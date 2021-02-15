@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <memory>
 
-#include "BoolLambdaColumn.h"
+#include "BoolColumn.h"
 #include "Column.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
@@ -26,7 +26,7 @@ TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
         "alias", "The alias of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7
-    addColumn(std::make_unique<BoolLambdaColumn<timeperiod, true>>(
+    addColumn(std::make_unique<BoolColumn<timeperiod, true>>(
         "in", "Wether we are currently in this period (0/1)", offsets,
         [](const timeperiod& tp) {
             // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

@@ -20,7 +20,8 @@ class IntAggregator : public Aggregator {
     using function_type = std::function<int(Row, const contact *)>;
 
 public:
-    IntAggregator(const AggregationFactory &factory, const function_type& getValue)
+    IntAggregator(const AggregationFactory &factory,
+                  const function_type &getValue)
         : _aggregation{factory()}, _getValue{getValue} {}
 
     void consume(Row row, const contact *auth_user,

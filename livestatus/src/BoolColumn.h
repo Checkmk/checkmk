@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef BoolLambdaColumn_h
-#define BoolLambdaColumn_h
+#ifndef BoolColumn_h
+#define BoolColumn_h
 
 #include <functional>
 #include <string>
@@ -15,13 +15,12 @@
 class Row;
 
 template <class T, bool Default = false>
-class BoolLambdaColumn : public IntColumn {
+class BoolColumn : public IntColumn {
 public:
-    BoolLambdaColumn(const std::string& name, const std::string& description,
-                     const ColumnOffsets& offsets,
-                     std::function<bool(const T&)> f)
+    BoolColumn(const std::string& name, const std::string& description,
+               const ColumnOffsets& offsets, std::function<bool(const T&)> f)
         : IntColumn(name, description, offsets), get_value_{std::move(f)} {}
-    ~BoolLambdaColumn() override = default;
+    ~BoolColumn() override = default;
 
     std::int32_t getValue(Row row,
                           const contact* /*auth_user*/) const override {
@@ -33,4 +32,4 @@ private:
     std::function<bool(const T&)> get_value_;
 };
 
-#endif  // BoolLambdaColumn.h
+#endif  // BoolColumn.h

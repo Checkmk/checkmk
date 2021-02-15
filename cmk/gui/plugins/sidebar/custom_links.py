@@ -51,7 +51,8 @@ class CustomLinks(SidebarSnapin):
                         html.begin_foldable_container("customlinks",
                                                       id_,
                                                       isopen=entry[1],
-                                                      title=entry[0])
+                                                      title=entry[0],
+                                                      icon="foldable_sidebar")
                         render_list(idss, entry[2])
                         html.end_foldable_container()
                     elif isinstance(entry[1], str):

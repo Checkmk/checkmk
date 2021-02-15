@@ -39,7 +39,7 @@ std::pair<std::string, std::string> GetNamesByVolumeId(
 std::pair<uint64_t, uint64_t> GetSpacesByVolumeId(std::string_view volume_id);
 std::string ProduceFileSystemOutput(std::string_view volume_id);
 std::vector<std::string> GetMountPointVector(std::string_view volume_id);
-std::string ProduceMountPointsOutput(const std::string& volume_id);
+std::string ProduceMountPointsOutput(std::string_view volume_id);
 std::vector<std::string> GetDriveVector();
 uint64_t CalcUsage(uint64_t avail, uint64_t total);
 }  // namespace df

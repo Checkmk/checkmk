@@ -11,6 +11,7 @@
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
@@ -19,13 +20,14 @@
 #include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class IntColumn;
 class Row;
 
 class IntFilter : public ColumnFilter {
+    using function_type = std::function<int(Row, const contact *)>;
+
 public:
-    IntFilter(Kind kind, const IntColumn &column, RelationalOperator relOp,
-              const std::string &value);
+    IntFilter(Kind kind, std::string columnName, function_type,
+              RelationalOperator relOp, const std::string &value);
 
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -46,7 +48,7 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const IntColumn &_column;
+    const function_type _get_value;
     const int32_t _ref_value;
 };
 

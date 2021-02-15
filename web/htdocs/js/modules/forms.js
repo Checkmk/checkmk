@@ -36,7 +36,9 @@ function ajax_call_select2_dropdown_autocomplete(elements, selector_name, autoco
     elements.find("." + selector_name).each((i, elem) =>
         $(elem).select2({
             language: {
-                searching: () => "Type to trigger search",
+                searching: () =>
+                    "Type to trigger search. In case of performance issues, please narrow down the \
+                    filters.",
             },
             width: "style",
             ajax: {

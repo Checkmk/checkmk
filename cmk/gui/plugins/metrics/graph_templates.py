@@ -32,10 +32,13 @@ def matching_graph_templates(
     graph_identification_info: Mapping,
     translated_metrics: TranslatedMetrics,
 ) -> Iterable[Tuple[int, GraphTemplate]]:
-    graph_index = graph_identification_info.get("graph_index")  # can be None -> show all graphs
+    graph_index = graph_identification_info.get(
+        "graph_index")  # can be None -> no restriction by index
+    graph_id = graph_identification_info.get("graph_id")  # can be None -> no restriction by id
     yield from ((index, graph_template)
                 for index, graph_template in enumerate(get_graph_templates(translated_metrics))
-                if graph_index is None or index == graph_index)
+                if (graph_index is None or index == graph_index) and
+                (graph_id is None or graph_template["id"] == graph_id))
 
 
 class GraphIdentificationTemplate(GraphIdentification):

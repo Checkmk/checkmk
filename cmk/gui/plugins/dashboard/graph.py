@@ -5,17 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Iterable, Optional
+from itertools import chain
+from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Tuple as TupleType
 
 import livestatus
 
 from cmk.utils.macros import MacroMapping
+from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.metrics import (
+    get_graph_templates,
+    graph_info,
+    metric_info,
+    translated_metrics_from_row,
+)
 from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
@@ -29,7 +38,146 @@ from cmk.gui.plugins.metrics.html_render import (
     resolve_graph_recipe,
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer
+from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    DropdownChoiceValue,
+    DropdownChoiceWithHostAndServiceHints,
+    TextAsciiAutocomplete,
+)
+
+
+def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
+    metric_id = metric_or_graph_id.replace("METRIC_", "")
+    return metric_info.get(metric_id, {}).get("title", metric_id)
+
+
+class GraphTemplate(DropdownChoiceWithHostAndServiceHints):
+    """Factory of a Dropdown menu from all graph templates"""
+    _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
+
+    def __init__(self, **kwargs: Any):
+        kwargs_with_defaults: Mapping[str, Any] = {
+            "css_spec": "graph-selector",
+            "hint_label": _("graph"),
+            "choices": [(None, _("Select graph"))],
+            "title": _("Graph"),
+            "encode_value": False,
+            "sorted": True,
+            "no_preselect": True,
+            "help": _(
+                "Select the graph to be displayed by this dashlet. In case the current selection "
+                "displays 'Deprecated choice, please re-select', this dashlet was created before "
+                "the release of version 2.0. Before this version, the graph selection was based on "
+                "a single number indexing the output of the corresponding service. Such dashlets "
+                "will continue to work, however, if you want to re-edit them, you have to re-"
+                "select the graph. To check which graph is currently selected, look at the title "
+                "of the dashlet in the dashboard.",),
+            **kwargs,
+        }
+        super().__init__(**kwargs_with_defaults)
+
+    def _validate_value(
+        self,
+        value: DropdownChoiceValue,
+        varprefix: str,
+    ) -> None:
+        if not value or value == self._MARKER_DEPRECATED_CHOICE:
+            raise MKUserError(varprefix, _("Please select a graph."))
+
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+        if not value:
+            return self.choices()
+        return [
+            next(
+                ((
+                    graph_id,
+                    graph_detail.get(
+                        "title",
+                        graph_id,
+                    ),
+                ) for graph_id, graph_detail in graph_info.items() if graph_id == value),
+                (
+                    value,
+                    _("Deprecated choice, please re-select")
+                    if value == self._MARKER_DEPRECATED_CHOICE else _metric_title_from_id(value),
+                ),
+            )
+        ]
+
+    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+        return super().render_input(
+            varprefix,
+            self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
+        )
+
+
+class AvailableGraphs(TextAsciiAutocomplete):
+    ident = "available_graphs"
+
+    @staticmethod
+    def _graph_template_title(graph_template: Mapping) -> str:
+        return graph_template.get("title") or _metric_title_from_id(graph_template["id"])
+
+    @classmethod
+    def _graph_choices_from_livestatus_row(
+        cls,
+        perf_data: str,
+        metrics: Iterable[MetricName],
+        check_cmd: str,
+    ) -> Iterable[TupleType[str, str]]:
+        yield from ((
+            template["id"],
+            cls._graph_template_title(template),
+        ) for template in get_graph_templates(
+            translated_metrics_from_row({
+                "service_metrics": metrics,
+                "service_perf_data": perf_data,
+                "service_check_command": check_cmd,
+            })))
+
+    # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
+    @classmethod
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
+        """Return the matching list of dropdown choices
+        Called by the webservice with the current input field value and the
+        completions_params to get the list of choices"""
+        if not (params.get("host") or params.get("service")):
+            choices: Iterable[TupleType[str, str]] = ((
+                graph_id,
+                graph_details.get(
+                    "title",
+                    graph_id,
+                ),
+            ) for graph_id, graph_details in graph_info.items())
+
+        else:
+            query = "\n".join([
+                "GET services",
+                "Columns: perf_data metrics check_command",
+            ] + [
+                f"Filter: {filter_name} = {livestatus.lqencode(filter_value)}"
+                for filter_name, filter_value in (
+                    ("host_name", params.get("host")),
+                    ("service_description", params.get("service")),
+                )
+                if filter_value
+            ])
+            with sites.set_limit(None):
+                choices = set(
+                    chain.from_iterable(
+                        cls._graph_choices_from_livestatus_row(
+                            perf_data,
+                            metrics,
+                            check_cmd,
+                        ) for perf_data, metrics, check_cmd in sites.live().query(query)))
+
+        val_lower = value.lower()
+        return sorted(
+            (choice for choice in choices if val_lower in choice[1].lower()),
+            key=lambda tuple_id_title: tuple_id_title[1],
+        )
 
 
 @dashlet_registry.register
@@ -129,12 +277,23 @@ class GraphDashlet(Dashlet):
 
         site = self._resolve_site(host)
 
-        return ("template", {
-            "site": site,
-            "host_name": host,
-            "service_description": service,
-            "graph_index": self._dashlet_spec["source"] - 1,
-        })
+        # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
+        # handle this here
+        raw_source = self._dashlet_spec["source"]
+        if isinstance(raw_source, int):
+            graph_def = {"graph_index": raw_source - 1}
+        else:
+            graph_def = {"graph_id": raw_source}
+
+        return (
+            "template",
+            {
+                "site": site,
+                "host_name": host,
+                "service_description": service,
+                **graph_def,
+            },
+        )
 
     @classmethod
     def vs_parameters(cls):
@@ -165,20 +324,21 @@ class GraphDashlet(Dashlet):
     def _parameter_elements(cls):
         return [
             cls._vs_timerange(),
-            ("source", Integer(
-                title=_("Source (n'th graph)"),
-                default_value=1,
-                minvalue=1,
-            )),
-            ("graph_render_options",
-             vs_graph_render_options(
-                 default_values=default_dashlet_graph_render_options,
-                 exclude=[
-                     "show_time_range_previews",
-                     "title_format",
-                     "show_title",
-                 ],
-             )),
+            (
+                "source",
+                GraphTemplate(),
+            ),
+            (
+                "graph_render_options",
+                vs_graph_render_options(
+                    default_values=default_dashlet_graph_render_options,
+                    exclude=[
+                        "show_time_range_previews",
+                        "title_format",
+                        "show_title",
+                    ],
+                ),
+            ),
         ]
 
     @classmethod

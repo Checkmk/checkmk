@@ -29,17 +29,43 @@ _GRAPH_TEMPLATES = [
         pytest.param(
             {},
             list(enumerate(_GRAPH_TEMPLATES)),
-            id="no index",
+            id="no index and no id",
         ),
         pytest.param(
             {"graph_index": 0},
             [(0, _GRAPH_TEMPLATES[0])],
-            id="matching index",
+            id="matching index and no id",
         ),
         pytest.param(
             {"graph_index": 10},
             [],
-            id="non-matching index",
+            id="non-matching index and no id",
+        ),
+        pytest.param(
+            {"graph_id": "2"},
+            [(1, _GRAPH_TEMPLATES[1])],
+            id="no index and matching id",
+        ),
+        pytest.param(
+            {"graph_id": "wrong"},
+            [],
+            id="no index and non-matching id",
+        ),
+        pytest.param(
+            {
+                "graph_index": 0,
+                "graph_id": "1",
+            },
+            [(0, _GRAPH_TEMPLATES[0])],
+            id="matching index and matching id",
+        ),
+        pytest.param(
+            {
+                "graph_index": 0,
+                "graph_id": "2",
+            },
+            [],
+            id="inconsistent matching index and matching id",
         ),
     ],
 )

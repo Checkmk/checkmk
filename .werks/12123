@@ -1,0 +1,15 @@
+Title: Datasource Programs: fix upgrade problem for activemq rules
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1613390197
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+In the previous version, it was not possible to upgrade from a
+pre 2.0.0 version without running into a problem with activemq's
+existing rules. This werk fixes this behavior allowing to take over
+the old rules.

@@ -1251,6 +1251,8 @@ rulespec_registry.register(
 
 def _special_agents_activemq_transform_activemq(value):
     if not isinstance(value, tuple):
+        if "protocol" not in value:
+            value["protocol"] = "http"
         return value
     new_value = {}
     new_value["servername"] = value[0]

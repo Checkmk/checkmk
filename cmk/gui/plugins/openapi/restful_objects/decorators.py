@@ -515,6 +515,11 @@ class Endpoint:
         if 422 in self._expected_status_codes:
             responses['422'] = self._path_item(422, 'The request could not be processed.')
 
+        if 405 in self._expected_status_codes:
+            responses['405'] = _path_item(
+                405, 'Method not allowed: This request is only allowed '
+                'with other HTTP methods')
+
         if 409 in self._expected_status_codes:
             responses['409'] = self._path_item(
                 409,

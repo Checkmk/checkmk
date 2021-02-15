@@ -188,14 +188,14 @@ def show_downtimes(param):
     ])
 
     query_expr = param.get('query')
-    host_name = param.get('host_name')
-    service_description = param.get('service_description')
     if query_expr is not None:
         q = q.filter(query_expr)
 
+    host_name = param.get('host_name')
     if host_name is not None:
         q = q.filter(Downtimes.host_name.contains(host_name))
 
+    service_description = param.get('service_description')
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
@@ -245,26 +245,27 @@ def _serve_downtimes(downtimes):
 
 def _serialize_downtimes(downtimes):
     entries = []
-    for downtime_info in downtimes:
-        service_description = downtime_info.get("service_description")
+    for downtime in downtimes:
+        service_description = downtime.get("service_description")
         if service_description:
             downtime_detail = "service: %s" % service_description
         else:
-            downtime_detail = "host: %s" % downtime_info["host_name"]
+            downtime_detail = "host: %s" % downtime["host_name"]
 
-        downtime_id = downtime_info['id']
+        downtime_id = downtime['id']
         entries.append(
             constructors.domain_object(
                 domain_type='downtime',
                 identifier=downtime_id,
                 title='Downtime for %s' % downtime_detail,
-                extensions=_downtime_properties(downtime_info),
+                extensions=_downtime_properties(downtime),
                 links=[
-                    constructors.link_rel(rel='.../delete',
-                                          href='/objects/host/%s/objects/downtime/%s' %
-                                          (downtime_info['host_name'], downtime_id),
-                                          method='delete',
-                                          title='Delete the downtime'),
+                    constructors.link_rel(
+                        rel='.../delete',
+                        href=f'/objects/host/{downtime["host_name"]}/objects/downtime/{downtime_id}',
+                        method='delete',
+                        title='Delete the downtime',
+                    ),
                 ]))
 
     return constructors.object_collection(

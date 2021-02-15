@@ -252,3 +252,12 @@ def test_label_validation(cls):
 
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         cls(u"äbc", b"\xc3\xbcbc")
+
+
+def test_discovered_host_labels_path(discovered_host_labels_dir):
+    hostname = "test.host.de"
+    config.get_config_cache().initialize()
+    assert not (discovered_host_labels_dir / hostname).exists()
+    DiscoveredHostLabelsStore(hostname).save(
+        DiscoveredHostLabels(HostLabel("foo", "1.5")).to_dict())
+    assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

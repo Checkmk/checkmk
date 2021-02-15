@@ -29,6 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 ACTIVATION_ID = {
     'activation_id': fields.String(
@@ -99,6 +100,7 @@ def _serve_activation_run(activation_id, is_running=False):
               204: "The activation has been completed.",
               302: ("The activation is still running. Redirecting to the "
                     "'Wait for completion' endpoint."),
+              404: "There is no running activation with this activation_id.",
           },
           path_params=[ACTIVATION_ID],
           additional_status_codes=[302],
@@ -111,7 +113,10 @@ def activate_changes_wait_for_completion(params):
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()
-    manager.load_activation(activation_id)
+    try:
+        manager.load_activation(activation_id)
+    except MKUserError:
+        raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
@@ -125,6 +130,9 @@ def activate_changes_wait_for_completion(params):
           'cmk/show',
           method='get',
           path_params=[ACTIVATION_ID],
+          status_descriptions={
+              404: "There is no running activation with this activation_id.",
+          },
           response_schema=response_schemas.DomainObject)
 def show_activation(params):
     """Show the activation status
@@ -132,7 +140,13 @@ def show_activation(params):
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()
-    manager.load_activation(activation_id)
+    try:
+        manager.load_activation(activation_id)
+    except MKUserError:
+        raise ProblemException(
+            status=404,
+            title=f"Activation {activation_id!r} not found.",
+        )
     return _serve_activation_run(activation_id, is_running=manager.is_running())
 
 

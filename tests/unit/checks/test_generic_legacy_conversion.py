@@ -1435,7 +1435,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'couchbase_nodes_stats.mem',
         'couchbase_nodes_uptime',
         'cpsecure_sessions',
-        'cpu.threads',
         'cups_queues',
         'datapower_cpu',
         'datapower_fan',

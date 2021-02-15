@@ -73,3 +73,5 @@ winperf_cpu_default_levels: dict = {}  # winperf_processor.util
 
 # cpu_loads
 cpuload_default_levels = (5.0, 10.0)
+# cpu_threads
+cpu_threads_default_levels = {"levels": (2000, 4000)}

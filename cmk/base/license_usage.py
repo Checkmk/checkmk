@@ -9,7 +9,7 @@ import random
 import time
 from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, NamedTuple, Tuple
 
 import livestatus
 
@@ -98,21 +98,11 @@ def _load_history_dump() -> LicenseUsageHistoryDump:
 
 
 def _create_sample() -> Optional[LicenseUsageSample]:
-    num_hosts = _get_stats_from_livestatus(
-        "GET hosts\nStats: host_labels != '{label_name}' '{label_value}'\n".format(
-            label_name=_LICENSE_LABEL_NAME,
-            label_value=_LICENSE_LABEL_EXCLUDE,
-        ))
-    num_services = _get_stats_from_livestatus(
-        ("GET services\n"
-         "Stats: host_labels != '{label_name}' '{label_value}'\n"
-         "Stats: service_labels != '{label_name}' '{label_value}'\n"
-         "StatsAnd: 2\n").format(
-             label_name=_LICENSE_LABEL_NAME,
-             label_value=_LICENSE_LABEL_EXCLUDE,
-         ))
+    hosts_counter = _get_hosts_counter()
+    services_counter = _get_services_counter()
 
-    if num_hosts == 0 and num_services == 0:
+    if (hosts_counter.included == 0 and hosts_counter.excluded == 0 and
+            services_counter.included == 0 and services_counter.excluded == 0):
         return None
 
     general_infos = cmk_version.get_general_version_infos()
@@ -121,16 +111,59 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         edition=general_infos['edition'],
         platform=general_infos['os'],
         is_cma=cmk_version.is_cma(),
-        num_hosts=num_hosts,
-        num_services=num_services,
+        num_hosts=hosts_counter.included,
+        num_hosts_excluded=hosts_counter.excluded,
+        num_services=services_counter.included,
+        num_services_excluded=services_counter.excluded,
         sample_time=int(time.time()),
         timezone=time.localtime().tm_zone,
     )
 
 
-def _get_stats_from_livestatus(query: str) -> int:
+EntityCounter = NamedTuple("EntityCounter", [
+    ("included", int),
+    ("excluded", int),
+])
+
+
+def _get_hosts_counter() -> EntityCounter:
+    included_num_hosts, excluded_num_hosts = _get_stats_from_livestatus(
+        ("GET hosts\n"
+         "Stats: host_labels != '{label_name}' '{label_value}'\n"
+         "Stats: host_labels = '{label_name}' '{label_value}'\n").format(
+             label_name=_LICENSE_LABEL_NAME,
+             label_value=_LICENSE_LABEL_EXCLUDE,
+         ))
+
+    return EntityCounter(
+        included=included_num_hosts,
+        excluded=excluded_num_hosts,
+    )
+
+
+def _get_services_counter() -> EntityCounter:
+    included_num_services, excluded_num_services = _get_stats_from_livestatus(
+        ("GET services\n"
+         "Stats: host_labels != '{label_name}' '{label_value}'\n"
+         "Stats: service_labels != '{label_name}' '{label_value}'\n"
+         "StatsAnd: 2\n"
+         "Stats: host_labels = '{label_name}' '{label_value}'\n"
+         "Stats: service_labels = '{label_name}' '{label_value}'\n"
+         "StatsOr: 2\n").format(
+             label_name=_LICENSE_LABEL_NAME,
+             label_value=_LICENSE_LABEL_EXCLUDE,
+         ))
+
+    return EntityCounter(
+        included=included_num_services,
+        excluded=excluded_num_services,
+    )
+
+
+def _get_stats_from_livestatus(query: str) -> Tuple[int, int]:
     try:
-        return livestatus.LocalConnection().query_summed_stats(query)[0]
+        stats = livestatus.LocalConnection().query(query)[0]
+        return int(stats[0]), int(stats[1])
     except (livestatus.MKLivestatusSocketError, livestatus.MKLivestatusNotFoundError) as e:
         logger.debug("Livestatus error: %s", e)
-        return 0
+        return (0, 0)

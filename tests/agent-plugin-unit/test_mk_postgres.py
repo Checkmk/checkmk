@@ -116,8 +116,8 @@ def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_lin
     assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
     assert myPostgresOnLinux.psql == "psql"
     assert myPostgresOnLinux.bin_path == "/usr/lib/postgres/"
-    assert myPostgresOnLinux.databases == ["postgres", "db1"]
-    assert myPostgresOnLinux.numeric_version == 12.3
+    assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
+    assert myPostgresOnLinux.get_server_version() == 12.3
     assert myPostgresOnLinux.pg_database == "postgres"
     assert myPostgresOnLinux.pg_port == "5432"
 
@@ -142,8 +142,8 @@ def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postg
     assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
     assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
     assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"
-    assert myPostgresOnWin.databases == ["postgres", "db1"]
-    assert myPostgresOnWin.numeric_version == 12.1
+    assert myPostgresOnWin.get_databases() == ["postgres", "db1"]
+    assert myPostgresOnWin.get_server_version() == 12.1
     assert myPostgresOnWin.pg_database == "postgres"
     assert myPostgresOnWin.pg_port == "5432"
 
@@ -172,8 +172,8 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
     assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
     assert myPostgresOnLinux.psql == "psql"
     assert myPostgresOnLinux.bin_path == "/usr/lib/postgres/"
-    assert myPostgresOnLinux.databases == ["postgres", "db1"]
-    assert myPostgresOnLinux.numeric_version == 12.3
+    assert myPostgresOnLinux.get_databases() == ["postgres", "db1"]
+    assert myPostgresOnLinux.get_server_version() == 12.3
     assert myPostgresOnLinux.pg_database == "mydb"
     assert myPostgresOnLinux.pg_port == "1234"
     assert myPostgresOnLinux.pg_user == "myuser"
@@ -208,8 +208,8 @@ def test_postgres_factory_windows_with_instance(
     assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
     assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
     assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"
-    assert myPostgresOnWin.databases == ["postgres", "db1"]
-    assert myPostgresOnWin.numeric_version == 12.1
+    assert myPostgresOnWin.get_databases() == ["postgres", "db1"]
+    assert myPostgresOnWin.get_server_version() == 12.1
     assert myPostgresOnWin.pg_database == "mydb"
     assert myPostgresOnWin.pg_port == "1234"
     assert myPostgresOnWin.pg_user == "myuser"

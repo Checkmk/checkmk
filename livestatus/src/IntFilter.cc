@@ -6,15 +6,15 @@
 #include "IntFilter.h"
 
 #include <cstdlib>
+#include <utility>
 
-#include "IntColumn.h"
 #include "Row.h"
 
-IntFilter::IntFilter(Kind kind, const IntColumn &column,
+IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column.name(), relOp, value)
-    , _column(column)
-    , _ref_value(atoi(value.c_str())) {}
+    : ColumnFilter{kind, std::move(columnName), relOp, value}
+    , _get_value{std::move(f)}
+    , _ref_value{atoi(value.c_str())} {}
 
 namespace {
 bool eval(int32_t x, RelationalOperator op, int32_t y) {
@@ -50,7 +50,7 @@ bool eval(int32_t x, RelationalOperator op, int32_t y) {
 
 bool IntFilter::accepts(Row row, const contact *auth_user,
                         std::chrono::seconds /*timezone_offset*/) const {
-    return eval(_column.getValue(row, auth_user), oper(), _ref_value);
+    return eval(_get_value(row, auth_user), oper(), _ref_value);
 }
 
 std::optional<int32_t> IntFilter::greatestLowerBoundFor(
@@ -126,6 +126,7 @@ std::unique_ptr<Filter> IntFilter::copy() const {
 }
 
 std::unique_ptr<Filter> IntFilter::negate() const {
-    return std::make_unique<IntFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+    return std::make_unique<IntFilter>(kind(), columnName(), _get_value,
+                                       negateRelationalOperator(oper()),
+                                       value());
 }

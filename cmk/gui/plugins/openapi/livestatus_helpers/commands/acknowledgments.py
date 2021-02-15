@@ -112,6 +112,10 @@ def acknowledge_servicegroup_problem(
         comment:
             If set, this comment will be stored alongside the acknowledgement.
 
+    Raises:
+        ValueError:
+            When the servicegroup could not be found.
+
     """
     members: List[List[str]] = Query(
         [tables.Servicegroups.members],
@@ -229,6 +233,10 @@ def acknowledge_hostgroup_problem(
         user:
         comment:
             If set, this comment will be stored alongside the acknowledgement.
+
+    Raises:
+        ValueError:
+            when the Hostgroup in question doesn't exist.
 
     """
     members: List[str] = Query([tables.Hostgroups.members],

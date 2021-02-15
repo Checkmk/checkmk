@@ -59,6 +59,7 @@ def create_timeperiod(params):
           '.../update',
           method='put',
           path_params=[NAME_FIELD],
+          additional_status_codes=[405],
           request_schema=request_schemas.UpdateTimePeriod,
           output_empty=True)
 def update_timeperiod(params):
@@ -66,6 +67,10 @@ def update_timeperiod(params):
 
     body = params['body']
     name = params['name']
+    if name == "24X7":
+        raise ProblemException(405, http.client.responses[405],
+                               "You cannot change the built-in time period")
+
     time_period = load_timeperiod(name)
     if time_period is None:
         raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
@@ -118,7 +123,7 @@ def show_time_period(params):
     if name not in time_periods:
         raise ProblemException(404, http.client.responses[404], f"Time period {name} not found")
     time_period = time_periods[name]
-    return _serve_time_period(_readable_format(time_period))
+    return _serve_time_period(_readable_format(time_period, name == "24X7"))
 
 
 @Endpoint(constructors.collection_href('time_period'),
@@ -157,8 +162,11 @@ def _serve_time_period(time_period):
     return response
 
 
-def _readable_format(time_period):
-    time_period_readable: Dict[str, Any] = {key: time_period[key] for key in ("alias", "exclude")}
+def _readable_format(time_period, builtin_period=False):
+    time_period_readable: Dict[str, Any] = {"alias": time_period["alias"]}
+    if not builtin_period:
+        time_period_readable["exclude"] = time_period["exclude"]
+
     active_time_ranges = _active_time_ranges_readable(
         {key: time_period[key] for key in defines.weekday_ids()})
     time_period_readable["active_time_ranges"] = active_time_ranges

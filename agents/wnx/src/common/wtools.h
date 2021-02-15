@@ -89,6 +89,15 @@ LocalResource<SERVICE_FAILURE_ACTIONS> actions(
 template <typename T>
 using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
 
+struct HandleDeleter {
+    using pointer = HANDLE;  // trick to use HANDLE as STL pointer
+
+    void operator()(HANDLE h) { ::CloseHandle(h); }
+};
+
+/// Unique ptr for Windows HANDLE
+using UniqueHandle = std::unique_ptr<HANDLE, HandleDeleter>;
+
 // returns <exit_code, 0>, <0, error> or <-1, error>
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 

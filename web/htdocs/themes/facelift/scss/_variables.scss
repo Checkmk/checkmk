@@ -242,7 +242,6 @@ $graph-legend-th-border-bottom: null;
 $graph-time-color: null;
 
 $dashlet-stats-border-top-color: $color-table-border;
-$dashlet-title-border-radius: 5px 5px 0 0;
 
 $snapin-border: none;
 $snapin-border-top: 1px solid $color-table-border-dark-2;
@@ -404,7 +403,7 @@ $globalvars-modified-border-color: rgb(204, 221, 255);
 $globalvars-modified-box-shadow: 3px 3px 5px rgb(238, 238, 238) inset;
 $globalvars-modified-globally-box-shadow: 3px 3px 5px rgb(139, 199, 229) inset;
 
-$dashlet-inner-bg-color: $white;
+$dashlet-inner-bg-color: rgb(245, 246, 249);
 
 $states-font-color: null;
 $statep-font-color: $white;

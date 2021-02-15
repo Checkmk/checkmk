@@ -48,8 +48,7 @@ function size_dashlets() {
             if (d_width <= 20) {
                 d_width = 21;
             }
-            // 14 => 9 title padding + empty space on right of dashlet
-            oDashTitle.style.width = d_width - 19 + "px";
+            oDashTitle.style.width = d_width - 17 + "px"; // 9 title padding + empty space on right of dashlet
             oDashTitle.style.display = disstyle;
             oDashTitle.style.left = dashboard_properties.dashlet_padding[3] + "px";
             oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + "px";

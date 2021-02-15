@@ -12,7 +12,6 @@ If you build the tree cleverly you can use it to pass on attributes in a meaning
 You can find an introduction to hosts including folders in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
-import urllib.parse
 
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
@@ -32,12 +31,8 @@ from cmk.gui.watolib import CREFolder
 
 FOLDER_FIELD = {
     'folder': fields.FolderField(
-        description=(
-            "The folder identifier. This can be a path name or the folder-specific 128 bit "
-            "identifier. This identifier is unique to the folder and stays the same, even if the "
-            "folder has been moved. The special value 'root' represents the root-folder. The same "
-            "root folder can also be accessed via '/'. The folder value has to urlencoded."),
-        example=urllib.parse.quote_plus('/my/fine/folder'),
+        example='~my~fine~folder',
+        required=True,
     )
 }
 
@@ -76,8 +71,9 @@ def update(params):
 
     post_body = params['body']
     title = post_body['title']
-    replace_attributes = post_body.get('attributes')
-    update_attributes = post_body.get('update_attributes')
+    replace_attributes = post_body['attributes']
+    update_attributes = post_body['update_attributes']
+    remove_attributes = post_body['remove_attributes']
 
     attributes = folder.attributes().copy()
 
@@ -87,9 +83,9 @@ def update(params):
     if update_attributes:
         attributes.update(update_attributes)
 
-    # FIXME
-    # You can't update the attributes without updating the title, so the title is mandatory.
-    # This shouldn't be the case though.
+    for attribute in remove_attributes:
+        folder.remove_attribute(attribute)
+
     folder.edit(title, attributes)
 
     return _serve_folder(folder)
@@ -109,8 +105,9 @@ def bulk_update(params):
     for update_details in entries:
         folder = update_details['folder']
         title = update_details['title']
-        replace_attributes = update_details.get('attributes')
-        update_attributes = update_details.get('update_attributes')
+        replace_attributes = update_details['attributes']
+        update_attributes = update_details['update_attributes']
+        remove_attributes = update_attributes['remove_attributes']
         attributes = folder.attributes().copy()
 
         if replace_attributes:
@@ -119,9 +116,9 @@ def bulk_update(params):
         if update_attributes:
             attributes.update(update_attributes)
 
-        # FIXME: see above in update
-        # You can't update the attributes without updating the title, so the title is mandatory.
-        # This shouldn't be the case though.
+        for attribute in remove_attributes:
+            folder.remove_attribute(attribute)
+
         folder.edit(title, attributes)
         folders.append(folder)
 

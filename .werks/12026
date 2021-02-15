@@ -1,0 +1,21 @@
+Title: Performance Graph Dashlets: Specify by Graph Title instead of by Index
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1613404968
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+The graph displayed by a performance graph dashlet is now specified
+by selecting from a list of available graphs, represented by their
+titles. This list can optionally be pre-filtered by host name or service
+description. Before this werk, graphs in performance graph dashlets were
+specified by a number indexing the graphs produced by the corresponding
+service (n'th graph).
+
+Performance graph dashlets created before this werk will continue to
+work. However, upon editing them the next time, you will have to re-
+select the graph to be displayed.

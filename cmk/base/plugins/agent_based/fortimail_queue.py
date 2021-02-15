@@ -54,6 +54,7 @@ from .agent_based_api.v1 import (
     equals,
     check_levels,
     SNMPTree,
+    Metric,
 )
 from typing import Mapping, List, Tuple, Dict
 
@@ -82,10 +83,11 @@ def check_fortimail_queue(item: str, params: Mapping[str, Tuple[float, float]],
     yield from check_levels(
         mail_count,
         levels_upper=queued_mails_upper,
-        metric_name='fortimail_queue_count',
+        metric_name='mail_queue_active_length',
         label='',
         render_func=lambda v, s=mail_size: "Mail count %s - Mail size %s" % (v, render.bytes(s)),
     )
+    yield Metric('mail_queue_active_size', mail_size)
 
 
 register.snmp_section(

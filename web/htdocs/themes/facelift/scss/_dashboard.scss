@@ -540,12 +540,12 @@ div#dashboard.grid {
 
   &.max {
     color: #f00;
-    background-color: #10181d;
+    background-color: $dashlet-editor-free;
   }
 
   &.grow {
     color: $white;
-    background-color: #10181d;
+    background-color: $dashlet-editor-free;
   }
 
   &.abs {

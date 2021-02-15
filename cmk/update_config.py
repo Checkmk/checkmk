@@ -140,6 +140,7 @@ class UpdateConfig:
             (self._set_user_scheme_serial, "Set version specific user attributes"),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
+            (self._rename_discovered_host_label_files, "Rename discovered host label files"),
         ]
 
     def _initialize_base_environment(self):
@@ -808,6 +809,19 @@ class UpdateConfig:
         if not host_name:
             return ObjectRef(ObjectRefType.Folder, folder_path)
         return ObjectRef(ObjectRefType.Host, host_name)
+
+    def _rename_discovered_host_label_files(self):
+        config_cache = cmk.base.config.get_config_cache()
+        for host_name in config_cache.all_configured_realhosts():
+            old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
+            new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
+            if old_path == new_path:
+                continue
+
+            if old_path.exists() and not new_path.exists():
+                self._logger.log(VERBOSE, "Rename discovered host labels file from '%s' to '%s'",
+                                 old_path, new_path)
+                old_path.rename(new_path)
 
 
 def _set_show_mode(users, user_id):

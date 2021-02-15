@@ -302,3 +302,12 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
 
     labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
     assert new_host_labels.to_dict() == labels_expected.to_dict()
+
+
+def test_discovered_host_labels_path(discovered_host_labels_dir):
+    hostname = "test.host.de"
+    config.get_config_cache().initialize()
+    assert not (discovered_host_labels_dir / hostname).exists()
+    DiscoveredHostLabelsStore(hostname).save(
+        DiscoveredHostLabels(HostLabel("foo", "1.5")).to_dict())
+    assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

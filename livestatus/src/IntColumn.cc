@@ -29,5 +29,8 @@ std::unique_ptr<Filter> IntColumn::createFilter(
 
 std::unique_ptr<Aggregator> IntColumn::createAggregator(
     AggregationFactory factory) const {
-    return std::make_unique<IntAggregator>(factory, this);
+    return std::make_unique<IntAggregator>(
+        factory, [this](Row row, const contact *auth_user) {
+            return getValue(row, auth_user);
+        });
 }

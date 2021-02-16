@@ -350,7 +350,7 @@ def deploy_to_website(UPLOAD_URL, CMK_VERS, RELEASE_KEY_PATH) {
     stage("Deploy to Website") {
         sh """
             ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_PATH} -p 52022 ${UPLOAD_URL} \
-                ln -s /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
+                ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
         """
     }
 }

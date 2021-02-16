@@ -699,10 +699,13 @@ class UpdateTimePeriod(BaseSchema):
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
-        example={
-            'start': '12:00',
-            'end': '14:00'
-        },
+        example=[{
+            'day': 'monday',
+            'time_ranges': [{
+                'start': '12:00',
+                'end': '14:00'
+            }],
+        }],
         description="The list of active time ranges which replaces the existing list of time ranges",
         required=False,
     )

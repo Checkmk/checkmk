@@ -73,7 +73,8 @@ CONTENT_TYPE = {
     'Content-Type': fields.String(
         required=True,
         description=("A header specifying which type of content is in the request/response body. "
-                     "This is required when sending encoded data in a POST/PUT body."),
+                     "This is required when sending encoded data in a POST/PUT body. When the "
+                     "request body is empty, this header should not be sent."),
         example='application/json',
     )
 }

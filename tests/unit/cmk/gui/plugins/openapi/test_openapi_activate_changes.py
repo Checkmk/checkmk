@@ -61,6 +61,7 @@ def test_openapi_activate_changes(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             status=200,
+            content_type='application/json',
         )
 
     with live(expect_status_query=True):
@@ -98,6 +99,7 @@ def test_openapi_activate_changes(
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            content_type="application/json",
         )
 
     for _ in range(10):

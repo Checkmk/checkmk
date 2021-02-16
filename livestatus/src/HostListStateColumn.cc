@@ -5,9 +5,8 @@
 
 #include "HostListStateColumn.h"
 
-#include "Row.h"
-
 #ifdef CMC
+#include <memory>
 #include <unordered_set>
 
 #include "Host.h"
@@ -16,41 +15,42 @@
 #include "auth.h"
 #endif
 
-int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
+int32_t HostListStateColumn::operator()(const value_type &hsts,
+                                        const contact *auth_user) const {
     int32_t result = 0;
 #ifdef CMC
-    if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
-        for (auto *hst : *p) {
-            if (auth_user == nullptr || hst->hasContact(auth_user)) {
-                const auto *state = hst->state();
-                update(auth_user, static_cast<HostState>(state->_current_state),
-                       state->_has_been_checked, &hst->_services,
-                       hst->handled(), result);
+    for (const auto *hst : hsts) {
+        if (auth_user == nullptr || hst->hasContact(auth_user)) {
+            const auto *state = hst->state();
+            auto svcs =
+                ServiceListStateColumn::value_type(hst->_services.size());
+            for (const auto &s : hst->_services) {
+                svcs.emplace(s.get());
             }
+            update(auth_user, static_cast<HostState>(state->_current_state),
+                   state->_has_been_checked, svcs, hst->handled(), result);
         }
     }
 #else
-    if (const auto *p = columnData<hostsmember *>(row)) {
-        for (hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
-            host *hst = mem->host_ptr;
-            if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, hst, nullptr)) {
-                update(auth_user, static_cast<HostState>(hst->current_state),
-                       hst->has_been_checked != 0, hst->services,
-                       hst->problem_has_been_acknowledged != 0 ||
-                           hst->scheduled_downtime_depth > 0,
-                       result);
-            }
+    for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
+        host *hst = mem->host_ptr;
+        if (auth_user == nullptr ||
+            is_authorized_for(_mc, auth_user, hst, nullptr)) {
+            update(auth_user, static_cast<HostState>(hst->current_state),
+                   hst->has_been_checked != 0, hst->services,
+                   hst->problem_has_been_acknowledged != 0 ||
+                       hst->scheduled_downtime_depth > 0,
+                   result);
         }
     }
 #endif
     return result;
 }
 
-void HostListStateColumn::update(const contact *auth_user,
-                                 HostState current_state, bool has_been_checked,
-                                 ServiceListStateColumn::service_list services,
-                                 bool handled, int32_t &result) const {
+void HostListStateColumn::update(
+    const contact *auth_user, HostState current_state, bool has_been_checked,
+    const ServiceListStateColumn::value_type &services, bool handled,
+    int32_t &result) const {
     switch (_logictype) {
         case Type::num_hst:
             result++;

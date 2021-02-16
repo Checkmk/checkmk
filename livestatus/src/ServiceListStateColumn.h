@@ -9,22 +9,31 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
-#include <string>
 
-#include "IntColumn.h"
 #include "LogEntry.h"
-class ColumnOffsets;
 class MonitoringCore;
-class Row;
 
 #ifdef CMC
+#include <memory>
+#include <unordered_set>
+
 #include "Host.h"
-#include "cmc.h"
+#include "Object.h"
+#include "ObjectGroup.h"
+#include "Service.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif
 
-class ServiceListStateColumn : public IntColumn {
+class ServiceListStateColumn {
+#ifdef CMC
+    using value_type = std::unordered_set<const Service *>;
+#else
+    using value_type = servicesmember *;
+#endif
+    friend class HostListStateColumn;
+
 public:
     enum class Type {
         num,
@@ -45,30 +54,40 @@ public:
         worst_hard_state,
     };
 
-    ServiceListStateColumn(const std::string &name,
-                           const std::string &description,
-                           const ColumnOffsets &offsets, MonitoringCore *mc,
-                           Type logictype)
-        : IntColumn(name, description, offsets)
-        , _mc(mc)
-        , _logictype(logictype) {}
-
-    int32_t getValue(Row row, const contact *auth_user) const override;
+    ServiceListStateColumn(MonitoringCore *mc, Type logictype)
+        : _mc(mc), _logictype(logictype) {}
 
 #ifdef CMC
-    using service_list = const Host::services_t *;
+    int32_t operator()(const Host &hst, const contact *auth_user) const {
+        auto v = value_type(hst._services.size());
+        for (const auto &e : hst._services) {
+            v.emplace(e.get());
+        }
+        return (*this)(v, auth_user);
+    }
+    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
+        auto v = value_type(g._objects.size());
+        for (const auto &e : g._objects) {
+            v.emplace(dynamic_cast<value_type::value_type>(e));
+        }
+        return (*this)(v, auth_user);
+    }
 #else
-    using service_list = servicesmember *;
+    int32_t operator()(const host &hst, const contact *auth_user) const {
+        return hst.services == nullptr ? 0 : (*this)(hst.services, auth_user);
+    }
+    int32_t operator()(const servicegroup &g, const contact *auth_user) const {
+        return g.members == nullptr ? 0 : (*this)(g.members, auth_user);
+    }
 #endif
-
-    static int32_t getValueFromServices(MonitoringCore *mc, Type logictype,
-                                        service_list mem,
-                                        const contact *auth_user);
+    int32_t operator()(const value_type &svcs, const contact *auth_user) const;
 
 private:
     MonitoringCore *_mc;
     const Type _logictype;
-
+    static int32_t getValueFromServices(MonitoringCore *mc, Type logictype,
+                                        const value_type &svcs,
+                                        const contact *auth_user);
     static void update(Type logictype, ServiceState current_state,
                        ServiceState last_hard_state, bool has_been_checked,
                        bool handled, int32_t &result);

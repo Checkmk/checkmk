@@ -5,54 +5,37 @@
 
 #include "ServiceListStateColumn.h"
 
-#include "Row.h"
-
 #ifdef CMC
-#include <memory>
-
 #include "Service.h"
 #include "State.h"
 #else
 #include "auth.h"
 #endif
 
-int32_t ServiceListStateColumn::getValue(Row row,
-                                         const contact *auth_user) const {
-#ifdef CMC
-    if (const auto *p = columnData<Host::services_t>(row)) {
-        return getValueFromServices(_mc, _logictype, p, auth_user);
-    }
-    return 0;
-#else
-    servicesmember *mem = nullptr;
-    if (const auto *p = columnData<servicesmember *>(row)) {
-        mem = *p;
-    }
-    return getValueFromServices(_mc, _logictype, mem, auth_user);
-#endif
+int32_t ServiceListStateColumn::operator()(const value_type &svcs,
+                                           const contact *auth_user) const {
+    return getValueFromServices(_mc, _logictype, svcs, auth_user);
 }
 
 // static
-int32_t ServiceListStateColumn::getValueFromServices(MonitoringCore *mc,
-                                                     Type logictype,
-                                                     service_list mem,
-                                                     const contact *auth_user) {
+int32_t ServiceListStateColumn::getValueFromServices(
+    MonitoringCore *mc, Type logictype,
+    // False positive: cppcheck wants const svcs but it already is!
+    // cppcheck-suppress constParameter
+    const value_type &svcs, const contact *auth_user) {
     int32_t result = 0;
 #ifdef CMC
     (void)mc;
-    if (mem != nullptr) {
-        for (const auto &svc : *mem) {
-            if (auth_user == nullptr || svc->hasContact(auth_user)) {
-                const auto *state = svc->state();
-                update(logictype,
-                       static_cast<ServiceState>(state->_current_state),
-                       static_cast<ServiceState>(state->_last_hard_state),
-                       state->_has_been_checked, svc->handled(), result);
-            }
+    for (const auto &svc : svcs) {
+        if (auth_user == nullptr || svc->hasContact(auth_user)) {
+            const auto *state = svc->state();
+            update(logictype, static_cast<ServiceState>(state->_current_state),
+                   static_cast<ServiceState>(state->_last_hard_state),
+                   state->_has_been_checked, svc->handled(), result);
         }
     }
 #else
-    for (; mem != nullptr; mem = mem->next) {
+    for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {

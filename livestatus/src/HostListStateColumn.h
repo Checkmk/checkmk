@@ -9,23 +9,29 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
-#include <string>
-#include <utility>
 
-#include "Column.h"
-#include "IntColumn.h"
 #include "LogEntry.h"
 #include "ServiceListStateColumn.h"
 class MonitoringCore;
-class Row;
 
 #ifdef CMC
-#include "cmc.h"
+#include <unordered_set>
+
+#include "Host.h"
+#include "Object.h"
+#include "ObjectGroup.h"
+#include "contact_fwd.h"
 #else
 #include "nagios.h"
 #endif
 
-class HostListStateColumn : public IntColumn {
+class HostListStateColumn {
+#ifdef CMC
+    using value_type = std::unordered_set<const Host *>;
+#else
+    using value_type = hostsmember *;
+#endif
+
 public:
     enum class Type {
         num_hst,
@@ -56,14 +62,22 @@ public:
         worst_svc_hard_state,
     };
 
-    HostListStateColumn(const std::string &name, const std::string &description,
-                        ColumnOffsets offsets, MonitoringCore *mc,
-                        Type logictype)
-        : IntColumn(name, description, std::move(offsets))
-        , _mc(mc)
-        , _logictype(logictype) {}
-
-    int32_t getValue(Row row, const contact *auth_user) const override;
+    HostListStateColumn(MonitoringCore *mc, Type logictype)
+        : _mc(mc), _logictype(logictype) {}
+#ifdef CMC
+    int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
+        auto v = value_type(g._objects.size());
+        for (const auto &e : g._objects) {
+            v.emplace(dynamic_cast<value_type::value_type>(e));
+        }
+        return (*this)(v, auth_user);
+    }
+#else
+    int32_t operator()(const hostgroup &g, const contact *auth_user) const {
+        return g.members == nullptr ? 0 : (*this)(g.members, auth_user);
+    }
+#endif
+    int32_t operator()(const value_type &hsts, const contact *auth_user) const;
 
 private:
     MonitoringCore *_mc;
@@ -71,8 +85,8 @@ private:
 
     void update(const contact *auth_user, HostState current_state,
                 bool has_been_checked,
-                ServiceListStateColumn::service_list services, bool handled,
-                int32_t &result) const;
+                const ServiceListStateColumn::value_type &services,
+                bool handled, int32_t &result) const;
 };
 
 #endif  // HostListStateColumn_h

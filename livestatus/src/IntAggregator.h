@@ -10,8 +10,10 @@
 
 #include <chrono>
 #include <functional>
+#include <utility>
 
 #include "Aggregator.h"
+#include "Column.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
@@ -20,9 +22,8 @@ class IntAggregator : public Aggregator {
     using function_type = std::function<int(Row, const contact *)>;
 
 public:
-    IntAggregator(const AggregationFactory &factory,
-                  const function_type &getValue)
-        : _aggregation{factory()}, _getValue{getValue} {}
+    IntAggregator(const AggregationFactory &factory, function_type getValue)
+        : _aggregation{factory()}, _getValue{std::move(getValue)} {}
 
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds /* timezone_offset*/) override {

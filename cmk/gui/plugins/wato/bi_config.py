@@ -989,9 +989,9 @@ class ModeBIEditRule(ABCBIMode):
         self.verify_pack_permission(self.bi_pack)
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars('rule')
-
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), 'rule')
-        new_bi_rule = BIRule(vs_rule_config)
+        schema_validated_config = BIRuleSchema().load(vs_rule_config)
+        new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
@@ -1231,6 +1231,10 @@ class ModeBIEditRule(ABCBIMode):
                 value[what] = value["properties"].pop(what)
             value["disabled"] = value["computation_options"].pop("disabled")
 
+            # Marshmallow cannot handle None, it saves {}
+            if value["state_messages"] == {}:
+                value["state_messages"] = None
+
             del value["properties"]
             del value["computation_options"]
             return value
@@ -1241,7 +1245,7 @@ class ModeBIEditRule(ABCBIMode):
                 value["properties"][what] = value.pop(what) or ""
 
             for what in ["state_messages"]:
-                value["properties"][what] = value.get(what, {})
+                value["properties"][what] = value.pop(what) or {}
 
             value["computation_options"] = {}
             value["computation_options"]["disabled"] = value.pop("disabled")

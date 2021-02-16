@@ -1,0 +1,12 @@
+Title: BI configuration: Fixed permanent exception when deselecting the "Display additional messages" checkbox
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1613465967
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+

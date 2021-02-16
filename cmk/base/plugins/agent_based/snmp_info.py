@@ -11,7 +11,6 @@ from .agent_based_api.v1.type_defs import (
     HostLabelGenerator,
     StringTable,
     InventoryResult,
-    SNMPDeviceTypes,
 )
 
 from .agent_based_api.v1 import (
@@ -25,6 +24,8 @@ from .agent_based_api.v1 import (
     State,
 )
 
+from .utils.device_types import SNMPDeviceType
+
 
 class SNMPInfo(NamedTuple):
     description: str
@@ -37,21 +38,19 @@ def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
     return SNMPInfo(*string_table[0][0])
 
 
-def is_fibrechannel_switch(description):
-    patterns = ["fc", "fibrechannel", "fibre channel"]
-    for pattern in patterns:
-        if pattern in description.lower():
-            return True
-    return False
+def is_fibrechannel_switch(description: str) -> bool:
+    # TODO: This is used by another plugin and must be moved to utils.
+    patterns = {"fc", "fibrechannel", "fibre channel"}
+    return any(p in description.lower() for p in patterns)
 
 
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:
-    for device_type in SNMPDeviceTypes:
-        if device_type in section.description.lower():
-            if device_type == "switch" and is_fibrechannel_switch(section.description):
+    for device_type in SNMPDeviceType:
+        if device_type.name in section.description.upper():
+            if device_type is SNMPDeviceType.SWITCH and is_fibrechannel_switch(section.description):
                 yield HostLabel("cmk/device_type", "fcswitch")
             else:
-                yield HostLabel("cmk/device_type", device_type)
+                yield HostLabel("cmk/device_type", device_type.name.lower())
             return
 
 

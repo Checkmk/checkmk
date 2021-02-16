@@ -819,8 +819,8 @@ class UpdateConfig:
                 continue
 
             if old_path.exists() and not new_path.exists():
-                self._logger.log(VERBOSE, "Rename discovered host labels file from '%s' to '%s'",
-                                 old_path, new_path)
+                self._logger.debug("Rename discovered host labels file from '%s' to '%s'", old_path,
+                                   new_path)
                 old_path.rename(new_path)
 
 

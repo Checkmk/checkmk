@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple, List
+from typing import List, Tuple
+
 import pytest  # type: ignore[import]
 
-import cmk.gui.config
 import cmk.utils.version
+
+import cmk.gui.config
 from cmk.gui.plugins.metrics import utils
 
 
@@ -149,8 +151,7 @@ def test_reverse_translation_metric_name(monkeypatch, canonical_name, perf_data_
 def test_get_graph_templates(load_plugins, metric_names, check_command, graph_ids):
     perfdata: List[Tuple] = [(n, 0, u'', None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    templates = utils.get_graph_templates(translated_metrics)
-    assert set(graph_ids) == set(t['id'] for t in templates)
+    assert set(graph_ids) == set(t['id'] for t in utils.get_graph_templates(translated_metrics))
 
 
 def test_replace_expression():

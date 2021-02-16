@@ -707,7 +707,15 @@ class SingleMetricFigure extends TimeseriesFigure {
     render_legend() {}
     render_grid() {}
     render_axis() {
-        if (this._subplots.filter(d => d.definition.plot_type == "area").length == 0) return;
+        const config = new URLSearchParams(this._post_body);
+        const toggle_range_display = JSON.parse(config.get("properties")).toggle_range_display;
+        if (
+            this._subplots.filter(d => d.definition.plot_type == "area").length == 0 ||
+            !toggle_range_display
+        ) {
+            this.g.selectAll("text.range").remove();
+            return;
+        }
 
         let render_function = this.get_scale_render_function();
         let domain = this._y_domain;

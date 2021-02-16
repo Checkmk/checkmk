@@ -1,6 +1,8 @@
+import {range} from "lodash";
 import * as d3 from "d3";
 import * as cmk_figures from "cmk_figures";
 import * as crossfilter from "crossfilter2";
+import {partitionableDomain, domainIntervals} from "number_format";
 
 // Used for rapid protoyping, bypassing webpack
 //var cmk_figures = cmk.figures; /*eslint-disable-line no-undef*/
@@ -114,7 +116,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             };
         this.figure_size = new_size;
         if (this._title) {
-            this.margin.top = 24; // 24 from UX project
+            this.margin.top = 24 + 8; // 24 from UX project title, 8 timeseries y-label margin
         }
         this.plot_size = {
             width: new_size.width - this.margin.left - this.margin.right,
@@ -219,7 +221,25 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             if (domains) all_domains.push(domains);
         });
         this._x_domain = [d3.min(all_domains, d => d.x[0]), d3.max(all_domains, d => d.x[1])];
-        this._y_domain = [d3.min(all_domains, d => d.y[0]), d3.max(all_domains, d => d.y[1] * 1.1)];
+
+        const y_tick_count = Math.max(2, Math.ceil(this.plot_size.height / 50));
+        const [min_val, max_val, step] = partitionableDomain(
+            [d3.min(all_domains, d => d.y[0]), d3.max(all_domains, d => d.y[1])],
+            y_tick_count,
+            domainIntervals(
+                cmk_figures.getIn(
+                    this,
+                    "_data",
+                    "plot_definitions",
+                    0,
+                    "metric",
+                    "unit",
+                    "stepping"
+                )
+            )
+        );
+        this._y_domain = [min_val, max_val];
+        this._y_domain_step = step;
         this.orig_scale_x.domain(this._x_domain);
         this.orig_scale_y.domain(this._y_domain);
     }
@@ -421,19 +441,20 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         );
         x.attr("transform", "translate(0," + this.plot_size.height + ")");
 
-        let render_function = this.get_scale_render_function();
         let y = this.g
             .selectAll("g.y_axis")
             .data([null])
             .join("g")
             .classed("y_axis", true)
             .classed("axis", true);
-        const y_tick_count = Math.min(Math.ceil(this.plot_size.height / 24), 6);
+
+        const tick_vals = range(this._y_domain[0], this._y_domain[1] + 1, this._y_domain_step);
+        let render_function = this.get_scale_render_function();
         this.transition(y).call(
             d3
                 .axisLeft(this.scale_y)
-                .tickFormat(d => render_function(d))
-                .ticks(y_tick_count)
+                .tickValues(tick_vals)
+                .tickFormat(d => render_function(d).replace(/\.0+\b/, ""))
         );
     }
 
@@ -449,12 +470,13 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .call(d3.axisBottom(this.scale_x).ticks(5).tickSize(-height).tickFormat(""));
 
         let width = this.plot_size.width;
+        const tick_vals = range(this._y_domain[0], this._y_domain[1] + 1, this._y_domain_step / 2);
         this.g
             .selectAll("g.grid.horizontal")
             .data([null])
             .join("g")
             .classed("grid horizontal", true)
-            .call(d3.axisLeft(this.scale_y).ticks(5).tickSize(-width).tickFormat(""));
+            .call(d3.axisLeft(this.scale_y).tickValues(tick_vals).tickSize(-width).tickFormat(""));
     }
 
     transition(selection) {

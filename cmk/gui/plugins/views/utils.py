@@ -1134,7 +1134,13 @@ def _get_singlecontext_html_vars_from_row(
         for filter_name in visuals.info_params(info_key):
             filter_object = visuals.get_filter(filter_name)
             # Get the list of URI vars to be set for that filter
-            url_vars.update(filter_object.request_vars_from_row(row))
+            try:
+                url_vars.update(filter_object.request_vars_from_row(row))
+            except KeyError:
+                # The information needed for a mandatory filter (single context) is not available.
+                # Continue without failing: The target site will show up a warning and ask for the
+                # missing information.
+                pass
 
     # See get_link_filter_names() comment for details
     for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
@@ -1185,7 +1191,13 @@ def get_linked_visual_request_vars(visual: Visual,
                                    singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
     vars_values: HTTPVariables = []
     for var in visuals.get_single_info_keys(visual["single_infos"]):
-        vars_values.append((var, singlecontext_request_vars[var]))
+        try:
+            vars_values.append((var, singlecontext_request_vars[var]))
+        except KeyError:
+            # The information needed for a mandatory filter (single context) is not available.
+            # Continue without failing: The target site will show up a warning and ask for the
+            # missing information.
+            pass
 
     if "site" in singlecontext_request_vars:
         vars_values.append(("site", singlecontext_request_vars["site"]))

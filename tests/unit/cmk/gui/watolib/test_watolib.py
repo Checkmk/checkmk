@@ -299,7 +299,7 @@ def test_registered_configvar_groups():
             u'Livestatus Proxy',
             u'Reporting',
             u'Monitoring Core',
-            u'Ntopng',
+            u'Ntopng (chargeable add-on)',
         ]
 
     registered = sorted(config_variable_group_registry.keys())

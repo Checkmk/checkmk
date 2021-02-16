@@ -324,6 +324,10 @@ class ABCEditGlobalSettingMode(WatoMode):
         value = self._current_settings.get(self._varname,
                                            self._global_settings.get(self._varname, defvalue))
 
+        hint = self._config_variable.hint()
+        if hint:
+            html.show_warning(hint)
+
         html.begin_form("value_editor", method="POST")
         title = self._valuespec.title()
         assert isinstance(title, str)

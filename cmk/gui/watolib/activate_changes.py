@@ -45,6 +45,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
+import cmk.utils.license_usage as license_usage
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -1777,7 +1778,19 @@ def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
         warnings = domain_class().activate()
         results[domain] = warnings or []
 
+    _add_extensions_for_license_usage()
+
     return results
+
+
+def _add_extensions_for_license_usage():
+    license_usage_dir = cmk.utils.paths.license_usage_dir
+    license_usage_dir.mkdir(parents=True, exist_ok=True)
+    extensions_filepath = license_usage_dir.joinpath("extensions.json")
+
+    with store.locked(extensions_filepath):
+        extensions = license_usage.LicenseUsageExtensions(ntop=config.is_ntop_configured(),)
+        store.save_bytes_to_file(extensions_filepath, extensions.serialize())
 
 
 def confirm_all_local_changes() -> None:

@@ -794,6 +794,16 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                 ],
             ),
             PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Dashboards"),
+                        entries=list(_dashboard_related_entries(name)),
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
                 name="add_dashlets",
                 title=_("Add"),
                 topics=list(_page_menu_topics(name, board, mode)),
@@ -888,6 +898,31 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
                 filename="edit_dashboard.py",
             )),
     )
+
+
+def _dashboard_related_entries(name):
+    linked_dashboards = ("main", "problems", "checkmk")
+    if name not in linked_dashboards:
+        return  # only the three main dashboards are related
+
+    dashboards = get_permitted_dashboards()
+    for entry_name in linked_dashboards:
+        if entry_name == name:
+            continue
+        dashboard = dashboards[entry_name]
+        yield PageMenuEntry(
+            # FIXME: get rid of the .replace(...) workaround once we have a main dashboard without context
+            title=dashboard['title'].replace("$SITE$", ""),
+            icon_name=dashboard['icon'],
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("name", entry_name)],
+                    filename="dashboard.py",
+                )),
+            is_shortcut=True,
+            is_suggested=False,
+        )
 
 
 def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,

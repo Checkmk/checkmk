@@ -417,7 +417,7 @@ def parse_grouping_config(
     options,
     subgroups_delimiter,
 ):
-    child_group_name, parent_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
+    parent_group_name, child_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
 
     for option in options:
         if option.startswith('grouping_'):

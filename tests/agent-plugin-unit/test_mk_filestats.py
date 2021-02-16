@@ -178,8 +178,8 @@ class TestConfigParsing:
     def config_options(self):
         return [
             ('banana', 'input_patterns', '/home/banana/*'),
-            ('penguin@banana', 'grouping_regex', '/home/banana/penguin*'),
-            ('camel@banana', 'grouping_regex', '/home/banana/camel'),
+            ('banana@penguin', 'grouping_regex', '/home/banana/penguin*'),
+            ('banana@camel', 'grouping_regex', '/home/banana/camel'),
             ('strawberry', 'input_patterns', '/var/log/*'),
         ]
 

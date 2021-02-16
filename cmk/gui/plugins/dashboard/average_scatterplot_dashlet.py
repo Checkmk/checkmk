@@ -72,13 +72,6 @@ class AverageScatterplotDataGenerator:
         return {
             "title": cls.figure_title(properties, context, settings, metric_name),
             "plot_definitions": [{
-                "plot_type": "scatterplot",
-                "id": "id_scatter",
-                "color": metric_color,
-                "label": _("%s by host") % metric_name,
-                "use_tags": ["scatter"],
-                "js_render": metric['unit'].get("js_render"),
-            }, {
                 "plot_type": "line",
                 "id": "id_mean",
                 "color": avg_color,
@@ -91,6 +84,13 @@ class AverageScatterplotDataGenerator:
                 "color": median_color,
                 "label": _("Median %s") % metric_name,
                 "use_tags": ["line_median"],
+                "js_render": metric['unit'].get("js_render"),
+            }, {
+                "plot_type": "scatterplot",
+                "id": "id_scatter",
+                "color": metric_color,
+                "label": _("%s by host") % metric_name,
+                "use_tags": ["scatter"],
                 "js_render": metric['unit'].get("js_render"),
             }],
             "data": elements

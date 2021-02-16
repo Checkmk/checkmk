@@ -85,9 +85,11 @@ private:
 
 class detail::StringColumn::Constant : public detail::StringColumn {
 public:
+    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
-             const std::string& x)
-        : detail::StringColumn{name, description, {}}, x_{x} {}
+             // cppcheck-suppress passedByValue
+             std::string x)
+        : detail::StringColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;
 
     [[nodiscard]] std::string getValue(Row /*row*/) const override {

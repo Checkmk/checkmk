@@ -58,7 +58,7 @@ def dummy_bi_rule():
 @pytest.fixture(scope="function")
 def bi_packs_sample_config():
     bi_packs = BIAggregationPacks("")
-    bi_packs.load_config_from_schema(sample_config.bi_packs_config)
+    bi_packs._load_config(sample_config.bi_packs_config)
     bi_packs.load_config = lambda: None
     bi_packs.save_config = lambda: None
     yield bi_packs

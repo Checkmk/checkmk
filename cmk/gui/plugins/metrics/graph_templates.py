@@ -13,7 +13,6 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
-    available_metrics_translated,
     evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
@@ -22,6 +21,7 @@ from cmk.gui.plugins.metrics.utils import (
     replace_expressions,
     split_expression,
     stack_resolver,
+    translated_metrics_from_row,
 )
 
 RPNAtom = _Tuple  # TODO: Improve this type
@@ -68,14 +68,6 @@ class GraphIdentificationTemplate(GraphIdentification):
 
 
 graph_identification_types.register(GraphIdentificationTemplate)
-
-
-def translated_metrics_from_row(row):
-    what = "service" if "service_check_command" in row else "host"
-    perf_data_string = row[what + "_perf_data"]
-    rrd_metrics = row[what + "_metrics"]
-    check_command = row[what + "_check_command"]
-    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
 def create_graph_recipe_from_template(graph_template, translated_metrics, row):

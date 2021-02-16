@@ -6,10 +6,10 @@ Date: 1613414150
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.1.0i1
+Version: 2.0.0b7
 
 Previously, the expiration mechanism for acknowledgements ignored the
-"persisten" flag, so the corresponding comments always vanished after
+"persistent" flag, so the corresponding comments always vanished after
 expiration.  Furthermore, the expiration of one acknowledgement didn't
 remove all other acknowledgements for the same host/service.
 

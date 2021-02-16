@@ -1090,3 +1090,10 @@ def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Bread
                                        PagetypeTopics.get_topic(board["topic"]))
     breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
     return breadcrumb
+
+
+def purge_metric_for_js(metric):
+    return {
+        "bounds": metric.get("scalar", {}),
+        "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
+    }

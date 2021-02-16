@@ -13,7 +13,7 @@ from cmk.utils.render import date_and_time
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
-from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string, service_table_query
+from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string, service_table_query, purge_metric_for_js
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol, metric_in_all_rrd_columns
 from cmk.gui.plugins.metrics.utils import get_metric_info, MetricName
 from cmk.gui.valuespec import DictionaryElements, GraphColor, Timerange
@@ -59,6 +59,8 @@ class AverageScatterplotDataGenerator:
         median_color = "#3CC2FF" if properties.get(
             "median_color", "default") == "default" else properties['median_color']
 
+        metric_js = purge_metric_for_js(metric)
+
         return {
             "title": cls.figure_title(properties, context, settings, metric_name),
             "plot_definitions": [{
@@ -67,21 +69,21 @@ class AverageScatterplotDataGenerator:
                 "color": avg_color,
                 "label": _("Mean %s") % metric_name,
                 "use_tags": ["line_mean"],
-                "js_render": metric['unit'].get("js_render"),
+                "metric": metric_js,
             }, {
                 "plot_type": "line",
                 "id": "id_median",
                 "color": median_color,
                 "label": _("Median %s") % metric_name,
                 "use_tags": ["line_median"],
-                "js_render": metric['unit'].get("js_render"),
+                "metric": metric_js,
             }, {
                 "plot_type": "scatterplot",
                 "id": "id_scatter",
                 "color": metric_color,
                 "label": _("%s by host") % metric_name,
                 "use_tags": ["scatter"],
-                "js_render": metric['unit'].get("js_render"),
+                "metric": metric_js,
             }],
             "data": elements
         }

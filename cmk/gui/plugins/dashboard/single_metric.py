@@ -12,6 +12,7 @@ from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     create_data_for_single_metric,
     render_title_with_macros_string,
+    purge_metric_for_js,
 )
 from cmk.gui.plugins.metrics.rrd_fetch import metric_in_all_rrd_columns
 from cmk.gui.plugins.metrics.utils import MetricName
@@ -105,12 +106,6 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
         if style == "metric":
             return metric_map(metric)
         return {}
-
-    def purge_metric_for_js(metric):
-        return {
-            "bounds": metric["scalar"],
-            "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
-        }
 
     # Historic values are always added as plot_type area
     if properties.get("time_range", "current")[0] == "range":

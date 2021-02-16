@@ -219,9 +219,15 @@ def _vs_elements(with_elements) -> DictionaryElements:
         choices = [fix_range] + ([auto_range] if "automatic_range" in with_elements else [])
 
         yield "display_range", CascadingDropdown(
-            title=_("Display range"),
+            title=_("Data range"),
             choices=choices,
             default_value="automatic" if "automatic_range" in with_elements else "fixed")
+
+        if "toggle_range_display" in with_elements:
+            yield "toggle_range_display", DropdownChoice(
+                title=_("Show range limits"),
+                choices=[(True, _("Show the limits of values displayed")),
+                         (False, _("Don't show information of limits"))])
 
     if "inner_state_display" in with_elements:
         yield "inner_state_display", DropdownChoice(
@@ -357,7 +363,8 @@ class SingleGraphDashlet(SingleMetricDashlet):
     @staticmethod
     def _vs_elements():
         return _vs_elements([
-            "time_range", "display_range", "automatic_range", "status_border", "inner_state_display"
+            "time_range", "display_range", "automatic_range", "toggle_range_display",
+            "status_border", "inner_state_display"
         ])
 
     @classmethod

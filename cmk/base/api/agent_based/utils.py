@@ -310,14 +310,17 @@ def check_levels(
 
     Example:
 
-        >>> result, = check_levels(
+        >>> result, metric = check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
+        ...     metric_name="temperature",
         ...     label="Fridge",
         ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
         Fridge: 23.0° (warn/crit at 12.0°/42.0°)
+        >>> print(metric)
+        Metric('temperature', 23.0, levels=(12.0, 42.0))
 
     """
     if render_func is None:
@@ -369,7 +372,7 @@ def check_levels_predictive(
         render_func = "{:.2f}".format
 
     # validate the metric name, before we can get the levels.
-    Metric.validate_name(metric_name)
+    _ = Metric(metric_name, value)
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(

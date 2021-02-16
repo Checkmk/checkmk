@@ -179,6 +179,7 @@ def _vs_elements(with_elements) -> DictionaryElements:
                     Dictionary(
                         optional_keys=False,
                         elements=_time_range_historic_dict_elements(with_elements),
+                        show_more_keys=['rrd_consolidation'],
                     ),
                 ),
             ],

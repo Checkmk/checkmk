@@ -136,7 +136,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
                 d3
                     .axisTop(this.scale_x)
                     .tickValues(tick_vals)
-                    .tickFormat(d => render_function(d))
+                    .tickFormat(d => render_function(d).replace(/\.0+\b/, ""))
             );
         this.render_grid(range(min_val, max_val, step / 2));
         return domain;

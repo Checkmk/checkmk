@@ -112,7 +112,7 @@ def bulk_create_hosts(params):
             f"Validated hosts were saved. The configurations for following hosts are faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.")
     hosts = [watolib.Host.host(entry['host_name']) for entry in entries]
-    return _host_collection(hosts)
+    return host_collection(hosts)
 
 
 @Endpoint(constructors.collection_href('host_config'),
@@ -121,11 +121,11 @@ def bulk_create_hosts(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_hosts(param):
     """Show all hosts"""
-    return _host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
+    return host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
 
 
-def _host_collection(hosts) -> Response:
-    host_collection = {
+def host_collection(hosts) -> Response:
+    _hosts = {
         'id': 'host',
         'domainType': 'host_config',
         'value': [
@@ -139,7 +139,7 @@ def _host_collection(hosts) -> Response:
         ],
         'links': [constructors.link_rel('self', constructors.collection_href('host_config'))],
     }
-    return constructors.serve_json(host_collection)
+    return constructors.serve_json(_hosts)
 
 
 @Endpoint(constructors.object_property_href('host_config', '{host_name}', 'nodes'),
@@ -234,7 +234,7 @@ def bulk_update_hosts(params):
 
         hosts.append(host)
 
-    return _host_collection(hosts)
+    return host_collection(hosts)
 
 
 @Endpoint(constructors.object_action_href('host_config', '{host_name}', action_name='rename'),

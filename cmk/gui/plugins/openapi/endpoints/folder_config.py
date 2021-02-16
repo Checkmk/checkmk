@@ -17,6 +17,7 @@ from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -54,6 +55,20 @@ def create(params):
     folder = parent_folder.create_subfolder(name, title, attributes)
 
     return _serve_folder(folder)
+
+
+@Endpoint(
+    constructors.domain_object_sub_collection_href('folder_config', '{folder}', 'hosts'),
+    '.../collection',
+    method='get',
+    path_params=[FOLDER_FIELD],
+    response_schema=response_schemas.DomainObjectCollection,
+)
+def hosts_of_folder(params):
+    """Show all hosts in a folder
+    """
+    folder = params['folder']
+    return host_collection(folder.hosts())
 
 
 @Endpoint(constructors.object_href('folder_config', '{folder}'),

@@ -91,7 +91,8 @@ TEST(CarrierTest, EstablishShutdown) {
     using namespace cma::carrier;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage,
+                            wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     cma::carrier::CoreCarrier cc;
@@ -150,7 +151,8 @@ TEST(CarrierTest, Mail) {
     using namespace cma::carrier;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallbackCarrier, 20, &S_Storage,
+                            wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     auto summary_output = cma::tools::ReadFileInVector(

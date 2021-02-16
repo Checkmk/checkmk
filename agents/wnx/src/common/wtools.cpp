@@ -2557,6 +2557,122 @@ std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
     return result;
 }
 
+namespace {
+ACL* CombineSidsIntoACl(SID* first_sid, size_t first_sub_count, SID* second_sid,
+                        size_t second_sub_count) {
+    // compute size of acl
+    auto acl_size = sizeof(ACL) +
+                    2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+                    GetSidLengthRequired(static_cast<UCHAR>(first_sub_count)) +
+                    GetSidLengthRequired(static_cast<UCHAR>(second_sub_count));
+
+    // create ACL
+    auto acl = static_cast<ACL*>(ProcessHeapAlloc(acl_size));
+
+    // init ACL
+    if (acl && InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) &&
+        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, first_sid) &&
+        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, second_sid))
+        return acl;
+    XLOG::l("Failed ACL creation");
+    ProcessHeapFree(acl);
+    return nullptr;
+}
+}  // namespace
+
+ACL* BuildSDAcl() {
+    SID_IDENTIFIER_AUTHORITY sia_world = SECURITY_WORLD_SID_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
+
+    char buf_everyone_sid[32];
+    char buf_creator_sid[32];
+
+    auto everyone_sid = reinterpret_cast<SID*>(buf_everyone_sid);
+    auto owner_sid = reinterpret_cast<SID*>(buf_creator_sid);
+
+    // initialize well known SID's
+    if (!InitializeSid(everyone_sid, &sia_world, 1) == FALSE ||
+        !InitializeSid(owner_sid, &sia_creator, 1) == FALSE)
+        return nullptr;
+
+    *GetSidSubAuthority(everyone_sid, 0) = SECURITY_WORLD_RID;
+    *GetSidSubAuthority(owner_sid, 0) = SECURITY_CREATOR_OWNER_RID;
+
+    return CombineSidsIntoACl(everyone_sid, 1, owner_sid, 1);
+}
+
+ACL* BuildAdminSDAcl() {
+    SID_IDENTIFIER_AUTHORITY sia_admin = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
+
+    char buf_admin_sid[32];
+    char buf_creator_sid[32];
+
+    auto sid_admin = reinterpret_cast<SID*>(buf_admin_sid);
+    auto sid_owner = reinterpret_cast<SID*>(buf_creator_sid);
+
+    // initialize well known SID's
+    if (InitializeSid(sid_admin, &sia_admin, 2) == FALSE ||
+        InitializeSid(sid_owner, &sia_creator, 1) == FALSE)
+        return nullptr;
+
+    *GetSidSubAuthority(sid_admin, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+    *GetSidSubAuthority(sid_admin, 1) = DOMAIN_ALIAS_RID_ADMINS;
+
+    *GetSidSubAuthority(sid_owner, 0) = SECURITY_CREATOR_OWNER_RID;
+
+    return CombineSidsIntoACl(sid_admin, 2, sid_owner, 1);
+}
+
+SecurityAttributeKeeper::SecurityAttributeKeeper(SecurityLevel sl) {
+    if (!allocAll(sl)) {
+        cleanupAll();
+    }
+}
+
+SecurityAttributeKeeper::~SecurityAttributeKeeper() {
+    cleanupAll();  //
+}
+
+bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
+    // this trash is referenced in the Security
+    // Descriptor, we should keep it safe
+    switch (sl) {
+        case SecurityLevel::standard:
+            acl_ = BuildAdminSDAcl();
+            break;
+        case SecurityLevel::admin:
+            acl_ = BuildAdminSDAcl();
+            break;
+    }
+
+    sd_ = static_cast<SECURITY_DESCRIPTOR*>(
+        ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
+    sa_ = static_cast<SECURITY_ATTRIBUTES*>(
+        ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
+
+    if (acl_ != nullptr && sd_ != nullptr &&
+        sa_ != nullptr &&  // <--- alloc check
+        ::InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) ==
+            TRUE &&
+        ::SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE) == TRUE) {
+        sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_->lpSecurityDescriptor = sd_;
+        sa_->bInheritHandle = FALSE;
+        return true;
+    }
+    return false;
+}
+
+void SecurityAttributeKeeper::cleanupAll() {
+    ProcessHeapFree(acl_);
+    ProcessHeapFree(sd_);
+    ProcessHeapFree(sa_);
+    acl_ = nullptr;
+    sd_ = nullptr;
+    sa_ = nullptr;
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

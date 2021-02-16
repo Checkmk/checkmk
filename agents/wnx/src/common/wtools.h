@@ -7,7 +7,7 @@
 #ifndef wtools_h__
 #define wtools_h__
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
 #include <comdef.h>
 
 #include "windows.h"
@@ -34,6 +34,61 @@
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
+
+inline void* ProcessHeapAlloc(size_t size) {
+    return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+
+inline void ProcessHeapFree(void* data) {
+    if (data != nullptr) {
+        ::HeapFree(::GetProcessHeap(), 0, data);
+    }
+}
+
+enum class SecurityLevel { standard, admin };
+
+// RAII class to keep MS Windows Security Descriptor temporary
+class SecurityAttributeKeeper {
+public:
+    SecurityAttributeKeeper(SecurityLevel sl);
+    ~SecurityAttributeKeeper();
+
+    const SECURITY_ATTRIBUTES* get() const { return sa_; }
+    SECURITY_ATTRIBUTES* get() { return sa_; }
+
+private:
+    bool allocAll(SecurityLevel sl);
+    void cleanupAll();
+    // below are allocated using ProcessHeapAlloc values
+    SECURITY_DESCRIPTOR* sd_{nullptr};
+    SECURITY_ATTRIBUTES* sa_{nullptr};
+    ACL* acl_{nullptr};
+};
+
+// this is functor to kill any pointer allocated with ::LocalAlloc
+// usually this pointer comes from Windows API
+template <typename T>
+struct LocalAllocDeleter {
+    void operator()(T* r) noexcept {
+        if (r != nullptr) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+    }
+};
+
+// usage
+#if (0)
+LocalResource<SERVICE_FAILURE_ACTIONS> actions(
+    ::WindowsApiToGetActions(handle_to_service));
+#endif
+//
+template <typename T>
+using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+
+// returns <exit_code, 0>, <0, error> or <-1, error>
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
+[[nodiscard]] std::wstring GetProcessPath(uint32_t pid) noexcept;
+
+[[nodiscard]] int KillProcessesByDir(const std::filesystem::path& dir) noexcept;
 
 uint32_t GetParentPid(uint32_t pid);
 

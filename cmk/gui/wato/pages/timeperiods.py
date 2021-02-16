@@ -627,7 +627,9 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             clone_name = html.request.var("clone")
-            if clone_name:
+            if html.request.var("mode") == "import_ical":
+                self._timeperiod = {}
+            elif clone_name:
                 self._name = clone_name
 
                 self._timeperiod = self._get_timeperiod(self._name)

@@ -134,12 +134,9 @@ def get_general_version_infos() -> Dict[str, Any]:
 
 
 def _get_os_info() -> str:
-    if os.environ.get("OMD_ROOT"):
-        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
-        if os.path.exists(disto_info):
-            return open(disto_info).readline().split("=", 1)[1].strip()
     if os.path.exists("/etc/redhat-release"):
         return open("/etc/redhat-release").readline().strip()
+
     if os.path.exists("/etc/SuSE-release"):
         return open("/etc/SuSE-release").readline().strip()
 
@@ -154,8 +151,15 @@ def _get_os_info() -> str:
 
     if "PRETTY_NAME" in info:
         return info["PRETTY_NAME"]
+
     if info:
         return "%s" % info
+
+    if os.environ.get("OMD_ROOT"):
+        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        if os.path.exists(disto_info):
+            return open(disto_info).readline().split("=", 1)[1].strip()
+
     return "UNKNOWN"
 
 

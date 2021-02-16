@@ -1766,7 +1766,7 @@ class PagetypeTopics(Overridable):
     def builtin_pages(cls):
         return {
             "my_workplace": {
-                "title": _("My workplace"),
+                "title": _("Workplace"),
                 "icon_name": "topic_my_workplace",
                 "description": "",
                 "sort_index": 10,

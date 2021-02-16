@@ -10,11 +10,14 @@ import random
 import re
 import shlex
 from collections import OrderedDict
+from itertools import chain
 from typing import (
     Any,
     AnyStr,
     Callable,
+    Container,
     Dict,
+    Iterable,
     Iterator,
     List,
     Mapping,
@@ -55,13 +58,14 @@ TranslatedMetrics = Dict[str, Dict[str, Any]]
 Atom = TypeVar('Atom')
 TransformedAtom = TypeVar('TransformedAtom')
 StackElement = Union[Atom, TransformedAtom]
+GraphTemplate = Dict[str, Any]
 
 
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
     def __init__(self, list_identifier=None, start_index=None):
-        OrderedDict.__init__(self)
+        super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
@@ -77,7 +81,7 @@ check_metrics: Dict[str, Dict[str, Any]] = {}
 perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info = AutomaticDict("manual_graph_template")
+graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")
 
 scalar_colors = {
     "warn": "#ffff00",
@@ -390,8 +394,11 @@ def perf_data_string_from_metric_names(metric_names):
     return " ".join(parts)
 
 
-def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_MetricName],
-                                 check_command: str) -> Dict:
+def available_metrics_translated(
+    perf_data_string: str,
+    rrd_metrics: List[_MetricName],
+    check_command: str,
+) -> TranslatedMetrics:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
         return {}
@@ -415,7 +422,7 @@ def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_Metri
     return translate_metrics(perf_data, check_command)
 
 
-def translated_metrics_from_row(row: Row) -> Mapping:
+def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
     what = "service" if "service_check_command" in row else "host"
     perf_data_string = row[what + "_perf_data"]
     rrd_metrics = row[what + "_metrics"]
@@ -654,7 +661,7 @@ def get_graph_template(template_id):
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def generic_graph_template(metric_name):
+def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
         "metrics": [(metric_name, "area"),],
@@ -665,38 +672,40 @@ def generic_graph_template(metric_name):
     }
 
 
-def get_graph_templates(translated_metrics):
+def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
     if not translated_metrics:
-        return []
+        yield from ()
+        return
 
     explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
-    already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = list(
-        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
-    return explicit_templates + implicit_templates
+    yield from explicit_templates
+    yield from _get_implicit_graph_templates(
+        translated_metrics,
+        _get_graphed_metrics(explicit_templates),
+    )
 
 
-def _get_explicit_graph_templates(translated_metrics):
+def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
         template = graph_template_for_metrics(graph_template, translated_metrics)
         if template:
             yield template
 
 
-def _get_graphed_metrics(graph_templates: List) -> Set:
-    graphed_metrics: Set = set()
-    for graph_template in graph_templates:
-        graphed_metrics.update(_metrics_used_by_graph(graph_template))
-    return graphed_metrics
+def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> Set[str]:
+    return set(chain.from_iterable(map(_metrics_used_by_graph, graph_templates)))
 
 
-def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
+def _get_implicit_graph_templates(
+    translated_metrics: TranslatedMetrics,
+    already_graphed_metrics: Container[str],
+) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
             yield generic_graph_template(metric_name)
 
 
-def _metrics_used_by_graph(graph_template: Any) -> Iterator:
+def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
     for metric_definition in graph_template["metrics"]:
         yield from metrics_used_in_expression(metric_definition[0])
 
@@ -714,7 +723,10 @@ def drop_metric_consolidation_advice(expression: str) -> str:
     return expression
 
 
-def graph_template_for_metrics(graph_template, translated_metrics):
+def graph_template_for_metrics(
+    graph_template: GraphTemplate,
+    translated_metrics: TranslatedMetrics,
+) -> GraphTemplate:
     # Skip early on conflicting_metrics
     for var in graph_template.get("conflicting_metrics", []):
         if var in translated_metrics:

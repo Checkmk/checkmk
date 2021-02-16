@@ -51,12 +51,11 @@ class GraphIdentificationTemplate(GraphIdentification):
         row = get_graph_data_from_livestatus(site, host_name, service_description)
 
         translated_metrics = translated_metrics_from_row(row)
-        graph_templates = get_graph_templates(translated_metrics)
         site = row["site"]
 
         graph_recipes = []
-        for index, graph_template in enumerate(graph_templates):
-            if graph_index is None or index == graph_index and graph_template is not None:
+        for index, graph_template in enumerate(get_graph_templates(translated_metrics)):
+            if graph_index is None or index == graph_index:
                 graph_recipe = create_graph_recipe_from_template(graph_template, translated_metrics,
                                                                  row)
                 # Put the specification of this graph into the graph_recipe

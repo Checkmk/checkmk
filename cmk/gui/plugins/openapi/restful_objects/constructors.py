@@ -232,19 +232,16 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     Returns:
 
     """
-    def _action(_name):
-        return '/actions/%s' % (_name,)
-
-    def _invoke(_name):
-        return _action(_name) + '/invoke'
 
     return {
         'id': name,
         'memberType': "action",
         'links': [
             link_rel('up', base),
-            link_rel('.../details', base + _action(name), parameters={'action': name}),
-            link_rel('.../invoke', base + _invoke(name), method='post',
+            link_rel('.../details', base + f'/actions/{name}', parameters={'action': name}),
+            link_rel('.../invoke',
+                     base + f'/actions/{name}/invoke',
+                     method='post',
                      parameters={'action': name}),
         ],
         'parameters': parameters,

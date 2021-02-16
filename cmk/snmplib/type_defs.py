@@ -82,17 +82,6 @@ SNMPDetectAtom = Tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 AbstractRawData = Union[_AgentRawData, SNMPRawData]
 TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
-SNMPDeviceTypes = [
-    "appliance",
-    "firewall",
-    "printer",
-    "router",
-    "sensor",
-    "switch",
-    "ups",
-    "wlc",
-]
-
 
 class SNMPBackendEnum(enum.Enum):
     INLINE = "Inline"

@@ -89,7 +89,6 @@ def test_v1_type_defs():
             'DiscoveryResult',
             'HostLabelGenerator',
             'InventoryResult',
-            'SNMPDeviceTypes',
             'StringByteTable',
             'StringTable',
     ]:

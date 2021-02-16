@@ -259,6 +259,7 @@ class Endpoint:
 
         if self.method in ("put", "post"):
             self._expected_status_codes.append(400)  # bad request
+            self._expected_status_codes.append(415)  # unsupported media type
 
         if self.path_params:
             self._expected_status_codes.append(404)  # not found
@@ -389,6 +390,13 @@ class Endpoint:
                     ext={'fields': messages},
                 )
 
+            if (self.method in ("post", "put") and request.get_data(cache=True) and
+                    request.content_type != self.content_type):
+                return problem(
+                    status=415,
+                    title=f"Content type {request.content_type!r} not supported on this endpoint.",
+                )
+
             try:
                 if path_schema:
                     param.update(path_schema().load(param))
@@ -403,8 +411,12 @@ class Endpoint:
                     param.update(header_schema().load(request.headers))
 
                 if request_schema:
-                    body = request_schema().load(request.json or {})
-                    param['body'] = body
+                    # Try to decode only when there is data. Decoding an empty string will fail.
+                    if request.get_data(cache=True):
+                        json = request.json or {}
+                    else:
+                        json = {}
+                    param['body'] = request_schema().load(json)
             except ValidationError as exc:
                 return _problem(exc, status_code=400)
 
@@ -504,6 +516,9 @@ class Endpoint:
                 409,
                 'The request is in conflict with the stored resource',
             )
+
+        if 415 in self._expected_status_codes:
+            responses['415'] = self._path_item(415, 'The submitted content-type is not supported.')
 
         if 302 in self._expected_status_codes:
             responses['302'] = self._path_item(

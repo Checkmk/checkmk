@@ -459,12 +459,12 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         )
 
         if site_states["disabled"]:
-            self._create_status_box(site_states["disabled"], "tacticalinfo", "disabled")
+            self._create_status_box(site_states["disabled"], "tacticalinfo", _("disabled"))
 
         if not site_states["error"]:
             return
 
-        self._create_status_box(site_states["error"], "tacticalalert", "disconnected")
+        self._create_status_box(site_states["error"], "tacticalalert", _("disconnected"))
 
     def _create_status_box(
         self,

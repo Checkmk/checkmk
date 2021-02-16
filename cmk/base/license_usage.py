@@ -7,7 +7,6 @@
 import logging
 import random
 import time
-from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, NamedTuple, Tuple
 
@@ -18,15 +17,17 @@ import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.license_usage import (
     LicenseUsageSample,
+    LicenseUsageExtensions,
     LicenseUsageHistoryDump,
     rot47,
 )
 
 logger = logging.getLogger("cmk.base.license_usage")
 
-license_usage_dir = Path(cmk.utils.paths.var_dir, "license_usage")
+license_usage_dir = cmk.utils.paths.license_usage_dir
 next_run_filepath = license_usage_dir.joinpath("next_run")
 history_filepath = license_usage_dir.joinpath("history.json")
+extensions_filepath = license_usage_dir.joinpath("extensions.json")
 
 _last_update_try_ts = 0.0
 
@@ -117,7 +118,17 @@ def _create_sample() -> Optional[LicenseUsageSample]:
         num_services_excluded=services_counter.excluded,
         sample_time=int(time.time()),
         timezone=time.localtime().tm_zone,
+        extensions=_get_extensions(),
     )
+
+
+def _get_extensions():
+    with store.locked(extensions_filepath):
+        raw_extensions = store.load_bytes_from_file(
+            extensions_filepath,
+            default=b'{}',
+        )
+    return LicenseUsageExtensions.deserialize(raw_extensions)
 
 
 EntityCounter = NamedTuple("EntityCounter", [

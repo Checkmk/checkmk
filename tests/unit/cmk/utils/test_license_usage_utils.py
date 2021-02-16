@@ -31,6 +31,7 @@ import cmk.utils.license_usage as license_usage
          num_hosts_excluded=0,
          num_services=4,
          num_services_excluded=0,
+         extensions=license_usage.LicenseUsageExtensions(ntop=False,),
      )),
     ("1.1", {
         "version": "",
@@ -55,6 +56,35 @@ import cmk.utils.license_usage as license_usage
          num_hosts_excluded=3,
          num_services=4,
          num_services_excluded=5,
+         extensions=license_usage.LicenseUsageExtensions(ntop=False,),
+     )),
+    ("1.1", {
+        "version": "",
+        "edition": "",
+        "platform": "",
+        "is_cma": False,
+        "sample_time": 1,
+        "timezone": "",
+        "num_hosts": 2,
+        "num_hosts_excluded": 3,
+        "num_services": 4,
+        "num_services_excluded": 5,
+        "extensions": {
+            "ntop": True,
+        },
+    },
+     license_usage.LicenseUsageSample(
+         version="",
+         edition="",
+         platform="",
+         is_cma=False,
+         sample_time=1,
+         timezone="",
+         num_hosts=2,
+         num_hosts_excluded=3,
+         num_services=4,
+         num_services_excluded=5,
+         extensions=license_usage.LicenseUsageExtensions(ntop=True,),
      )),
 ])
 def test__migrate_sample(prev_dump_version, sample, result):

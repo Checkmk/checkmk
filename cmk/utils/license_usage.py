@@ -5,10 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Dict
+from typing import List, Dict, Any
 from dataclasses import dataclass, asdict
 
 LicenseUsageHistoryDumpVersion = "1.1"
+
+
+@dataclass
+class LicenseUsageExtensions:
+    ntop: bool
+
+    def serialize(self) -> bytes:
+        return _serialize(self)
+
+    @classmethod
+    def deserialize(cls, raw_extensions: bytes) -> 'LicenseUsageExtensions':
+        extensions = _migrate_extensions(_deserialize(raw_extensions))
+        return cls(**extensions)
 
 
 @dataclass
@@ -23,6 +36,7 @@ class LicenseUsageSample:
     num_hosts_excluded: int
     num_services: int
     num_services_excluded: int
+    extensions: LicenseUsageExtensions
 
 
 @dataclass
@@ -34,18 +48,11 @@ class LicenseUsageHistoryDump:
         self.history = ([sample] + self.history)[:400]
 
     def serialize(self) -> bytes:
-        history_dump_str = json.dumps(asdict(self))
-        return rot47(history_dump_str).encode("utf-8")
+        return _serialize(self)
 
     @classmethod
     def deserialize(cls, raw_history_dump: bytes) -> 'LicenseUsageHistoryDump':
-        history_dump_str = rot47(raw_history_dump.decode("utf-8"))
-
-        try:
-            history_dump = json.loads(history_dump_str)
-        except json.decoder.JSONDecodeError:
-            history_dump = {}
-
+        history_dump = _deserialize(raw_history_dump)
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
             history=[
@@ -55,11 +62,35 @@ class LicenseUsageHistoryDump:
         )
 
 
+def _serialize(dump: Any) -> bytes:
+    dump_str = json.dumps(asdict(dump))
+    return rot47(dump_str).encode("utf-8")
+
+
+def _deserialize(raw_dump: bytes) -> Dict:
+    dump_str = rot47(raw_dump.decode("utf-8"))
+
+    try:
+        return json.loads(dump_str)
+    except json.decoder.JSONDecodeError:
+        return {}
+
+
 def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
     if prev_dump_version == "1.0":
         sample.setdefault("num_hosts_excluded", 0)
         sample.setdefault("num_services_excluded", 0)
+
+    migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
+    sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)
     return LicenseUsageSample(**sample)
+
+
+def _migrate_extensions(extensions: Dict) -> Dict:
+    # May be missing independent of dump version:
+    # It's only after execute_activate_changes created the extensions dump then it's available.
+    extensions.setdefault("ntop", False)
+    return extensions
 
 
 def rot47(input_str: str) -> str:

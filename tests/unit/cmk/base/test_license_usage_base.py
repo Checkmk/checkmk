@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 import cmk.utils.store as store
 from cmk.utils.license_usage import (
     LicenseUsageSample,
+    LicenseUsageExtensions,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
 )
@@ -27,6 +28,7 @@ _license_usage_sample_example = LicenseUsageSample(
     num_hosts_excluded=0,
     num_services=1000,
     num_services_excluded=0,
+    extensions=LicenseUsageExtensions(ntop=False,),
 )
 
 
@@ -54,6 +56,7 @@ def test_update_history_de_serialize(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=500,
                 num_services_excluded=0,
+                extensions=LicenseUsageExtensions(ntop=False,),
             )
         ],
     )
@@ -82,6 +85,7 @@ def test_update_history_de_serialize(monkeypatch):
         assert sample.timezone == ""
         assert sample.num_hosts == num_hosts
         assert sample.num_services == num_services
+        assert sample.extensions.ntop is False
 
 
 def test_update_history__create_or_update_history_dump_empty(monkeypatch):
@@ -105,6 +109,7 @@ def test_update_history__create_or_update_history_dump_empty(monkeypatch):
     assert sample.timezone == ""
     assert sample.num_hosts == 100
     assert sample.num_services == 1000
+    assert sample.extensions.ntop is False
 
 
 def test_update_history__create_or_update_history_dump(monkeypatch):
@@ -122,6 +127,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=30,
                 num_services_excluded=0,
+                extensions=LicenseUsageExtensions(ntop=False,),
             ),
             LicenseUsageSample(
                 version="",
@@ -134,6 +140,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=20,
                 num_services_excluded=0,
+                extensions=LicenseUsageExtensions(ntop=False,),
             ),
             LicenseUsageSample(
                 version="",
@@ -146,6 +153,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=10,
                 num_services_excluded=0,
+                extensions=LicenseUsageExtensions(ntop=False,),
             ),
         ],
     ).serialize()
@@ -174,6 +182,7 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
         assert sample.timezone == ""
         assert sample.num_hosts == num_hosts
         assert sample.num_services == num_services
+        assert sample.extensions.ntop is False
 
 
 def test_update_history__may_update_successful(monkeypatch):
@@ -240,6 +249,12 @@ def test__create_sample(monkeypatch, num_hosts, num_hosts_excluded, num_services
         license_usage,
         "_get_stats_from_livestatus",
         _mock_livestatus,
+    )
+
+    monkeypatch.setattr(
+        license_usage,
+        "_get_extensions",
+        lambda: LicenseUsageExtensions(ntop=False),
     )
 
     sample = license_usage._create_sample()

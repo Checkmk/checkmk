@@ -40,6 +40,7 @@ pathlib_paths = [
     "local_agent_based_plugins_dir",
     "diagnostics_dir",
     "site_config_dir",
+    "license_usage_dir",
 ]
 
 

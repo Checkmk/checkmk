@@ -516,13 +516,14 @@ export function make_levels(domain, bounds) {
     if (bounds.warn <= dmin) dmin = bounds.warn;
 
     return [
-        {from: bounds.crit, to: dmax, color: "#FF3232"},
+        {from: bounds.crit, to: dmax, color: "#FF3232", style: "metricstate state2"},
         {
             from: bounds.warn,
             to: bounds.crit,
             color: "#FFFE44",
+            style: "metricstate state1",
         },
-        {from: dmin, to: bounds.warn, color: "#13D389"},
+        {from: dmin, to: bounds.warn, color: "#13D389", style: "metricstate state0"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -704,14 +705,16 @@ export function renderable_value(value, domain, plot) {
     const levels = make_levels(domain, plot.metric.bounds);
     const formatter = plot_render_function(plot);
 
-    const color = levels.length
-        ? levels.find(element => clamp(value.value, domain) >= element.from).color
-        : "#3CC2FF";
+    let style = {color: "#3CC2FF", style: ""};
+    if (levels.length) {
+        let state = levels.find(element => clamp(value.value, domain) >= element.from);
+        style = {color: state.color, style: state.style};
+    }
 
     return {
         ...split_unit(formatter(value.value)),
         url: value.url || "",
-        color: color,
+        ...style,
     };
 }
 

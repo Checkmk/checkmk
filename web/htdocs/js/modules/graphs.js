@@ -468,28 +468,6 @@ function render_graph(graph) {
         ctx.restore();
     }
 
-    // Paint axes and a strong line at 0, if that is in the range
-    if (graph.render_options.show_vertical_axis)
-        paint_line(
-            [t_orig, v_orig + axis_over_width],
-            [t_orig, top_border],
-            graph.render_options.foreground_color
-        );
-
-    if (graph.render_options.show_time_axis)
-        paint_line(
-            [t_orig - axis_over_width, v_orig],
-            [width, v_orig],
-            graph.render_options.foreground_color
-        );
-
-    if (v_range_from <= 0 && v_range_to >= 0)
-        paint_line(
-            trans(graph["start_time"], 0),
-            trans(graph["end_time"], 0),
-            graph.render_options.foreground_color
-        );
-
     // Paint horizontal rules like warn and crit
     ctx.save();
     ctx.lineWidth = rule_line_width;

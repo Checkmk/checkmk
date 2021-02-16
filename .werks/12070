@@ -1,0 +1,17 @@
+Title: Fix creation of timeperiod copy
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613476666
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+If an existing timeperiod was cloned via "Create a copy", the values of the
+existing, copied timeperiod were changed. No new timeperiod was created.
+
+Creating a copy will now create a clone of the chosen timeperiod.
+Furthermore, if you create a new timeperiod, the "Internal ID" will be
+pre-filled.

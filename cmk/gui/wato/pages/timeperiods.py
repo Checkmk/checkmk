@@ -19,6 +19,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -807,12 +808,13 @@ class ModeEditTimeperiod(WatoMode):
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
 
-        if self._name is None:
+        if self._new:
             self._name = vs_spec["name"]
             watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
         else:
             watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
+        assert self._name is not None
         self._timeperiods[self._name] = self._timeperiod
         watolib.timeperiods.save_timeperiods(self._timeperiods)
         return redirect(mode_url("timeperiods"))
@@ -849,7 +851,8 @@ class ModeEditTimeperiod(WatoMode):
                 exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
-            "name": self._name,
+            "name": unique_default_name_suggestion(self._name or "time_period",
+                                                   list(self._timeperiods.keys())),
             "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),

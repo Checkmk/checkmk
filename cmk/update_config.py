@@ -11,7 +11,7 @@ be called manually.
 """
 
 import re
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import errno
 from typing import List, Tuple, Any, Dict, Set, Optional
 import argparse
@@ -90,6 +90,8 @@ REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
 REMOVED_WATO_RULESETS_MAP = {
     "non_inline_snmp_hosts": "snmp_backend_hosts",
 }
+
+_MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 
 class UpdateConfig:
@@ -313,6 +315,7 @@ class UpdateConfig:
         self._transform_replaced_wato_rulesets(all_rulesets)
         self._transform_wato_rulesets_params(all_rulesets)
         self._transform_discovery_disabled_services(all_rulesets)
+        self._validate_regexes_in_item_specs(all_rulesets)
         all_rulesets.save()
 
     def _transform_ignored_checks_to_maincheckified_list(self, all_rulesets):
@@ -436,6 +439,36 @@ class UpdateConfig:
                 for s in rule.conditions.service_description
                 if "$regex" in s
             ]
+
+    def _validate_regexes_in_item_specs(self, all_rulesets):
+        num_errors = 0
+        for ruleset in all_rulesets.get_rulesets().values():
+            for folder, index, rule in ruleset.get_rules():
+                if not rule.get_rule_conditions().service_description:
+                    continue
+                for item in rule.get_rule_conditions().service_description:
+                    regex = item.get('$regex')
+                    if regex is None:
+                        continue
+                    try:
+                        re.compile(regex)
+                    except re.error as e:
+                        self._logger.error(
+                            "ERROR: Invalid regular expression in service condition detected: (Ruleset: %s, Folder: %s, "
+                            "Rule nr: %s, Condition: %s, Exception: %s)", ruleset.name,
+                            folder.path(), index, regex, e)
+                        num_errors += 1
+                        continue
+                    if PureWindowsPath(regex) and _MATCH_SINGLE_BACKSLASH.search(regex):
+                        self._logger.warn(
+                            "WARN: Service condition in rule looks like a windows path that is not correctly escaped."
+                            " Use double backslash as directory separator in regex expressions, e.g."
+                            " 'C:\\\\Program Files\\\\'"
+                            " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)", ruleset.name,
+                            folder.path(), index, regex)
+
+        if num_errors:
+            raise MKGeneralException("Detected %d errors in service conditions" % num_errors)
 
     def _initialize_gui_environment(self):
         self._logger.log(VERBOSE, "Loading GUI plugins...")

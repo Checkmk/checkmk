@@ -1,0 +1,24 @@
+Title: Validate item spec regexes during config update
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1613465646
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+Unfortunately Python 2 allowed to enter invalid regexes into the service condition of check parameter rules.
+In Python 3 these values will lead to a crash when evaluating the service condition.
+E.g. a service condition like "C:\Users\" leads to the error message "re.error: incomplete escape \U at position 2".
+
+Therefore the Checkmk update procedure (cmk-update-config) validates the regular expressions in service conditions of
+check parameter rules and logs "ERROR: Invalid regular expression in service condition detected" if the regex cannot
+be evaluated at all or logs "WARN: Service condition in rule looks like a windows path that is not correctly escaped."
+if the regex seems to be a windows path that contains a single backslash instead of two backslashes.
+If you encounter these errors or warnings your configuration probably contains rules that needs to be corrected.
+Previous Checkmk versions were not complaining about those rules but they were not able to match.
+You should change these rules according to https://docs.checkmk.com/latest/en/regexes.html prior to the update
+of your production site.
+E.g. you should change windows paths like "C:\Users\" to "C:\\Users\\" with double backslashes.

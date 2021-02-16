@@ -102,32 +102,40 @@ class BIStructureFetcher:
     def _fetch_missing_data(self, missing_program_starts) -> None:
         only_sites = {kv[0]: kv[1] for kv in missing_program_starts}
 
-        query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(self._structure_columns())
-        rows = self._sites_callback.query(query, list(only_sites.keys()))
+        # Start two queries: GET hosts / GET services
+        # Most of the columns are available via the hosts table
+        # Querying the service tables provides additional info like service_tags/service_labels
+        # If something happens (reload config) between the host and service query, we simply ignore it
+        host_query = "GET hosts\nColumns: %s\nCache: reload\n" % " ".join(
+            self._host_structure_columns())
+        host_rows = self._sites_callback.query(host_query, list(only_sites.keys()))
+
+        service_query = "GET services\nColumns: %s\nCache: reload\n" % " ".join(
+            self._service_structure_columns())
+        host_service_lookup: Dict[HostName, List] = {}
+        for row in self._sites_callback.query(service_query, list(only_sites.keys())):
+            host_service_lookup.setdefault(row[1], []).append(row[2:])
 
         site_data: Dict[str, Dict] = {}
-        headers = ["site"] + self._structure_columns()
+        for site, host_name, host_tags, host_labels, host_childs, host_parents, host_alias, host_filename in host_rows:
+            services = {
+                description: (set(tags), labels)
+                for description, tags, labels in host_service_lookup.get(host_name, [])
+            }
 
-        # TODO: rework in a later commit, fetches way too much redundant data
-        for row in rows[1:]:
-            drow = dict(zip(headers, row))
-            this_site = site_data.setdefault(drow["site"], {})
-
-            if drow["host_name"] not in this_site:
-                this_site[drow["host_name"]] = (
-                    drow["site"],
-                    set(drow["host_tags"].values()),
-                    drow["host_labels"],
-                    drow["host_filename"].rstrip("/hosts.mk"),
-                    {},
-                    tuple(drow["host_childs"]),
-                    tuple(drow["host_parents"]),
-                    drow["host_alias"],
-                    drow["host_name"],
-                )
-
-            this_host = this_site[drow["host_name"]]
-            this_host[4][drow["description"]] = (set(drow["tags"].values()), drow["labels"])
+            # This data will be serialized to disc
+            # Named tuples/dicts will be used later on when the data gets processed
+            site_data.setdefault(site, {})[host_name] = (
+                site,
+                set(host_tags.values()),
+                host_labels,
+                host_filename.rstrip("/hosts.mk"),
+                services,
+                tuple(host_childs),
+                tuple(host_parents),
+                host_alias,
+                host_name,
+            )
 
         for site_id, hosts in site_data.items():
             self.add_site_data(site_id, hosts)
@@ -151,11 +159,15 @@ class BIStructureFetcher:
             self.add_site_data(site_id, site_data)
 
     @classmethod
-    def _structure_columns(cls) -> List[str]:
+    def _host_structure_columns(cls) -> List[str]:
         return [
             "host_name", "host_tags", "host_labels", "host_childs", "host_parents", "host_alias",
-            "description", "tags", "host_filename", "labels"
+            "host_filename"
         ]
+
+    @classmethod
+    def _service_structure_columns(cls) -> List[str]:
+        return ["host_name", "description", "tags", "labels"]
 
     def _site_data_filename(self, site_id, timestamp) -> str:
         return "%s.%s.%d" % (self._site_cache_prefix, site_id, timestamp)

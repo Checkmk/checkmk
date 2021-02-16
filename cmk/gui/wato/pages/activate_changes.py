@@ -253,8 +253,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.div("", id_="row_info")
             html.close_h3()
             self._change_table()
-        html.hidden_field("selection_id", weblib.selection_id())
-        init_rowselect(self.name())
 
     def _activation_msg(self):
         html.open_div(id_="async_progress_msg")
@@ -313,8 +311,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       "a permitted user to do it for you."))
 
         forms.end()
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _change_table(self):
         with table_element("changes",

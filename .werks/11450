@@ -1,0 +1,13 @@
+Title: BI compiliation: fixed incorrect host regex pattern matching
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1613467142
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+The host regex pattern matcher missed the implicit $ character at the end of each configured pattern.
+This led to more hosts being found.

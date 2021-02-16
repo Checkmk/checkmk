@@ -57,11 +57,8 @@ class BISearcher(ABCBISearcher):
 
     def filter_host_choice(self, hosts: List[BIHostData],
                            condition: Dict) -> Tuple[List[BIHostData], Dict]:
-        if condition["type"] == "all_hosts" or condition["pattern"] == "(.*)":
-            match_groups = {}
-            for host in hosts:
-                match_groups[host.name] = (host.name,)
-            return hosts, match_groups
+        if condition["type"] == "all_hosts":
+            return hosts, self._host_match_groups(hosts)
 
         if condition["type"] == "host_name_regex":
             return self.get_host_name_matches(hosts, condition["pattern"])
@@ -71,21 +68,32 @@ class BISearcher(ABCBISearcher):
 
         raise NotImplementedError("Invalid condition type %r" % condition["type"])
 
+    def _host_match_groups(self, hosts: List[BIHostData], match="name"):
+        return {host.name: (getattr(host, match),) for host in hosts}
+
     def get_host_name_matches(self, hosts: List[BIHostData],
                               pattern: str) -> Tuple[List[BIHostData], Dict]:
 
-        is_regex_match = '*' in pattern or '$' in pattern or '|' in pattern or '[' in pattern
+        if pattern == "(.*)":
+            return hosts, self._host_match_groups(hosts)
+
+        is_regex_match = any(map(lambda x: x in pattern, ["(", ")", "*", "$", "|", "[", "]"]))
         if not is_regex_match:
             host = self.hosts.get(pattern)
             if host:
                 return [host], {pattern: (pattern,)}
             return [], {}
 
+        # Hidden "feature": The regex pattern condition for hosts implicitly uses a $ at the end
+        pattern_with_anchor = pattern
+        if not pattern_with_anchor.endswith("$"):
+            pattern_with_anchor += "$"
+
         matched_hosts = []
         matched_re_groups = {}
-        regex_pattern = regex(pattern)
-        pattern_match_cache = self._host_regex_match_cache.setdefault(pattern, {})
-        pattern_miss_cache = self._host_regex_miss_cache.setdefault(pattern, {})
+        regex_pattern = regex(pattern_with_anchor)
+        pattern_match_cache = self._host_regex_match_cache.setdefault(pattern_with_anchor, {})
+        pattern_miss_cache = self._host_regex_miss_cache.setdefault(pattern_with_anchor, {})
         for host in hosts:
             if host.name in pattern_miss_cache:
                 continue
@@ -107,8 +115,11 @@ class BISearcher(ABCBISearcher):
 
     def get_host_alias_matches(self, hosts: List[BIHostData],
                                pattern: str) -> Tuple[List[BIHostData], Dict]:
-        # TODO: alias matches currently costs way more performmance than the host matches
-        #       requires alias lookup to fix
+        if pattern == "(.*)":
+            return hosts, self._host_match_groups(hosts, "alias")
+
+        # TODO: alias matches currently costs way more performance than the host matches
+        #       requires alias lookup cache to fix
         matched_hosts = []
         matched_re_groups = {}
         regex_pattern = regex(pattern)

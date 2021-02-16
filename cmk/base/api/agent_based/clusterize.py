@@ -33,7 +33,7 @@ def make_node_notice_results(
 
     Usage example:
         >>> def cluster_check_myplugin(item, section):
-        ...     '''A cluster check function that just passes along all nodes' results'''
+        ...     '''A cluster check function that just passes along all node results'''
         ...     for node_name, node_section in sections.values():
         ...         yield from make_node_notice_results(
         ...             node_name,

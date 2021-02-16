@@ -146,7 +146,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
             this.plot,
             value,
             {x: 0, y: -this._radius / 5},
-            {font_size: this._radius / 3.5, color: value.color}
+            {font_size: this._radius / 3.5, style: value.style}
         );
 
         if (domain[0] === domain[1]) return;

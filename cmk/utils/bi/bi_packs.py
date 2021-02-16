@@ -286,15 +286,13 @@ class BIAggregationPacks:
 
     def load_config(self) -> None:
         if not Path(self._bi_configuration_file).exists():
-            self.load_config_from_schema(bi_sample_config)
+            self._load_config(bi_sample_config)
             return
+        self._load_config(store.load_object_from_file(self._bi_configuration_file))
 
-        self.load_config_from_schema(store.load_object_from_file(self._bi_configuration_file))
-
-    def load_config_from_schema(self, config_packs_schema: Dict) -> None:
+    def _load_config(self, config: Dict) -> None:
         self.cleanup()
-        data = BIAggregationPacksSchema().load(config_packs_schema)
-        self._instantiate_packs(data["packs"])
+        self._instantiate_packs(config["packs"])
 
     def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}

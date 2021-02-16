@@ -42,7 +42,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, Row
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
@@ -413,6 +413,14 @@ def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_Metri
                 perf_data.append(entry)
 
     return translate_metrics(perf_data, check_command)
+
+
+def translated_metrics_from_row(row: Row) -> Mapping:
+    what = "service" if "service_check_command" in row else "host"
+    perf_data_string = row[what + "_perf_data"]
+    rrd_metrics = row[what + "_metrics"]
+    check_command = row[what + "_check_command"]
+    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
 #.

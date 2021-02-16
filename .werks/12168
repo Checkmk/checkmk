@@ -1,0 +1,19 @@
+Title: Handle non-persistent comments correctly
+Class: fix
+Compatible: compat
+Component: core
+Date: 1613474709
+Edition: cee
+Knowledge: doc
+Level: 3
+State: unknown
+Version: 2.0.0b7
+
+You can add non-persistent host/service comments via Livestatus, and these
+should vanish when the monitoring core is restarted.  The CMC effectively
+ignored the "persistent" flag for these user comments, so even
+non-persistent comments survived a restart.  This has been fixed, the CMC
+now behaves like Nagios.
+
+Note that this fix doesn't affect comments added via the GUI, because these
+are always persistent.

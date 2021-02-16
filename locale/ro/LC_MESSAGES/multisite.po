@@ -351,11 +351,11 @@ msgid "%d rows"
 msgstr "randuri"
 
 #, fuzzy, python-format
-msgid "%d site is not connected"
-msgid_plural "%d sites are not connected"
-msgstr[0] "Conexiune Noua"
-msgstr[1] "Conexiune Noua"
-msgstr[2] "Conexiune Noua"
+msgid "%d site is %s."
+msgid_plural "%d sites are %s."
+msgstr[0] "Adaugă element"
+msgstr[1] "Adaugă element"
+msgstr[2] "Adaugă element"
 
 #, fuzzy, python-format
 msgid "%d specific settings"
@@ -598,18 +598,6 @@ msgstr ""
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
-
-#, python-format
-msgid "%s: Top Application Traffic: Last Day View"
-msgstr ""
-
-#, python-format
-msgid "%s: Top Application Traffic: Last Hour View"
-msgstr ""
-
-#, fuzzy, python-format
-msgid "%s: Top Local Talkers"
-msgstr "% / gamă"
 
 #, fuzzy, python-format
 msgid "%s: Uses SSL"
@@ -5192,10 +5180,10 @@ msgstr ""
 #, python-format
 msgid ""
 "Associated hosts, services and events are not included in the Tactical "
-"Overview. The disconnected site is %s."
+"Overview. The %s site is %s."
 msgid_plural ""
 "Associated hosts, services and events are not included in the Tactical "
-"Overview. The disconnected sites are %s."
+"Overview. The %s sites are %s."
 msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
@@ -12784,6 +12772,9 @@ msgstr "5 minute"
 msgid "Deploy iptables plugin"
 msgstr ""
 
+msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
+msgstr ""
+
 msgid "Deploy logged in users plugin"
 msgstr ""
 
@@ -12836,6 +12827,10 @@ msgid "Deploy plugin that updates agent automatically"
 msgstr ""
 
 msgid "Deploy powershell plugin - recommended for Win2k8 upwards"
+msgstr ""
+
+msgid ""
+"Deploy standard environment (Current Python 3.8 + standard set of modules)"
 msgstr ""
 
 #, python-format
@@ -23983,9 +23978,6 @@ msgstr ""
 msgid "Juniper Processor Utilization of Operating CPU"
 msgstr ""
 
-msgid "Just rely on existing check files, detect new items only"
-msgstr ""
-
 msgid "Just remove the affected tags from the rules."
 msgstr ""
 
@@ -33172,9 +33164,6 @@ msgstr ""
 msgid "Perform automatic service discovery"
 msgstr ""
 
-msgid "Perform full SNMP scan always, detect new check types"
-msgstr ""
-
 msgid "Perform periodic service discovery check"
 msgstr ""
 
@@ -34825,6 +34814,10 @@ msgstr ""
 
 msgid "Python Version"
 msgstr ""
+
+#, fuzzy
+msgid "Python environment"
+msgstr "Conexiuni Active"
 
 msgid "QOS class"
 msgstr ""
@@ -38361,9 +38354,6 @@ msgid "Service descriptions"
 msgstr ""
 
 msgid "Service discovery"
-msgstr ""
-
-msgid "Service discovery check for SNMP devices"
 msgstr ""
 
 #, fuzzy
@@ -45592,6 +45582,14 @@ msgid ""
 msgstr ""
 
 msgid ""
+"The standard environment we deploy can't be used on legacy Windows systems "
+"such as Windows Server 2008, Windows Server 2008R2. If you want to deploy "
+"agent plugins like the agent updater, mk_logwatch or mk_jolokia on such "
+"windows hosts, you have to select the option \"Deploy legacy environment\" "
+"here."
+msgstr ""
+
+msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
 "is based on the assumption that you want to be informed when there is new "
 "information. However, there are also use cases where new incoming messages "
@@ -48125,7 +48123,7 @@ msgstr ""
 
 msgid ""
 "This ruleset allows to add embedded Python to the Windows Agent "
-"installation. Available version is 'Python 3.8'."
+"installation. "
 msgstr ""
 
 msgid ""
@@ -49312,6 +49310,17 @@ msgstr ""
 
 msgid "Top"
 msgstr ""
+
+msgid "Top Application Traffic: Last Day View"
+msgstr ""
+
+#, fuzzy
+msgid "Top Application Traffic: Last Hour View"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Top Local Talkers"
+msgstr "% / gamă"
 
 msgid "Top Talkers"
 msgstr ""
@@ -57749,6 +57758,13 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "%d site is not connected"
+#~ msgid_plural "%d sites are not connected"
+#~ msgstr[0] "Conexiune Noua"
+#~ msgstr[1] "Conexiune Noua"
+#~ msgstr[2] "Conexiune Noua"
+
+#, fuzzy
 #~| msgid "use local configuration"
 #~ msgid "Node configuration"
 #~ msgstr "foloseste configuratia locala"
@@ -57887,10 +57903,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Custom python path"
 #~ msgstr "Atribute personalizate"
-
-#, fuzzy
-#~ msgid "Python version"
-#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "Check state of BI aggregations"

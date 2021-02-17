@@ -1,0 +1,15 @@
+Title: Fix dynamic configuration executing only phase 1 in some cases
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1613567696
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+When a dcd connection was configured to operate in the central site of
+a distributed setup, the connection could fail with only executing
+the phase 1 of the synchronization. This was caused by a file
+<tt>etc/check_mk/dcd.d/wato/distributed.mk</tt> in the central site
+telling the DCD that it was a remote site.

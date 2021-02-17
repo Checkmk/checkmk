@@ -1884,10 +1884,10 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     if cmk_version.is_raw_edition():
         return
 
-    with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",
-                                                                          encoding="utf-8") as f:
-        f.write(ensure_str(wato_fileheader()))
-        f.write("dcd_is_wato_remote_site = %r\n" % is_remote)
+    output = wato_fileheader()
+    output += "dcd_is_wato_remote_site = %r\n" % is_remote
+
+    store.save_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
 
 
 def create_site_globals_file(site_id: SiteId, tmp_dir: str,

@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
-from ..agent_based_api.v1 import State as state, type_defs
+from ..agent_based_api.v1 import State
 
 
 class DatafilesException(RuntimeError):
@@ -25,7 +25,7 @@ class OraErrors:
         self.ignore = False
         self.has_error = False
         self.error_text = ""
-        self.error_severity = state.OK
+        self.error_severity = State.OK
 
         # Update according to line content
         self.handle_errors(line)
@@ -41,7 +41,7 @@ class OraErrors:
         if line[0].startswith('ORA-'):
             self.has_error = True
             self.error_text = 'Found error in agent output "%s"' % ' '.join(line)
-            self.error_severity = state.UNKNOWN
+            self.error_severity = State.UNKNOWN
             return
 
         # Handle error output from new agent
@@ -49,7 +49,7 @@ class OraErrors:
             if len(line) >= 3 and line[2].startswith("ORA-"):
                 self.has_error = True
                 self.error_text = "%s" % ' '.join(line[2:])
-                self.error_severity = state.UNKNOWN
+                self.error_severity = State.UNKNOWN
                 return
             self.ignore = True
             return  # ignore other FAILURE lines
@@ -61,7 +61,7 @@ class OraErrors:
         if line[1].startswith('ORA-'):
             self.has_error = True
             self.error_text = 'Found error in agent output "%s"' % ' '.join(line[1:])
-            self.error_severity = state.UNKNOWN
+            self.error_severity = State.UNKNOWN
             return
 
 

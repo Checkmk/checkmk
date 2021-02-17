@@ -1,0 +1,14 @@
+Title: AWS limits: missing titles display as "???" in service monitoring rules
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613556853
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b7
+
+Some of the rules for AWS limits in the service monitoring rulesets did not
+display properly: they showed "???" instead of proper titles. This has been
+fixed. Affected rulesets are: Glacier Limits, S3 Limits, EC2 Limits, ELB
+Limits, ELBv2 Limits, EBS Limits, RDS Limits.

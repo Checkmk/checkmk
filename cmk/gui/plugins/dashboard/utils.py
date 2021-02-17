@@ -840,7 +840,19 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
         # -> 2.0.0i Removed network topology dashlet type
         transform_topology_dashlet(dashlet_spec)
 
+    if dashlet_spec["type"] in ["notifications_bar_chart", "alerts_bar_chart"]:
+        # -> v2.0.0b6 introduced the different render modes
+        _transform_event_bar_chart_dashlet(dashlet_spec)
+
     return dashlet_spec
+
+
+def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):
+    if "render_mode" not in dashlet_spec:
+        dashlet_spec["render_mode"] = ("bar_chart", {
+            "time_range": dashlet_spec.pop("time_range", "d0"),
+            "time_resolution": dashlet_spec.pop("time_resolution", "h"),
+        })
 
 
 def transform_topology_dashlet(dashlet_spec: DashletConfig,

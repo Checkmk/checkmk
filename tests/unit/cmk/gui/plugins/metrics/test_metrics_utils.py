@@ -215,3 +215,9 @@ def test_stack_resolver_exception_missing_operator_arguments():
     with pytest.raises(utils.MKGeneralException,
                        match="Syntax error in expression '3, T': too few operands"):
         utils.stack_resolver('3 T'.split(), lambda x: x == "T", lambda op, f, s: f + s, int)
+
+
+def test_graph_titles():
+    graphs_without_title = sorted(graph_id for graph_id, graph_info in utils.graph_info.items()
+                                  if not graph_info.get("title"))
+    assert not graphs_without_title, f"Please provide titles for the following graphs: {', '.join(graphs_without_title)}"

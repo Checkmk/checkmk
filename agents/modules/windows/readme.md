@@ -37,6 +37,15 @@ installation is not possible. The error is "cannot install" or similar
 
 4. You must increase value in file BUILD_NUM to get a rebuild binary
 
+### Changes of the files and names
+
+This procedure may quite annoying, you have to check next points:
+
+1. All scripts here. Node builds artifacts succesfully.
+2. **buildscripts/scripts/lib/windows.groovy** : from windows node to jenkins
+3. **buildscripts/scripts/build-cmk-version.jenkins** : from enkins to packaging
+4. Checkmk root **Makefile**. Packaging self
+
 ### PROCESS
 
 #### Execution local
@@ -96,7 +105,6 @@ In latter case the git_hash is replaced with string "latest".
 
 IMPORTANT: You need Visual Studio 10 to build 3.4.4. 
 This can be difficult to obtain, you have to ask a person having Visual Studio Professional license to download.
-
 
 ### TREE
 

@@ -54,6 +54,16 @@ body.mobile {
     }
   }
 
+  .ui-body-c .ui-link {
+    color: $grey-4;
+  }
+  .ui-body-c .ui-link:visited {
+    color: $grey-4;
+  }
+  .ui-body-c .ui-link:hover {
+    color: $grey-2;
+  }
+
   td.nonstatus {
     background-color: rgb(255, 255, 255);
   }

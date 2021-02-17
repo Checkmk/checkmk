@@ -402,6 +402,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def compile_postprocess(
         self,
         bi_branch_root: "ABCBICompiledNode",
+        services_of_host: Dict[HostName, Set[ServiceName]],
         bi_searcher: ABCBISearcher,
     ) -> List["ABCBICompiledNode"]:
         raise NotImplementedError()

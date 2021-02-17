@@ -88,6 +88,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
+        services_of_host: Dict[HostName, Set[ServiceName]],
         bi_searcher: ABCBISearcher,
     ) -> List[ABCBICompiledNode]:
         return [self]
@@ -258,10 +259,11 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
+                            services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         self.nodes = [
             res for node in self.nodes
-            for res in node.compile_postprocess(bi_branch_root, bi_searcher)
+            for res in node.compile_postprocess(bi_branch_root, services_of_host, bi_searcher)
         ]
         return [self]
 
@@ -393,22 +395,18 @@ class BIRemainingResult(ABCBICompiledNode):
         self.host_names = host_names
 
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
+                            services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         postprocessed_nodes: List[ABCBICompiledNode] = []
         for host_name in self.host_names:
             site_id = bi_searcher.hosts[host_name].site_id
-            for service_description in self._remaining_services_for(host_name, bi_branch_root,
-                                                                    bi_searcher):
+            used_services = services_of_host.get(host_name, set())
+            for service_description in set(bi_searcher.hosts[host_name].services) - used_services:
                 postprocessed_nodes.append(
                     BICompiledLeaf(host_name=host_name,
                                    service_description=service_description,
                                    site_id=site_id))
         return postprocessed_nodes
-
-    def _remaining_services_for(self, host_name: HostName, node: ABCBICompiledNode,
-                                bi_searcher: ABCBISearcher) -> Set[ServiceName]:
-        used_services = node.services_of_host(host_name)
-        return set(bi_searcher.hosts[host_name].services) - used_services
 
     def required_elements(self) -> Set[RequiredBIElement]:
         return set()

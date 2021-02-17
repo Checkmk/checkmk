@@ -223,23 +223,26 @@ class ABCEventBarChartDashlet(ABCFigureDashlet):
     def _vs_elements(cls):
         return [
             ("render_mode",
-             CascadingDropdown(choices=[
-                 ("bar_chart", _("Bar chart"),
-                  Dictionary(
-                      elements=bar_chart_vs_time_components(),
-                      optional_keys=[],
-                  )),
-                 ("simple_number", _("Number of notifications as text"),
-                  Dictionary(
-                      elements=[
-                          ("time_range", Timerange(
-                              title=_("Time range"),
-                              default_value='d0',
-                          )),
-                      ],
-                      optional_keys=[],
-                  )),
-             ])),
+             CascadingDropdown(
+                 title=_("Display"),
+                 choices=[
+                     ("bar_chart", _("Bar chart"),
+                      Dictionary(
+                          elements=bar_chart_vs_time_components(),
+                          optional_keys=[],
+                      )),
+                     ("simple_number", _("Number of notifications as text"),
+                      Dictionary(
+                          elements=[
+                              ("time_range", Timerange(
+                                  title=_("Time range"),
+                                  default_value='d0',
+                              )),
+                          ],
+                          optional_keys=[],
+                      )),
+                 ],
+             )),
             ("log_target",
              DropdownChoice(
                  title=_("Host or service %ss" % cls.log_type),

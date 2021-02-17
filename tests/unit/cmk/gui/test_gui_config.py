@@ -74,9 +74,9 @@ def test_registered_permission_sections():
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
-            ('custom_graph', (50, u'Custom Graphs', True)),
-            ('forecast_graph', (50, u'Forecast Graphs', True)),
-            ('graph_collection', (50, u'Graph Collections', True)),
+            ('custom_graph', (50, u'Custom graphs', True)),
+            ('forecast_graph', (50, u'Forecast graphs', True)),
+            ('graph_collection', (50, u'Graph collections', True)),
             ('graph_tuning', (50, u'Graph tunings', True)),
             ('sla_configuration', (50, u'Service Level Agreements', True)),
             ('report', (50, u'Reports', True)),

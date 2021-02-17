@@ -5,4 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
+from collections import OrderedDict
+
+Section = OrderedDict
 SectionVM = Dict[str, List[str]]

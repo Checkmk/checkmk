@@ -4,76 +4,63 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import copy
 import json
-from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
+import time
+from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from six import ensure_str
 
 import cmk.utils.version as cmk_version
-from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.pages
 import cmk.gui.config as config
-import cmk.gui.visuals as visuals
-import cmk.gui.forms as forms
-import cmk.gui.utils as utils
 import cmk.gui.crash_reporting as crash_reporting
-from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.valuespec import (
-    Transform,
-    Dictionary,
-    DropdownChoice,
-    Checkbox,
-)
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+import cmk.gui.forms as forms
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.globals import html, request
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.pages import page_registry, Page, PageResult
+import cmk.gui.pages
+import cmk.gui.plugins.dashboard
+import cmk.gui.utils as utils
+import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import (
-    make_topic_breadcrumb,
     Breadcrumb,
     BreadcrumbItem,
     make_current_page_breadcrumb_item,
+    make_topic_breadcrumb,
 )
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_javascript_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSidePopup,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_javascript_link,
-    make_display_options_dropdown,
+    PageMenuTopic,
 )
-
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKGeneralException,
-    MKAuthException,
-    MKUserError,
+from cmk.gui.pages import Page, page_registry, PageResult
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
+from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.utils.html import HTML
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    Transform,
+    ValueSpec,
+    ValueSpecValidateFunc,
 )
-from cmk.gui.permissions import (
-    declare_permission,
-    permission_section_registry,
-    PermissionSection,
-)
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    VisualType,
-)
-
-import cmk.gui.plugins.dashboard
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
@@ -81,30 +68,17 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
-from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (
-    GROW,
-    MAX,
-    Dashlet,
-    copy_view_into_dashlet,
-    builtin_dashboards,
-    dashboard_breadcrumb,
-    dashlet_types,
-    dashlet_registry,
-    dashlet_vs_general_settings,
-    get_all_dashboards,
-    get_permitted_dashboards,
-    save_all_dashboards,
-)
+from cmk.gui.node_visualization import get_topology_view_and_filters
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
-    DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
-    DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
-    DashletId, ABCFigureDashlet,
+    ABCFigureDashlet, builtin_dashboards, copy_view_into_dashlet, dashboard_breadcrumb,
+    DashboardConfig, DashboardName, Dashlet, dashlet_registry, dashlet_types,
+    dashlet_vs_general_settings, DashletConfig, DashletHandleInputFunc, DashletId, DashletInputFunc,
+    DashletRefreshAction, DashletRefreshInterval, DashletSize, DashletType, DashletTypeName,
+    get_all_dashboards, get_permitted_dashboards, GROW, MAX, save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.node_visualization import get_topology_view_and_filters
-
+from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False

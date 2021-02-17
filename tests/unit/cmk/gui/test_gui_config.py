@@ -8,21 +8,18 @@
 
 import json
 from pathlib import Path
-from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import pytest  # type: ignore[import]
+from flask_babel.speaklater import LazyString  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.config as config
-from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
-from cmk.gui.permissions import (
-    permission_section_registry,
-    permission_registry,
-    Permission,
-)
+from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")

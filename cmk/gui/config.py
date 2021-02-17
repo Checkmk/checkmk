@@ -556,6 +556,10 @@ class LoggedInUser:
         return self.get_attribute("contactgroups", [])
 
     @property
+    def start_url(self) -> Optional[str]:
+        return self.load_file("start_url", None)
+
+    @property
     def show_help(self) -> bool:
         return self.load_file("help", False)
 

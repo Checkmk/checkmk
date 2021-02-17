@@ -553,9 +553,9 @@ class SidebarRenderer:
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
-            href=config.user.get_attribute("start_url") or config.start_url,
+            href=config.user.start_url or config.start_url,
             target="main",
-            title=_("Go to main overview"),
+            title=_("Go to main page"),
         )
         if config.user.get_attribute("nav_hide_icons_title"):
             html.img(html.theme_url('images/tribe29_icon_min.svg'))

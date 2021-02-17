@@ -37,6 +37,7 @@ def test_registered_pages():
         'ajax_search_monitoring',
         'ajax_search_setup',
         'ajax_service_discovery',
+        'ajax_set_dashboard_start_url',
         'ajax_set_foldertree',
         'ajax_set_rowselection',
         'ajax_sidebar_position',

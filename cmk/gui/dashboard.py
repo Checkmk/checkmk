@@ -765,6 +765,17 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                         title=_("Edit"),
                         entries=list(_dashboard_edit_entries(name, board, mode)),
                     ),
+                    PageMenuTopic(
+                        title=_("User profile"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Set as start URL"),
+                                icon_name="",
+                                item=make_javascript_link('cmk.dashboard.set_start_url(%s)' %
+                                                          json.dumps(name)),
+                            )
+                        ],
+                    ),
                 ],
             ),
             PageMenuDropdown(

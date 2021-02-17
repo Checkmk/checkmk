@@ -230,7 +230,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
     );
 
     Swal.fire(args).then(result => {
-        if (result.value) {
+        if (confirm_handler && result.value) {
             confirm_handler();
         }
     });

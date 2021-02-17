@@ -29,7 +29,7 @@ from cmk.gui.exceptions import (HTTPRedirect, MKUserError, MKGeneralException, M
                                 FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html, request
-from cmk.gui.pages import page_registry, AjaxPage, Page
+from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -155,7 +155,7 @@ mega_menu_registry.register(
 @page_registry.register_page("ajax_ui_theme")
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
-    def page(self):
+    def page(self) -> AjaxPageResult:
         themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
         current_theme = html.get_theme()
         try:
@@ -169,15 +169,31 @@ class ModeAjaxCycleThemes(AjaxPage):
             new_theme = themes[theme_index + 1]
 
         _set_user_attribute("ui_theme", new_theme)
+        return {}
 
 
 @page_registry.register_page("ajax_sidebar_position")
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
-    def page(self):
+    def page(self) -> AjaxPageResult:
         _set_user_attribute(
             "ui_sidebar_position",
             None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left")
+        return {}
+
+
+@page_registry.register_page("ajax_set_dashboard_start_url")
+class ModeAjaxSetStartURL(AjaxPage):
+    """AJAX handler to set the start URL of a user to a dashboard"""
+    def page(self) -> AjaxPageResult:
+        try:
+            name = html.request.get_str_input_mandatory("name")
+            url = makeuri_contextless(request, [("name", name)], "dashboard.py")
+            cmk.gui.utils.validate_start_url(url, "")
+            _set_user_attribute("start_url", repr(url))
+        except Exception:
+            raise MKUserError(None, _("Failed to set start URL"))
+        return {}
 
 
 def _set_user_attribute(key: str, value: Optional[str]):

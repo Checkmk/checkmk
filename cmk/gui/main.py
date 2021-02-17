@@ -25,7 +25,7 @@ def page_index() -> None:
 
 
 def _get_start_url() -> str:
-    default_start_url = config.user.get_attribute("start_url", config.start_url) or config.start_url
+    default_start_url = config.user.start_url or config.start_url
     if not utils.is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 

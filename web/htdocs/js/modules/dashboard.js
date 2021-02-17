@@ -9,6 +9,23 @@ import * as forms from "forms";
 var reload_on_resize = {};
 export var dashboard_properties = {};
 
+// Set the dashboard as a start URL for the user
+export function set_start_url(dashboard_name) {
+    ajax.call_ajax("ajax_set_dashboard_start_url.py?name=" + encodeURIComponent(dashboard_name), {
+        response_handler: (_handler_data, response_body) => {
+            const response = JSON.parse(response_body);
+            if (response.result_code === 0) {
+                utils.reload_whole_page();
+            } else {
+                forms.confirm_dialog(
+                    {text: response.result, confirmButtonText: "OK", showCancelButton: false},
+                    null
+                );
+            }
+        },
+    });
+}
+
 export function set_reload_on_resize(dashlet_id, url) {
     reload_on_resize[dashlet_id] = url;
 }

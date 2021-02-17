@@ -11,7 +11,7 @@ from .utils import docker
 
 
 def _parse_docker_container_mem_plugin(string_table: StringTable) -> Dict[str, Any]:
-    parsed = docker.json_get_obj(string_table[1])
+    parsed = docker.parse(string_table).data
     # flatten nested stats
     parsed.update(parsed.pop('stats'))
     # rename for compatibility with section produced by linux agent
@@ -36,6 +36,7 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
         ... ]))
         {'MemFree': 16686145578, 'MemTotal': 16690180096}
         >>> pprint.pprint(parse_docker_container_mem([
+        ...     # this format is used for agent running inside docker container
         ...     ['cache', '41316352'], ['rss', '79687680'], ['rss_huge', '8388608'],
         ...     ['mapped_file', '5976064'], ['swap', '0'], ['pgpgin', '7294455'],
         ...     ['pgpgout', '7267468'], ['pgfault', '39514980'], ['pgmajfault', '111'],

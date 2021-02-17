@@ -6,15 +6,8 @@
 import cmk.base.plugins.agent_based.utils.docker as docker
 
 
-def parse_docker_container_labels(info):
-    version = docker.get_version(info)
-    index = 0 if version is None else 1
-    data = docker.json_get_obj(info[index]) if info[index:] else None
-    return data
-
-
 def inv_docker_container_labels(info, inventory_tree):
-    data = parse_docker_container_labels(info)
+    data = docker.parse(info).data
     if data is None:
         return
     container = inventory_tree.get_dict("software.applications.docker.container.")

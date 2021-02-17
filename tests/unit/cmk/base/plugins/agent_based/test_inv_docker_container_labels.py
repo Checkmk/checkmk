@@ -22,9 +22,7 @@ AGENT_OUTPUT = (
 
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_inv_docker_container_labels():
-    info = [
-        line.split("\0") if "\0" in line else line.split(" ") for line in AGENT_OUTPUT.split("\n")
-    ]
+    info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     plugin = agent_based_register.get_inventory_plugin(
         InventoryPluginName('docker_container_labels'))
     assert plugin

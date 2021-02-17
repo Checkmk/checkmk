@@ -16,9 +16,7 @@ AGENT_OUTPUT = (
 
 
 def test_inv_docker_node_network():
-    pre_parsed = [
-        line.split("\0") if "\0" in line else line.split(" ") for line in AGENT_OUTPUT.split("\n")
-    ]
+    pre_parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
     result = inventory_docker_node_network(parse_docker_node_network(pre_parsed))
     assert list(result) == [
         Attributes(path=['software', 'applications', 'docker', 'networks', 'asd'],

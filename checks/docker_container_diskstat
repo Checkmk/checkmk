@@ -37,7 +37,7 @@ def parse_docker_container_diskstat(info):
 
 
 def _parse_docker_container_diskstat_plugin(info):
-    raw = docker.json_get_obj(info[1])
+    raw = docker.parse(info).data
 
     devices = {}
     for major_minor, name in raw["names"].items():

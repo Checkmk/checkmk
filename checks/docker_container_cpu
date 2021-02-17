@@ -13,8 +13,19 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 
 def parse_docker_container_cpu(info):
     parsed = {}
-    version = docker.get_version(info)
-    if version is None:
+    try:
+        raw = docker.parse(info).data
+        # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
+        if "online_cpus" in raw:
+            num_cpus = raw["online_cpus"]
+        else:
+            num_cpus = len(raw['cpu_usage']['percpu_usage'])
+        parsed["num_cpus"] = num_cpus
+        parsed["system_ticks"] = raw['system_cpu_usage']
+        parsed["container_ticks"] = raw['cpu_usage']['total_usage']
+        return parsed
+    except docker.AgentOutputMalformatted:
+        # if agent is run inside docker container, output format differs
         for line in info:
             if line[0] == "cpu":
                 parsed["system_ticks"] = sum(map(int, line[1:]))
@@ -23,17 +34,6 @@ def parse_docker_container_cpu(info):
         if "user" in parsed and "system" in parsed:
             parsed["container_ticks"] = parsed["user"] + parsed["system"]
         return parsed
-
-    raw = docker.json_get_obj(info[1])
-    # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
-    if "online_cpus" in raw:
-        num_cpus = raw["online_cpus"]
-    else:
-        num_cpus = len(raw['cpu_usage']['percpu_usage'])
-    parsed["num_cpus"] = num_cpus
-    parsed["system_ticks"] = raw['system_cpu_usage']
-    parsed["container_ticks"] = raw['cpu_usage']['total_usage']
-    return parsed
 
 
 # Migration NOTE: Create a separate section, but a common check plugin for

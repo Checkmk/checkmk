@@ -3,8 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import json
+
 import cmk.base.plugins.agent_based.utils.docker as docker
-from cmk.base.check_legacy_includes.legacy_docker import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def _split_subsections(info):
@@ -21,16 +22,12 @@ def _split_subsections(info):
 
 
 def parse_docker_node_images(info):
-    version = docker.get_version(info)
-
-    if version is None:
-        subsections = _split_subsections(info)
-        return parse_legacy_docker_node_images(subsections)
+    docker.ensure_valid_docker_header(info)
 
     subsections = _split_subsections(info[1:])
-    i_images = (docker.json_get_obj(i) for i in subsections.get('images', []))
+    i_images = (json.loads(i[0]) for i in subsections.get('images', []))
     images = {i["Id"]: i for i in i_images if i is not None}
-    i_containers = (docker.json_get_obj(c) for c in subsections.get('containers', []))
+    i_containers = (json.loads(c[0]) for c in subsections.get('containers', []))
     containers = {c["Id"]: c for c in i_containers if c is not None}
 
     running_images = [c['Image'] for c in containers.values()]

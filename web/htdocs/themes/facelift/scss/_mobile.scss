@@ -214,4 +214,11 @@ body.mobile {
       }
     }
   }
+
+  input.button {
+    margin-top: 0;
+    width: 100%;
+    background-color: $white;
+    border-radius: $spacing;
+  }
 }

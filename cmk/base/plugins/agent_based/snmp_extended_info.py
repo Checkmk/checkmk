@@ -18,8 +18,7 @@ from .agent_based_api.v1.type_defs import (
     HostLabelGenerator,
 )
 
-from .utils.device_types import SNMPDeviceType
-from .snmp_info import is_fibrechannel_switch  # TODO: this must be moved.
+from .utils.device_types import is_fibrechannel_switch, SNMPDeviceType
 
 
 class SNMPExtendedInfo(NamedTuple):

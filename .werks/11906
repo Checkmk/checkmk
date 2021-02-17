@@ -1,0 +1,16 @@
+Title: Improve message length computation in fetcher protocol
+Class: fix
+Compatible: compat
+Component: core
+Date: 1613575351
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b7
+
+The computation of the length of SNMP payloads is now consistent
+with improperly escaped JSON strings.
+
+Previously, the inconsistency could result in the crash
+of the SNMP checks.

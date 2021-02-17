@@ -346,7 +346,7 @@ class FetcherMessage(Protocol):
         return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
 
     def __len__(self) -> int:
-        return len(self.header) + len(self.payload) + len(self.stats)
+        return len(self.header) + self.header.payload_length + self.header.stats_length
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
@@ -554,7 +554,7 @@ class CMCMessage(Protocol):
         return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
 
     def __len__(self) -> int:
-        return len(self.header) + sum(len(_) for _ in self.payload)
+        return len(self.header) + self.header.payload_length
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header

@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Final
 import enum
 
 
@@ -15,3 +16,10 @@ class SNMPDeviceType(enum.Enum):
     SWITCH = enum.auto()
     UPS = enum.auto()
     WLC = enum.auto()
+
+
+_FIBRECHANEL_MARKER: Final = {"fc", "fibrechannel", "fibre channel"}
+
+
+def is_fibrechannel_switch(description: str) -> bool:
+    return any(m in description.lower() for m in _FIBRECHANEL_MARKER)

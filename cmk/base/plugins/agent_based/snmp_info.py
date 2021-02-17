@@ -24,7 +24,7 @@ from .agent_based_api.v1 import (
     State,
 )
 
-from .utils.device_types import SNMPDeviceType
+from .utils.device_types import is_fibrechannel_switch, SNMPDeviceType
 
 
 class SNMPInfo(NamedTuple):
@@ -36,12 +36,6 @@ class SNMPInfo(NamedTuple):
 
 def parse_snmp_info(string_table: List[StringTable]) -> SNMPInfo:
     return SNMPInfo(*string_table[0][0])
-
-
-def is_fibrechannel_switch(description: str) -> bool:
-    # TODO: This is used by another plugin and must be moved to utils.
-    patterns = {"fc", "fibrechannel", "fibre channel"}
-    return any(p in description.lower() for p in patterns)
 
 
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:

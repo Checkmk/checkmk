@@ -8,6 +8,7 @@ import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     parse_f5_bigip_cluster_status,
+    parse_f5_bigip_vcmpfailover,
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
     cluster_check_f5_bigip_cluster_status,
@@ -103,3 +104,11 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result):
 ])
 def test_cluster_check_f5_bigip_cluster_status_v11_2(arg, result):
     assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
+
+
+@pytest.mark.parametrize("string_table,expected_parsed_data", [
+    ([[['0', '4']]], 4),
+    ([[['3', '4']]], None),
+])
+def test_parse_f5_bigip_vcmpfailover(string_table, expected_parsed_data):
+    assert parse_f5_bigip_vcmpfailover(string_table) == expected_parsed_data

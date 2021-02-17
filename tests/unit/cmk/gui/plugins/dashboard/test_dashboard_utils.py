@@ -60,6 +60,36 @@ from cmk.gui.plugins.dashboard import utils
             },
             id="1.6.0->2.0.0b6 pnpgraph",
         ),
+        pytest.param(
+            {
+                'type': 'notifications_bar_chart',
+                'time_range': 'd0',
+                'time_resolution': 'h',
+            },
+            {
+                'type': 'notifications_bar_chart',
+                'render_mode': ("bar_chart", {
+                    'time_range': 'd0',
+                    'time_resolution': 'h',
+                }),
+            },
+            id="2.0.0->2.0.0b6 notification bar chart",
+        ),
+        pytest.param(
+            {
+                'type': 'alerts_bar_chart',
+                'time_range': 'd0',
+                'time_resolution': 'h',
+            },
+            {
+                'type': 'alerts_bar_chart',
+                'render_mode': ("bar_chart", {
+                    'time_range': 'd0',
+                    'time_resolution': 'h',
+                }),
+            },
+            id="2.0.0->2.0.0b6 alerts bar chart",
+        ),
     ],
 )
 def test_transform_dashlets_mut(entry, result):

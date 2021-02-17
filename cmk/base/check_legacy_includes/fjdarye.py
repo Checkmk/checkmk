@@ -70,9 +70,11 @@ fjdarye_disks_status = {
 def parse_fjdarye_disks(info):
     parsed = {}
     for idx, disk_state in info:
-        state, state_readable = fjdarye_disks_status.get(disk_state,
-                                                         (3, "unknown[%s]" % disk_state))
-        parsed.setdefault(int(idx), {
+        state, state_readable = fjdarye_disks_status.get(
+            disk_state,
+            (3, "unknown[%s]" % disk_state),
+        )
+        parsed.setdefault(str(idx), {
             "state": state,
             "state_readable": state_readable,
             "state_disk": disk_state,
@@ -230,7 +232,7 @@ fjdarye_sum_status = {1: 'unknown', 2: 'unused', 3: 'ok', 4: 'warning', 5: 'fail
 
 def inventory_fjdarye_sum(info):
     if len(info[0]) == 1:
-        return [(0, None)]
+        yield "0", {}
 
 
 def check_fjdarye_sum(index, _no_param, info):

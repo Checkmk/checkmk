@@ -41,7 +41,7 @@ class GraphDashlet(Dashlet):
 
     @classmethod
     def title(cls):
-        return _("Performance Graph")
+        return _("Performance graph")
 
     @classmethod
     def description(cls):

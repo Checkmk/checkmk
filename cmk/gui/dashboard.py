@@ -939,7 +939,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardC
                                           mode: str) -> Iterator[PageMenuEntry]:
 
     yield PageMenuEntry(
-        title='Performance Graph',
+        title=_('Performance graph'),
         icon_name='graph',
         item=make_simple_link(
             'edit_dashlet.py?name=%s&create=0&back=%s&type=pnpgraph' %
@@ -947,7 +947,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardC
     )
 
     yield PageMenuEntry(
-        title='Custom Graph',
+        title=_('Custom graph'),
         icon_name={
             'icon': 'graph',
             'emblem': 'add',
@@ -958,7 +958,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardC
     )
 
     yield PageMenuEntry(
-        title='Combined Graph',
+        title=_('Combined graph'),
         icon_name={
             'icon': 'graph',
             'emblem': 'add',  # TODO: Need its own icon

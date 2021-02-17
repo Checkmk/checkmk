@@ -11,10 +11,7 @@
 
 from typing import Optional, Union
 
-from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, Item, ServiceName
-
-from cmk.base.check_utils import LegacyCheckParameters
-from cmk.base.discovered_labels import DiscoveredServiceLabels
+from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, ServiceName
 
 # Management board checks
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
@@ -26,18 +23,6 @@ HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. inter
 _hostname: Optional[HostName] = None
 _check_type: Optional[CheckPluginNameStr] = None
 _service_description: Optional[ServiceName] = None
-
-
-# Obsolete! Do not confuse with the Service object exposed by the new API.
-class Service:
-    """Can be used to by the discovery function to tell Checkmk about a new service"""
-    def __init__(self,
-                 item: Item,
-                 parameters: LegacyCheckParameters = None,
-                 service_labels: Optional[DiscoveredServiceLabels] = None) -> None:
-        self.item = item
-        self.parameters = parameters
-        self.service_labels = service_labels or DiscoveredServiceLabels()
 
 
 def set_hostname(hostname: Optional[HostName]) -> None:

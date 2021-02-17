@@ -14,7 +14,7 @@ import pytest  # type: ignore[import]
 
 from cmk.base.item_state import MKCounterWrapped
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
-from cmk.base.check_api_utils import Service
+from cmk.base.check_api import Service
 
 
 class Tuploid:

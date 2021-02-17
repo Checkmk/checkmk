@@ -105,6 +105,8 @@ def make_user_audit_log_object(attributes):
     obj.pop("user_scheme_serial", None)
 
     # Skip default values (that will not be persisted)
+    if obj.get("start_url") is None:
+        obj.pop("start_url", None)
     if obj.get("ui_sidebar_position") is None:
         obj.pop("ui_sidebar_position", None)
     if obj.get("ui_theme") is None:

@@ -181,7 +181,7 @@ def user_exists(username: UserId) -> bool:
 def _user_exists_according_to_profile(username: UserId) -> bool:
     base_path = config.config_dir + "/" + ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
-            or os.path.exists(base_path + "serial.mk")
+        or os.path.exists(base_path + "serial.mk")
 
 
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
@@ -725,6 +725,7 @@ def load_users(lock: bool = False) -> Users:
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
+                    ('start_url', lambda x: None if x == "None" else x),
                     ('ui_theme', lambda x: x),
                     ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
@@ -874,6 +875,11 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "idle_timeout")
 
+        if user.get("start_url") is not None:
+            save_custom_attr(user_id, "start_url", user["start_url"])
+        else:
+            remove_custom_attr(user_id, "start_url")
+
         # Is None on first load
         if user.get("ui_theme") is not None:
             save_custom_attr(user_id, "ui_theme", user["ui_theme"])
@@ -988,7 +994,7 @@ def _multisite_keys() -> List[str]:
     """User attributes to put into multisite configuration"""
     multisite_variables = [
         var for var in _get_multisite_custom_variable_names()
-        if var not in ["ui_theme", "ui_sidebar_position"]
+        if var not in ("start_url", "ui_theme", "ui_sidebar_position")
     ]
     return [
         "roles",

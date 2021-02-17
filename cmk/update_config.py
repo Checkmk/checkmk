@@ -675,7 +675,7 @@ class UpdateConfig:
 
     def _rewrite_bi_configuration(self):
         """Convert the bi configuration to the new (REST API compatible) format"""
-        BILegacyPacksConverter(BIManager.bi_configuration_file()).convert_config()
+        BILegacyPacksConverter(self._logger, BIManager.bi_configuration_file()).convert_config()
 
     def _migrate_topology_dashlet(self):
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(

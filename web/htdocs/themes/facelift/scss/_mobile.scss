@@ -221,4 +221,13 @@ body.mobile {
     background-color: $white;
     border-radius: $spacing;
   }
+
+  input[type="checkbox"] {
+    &,
+    &:checked {
+      + label::before {
+        content: none;
+      }
+    }
+  }
 }

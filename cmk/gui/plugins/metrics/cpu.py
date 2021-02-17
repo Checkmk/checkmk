@@ -497,6 +497,7 @@ graph_info["fgpa_utilization"] = {
 #
 
 graph_info["util_average_1"] = {
+    "title": _("CPU utilization"),
     "metrics": [
         ("util", "area"),
         ("util_average", "line"),
@@ -733,6 +734,7 @@ graph_info["cpu_utilization_8"] = {
 }
 
 graph_info["util_fallback"] = {
+    "title": _("CPU utilization"),
     "metrics": [("util", "area"),],
     "scalars": [
         "util:warn",
@@ -782,6 +784,7 @@ graph_info["threads"] = {
 }
 
 graph_info["thread_usage"] = {
+    "title": _("Thread usage"),
     "metrics": [("thread_usage", "area"),],
     "scalars": ["thread_usage:warn", "thread_usage:crit"],
     "range": (0, 100),

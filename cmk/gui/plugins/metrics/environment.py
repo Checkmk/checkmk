@@ -301,6 +301,7 @@ graph_info["battery_currents"] = {
 }
 
 graph_info["battery_capacity"] = {
+    "title": _("Battery capacity"),
     "metrics": [("battery_capacity", "area"),],
     "range": (0, 100),
 }

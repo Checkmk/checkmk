@@ -365,26 +365,31 @@ graph_info["livestatus_requests_per_connection"] = {
 }
 
 graph_info["livestatus_usage"] = {
+    "title": _("Livestatus usage"),
     "metrics": [("livestatus_usage", "area"),],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_cmk"] = {
+    "title": _("Checkmk helper usage"),
     "metrics": [("helper_usage_cmk", "area"),],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_fetcher"] = {
+    "title": _("Fetcher helper usage"),
     "metrics": [("helper_usage_fetcher", "area"),],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_checker"] = {
+    "title": _("Checker helper usage"),
     "metrics": [("helper_usage_checker", "area"),],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_generic"] = {
+    "title": _("Generic helper usage"),
     "metrics": [("helper_usage_generic", "area"),],
     "range": (0, 100),
 }

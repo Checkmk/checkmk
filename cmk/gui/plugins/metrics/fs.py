@@ -87,6 +87,7 @@ metric_info["fs_provisioning"] = {
 #   '----------------------------------------------------------------------'
 
 graph_info["fs_used"] = {
+    "title": _("Filesystem size and used space"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),
@@ -102,6 +103,7 @@ graph_info["fs_used"] = {
 
 # draw a different graph if space reserved for root was excluded
 graph_info["fs_used_2"] = {
+    "title": _("Filesystem size and usage"),
     "metrics": [
         ("fs_used", "area"),
         ("fs_free", "stack"),
@@ -131,5 +133,6 @@ graph_info["shrinking"] = {
 }
 
 graph_info["fs_trend"] = {
+    "title": _("Trend of filesystem growth"),
     "metrics": [("fs_trend", "line"),],
 }

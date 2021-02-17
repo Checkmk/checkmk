@@ -137,20 +137,19 @@ def _item_spec_aws_limits_generic():
 def _vs_limits(resource: str,
                default_limit: int,
                vs_limit_cls: Optional[Type[Filesize]] = None,
-               unit: Optional[str] = None,
+               unit: str = "",
                title_default: str = "Limit from AWS API") -> Alternative:
-
-    if unit is None:
-        unit = resource
 
     if vs_limit_cls is None:
         vs_limit = Integer(
+            title=_("%s" % resource),
             unit=_("%s" % unit),
             minvalue=1,
             default_value=default_limit,
         )
     else:
         vs_limit = vs_limit_cls(
+            title=_("%s" % resource),
             minvalue=1,
             default_value=default_limit,
         )
@@ -160,25 +159,29 @@ def _vs_limits(resource: str,
     else:
         title = None
 
-    return Alternative(
-        title=title,
-        elements=[
-            Tuple(title=_("Set levels"),
-                  elements=[
-                      Alternative(elements=[FixedValue(
-                          None,
-                          totext=_(title_default),
-                      ), vs_limit]),
-                      Percentage(title=_("Warning at"), default_value=80.0),
-                      Percentage(title=_("Critical at"), default_value=90.0),
-                  ]),
-            Tuple(title=_("No levels"),
-                  elements=[
-                      FixedValue(None, totext=""),
-                      FixedValue(None, totext=""),
-                      FixedValue(None, totext=""),
-                  ]),
-        ])
+    return Alternative(title=title,
+                       elements=[
+                           Tuple(title=_("Set levels"),
+                                 elements=[
+                                     Alternative(orientation="horizontal",
+                                                 elements=[
+                                                     FixedValue(
+                                                         None,
+                                                         title=_(title_default),
+                                                         totext="",
+                                                     ),
+                                                     vs_limit,
+                                                 ]),
+                                     Percentage(title=_("Warning at"), default_value=80.0),
+                                     Percentage(title=_("Critical at"), default_value=90.0),
+                                 ]),
+                           Tuple(title=_("No levels"),
+                                 elements=[
+                                     FixedValue(None, totext=""),
+                                     FixedValue(None, totext=""),
+                                     FixedValue(None, totext=""),
+                                 ]),
+                       ])
 
 
 #.

@@ -325,6 +325,12 @@ class ActivateChangesWriter:
         # escaped / allowed HTML and strings to be escaped.
         text = escaping.escape_text(text)
 
+        # If the local site don't need a restart, there is no reason to add a
+        # change for that site. Otherwise the activation page would show a
+        # change but the site would not be selected for activation.
+        if config.site_is_local(site_id) and need_restart is False:
+            return None
+
         SiteChanges(SiteChanges.make_path(site_id)).append({
             "id": change_id,
             "action_name": action_name,

@@ -372,11 +372,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 need_restart = self._is_activate_needed(site_id)
                 need_sync = self.is_sync_needed(site_id)
                 need_action = need_restart or need_sync
+                nr_changes = len(self._changes_of_site(site_id))
 
                 # Activation checkbox
                 table.cell("", css="buttons")
-                if can_activate_all:
-                    html.checkbox("site_%s" % site_id, bool(need_action), cssclass="site_checkbox")
+                if can_activate_all and nr_changes:
+                    html.checkbox("site_%s" % site_id, need_action, cssclass="site_checkbox")
 
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")
@@ -429,9 +430,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                            site_status.get("livestatus_version", ""),
                            css="narrow nobr")
 
-                table.cell(_("Changes"),
-                           "%d" % len(self._changes_of_site(site_id)),
-                           css="number narrow nobr")
+                table.cell(_("Changes"), "%d" % nr_changes, css="number narrow nobr")
 
                 table.cell(_("Progress"), css="repprogress")
                 html.open_div(id_="site_%s_status" % site_id, class_=["msg"])

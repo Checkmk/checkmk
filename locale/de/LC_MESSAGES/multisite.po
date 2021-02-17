@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-16 02:01+0000\n"
-"Last-Translator: Moritz Kiemer <moritz.kiemer@tribe29.com>\n"
+"PO-Revision-Date: 2021-02-17 04:56+0000\n"
+"Last-Translator: Timotheus Bachinger <timotheus.bachinger@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -1075,6 +1075,11 @@ msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
 msgstr ""
 "<b>Negation:</b> Wende Regel auf alle <b> außer</b> den oben stehenden Hosts "
 "an"
+
+msgid ""
+"<b>Note:</b> The ntopng integration is an add-on feature for which a "
+"subscription add-on has to be purchased separately."
+msgstr ""
 
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
@@ -4835,9 +4840,6 @@ msgstr "Hosts immer als oben annehmen"
 msgid "Always bulk"
 msgstr "Immer aktiv"
 
-msgid "Always draw the service status on the border"
-msgstr "Zeige den Service Status immer am Rand"
-
 msgid "Always install Python with agent"
 msgstr "Installiere Python immer mit dem Agenten"
 
@@ -7070,29 +7072,6 @@ msgstr ""
 "des benutzen Platzes ausschließen."
 
 msgid ""
-"By default Check_MK uses command line calls of Net-SNMP tools like snmpget "
-"or snmpwalk to gather SNMP information. For each request a new command line "
-"program is being executed. It is now possible to use the inline SNMP "
-"implementation which calls the net-snmp libraries directly via its python "
-"bindings. This should increase the performance of SNMP checks in a "
-"significant way. The inline SNMP mode is a feature which improves the "
-"performance for large installations and only available via our subscription."
-"<b>Note:</b> This option is deprecated and has been replaced by Choose SNMP "
-"Backend. Changes to this option will have no effect to the behaviour of "
-"Checkmk"
-msgstr ""
-"Standardmäßig verwendet Check_MK zum Holen von SNMP-Informationen "
-"Kommandozeilenbefehle aus dem Net-SNMP-Projekt, wie snmpget oder snmpget. "
-"Jede Anfrage benötigt so die Ausführung eines externen Programmes. Bei der "
-"neuen integrierten SNMP-Implementierung werden die Net-SNMP-Bibliotheken "
-"direkt aus dem Python-Programm angesprochen. Dies verringert den CPU-"
-"Verbrauch beim SNMP-Monitoring auf etwa die Hälfte, was vor allem für "
-"größere Installation nützlich ist.\n"
-"<b>Hinweis:</b> Diese Option ist veraltet und wurde durch Choose SNMP "
-"Backend ersetzt. Änderungen an dieser Option haben keinen Einfluss auf das "
-"Verhalten von Checkmk"
-
-msgid ""
 "By default Check_MK uses the community \"public\" to contact hosts via SNMP "
 "v1/v2. This rule can be used to customize the the credentials to be used "
 "when contacting hosts via SNMP."
@@ -7119,6 +7098,29 @@ msgstr ""
 "für größere Installation nützlich ist. Beide SNMP-Modi sind Features, welche "
 "die Performance für große Installationen verbessern und sind nur über unser "
 "Abonnement verfügbar."
+
+#, fuzzy, python-format
+msgid ""
+"By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
+"snmpwalk to gather SNMP information. For each request a new command line "
+"program is being executed. It is now possible to use the inline SNMP "
+"implementation which calls the net-snmp libraries directly via its python "
+"bindings. This should increase the performance of SNMP checks in a "
+"significant way. The inline SNMP mode is a feature which improves the "
+"performance for large installations and only available via our subscription."
+"<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
+"Changes to this option will have no effect to the behaviour of Checkmk"
+msgstr ""
+"Standardmäßig verwendet Check_MK zum Holen von SNMP-Informationen "
+"Kommandozeilenbefehle aus dem Net-SNMP-Projekt, wie snmpget oder snmpget. "
+"Jede Anfrage benötigt so die Ausführung eines externen Programmes. Bei der "
+"neuen integrierten SNMP-Implementierung werden die Net-SNMP-Bibliotheken "
+"direkt aus dem Python-Programm angesprochen. Dies verringert den CPU-"
+"Verbrauch beim SNMP-Monitoring auf etwa die Hälfte, was vor allem für "
+"größere Installation nützlich ist.\n"
+"<b>Hinweis:</b> Diese Option ist veraltet und wurde durch Choose SNMP "
+"Backend ersetzt. Änderungen an dieser Option haben keinen Einfluss auf das "
+"Verhalten von Checkmk"
 
 msgid ""
 "By default all multiple graphs in emails are displayed floating nearby. You "
@@ -9618,6 +9620,12 @@ msgstr "Kommentar für die Wartungszeit"
 msgid "Color gradient"
 msgstr "Farbverlauf"
 
+msgid "Color value after SERVICE state"
+msgstr ""
+
+msgid "Color value following it's METRIC THRESHOLDS if available"
+msgstr ""
+
 msgid "Colored Background"
 msgstr "Farbiger Hintergrund"
 
@@ -10280,6 +10288,10 @@ msgstr ""
 "ausgegeben werden können, allerdings muss dafür mehr Konfigurationsaufwand "
 "betrieben werden und die Zustellung ist synchron, wir empfehlen daher die "
 "Verwendung nur zusammen mit dem Alarmspooler."
+
+#, fuzzy
+msgid "Confirm"
+msgstr "Bestätigen"
 
 msgid "Confirm aux tag deletion"
 msgstr "Löschen des Aux-Tags bestätigen"
@@ -12394,6 +12406,10 @@ msgid "Data not found"
 msgstr "Daten nicht gefunden"
 
 #, fuzzy
+msgid "Data range"
+msgstr "Datumsbereich"
+
+#, fuzzy
 msgid "Data read"
 msgstr "Gelesene Dateneinheiten"
 
@@ -14385,10 +14401,6 @@ msgstr "Nur eine Zusammenfassung der Datendateien anzeigen"
 msgid "Display only a summary of all Transactionlogs"
 msgstr "Nur eine Zusammenfassung der Transaktionslogs anzeigen"
 
-#, fuzzy
-msgid "Display range"
-msgstr "Durchschnitt anzeigen"
-
 msgid "Display range: Minimum must be strictly less than maximum"
 msgstr ""
 "Anzeigebereich: Minimum muss grundsätzlich weniger sein als das Maximum"
@@ -14945,7 +14957,7 @@ msgid "Do not show a summary line"
 msgstr "Keine Zusammenfassung anzeigen"
 
 #, fuzzy
-msgid "Do not show any service status border"
+msgid "Do not show any status border"
 msgstr "Reservierten Platz nicht anzeigen"
 
 #, fuzzy
@@ -15320,6 +15332,10 @@ msgstr "Nicht den Graphtitel anzeigen"
 msgid "Don't show home port info"
 msgstr "Keinen benutzerdefinierten Port verwenden"
 
+#, fuzzy
+msgid "Don't show information of limits"
+msgstr "Informationen zeigen von einzelnem"
+
 msgid "Don't show or warn if \"Failed Actions\" are present (default)"
 msgstr ""
 "Zeige es nicht an und warne nicht, wenn \"Failed Actions\" vorhanden sind "
@@ -15487,7 +15503,12 @@ msgstr "Wartungszeiten von Host"
 msgid "Downtimes of service"
 msgstr "Wartungszeiten von Service"
 
-msgid "Draw a status border when service is not OK"
+#, fuzzy
+msgid "Draw a status border when METRICS THRESHOLDS are crossed"
+msgstr "Zeichne eine Statusleiste, wenn der Service nicht OK ist"
+
+#, fuzzy
+msgid "Draw a status border when SERVICE is not OK"
 msgstr "Zeichne eine Statusleiste, wenn der Service nicht OK ist"
 
 msgid "Driver"
@@ -18732,6 +18753,10 @@ msgid "Folio"
 msgstr "Folio"
 
 msgid "Follow the redirection"
+msgstr "Der Umleitung folgen"
+
+#, fuzzy
+msgid "Follow theme default"
 msgstr "Der Umleitung folgen"
 
 msgid "Follow, but stay to same IP address"
@@ -26329,10 +26354,6 @@ msgstr "Zuletzt gesehen"
 msgid "Last service check is not recent enough"
 msgstr "Letzter Service-Check ist nicht aktuell genug"
 
-#, fuzzy
-msgid "Last state"
-msgstr "Bester Status"
-
 #, python-format
 msgid "Last successful sync %d seconds ago."
 msgstr "Letzte erfolgreiche Synchronisation vor %d Sekunden."
@@ -29826,12 +29847,12 @@ msgstr "Metrik-Vorhersage"
 msgid "Metric History"
 msgstr "Metrik-Historie"
 
-#, fuzzy
-msgid "Metric Status"
-msgstr "Verwalten von Tags"
-
 msgid "Metric aggregation"
 msgstr "Metrik-Aggregation"
+
+#, fuzzy
+msgid "Metric color"
+msgstr "Metrik-Historie"
 
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
@@ -29849,13 +29870,6 @@ msgstr ""
 msgid "Metric not found"
 msgstr "Metrik nicht gefunden"
 
-#, fuzzy
-msgid "Metric state is colored in its value"
-msgstr "Services nach Status eingefärbt"
-
-msgid "Metric status is colored on the dashlet background"
-msgstr "Der Metrikstatus wird auf dem Dashlet-Hintergrund farbig dargestellt"
-
 msgid ""
 "Metric transformations and combinations like Forecasts calculations, "
 "aggregations and filtering are only available with the Checkmk Enterprise "
@@ -29865,8 +29879,9 @@ msgstr ""
 "Aggregationen und Filterungen sind nur mit den Checkmk Enterprise Editions "
 "verfügbar"
 
-msgid "Metric value is displayed in neutral color"
-msgstr "Der Metrikwert wird in neutraler Farbe angezeigt."
+#, fuzzy
+msgid "Metric: "
+msgstr "Metrik"
 
 msgid "Metrics"
 msgstr "Metriken"
@@ -30673,9 +30688,6 @@ msgstr "Verbindung"
 #, fuzzy
 msgid "My graphs"
 msgstr "Meine Graphen"
-
-msgid "My workplace"
-msgstr "Mein Arbeitsbereich"
 
 msgid "MySQL"
 msgstr "MySQL"
@@ -32422,12 +32434,11 @@ msgstr "Name des Peers"
 msgid "Ntop: Alerts"
 msgstr "Alarme"
 
-#, fuzzy
-msgid "Ntopng"
-msgstr "Ntopng"
+msgid "Ntopng (chargeable add-on)"
+msgstr ""
 
 #, fuzzy
-msgid "Ntopng Connection Parameters"
+msgid "Ntopng Connection Parameters (chargeable add-on)"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
 msgid "Nullmailer: Mail Queue"
@@ -32674,6 +32685,10 @@ msgstr "Anzahl der Hops"
 msgid "Number of hosts"
 msgstr "Anzahl der Hosts"
 
+#, fuzzy
+msgid "Number of hosts (excluded)"
+msgstr "Anzahl der Hosts"
+
 msgid "Number of hosts in state DOWN (Host Group)"
 msgstr "Anzahl von Hosts im Status DOWN (Hostgruppe)"
 
@@ -32869,6 +32884,10 @@ msgstr "Anzahl von Services (Hostgruppe)"
 
 msgid "Number of services (Service Group)"
 msgstr "Anzahl Services (Servicegruppe)_"
+
+#, fuzzy
+msgid "Number of services (excluded)"
+msgstr "Anzahl von Services"
 
 msgid "Number of services in state CRIT"
 msgstr "Anzahl von Services im Status CRIT"
@@ -40728,6 +40747,10 @@ msgid "Service-Level"
 msgstr "Service-Level"
 
 #, fuzzy
+msgid "Service: "
+msgstr "Service:"
+
+#, fuzzy
 msgid "ServiceNow URL"
 msgstr "Servicenow URL"
 
@@ -41602,6 +41625,10 @@ msgstr "Namen von Plugins anzeigen"
 msgid "Show prediction for "
 msgstr "Vorhersage zeigen für"
 
+#, fuzzy
+msgid "Show range limits"
+msgstr "Alias anzeigen"
+
 msgid "Show reserved space"
 msgstr "Reserviertern Platz anzeigen"
 
@@ -41659,6 +41686,9 @@ msgstr "Zeige die vertikale Achse"
 
 msgid "Show the header of the dashboard with the configured title."
 msgstr "Den konfigurierten Titel der Übersicht auf der Seite anzeigen"
+
+msgid "Show the limits of values displayed"
+msgstr ""
 
 msgid "Show the list of hosts in this category"
 msgstr "Liste der Hosts in dieser Kategorie anzeigen"
@@ -42465,6 +42495,17 @@ msgstr "Es tut uns leid"
 
 msgid "Sorry, I will not display more than 900 hosts."
 msgstr "Es werden maximal 900 Hosts angezeigt."
+
+#, fuzzy
+msgid ""
+"Sorry, but your unlimited 30-day trial of Checkmk has ended. The Checkmk "
+"Free Edition does not allow distributed setups after the 30-day trial "
+"period. In case you want to test distributed setups, please <a href="
+"\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>."
+msgstr ""
+"Ein Verteiltes Setup ist in der Checkmk Demo nicht verfügbar. Wenn Sie ein "
+"Verteiltes Setup testen wollen, <a href=\"mailto:info@checkmk.com"
+"\">kontaktieren Sie uns</a> bitte."
 
 msgid ""
 "Sorry, only absolute filenames are allowed. Your filename must begin with a "
@@ -44135,10 +44176,6 @@ msgstr "Statusdetail"
 msgid "Status view"
 msgstr "Statusansicht"
 
-#, fuzzy
-msgid "Status: "
-msgstr "Status"
-
 msgid "Status: DISBALE"
 msgstr "Status: DISABLE"
 
@@ -45564,17 +45601,6 @@ msgstr ""
 "Dieses Feature heißt MRPE (MK's Remote Plugin Executor). Diese Regel erlaubt "
 "den Agenten so zu konfigurieren, dass er Plugins Ihrer Wahl mit den "
 "gegebenen Argumenten ausführt."
-
-#, fuzzy
-msgid ""
-"The Checkmk Enterprise Free Edition is expired and you can create a "
-"distributed setup with only two sites: one central and one remote site. In "
-"case you want to test more complex distributed setups, please <a href="
-"\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>."
-msgstr ""
-"Ein Verteiltes Setup ist in der Checkmk Demo nicht verfügbar. Wenn Sie ein "
-"Verteiltes Setup testen wollen, <a href=\"mailto:info@checkmk.com"
-"\">kontaktieren Sie uns</a> bitte."
 
 #, fuzzy
 msgid "The Checkmk Micro Core"
@@ -54083,7 +54109,7 @@ msgid "Top Local Talkers"
 msgstr "%s: lokale Top Talkers"
 
 msgid "Top Talkers"
-msgstr ""
+msgstr "Top Talkers"
 
 #, fuzzy
 msgid "Top alerters"
@@ -54098,7 +54124,7 @@ msgstr "Verhalten beim Seitenanfang"
 
 #, python-format
 msgid "Top talkers not implemented for type: %s"
-msgstr ""
+msgstr "Top talkers sind für folgenden Typ nicht verfügbar: %s"
 
 msgid "Topic"
 msgstr "Thema"
@@ -59905,6 +59931,10 @@ msgstr "Arbeitsgruppe"
 msgid "Workgroup or domain used (defaults to <tt>WORKGROUP</tt>)"
 msgstr "Benutzte Arbeitsgruppe oder Domäne (Default ist <tt>WORKGROUP</tt>)"
 
+#, fuzzy
+msgid "Workplace"
+msgstr "Mein Arbeitsbereich"
+
 msgid "Worst - take worst of all node states"
 msgstr "den schlechtesten Zustand aller Nodes verwenden"
 
@@ -63632,6 +63662,45 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Always draw the service status on the border"
+#~ msgstr "Zeige den Service Status immer am Rand"
+
+#, fuzzy
+#~| msgid "Display average"
+#~ msgid "Display range"
+#~ msgstr "Durchschnitt anzeigen"
+
+#, fuzzy
+#~| msgid "Best state"
+#~ msgid "Last state"
+#~ msgstr "Bester Status"
+
+#, fuzzy
+#~| msgid "Manage tags"
+#~ msgid "Metric Status"
+#~ msgstr "Verwalten von Tags"
+
+#, fuzzy
+#~| msgid "Services colored according to state"
+#~ msgid "Metric state is colored in its value"
+#~ msgstr "Services nach Status eingefärbt"
+
+#~ msgid "Metric status is colored on the dashlet background"
+#~ msgstr ""
+#~ "Der Metrikstatus wird auf dem Dashlet-Hintergrund farbig dargestellt"
+
+#~ msgid "Metric value is displayed in neutral color"
+#~ msgstr "Der Metrikwert wird in neutraler Farbe angezeigt."
+
+#, fuzzy
+#~ msgid "Ntopng"
+#~ msgstr "Ntopng"
+
+#, fuzzy
+#~| msgid "Status"
+#~ msgid "Status: "
+#~ msgstr "Status"
+
 #~ msgid "%d site is not connected"
 #~ msgid_plural "%d sites are not connected"
 #~ msgstr[0] "%d Instanz ist nicht verbunden"
@@ -66779,9 +66848,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Service states"
 #~ msgstr "Service-Status"
-
-#~ msgid "Service:"
-#~ msgstr "Service:"
 
 #~ msgid "Servicegroup (Regex)"
 #~ msgstr "Servicegruppe (Regex)"

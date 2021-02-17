@@ -887,7 +887,7 @@ def _dashboard_related_entries(name):
         yield PageMenuEntry(
             # FIXME: get rid of the .replace(...) workaround once we have a main dashboard without context
             title=dashboard['title'].replace("$SITE$", ""),
-            icon_name=dashboard['icon'],
+            icon_name=dashboard['icon'] or 'unknown',
             item=make_simple_link(
                 makeuri_contextless(
                     request,

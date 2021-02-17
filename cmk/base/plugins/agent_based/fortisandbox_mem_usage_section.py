@@ -5,14 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Mapping
+from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import (
     SNMPTree,
     register,
-)
-from .agent_based_api.v1.type_defs import StringTable
-from .mem_used import (
-    discover_mem_used,
-    check_mem_used,
 )
 from .utils.fortinet import DETECT_FORTISANDBOX
 
@@ -42,13 +38,4 @@ register.snmp_section(
             "4",  # fsaSysMemCapacity
         ],
     ),
-)
-
-register.check_plugin(
-    name="fortisandbox_mem_usage",
-    service_name="Memory",
-    discovery_function=discover_mem_used,
-    check_function=check_mem_used,
-    check_default_parameters={"levels": (80.0, 90.0)},
-    check_ruleset_name="memory",
 )

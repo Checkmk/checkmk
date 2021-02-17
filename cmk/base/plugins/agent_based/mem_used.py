@@ -203,3 +203,13 @@ register.check_plugin(
     },
     check_ruleset_name="memory",
 )
+
+# Different default parameters!
+register.check_plugin(
+    name="fortisandbox_mem_usage",
+    service_name="Memory",
+    discovery_function=discover_mem_used,
+    check_function=check_mem_used,
+    check_default_parameters={"levels": (80.0, 90.0)},
+    check_ruleset_name="memory",
+)

@@ -13,7 +13,7 @@ from typing import Any, Optional, Tuple, Callable
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, valuespec as valuespec, sites
+from cmk.gui import watolib, valuespec as valuespec, sites, config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
@@ -800,6 +800,14 @@ class AttributesField(_fields.Dict):
                 self.fail("attribute_forbidden", attribute='meta_data', value=value)
         except MKUserError as exc:
             raise ValidationError(str(exc))
+
+
+class SiteField(_fields.String):
+    default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
+
+    def _validate(self, value):
+        if value not in config.allsites().keys():
+            self.fail("unknown_site", site=value)
 
 
 Boolean = _fields.Boolean

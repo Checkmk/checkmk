@@ -25,7 +25,11 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 
 PARAMETERS = [{
-    'site': fields.String(description="Restrict the query to this particular site."),
+    'sites': fields.List(
+        fields.SiteField(),
+        description="Restrict the query to this particular site.",
+        missing=list,
+    ),
     'query': fields.query_field(Services, required=False),
     'columns': fields.List(
         fields.LiveStatusColumn(

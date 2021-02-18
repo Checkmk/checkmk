@@ -197,7 +197,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                         status=200)
     for entry in coll.json['value']:
         # Fetch the new E-Tag.
-        resp = wsgi_app.get("/NO_SITE/check_mk/api/v0" + entry['href'], status=200)
+        resp = wsgi_app.get(entry['href'], status=200)
         # With the right ETag, the operation shall succeed
         wsgi_app.follow_link(resp,
                              '.../delete',

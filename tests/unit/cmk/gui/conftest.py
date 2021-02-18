@@ -296,7 +296,7 @@ class WebTestAppForCMK(webtest.TestApp):
         rel = _expand_rel(rel)
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
             link = get_link(resp.json, rel)
-            return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
+            resp = self.call_method(link.get('method', 'GET').lower(), link['href'], **kw)
         return resp
 
     def api_request(self, action, request, output_format='json', **kw):

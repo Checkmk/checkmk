@@ -13,6 +13,15 @@ from cmk.gui.plugins.dashboard.single_metric import dashlet_title
     [
         pytest.param(
             {
+                "show_title": True,
+                "single_infos": ["host", "service"],
+            },
+            ("", {}, {}),
+            "$METRIC_NAME$",
+            id="default title",
+        ),
+        pytest.param(
+            {
                 "show_title": False,
                 "title": "title",
                 "single_infos": ["host", "service"],
@@ -24,6 +33,7 @@ from cmk.gui.plugins.dashboard.single_metric import dashlet_title
         pytest.param(
             {
                 "show_title": True,
+                "title": "",
                 "single_infos": ["host", "service"],
             },
             ("", {}, {}),

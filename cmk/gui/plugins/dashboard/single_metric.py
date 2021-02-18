@@ -249,7 +249,7 @@ class SingleMetricDashlet(ABCFigureDashlet):
 
     @staticmethod
     def default_display_title() -> str:
-        return ""
+        return "$METRIC_NAME$"
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:

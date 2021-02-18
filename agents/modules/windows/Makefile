@@ -146,4 +146,8 @@ python_344:
 	@copy /Y $(PYTHON_MODULE) $(ARTEFACT_MODULE)
 	@powershell Write-Host -foreground Green "Python 3.4.4 is saved"
 
+integration:
+	@make -C "tests" test-integration
 
+integration-force:
+	@make -C "tests" test-integration-force

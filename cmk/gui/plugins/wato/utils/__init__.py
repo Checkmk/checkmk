@@ -1397,7 +1397,7 @@ def configure_attributes(new,
     hide_attributes = []
     show_more_mode: bool = False
 
-    show_more_mode = bool(config.user.show_mode)
+    show_more_mode = config.user.show_mode != "default_show_less"
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies

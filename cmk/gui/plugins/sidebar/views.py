@@ -12,7 +12,7 @@ import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
 if not cmk_version.is_raw_edition():
-    import cmk.gui.cee.reporting as reporting
+    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
 else:
     reporting = None  # type: ignore[assignment]
 from cmk.gui.main_menu import mega_menu_registry

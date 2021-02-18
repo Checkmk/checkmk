@@ -368,6 +368,16 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
         raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
 
+        config_cache = config.get_config_cache()
+        labels = config_cache.labels
+        ruleset_matcher = config_cache.ruleset_matcher
+        for k, v in labels.labels_of_host(ruleset_matcher, raw_context['HOSTNAME']).items():
+            raw_context['HOSTLABEL_' + k] = v
+        if raw_context['WHAT'] == 'SERVICE':
+            for k, v in labels.labels_of_service(ruleset_matcher, raw_context['HOSTNAME'],
+                                                 raw_context['SERVICEDESC']).items():
+                raw_context['SERVICELABEL_' + k] = v
+
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
 

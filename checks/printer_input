@@ -14,6 +14,7 @@ factory_settings['printer_input_default_levels'] = {
 }
 
 check_info["printer_input"] = {
+    'parse_function': parse_printer_io,
     'inventory_function': inventory_printer_io,
     'check_function': lambda item, params, info: check_printer_io(item, params, info, 'input'),
     'service_description': 'Input %s',

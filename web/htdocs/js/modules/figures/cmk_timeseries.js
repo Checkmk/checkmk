@@ -116,7 +116,8 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             };
         this.figure_size = new_size;
         if (this._title) {
-            this.margin.top = 24 + 8; // 24 from UX project title, 8 timeseries y-label margin
+            this.margin.top = 24; // 24 from UX project title
+            this._adjust_margin();
         }
         this.plot_size = {
             width: new_size.width - this.margin.left - this.margin.right,
@@ -133,6 +134,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this.orig_scale_y.range([this.plot_size.height, 0]);
     }
 
+    _adjust_margin() {}
     _get_legend_height() {
         return 0;
     }
@@ -503,6 +505,9 @@ cmk_figures.figure_registry.register(TimeseriesFigure);
 class AverageScatterplotFigure extends TimeseriesFigure {
     static ident() {
         return "average_scatterplot";
+    }
+    _adjust_margin() {
+        this.margin.top += 8; // timeseries y-label margin
     }
 
     _mouse_down() {

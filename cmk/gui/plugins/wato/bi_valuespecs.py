@@ -157,6 +157,10 @@ def _get_aggregation_choices():
 #     'rule_id': 'applications',
 #     'type': 'call_a_rule'})))
 def _convert_bi_rule_to_vs(value):
+    if value is None:
+        # The "complain phase" sets the value to None. o.O
+        # If None is returned, it seems the valuespec uses the parameters from the request
+        return value
     if value["search"]["type"] == "empty":
         return value["action"]["type"], value["action"]
 
@@ -167,7 +171,7 @@ def _convert_bi_rule_from_vs(value):
     if value[0] in [
             "state_of_host", "state_of_service", "state_of_remaining_services", "call_a_rule"
     ]:
-        action = value[1]
+        action = copy.deepcopy(value[1])
         action["type"] = value[0]
         return {"action": action, "search": {"type": "empty"}}
 

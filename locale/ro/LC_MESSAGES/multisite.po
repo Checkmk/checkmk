@@ -8878,22 +8878,24 @@ msgstr ""
 msgid "Clone Aggregation %s"
 msgstr "Agregare noua"
 
-msgid "Clone Custom Graph"
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Clone Forecast Graph"
-msgstr "Grup nou"
-
-msgid "Clone Graph Collection"
-msgstr ""
-
 msgid "Clone SLA"
 msgstr ""
 
 msgid "Clone bookmark list"
 msgstr ""
+
+#, fuzzy
+msgid "Clone custom graph"
+msgstr "Atribute personalizate"
+
+# georgem ##############
+#, fuzzy
+msgid "Clone forecast graph"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Clone graph collection"
+msgstr "Conexiune Noua"
 
 msgid "Clone graph tuning"
 msgstr ""
@@ -9156,10 +9158,6 @@ msgstr ""
 
 msgid "Com. buf. max/total"
 msgstr ""
-
-#, fuzzy
-msgid "Combined Graph"
-msgstr "Atribute personalizate"
 
 msgid "Combined graph"
 msgstr ""
@@ -10476,17 +10474,6 @@ msgstr ""
 msgid "Create Conference Latency"
 msgstr ""
 
-msgid "Create Custom Graph"
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Create Forecast Graph"
-msgstr "Grup nou"
-
-msgid "Create Graph Collection"
-msgstr ""
-
 msgid "Create SLA"
 msgstr ""
 
@@ -10576,8 +10563,21 @@ msgstr ""
 msgid "Create clone of %s"
 msgstr ""
 
+#, fuzzy
+msgid "Create custom graph"
+msgstr "Atribute personalizate"
+
+# georgem ##############
+#, fuzzy
+msgid "Create forecast graph"
+msgstr "Grup nou"
+
 msgid "Create gateway hosts in"
 msgstr ""
+
+#, fuzzy
+msgid "Create graph collection"
+msgstr "Conexiune Noua"
 
 msgid "Create graph tuning"
 msgstr ""
@@ -11186,10 +11186,6 @@ msgstr "Atribute personalizate"
 msgid "Custom Graph"
 msgstr "Atribute personalizate"
 
-#, fuzzy
-msgid "Custom Graphs"
-msgstr "Atribute personalizate"
-
 msgid "Custom Host/Service Notes URL"
 msgstr ""
 
@@ -11252,6 +11248,10 @@ msgstr "Atribute personalizate"
 
 #, fuzzy
 msgid "Custom footer links"
+msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Custom graph"
 msgstr "Atribute personalizate"
 
 msgid "Custom graph timeranges"
@@ -13635,6 +13635,10 @@ msgstr "Nici o schimbare"
 msgid "Disovered services of the host"
 msgstr "Grup nou"
 
+#, fuzzy
+msgid "Display"
+msgstr "% / gamă"
+
 msgid "Display ESX Host power state on"
 msgstr ""
 
@@ -15067,9 +15071,6 @@ msgstr "Agregare noua"
 msgid "Edit BI Pack %s"
 msgstr ""
 
-msgid "Edit Custom Graph"
-msgstr ""
-
 msgid "Edit Dashboards"
 msgstr ""
 
@@ -15080,15 +15081,7 @@ msgstr ""
 msgid "Edit Downtimes"
 msgstr "Întreruperi adhoc"
 
-# georgem ##############
-#, fuzzy
-msgid "Edit Forecast Graph"
-msgstr "Grup nou"
-
 msgid "Edit GUI design for this customer"
-msgstr ""
-
-msgid "Edit Graph Collection"
 msgstr ""
 
 #, fuzzy, python-format
@@ -15151,6 +15144,10 @@ msgstr "Conexiune Noua"
 msgid "Edit contact group"
 msgstr ""
 
+#, fuzzy
+msgid "Edit custom graph"
+msgstr "Atribute personalizate"
+
 #, fuzzy, python-format
 msgid "Edit customer %s"
 msgstr "Editeaza regulile de loguri"
@@ -15158,6 +15155,11 @@ msgstr "Editeaza regulile de loguri"
 #, fuzzy
 msgid "Edit dashboard"
 msgstr "Adaugă element"
+
+# georgem ##############
+#, fuzzy
+msgid "Edit forecast graph"
+msgstr "Grup nou"
 
 #, fuzzy, python-format
 msgid "Edit foreign %s"
@@ -15170,6 +15172,10 @@ msgstr "Setari"
 #, fuzzy
 msgid "Edit graph"
 msgstr "Adaugă group de model"
+
+#, fuzzy
+msgid "Edit graph collection"
+msgstr "Conexiune Noua"
 
 msgid "Edit graph tuning"
 msgstr ""
@@ -16444,9 +16450,6 @@ msgstr "Activare Configurare"
 msgid "Example for Parameters"
 msgstr ""
 
-msgid "Examples"
-msgstr ""
-
 msgid "Exc."
 msgstr ""
 
@@ -17604,16 +17607,20 @@ msgstr "Spațiu liber exact"
 msgid "Filter"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Filter %s selection by hostname: "
+msgstr "%s nu este un număr întreg valid."
+
+#, fuzzy, python-format
+msgid "Filter %s selection by service: "
+msgstr "%s nu este un număr întreg valid."
+
 msgid "Filter / Search"
 msgstr ""
 
 #, fuzzy
 msgid "Filter Host"
 msgstr "%d setări de Filtrare"
-
-#, fuzzy
-msgid "Filter agents"
-msgstr "Agregare noua"
 
 #, fuzzy
 msgid "Filter aggregations"
@@ -17649,35 +17656,8 @@ msgstr ""
 msgid "Filter group (see help)"
 msgstr "Reguli"
 
-#, fuzzy
-msgid "Filter hosts"
-msgstr " pentru elementul %s"
-
-msgid "Filter metric selection by hostname: "
-msgstr ""
-
-#, fuzzy
-msgid "Filter metric selection by service: "
-msgstr "%s nu este un număr întreg valid."
-
 msgid "Filter pattern (RegExp)"
 msgstr ""
-
-#, fuzzy
-msgid "Filter permissions"
-msgstr "Optiuni tabel"
-
-#, fuzzy
-msgid "Filter rule packs"
-msgstr "Reguli"
-
-#, fuzzy
-msgid "Filter rules"
-msgstr "Ascude regulile de utilizator"
-
-#, fuzzy
-msgid "Filter settings"
-msgstr "%d setări de Filtrare"
 
 #, fuzzy
 msgid "Filter view"
@@ -18161,17 +18141,16 @@ msgstr ""
 msgid "Forecast Graph"
 msgstr "Grup nou"
 
-# georgem ##############
-#, fuzzy
-msgid "Forecast Graphs"
-msgstr "Grup nou"
-
 #, fuzzy
 msgid "Forecast Model Configuration"
 msgstr "Activare Configurare"
 
 msgid "Forecast Trend (Slow)"
 msgstr ""
+
+#, fuzzy
+msgid "Forecast graph"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Forecast graphs"
@@ -18306,8 +18285,9 @@ msgstr ""
 msgid "Found no matching rows. Please try another search term."
 msgstr ""
 
-msgid "Found no rules packs."
-msgstr ""
+#, fuzzy
+msgid "Found no rule packs."
+msgstr "Reguli"
 
 msgid "Found no services yet. To retry please execute a full scan."
 msgstr ""
@@ -18690,10 +18670,6 @@ msgid "Global notification rules"
 msgstr ""
 
 #, fuzzy
-msgid "Global reports"
-msgstr "rapoarte"
-
-#, fuzzy
 msgid "Global services to monitor"
 msgstr "Adaugă instanță pentru monitorizare"
 
@@ -18759,12 +18735,6 @@ msgstr "Dimensiunea Maxima"
 msgid "Graph"
 msgstr ""
 
-msgid "Graph Collection"
-msgstr ""
-
-msgid "Graph Collections"
-msgstr ""
-
 #, fuzzy
 msgid "Graph Options"
 msgstr "Optiuni tabel"
@@ -18776,6 +18746,10 @@ msgstr "Conexiune Noua"
 #, fuzzy, python-format
 msgid "Graph collection '%s' does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+msgid "Graph collections"
+msgstr "Conexiune Noua"
 
 #, python-format
 msgid "Graph identification: The '%s' attribute is missing"
@@ -20553,6 +20527,10 @@ msgstr ""
 
 msgid "Host problem acknowledged"
 msgstr ""
+
+#, fuzzy
+msgid "Host problem history"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Host problems"
 msgstr ""
@@ -26600,6 +26578,10 @@ msgstr ""
 msgid "Main dashboard"
 msgstr "Adaugă element"
 
+#, fuzzy
+msgid "Main dashboard $SITE$"
+msgstr "Adaugă element"
+
 msgid "Main directory"
 msgstr ""
 
@@ -29424,20 +29406,8 @@ msgid "New Action"
 msgstr ""
 
 #, fuzzy
-msgid "New Collection"
-msgstr "Conexiune Noua"
-
-#, fuzzy
 msgid "New Connections"
 msgstr "Conexiune Noua"
-
-#, fuzzy
-msgid "New Forecast"
-msgstr "Element nou"
-
-#, fuzzy
-msgid "New Graph"
-msgstr "Cautare noua"
 
 #, fuzzy
 msgid "New Password"
@@ -29466,6 +29436,10 @@ msgid "New backup target"
 msgstr "Eticheta Auxiliara noua"
 
 #, fuzzy
+msgid "New collection"
+msgstr "Conexiune Noua"
+
+#, fuzzy
 msgid "New custom graph..."
 msgstr "Grup nou"
 
@@ -29480,8 +29454,16 @@ msgid "New files in Spool"
 msgstr ""
 
 #, fuzzy
+msgid "New forecast"
+msgstr "Element nou"
+
+#, fuzzy
 msgid "New forecast graph..."
 msgstr "Grup nou"
+
+#, fuzzy
+msgid "New graph"
+msgstr "Cautare noua"
 
 #, fuzzy
 msgid "New list"
@@ -29572,7 +29554,7 @@ msgid "No Context"
 msgstr "Adaugă Conținut"
 
 #, python-format
-msgid "No Forecast Graph with the name <tt>%s</tt>"
+msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr ""
 
 msgid "No IP"
@@ -30422,6 +30404,10 @@ msgstr ""
 
 msgid "Notifications of host & services"
 msgstr ""
+
+#, fuzzy
+msgid "Notifications today"
+msgstr "Notificari"
 
 msgid "Notified events for hosts"
 msgstr ""
@@ -33208,9 +33194,6 @@ msgid "Performance Data for Latency"
 msgstr ""
 
 msgid "Performance Data for Queue Length"
-msgstr ""
-
-msgid "Performance Graph"
 msgstr ""
 
 msgid "Performance Graphs"
@@ -36382,10 +36365,6 @@ msgstr "Reseteaza contoarele"
 msgid "Reset rule pack to the MKP version"
 msgstr ""
 
-#, fuzzy
-msgid "Reset search"
-msgstr "Cautare noua"
-
 msgid "Reset sorting"
 msgstr ""
 
@@ -37944,10 +37923,6 @@ msgid "Select metric"
 msgstr "Afectat de serviciu"
 
 #, fuzzy
-msgid "Select metric: "
-msgstr "Afectat de serviciu"
-
-#, fuzzy
 msgid "Select sound"
 msgstr "(selectează directorul)"
 
@@ -38506,6 +38481,10 @@ msgstr ""
 
 msgid "Service problem acknowledged"
 msgstr ""
+
+#, fuzzy
+msgid "Service problem history"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Service problems"
 msgstr ""
@@ -42812,9 +42791,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Template: %s"
 msgstr "doua nivele"
-
-msgid "Templates"
-msgstr ""
 
 msgid "Temporarily disable <b>all</b> notifications!"
 msgstr "Dezactiveaza temporar <b>toate</b> notificarile!"
@@ -49354,6 +49330,10 @@ msgstr ""
 msgid "Top alerters"
 msgstr "Dezactiveaza Notificarile"
 
+#, fuzzy
+msgid "Top alerters (last 7 days)"
+msgstr " în %d zile"
+
 #, python-format
 msgid "Top alerters - %s"
 msgstr ""
@@ -49777,6 +49757,10 @@ msgstr ""
 
 msgid "Total running On-Demand Instances"
 msgstr ""
+
+#, fuzzy
+msgid "Total service history"
+msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Total sessions"
@@ -56897,6 +56881,10 @@ msgid "messages"
 msgstr "Mesajul Text"
 
 #, fuzzy
+msgid "metric"
+msgstr "serviciu"
+
+#, fuzzy
 msgid "microseconds"
 msgstr "secunde"
 
@@ -57784,6 +57772,57 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Combined Graph"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Custom Graphs"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Filter agents"
+#~ msgstr "Agregare noua"
+
+#, fuzzy
+#~ msgid "Filter hosts"
+#~ msgstr " pentru elementul %s"
+
+#, fuzzy
+#~ msgid "Filter permissions"
+#~ msgstr "Optiuni tabel"
+
+#, fuzzy
+#~ msgid "Filter rule packs"
+#~ msgstr "Reguli"
+
+#, fuzzy
+#~| msgid "Hide user rules"
+#~ msgid "Filter rules"
+#~ msgstr "Ascude regulile de utilizator"
+
+#, fuzzy
+#~| msgid "%d Filter settings"
+#~ msgid "Filter settings"
+#~ msgstr "%d setări de Filtrare"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Forecast Graphs"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Global reports"
+#~ msgstr "rapoarte"
+
+#, fuzzy
+#~ msgid "Reset search"
+#~ msgstr "Cautare noua"
+
+#, fuzzy
+#~ msgid "Select metric: "
+#~ msgstr "Afectat de serviciu"
 
 #, fuzzy
 #~ msgid "Display range"
@@ -58706,10 +58745,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Exporta doar elementele si serviciile pentru care utilizatorul este "
 #~ "contact"
-
-#, fuzzy
-#~ msgid "Graph collections"
-#~ msgstr "Conexiune Noua"
 
 #, fuzzy
 #~ msgid "Hide Checkboxes and bulk actions"
@@ -61221,10 +61256,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "The last 365 days"
-#~ msgstr " în %d zile"
-
-#, fuzzy
-#~ msgid "The last 7 days"
 #~ msgstr " în %d zile"
 
 #, fuzzy

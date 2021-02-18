@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-17 04:56+0000\n"
-"Last-Translator: Timotheus Bachinger <timotheus.bachinger@tribe29.com>\n"
+"PO-Revision-Date: 2021-02-18 07:00+0000\n"
+"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -355,11 +355,11 @@ msgstr "%d offene inkompatible Werks"
 msgid "%d rows"
 msgstr "%d Zeilen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d site is %s."
 msgid_plural "%d sites are %s."
-msgstr[0] "Diese Instanz ist %s"
-msgstr[1] "Diese Instanz ist %s"
+msgstr[0] "%d Instanz ist %s"
+msgstr[1] "%d Instanzen sind %s"
 
 #, python-format
 msgid "%d specific settings"
@@ -1080,6 +1080,8 @@ msgid ""
 "<b>Note:</b> The ntopng integration is an add-on feature for which a "
 "subscription add-on has to be purchased separately."
 msgstr ""
+"<b>Notiz:</b> Die Ntop Einbindung ist ein Add-On Feature, für das eine "
+"seperate Add-On Suskription gekauft werden muss."
 
 msgid ""
 "<b>Note:</b> the shown results are incomplete and do not reflect the sort "
@@ -5442,7 +5444,7 @@ msgstr "Zuweisung von Services zu Kontaktgruppen"
 msgid "Assignment of services to service groups"
 msgstr "Zuweisung von Services zu Servicegruppen"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Associated hosts, services and events are not included in the Tactical "
 "Overview. The %s site is %s."
@@ -5451,10 +5453,10 @@ msgid_plural ""
 "Overview. The %s sites are %s."
 msgstr[0] ""
 "Verbundene Hosts, Services und Events werden nicht im Tactical Overview "
-"angezeigt. Die nicht verbundene Site ist %s."
+"angezeigt. Die %s Site ist %s."
 msgstr[1] ""
 "Verbundene Hosts, Services und Events werden nicht im Tactical Overview "
-"angezeigt. Die nicht verbundenen Sites sind %s."
+"angezeigt. Die %s Sites sind %s."
 
 msgid "Assume a different IAM role"
 msgstr "Vermutlich eine andere IAM Rolle"
@@ -7099,7 +7101,7 @@ msgstr ""
 "die Performance für große Installationen verbessern und sind nur über unser "
 "Abonnement verfügbar."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
 "snmpwalk to gather SNMP information. For each request a new command line "
@@ -7111,16 +7113,16 @@ msgid ""
 "<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
 "Changes to this option will have no effect to the behaviour of Checkmk"
 msgstr ""
-"Standardmäßig verwendet Check_MK zum Holen von SNMP-Informationen "
+"Standardmäßig verwendet Checkmk zum Holen von SNMP-Informationen "
 "Kommandozeilenbefehle aus dem Net-SNMP-Projekt, wie snmpget oder snmpget. "
 "Jede Anfrage benötigt so die Ausführung eines externen Programmes. Bei der "
 "neuen integrierten SNMP-Implementierung werden die Net-SNMP-Bibliotheken "
 "direkt aus dem Python-Programm angesprochen. Dies verringert den CPU-"
 "Verbrauch beim SNMP-Monitoring auf etwa die Hälfte, was vor allem für "
 "größere Installation nützlich ist.\n"
-"<b>Hinweis:</b> Diese Option ist veraltet und wurde durch Choose SNMP "
-"Backend ersetzt. Änderungen an dieser Option haben keinen Einfluss auf das "
-"Verhalten von Checkmk"
+"<b>Hinweis:</b> Diese Option ist veraltet und wurde durch '%s' ersetzt. "
+"Änderungen an dieser Option haben keinen Einfluss auf das Verhalten von "
+"Checkmk"
 
 msgid ""
 "By default all multiple graphs in emails are displayed floating nearby. You "
@@ -8507,9 +8509,8 @@ msgstr "Auf eine Adresse prüfen"
 msgid "Check for correct version"
 msgstr "Check auf korrekte Version"
 
-#, fuzzy
 msgid "Check for correct version of Checkmk agent"
-msgstr "Auf korrekte Version des Check_MK-Agenten prüfen"
+msgstr "Auf korrekte Version des Checkmk-Agenten prüfen"
 
 msgid "Check freshness"
 msgstr "Aktualität des Checks"
@@ -8728,13 +8729,11 @@ msgstr "Checkboxauswahl (Lebenszeit)"
 msgid "Checked"
 msgstr "Geprüft"
 
-#, fuzzy
 msgid "Checker helper"
-msgstr "Belegung Check-Hilfsprozesse"
+msgstr "Checker-Hilfsprozesse"
 
-#, fuzzy
 msgid "Checker helper usage"
-msgstr "Belegung Check-Hilfsprozesse"
+msgstr "Belegung Checker-Hilfsprozesse"
 
 msgid "Checkmk"
 msgstr "Checkmk"
@@ -8822,13 +8821,11 @@ msgstr "Checkmk-Check-Hilfsprozesse"
 msgid "Checkmk check latency"
 msgstr "Checkmk Check-Latenz"
 
-#, fuzzy
 msgid "Checkmk checker count"
-msgstr "Check_MK-Version"
+msgstr "Checkmk Checker Anzahl"
 
-#, fuzzy
 msgid "Checkmk checker usage"
-msgstr "Belegung Check-Hilfsprozesse"
+msgstr "Belegung Checkmk Checker"
 
 msgid "Checkmk config filename"
 msgstr "Checkmk Konfigurationsdateiname"
@@ -9386,20 +9383,23 @@ msgstr "Klone %s"
 msgid "Clone Aggregation %s"
 msgstr "Hostname Aggregationen"
 
-msgid "Clone Custom Graph"
-msgstr "Benutzergraph kopieren"
-
-msgid "Clone Forecast Graph"
-msgstr "Vorhersagegraph kopieren"
-
-msgid "Clone Graph Collection"
-msgstr "Graphensammlung klonen"
-
 msgid "Clone SLA"
 msgstr "Klone SLA"
 
 msgid "Clone bookmark list"
 msgstr "Lesezeichenliste klonen"
+
+#, fuzzy
+msgid "Clone custom graph"
+msgstr "Benutzergraph kopieren"
+
+#, fuzzy
+msgid "Clone forecast graph"
+msgstr "Vorhersagegraph kopieren"
+
+#, fuzzy
+msgid "Clone graph collection"
+msgstr "Graphensammlung klonen"
 
 msgid "Clone graph tuning"
 msgstr "Graph-Tuning klonen"
@@ -9621,10 +9621,10 @@ msgid "Color gradient"
 msgstr "Farbverlauf"
 
 msgid "Color value after SERVICE state"
-msgstr ""
+msgstr "Farbwert nach SERVICE Status"
 
 msgid "Color value following it's METRIC THRESHOLDS if available"
-msgstr ""
+msgstr "Farbwert nach den METRIC THRESHOLDS wenn verfügbar"
 
 msgid "Colored Background"
 msgstr "Farbiger Hintergrund"
@@ -9668,10 +9668,6 @@ msgstr "Spalten"
 
 msgid "Com. buf. max/total"
 msgstr "Bef. buf. max/gesamt"
-
-#, fuzzy
-msgid "Combined Graph"
-msgstr "Kombigraph"
 
 msgid "Combined graph"
 msgstr "Kombigraph"
@@ -11089,15 +11085,6 @@ msgstr "Erzeuge %s spezifische Regel für: "
 msgid "Create Conference Latency"
 msgstr "Latenz bei Erstellung von Konferenzen"
 
-msgid "Create Custom Graph"
-msgstr "Benutzergraph erzeugen"
-
-msgid "Create Forecast Graph"
-msgstr "Vorhersagegraph erzeugen"
-
-msgid "Create Graph Collection"
-msgstr "Graphensammlung erstellen"
-
 msgid "Create SLA"
 msgstr "Erstelle SLA"
 
@@ -11191,8 +11178,20 @@ msgstr "Erzeuge Check wenn Service im Status"
 msgid "Create clone of %s"
 msgstr "Erzeuge Klon von %s"
 
+#, fuzzy
+msgid "Create custom graph"
+msgstr "Benutzergraph erzeugen"
+
+#, fuzzy
+msgid "Create forecast graph"
+msgstr "Vorhersagegraph erzeugen"
+
 msgid "Create gateway hosts in"
 msgstr "Erzeuge GatewayHosts in"
+
+#, fuzzy
+msgid "Create graph collection"
+msgstr "Graphensammlung erstellen"
 
 msgid "Create graph tuning"
 msgstr "Graph-Tuning erstellen"
@@ -11802,9 +11801,6 @@ msgstr "GUI-Desing anpassen"
 msgid "Custom Graph"
 msgstr "Benutzergraph"
 
-msgid "Custom Graphs"
-msgstr "Benutzergraphen"
-
 msgid "Custom Host/Service Notes URL"
 msgstr "URL für Benutzernotizen zu Hosts und Services"
 
@@ -11861,6 +11857,10 @@ msgstr "Individuelle Ereignisbegrenzung pro Regel"
 
 msgid "Custom footer links"
 msgstr "Benutzerdefinierte Fußzeilen-Links"
+
+#, fuzzy
+msgid "Custom graph"
+msgstr "Benutzergraphen"
 
 msgid "Custom graph timeranges"
 msgstr "Benutzerspezifische Zeitspannen"
@@ -13428,6 +13428,7 @@ msgstr "Das iptables Plugins ausrollen"
 
 msgid "Deploy legacy environment (Python 3.4 + standard set of modules)"
 msgstr ""
+"Stelle alte Umgebung bereit (Python 3.4 + Standardmäßiges Set an Modulen)"
 
 msgid "Deploy logged in users plugin"
 msgstr "Plugin für eingeloggte Benutzer ausrollen"
@@ -13487,6 +13488,8 @@ msgstr ""
 msgid ""
 "Deploy standard environment (Current Python 3.8 + standard set of modules)"
 msgstr ""
+"Stelle Standard Umgebung bereit (Aktuelles Python 3.8 + Standardmäßiges Set "
+"an Modulen)"
 
 #, python-format
 msgid "Deploy the %s plugin and its configuration"
@@ -14290,6 +14293,10 @@ msgstr "Entdeckte Host-Labels"
 #, fuzzy
 msgid "Disovered services of the host"
 msgstr "Erkannte Services des Hosts"
+
+#, fuzzy
+msgid "Display"
+msgstr "Anzeigename"
 
 msgid "Display ESX Host power state on"
 msgstr "Service für ESX-Hostzustand anzeigen auf"
@@ -15825,9 +15832,6 @@ msgstr "Aggregation editieren"
 msgid "Edit BI Pack %s"
 msgstr "BI-Paket %s editieren"
 
-msgid "Edit Custom Graph"
-msgstr "Benutzergraph editieren"
-
 msgid "Edit Dashboards"
 msgstr "Übersichten bearbeiten"
 
@@ -15837,14 +15841,8 @@ msgstr "Dashlet bearbeiten"
 msgid "Edit Downtimes"
 msgstr "Wartungszeiten editieren"
 
-msgid "Edit Forecast Graph"
-msgstr "Vorhersagegraph editieren"
-
 msgid "Edit GUI design for this customer"
 msgstr "Design der Oberfläche anpassen"
-
-msgid "Edit Graph Collection"
-msgstr "Graphensammlung bearbeiten"
 
 #, fuzzy, python-format
 msgid "Edit LDAP connection: %s"
@@ -15903,6 +15901,10 @@ msgstr "Instanzverbindung"
 msgid "Edit contact group"
 msgstr "Kontaktgruppe Bearbeiten"
 
+#, fuzzy
+msgid "Edit custom graph"
+msgstr "Benutzergraph editieren"
+
 #, fuzzy, python-format
 msgid "Edit customer %s"
 msgstr "Kunde bearbeiten"
@@ -15910,6 +15912,10 @@ msgstr "Kunde bearbeiten"
 #, fuzzy
 msgid "Edit dashboard"
 msgstr "Übersicht bearbeiten"
+
+#, fuzzy
+msgid "Edit forecast graph"
+msgstr "Vorhersagegraph editieren"
 
 # Das muss im Code anders gelöst werden
 #, python-format
@@ -15923,6 +15929,10 @@ msgstr "Globale Einstellungen"
 #, fuzzy
 msgid "Edit graph"
 msgstr "Graph-Tuning bearbeiten"
+
+#, fuzzy
+msgid "Edit graph collection"
+msgstr "Graphensammlung bearbeiten"
 
 msgid "Edit graph tuning"
 msgstr "Graph-Tuning bearbeiten"
@@ -17243,9 +17253,6 @@ msgstr "Linux Agent - Beispielkonfiguration mit systemd"
 msgid "Example for Parameters"
 msgstr "Beispiel für Parameter"
 
-msgid "Examples"
-msgstr "Beispiele"
-
 msgid "Exc."
 msgstr "Exc."
 
@@ -18420,16 +18427,20 @@ msgstr "Dateisystembenutzung"
 msgid "Filter"
 msgstr "Filter"
 
+#, fuzzy, python-format
+msgid "Filter %s selection by hostname: "
+msgstr "Auswahl der Metrik nach Hostnamen filtern: "
+
+#, fuzzy, python-format
+msgid "Filter %s selection by service: "
+msgstr "Bitte wählen Sie einen Service"
+
 msgid "Filter / Search"
 msgstr "Filter/Suche"
 
 #, fuzzy
 msgid "Filter Host"
 msgstr "Filter"
-
-#, fuzzy
-msgid "Filter agents"
-msgstr "Filter Aggregationen"
 
 msgid "Filter aggregations"
 msgstr "Filter Aggregationen"
@@ -18470,35 +18481,8 @@ msgstr ""
 msgid "Filter group (see help)"
 msgstr "Regelpaket %s bearbeiten"
 
-#, fuzzy
-msgid "Filter hosts"
-msgstr "Fehlerhafte Hosts"
-
-msgid "Filter metric selection by hostname: "
-msgstr "Auswahl der Metrik nach Hostnamen filtern: "
-
-#, fuzzy
-msgid "Filter metric selection by service: "
-msgstr "Bitte wählen Sie einen Service"
-
 msgid "Filter pattern (RegExp)"
 msgstr "Filter-Ausdruck (Regex)"
-
-#, fuzzy
-msgid "Filter permissions"
-msgstr "Schreiben von Wiederholungsübertragungen"
-
-#, fuzzy
-msgid "Filter rule packs"
-msgstr "Regelpaket %s bearbeiten"
-
-#, fuzzy
-msgid "Filter rules"
-msgstr "Filter"
-
-#, fuzzy
-msgid "Filter settings"
-msgstr "%d Filtereinstellungen"
 
 #, fuzzy
 msgid "Filter view"
@@ -19068,14 +19052,15 @@ msgstr "Aktualisierung der PNP-Metainformationen beim Neustart"
 msgid "Forecast Graph"
 msgstr "Vorhersagegraph"
 
-msgid "Forecast Graphs"
-msgstr "Vorhersagegraphen"
-
 msgid "Forecast Model Configuration"
 msgstr "Konfiguration des Vorhersagemodells"
 
 msgid "Forecast Trend (Slow)"
 msgstr "Vorhersage Trend (langsam)"
+
+#, fuzzy
+msgid "Forecast graph"
+msgstr "Vorhersagegraphen"
 
 #, fuzzy
 msgid "Forecast graphs"
@@ -19222,7 +19207,8 @@ msgstr ""
 "Keine passenden Datensätze gefunden. Bitte geben Sie einen anderen "
 "Suchausdruck an."
 
-msgid "Found no rules packs."
+#, fuzzy
+msgid "Found no rule packs."
 msgstr "Keine Regelpakete gefunden."
 
 msgid "Found no services yet. To retry please execute a full scan."
@@ -19623,9 +19609,6 @@ msgstr "Globale Alarmierungsregel"
 msgid "Global notification rules"
 msgstr "Globale Alarmierungsregeln"
 
-msgid "Global reports"
-msgstr "Globale Berichte"
-
 msgid "Global services to monitor"
 msgstr "Globale Dienste zur Überwachung"
 
@@ -19689,12 +19672,6 @@ msgstr "Detaillierte Größe"
 msgid "Graph"
 msgstr "Graph"
 
-msgid "Graph Collection"
-msgstr "Graphensammlung"
-
-msgid "Graph Collections"
-msgstr "Graphensammlungen"
-
 msgid "Graph Options"
 msgstr "Graphoptionen"
 
@@ -19704,6 +19681,9 @@ msgstr "Graphensammlung"
 #, python-format
 msgid "Graph collection '%s' does not exist"
 msgstr "Die Graphensammlung '%s' existiert nicht"
+
+msgid "Graph collections"
+msgstr "Graphensammlung"
 
 #, python-format
 msgid "Graph identification: The '%s' attribute is missing"
@@ -21095,6 +21075,13 @@ msgid ""
 "information for a single Oracle DB. However, before the dashboard is "
 "rendered, the user has to decide which DB he wants to look at."
 msgstr ""
+"Hier können zusätzliche Eigenschaften für das Dashboard konfiguriert werden. "
+"Dies ist optional und wird nur benötigt um erweiterte Dashboards zu "
+"erzeugen. Zum Beispiel, um gewisse Filter obligatorisch zu machen. Das "
+"ermöglicht generische Dashboards, welche zum Beispiel alle relevante "
+"Informationen für eine einzelne Oracle Datenbank enthält, zu bauen. Jedoch "
+"muss, bevor das Dashboard gerendered wird, der Benutzer entscheiden welche "
+"Datenbank visualisiert werden soll."
 
 msgid ""
 "Here, you can define conditions for applying this rule. These conditions are "
@@ -21747,6 +21734,10 @@ msgstr "Leistungsdaten von Host"
 
 msgid "Host problem acknowledged"
 msgstr "Hostproblem quittiert"
+
+#, fuzzy
+msgid "Host problem history"
+msgstr "Hostprobleme"
 
 msgid "Host problems"
 msgstr "Hostprobleme"
@@ -28535,6 +28526,10 @@ msgstr "Hauptübersicht"
 msgid "Main dashboard"
 msgstr "Übersicht bearbeiten"
 
+#, fuzzy
+msgid "Main dashboard $SITE$"
+msgstr "Übersicht bearbeiten"
+
 msgid "Main directory"
 msgstr "Hauptverzeichnis"
 
@@ -31310,17 +31305,8 @@ msgstr "Neu %s"
 msgid "New Action"
 msgstr "Neue Aktione"
 
-msgid "New Collection"
-msgstr "Neue Sammlung"
-
 msgid "New Connections"
 msgstr "Neue Verbindungen"
-
-msgid "New Forecast"
-msgstr "Neue Vorhersage"
-
-msgid "New Graph"
-msgstr "Neuer Graph"
 
 msgid "New Password"
 msgstr "Neues Passwort"
@@ -31344,6 +31330,10 @@ msgstr "Neuer Backup-Job"
 msgid "New backup target"
 msgstr "Neues Sicherungsziel"
 
+#, fuzzy
+msgid "New collection"
+msgstr "Neue Sammlung"
+
 msgid "New custom graph..."
 msgstr "Neuer Benutzergraph..."
 
@@ -31356,8 +31346,16 @@ msgstr "Neue Funktion"
 msgid "New files in Spool"
 msgstr "Neue Dateien im Spooler"
 
+#, fuzzy
+msgid "New forecast"
+msgstr "Neue Vorhersage"
+
 msgid "New forecast graph..."
 msgstr "Neuer Vorhersagegraph..."
+
+#, fuzzy
+msgid "New graph"
+msgstr "Neuer Graph"
 
 msgid "New list"
 msgstr "Neue Liste"
@@ -31443,8 +31441,8 @@ msgstr "Bedingungen"
 msgid "No Context"
 msgstr "Kein Kontext"
 
-#, python-format
-msgid "No Forecast Graph with the name <tt>%s</tt>"
+#, fuzzy, python-format
+msgid "No Forecast graph with the name <tt>%s</tt>"
 msgstr "Kein Vorhersagegraph mit dem Namen <tt>%s</tt>"
 
 msgid "No IP"
@@ -32370,6 +32368,10 @@ msgstr "Alarme von Host"
 msgid "Notifications of host & services"
 msgstr "Alarmierung von Hosts & Services"
 
+#, fuzzy
+msgid "Notifications today"
+msgstr "Alarmierungsmethode"
+
 msgid "Notified events for hosts"
 msgstr "Alarmierte Ereignisse fur Hosts"
 
@@ -32435,7 +32437,7 @@ msgid "Ntop: Alerts"
 msgstr "Alarme"
 
 msgid "Ntopng (chargeable add-on)"
-msgstr ""
+msgstr "Ntopng (gebührenpflichtiges Add-On)"
 
 #, fuzzy
 msgid "Ntopng Connection Parameters (chargeable add-on)"
@@ -35248,9 +35250,6 @@ msgstr "Leistungsdaten für Latenzzeit"
 
 msgid "Performance Data for Queue Length"
 msgstr "Leistungsdaten für Wartenschlangen-Länge"
-
-msgid "Performance Graph"
-msgstr "Messdatengraph"
 
 msgid "Performance Graphs"
 msgstr "Messdatengraphen"
@@ -38552,9 +38551,6 @@ msgstr "Zähler zurücksetzen"
 msgid "Reset rule pack to the MKP version"
 msgstr "Regelpaket zur MKP-Version zurücksetzen"
 
-msgid "Reset search"
-msgstr "Suche zurücksetzen"
-
 msgid "Reset sorting"
 msgstr "Sortierung zurücksetzen"
 
@@ -40131,10 +40127,6 @@ msgstr "Schnittstellentypen auswählen"
 msgid "Select metric"
 msgstr "Ändere Metrik"
 
-#, fuzzy
-msgid "Select metric: "
-msgstr "Ändere Metrik"
-
 msgid "Select sound"
 msgstr "Klang auswählen"
 
@@ -40683,6 +40675,10 @@ msgstr "Ausgabe des Service-Plugins"
 
 msgid "Service problem acknowledged"
 msgstr "Service Problem quittiert"
+
+#, fuzzy
+msgid "Service problem history"
+msgstr "Serviceprobleme"
 
 msgid "Service problems"
 msgstr "Serviceprobleme"
@@ -41688,7 +41684,7 @@ msgid "Show the header of the dashboard with the configured title."
 msgstr "Den konfigurierten Titel der Übersicht auf der Seite anzeigen"
 
 msgid "Show the limits of values displayed"
-msgstr ""
+msgstr "Zeige die Limits der angezeigten Werte"
 
 msgid "Show the list of hosts in this category"
 msgstr "Liste der Hosts in dieser Kategorie anzeigen"
@@ -45323,9 +45319,6 @@ msgstr "Vorlagen-Graphen"
 #, python-format
 msgid "Template: %s"
 msgstr "Vorlagen: %s"
-
-msgid "Templates"
-msgstr "Vorlagen"
 
 msgid "Temporarily disable <b>all</b> notifications!"
 msgstr "Vorübergehend <b>alle</b> Alarme deaktivieren!"
@@ -49015,6 +49008,11 @@ msgid ""
 "windows hosts, you have to select the option \"Deploy legacy environment\" "
 "here."
 msgstr ""
+"Die Standard Umgebung die ausgeliefert wird kann nicht auf alten Windows "
+"Systemen, wie Windows Server 2008, Windows Server 2008R2, verwendet werden. "
+"Wenn Agent Plugins wie Agent Updater, mk_logwatch oder mk_jolokia auf "
+"solchen Windows Hosts verwendet werden sollen, muss die Option \"Liefere "
+"alte Umgebung aus\" ausgewählt werden."
 
 msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
@@ -53757,7 +53755,7 @@ msgid "Time since the last VACUUM"
 msgstr "Zeit seit letztem VACUUM"
 
 msgid "Time since the sidecar was last seen by graylog"
-msgstr ""
+msgstr "Zeit seitdem das Sidecar das letzte Mal von graylog gesehen wurde"
 
 #, python-format
 msgid "Time specific check parameter #%d"
@@ -54115,6 +54113,10 @@ msgstr "Top Talkers"
 msgid "Top alerters"
 msgstr "%s Alarme"
 
+#, fuzzy
+msgid "Top alerters (last 7 days)"
+msgstr "Top Alarmierer - %s"
+
 #, python-format
 msgid "Top alerters - %s"
 msgstr "Top Alarmierer - %s"
@@ -54181,10 +54183,10 @@ msgid "Total PGA inuse"
 msgstr "Gesamter installierter RAM"
 
 msgid "Total PGA used for auto workareas"
-msgstr ""
+msgstr "Gesamte PGA benutzt für automatische Arbeitsbereiche"
 
 msgid "Total PGA used for manual workareas"
-msgstr ""
+msgstr "Gesamte PGA benutzt für manuelle Arbeitsbereiche"
 
 msgid "Total Packets Maximum"
 msgstr "Total Pakete Maximum"
@@ -54536,6 +54538,10 @@ msgstr "Instgesamt laufende On-Demand-%s-Instanzen"
 #, fuzzy
 msgid "Total running On-Demand Instances"
 msgstr "Insgesamt laufende On-Demand-Instanzen"
+
+#, fuzzy
+msgid "Total service history"
+msgstr "Host+D. Verlauf"
 
 msgid "Total sessions"
 msgstr "Gesamte Sitzungen"
@@ -58902,7 +58908,7 @@ msgstr ""
 "Einstellung zur Sicherheit auf <b>Aus</b> stellen."
 
 msgid "When the Agent to be uninstalled"
-msgstr ""
+msgstr "Wenn der Agent deinstalliert wird"
 
 msgid ""
 "When the Event Console receives a message than the host name that is "
@@ -60739,6 +60745,20 @@ msgid ""
 "can achieve this by setting the \"Range Reference\" parameter to 10-20 ms, "
 "and warning and critical levels to 10% and 20% respectively."
 msgstr ""
+"Es können Limits für die Latenz der Lese oder Schreibe I/O Operationen von "
+"Nimble Speichervolumen festgelegt werden. Die Operationen werden in Bezug "
+"auf die Anzahl an Operationen als prozentualer Anteil der gesamten Lese oder "
+"Schreibe I/O Operationen der letzten Latenzzeit (z.B. 0-0.1ms, 0.1-0.2ms, "
+"etc.) angezeigt. Um effektiv Limits für diese Volumen festzulegen sollten "
+"WARN/CRIT Levels abhängig vom prozentualen Anteil der gesamten Anzahl an "
+"Operationen gesetzt werden. Um eine große Anzahl an Nimble Speichergeräten "
+"und deren verschiedenen Funktionalitäten (all-flash, hybrid, tape, etc.) "
+"unterzubringen ist es möglich einen Startpunkt, ab dem die Werte eingebunden "
+"werden, festzulegen. Zum Beispiel, für manche Geräte, will man nur mit WARN "
+"benachrichtigt werden wenn 10% der Operationen eine Latenz von 10-20ms oder "
+"mehr haben und CRIT wenn 20% der Operationen die Schwellwert erreichen. Man "
+"kann dies erreichen, in dem die Einstellung \"Range Reference\" auf 10-20ms "
+"und warnungs bzw.  kritische Levels auf 10% und 20% gesetzt werden."
 
 #, fuzzy
 msgid "You can simulate an event here and check out which rules are matching."
@@ -62493,7 +62513,7 @@ msgid "hits"
 msgstr "Lesetreffer"
 
 msgid "hits for pass"
-msgstr ""
+msgstr "Durchgelassene Treffer"
 
 msgid "host"
 msgstr "Host"
@@ -62780,6 +62800,10 @@ msgstr[1] "Nachrichten"
 
 msgid "messages"
 msgstr "Nachrichten"
+
+#, fuzzy
+msgid "metric"
+msgstr "Metrik"
 
 msgid "microseconds"
 msgstr "Mikrosekunden"
@@ -63661,6 +63685,73 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Combined graph"
+#~ msgid "Combined Graph"
+#~ msgstr "Kombigraph"
+
+#~ msgid "Custom Graphs"
+#~ msgstr "Benutzergraphen"
+
+#~ msgid "Examples"
+#~ msgstr "Beispiele"
+
+#, fuzzy
+#~| msgid "Filter aggregations"
+#~ msgid "Filter agents"
+#~ msgstr "Filter Aggregationen"
+
+#, fuzzy
+#~| msgid "Failed hosts"
+#~ msgid "Filter hosts"
+#~ msgstr "Fehlerhafte Hosts"
+
+#, fuzzy
+#~| msgid "Write Retransmissions"
+#~ msgid "Filter permissions"
+#~ msgstr "Schreiben von Wiederholungsübertragungen"
+
+#, fuzzy
+#~| msgid "Edit rule pack %s"
+#~ msgid "Filter rule packs"
+#~ msgstr "Regelpaket %s bearbeiten"
+
+#, fuzzy
+#~| msgid "Filters"
+#~ msgid "Filter rules"
+#~ msgstr "Filter"
+
+#, fuzzy
+#~| msgid "%d Filter settings"
+#~ msgid "Filter settings"
+#~ msgstr "%d Filtereinstellungen"
+
+#~ msgid "Forecast Graphs"
+#~ msgstr "Vorhersagegraphen"
+
+#~ msgid "Global reports"
+#~ msgstr "Globale Berichte"
+
+#~ msgid "Graph Collection"
+#~ msgstr "Graphensammlung"
+
+#~ msgid "Graph Collections"
+#~ msgstr "Graphensammlungen"
+
+#~ msgid "Performance Graph"
+#~ msgstr "Messdatengraph"
+
+#~ msgid "Reset search"
+#~ msgstr "Suche zurücksetzen"
+
+#, fuzzy
+#~| msgid "Change metric"
+#~ msgid "Select metric: "
+#~ msgstr "Ändere Metrik"
+
+#~ msgid "Templates"
+#~ msgstr "Vorlagen"
 
 #~ msgid "Always draw the service status on the border"
 #~ msgstr "Zeige den Service Status immer am Rand"
@@ -65667,9 +65758,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Grants read access to all rotations."
 #~ msgstr "Gewährt Lesezugriff auf alle Rotationen."
-
-#~ msgid "Graph collections"
-#~ msgstr "Graphensammlung"
 
 #~ msgid "Graphs globally"
 #~ msgstr "Globale Graphen"

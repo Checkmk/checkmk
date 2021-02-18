@@ -12,9 +12,13 @@ SHELL 	  := /bin/bash -e -o pipefail
 MULTISITE_POT = multisite.pot
 
 help:
+	@echo "setup      - Install gettext (needed to build mo-files)"
 	@echo "mo         - Build mo-files from po-files for all languages"
 	@echo "update-pot - Pull in Checkmk repository, update, commit and push multisite.pot in Checkmk localization repository accordingly"
 	@echo "update-pos - Pull changes in Checkmk localization repository, update, commit and push po-files in Checkmk repository accordingly"
+
+setup:
+	sudo apt-get install gettext
 
 mo:
 	for lang in $(LANGUAGES) ; do \

@@ -116,6 +116,7 @@ def test_registered_permissions():
         'dashboard.main',
         'dashboard.problems',
         'dashboard.simple_problems',
+        'dashboard.site',
         'dashboard.checkmk',
         'dashboard.checkmk_host',
         'general.acknowledge_werks',

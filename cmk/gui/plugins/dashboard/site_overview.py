@@ -254,6 +254,7 @@ class SiteOverviewDashletDataGenerator:
                 SiteElement(
                     title=site_spec["alias"],
                     url_add_vars={
+                        "name": "site",
                         "site": site_id,
                     },
                     parts=parts,

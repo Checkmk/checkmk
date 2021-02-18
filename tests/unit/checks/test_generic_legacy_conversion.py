@@ -808,7 +808,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'printer_alerts_text_map',
         'printer_code_map',
         'printer_input_default_levels',
-        'printer_io_states',
         'printer_io_units',
         'printer_output_default_levels',
         'printer_supply_default_levels',

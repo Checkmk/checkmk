@@ -1,0 +1,14 @@
+Title: Add help text to "Archive events of hosts" command
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613675183
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+The command "Archive events of hosts" is bound to the rule "Check event state
+in Event Console" to archive events of one host. To make this clearly visible
+to the user, a help text was added to the command.

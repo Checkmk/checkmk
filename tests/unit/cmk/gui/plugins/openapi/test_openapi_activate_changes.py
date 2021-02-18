@@ -55,7 +55,7 @@ def test_openapi_activate_changes(
             params='{"sites": ["asdf"]}',
             content_type='application/json',
         )
-        assert resp.json['detail'].startswith("Unknown site")
+        assert "Unknown site" in repr(resp.json), resp.json
 
         resp = wsgi_app.call_method(
             'post',

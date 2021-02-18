@@ -38,7 +38,7 @@ class HostParameters(BaseSchema):
 
     """
     sites = fields.List(
-        fields.String(),
+        fields.SiteField(),
         description="Restrict the query to this particular site.",
         missing=[],
     )

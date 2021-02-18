@@ -22,7 +22,7 @@ def inv_docker_node_info(parsed, inventory_tree, status_data_tree):
     _try_set(node, "swarm_state", swarm_data, "LocalNodeState")
     _try_set(node, "swarm_node_id", swarm_data, "NodeID")
 
-    if "RemoteManagers" in swarm_data:
+    if swarm_data.get("RemoteManagers"):
         swarm_manager = inventory_tree.get_list("software.applications.docker.swarm_manager:")
         swarm_manager += swarm_data["RemoteManagers"]
 

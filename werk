@@ -400,6 +400,7 @@ def save_werk(werk: Werk) -> None:
                 f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
         f.write("\n")
         f.write(werk["description"])
+        f.write("\n")
     git_add(werk)
     save_last_werkid(int(werk["id"]))
 

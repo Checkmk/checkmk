@@ -22,6 +22,7 @@ from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
 
+import cmk.gui.config as config
 from cmk.gui.globals import request
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -613,7 +614,7 @@ class Endpoint:
         path_params: Sequence[
             RawParameter] = self.path_params if self.path_params is not None else []
 
-        if self.etag in ('input', 'both'):
+        if config.rest_api_etag_locking and self.etag in ('input', 'both'):
             header_params.append(ETAG_IF_MATCH_HEADER)
 
         if self.request_schema:

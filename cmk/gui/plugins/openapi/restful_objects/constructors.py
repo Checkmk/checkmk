@@ -13,7 +13,7 @@ from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
-from cmk.gui import config
+import cmk.gui.config as config
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -194,8 +194,7 @@ def require_etag(etag: ETags) -> None:
     Raises:
         ProblemException: When If-Match missing or ETag doesn't match.
     """
-    # TODO: Make configurable in WATO config
-    etags_required = True
+    etags_required = config.rest_api_etag_locking
     if not request.if_match:
         if not etags_required:
             return

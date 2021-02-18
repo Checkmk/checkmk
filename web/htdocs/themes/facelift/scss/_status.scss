@@ -191,31 +191,6 @@ img.pluginurl {
   vertical-align: middle;
 }
 
-/* *some* problem */
-.states,
-.hstates {
-  color: $black;
-  background-image: url("images/someproblem.png");
-  background-position: center center;
-  background-repeat: repeat;
-
-  body.main & a,
-  table.data tr.data > & a {
-    &,
-    &:hover,
-    &:link,
-    &:link:hover {
-      color: $grey-7;
-    }
-  }
-}
-
-.states {
-  background-color: $color-nuance-6;
-  background-image: none;
-  transition: 0.15s ease-in-out;
-}
-
 /* Status of sites in sidebar and in WATO */
 .status_label {
   width: 56px;
@@ -449,11 +424,6 @@ table.data {
   .state2 *,
   .state3 * {
     color: $white;
-  }
-
-  tr.data td.states {
-    color: $states-font-color;
-    background-color: $color-nuance-6;
   }
 }
 

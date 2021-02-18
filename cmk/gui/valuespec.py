@@ -4820,7 +4820,7 @@ class Dictionary(ValueSpec):
                     isopen=self._form_isopen,
                     narrow=self._form_narrow,
                     show_more_toggle=self._section_has_show_more(section_elements),
-                    show_more_mode=bool(config.user.show_mode),
+                    show_more_mode=config.user.show_mode != "default_show_less",
                     help_text=self.help(),
                 )
             self.render_input_form_header(varprefix, value, header, section_elements, css=css)

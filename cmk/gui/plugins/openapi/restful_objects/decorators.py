@@ -188,9 +188,9 @@ class Endpoint:
             These variables have to be defined elsewhere first. See the {query,path,header}_params
             Arguments of this class.
 
-        name:
-            The name of the endpoint. This is the name where this endpoint is "registered" under
-            and can only be used once globally.
+        link_relation:
+            The link relation of the endpoint. This relation is used to identify an endpoint
+            for linking. This has to be unique in it's module.
 
         method:
             The HTTP method under which the endpoint should be accessible. Methods are written
@@ -550,7 +550,7 @@ class Endpoint:
         if 409 in self._expected_status_codes:
             responses['409'] = self._path_item(
                 409,
-                'The request is in conflict with the stored resource',
+                'The request is in conflict with the stored resource.',
             )
 
         if 415 in self._expected_status_codes:
@@ -564,7 +564,7 @@ class Endpoint:
             )
 
         if 400 in self._expected_status_codes:
-            responses['400'] = self._path_item(400, 'Parameter or validation failure')
+            responses['400'] = self._path_item(400, 'Parameter or validation failure.')
 
         # We don't(!) support any endpoint without an output schema.
         # Just define one!

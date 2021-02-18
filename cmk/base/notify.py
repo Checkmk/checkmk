@@ -2025,12 +2025,6 @@ def call_bulk_notification_script(
 #   '----------------------------------------------------------------------'
 
 
-# Be aware: The backlog.mk contains the raw context which has not been decoded
-# to unicode yet. It contains raw encoded strings e.g. the plugin output provided
-# by third party plugins which might be UTF-8 encoded but can also be encoded in
-# other ways. Currently the context is converted later by bot, this module
-# and the GUI. TODO Maybe we should centralize the encoding here and save the
-# backlock already encoded.
 def store_notification_backlog(raw_context: EventContext) -> None:
     path = notification_logdir + "/backlog.mk"
     if not config.notification_backlog:

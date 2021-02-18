@@ -51,6 +51,42 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
                     },
                 ),
             ]),
+        (
+            # @docker_version_info^@{"PluginVersion": "0.1", "DockerPyVersion": "3.4.1", "ApiVersion": "1.39"}
+            {
+                "ServerVersion": "18.09.1",
+                "IndexServerAddress": "https://index.docker.io/v1/",
+                "ID": "GG7L:A5P4:M6AF:RL3A:7KWZ:VMMK:7MCQ:FX37:LG4A:RXV3:Q6YN:WKYG",
+                "Containers": 1,
+                "ContainersRunning": 1,
+                "ContainersPaused": 0,
+                "ContainersStopped": 0,
+                "Images": 4,
+                "Swarm": {
+                    "NodeID": "",
+                    "NodeAddr": "",
+                    "LocalNodeState": "inactive",
+                    "ControlAvailable": False,
+                    "Error": "",
+                    "RemoteManagers": None
+                },
+            },
+            [
+                Attributes(path=['software', 'applications', 'docker'],
+                           inventory_attributes={
+                               'version': '18.09.1',
+                               'registry': 'https://index.docker.io/v1/',
+                               'swarm_state': 'inactive',
+                               'swarm_node_id': ''
+                           },
+                           status_attributes={
+                               'num_containers_total': 1,
+                               'num_containers_running': 1,
+                               'num_containers_paused': 0,
+                               'num_containers_stopped': 0,
+                               'num_images': 4
+                           })
+            ]),
         ({
             "ServerVersion": "20.10.3",
             "IndexServerAddress": "https://index.docker.io/v1/",

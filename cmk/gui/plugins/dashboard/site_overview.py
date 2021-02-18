@@ -108,12 +108,12 @@ class SiteOverviewDashletDataGenerator:
         if render_mode == "hosts":
             assert site_id is not None
             elements = cls._collect_hosts_data(site_id)
+            default_title = _("Host overview")
         elif render_mode == "sites":
             elements = cls._collect_sites_data()
+            default_title = _("Site overview")
         else:
             raise NotImplementedError()
-
-        default_title = _("Site overview")
 
         return {
             # TODO: This should all be done inside the dashlet class once it is instantiated by the

@@ -24,7 +24,7 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast
+from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast, Mapping
 import traceback
 import uuid
 
@@ -255,11 +255,11 @@ def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
                 replay_nr = 0
             notify_notify(raw_context_from_backlog(replay_nr))
         elif notify_mode == 'stdin':
-            notify_notify(raw_context_from_stdin())
+            notify_notify(events.raw_context_from_string(sys.stdin.read()))
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
         else:
-            notify_notify(raw_context_from_env())
+            notify_notify(raw_context_from_env(os.environ))
 
     except Exception:
         crash_dir = cmk.utils.paths.var_dir + "/notify"
@@ -2057,21 +2057,10 @@ def raw_context_from_backlog(nr: int) -> EventContext:
     return backlog[nr]
 
 
-def raw_context_from_stdin() -> EventContext:
-    context = {}
-    for line in sys.stdin:
-        varname, value = line.strip().split("=", 1)
-        context[varname] = events.expand_backslashes(value)
-    events.pipe_decode_raw_context(context)
-    return context
-
-
-def raw_context_from_env() -> EventContext:
-    # Information about notification is excpected in the
-    # environment in variables with the prefix NOTIFY_
+def raw_context_from_env(environ: Mapping[str, str]) -> EventContext:
     context = {
         var[7:]: value
-        for (var, value) in os.environ.items()
+        for (var, value) in environ.items()
         if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
     }
     events.pipe_decode_raw_context(context)

@@ -1218,6 +1218,10 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return ["host", "service"]
 
     def render(self, what):
+        html.help(
+            _('Note: With this command you can archive all events of one host. '
+              'Needs a rule "Check event state in Event Console" to be '
+              'configured.'))
         html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
 
     def action(self, cmdtag, spec, row, row_index, num_rows):

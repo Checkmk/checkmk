@@ -27,9 +27,10 @@ def discover_postgres_stats(section):
         yield f"ANALYZE {item}", {}
 
 
-def _check_never_checked(item, text, never_checked, params, now):
+def _check_never_checked(text, never_checked, params, now):
+    state_key = "last-time-all-checked"
     if not never_checked:
-        set_item_state(item, now)
+        set_item_state(state_key, now)
         yield 0, "No never checked tables"
         return
 
@@ -37,9 +38,9 @@ def _check_never_checked(item, text, never_checked, params, now):
     cutoff_hint = " (first 5 shown)" if count > 5 else ""
     yield 0, f"{count} tables were never {text}: {' / '.join(never_checked[:5])}{cutoff_hint}"
 
-    last_ts = get_item_state(item)
+    last_ts = get_item_state(state_key)
     if last_ts is None:
-        set_item_state(item, now)
+        set_item_state(state_key, now)
         return
     yield check_levels(
         now - last_ts,
@@ -89,7 +90,7 @@ def _check_postgres_stats(*, item, params, section, now):
             infoname=f"Not {text} for",
         )
 
-    yield from _check_never_checked(item, text, never_checked, params, now)
+    yield from _check_never_checked(text, never_checked, params, now)
 
 
 check_info['postgres_stats'] = {

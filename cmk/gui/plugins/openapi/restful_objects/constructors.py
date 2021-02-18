@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import hashlib
 import json
 import re
@@ -12,6 +13,7 @@ from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
+from cmk.gui import config
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -29,6 +31,51 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     Serializable,
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
+
+API_VERSION = "v0"
+
+
+@contextlib.contextmanager
+def _request_context(secure=True):
+    import os
+    import mock
+    from werkzeug.test import create_environ
+    from cmk.gui.utils.script_helpers import request_context
+    if secure:
+        protocol = 'https'
+    else:
+        protocol = 'http'
+    with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}), \
+            request_context(create_environ(base_url=f"{protocol}://localhost:5000/")):
+        yield
+
+
+def absolute_url(href):
+    """Give an absolute URL.
+
+    Examples:
+
+
+        This function has to be used within an request context.
+
+        >>> with _request_context(secure=False):
+        ...     absolute_url("objects/host_config/example.com")
+        'http://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+
+        >>> with _request_context(secure=True):
+        ...     absolute_url("objects/host_config/example.com")
+        'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+
+    Args:
+        href:
+
+    Returns:
+
+    """
+    if href.startswith("/"):
+        href = href.lstrip("/")
+
+    return f"{request.host_url}{config.omd_site()}/check_mk/api/{API_VERSION}/{href}"
 
 
 def link_rel(
@@ -67,16 +114,17 @@ def link_rel(
 
     Examples:
 
-        >>> link = link_rel('.../update', 'update',
-        ...                 method='get', profile='.../object', title='Update the object')
         >>> expected = {
         ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/update',
         ...     'title': 'Update the object',
-        ...     'href': 'update'
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/foo/update'
         ... }
+        >>> with _request_context():
+        ...     link = link_rel('.../update', '/objects/foo/update',
+        ...                     method='get', profile='.../object', title='Update the object')
         >>> assert link == expected, link
 
     Returns:
@@ -89,7 +137,7 @@ def link_rel(
 
     link_obj = {
         'rel': expand_rel(rel, parameters),
-        'href': href,
+        'href': absolute_url(href),
         'method': method.upper(),
         'type': expand_rel(content_type, content_type_params),
         'domainType': 'link',
@@ -167,7 +215,8 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
 
     Examples:
 
-        >>> action = object_action('move', {'from': 'to'}, '')
+        >>> with _request_context():
+        ...     action = object_action('move', {'from': 'to'}, '')
         >>> assert len(action['links']) > 0
 
     Args:
@@ -226,14 +275,15 @@ def object_collection(
         ...     'links': [
         ...         {
         ...             'rel': 'self',
-        ...             'href': '/domain-types/host/collections/all',
+        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/domain-types/host/collections/all',
         ...             'method': 'GET',
         ...             'type': 'application/json',
         ...             'domainType': 'link',
         ...         }
         ...     ]
         ... }
-        >>> result = object_collection('all', 'host', [], '')
+        >>> with _request_context():
+        ...     result = object_collection('all', 'host', [], '')
         >>> assert result == expected, result
 
     Returns:
@@ -380,9 +430,7 @@ def object_property(
         'choices': [],
     }
     if linkable:
-        property_obj['links'] = [
-            link_rel('self', f"{base}/properties/{name}", profile='.../object_property')
-        ]
+        property_obj['links'] = [link_rel('self', f"{base}/properties/{name}")]
         if links:
             property_obj['links'].extend(links)
 
@@ -705,13 +753,14 @@ def collection_item(
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': '/objects/folder_config/3',
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/folder_config/3',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
+        >>> with _request_context():
+        ...     res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:

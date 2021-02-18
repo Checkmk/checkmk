@@ -87,25 +87,31 @@ def _create_discovery_function(
 
         for element in original_discovery_result:
             if isinstance(element, tuple) and len(element) in (2, 3):
-                parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)
+                item, raw_params = element[0], element[-1]
+                if item is not None and not isinstance(item, str):
+                    raise ValueError("item must be None or of type `str`")
+
+                parameters = _resolve_string_parameters(raw_params, check_name, get_check_context)
                 service = Service(
-                    item=element[0] or None,
+                    item=None,  # will be replaced
                     parameters=wrap_parameters(parameters or {}),
                 )
-                # nasty hack for nasty plugins:
+                # nasty hack for nasty plugins: item = ''
                 # Bypass validation. Item should be None or non-empty string!
-                service = service._replace(item=element[0])
+                service = service._replace(item=item)
                 yield service
-            else:
-                try:
-                    yield Service(
-                        item=element.item,
-                        parameters=wrap_parameters(element.parameters or {}),
-                        labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
-                    )
-                except AttributeError:
-                    # just let it through. Base must deal with bogus return types anyway.
-                    yield element
+                continue
+
+            with suppress(AttributeError):
+                yield Service(
+                    item=element.item,
+                    parameters=wrap_parameters(element.parameters or {}),
+                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
+                )
+                continue
+
+            # just let it through. Base must deal with bogus return types anyway.
+            yield element
 
     return discovery_migration_wrapper
 

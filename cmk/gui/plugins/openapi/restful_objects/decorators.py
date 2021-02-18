@@ -264,6 +264,9 @@ class Endpoint:
         if self.path_params:
             self._expected_status_codes.append(404)  # not found
 
+        if self.query_params or self.request_schema:
+            self._expected_status_codes.append(400)  # bad request
+
         if self.etag in ('input', 'both'):
             self._expected_status_codes.append(412)  # precondition failed
             self._expected_status_codes.append(428)  # precondition required

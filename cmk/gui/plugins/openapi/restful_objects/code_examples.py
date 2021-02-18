@@ -9,6 +9,7 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+import functools
 import json
 import re
 import threading
@@ -447,6 +448,7 @@ def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
     return bool(getattr(_schema, 'type_schemas', None))
 
 
+@functools.lru_cache()
 def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 

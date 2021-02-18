@@ -1535,6 +1535,29 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         )
 
 
+class RestAPIETagLocking(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupSiteManagement
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "rest_api_etag_locking"
+
+    def valuespec(self) -> ValueSpec:
+        return Checkbox(
+            title=_("REST API: Use HTTP ETags for optimistic locking"),
+            help=_("When multiple HTTP clients want to update an object at the same time, "
+                   "it can happen that the slower client will overwrite changes by the faster one. "
+                   "This is commonly referred to as the 'lost update problem'. To prevent this "
+                   "situation from happening, Checkmk's REST API does 'optimistic locking' using "
+                   "HTTP ETag headers. In this case the Object's ETag has to be sent to the server "
+                   "with a HTTP If-Match header. This behavior can be deactivated, but this will "
+                   "allow the 'lost update problem' to occur."),
+        )
+
+
 #.
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

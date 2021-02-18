@@ -43,9 +43,11 @@ def query_redis(client: 'RedisDecoded',
                 integrity_callback: Callable[[], IntegrityCheckResponse],
                 update_callback: Callable[[Pipeline], Any],
                 query_callback: Callable[[], QueryData],
-                timeout: Optional[int] = None) -> QueryData:
-    query_lock = client.lock("%s.query_lock" % data_key)
-    update_lock = client.lock("%s.update_lock" % data_key)
+                timeout: Optional[int] = None,
+                ttl_query_lock: int = 5,
+                ttl_update_lock: int = 10) -> QueryData:
+    query_lock = client.lock("%s.query_lock" % data_key, timeout=ttl_query_lock)
+    update_lock = client.lock("%s.update_lock" % data_key, timeout=ttl_update_lock)
     try:
         query_lock.acquire()
         integrity_result = integrity_callback()

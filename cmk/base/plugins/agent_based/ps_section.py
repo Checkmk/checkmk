@@ -188,7 +188,7 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
         >>> print(cpu_cores)
         1
         >>> print(lines[0][0])
-        Process_Info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
+        ps_info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
         >>> print(lines[0][1])
         ['/sbin/init', '--ladida']
     """

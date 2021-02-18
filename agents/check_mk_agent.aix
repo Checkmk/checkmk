@@ -25,6 +25,7 @@ read_python2_version() {
 }
 PYTHON3=$(read_python3_version)
 PYTHON2=$(read_python2_version)
+export PYTHON2 PYTHON3
 
 if [ -e $HOME/.profile ]
 then

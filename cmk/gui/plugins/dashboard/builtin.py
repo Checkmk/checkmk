@@ -382,7 +382,7 @@ builtin_dashboards['checkmk_host'] = {
         },
         'background': True,
         'position': (1, 1),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['service', 'host'],
         'size': (26, 14)
     }, {
@@ -409,7 +409,7 @@ builtin_dashboards['checkmk_host'] = {
             'show_vertical_axis': True
         },
         'source': 8,
-        'show_title': False,
+        'show_title': True,
         'position': (-36, 15),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -438,7 +438,7 @@ builtin_dashboards['checkmk_host'] = {
             'show_vertical_axis': True
         },
         'source': 2,
-        'show_title': False,
+        'show_title': True,
         'position': (27, 15),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -469,7 +469,7 @@ builtin_dashboards['checkmk_host'] = {
         'source': 1,
         'background': True,
         'position': (27, 1),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['service', 'host'],
         'size': (0, 14)
     }, {
@@ -496,7 +496,7 @@ builtin_dashboards['checkmk_host'] = {
             'show_vertical_axis': True
         },
         'source': 2,
-        'show_title': False,
+        'show_title': True,
         'position': (-36, 1),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -522,7 +522,7 @@ builtin_dashboards['checkmk_host'] = {
         },
         'background': True,
         'position': (1, 15),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['host', 'service'],
         'size': (26, 14)
     }, {

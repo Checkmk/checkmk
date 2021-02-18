@@ -810,6 +810,8 @@ class HostField(String):
         'should_not_exist': 'Host {host_name!r} already exists.',
         'should_be_monitored': 'Host {host_name!r} exists, but is not monitored. '
                                'Activate the configuration?',
+        'should_not_be_monitored': 'Host {host_name!r} exists, but should not be monitored. '
+                                   'Activate the configuration?',
         'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
     }
 
@@ -819,7 +821,7 @@ class HostField(String):
         pattern=HOST_NAME_REGEXP,
         required=True,
         validate=None,
-        should_exist: bool = True,
+        should_exist: Optional[bool] = True,
         should_be_monitored: Optional[bool] = None,
         **kwargs,
     ):

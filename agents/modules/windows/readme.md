@@ -45,13 +45,24 @@ This procedure may quite annoying, you have to check next points:
 2. **buildscripts/scripts/lib/windows.groovy** : from windows node to jenkins
 3. **buildscripts/scripts/build-cmk-version.jenkins** : from enkins to packaging
 4. Checkmk root **Makefile**. Packaging self
+5. Add to integration tests new file name:
+ 
+   *grep agents\modules\windows\tests\integration\* for "python-"*
+    
+   Usually it is conftest.py and Makefile.
 
 ### PROCESS
 
 #### Execution local
 
+##### Building
 make build PY_VER=3.8 PY_SUBVER=7
 make python_344 PY_VER=3.4 PY_SUBVER=4
+
+##### Testing
+make integration    
+make integration-force
+
 
 #### Execution CI
 

@@ -356,11 +356,12 @@ table.data {
       }
     }
 
-    /* TODO: Reproduce this html element */
+    /* e.g. numeric columns on alert statistics views */
     &.count {
-      font-family: sans-serif;
+      width: 1%;
       font-weight: bold;
       text-align: right;
+      white-space: nowrap;
     }
 
     &.number {

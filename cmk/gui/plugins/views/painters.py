@@ -4679,7 +4679,7 @@ class PainterAlertStatsProblem(Painter):
         return _("Alert Statistics: Number of problem alerts")
 
     def short_title(self, cell: Cell) -> str:
-        return _("PROB")
+        return _("Problems")
 
     @property
     def columns(self) -> List[ColumnName]:

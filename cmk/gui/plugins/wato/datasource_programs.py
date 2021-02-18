@@ -2373,7 +2373,7 @@ def _valuespec_special_agents_azure():
                  ],
              )),
         ],
-        optional_keys=["piggyback_vms", "sequential"],
+        optional_keys=["subscription", "piggyback_vms", "sequential"],
     )
 
 

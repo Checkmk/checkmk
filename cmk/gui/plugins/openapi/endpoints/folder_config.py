@@ -58,7 +58,7 @@ def create(params):
 
 
 @Endpoint(
-    constructors.domain_object_sub_collection_href('folder_config', '{folder}', 'hosts'),
+    constructors.domain_object_collection_href('folder_config', '{folder}', 'hosts'),
     '.../collection',
     method='get',
     path_params=[FOLDER_FIELD],

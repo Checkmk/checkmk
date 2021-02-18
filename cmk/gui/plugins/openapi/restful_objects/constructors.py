@@ -458,7 +458,7 @@ def domain_type_action_href(domain_type: DomainType, action: str) -> str:
     return f"/domain-types/{domain_type}/actions/{action}/invoke"
 
 
-def domain_object_sub_collection_href(
+def domain_object_collection_href(
     domain_type: DomainType,
     obj_id: str,
     collection_name: str,
@@ -476,7 +476,7 @@ def domain_object_sub_collection_href(
             The name of the collection.
 
     Examples:
-        >>> domain_object_sub_collection_href('folder_config', 'stuff', 'hosts')
+        >>> domain_object_collection_href('folder_config', 'stuff', 'hosts')
         '/objects/folder_config/stuff/collections/hosts'
 
     Returns:

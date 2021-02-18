@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "23f279d50737b760a67431b1ecb7aea1e909f62f4677d96c1a81eaa737359196"
+            "sha256": "fccd83e7ecde3accc22ffafeb8f2ab6c87261373381dc29b02203974a6fa1efd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1808,14 +1808,6 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.13.1"
-        },
-        "polib": {
-            "hashes": [
-                "sha256:93b730477c16380c9a96726c54016822ff81acfa553977fdd131f2b90ba858d7",
-                "sha256:fad87d13696127ffb27ea0882d6182f1a9cf8a5e2b37a587751166c51e5a332a"
-            ],
-            "index": "pypi",
-            "version": "==1.1.0"
         },
         "pre-commit": {
             "hashes": [

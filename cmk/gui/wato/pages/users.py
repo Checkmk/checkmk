@@ -1030,7 +1030,7 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            user_np = self._user.get("notification_period")
+            user_np = self._user.get("notification_period", "24X7")
             if not isinstance(user_np, str):
                 raise Exception("invalid notification period %r" % (user_np,))
             choices: Choices = [

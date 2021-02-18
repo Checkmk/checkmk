@@ -50,7 +50,7 @@ from cmk.base.checkers.snmp import SNMPSource
 from cmk.base.checkers.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
-    "TestSection",
+    "_TestSection",
     "name, parsed_section_name, parse_function, supersedes",
 )
 

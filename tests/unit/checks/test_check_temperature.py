@@ -176,7 +176,7 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
 
 
 Entry = collections.namedtuple(
-    'TestEntry',
+    'Entry',
     [
         'reading',
         'growth',

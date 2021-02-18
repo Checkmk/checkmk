@@ -39,7 +39,12 @@ def parse_docker_container_cpu(info):
         return parsed
 
     raw = docker_json_get_obj(info[1])
-    parsed["num_cpus"] = len(raw['cpu_usage']['percpu_usage'])
+    # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
+    if "online_cpus" in raw:
+        num_cpus = raw["online_cpus"]
+    else:
+        num_cpus = len(raw['cpu_usage']['percpu_usage'])
+    parsed["num_cpus"] = num_cpus
     parsed["system_ticks"] = raw['system_cpu_usage']
     parsed["container_ticks"] = raw['cpu_usage']['total_usage']
     return parsed

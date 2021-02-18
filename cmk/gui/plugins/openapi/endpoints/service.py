@@ -47,7 +47,7 @@ PARAMETERS = [{
 }]
 
 
-@Endpoint(constructors.domain_object_sub_collection_href('host', '{host_name}', 'services'),
+@Endpoint(constructors.domain_object_collection_href('host', '{host_name}', 'services'),
           '.../collection',
           method='get',
           path_params=[HOST_NAME],

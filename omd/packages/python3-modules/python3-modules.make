@@ -255,7 +255,6 @@ python3-modules-dump-Pipfile:
 	@echo 'pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml'
 	@echo 'pytest-profiling = "*"  # used to analyze test run performance'
 	@echo 'responses = "*"  # used for unit tests'
-	@echo 'polib = "*"  # used by locale/add-authors for working with .po files'
 	@echo 'webtest = "*"  # used by WSGI based tests'
 	@echo 'pre-commit = "*"  # used to fix / find issues before commiting changes'
 	@echo 'flake8 = "*"'

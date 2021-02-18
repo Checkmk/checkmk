@@ -28,7 +28,6 @@ pytest-mock = "*"  # used by quite a few unit/integration tests via the mocker f
 pytest-testmon = "*"  # used for pre-commit checking via .pre-commit-config.yaml
 pytest-profiling = "*"  # used to analyze test run performance
 responses = "*"  # used for unit tests
-polib = "*"  # used by locale/add-authors for working with .po files
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
 flake8 = "*"

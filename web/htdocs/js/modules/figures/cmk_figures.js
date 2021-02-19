@@ -690,8 +690,8 @@ export function state_component(figurebase, state) {
     the_rect
         .attr("x", border_width / 2)
         .attr("y", border_width / 2)
-        .attr("width", figurebase.figure_size.width - 2 * border_width)
-        .attr("height", figurebase.figure_size.height - 2 * border_width)
+        .attr("width", figurebase.figure_size.width - border_width)
+        .attr("height", figurebase.figure_size.height - border_width)
         .style("fill", "none")
         .style("stroke-width", border_width);
 

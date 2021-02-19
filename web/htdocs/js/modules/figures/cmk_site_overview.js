@@ -48,7 +48,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
             .style("position", "absolute")
             .style("top", "0px")
             .style("left", "0px")
-            .on("mousemove", () => this._update_quadtree_svg());
+            .on("mousemove", event => this._update_quadtree_svg(event));
 
         let left = this.margin.left;
         let top = this.margin.top;
@@ -75,8 +75,8 @@ export class SiteOverview extends cmk_figures.FigureBase {
             .append("input")
             .attr("type", "text")
             .classed("msg_filter", true)
-            .on("input", () => {
-                let target = d3.select(d3.event.target);
+            .on("input", event => {
+                let target = d3.select(event.target);
                 let filter = target.property("value");
                 hostname_filter.filter(d => {
                     return d.toLowerCase().includes(filter.toLowerCase());
@@ -130,9 +130,9 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     [0, 0],
                     [this.plot_size.width, this.plot_size.height],
                 ])
-                .on("zoom", () => {
+                .on("zoom", event => {
                     let zoom_enabled = this._zoomable_modes.indexOf(this._data.render_mode) != -1;
-                    this._last_zoom = zoom_enabled ? d3.event.transform : d3.zoomIdentity;
+                    this._last_zoom = zoom_enabled ? event.transform : d3.zoomIdentity;
                     this.plot.attr("transform", this._last_zoom);
                     if (this._use_canvas_for_hosts)
                         this._render_hexagon_content(this._hexagon_content);
@@ -397,10 +397,10 @@ export class SiteOverview extends cmk_figures.FigureBase {
         });
     }
 
-    _update_quadtree_svg() {
+    _update_quadtree_svg(event) {
         if (this._quadtree.size() == 0) return;
-        let x = d3.event.layerX - this.margin.left;
-        let y = d3.event.layerY - this.margin.top;
+        let x = event.layerX - this.margin.left;
+        let y = event.layerY - this.margin.top;
         let host = this._quadtree.find(
             (x - this._last_zoom.x) / this._last_zoom.k,
             (y - this._last_zoom.y) / this._last_zoom.k,

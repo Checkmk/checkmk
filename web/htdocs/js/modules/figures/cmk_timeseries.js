@@ -40,9 +40,9 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .style("display", "inline-block")
             .style("overflow", "visible")
             .on("click", () => this._mouse_click())
-            .on("mousedown", () => this._mouse_down())
-            .on("mousemove", () => this._mouse_move())
-            .on("mouseleave", () => this._mouse_out());
+            .on("mousedown", event => this._mouse_down(event))
+            .on("mousemove", event => this._mouse_move(event))
+            .on("mouseleave", event => this._mouse_out(event));
 
         // The main svg, covers the whole figure
         this.svg = main_div
@@ -87,13 +87,13 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this.legend_generator = new cmk_figures.FigureLegend(this._legend);
     }
 
-    _mouse_down() {}
+    _mouse_down(event) {}
 
-    _mouse_click() {}
+    _mouse_click(event) {}
 
-    _mouse_out() {}
+    _mouse_out(event) {}
 
-    _mouse_move() {}
+    _mouse_move(event) {}
 
     crossfilter() {
         if (!arguments.length) {
@@ -145,16 +145,16 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         this._zoom = d3
             .zoom()
             .scaleExtent([0.01, 100])
-            .on("zoom", () => {
+            .on("zoom", event => {
                 let last_y = this._current_zoom.y;
                 if (this.lock_zoom_x) {
-                    d3.event.transform.x = 0;
-                    d3.event.transform.k = 1;
+                    event.transform.x = 0;
+                    event.transform.k = 1;
                 }
-                if (this.lock_zoom_x_scale) d3.event.transform.k = 1;
+                if (this.lock_zoom_x_scale) event.transform.k = 1;
 
-                this._current_zoom = d3.event.transform;
-                if (d3.event.sourceEvent.type === "wheel") this._current_zoom.y = last_y;
+                this._current_zoom = event.transform;
+                if (event.sourceEvent.type === "wheel") this._current_zoom.y = last_y;
                 this._zoomed();
             });
         this.svg.call(this._zoom);
@@ -510,25 +510,25 @@ class AverageScatterplotFigure extends TimeseriesFigure {
         this.margin.top += 8; // timeseries y-label margin
     }
 
-    _mouse_down() {
-        // d3.event.button == 1 equals a pressed mouse wheel
-        if (d3.event.button == 1 && this._selected_scatterpoint) {
+    _mouse_down(event) {
+        // event.button == 1 equals a pressed mouse wheel
+        if (event.button == 1 && this._selected_scatterpoint) {
             window.open(this._selected_scatterpoint.url);
         }
     }
 
-    _mouse_click() {
+    _mouse_click(event) {
         if (this._selected_scatterpoint) window.location = this._selected_scatterpoint.url;
     }
 
-    _mouse_out() {
+    _mouse_out(event) {
         this.g.select("path.pin").remove();
         this._tooltip.selectAll("table").remove();
         this._tooltip.style("opacity", 0);
     }
 
-    _mouse_move() {
-        let ev = d3.event;
+    _mouse_move(event) {
+        let ev = event;
         // TODO KO: clean up these mouse events for better performance
         if (
             !["svg", "path"].includes(ev.target.tagName) ||
@@ -1660,8 +1660,8 @@ class CmkGraphShifter extends CmkGraphTimeseriesFigure {
             .attr("min", d => d.min)
             .attr("max", d => d.max)
             .attr("value", 0)
-            .on("change", d => {
-                this._cutter_div.selectAll("td.value#" + d.id).text(d3.event.target.value);
+            .on("change", (event, d) => {
+                this._cutter_div.selectAll("td.value#" + d.id).text(event.target.value);
                 this._update_shifts();
             });
     }

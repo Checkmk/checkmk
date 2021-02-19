@@ -2437,7 +2437,7 @@ class html(ABCHTMLGenerator):
 
         if icon:
             self.img(id_=img_id,
-                     class_=["treeangle", "title", "open" if isopen else "closed"],
+                     class_=["treeangle", "title", "icon", "open" if isopen else "closed"],
                      src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
                      onclick=onclick)
         else:

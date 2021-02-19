@@ -349,12 +349,12 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             this.update_gui();
         });
 
-        // Easter egg
+        // Easter egg / Datatype Debugging
         //new_items.call(
         //    d3.drag()
-        //        .on("start", () => this.legend_generator._dragstart())
-        //        .on("drag", () => this.legend_generator._drag())
-        //        .on("end", () => this.legend_generator._dragend())
+        //        .on("start", event => this.legend_generator._dragstart(event))
+        //        .on("drag", event => this.legend_generator._drag(event))
+        //        .on("end", event => this.legend_generator._dragend(event))
         //);
 
         new_items

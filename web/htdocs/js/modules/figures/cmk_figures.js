@@ -561,10 +561,10 @@ export class FigureTooltip {
         this.plot_size = plot_size;
     }
 
-    update_position() {
+    update_position(event) {
         if (!this.active()) return;
 
-        let ev = "sourceEvent" in d3.event ? d3.event.sourceEvent : d3.event;
+        let ev = "sourceEvent" in event ? event.sourceEvent : event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
@@ -596,30 +596,30 @@ export class FigureTooltip {
     add_support(node) {
         let element = d3.select(node);
         element
-            .on("mouseover", () => this._mouseover())
-            .on("mouseleave", () => this._mouseleave())
-            .on("mousemove", () => this._mousemove());
+            .on("mouseover", event => this._mouseover(event))
+            .on("mouseleave", event => this._mouseleave(event))
+            .on("mousemove", event => this._mousemove(event));
     }
 
     active() {
         return this._tooltip.style("opacity") == 1;
     }
 
-    _mouseover() {
-        let node_data = d3.select(d3.event.target).datum();
+    _mouseover(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
 
         this._tooltip.style("opacity", 1);
     }
 
-    _mousemove() {
-        let node_data = d3.select(d3.event.target).datum();
+    _mousemove(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this._tooltip.html(node_data.tooltip);
-        this.update_position();
+        this.update_position(event);
     }
 
-    _mouseleave() {
+    _mouseleave(event) {
         this._tooltip.style("opacity", 0);
     }
 }
@@ -630,18 +630,18 @@ export class FigureLegend {
         this._legend.classed("legend", true);
     }
 
-    _dragstart() {
-        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
+    _dragstart(event) {
+        this._dragged_object = d3.select(event.sourceEvent.currentTarget);
     }
 
-    _drag() {
+    _drag(event) {
         this._dragged_object
             .style("position", "absolute")
-            .style("top", d3.event.y + "px")
-            .style("right", -d3.event.x + "px");
+            .style("top", event.y + "px")
+            .style("right", -event.x + "px");
     }
 
-    _dragend() {
+    _dragend(event) {
         this._dragged_object.remove();
 
         let point_in_rect = (r, p) => p.x > r.x1 && p.x < r.x2 && p.y > r.y1 && p.y < r.y2;
@@ -656,14 +656,14 @@ export class FigureLegend {
             if (
                 point_in_rect(
                     {x1: x1, y1: y1, x2: x2, y2: y2},
-                    {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}
+                    {x: event.sourceEvent.clientX, y: event.sourceEvent.clientY}
                 )
             )
                 target_renderer = d;
         });
 
-        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
-            d3.event.subject.migrate_to(target_renderer);
+        if (target_renderer != null && target_renderer != event.subject.renderer)
+            event.subject.migrate_to(target_renderer);
     }
 }
 

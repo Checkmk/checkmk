@@ -1236,3 +1236,64 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
 ])
 def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
     assert may_edit_ruleset(varname) is False
+
+
+def test_is_ntop_available():
+    is_ntop_available = config.is_ntop_available()
+
+    if cmk_version.is_raw_edition():
+        assert not is_ntop_available
+    if not cmk_version.is_raw_edition():
+        assert is_ntop_available
+
+
+@pytest.mark.parametrize("ntop_connection, custom_user, answer", [
+    (
+        {
+            'is_activated': False
+        },
+        "",
+        False,
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': False
+        },
+        "",
+        True,
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "",
+        False,
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "a_ntop_user",
+        True,
+    ),
+])
+def test_is_ntop_configured_and_reason(
+    mocker,
+    ntop_connection,
+    custom_user,
+    answer,
+):
+    if cmk_version.is_raw_edition():
+        assert not config.is_ntop_configured()
+    if not cmk_version.is_raw_edition():
+        mocker.patch.object(
+            config,
+            'ntop_connection',
+            ntop_connection,
+        )
+        if custom_user:
+            config.user._set_attribute("ntop_alias", custom_user)
+        assert config.is_ntop_configured() == answer

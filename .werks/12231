@@ -1,0 +1,14 @@
+Title: <tt>ceph_df</tt>: Support Ceph 15.2.8-1focal
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1613980198
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The check plugin <tt>ceph_df</tt>, which monitors the size and
+used space of pools of Ceph storage systems, now supports Ceph
+15.2.8-1focal. The corresponding services will be discovered upon
+re-discovery.

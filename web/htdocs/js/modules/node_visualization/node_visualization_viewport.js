@@ -121,18 +121,18 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "svg_content")
-            .on("contextmenu", () => {
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
+            .on("contextmenu", event => {
+                event.preventDefault();
+                event.stopPropagation();
                 // TODO: identify nodes layer (svg/canvas)
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].render_context_menu();
+                ].render_context_menu(event);
             })
-            .on("click.remove_context", () =>
+            .on("click.remove_context", event =>
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].remove_context_menu()
+                ].remove_context_menu(event)
             );
 
         this.div_content_selection = this.selection

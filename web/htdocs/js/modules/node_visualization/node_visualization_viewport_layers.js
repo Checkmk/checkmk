@@ -691,8 +691,8 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
         if (this.node.children != this.node._children)
             elements.push({
                 text: "Below this node, expand all nodes",
-                on: () => {
-                    d3.event.stopPropagation();
+                on: event => {
+                    event.stopPropagation();
                     this.expand_node_including_children(this.node);
                     this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                     this.viewport.update_layers();
@@ -703,8 +703,8 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
         else
             elements.push({
                 text: "Collapse this node",
-                on: () => {
-                    d3.event.stopPropagation();
+                on: event => {
+                    event.stopPropagation();
                     this.collapse_node();
                 },
                 href: "",
@@ -713,8 +713,8 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
 
         elements.push({
             text: "Expand all nodes",
-            on: () => {
-                d3.event.stopPropagation();
+            on: event => {
+                event.stopPropagation();
                 this.expand_node_including_children(this.node.data.chunk.tree);
                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                 this.viewport.update_layers();
@@ -725,8 +725,8 @@ class BIAggregatorNode extends node_visualization_viewport_utils.AbstractGUINode
 
         elements.push({
             text: "Below this node, show only problems",
-            on: () => {
-                d3.event.stopPropagation();
+            on: event => {
+                event.stopPropagation();
                 this._filter_root_cause(this.node);
                 this.viewport.recompute_node_chunk_descendants_and_links(this.node.data.chunk);
                 this.viewport.update_layers();
@@ -916,7 +916,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .style("width", "200px");
 
         let options = select
-            .on("change", () => this._change_line_style())
+            .on("change", event => this._change_line_style(event))
             .selectAll("option")
             .data(["straight", "round", "elbow"]);
         options.exit().remove();
@@ -933,8 +933,8 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .text(d => d);
     }
 
-    _change_line_style() {
-        let new_line_style = d3.select(d3.event.target).property("value");
+    _change_line_style(event) {
+        let new_line_style = d3.select(event.target).property("value");
         this.viewport.get_hierarchy_list().forEach(node_chunk => {
             node_chunk.layout_instance.line_config.style = new_line_style;
             node_chunk.layout_settings.config.line_config.style = new_line_style;
@@ -1076,7 +1076,7 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             this.node_instances[idx].node.data.transition_info.use_transition = false;
     }
 
-    render_context_menu(node_instance) {
+    render_context_menu(event, node_instance) {
         if (!this.viewport.layout_manager.edit_layout && !node_instance) return; // Nothing to show
 
         let node = null;
@@ -1087,13 +1087,13 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
         } else {
             let last_zoom = this.viewport.last_zoom;
             coords = {
-                x: (d3.event.layerX - last_zoom.x) / last_zoom.k,
-                y: (d3.event.layerY - last_zoom.y) / last_zoom.k,
+                x: (event.layerX - last_zoom.x) / last_zoom.k,
+                y: (event.layerY - last_zoom.y) / last_zoom.k,
             };
         }
 
-        d3.event.preventDefault();
-        d3.event.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
 
         // TODO: remove this, apply general update pattern..
         this.div_selection.selectAll("#popup_menu").remove();
@@ -1119,7 +1119,6 @@ export class LayeredNodesLayer extends node_visualization_viewport_utils.Layered
             .merge(content);
 
         // Create li for each item
-        let elements = [];
         if (this.viewport.layout_manager.edit_layout) {
             // Add elements layout manager
             this._add_elements_to_context_menu(

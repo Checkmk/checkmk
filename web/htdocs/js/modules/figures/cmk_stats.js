@@ -1,5 +1,5 @@
-import * as d3 from "d3";
 import * as cmk_figures from "cmk_figures";
+import * as d3Hexbin from "d3-hexbin";
 
 export class HostStats extends cmk_figures.FigureBase {
     static ident() {
@@ -26,7 +26,7 @@ export class HostStats extends cmk_figures.FigureBase {
 
         this.resize();
         let parts = this._data.parts;
-        const hexbin = d3.hexbin();
+        const hexbin = d3Hexbin.hexbin();
         let hexagon_config = [];
 
         let largest_element_count = 0;

@@ -1,0 +1,14 @@
+Title: Error reporting in downtime script (treasures)
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1613981967
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+There was a bug in the error reporting of the script <tt>treasures/downtime</tt>
+(used to set downtimes from the command prompt), which prevented the script from
+correctly reporting errors. This has been fixed.

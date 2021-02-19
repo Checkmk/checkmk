@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from typing import Any, Dict
 
 from cmk.base.check_api import regex
 from cmk.base.check_api import MKCounterWrapped
@@ -46,8 +47,8 @@ def parse_runmqsc_display_output(info, group_by_object):
             previous = value
         yield previous, False
 
-    parsed = {}  # type: ignore[var-annotated]
-    attributes = {}  # type: ignore[var-annotated]
+    parsed: Dict[Any, Any] = {}
+    attributes: Dict[Any, Any] = {}
     for (line,), has_more in lookahead(info):
         intro_line = re_intro.match(line)
         if intro_line:

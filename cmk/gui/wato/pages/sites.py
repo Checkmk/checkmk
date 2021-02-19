@@ -7,7 +7,7 @@
 
 import traceback
 import time
-import multiprocessing
+from multiprocessing import JoinableQueue, Process
 import socket
 import contextlib
 import binascii
@@ -870,17 +870,16 @@ class ReplicationStatusFetcher:
         super().__init__()
         self._logger = logger.getChild("replication-status")
 
-    def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, PingResult]:
+    def fetch(self, sites: List[_Tuple[str, Dict]]) -> Dict[str, ReplicationStatus]:
         self._logger.debug("Fetching replication status for %d sites" % len(sites))
-        results_by_site = {}
+        results_by_site: Dict[str, ReplicationStatus] = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue = multiprocessing.JoinableQueue()  # type: ignore[var-annotated]
+        result_queue: JoinableQueue[ReplicationStatus] = JoinableQueue()
 
         processes = []
         for site_id, site in sites:
-            process = multiprocessing.Process(target=self._fetch_for_site,
-                                              args=(site_id, site, result_queue))
+            process = Process(target=self._fetch_for_site, args=(site_id, site, result_queue))
             process.start()
             processes.append((site_id, process))
 

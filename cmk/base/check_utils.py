@@ -10,7 +10,6 @@ from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-RulesetName = str
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']
 

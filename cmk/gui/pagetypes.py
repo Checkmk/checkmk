@@ -1775,12 +1775,6 @@ class PagetypeTopics(Overridable):
     @classmethod
     def builtin_pages(cls):
         return {
-            "my_workplace": {
-                "title": _("Workplace"),
-                "icon_name": "topic_my_workplace",
-                "description": "",
-                "sort_index": 10,
-            },
             "overview": {
                 "title": _("Overview"),
                 "icon_name": "topic_overview",
@@ -1843,12 +1837,18 @@ class PagetypeTopics(Overridable):
                 "sort_index": 95,
                 "hide": not config.is_ntop_configured(),
             },
+            "my_workplace": {
+                "title": _("Workplace"),
+                "icon_name": "topic_my_workplace",
+                "description": "",
+                "sort_index": 100,
+            },
             # Only fallback for items without topic
             "other": {
                 "title": _("Other"),
                 "icon_name": "topic_other",
                 "description": "",
-                "sort_index": 90,
+                "sort_index": 105,
             },
         }
 

@@ -185,6 +185,7 @@ if "main" not in builtin_dashboards:
     builtin_dashboards["main"] = builtin_dashboards["problems"].copy()
     builtin_dashboards["main"].update({
         "title": _("Main dashboard"),
+        "title_url": "view.py?filled_in=filter&hoststate_filled=1&hst1=on&hst2=on&hstp=on&view_name=searchhost&_show_filter_form=0",
         "icon": "dashboard_main",
         "topic": "overview",
         "sort_index": 12,

@@ -36,6 +36,7 @@ from cmk.gui.utils import get_random_string
 from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
+import cmk.gui.watolib.activate_changes as activate_changes
 
 SPEC_LOCK = threading.Lock()
 
@@ -382,3 +383,8 @@ def with_host(module_wide_request_context, with_user_login, suppress_automation_
     ])
     yield hostnames
     hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
+
+
+@pytest.fixture(autouse=True)
+def mock__add_extensions_for_license_usage(monkeypatch):
+    monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)

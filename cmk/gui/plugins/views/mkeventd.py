@@ -982,13 +982,14 @@ class PainterHistoryAddinfo(Painter):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionECUpdateEvent := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="update",
-    title=_l("Update an event"),
-    description=_l("Needed for acknowledging and changing the comment and contact of an event"),
-    defaults=["user", "admin"],
-))
+PermissionECUpdateEvent = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="update",
+        title=_l("Update an event"),
+        description=_l("Needed for acknowledging and changing the comment and contact of an event"),
+        defaults=["user", "admin"],
+    ))
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
@@ -1080,14 +1081,15 @@ class CommandECUpdateEvent(ECCommand):
                                               0, comment, contact), _("update")
 
 
-permission_registry.register(PermissionECChangeEventState := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="changestate",
-    title=_l("Change event state"),
-    description=_l("This permission allows to change the state classification of an event "
-                   "(e.g. from CRIT to WARN)."),
-    defaults=["user", "admin"],
-))
+PermissionECChangeEventState = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="changestate",
+        title=_l("Change event state"),
+        description=_l("This permission allows to change the state classification of an event "
+                       "(e.g. from CRIT to WARN)."),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1116,14 +1118,15 @@ class CommandECChangeState(ECCommand):
                                              state), _("change the state")
 
 
-permission_registry.register(PermissionECCustomActions := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="actions",
-    title=_l("Perform custom action"),
-    description=_l("This permission is needed for performing the configured actions "
-                   "(execution of scripts and sending emails)."),
-    defaults=["user", "admin"],
-))
+PermissionECCustomActions = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="actions",
+        title=_l("Perform custom action"),
+        description=_l("This permission is needed for performing the configured actions "
+                       "(execution of scripts and sending emails)."),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1152,13 +1155,14 @@ class CommandECCustomAction(ECCommand):
                     _("execute the action \"%s\"") % title)
 
 
-permission_registry.register(PermissionECArchiveEvent := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="delete",
-    title=_l("Archive an event"),
-    description=_l("Finally archive an event without any further action"),
-    defaults=["user", "admin"],
-))
+PermissionECArchiveEvent = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="delete",
+        title=_l("Archive an event"),
+        description=_l("Finally archive an event without any further action"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1185,13 +1189,14 @@ class CommandECArchiveEvent(ECCommand):
             return command, title
 
 
-permission_registry.register(PermissionECArchiveEventsOfHost := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="archive_events_of_hosts",
-    title=_l("Archive events of hosts"),
-    description=_l("Archive all open events of all hosts shown in host views"),
-    defaults=["user", "admin"],
-))
+PermissionECArchiveEventsOfHost = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="archive_events_of_hosts",
+        title=_l("Archive events of hosts"),
+        description=_l("Archive all open events of all hosts shown in host views"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1229,6 +1234,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
                 data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
                                           "Filter: host_name = %s" % row['host_name'])
                 commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
+
             return commands, "<b>archive all events of all hosts</b> of"
 
 

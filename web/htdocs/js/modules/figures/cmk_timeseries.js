@@ -979,22 +979,22 @@ function area_draw_fn(subplot) {
         });
 }
 
-function graph_data_path(subplot, path_type) {
+function graph_data_path(subplot, path_type, status_cls) {
     return subplot.svg
         .selectAll("g.graph_data path." + path_type)
         .data([subplot.transformed_data])
-        .join(enter =>
-            enter.append("g").classed("graph_data", true).append("path").classed(path_type, true)
-        )
+        .join(enter => enter.append("g").classed("graph_data", true).append("path"))
+        .attr("class", `${path_type}${status_cls ? " " + status_cls : ""}`)
         .classed((subplot.definition.css_classes || []).join(" "), true);
 }
 
-function draw_subplot(subplot, path_type, styles) {
-    let path = graph_data_path(subplot, path_type);
+function draw_subplot(subplot, path_type, status_cls, styles) {
+    let path = graph_data_path(subplot, path_type, status_cls);
     let path_fn = (path_type === "line" ? line_draw_fn : area_draw_fn)(subplot);
 
     let plot = subplot._renderer.transition(path).attr("d", d => path_fn(d));
-    Object.entries(styles).forEach(([property, value]) => plot.style(property, value));
+    if (!status_cls)
+        Object.entries(styles).forEach(([property, value]) => plot.style(property, value));
 }
 
 // Renders a single uninterrupted line
@@ -1004,7 +1004,7 @@ class LinePlot extends SubPlot {
     }
 
     render() {
-        draw_subplot(this, "line", {
+        draw_subplot(this, "line", "", {
             fill: "none",
             opacity: this.get_opacity() || 1,
             stroke: this.get_color(),
@@ -1027,9 +1027,11 @@ class AreaPlot extends SubPlot {
 
     render() {
         let color = this.get_color();
-        draw_subplot(this, "area", {fill: color, opacity: this.get_opacity()});
+        let status_cls = cmk_figures.getIn(this, "definition", "fill_style", "style") || "";
+
+        draw_subplot(this, "area", status_cls, {fill: color, opacity: this.get_opacity()});
         if (this.definition.style === "with_topline")
-            draw_subplot(this, "line", {
+            draw_subplot(this, "line", status_cls, {
                 "stroke-width": this.definition.stroke_width || 2,
                 fill: "none",
                 stroke: color,
@@ -1209,9 +1211,27 @@ class SingleValuePlot extends SubPlot {
 
         const plot_size = this._renderer.plot_size;
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        let inner_status_display = cmk_figures.getIn(this, "definition", "inner_render");
+        let inner_status_display = cmk_figures.getIn(this, "definition", "text_style");
 
         const config = new URLSearchParams(this._post_body);
+
+        let fill_component = cmk_figures.getIn(this, "definition", "fill_style");
+        if (fill_component) {
+            let style = fill_component.style ? " " + fill_component.style : "";
+            this.svg
+                .selectAll("rect.status_background")
+                .data([null])
+                .join("rect")
+                .attr("class", `status_background${style}`)
+                .attr("y", 0)
+                .attr("x", 0)
+                .attr("width", plot_size.width)
+                .attr("height", plot_size.height);
+        } else {
+            this.svg.selectAll("rect.status_background").remove();
+            if (this.definition.metric_status_display == null) value.color = "#3CC2FF"; // default blue
+        }
+
         cmk_figures.metric_value_component(
             this.svg,
             value,
@@ -1219,7 +1239,7 @@ class SingleValuePlot extends SubPlot {
             {font_size, ...inner_status_display}
         );
 
-        let border_component = cmk_figures.getIn(this, "definition", "border_component");
+        let border_component = cmk_figures.getIn(this, "definition", "border_style");
         if (border_component) cmk_figures.state_component(this._renderer, border_component);
     }
 

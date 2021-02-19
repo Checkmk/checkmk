@@ -484,6 +484,7 @@ export class FigureBase {
             .data(d => [d])
             .join("text")
             .text(d => d.title)
+            .classed("title", true)
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
@@ -522,14 +523,13 @@ export function make_levels(domain, bounds) {
     if (bounds.warn <= dmin) dmin = bounds.warn;
 
     return [
-        {from: bounds.crit, to: dmax, color: "#FF3232", style: "metricstate state2"},
+        {from: bounds.crit, to: dmax, style: "metricstate state2"},
         {
             from: bounds.warn,
             to: bounds.crit,
-            color: "#FFFE44",
             style: "metricstate state1",
         },
-        {from: dmin, to: bounds.warn, color: "#13D389", style: "metricstate state0"},
+        {from: dmin, to: bounds.warn, style: "metricstate state0"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -681,7 +681,6 @@ export function state_component(figurebase, state) {
         .selectAll(".state_component")
         .data([state])
         .join("g")
-        .attr("class", d => d.style)
         .classed("state_component", true);
     let the_rect = state_component
         .selectAll("rect")
@@ -692,6 +691,7 @@ export function state_component(figurebase, state) {
         .attr("y", border_width / 2)
         .attr("width", figurebase.figure_size.width - border_width)
         .attr("height", figurebase.figure_size.height - border_width)
+        .attr("class", d => d.style)
         .style("fill", "none")
         .style("stroke-width", border_width);
 
@@ -704,6 +704,7 @@ export function state_component(figurebase, state) {
         .attr("y", figurebase.figure_size.height - font_size)
         .attr("text-anchor", "middle")
         .style("font-size", font_size + "px")
+        .attr("class", d => d.style)
         .text(d => d.msg);
 }
 
@@ -756,7 +757,7 @@ export function metric_value_component(selection, value, attr, style) {
         .selectAll("a.single_value")
         .data([value])
         .join("a")
-        .attr("class", `single_value${style.style ? " " + style.style : ""}`)
+        .classed("single_value", true)
         .attr("xlink:href", d => d.url || null);
     let text = link
         .selectAll("text")
@@ -766,6 +767,7 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
+        .attr("class", style.style ? style.style : "single_value")
         .style("font-size", style.font_size + "px");
 
     let unit = text

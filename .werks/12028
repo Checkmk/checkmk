@@ -6,7 +6,8 @@ Date: 1613722725
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+State: unknown
+Version: 2.0.0b7
 
 This werk fixes an issue with the asynchronous execution of python-based
 agent plugins. Due to a bug, the corresponding cache files might have been

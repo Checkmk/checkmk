@@ -24,7 +24,7 @@ apc_ats_output_default_levels = {"output_voltage_max": (240, 250), "load_perc_ma
 
 # The plugin cisco_asa_svcsessions does not exist anymore (checkmk.com/de/werk/11150)
 # Still we need to be able to load the autochecks file.
-cisco_asa_svc_default_levels = {}  # type: ignore[var-annotated]
+cisco_asa_svc_default_levels: dict = {}
 
 # chrony:
 ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms sys_time_offset_offset
@@ -41,8 +41,8 @@ hp_msa_controller_cpu_default_levels = (80.0, 90.0)
 # if.include
 # These HostRulespecs are deprecated as of v2.0. However, for compatibility reasons, we must not
 # delete these variable.
-if_disable_if64_hosts = []  # type: ignore[var-annotated]
-if_groups = []  # type: ignore[var-annotated]
+if_disable_if64_hosts: list = []
+if_groups: list = []
 # Obsolete variables, but needed as contained in autochecks of older checks. We need to keep this up
 # for a few years/decades...
 if_default_error_levels = (0.01, 0.1)
@@ -63,10 +63,10 @@ services_default_levels = {
 }
 services_summary_default_levels = {"ignored": [], "state_if_stopped": 0}
 
-tcp_conn_stats_default_levels = {}  # type: ignore[var-annotated]
+tcp_conn_stats_default_levels: dict = {}
 
 # oracle_tablespaces
 oracle_tablespaces_default_levels = (10.0, 5.0)
 oracle_tablespaces_check_autoext = True
 
-winperf_cpu_default_levels = {}  # type: ignore[var-annotated]  # winperf_processor.util
+winperf_cpu_default_levels: dict = {}  # winperf_processor.util

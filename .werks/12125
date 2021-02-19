@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.0.0b7
+Version: 2.0.0b8
 
 This change introduces the show all endpoint to users, host tag, password and time period

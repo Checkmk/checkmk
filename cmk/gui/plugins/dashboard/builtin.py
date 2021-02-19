@@ -20,7 +20,7 @@ builtin_dashboards["problems"] = {
     "title": _("Problem dashboard"),
     "topic": "problems",
     "sort_index": 5,
-    "icon": "dashboard",
+    "icon": "dashboard_problems",
     "description": _("This dashboard gives you a general overview on the state of your "
                      "monitored devices."),
     "dashlets": [
@@ -185,6 +185,7 @@ if "main" not in builtin_dashboards:
     builtin_dashboards["main"] = builtin_dashboards["problems"].copy()
     builtin_dashboards["main"].update({
         "title": _("Main dashboard"),
+        "icon": "dashboard_main",
         "topic": "overview",
         "sort_index": 12,
     })
@@ -336,7 +337,7 @@ builtin_dashboards["checkmk"] = {
         'size': (0, 0)
     }],
     'single_infos': [],
-    'icon': 'checkmk'
+    'icon': 'dashboard_system'
 }
 
 builtin_dashboards['checkmk_host'] = {

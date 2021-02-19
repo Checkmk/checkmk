@@ -16,6 +16,8 @@ export class HostStats extends cmk_figures.FigureBase {
     }
 
     update_data(data) {
+        this._title = data.title;
+        this._title_url = data.title_url;
         this._data = data.data;
     }
 
@@ -78,7 +80,7 @@ export class HostStats extends cmk_figures.FigureBase {
             .text(d => d.text)
             .attr("href", d => d.url);
 
-        this.render_title(this._data.title, this._data.title_url);
+        this.render_title(this._title, this._title_url);
     }
 }
 

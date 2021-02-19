@@ -2244,16 +2244,6 @@ def _get_checkgroup_parameters(config_cache: 'ConfigCache', host: HostName, chec
         raise MKGeneralException(str(e) + " (on host %s, checkgroup %s)" % (host, checkgroup))
 
 
-def get_management_board_precedence(check_plugin_name: CheckPluginNameStr,
-                                    plugins_info: CheckInfo) -> str:
-    # TODO(mo): The first .get() has been added as quick fix for an issue during new Check-API
-    # development. This should not be kept after the situation in clearer.
-    mgmt_board = plugins_info.get(check_plugin_name, {}).get("management_board")
-    if mgmt_board is None:
-        return check_api_utils.HOST_PRECEDENCE
-    return mgmt_board
-
-
 cmk.utils.cleanup.register_cleanup(check_api_utils.reset_hostname)
 
 #.

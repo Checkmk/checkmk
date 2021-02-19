@@ -92,10 +92,11 @@ def get_aggregated_result(
         )
 
     section_name = legacy_check_plugin_name.split('.')[0]
+    main_check_info = config.check_info.get(section_name, {})
 
     section_content = None
     multi_host_sections = _MultiHostSections(parsed_sections_broker)
-    mgmt_board_info = config.get_management_board_precedence(section_name, config.check_info)
+    mgmt_board_info = main_check_info.get("management_board") or LEGACY_HOST_PRECEDENCE
     source_type = SourceType.MANAGEMENT if mgmt_board_info == LEGACY_MGMT_ONLY else SourceType.HOST
     try:
         section_content = multi_host_sections.get_section_content(

@@ -103,7 +103,7 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
             .duration(node_visualization_utils.DefaultTransition.duration())
             .style("opacity", 1);
 
-        this.viewport.selection.on("mousemove.translation_info", () => this.mousemove());
+        this.viewport.selection.on("mousemove.translation_info", event => this.mousemove(event));
         let rows = this.div_selection
             .append("table")
             .attr("id", "translation_infobox")
@@ -165,8 +165,8 @@ export class LayeredDebugLayer extends node_visualization_viewport_utils.Layered
             );
     }
 
-    mousemove() {
-        let coords = d3.mouse(this.anchor_info.node());
+    mousemove(event) {
+        let coords = d3.pointer(event);
         this.div_selection
             .selectAll("td#Mouse")
             .text("X:" + parseInt(coords[0]) + " / Y:" + parseInt(coords[1]));

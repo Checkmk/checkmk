@@ -94,7 +94,7 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
     ]
 
 
-PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
+PS_DISCOVERY_WATO_RULES = [
     {
         "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "smss",

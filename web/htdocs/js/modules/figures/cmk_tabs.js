@@ -27,7 +27,7 @@ export class TabsBar {
             .each((d, idx, nodes) => {
                 d3.select(nodes[idx]).classed(d.tab_id(), true);
             })
-            .on("click", () => this._tab_clicked())
+            .on("click", event => this._tab_clicked(event))
             .append("a")
             .attr("href", d => "#" + d.tab_id())
             .style("pointer-events", "none");
@@ -55,8 +55,8 @@ export class TabsBar {
         return [];
     }
 
-    _tab_clicked() {
-        let target = d3.select(d3.event.target);
+    _tab_clicked(event) {
+        let target = d3.select(event.target);
         let tab = target.datum();
         this._activate_tab(tab);
     }

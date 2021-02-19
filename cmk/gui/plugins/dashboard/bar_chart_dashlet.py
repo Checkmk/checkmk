@@ -166,8 +166,7 @@ class BarBarChartDataGenerator(BarChartDataGenerator):
         raise MKUserError("timestep", _("Invalid timestep \"%d\" given" % timestep))
 
     def generate_response_data(self, properties, context, settings):
-        bar_chart_config = super(BarBarChartDataGenerator,
-                                 self).generate_response_data(properties, context, settings)
+        bar_chart_config = super().generate_response_data(properties, context, settings)
         # Add barbar elements
         response = self._create_barbar_chart_config(bar_chart_config, properties, context)
 

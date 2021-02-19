@@ -141,7 +141,8 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
     return {
         "plot_definitions": plot_definitions,
         "data": data,
-        "title": dashlet_title(settings, metrics[0] if metrics else ("", {}, {}))
+        "title": dashlet_title(settings, metrics[0] if metrics else ("", {}, {})),
+        "title_url": settings.get("title_url"),
     }
 
 

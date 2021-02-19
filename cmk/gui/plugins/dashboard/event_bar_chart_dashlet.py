@@ -302,6 +302,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
         response = ABCEventBarChartDataGenerator("notification", 3).generate_response_data(
             properties, context, settings)
         response['title'] = bar_chart_title(properties, context, settings)
+        response['title_url'] = settings.get('title_url')
         return response
 
 
@@ -336,4 +337,5 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
         response = ABCEventBarChartDataGenerator("alert", 1).generate_response_data(
             properties, context, settings)
         response['title'] = bar_chart_title(properties, context, settings)
+        response['title_url'] = settings.get('title_url')
         return response

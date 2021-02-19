@@ -71,6 +71,7 @@ class AlertStatisticsDashletDataGenerator:
                 settings.get("title", default_title),
                 default_title,
             ),
+            "title_url": settings.get("title_url"),
             "plot_definitions": [],
             "data": [e.serialize() for e in elements],
             "upper_bound": max([100] + [e.num_problems + 1 for e in elements]),

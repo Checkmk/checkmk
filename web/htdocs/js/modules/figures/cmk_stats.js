@@ -78,7 +78,7 @@ export class HostStats extends cmk_figures.FigureBase {
             .text(d => d.text)
             .attr("href", d => d.url);
 
-        this.render_title(this._data.title);
+        this.render_title(this._data.title, this._data.title_url);
     }
 }
 

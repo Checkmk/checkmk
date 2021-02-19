@@ -336,7 +336,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 .classed("element_box", true)
                 .classed("host_element", true)
                 .style("cursor", "pointer")
-                .on("click", d => {
+                .on("click", (event, d) => {
                     location.href = d.link;
                 })
                 .each((d, idx, nodes) => {
@@ -446,7 +446,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _render_site_hexagons(element_boxes, geometry) {
-        let handle_click = function (element) {
+        let handle_click = function (event, element) {
             if (element.type == "host_element") {
                 location.href = element.link;
             } else if (element.type != "icon_element") {

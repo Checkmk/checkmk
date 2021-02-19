@@ -23,6 +23,9 @@
 #include "tools/_tgt.h"
 #include "upgrade.h"
 
+using namespace std::chrono_literals;
+namespace fs = std::filesystem;
+
 // we want to avoid those data public
 namespace cma {
 void ResetCleanOnExit();
@@ -616,6 +619,76 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
 
     EXPECT_EQ(exists_count, user_folders_count_)
         << "you delete wrong count of folders";
+}
+
+namespace {
+class JobToCheckEnvironment {
+public:
+    JobToCheckEnvironment(const std::string& case_name)
+        : dirs{case_name}
+        , cmd_file_{dirs.in() / "printer.cmd"}
+        , results_file_{dirs.out() / "results.txt"} {}
+
+    std::vector<std::string> getEnvironment() {
+        createScript();
+        return runScript();
+    }
+
+private:
+    void createScript() {
+        auto bat_file = fmt::format(
+            "@echo start>{0}\n"
+            "@if defined MK_STATEDIR echo %MK_STATEDIR%>>{0}\n"
+            "@if defined MK_CONFDIR echo %MK_CONFDIR%>>{0}\n"
+            "@if defined MK_LOCALDIR echo %MK_LOCALDIR%>>{0}\n"
+            "@if defined MK_TEMPDIR echo %MK_TEMPDIR%>>{0}\n"
+            "@if defined MK_SPOOLDIR echo %MK_SPOOLDIR%>>{0}\n"
+            "@if defined MK_PLUGINSDIR echo %MK_PLUGINSDIR%>>{0}\n"
+            "@if defined MK_LOGDIR echo %MK_LOGDIR%>>{0}\n"
+            "@if defined REMOTE_HOST echo %REMOTE_HOST%>>{0}\n"
+            "@if defined REMOTE echo %REMOTE%>>{0}\n"
+            "@if defined MK_INSTALLDIR echo %MK_INSTALLDIR%>>{0}\n"
+            "@if defined MK_MODULESDIR echo %MK_MODULESDIR%>>{0}\n"
+            "@if defined MK_MSI_PATH echo %MK_MSI_PATH%>>{0}\n",
+            results_file_);
+
+        std::ofstream ofs(cmd_file_);
+
+        ofs << bat_file;
+    }
+
+    std::vector<std::string> runScript() {
+        auto [pid, job, process] =
+            tools::RunStdCommandAsJob(cmd_file_.wstring());
+        tst::WaitForSuccessSilent(1000ms, [process]() {
+            DWORD code = 0;
+            auto success = ::GetExitCodeProcess(process, &code);
+            return success == TRUE && code != STILL_ACTIVE;
+        });
+
+        ::TerminateJobObject(job, 21);
+        ::CloseHandle(job);
+        ::CloseHandle(process);
+        return tst::ReadFileAsTable(results_file_);
+    }
+
+    tst::TempDirPair dirs;
+    fs::path cmd_file_;
+    fs::path results_file_;
+};
+}  // namespace
+
+TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
+    JobToCheckEnvironment job(test_info_->name());
+    cfg::SetupPluginEnvironment();
+    auto table = job.getEnvironment();
+
+    // check for uniqueness
+    std::set<std::string> all;
+    for (auto const& raw : table) {
+        all.insert(raw);
+    }
+    EXPECT_EQ(all.size(), 11);
 }
 
 }  // namespace cma::cfg

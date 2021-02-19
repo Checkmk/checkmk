@@ -378,7 +378,10 @@ std::filesystem::path GetFabricYml() {
            cma::cfg::files::kDefaultMainConfig;
 }
 
-bool WaitForSuccess(std::chrono::milliseconds ms,
+namespace {
+enum class WaitForSuccessMode { silent, indicate };
+
+bool WaitForSuccess(std::chrono::milliseconds ms, WaitForSuccessMode mode,
                     std::function<bool()> predicat) {
     using namespace std::chrono_literals;
     auto count = ms / 20ms;
@@ -386,8 +389,10 @@ bool WaitForSuccess(std::chrono::milliseconds ms,
     auto success = false;
 
     for (int i = 0; i < count; i++) {
-        if (i % 10 == 9) {
-            xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
+        if (mode == WaitForSuccessMode::indicate) {
+            if (i % 10 == 9) {
+                xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
+            }
         }
         if (predicat()) {
             success = true;
@@ -396,8 +401,21 @@ bool WaitForSuccess(std::chrono::milliseconds ms,
         cma::tools::sleep(20ms);
     }
 
-    xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
+    if (mode == WaitForSuccessMode::indicate) {
+        xlog::sendStringToStdio("\n", xlog::internal::Colors::yellow);
+    }
     return success;
+}
+}  // namespace
+
+bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
+                            std::function<bool()> predicat) {
+    return WaitForSuccess(ms, WaitForSuccessMode::indicate, predicat);
+}
+
+bool WaitForSuccessSilent(std::chrono::milliseconds ms,
+                          std::function<bool()> predicat) {
+    return WaitForSuccess(ms, WaitForSuccessMode::silent, predicat);
 }
 
 }  // namespace tst

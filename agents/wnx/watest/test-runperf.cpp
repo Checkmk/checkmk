@@ -127,7 +127,7 @@ TEST(SectionPerf, Runner) {
 
     auto ret = RunPerf(prefix, port_param, L"12345", 20, counters);
     ASSERT_EQ(ret, 0);
-    ASSERT_TRUE(tst::WaitForSuccess(
+    ASSERT_TRUE(tst::WaitForSuccessIndicate(
         4s, []() { return g_mailslot_storage.delivered_; }));
 
     auto data = g_mailslot_storage.buffer_.data();

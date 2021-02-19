@@ -459,9 +459,10 @@ class UpdateConfig:
                             folder.path(), index, regex, e)
                         num_errors += 1
                         continue
-                    if PureWindowsPath(regex) and _MATCH_SINGLE_BACKSLASH.search(regex):
+                    if PureWindowsPath(regex).is_absolute() and _MATCH_SINGLE_BACKSLASH.search(
+                            regex):
                         self._logger.warn(
-                            "WARN: Service condition in rule looks like a windows path that is not correctly escaped."
+                            "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped."
                             " Use double backslash as directory separator in regex expressions, e.g."
                             " 'C:\\\\Program Files\\\\'"
                             " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)", ruleset.name,

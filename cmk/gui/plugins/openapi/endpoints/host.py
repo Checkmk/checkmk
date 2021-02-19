@@ -13,7 +13,6 @@ You can find an introduction to basic monitoring principles including host statu
 
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -31,7 +30,7 @@ class HostParameters(BaseSchema):
 
         >>> p = HostParameters()
         >>> p.load({})['columns']
-        ['name']
+        [Column(hosts.name: string)]
 
         >>> p.load({})['sites']
         []
@@ -43,17 +42,7 @@ class HostParameters(BaseSchema):
         missing=[],
     )
     query = fields.query_field(Hosts, required=False)
-    columns = fields.List(
-        fields.LiveStatusColumn(
-            table=Hosts,
-            mandatory=[Hosts.name.name],
-            required=True,
-        ),
-        description=("The desired columns of the hosts table. "
-                     "If left empty, only the name column is used."),
-        missing=[Hosts.name.name],
-        required=False,
-    )
+    columns = fields.column_field(Hosts, mandatory=[Hosts.name])
 
 
 @Endpoint(constructors.collection_href('host'),
@@ -70,8 +59,7 @@ def list_hosts(param):
     if sites_to_query:
         live.only_sites = sites_to_query
 
-    columns = verify_columns(Hosts, param['columns'])
-    q = Query(columns)
+    q = Query(param['columns'])
 
     # TODO: add sites parameter
     query_expr = param.get('query')

@@ -42,14 +42,14 @@ def test_openapi_livestatus_hosts_generic_filter(
 
     live.expect_query([
         'GET hosts',
-        'Columns: name',
+        'Columns: name alias',
         'Filter: alias ~ heute',
     ],)
     with live:
         resp = wsgi_app.call_method(
             'get',
             base +
-            '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}',
+            '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}&columns=name&columns=alias',
             status=200,
         )
         assert len(resp.json['value']) == 1

@@ -14,7 +14,6 @@ You can find an introduction to services in the
 """
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -31,19 +30,13 @@ PARAMETERS = [{
         missing=list,
     ),
     'query': fields.query_field(Services, required=False),
-    'columns': fields.List(
-        fields.LiveStatusColumn(
-            table=Services,
-            mandatory=[Services.host_name.name, Services.description.name],
-        ),
-        required=False,
-        description="The desired columns of the services table. If left empty, a default set"
-        " of columns is used.",
-        missing=[
-            Services.host_name.name,
-            Services.description.name,
+    'columns': fields.column_field(
+        Services,
+        mandatory=[
+            Services.host_name,
+            Services.description,
         ],
-    ),
+    )
 }]
 
 
@@ -80,8 +73,7 @@ def _list_all_services(param):
 def _list_services(param):
     live = sites.live()
 
-    columns = verify_columns(Services, param['columns'])
-    q = Query(columns)
+    q = Query(param['columns'])
 
     host_name = param.get('host_name')
     if host_name is not None:

@@ -39,7 +39,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
             .style("position", "absolute")
             .style("display", "inline-block")
             .style("overflow", "visible")
-            .on("click", () => this._mouse_click())
+            .on("click", event => this._mouse_click(event))
             .on("mousedown", event => this._mouse_down(event))
             .on("mousemove", event => this._mouse_move(event))
             .on("mouseleave", event => this._mouse_out(event));
@@ -1408,7 +1408,7 @@ class CmkGraphTimeseriesFigure extends TimeseriesFigure {
             .style("position", "absolute")
             .style("bottom", "0px")
             .text("Toggle legend")
-            .on("click", () => {
+            .on("click", event => {
                 this._small_legend = !this._small_legend;
                 this.render_legend();
                 this.resize();
@@ -1620,7 +1620,7 @@ class CmkGraphShifter extends CmkGraphTimeseriesFigure {
             .style("border", "grey")
             .style("border-style", "solid")
             .text("Shift data")
-            .on("click", (d, idx, nodes) => {
+            .on("click", (event, d, idx, nodes) => {
                 let node = d3.select(nodes[idx]);
                 let active = !node.classed("active");
                 node.classed("active", active);
@@ -1688,7 +1688,7 @@ class CmkGraphShifter extends CmkGraphTimeseriesFigure {
             .join("input")
             .attr("type", "checkbox")
             .style("display", "inline-block")
-            .on("change", () => this._update_shifts());
+            .on("change", event => this._update_shifts());
         let metric_td = rows
             .selectAll("td.color")
             .data(d => [d])

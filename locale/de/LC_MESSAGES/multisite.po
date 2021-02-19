@@ -12634,6 +12634,10 @@ msgstr "Deaktiviert"
 msgid "Dead paths"
 msgstr "Tote Pfade"
 
+#, fuzzy
+msgid "Dead- and waitlocks"
+msgstr "Gelesene und geschriebene Blöcke"
+
 msgid "Deadlocks"
 msgstr "Deadlocks"
 
@@ -13611,6 +13615,9 @@ msgid ""
 msgstr ""
 "Veraltetes WATO-Modul: Als Funktion implementiert. Dieses muss als "
 "Kindklasse von WatoMode neu implementiert werden."
+
+msgid "Deprecated choice, please re-select"
+msgstr ""
 
 msgid "Deprecations"
 msgstr "Überholte Einstellungen"
@@ -18039,6 +18046,10 @@ msgstr ""
 "Fehlerbericht konnte nicht gesendet werden. Bitte laden Sie ihn von Hand "
 "herunter und senden ihn an <a href=\"%s\">%s</a>"
 
+#, fuzzy
+msgid "Failed to set start URL"
+msgstr "Fehler beim Backen der Agenten: %s"
+
 msgid "Failed to spare ratio"
 msgstr "Verhältnis von Failed zu Spare"
 
@@ -18403,6 +18414,14 @@ msgstr "Dateisystem: Mountoptionen (Linux/UNIX)"
 
 msgid "Filesystem size"
 msgstr "Dateisystemgröße"
+
+#, fuzzy
+msgid "Filesystem size and usage"
+msgstr "Dateisystembenutzung"
+
+#, fuzzy
+msgid "Filesystem size and used space"
+msgstr "Dateisystembenutzung"
 
 msgid "Filesystem types to ignore"
 msgstr "Zu ignorierende Dateisystemtypen"
@@ -19635,7 +19654,8 @@ msgstr "Globbing-Muster für Eingabedateien"
 msgid "Go critical if all licenses are used"
 msgstr "Kritisch melden, wenn alle Lizenzen in Verwendung sind"
 
-msgid "Go to main overview"
+#, fuzzy
+msgid "Go to main page"
 msgstr "Zur Hauptübersicht"
 
 msgid "Go to the report store"
@@ -21729,15 +21749,15 @@ msgid ""
 msgstr ""
 "Host/Service muss den folgenden Servicelevel haben, damit alarmiert wird"
 
+#, fuzzy
+msgid "Host overview"
+msgstr "Hostgruppenübersicht"
+
 msgid "Host performance data"
 msgstr "Leistungsdaten von Host"
 
 msgid "Host problem acknowledged"
 msgstr "Hostproblem quittiert"
-
-#, fuzzy
-msgid "Host problem history"
-msgstr "Hostprobleme"
 
 msgid "Host problems"
 msgstr "Hostprobleme"
@@ -28526,10 +28546,6 @@ msgstr "Hauptübersicht"
 msgid "Main dashboard"
 msgstr "Übersicht bearbeiten"
 
-#, fuzzy
-msgid "Main dashboard $SITE$"
-msgstr "Übersicht bearbeiten"
-
 msgid "Main directory"
 msgstr "Hauptverzeichnis"
 
@@ -30760,6 +30776,9 @@ msgstr "NTLS-Clients"
 msgid "NTLS Links"
 msgstr "NTLS-Links"
 
+msgid "NTOP"
+msgstr ""
+
 #, fuzzy
 msgid "NTP discovery"
 msgstr "eWON-Serviceerkennung"
@@ -32368,10 +32387,6 @@ msgstr "Alarme von Host"
 msgid "Notifications of host & services"
 msgstr "Alarmierung von Hosts & Services"
 
-#, fuzzy
-msgid "Notifications today"
-msgstr "Alarmierungsmethode"
-
 msgid "Notified events for hosts"
 msgstr "Alarmierte Ereignisse fur Hosts"
 
@@ -32644,6 +32659,14 @@ msgstr "Anzahl von Elementen zur Anzeige in der Schnellsuche"
 msgid "Number of entries"
 msgstr "Anzahl von Einträgen"
 
+#, fuzzy
+msgid "Number of excluded hosts"
+msgstr "Anzahl der Hosts"
+
+#, fuzzy
+msgid "Number of excluded services"
+msgstr "Anzahl von Services"
+
 msgid "Number of expected messages"
 msgstr "Anzahl erwarteter Nachrichten"
 
@@ -32685,10 +32708,6 @@ msgid "Number of hops"
 msgstr "Anzahl der Hops"
 
 msgid "Number of hosts"
-msgstr "Anzahl der Hosts"
-
-#, fuzzy
-msgid "Number of hosts (excluded)"
 msgstr "Anzahl der Hosts"
 
 msgid "Number of hosts in state DOWN (Host Group)"
@@ -32886,10 +32905,6 @@ msgstr "Anzahl von Services (Hostgruppe)"
 
 msgid "Number of services (Service Group)"
 msgstr "Anzahl Services (Servicegruppe)_"
-
-#, fuzzy
-msgid "Number of services (excluded)"
-msgstr "Anzahl von Services"
 
 msgid "Number of services in state CRIT"
 msgstr "Anzahl von Services im Status CRIT"
@@ -34391,9 +34406,6 @@ msgstr "POP3-Server"
 msgid "POST / GET Variables"
 msgstr "POST- / GET-Variablen"
 
-msgid "PROB"
-msgstr "PROB"
-
 msgid "PROXY"
 msgstr "PROXY"
 
@@ -35850,6 +35862,10 @@ msgid "Please provide a valid name"
 msgstr "Bitte geben Sie eine gülige Zahl ein"
 
 msgid "Please select a file."
+msgstr "Bitte wählen Sie eine Datei."
+
+#, fuzzy
+msgid "Please select a graph."
 msgstr "Bitte wählen Sie eine Datei."
 
 msgid "Please select a metric"
@@ -39596,7 +39612,7 @@ msgid "Same version as the monitoring site"
 msgstr "Selbe Version wie die Monitoring-Instanz"
 
 #, fuzzy
-msgid "Sample time"
+msgid "Sample date"
 msgstr "Verstrichene Zeit"
 
 #, fuzzy
@@ -40103,6 +40119,10 @@ msgstr "Gerätetyp auswählen"
 msgid "Select file"
 msgstr "Datei auswählen"
 
+#, fuzzy
+msgid "Select graph"
+msgstr "Vorhersagegraphen"
+
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrance and reset this counter as "
@@ -40139,6 +40159,16 @@ msgid ""
 msgstr ""
 "Wählen Sie die Version des LDAP Servers. Die meisten aktuellen Server "
 "verwenden LDAP Version 3."
+
+msgid ""
+"Select the graph to be displayed by this dashlet. In case the current "
+"selection displays 'Deprecated choice, please re-select', this dashlet was "
+"created before the release of version 2.0. Before this version, the graph "
+"selection was based on a single number indexing the output of the "
+"corresponding service. Such dashlets will continue to work, however, if you "
+"want to re-edit them, you have to re-select the graph. To check which graph "
+"is currently selected, look at the title of the dashlet in the dashboard."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -40364,6 +40394,10 @@ msgstr "Serverlatenz"
 #, fuzzy
 msgid "Server performance"
 msgstr "Serverperformance"
+
+#, fuzzy
+msgid "Server timezone"
+msgstr "Uhrzeit des Servers"
 
 msgid "Service"
 msgstr "Service"
@@ -40676,10 +40710,6 @@ msgstr "Ausgabe des Service-Plugins"
 msgid "Service problem acknowledged"
 msgstr "Service Problem quittiert"
 
-#, fuzzy
-msgid "Service problem history"
-msgstr "Serviceprobleme"
-
 msgid "Service problems"
 msgstr "Serviceprobleme"
 
@@ -40905,6 +40935,10 @@ msgstr "Setze absolute Schwellwerte"
 
 msgid "Set an individual idle timeout"
 msgstr "Einen indiviellen Timeout festlegen"
+
+#, fuzzy
+msgid "Set as start URL"
+msgstr "Standard-URL benutzen"
 
 msgid "Set by rule pack"
 msgstr "Von Regelpaket festgelegt"
@@ -42640,9 +42674,6 @@ msgstr "Sortierung"
 
 msgid "Source"
 msgstr "Quelle"
-
-msgid "Source (n'th graph)"
-msgstr "Quelle (n-ter Graph)"
 
 msgid "Source IP Address"
 msgstr "Ursprungs-IP-Adresse"
@@ -53943,10 +53974,6 @@ msgstr "Zeitstempel einer entfernten Datei"
 msgid "Timewarp to "
 msgstr "Zeitreise zu"
 
-#, fuzzy
-msgid "Timezone"
-msgstr "Zeitleiste"
-
 msgid "Timezone offset"
 msgstr "Zeitzonen Verschiebung"
 
@@ -54112,10 +54139,6 @@ msgstr "Top Talkers"
 #, fuzzy
 msgid "Top alerters"
 msgstr "%s Alarme"
-
-#, fuzzy
-msgid "Top alerters (last 7 days)"
-msgstr "Top Alarmierer - %s"
 
 #, python-format
 msgid "Top alerters - %s"
@@ -54538,10 +54561,6 @@ msgstr "Instgesamt laufende On-Demand-%s-Instanzen"
 #, fuzzy
 msgid "Total running On-Demand Instances"
 msgstr "Insgesamt laufende On-Demand-Instanzen"
-
-#, fuzzy
-msgid "Total service history"
-msgstr "Host+D. Verlauf"
 
 msgid "Total sessions"
 msgstr "Gesamte Sitzungen"
@@ -57003,11 +57022,19 @@ msgstr "Benutzt"
 msgid "Used Bandwidth of port in megabyte/s"
 msgstr "Durchsatz in MByte/Sek"
 
+#, fuzzy
+msgid "Used CPU Memory"
+msgstr "Cisco Speicherverwendung"
+
 msgid "Used CPU Time"
 msgstr "Verbrauchte CPU-Zeit"
 
 msgid "Used DHCP leases"
 msgstr "Genutzte DHCP-Leases"
+
+#, fuzzy
+msgid "Used RAM"
+msgstr "Benutzt von"
 
 msgid "Used bandwidth (minimum or maximum traffic)"
 msgstr "Verwendete Bandbreite (minimaler oder maximaler Verkehr)"
@@ -57156,6 +57183,10 @@ msgstr "Nutzer Benachrichtigungen"
 #, fuzzy
 msgid "User password"
 msgstr "Username und Passwort"
+
+#, fuzzy
+msgid "User profile"
+msgstr "Benutzerprofil"
 
 msgid "User profiles can not be edited (WATO is disabled)."
 msgstr ""
@@ -62459,6 +62490,10 @@ msgstr "von:"
 msgid "global"
 msgstr "Global"
 
+#, fuzzy
+msgid "graph"
+msgstr "Graph"
+
 #, python-format
 msgid "graph number %d"
 msgstr "Graph Nummer %d"
@@ -63685,6 +63720,57 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#, fuzzy
+#~| msgid "Host problems"
+#~ msgid "Host problem history"
+#~ msgstr "Hostprobleme"
+
+#, fuzzy
+#~| msgid "Edit Dashboard"
+#~ msgid "Main dashboard $SITE$"
+#~ msgstr "Übersicht bearbeiten"
+
+#, fuzzy
+#~| msgid "Notification Method"
+#~ msgid "Notifications today"
+#~ msgstr "Alarmierungsmethode"
+
+#, fuzzy
+#~| msgid "Number of hosts"
+#~ msgid "Number of hosts (excluded)"
+#~ msgstr "Anzahl der Hosts"
+
+#, fuzzy
+#~| msgid "Number of services"
+#~ msgid "Number of services (excluded)"
+#~ msgstr "Anzahl von Services"
+
+#~ msgid "PROB"
+#~ msgstr "PROB"
+
+#, fuzzy
+#~| msgid "Service problems"
+#~ msgid "Service problem history"
+#~ msgstr "Serviceprobleme"
+
+#~ msgid "Source (n'th graph)"
+#~ msgstr "Quelle (n-ter Graph)"
+
+#, fuzzy
+#~| msgid "Timeline"
+#~ msgid "Timezone"
+#~ msgstr "Zeitleiste"
+
+#, fuzzy
+#~| msgid "Top alerters - %s"
+#~ msgid "Top alerters (last 7 days)"
+#~ msgstr "Top Alarmierer - %s"
+
+#, fuzzy
+#~| msgid "Host+Svc history"
+#~ msgid "Total service history"
+#~ msgstr "Host+D. Verlauf"
 
 #, fuzzy
 #~| msgid "Combined graph"
@@ -65815,9 +65901,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Host Dt-History"
 #~ msgstr "Host Wartungszt."
 
-#~ msgid "Host Group Overview"
-#~ msgstr "Hostgruppenübersicht"
-
 #, fuzzy
 #~ msgid "Host Group Overview of Down Hosts"
 #~ msgstr "Hostgruppenübersicht"
@@ -67620,9 +67703,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgstr ""
 #~ "Das WATO-BI-Modul nutzen um BI-Aggregationen in den berechtigten BI-Packs "
 #~ "zu erstellen, zu modifizieren und zu löschen."
-
-#~ msgid "User Profile"
-#~ msgstr "Benutzerprofil"
 
 #~ msgid "User Properties"
 #~ msgstr "Benutzereigenschaften"

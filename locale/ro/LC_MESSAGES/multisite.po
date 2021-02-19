@@ -12034,6 +12034,9 @@ msgstr ""
 msgid "Dead paths"
 msgstr ""
 
+msgid "Dead- and waitlocks"
+msgstr ""
+
 msgid "Deadlocks"
 msgstr ""
 
@@ -12950,6 +12953,9 @@ msgstr ""
 msgid ""
 "Deprecated WATO module: Implemented as function. This needs to be refactored "
 "as WatoMode child class."
+msgstr ""
+
+msgid "Deprecated choice, please re-select"
 msgstr ""
 
 #, fuzzy
@@ -17218,6 +17224,10 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Failed to set start URL"
+msgstr "Optiuni tabel"
+
+#, fuzzy
 msgid "Failed to spare ratio"
 msgstr "Optiuni tabel"
 
@@ -17582,6 +17592,14 @@ msgstr ""
 
 msgid "Filesystem size"
 msgstr ""
+
+#, fuzzy
+msgid "Filesystem size and usage"
+msgstr "Spațiu liber exact"
+
+#, fuzzy
+msgid "Filesystem size and used space"
+msgstr "Spațiu liber exact"
 
 msgid "Filesystem types to ignore"
 msgstr ""
@@ -18696,7 +18714,7 @@ msgstr ""
 msgid "Go critical if all licenses are used"
 msgstr ""
 
-msgid "Go to main overview"
+msgid "Go to main page"
 msgstr ""
 
 msgid "Go to the report store"
@@ -20522,15 +20540,15 @@ msgid ""
 "Host or service must be in the following service level to get notification"
 msgstr ""
 
+#, fuzzy
+msgid "Host overview"
+msgstr "Numele Elementului"
+
 msgid "Host performance data"
 msgstr ""
 
 msgid "Host problem acknowledged"
 msgstr ""
-
-#, fuzzy
-msgid "Host problem history"
-msgstr "(fără Nivel de serviciu)"
 
 msgid "Host problems"
 msgstr ""
@@ -26578,10 +26596,6 @@ msgstr ""
 msgid "Main dashboard"
 msgstr "Adaugă element"
 
-#, fuzzy
-msgid "Main dashboard $SITE$"
-msgstr "Adaugă element"
-
 msgid "Main directory"
 msgstr ""
 
@@ -28847,6 +28861,9 @@ msgstr ""
 msgid "NTLS Links"
 msgstr ""
 
+msgid "NTOP"
+msgstr ""
+
 #, fuzzy
 msgid "NTP discovery"
 msgstr "Inventariere in masa"
@@ -30405,10 +30422,6 @@ msgstr ""
 msgid "Notifications of host & services"
 msgstr ""
 
-#, fuzzy
-msgid "Notifications today"
-msgstr "Notificari"
-
 msgid "Notified events for hosts"
 msgstr ""
 
@@ -30683,6 +30696,14 @@ msgid "Number of entries"
 msgstr "Cluster nou"
 
 #, fuzzy
+msgid "Number of excluded hosts"
+msgstr " pentru elementul %s"
+
+#, fuzzy
+msgid "Number of excluded services"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Number of expected messages"
 msgstr "Numarul maxim de mesaje"
 
@@ -30722,10 +30743,6 @@ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 msgid "Number of hosts"
-msgstr " pentru elementul %s"
-
-#, fuzzy
-msgid "Number of hosts (excluded)"
 msgstr " pentru elementul %s"
 
 msgid "Number of hosts in state DOWN (Host Group)"
@@ -30927,10 +30944,6 @@ msgstr "Grup nou"
 
 msgid "Number of services (Service Group)"
 msgstr ""
-
-#, fuzzy
-msgid "Number of services (excluded)"
-msgstr "Grup nou"
 
 msgid "Number of services in state CRIT"
 msgstr ""
@@ -32362,9 +32375,6 @@ msgstr ""
 msgid "POST / GET Variables"
 msgstr ""
 
-msgid "PROB"
-msgstr ""
-
 msgid "PROXY"
 msgstr ""
 
@@ -33725,6 +33735,10 @@ msgstr "%s nu este un număr întreg valid."
 
 msgid "Please select a file."
 msgstr ""
+
+#, fuzzy
+msgid "Please select a graph."
+msgstr "%s nu este un număr întreg valid."
 
 #, fuzzy
 msgid "Please select a metric"
@@ -37400,7 +37414,7 @@ msgid "Same version as the monitoring site"
 msgstr ""
 
 #, fuzzy
-msgid "Sample time"
+msgid "Sample date"
 msgstr "Numele Elementului"
 
 #, fuzzy
@@ -37903,6 +37917,10 @@ msgstr "(selectează directorul)"
 msgid "Select file"
 msgstr "(selectează directorul)"
 
+#, fuzzy
+msgid "Select graph"
+msgstr "Grup nou"
+
 msgid ""
 "Select how the count is computed. The algorithm <i>Interval</i> will count "
 "the number of messages from the first occurrance and reset this counter as "
@@ -37932,6 +37950,16 @@ msgstr ""
 msgid ""
 "Select the LDAP version the LDAP server is serving. Most modern servers use "
 "LDAP version 3."
+msgstr ""
+
+msgid ""
+"Select the graph to be displayed by this dashlet. In case the current "
+"selection displays 'Deprecated choice, please re-select', this dashlet was "
+"created before the release of version 2.0. Before this version, the graph "
+"selection was based on a single number indexing the output of the "
+"corresponding service. Such dashlets will continue to work, however, if you "
+"want to re-edit them, you have to re-select the graph. To check which graph "
+"is currently selected, look at the title of the dashlet in the dashboard."
 msgstr ""
 
 #, python-format
@@ -38148,6 +38176,10 @@ msgstr "Statusul Serverului"
 
 msgid "Server performance"
 msgstr ""
+
+#, fuzzy
+msgid "Server timezone"
+msgstr "Numele Elementului"
 
 msgid "Service"
 msgstr ""
@@ -38482,10 +38514,6 @@ msgstr ""
 msgid "Service problem acknowledged"
 msgstr ""
 
-#, fuzzy
-msgid "Service problem history"
-msgstr "(fără Nivel de serviciu)"
-
 msgid "Service problems"
 msgstr ""
 
@@ -38723,6 +38751,9 @@ msgid "Set absolute levels"
 msgstr "Liber Exact"
 
 msgid "Set an individual idle timeout"
+msgstr ""
+
+msgid "Set as start URL"
 msgstr ""
 
 #, fuzzy
@@ -40295,9 +40326,6 @@ msgid "Sorting"
 msgstr ""
 
 msgid "Source"
-msgstr ""
-
-msgid "Source (n'th graph)"
 msgstr ""
 
 #, fuzzy
@@ -49188,10 +49216,6 @@ msgstr ""
 msgid "Timewarp to "
 msgstr ""
 
-#, fuzzy
-msgid "Timezone"
-msgstr "Portul TCP pentru conexiune"
-
 msgid "Timezone offset"
 msgstr ""
 
@@ -49329,10 +49353,6 @@ msgstr ""
 #, fuzzy
 msgid "Top alerters"
 msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-msgid "Top alerters (last 7 days)"
-msgstr " în %d zile"
 
 #, python-format
 msgid "Top alerters - %s"
@@ -49757,10 +49777,6 @@ msgstr ""
 
 msgid "Total running On-Demand Instances"
 msgstr ""
-
-#, fuzzy
-msgid "Total service history"
-msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Total sessions"
@@ -52071,11 +52087,19 @@ msgstr ""
 msgid "Used Bandwidth of port in megabyte/s"
 msgstr ""
 
+#, fuzzy
+msgid "Used CPU Memory"
+msgstr "Nivelurile maxime pentru voltaj"
+
 msgid "Used CPU Time"
 msgstr ""
 
 msgid "Used DHCP leases"
 msgstr ""
+
+#, fuzzy
+msgid "Used RAM"
+msgstr "licente nefolosite"
 
 msgid "Used bandwidth (minimum or maximum traffic)"
 msgstr ""
@@ -52238,6 +52262,10 @@ msgstr "trimite notificare"
 #, fuzzy
 msgid "User password"
 msgstr "Parola"
+
+#, fuzzy
+msgid "User profile"
+msgstr "Ascude regulile de utilizator"
 
 msgid "User profiles can not be edited (WATO is disabled)."
 msgstr ""
@@ -56528,6 +56556,10 @@ msgstr ""
 msgid "global"
 msgstr "Statusul Serverului"
 
+#, fuzzy
+msgid "graph"
+msgstr "Grup nou"
+
 #, python-format
 msgid "graph number %d"
 msgstr ""
@@ -57774,6 +57806,43 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Host problem history"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Main dashboard $SITE$"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~| msgid "Notifications"
+#~ msgid "Notifications today"
+#~ msgstr "Notificari"
+
+#, fuzzy
+#~ msgid "Number of hosts (excluded)"
+#~ msgstr " pentru elementul %s"
+
+#, fuzzy
+#~ msgid "Number of services (excluded)"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Service problem history"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Timezone"
+#~ msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy
+#~ msgid "Top alerters (last 7 days)"
+#~ msgstr " în %d zile"
+
+#, fuzzy
+#~ msgid "Total service history"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 #~ msgid "Combined Graph"
 #~ msgstr "Atribute personalizate"
 
@@ -58785,10 +58854,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Host Graphs"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Host Group Overview"
-#~ msgstr "Numele Elementului"
 
 #, fuzzy
 #~ msgid "Host Groups (Grid)"
@@ -59818,10 +59883,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Used rulesets"
 #~ msgstr "Reguli"
-
-#, fuzzy
-#~ msgid "User Profile"
-#~ msgstr "Ascude regulile de utilizator"
 
 #, fuzzy
 #~ msgid "User Properties"

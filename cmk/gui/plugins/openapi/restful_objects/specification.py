@@ -120,7 +120,7 @@ SECURITY_SCHEMES = {
         'scheme': 'bearer',
         'in': 'header',
         'description': 'Use automation user credentials. The format of the header value is '
-                       '`Bearer $user $password`. This method has the highest precedence. If it '
+                       '`$user $password`. This method has the highest precedence. If it '
                        'succeeds, all other authentication methods are skipped.',
         'bearerFormat': 'username password',
     },

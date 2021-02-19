@@ -707,7 +707,7 @@ class LayoutTable(Layout):
 
 
 def _get_view_name(view) -> str:
-    return view["name"]
+    return "view-%s" % view["name"]
 
 
 @layout_registry.register

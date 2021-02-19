@@ -81,6 +81,7 @@ quicksearch_dropdown_limit = 80
 
 # Quicksearch search order
 quicksearch_search_order = [
+    ("menu", "continue"),
     ("h", "continue"),
     ("al", "continue"),
     ("ad", "continue"),

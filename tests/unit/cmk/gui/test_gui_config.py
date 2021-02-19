@@ -116,7 +116,6 @@ def test_registered_permissions():
         'dashboard.main',
         'dashboard.problems',
         'dashboard.simple_problems',
-        'dashboard.site',
         'dashboard.checkmk',
         'dashboard.checkmk_host',
         'general.acknowledge_werks',
@@ -525,6 +524,7 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            'dashboard.site',
             'dashboard.ntop_alerts',
             'dashboard.ntop_flows',
             'dashboard.ntop_top_talkers',

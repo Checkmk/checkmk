@@ -6,8 +6,7 @@ import "core-js/stable";
 
 import $ from "jquery";
 import * as d3 from "d3";
-import * as d3_sankey from "d3-sankey";
-import {hexbin as Hexbin} from "d3-hexbin";
+import * as d3Sankey from "d3-sankey";
 import * as crossfilter from "crossfilter2";
 import * as dc from "dc";
 import * as forms from "forms";
@@ -100,12 +99,11 @@ $(() => {
     element_dragging.register_event_handlers();
 });
 
-d3.hexbin = Hexbin;
 export const cmk_export = {
     crossfilter: crossfilter.default,
     d3: d3,
     dc: dc,
-    sankey: d3_sankey,
+    d3Sankey: d3Sankey,
     cmk: {
         forms: forms,
         prediction: prediction,

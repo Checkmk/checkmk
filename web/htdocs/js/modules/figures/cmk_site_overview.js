@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as utils from "utils";
+import * as d3Hexbin from "d3-hexbin";
 import * as cmk_figures from "cmk_figures";
 
 export class SiteOverview extends cmk_figures.FigureBase {
@@ -246,7 +247,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _compute_host_elements(geometry, elements) {
-        const hexbin = d3.hexbin();
+        const hexbin = d3Hexbin.hexbin();
         let outer_hexagon_path = hexbin.hexagon(geometry.radius);
         elements.forEach((d, idx) => {
             // Compute coordinates
@@ -475,6 +476,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
         }
 
         // Now render all hexagons
+        const hexbin = d3Hexbin.hexbin();
         hexagon_boxes.each((element, idx, nodes) => {
             let hexagon_box = d3.select(nodes[idx]);
 
@@ -484,7 +486,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     .selectAll("path.hexagon_0")
                     .data([element])
                     .join(enter => enter.append("path").classed("hexagon_0", true))
-                    .attr("d", d3.hexbin().hexagon(geometry.hexagon_radius * 0.5))
+                    .attr("d", hexbin.hexagon(geometry.hexagon_radius * 0.5))
                     .attr("title", element.title)
                     .classed("icon_element", true)
                     .classed(element.css_class, true);
@@ -524,7 +526,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                         .selectAll("path.hexagon_" + i)
                         .data([element])
                         .join(enter => enter.append("path").classed("hexagon_" + i, true))
-                        .attr("d", d3.hexbin().hexagon(radius * scale))
+                        .attr("d", hexbin.hexagon(radius * scale))
                         .attr("title", part.title)
                         .classed("hexagon", true)
                         .classed(part.css_class, true);

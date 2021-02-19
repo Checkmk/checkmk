@@ -152,11 +152,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("id", "div_layers");
 
         this.main_zoom = d3.zoom();
-        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", () => this.zoomed());
+        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", event => this.zoomed(event));
 
         // Disable left click zoom
-        this.main_zoom.filter(() => {
-            return d3.event.button === 0 || d3.event.button === 1;
+        this.main_zoom.filter(event => {
+            return event.button === 0 || event.button === 1;
         });
         this.svg_content_selection.call(this.main_zoom).on("dblclick.zoom", null);
 
@@ -273,14 +273,14 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .classed("noselect", true)
             .classed("togglebox", true)
             .style("pointer-events", "all")
-            .on("click", () => this.toggle_overlay_click())
+            .on("click", event => this.toggle_overlay_click(event))
             .merge(toggleboxes);
         toggleboxes.classed("enabled", d => d.config.active);
     }
 
-    toggle_overlay_click() {
-        d3.event.stopPropagation();
-        let target = d3.select(d3.event.target);
+    toggle_overlay_click(event) {
+        event.stopPropagation();
+        let target = d3.select(event.target);
         let layer_id = target.attr("layer_id");
 
         var new_state = !this._layers[layer_id].is_enabled();
@@ -650,12 +650,12 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         }
     }
 
-    zoomed() {
+    zoomed(event) {
         if (!this.data_to_show) return;
 
-        this.last_zoom = d3.event.transform;
-        this.scale_x.range([0, this.width * d3.event.transform.k]);
-        this.scale_y.range([0, this.height * d3.event.transform.k]);
+        this.last_zoom = event.transform;
+        this.scale_x.range([0, this.width * event.transform.k]);
+        this.scale_y.range([0, this.height * event.transform.k]);
 
         for (var layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled()) continue;

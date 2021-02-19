@@ -12,6 +12,8 @@ import sys
 from itertools import groupby
 from typing import Optional, Tuple, Union
 
+from cmk.special_agents.utils.agent_common import SectionWriter
+
 import snap7  # type: ignore[import]
 from snap7.common import Snap7Library, Snap7Exception  # type: ignore[import]
 from snap7.snap7types import S7AreaCT, S7AreaDB, S7AreaMK, S7AreaPA, S7AreaPE, S7AreaTM  # type: ignore[import]
@@ -305,13 +307,13 @@ def main(sys_argv=None):
 
             parsed_area_values.extend(_cast_values(values, start_address, area_value))
 
-        sys.stdout.write("<<<siemens_plc_cpu_state>>>\n")
-        if cpu_state is not None:
-            sys.stdout.write(cpu_state + "\n")
+        with SectionWriter('siemens_plc_cpu_state', None) as writer:
+            if cpu_state is not None:
+                writer.append(cpu_state)
 
-        sys.stdout.write("<<<siemens_plc>>>\n")
-        for values in parsed_area_values:
-            sys.stdout.write("%s %s %s %s\n" % (hostname, *values))
+        with SectionWriter('siemens_plc', None) as writer:
+            for values in parsed_area_values:
+                writer.append("%s %s %s %s" % (hostname, *values))
 
 
 if __name__ == '__main__':

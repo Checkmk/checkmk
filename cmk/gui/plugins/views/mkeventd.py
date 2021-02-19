@@ -652,7 +652,7 @@ class PainterEventState(Painter):
     def render(self, row, cell):
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, name
+        return "state svcstate state%s" % state, html.render_span(name)
 
 
 @painter_registry.register

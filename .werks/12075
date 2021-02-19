@@ -1,0 +1,14 @@
+Title: Fix color of status column entries in events view
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613738252
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+The entries were not colored.
+
+This has been fixed.

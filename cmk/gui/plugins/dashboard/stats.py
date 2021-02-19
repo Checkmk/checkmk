@@ -43,7 +43,6 @@ class StatsPart:
 
 @dataclass
 class StatsElement:
-    title: str
     total: StatsPart
     parts: List[StatsPart]
 
@@ -58,11 +57,8 @@ class StatsDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return {
-            # NOTE: this title is NOT used at the moment. data.title is used instead!
-            # TODO: Get the correct dashlet title. This needs to use the general dashlet title
-            # calculation. We somehow have to get the title from
-            # cmk.gui.dashboard._render_dashlet_title.
-            "title": cls._title(),
+            "title": settings.get("title", cls._title()),
+            "title_url": settings.get("title_url"),
             "data": cls._collect_data(context, settings["single_infos"]).serialize(),
         }
 
@@ -102,7 +98,6 @@ class StatsDashletDataGenerator:
         )
 
         return StatsElement(
-            title=cls._title(),
             parts=parts,
             total=total_part,
         )

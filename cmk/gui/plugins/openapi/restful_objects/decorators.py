@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Typ
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
+import werkzeug
 from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
 from werkzeug.utils import import_string
@@ -145,6 +146,32 @@ def _path_item(
     if headers:
         response['headers'] = headers
     return response
+
+
+def _from_multi_dict(multi_dict: werkzeug.MultiDict) -> Dict[str, Union[List[str], str]]:
+    """Transform a MultiDict to a non-heterogenous dict
+
+    Meaning: lists are lists and lists of lenght 1 are scalars.
+
+    Examples:
+        >>> _from_multi_dict(werkzeug.MultiDict([('a', '1'), ('a', '2'), ('c', '3')]))
+        {'a': ['1', '2'], 'c': '3'}
+
+    Args:
+        multi_dict:
+            A Werkzeug MultiDict instance.
+
+    Returns:
+        A dict.
+
+    """
+    ret = {}
+    for key, values in multi_dict.to_dict(flat=False).items():
+        if len(values) == 1:
+            ret[key] = values[0]
+        else:
+            ret[key] = values
+    return ret
 
 
 class Endpoint:
@@ -408,7 +435,7 @@ class Endpoint:
 
             try:
                 if query_schema:
-                    param.update(query_schema().load(request.args))
+                    param.update(query_schema().load(_from_multi_dict(request.args)))
 
                 if header_schema:
                     param.update(header_schema().load(request.headers))

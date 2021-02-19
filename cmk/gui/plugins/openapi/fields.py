@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
-from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
 from cmk.gui.plugins.webapi import validate_host_attributes
@@ -694,18 +694,83 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
     )
 
 
-class LiveStatusColumn(String):
+def column_field(
+    table: typing.Type[Table],
+    required: bool = False,
+    mandatory: Optional[typing.List[typing.Union[Column, str]]] = None,
+) -> '_ListOfColumns':
+    return _ListOfColumns(
+        _LiveStatusColumn(table=table, required=required),
+        table=table,
+        required=required,
+        mandatory=mandatory or [],
+        missing=mandatory,
+        description=f"The desired columns of the {table.__tablename__!r} table. If left empty, a "
+        "default set of columns is used.",
+    )
+
+
+class _ListOfColumns(List):
+    """Manages a list of Livestatus columns and returns Column instances
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> cols = _ListOfColumns(
+        ...     _LiveStatusColumn(table=Hosts),
+        ...     table=Hosts,
+        ... )
+        >>> cols.deserialize(['name', 'alias'])
+        [Column(hosts.name: string), Column(hosts.alias: string)]
+
+        >>> cols = _ListOfColumns(
+        ...     _LiveStatusColumn(table=Hosts),
+        ...     table=Hosts,
+        ...     mandatory=[Hosts.name],
+        ... )
+        >>> cols.deserialize(['alias'])
+        [Column(hosts.name: string), Column(hosts.alias: string)]
+
+    """
+    default_error_messages = {
+        'unknown_column': "Unknown default column: {table_name}.{column_name}",
+    }
+
+    def __init__(self, cls_or_instance: typing.Union[_fields.Field, type], **kwargs):
+        super().__init__(cls_or_instance, **kwargs)
+        table = self.metadata['table']
+        for column in self.metadata.get('mandatory', []):
+            if column not in table.__columns__():
+                raise ValueError(f"Column {column!r} in parameter 'mandatory' is not a column "
+                                 f"of table {table.__tablename__!r}")
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data)
+        table = self.metadata['table']
+        for column in reversed(self.metadata.get('mandatory', [])):
+            if isinstance(column, Column):
+                column_name = column.name
+            else:
+                column_name = column
+            if column_name not in value:
+                value.insert(0, column_name)
+        return [getattr(table, col) for col in value]
+
+
+class _LiveStatusColumn(String):
     """Represents a LiveStatus column.
 
-    >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
-    >>> LiveStatusColumn(table=Hosts).deserialize('name')
-    'name'
+    Examples:
 
-    >>> import pytest
-    >>> with pytest.raises(ValidationError) as exc:
-    ...     LiveStatusColumn(table=Hosts).deserialize('bar')
-    >>> exc.value.messages
-    ['Unknown column: hosts.bar']
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> _LiveStatusColumn(table=Hosts).deserialize('name')
+        'name'
+
+        >>> import pytest
+        >>> with pytest.raises(ValidationError) as exc:
+        ...     _LiveStatusColumn(table=Hosts).deserialize('bar')
+        >>> exc.value.messages
+        ['Unknown column: hosts.bar']
 
     """
     default_error_messages = {
@@ -720,9 +785,6 @@ class LiveStatusColumn(String):
                 table_name=table.__tablename__,
                 column_name=value,
             )
-        for column in self.metadata.get('mandatory', []):
-            if column not in value:
-                value.append(column)
         return value
 
 

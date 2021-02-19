@@ -446,7 +446,7 @@ def compute_graph_v_axis(graph_recipe, graph_data_range, height_ex, layouted_cur
 
     elif stepping == "integer":
         base = 10
-        steps = [(2, 0.5), (5, 1), (10, 2)]
+        steps = [(1, 0.5), (2, 0.5), (5, 1), (10, 2)]
 
     else:  # "decimal"
         base = 10

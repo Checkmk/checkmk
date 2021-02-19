@@ -14,6 +14,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
+from cmk.utils.check_utils import section_name_of
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import AgentRawData, ParsedSectionName, result, SectionName, SourceType
 
@@ -29,9 +30,9 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources import make_nodes, make_sources, Source, update_host_sections
 from cmk.base.sources.agent import AgentHostSections
@@ -390,7 +391,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
 
     section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
-        check_api_utils.HOST_ONLY,
+        HOST_ONLY,
         "section_plugin_name",
         False,
         cluster_node_keys=cluster_node_keys,
@@ -400,7 +401,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
 
     section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),
-        check_api_utils.HOST_PRECEDENCE,
+        HOST_PRECEDENCE,
         "section_plugin_name",
         False,
         cluster_node_keys=cluster_node_keys,
@@ -410,7 +411,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
 
     section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.MANAGEMENT),
-        check_api_utils.MGMT_ONLY,
+        MGMT_ONLY,
         "section_plugin_name",
         False,
         cluster_node_keys=None if cluster_node_keys is None else

@@ -13,11 +13,6 @@ from typing import Optional, Union
 
 from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, ServiceName
 
-# Management board checks
-MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
-
 # Is set before check/discovery function execution
 # Host currently being checked
 _hostname: Optional[HostName] = None

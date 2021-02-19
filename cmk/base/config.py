@@ -44,6 +44,7 @@ from mypy_extensions import NamedArg
 from six import ensure_str
 
 import cmk.utils
+import cmk.utils.check_utils
 from cmk.utils.check_utils import (
     maincheckify,
     unwrap_parameters,

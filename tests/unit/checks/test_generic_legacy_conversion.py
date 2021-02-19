@@ -6,11 +6,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import SectionName, CheckPluginName
-
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api as check_api
-import cmk.base.config as config
+from cmk.utils.type_defs import SectionName
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
@@ -26,6 +22,7 @@ from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-d
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
     _has_table_2, _is_cisco, _is_cisco_nexus,
 )
+from cmk.base.check_utils import HOST_ONLY, MGMT_ONLY
 
 pytestmark = pytest.mark.checks
 
@@ -35,7 +32,7 @@ def test_management_board_interface_prefix(fix_plugin_legacy):
         ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
         ("Description must start with 'Management Interface: '",
          lambda k, c: c["service_description"].startswith("Management Interface: ")),
-        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == check_api.MGMT_ONLY),
+        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == MGMT_ONLY),
     )
 
     management_checks = [(key, check)
@@ -58,7 +55,7 @@ def test_management_board_interface_prefix(fix_plugin_legacy):
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
         requirement = "The corresponding non-mgmt check must have HOST_ONLY set"
-        assert host_check["management_board"] == check_api.HOST_ONLY, (
+        assert host_check["management_board"] == HOST_ONLY, (
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
 

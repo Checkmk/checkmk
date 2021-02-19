@@ -139,10 +139,12 @@ import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 
 from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
+    check_type, host_name, service_description,
+)
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import
     HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
     HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
     MGMT_ONLY,  # Use host address/credentials when it's a SNMP HOST,
-    check_type, host_name, service_description,
 )
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import

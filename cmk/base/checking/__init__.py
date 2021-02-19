@@ -64,7 +64,7 @@ from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
-from cmk.base.sources.host_sections import HostKey, MultiHostSections, ParsedSectionsBroker
+from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 
 if not cmk_version.is_raw_edition():
     import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -462,7 +462,7 @@ def execute_check(
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
         with _service_context(service):
             submittable = _legacy_mode.get_aggregated_result(
-                MultiHostSections(parsed_sections_broker),
+                parsed_sections_broker,
                 host_config.hostname,
                 ipaddress,
                 service,

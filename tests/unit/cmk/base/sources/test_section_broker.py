@@ -32,14 +32,15 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources import make_nodes, make_sources, Source, update_host_sections
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.host_sections import (
     HostKey,
     HostSections,
-    MultiHostSections,
     ParsedSectionsBroker,
 )
+
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource
 from cmk.base.sources.snmp import SNMPSource
@@ -385,7 +386,7 @@ def test_get_section_content(hostname, host_entries, cluster_node_keys, expected
             AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content}),
         )
 
-    mhs = MultiHostSections(parsed_sections_broker)
+    mhs = _MultiHostSections(parsed_sections_broker)
 
     section_content = mhs.get_section_content(
         HostKey(hostname, "127.0.0.1", SourceType.HOST),

@@ -1757,7 +1757,7 @@ export class LayoutStyleExampleGenerator {
             .enter()
             .append("select")
             .attr("name", this._varprefix + "type")
-            .on("change", () => this._changed_style())
+            .on("change", event => this._changed_style(event))
             .selectAll("option")
             .data(style_choices)
             .enter()
@@ -1767,8 +1767,8 @@ export class LayoutStyleExampleGenerator {
             .text(d => d[1]);
     }
 
-    _changed_style() {
-        let new_style_id = d3.select(d3.event.target).property("value");
+    _changed_style(event) {
+        let new_style_id = d3.select(event.target).property("value");
         this._options_selection.selectAll("*").remove();
         this._viewport_selection.selectAll(".block_style_overlay").remove();
         this.create_example({type: new_style_id, style_config: {}});

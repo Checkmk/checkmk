@@ -448,6 +448,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                 DropdownChoice(
                     title=_("Search filter"),
                     choices=[
+                        ("menu", _("Monitor menu entries")),
                         ("h", _("Hostname")),
                         ("al", _("Hostalias")),
                         ("ad", _("Hostaddress")),

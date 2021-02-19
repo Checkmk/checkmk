@@ -1,0 +1,13 @@
+Title: Monitor menu entries are now searchable in mega menu
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1613742001
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b8
+
+The mega menu entries of the setup menu were searchable for a longer time now.
+For a consistent user experience, the monitor menu entries can now also be
+searched using the search filed in the monitor menu.

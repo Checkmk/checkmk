@@ -23,6 +23,7 @@ from cmk.gui.type_defs import ABCMegaMenuSearch
 import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -1227,6 +1228,29 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
 
 match_plugin_registry.register(HostLabelMatchPlugin())
 match_plugin_registry.register(ServiceLabelMatchPlugin())
+
+
+class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
+    """Create matches for the entries of the monitor menu"""
+    def __init__(self) -> None:
+        super().__init__("menu")
+
+    def get_match_topic(self) -> str:
+        return _("Monitor")
+
+    def get_results(self, query: str) -> List[SearchResult]:
+        return [
+            SearchResult(
+                title=topic_menu_item.title,
+                url=topic_menu_item.url,
+            )
+            for topic_menu_topic in mega_menu_registry["monitoring"].topics()
+            for topic_menu_item in topic_menu_topic.items
+            if query.lower() in topic_menu_item.title.lower()
+        ]
+
+
+match_plugin_registry.register(MonitorMenuMatchPlugin())
 
 #   .--Menu Search---------------------------------------------------------.
 #   |      __  __                    ____                      _           |

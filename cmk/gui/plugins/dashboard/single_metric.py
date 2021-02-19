@@ -115,6 +115,7 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
                 "id": row_id,
                 "plot_type": "area",
                 "style": "with_topline",
+                "fill_style": status_component(properties.get("fill_style"), metric, row),
                 "use_tags": [row_id],
                 "color": "#008EFF",
                 "opacity": 0.1,
@@ -130,8 +131,9 @@ def _create_single_metric_config(data, metrics, properties, context, settings):
             "id": "%s_single" % row_id,
             "plot_type": "single_value",
             "use_tags": [row_id],
-            "border_component": status_component(properties.get("status_border"), metric, row),
-            "inner_render": status_component(properties.get("inner_state_display"), metric, row),
+            "border_style": status_component(properties.get("border_style"), metric, row),
+            "fill_style": status_component(properties.get("fill_style"), metric, row),
+            "text_style": status_component(properties.get("text_style"), metric, row),
             "metric": purge_metric_for_js(metric),
             "color": metric.get("color", "#3CC2FF")
         }
@@ -216,20 +218,29 @@ def _vs_elements(with_elements) -> DictionaryElements:
 
         if "toggle_range_display" in with_elements:
             yield "toggle_range_display", DropdownChoice(
-                title=_("Show range limits"),
+                title=_("Range limits"),
                 choices=[(True, _("Show the limits of values displayed")),
                          (False, _("Don't show information of limits"))])
 
-    if "inner_state_display" in with_elements:
-        yield "inner_state_display", DropdownChoice(
-            title=_("Metric color"),
+    if "text_style" in with_elements:
+        yield "text_style", DropdownChoice(
+            title=_("Text color"),
             choices=[(None, _("Follow theme default")),
-                     ("service", _("Color value after SERVICE state")),
-                     ("metric", _("Color value following it's METRIC THRESHOLDS if available"))],
+                     ("metric", _("Color value following it's METRIC THRESHOLDS if available")),
+                     ("service", _("Color value after SERVICE state"))],
         )
 
-    if "status_border" in with_elements:
-        yield "status_border", DropdownChoice(
+    if "fill_style" in with_elements:
+        yield "fill_style", DropdownChoice(
+            title=_("Fill color"),
+            choices=[(None, _("Follow theme default")),
+                     ("metric",
+                      _("Color background following it's METRIC THRESHOLDS if available")),
+                     ("service", _("Color background after SERVICE state"))],
+        )
+
+    if "border_style" in with_elements:
+        yield "border_style", DropdownChoice(
             title=_("Status border"),
             choices=[
                 (None, _("Do not show any status border")),
@@ -285,7 +296,7 @@ class GaugeDashlet(SingleMetricDashlet):
 
     @staticmethod
     def _vs_elements():
-        return _vs_elements(["time_range", "display_range", "status_border"])
+        return _vs_elements(["time_range", "display_range", "border_style"])
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
@@ -354,8 +365,8 @@ class SingleGraphDashlet(SingleMetricDashlet):
     @staticmethod
     def _vs_elements():
         return _vs_elements([
-            "time_range", "display_range", "automatic_range", "toggle_range_display",
-            "status_border", "inner_state_display"
+            "time_range", "display_range", "automatic_range", "toggle_range_display", "text_style",
+            "fill_style", "border_style"
         ])
 
     @classmethod

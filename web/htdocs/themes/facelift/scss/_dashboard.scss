@@ -711,45 +711,47 @@ div#dashboard.grid {
   color: $primary-font-color;
 }
 
-svg g,
-svg a.single_value {
-  &.state0 rect {
-    stroke: $color-state-success-background;
+svg {
+  .title,
+  .single_value,
+  .state_component {
+    fill: $primary-font-color;
+    text {
+      // because there is conflict with a general: svg text
+      stroke: none;
+    }
+  }
+  .status_background {
+    opacity: 0.4;
+    fill: $dashlet-inner-bg-color;
   }
 
-  &.state1 rect {
+  .line {
+    fill: none !important;
+  }
+
+  .area {
+    opacity: 0.4;
+  }
+
+  .state0 {
+    fill: $success;
+    stroke: $success;
+  }
+
+  .state1 {
+    fill: $color-state-1-background;
     stroke: $color-state-1-background;
   }
 
-  &.state2 rect {
+  .state2 {
+    fill: $color-state-2-background;
     stroke: $color-state-2-background;
   }
 
-  &.state3 rect {
-    stroke: $color-state-3-background;
-  }
-
-  &.state0 text {
-    fill: $color-state-success-background;
-  }
-
-  &.state1 text {
-    fill: $color-state-1-background;
-  }
-
-  &.state2 text {
-    fill: $color-state-2-background;
-  }
-
-  &.state3 text {
+  .state3 {
     fill: $color-state-3-background;
-  }
-}
-
-svg a.single_value {
-  // this is default unspecified text color
-  text {
-    fill: $hexagon-downtime-color; //because is the same light blue
+    stroke: $color-state-3-background;
   }
 }
 

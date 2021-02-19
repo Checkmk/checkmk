@@ -64,7 +64,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         this.render_title(this._data.title, this._data.title_url);
 
         let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        let border_component = cmk_figures.getIn(plot, "border_component");
+        let border_component = cmk_figures.getIn(plot, "border_style");
         if (border_component) cmk_figures.state_component(this, border_component);
     }
 
@@ -119,7 +119,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
         const plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
         if (!data.length || !plot || !plot.metric.bounds) {
             this.plot.selectAll("path.level").remove();
-            this.plot.selectAll("path.value").remove();
+            this.plot.selectAll("path.single_value").remove();
             this.plot.selectAll("a.single_value").remove();
             return;
         }
@@ -157,7 +157,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .selectAll("path.level")
             .data(cmk_figures.make_levels(domain, plot.metric.bounds))
             .join(enter => enter.append("path").classed("level", true))
-            .attr("fill", d => d.color)
+            .attr("class", d => "level " + d.style)
             .attr("opacity", 0.9)
             .attr(
                 "d",
@@ -174,10 +174,10 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .text(d => d.from + " -> " + d.to);
         // gauge bar
         this.plot
-            .selectAll("path.value")
-            .data([{value: cmk_figures.clamp(last_value.value, domain), color: value.color}])
-            .join(enter => enter.append("path").classed("value", true))
-            .attr("fill", d => d.color)
+            .selectAll("path.single_value")
+            .data([{...value, value: cmk_figures.clamp(last_value.value, domain)}])
+            .join("path")
+            .attr("class", d => "single_value " + d.style)
             .attr("opacity", 0.9)
             .attr(
                 "d",

@@ -29,14 +29,14 @@ export class SearchAggregationsPlugin extends node_visualization_toolbar_utils.T
             .classed("box", true)
             .classed("toolbar_search", true)
             .append("input")
-            .on("input", () => this.updated_search_node_text())
+            .on("input", event => this.updated_search_node_text(event))
             .classed("search_node", true)
             .attr("placeholder", "Search node")
             .attr("value", this.search_node_text);
     }
 
-    updated_search_node_text() {
-        this.set_search_node_text(d3.select(d3.event.target).property("value"));
+    updated_search_node_text(event) {
+        this.set_search_node_text(d3.select(event.target).property("value"));
         this.start_node_search();
     }
 

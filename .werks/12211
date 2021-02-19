@@ -1,0 +1,13 @@
+Title: Fix show more mode in page menu dropdowns
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613753968
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+You had to use the "Show more items" button once on dropdowns with show more
+items, even if "Default to show more" or "Enforce show more" was configured.

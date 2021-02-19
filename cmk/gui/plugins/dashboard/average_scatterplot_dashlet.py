@@ -63,6 +63,7 @@ class AverageScatterplotDataGenerator:
 
         return {
             "title": cls.figure_title(properties, context, settings, metric_name),
+            "title_url": settings.get("title_url"),
             "plot_definitions": [{
                 "plot_type": "line",
                 "id": "id_mean",

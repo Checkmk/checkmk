@@ -124,6 +124,7 @@ class SiteOverviewDashletDataGenerator:
                 settings.get("title", default_title),
                 default_title,
             ),
+            "title_url": settings.get("title_url"),
             "render_mode": render_mode,
             "plot_definitions": [],
             "data": [e.serialize() for e in elements],

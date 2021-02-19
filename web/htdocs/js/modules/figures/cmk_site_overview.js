@@ -155,7 +155,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
         if (this._hexagon_content === null) this.plot.selectAll("*").remove();
         else this._render_hexagon_content(this._hexagon_content);
 
-        this.render_title(this._data.title);
+        this.render_title(this._data.title, this._data.title_url);
     }
 
     _compute_host_geometry(num_elements, box_area) {

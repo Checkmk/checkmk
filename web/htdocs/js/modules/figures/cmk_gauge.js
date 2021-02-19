@@ -61,7 +61,7 @@ class GaugeFigure extends cmk_figures.FigureBase {
 
     render() {
         this._render_levels();
-        this.render_title(this._data.title);
+        this.render_title(this._data.title, this._data.title_url);
 
         let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
         let border_component = cmk_figures.getIn(plot, "border_component");

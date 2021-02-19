@@ -3,12 +3,6 @@ import {range} from "lodash";
 import * as cmk_figures from "cmk_figures";
 import {partitionableDomain, domainIntervals} from "number_format";
 
-// Used for rapid protoyping, bypassing webpack
-//var cmk_figures = cmk.figures; /*eslint-disable-line no-undef*/
-//var dc = dc; /*eslint-disable-line no-undef*/
-//var d3 = d3; /*eslint-disable-line no-undef*/
-//var crossfilter = crossfilter; /*eslint-disable-line no-undef*/
-
 class BarplotFigure extends cmk_figures.FigureBase {
     static ident() {
         return "barplot";
@@ -90,7 +84,7 @@ class BarplotFigure extends cmk_figures.FigureBase {
         this._time_dimension.filter(d => d == this._time_dimension.top(1)[0].timestamp);
 
         this.resize();
-        this.render_title(data.title);
+        this.render_title(data.title, data.title_url);
 
         const domain = this.render_axis();
         this._render_values(domain);

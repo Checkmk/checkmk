@@ -192,6 +192,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         });
         cmk_figures.FigureBase.prototype.update_data.call(this, data);
         this._title = data.title;
+        this._title_url = data.title_url;
         this._update_zoom_settings();
         this._update_crossfilter(data.data);
         this._update_subplots(data.plot_definitions);
@@ -290,7 +291,7 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
     }
 
     render() {
-        this.render_title(this._title);
+        this.render_title(this._title, this._title_url);
 
         // Prepare scales, the subplots need them to render the data
         this._prepare_scales();

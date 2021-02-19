@@ -446,11 +446,9 @@ export class FigureBase {
             .on("click", () => this.scheduler.force_update());
     }
 
-    render_title(title) {
+    render_title(title, title_url) {
         if (!this.svg) return;
-
-        if (title) title = [title];
-        else title = [];
+        title = title ? [{title: title, url: title_url}] : [];
 
         let title_component = this.svg
             .selectAll(".title")
@@ -473,11 +471,19 @@ export class FigureBase {
             .attr("height", 22)
             .classed(highlight_container ? "highlighted" : "", true);
 
+        if (title_url) {
+            title_component = title_component
+                .selectAll("a")
+                .data(d => [d])
+                .join("a")
+                .attr("xlink:href", d => d.url || "#");
+        }
+
         title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
-            .text(d => d)
+            .text(d => d.title)
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");

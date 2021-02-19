@@ -58,6 +58,7 @@ class StatsDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return {
+            # NOTE: this title is NOT used at the moment. data.title is used instead!
             # TODO: Get the correct dashlet title. This needs to use the general dashlet title
             # calculation. We somehow have to get the title from
             # cmk.gui.dashboard._render_dashlet_title.

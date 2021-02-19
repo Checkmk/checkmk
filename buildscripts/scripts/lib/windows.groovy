@@ -13,10 +13,7 @@ def build(Map args) {
         // No job should exceed 3*5 = 15 minutes
         timeout(time: 15, unit: 'MINUTES') {
             try {
-                if (args.TARGET == "module") {
-                    bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
-                    ARTIFACTS = 'python-3.8.zip'
-                } else if (args.TARGET == "cached") {
+                if (args.TARGET == "cached") {
                     bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
                     ARTIFACTS = 'python-3.8.zip,python-3.4.zip'
                 } else if (args.TARGET == "agent") {

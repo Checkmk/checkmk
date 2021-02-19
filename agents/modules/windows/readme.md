@@ -41,7 +41,7 @@ installation is not possible. The error is "cannot install" or similar
 
 This procedure may quite annoying, you have to check next points:
 
-1. All scripts here. Node builds artifacts succesfully.
+1. Check scripts in the folder. 
 2. **buildscripts/scripts/lib/windows.groovy** : from windows node to jenkins
 3. **buildscripts/scripts/build-cmk-version.jenkins** : from enkins to packaging
 4. Checkmk root **Makefile**. Packaging self
@@ -50,6 +50,9 @@ This procedure may quite annoying, you have to check next points:
    *grep agents\modules\windows\tests\integration\* for "python-"*
     
    Usually it is conftest.py and Makefile.
+
+6. Check build_the_module.cmd for 3.8, 3.4 and et cetera
+7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
 

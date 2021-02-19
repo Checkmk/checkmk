@@ -866,7 +866,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
 
     drag_start() {
         this.drag_start_info = {};
-        this.drag_start_info.start_coords = d3.mouse(this.selection.node());
+        this.drag_start_info.start_coords = d3.pointer(this.selection.node());
         this.drag_start_info.options = JSON.parse(JSON.stringify(this.style_config.options));
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
@@ -875,7 +875,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     }
 
     change_rotation() {
-        let coords = d3.mouse(this.selection.node());
+        let coords = d3.pointer(this.selection.node());
         let offset =
             ((this.drag_start_info.start_coords[1] - coords[1]) *
                 this._layout_manager.viewport.last_zoom.k) %
@@ -1136,7 +1136,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
 
     resize_layer_drag() {
         let rotation_rad = (this.style_config.options.rotation / 180) * Math.PI;
-        let coords = d3.mouse(this.selection.node());
+        let coords = d3.pointer(this.selection.node());
         let offset_y = this.drag_start_info.start_coords[0] - coords[0];
         let offset_x = this.drag_start_info.start_coords[1] - coords[1];
 
@@ -1426,7 +1426,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.mouse(this.selection.node());
+        let coords = d3.pointer(this.selection.node());
         let offset_x =
             (this.drag_start_info.start_coords[1] - coords[1]) *
             this._layout_manager.viewport.last_zoom.k;
@@ -1440,7 +1440,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.mouse(this.selection.node());
+        let coords = d3.pointer(this.selection.node());
 
         let offset_x =
             (this.drag_start_info.start_coords[1] - coords[1]) *

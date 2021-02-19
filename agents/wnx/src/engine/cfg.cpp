@@ -1147,7 +1147,7 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
 
 // #TODO refactor this trash
 void SetupPluginEnvironment() {
-    const std::array<std::pair<const std::string_view, const std::wstring>, 9>
+    const std::array<std::pair<const std::string_view, const std::wstring>, 10>
         env_pairs{{{envs::kMkLocalDirName, GetLocalDir()},
                    {envs::kMkStateDirName, GetStateDir()},
                    {envs::kMkPluginsDirName, GetUserPluginsDir()},
@@ -1156,6 +1156,7 @@ void SetupPluginEnvironment() {
                    {envs::kMkConfDirName, GetPluginConfigDir()},
                    {envs::kMkSpoolDirName, GetSpoolDir()},
                    {envs::kMkInstallDirName, GetUserInstallDir()},
+                   {envs::kMkModulesDirName, GetUserModulesDir()},
                    {envs::kMkMsiPathName, GetUpdateDir()}}};
 
     for (const auto& d : env_pairs)

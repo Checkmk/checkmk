@@ -150,6 +150,10 @@ void SafeCleanTmpxDir();
 
 void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
+inline std::vector<std::string> ReadFileAsTable(
+    const std::filesystem::path& name) {
+    return ReadFileAsTable(name.u8string());
+}
 
 using CheckYamlVector =
     std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
@@ -213,8 +217,11 @@ const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
 std::string GetFabricYmlContent();
 
-bool WaitForSuccess(std::chrono::milliseconds ms,
-                    std::function<bool()> predicat);
+bool WaitForSuccessSilent(std::chrono::milliseconds ms,
+                          std::function<bool()> predicat);
+
+bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
+                            std::function<bool()> predicat);
 
 }  // namespace tst
 #endif  // test_tools_h__

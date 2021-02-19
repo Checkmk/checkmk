@@ -20,29 +20,32 @@
 #include "service_processor.h"
 #include "test_tools.h"
 
+namespace fs = std::filesystem;
+using namespace std::chrono_literals;
+
 namespace cma {  // to become friendly for wtools classes
 constexpr auto G_EndOfString = tgt::IsWindows() ? "\r\n" : "\n";
 
 constexpr const char* SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
-
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
-                               std::string Name) {
-    std::ofstream ofs(Path.u8string());
+namespace {
+void CreatePluginInTemp(const std::filesystem::path& filename, int timeout,
+                        std::string_view plugin_name) {
+    std::ofstream ofs(filename.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", filename, GetLastError());
         return;
     }
 
     ofs << "@echo off\n"
         //<< "timeout /T " << Timeout << " /NOBREAK > nul\n"
-        << "powershell Start-Sleep " << Timeout << " \n"
-        << "@echo ^<^<^<" << Name << "^>^>^>\n"
+        << "powershell Start-Sleep " << timeout << " \n"
+        << "@echo ^<^<^<" << plugin_name << "^>^>^>\n"
         << "@echo " << SecondLine << "\n";
 }
 
-static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
-                                  std::string Name) {
+void CreateVbsPluginInTemp(const std::filesystem::path& Path,
+                           std::string Name) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -59,8 +62,8 @@ static void CreateVbsPluginInTemp(const std::filesystem::path& Path,
                "45678912345678912345678912345678912345678912345678912345678912345aa\"\n";
 }
 
-static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
-                                          std::string Name) {
+void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
+                                   std::string Name) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -79,9 +82,9 @@ static void CreateComplicatedPluginInTemp(const std::filesystem::path& Path,
         << "@echo " << SecondLine << "\n";
 }
 
-static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
-                               std::string Name, std::string_view code,
-                               cma::provider::PluginType type) {
+void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
+                        std::string Name, std::string_view code,
+                        cma::provider::PluginType type) {
     std::ofstream ofs(Path.u8string());
 
     if (!ofs) {
@@ -97,7 +100,7 @@ static void CreatePluginInTemp(const std::filesystem::path& Path, int Timeout,
     ofs << code << "\n";
 }
 
-static void RemoveFolder(const std::filesystem::path& Path) {
+void RemoveFolder(const std::filesystem::path& Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
     fs::path dir_path;
@@ -123,8 +126,8 @@ static void RemoveFolder(const std::filesystem::path& Path) {
 
 // because PluginMap is relative complicated(PluginEntry is not trivial)
 // we will use special method to insert artificial data in map
-static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
-                        bool async, int cache_age) {
+void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
+                 bool async, int cache_age) {
     namespace fs = std::filesystem;
     fs::path p = name;
     pm.emplace(std::make_pair(name, p));
@@ -137,6 +140,7 @@ static void InsertEntry(PluginMap& pm, const std::string& name, int timeout,
         it->second.applyConfigUnit(e, false);
     }
 }
+}  // namespace
 
 TEST(PluginTest, Entry) {
     PluginMap pm;
@@ -244,43 +248,23 @@ TEST(PluginTest, TimeoutCalc) {
     }
 }
 
-TEST(PluginTest, JobStartSTop) {
-    namespace fs = std::filesystem;
+TEST(PluginTest, JobStartStopIntegration) {
+    tst::TempDirPair dirs{test_info_->name()};
+    fs::path temp_folder = dirs.in();
 
-    fs::path temp_folder = cma::cfg::GetTempDir();
-
-    CreatePluginInTemp(temp_folder / "a.cmd", 120, "a");
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    CreatePluginInTemp(temp_folder / "a.cmd", 20, "a");
 
     auto [pid, job, process] =
-        cma::tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
-    ::Sleep(1000);
-    TerminateJobObject(job, 21);
-    if (job) CloseHandle(job);
-    if (process) CloseHandle(process);
-    /*
-
-        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-        PROCESSENTRY32 process;
-        ZeroMemory(&process, sizeof(process));
-        process.dwSize = sizeof(process);
-        Process32First(snapshot, &process);
-        do {
-            // process.th32ProcessId is the PID.
-            if (process.th32ParentProcessID == pid) {
-                cma::tools::win::KillProcess(process.th32ProcessID);
-            }
-
-        } while (Process32Next(snapshot, &process));
-
-        CloseHandle(job);
-    cma::tools::win::KillProcess(pid);
-    */
+        tools::RunStdCommandAsJob((temp_folder / "a.cmd").wstring());
+    ASSERT_NE(pid, 0);
+    ASSERT_NE(job, nullptr);
+    tools::sleep(200ms);
+    ::TerminateJobObject(job, 21);
+    ::CloseHandle(job);
+    ::CloseHandle(process);
 }
 
 TEST(PluginTest, Extensions) {
-    using namespace std;
-
     auto pshell = MakePowershellWrapper();
     EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
 
@@ -1802,7 +1786,7 @@ bool WaitForSuccess(std::chrono::duration<T, B> allowed_wait,
                     std::function<bool()> func) {
     using namespace std::chrono;
 
-    constexpr auto grane = 500ms;
+    constexpr auto grane = 50ms;
     auto wait_time = allowed_wait;
 
     while (wait_time >= 0ms) {

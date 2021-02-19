@@ -762,7 +762,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self) -> bool:
-        return True
+        return not (cmk.gui.config.has_wato_slave_sites() or cmk.gui.config.is_wato_slave_site())
 
     def topic(self):
         return HostAttributeTopicBasicSettings

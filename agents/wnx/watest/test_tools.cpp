@@ -5,6 +5,8 @@
 
 #include "test_tools.h"
 
+#include <shellapi.h>
+
 #include <filesystem>
 #include <random>
 #include <string>
@@ -14,6 +16,7 @@
 #include "cfg.h"
 #include "corecrt_terminate.h"  // for terminate
 #include "exception"            // for terminate
+#include "firewall.h"
 #include "fmt/format.h"
 #include "on_start.h"
 #include "tools/_misc.h"
@@ -416,6 +419,31 @@ bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
 bool WaitForSuccessSilent(std::chrono::milliseconds ms,
                           std::function<bool()> predicat) {
     return WaitForSuccess(ms, WaitForSuccessMode::silent, predicat);
+}
+
+namespace {
+constexpr std::wstring_view firewall_test_rule_name = L"CMK_TEST_RULE";
+}
+
+FirewallOpener::FirewallOpener() {
+    int count = 0;
+    auto res = ::CommandLineToArgvW(::GetCommandLineW(), &count);
+    if (res == nullptr) {
+        XLOG::l("can't read argv");
+        ::abort();
+    }
+    argv0_ = res[0];
+
+    if (!cma::fw::CreateInboundRule(firewall_test_rule_name, argv0_, -1)) {
+        XLOG::l("can't read argv");
+        ::abort();
+    }
+}
+
+FirewallOpener::~FirewallOpener() {
+    if (!argv0_.empty()) {
+        cma::fw::RemoveRule(firewall_test_rule_name, argv0_);
+    }
 }
 
 }  // namespace tst

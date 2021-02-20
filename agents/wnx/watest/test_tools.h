@@ -223,5 +223,21 @@ bool WaitForSuccessSilent(std::chrono::milliseconds ms,
 bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
                             std::function<bool()> predicat);
 
+// Usage FirewallOpener fwo;
+class FirewallOpener {
+public:
+    FirewallOpener();
+    ~FirewallOpener();
+
+    FirewallOpener(const FirewallOpener&) = delete;
+    FirewallOpener(FirewallOpener&&) = delete;
+
+    FirewallOpener& operator=(const FirewallOpener&) = delete;
+    FirewallOpener& operator=(FirewallOpener&&) = delete;
+
+private:
+    std::wstring argv0_;
+};
+
 }  // namespace tst
 #endif  // test_tools_h__

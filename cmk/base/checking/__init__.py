@@ -14,7 +14,6 @@ from typing import (
     DefaultDict,
     Dict,
     List,
-    NamedTuple,
     Optional,
     Sequence,
     Set,

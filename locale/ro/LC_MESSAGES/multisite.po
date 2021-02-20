@@ -798,6 +798,9 @@ msgstr ", date nu au fost primite în ultimele %.1f intervale de verificate"
 msgid ", the first match skips this rule pack"
 msgstr ""
 
+msgid "-"
+msgstr ""
+
 msgid "-.-- %"
 msgstr ""
 
@@ -2937,6 +2940,9 @@ msgstr "Adaugă Contoar"
 msgid "Add destination address"
 msgstr "Linii de header adiționale"
 
+msgid "Add details manually"
+msgstr ""
+
 msgid "Add diskstate rule"
 msgstr ""
 
@@ -3223,10 +3229,6 @@ msgstr "Adaugp o noua configurație de utilizator"
 #, fuzzy
 msgid "Add subfolder"
 msgstr "Adaugă filtre"
-
-#, fuzzy
-msgid "Add subscription details"
-msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Add tag"
@@ -10318,6 +10320,14 @@ msgstr ""
 msgid "Could not save changes: %s"
 msgstr "Activare schimbări"
 
+#, fuzzy, python-format
+msgid "Could query available interfaces for host %s and user %s."
+msgstr "Un titlu pentru view"
+
+#, python-format
+msgid "Could query available interfaces for user %s."
+msgstr ""
+
 msgid "Count"
 msgstr ""
 
@@ -15875,6 +15885,10 @@ msgstr ""
 
 msgid "End"
 msgstr ""
+
+#, fuzzy
+msgid "End date"
+msgstr "Parola"
 
 msgid "End-Time"
 msgstr ""
@@ -23517,6 +23531,14 @@ msgstr ""
 
 msgid "Invalid start time given"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Invalid subscription %s date"
+msgstr "foloseste descrierea"
+
+#, fuzzy
+msgid "Invalid subscription sizing"
+msgstr "foloseste descrierea"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -38788,12 +38810,6 @@ msgstr "afiseaza erori"
 msgid "Set custom theme"
 msgstr ""
 
-#, python-format
-msgid ""
-"Set customer portal credentials and subscription details for automatically "
-"submitting license usage reports to the Checkmk license server '%s'."
-msgstr ""
-
 msgid "Set default time range"
 msgstr ""
 
@@ -39938,6 +39954,10 @@ msgstr ""
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr ""
 
+#, fuzzy
+msgid "Sizing"
+msgstr "foloseste descrierea"
+
 msgid "Skip exceeding messages, create one critical message"
 msgstr ""
 
@@ -40864,6 +40884,10 @@ msgstr ""
 
 msgid "Start URL to display in main frame"
 msgstr ""
+
+#, fuzzy
+msgid "Start date"
+msgstr "Numele Elementului"
 
 msgid "Start during system boot"
 msgstr ""
@@ -41958,19 +41982,7 @@ msgid "Subscription details"
 msgstr "foloseste descrierea"
 
 #, fuzzy
-msgid "Subscription end date"
-msgstr "foloseste descrierea"
-
-#, fuzzy
 msgid "Subscription settings"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Subscription sizing"
-msgstr "foloseste descrierea"
-
-#, fuzzy
-msgid "Subscription start date"
 msgstr "foloseste descrierea"
 
 msgid "Substitution"
@@ -43876,12 +43888,6 @@ msgid ""
 "make sense for events that can be cancelled by a negative rule."
 msgstr ""
 
-msgid ""
-"The credentials are part of your subscription and can be found in your "
-"contract. These credentials are also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk<a>."
-msgstr ""
-
 msgid "The credentials for api calls with authentication."
 msgstr ""
 
@@ -44009,11 +44015,6 @@ msgid ""
 msgstr ""
 
 msgid "The description of the interface as provided by the device"
-msgstr ""
-
-msgid ""
-"The details including start date, end date and sizing are part of your "
-"subscription and can be found in your contract."
 msgstr ""
 
 #, python-format
@@ -56411,6 +56412,10 @@ msgstr ""
 msgid "enable this site"
 msgstr "%s acest site"
 
+#, fuzzy
+msgid "end"
+msgstr "%d schimbări"
+
 msgid "entries"
 msgstr ""
 
@@ -57507,6 +57512,10 @@ msgid "specify manually ->"
 msgstr ""
 
 #, fuzzy
+msgid "start"
+msgstr "Setari"
+
+#, fuzzy
 msgid "status entries"
 msgstr "Cluster nou"
 
@@ -57804,6 +57813,14 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Add subscription details"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Subscription end date"
+#~ msgstr "foloseste descrierea"
 
 #, fuzzy
 #~ msgid "Host problem history"
@@ -59560,10 +59577,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "See the availability"
 #~ msgstr "Tabel cu macro-uri disponibile"
-
-#, fuzzy
-#~ msgid "See the availability views of hosts and services"
-#~ msgstr "Un titlu pentru view"
 
 #, fuzzy
 #~ msgid "Selection of multiple host groups"

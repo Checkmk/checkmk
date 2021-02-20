@@ -801,6 +801,9 @@ msgstr ", innerhalb der letzten %.1f Checkperioden wurde keine Daten empfangen"
 msgid ", the first match skips this rule pack"
 msgstr ", der erste Treffer überspringt das Regelpaket"
 
+msgid "-"
+msgstr ""
+
 msgid "-.-- %"
 msgstr "-.-- %"
 
@@ -3162,6 +3165,10 @@ msgstr "Kunde hinzufügen"
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
 
+#, fuzzy
+msgid "Add details manually"
+msgstr "Manuell ausführen"
+
 msgid "Add diskstate rule"
 msgstr "Regel hinzufügen"
 
@@ -3394,9 +3401,6 @@ msgstr "Neue Statuskonfiguriation hinzufügen"
 
 msgid "Add subfolder"
 msgstr "Unterverzeichnis hinzufügen"
-
-msgid "Add subscription details"
-msgstr "Subskriptionsdetails hinzufügen"
 
 msgid "Add tag"
 msgstr "Tag hinzufügen"
@@ -10935,6 +10939,14 @@ msgstr ""
 msgid "Could not save changes: %s"
 msgstr "Kann Änderungen nicht speichern: %s"
 
+#, fuzzy, python-format
+msgid "Could query available interfaces for host %s and user %s."
+msgstr "Anzeigen der Verfügbarkeitsansichten von Hosts und Diensten"
+
+#, python-format
+msgid "Could query available interfaces for user %s."
+msgstr ""
+
 msgid "Count"
 msgstr "Anzahl"
 
@@ -16661,6 +16673,10 @@ msgstr "Verschlüsselungsgeheimnis"
 
 msgid "End"
 msgstr "Ende"
+
+#, fuzzy
+msgid "End date"
+msgstr "Event-Datenbank"
 
 msgid "End-Time"
 msgstr "End-Zeit"
@@ -25429,6 +25445,14 @@ msgstr "Ungültige Sicherung (zu klein)"
 
 msgid "Invalid start time given"
 msgstr "Ungülitge Startzeit"
+
+#, fuzzy, python-format
+msgid "Invalid subscription %s date"
+msgstr "Subskription"
+
+#, fuzzy
+msgid "Invalid subscription sizing"
+msgstr "Subskription"
 
 msgid "Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
 msgstr ""
@@ -40968,14 +40992,6 @@ msgstr "Wähle benutzerdefiniertes Aussehen"
 msgid "Set custom theme"
 msgstr "Wähle benutzerdefiniertes Aussehen"
 
-#, python-format
-msgid ""
-"Set customer portal credentials and subscription details for automatically "
-"submitting license usage reports to the Checkmk license server '%s'."
-msgstr ""
-"Setze Kundenportal-Benutzerdaten und Subscriptions-Details, um automatisch "
-"Berichte über die Lizenz-Nutzung an den Checkmk Lizenz Server '%s' zu senden."
-
 msgid "Set default time range"
 msgstr "Standard-Zeitbereich setzen"
 
@@ -42208,6 +42224,10 @@ msgstr "Größe, Alter und Anzahl von Dateigruppen"
 msgid "Size, age and count of file groups (mk_filestats)"
 msgstr "Größe, Alter und Anzahl von Dateigruppen (mk_filestats)"
 
+#, fuzzy
+msgid "Sizing"
+msgstr "Synchronisiere"
+
 msgid "Skip exceeding messages, create one critical message"
 msgstr "Übrige Nachrichten auslassen, eine kritische Nachricht erstellen"
 
@@ -43358,6 +43378,10 @@ msgstr "Livestatus-Proxy starten"
 msgid "Start URL to display in main frame"
 msgstr "Start-URL für den Haupt-Frame"
 
+#, fuzzy
+msgid "Start date"
+msgstr "Starttyp"
+
 msgid "Start during system boot"
 msgstr "Mit dem Betriebssystem starten"
 
@@ -44497,19 +44521,7 @@ msgid "Subscription details"
 msgstr "Subskription"
 
 #, fuzzy
-msgid "Subscription end date"
-msgstr "Subskription"
-
-#, fuzzy
 msgid "Subscription settings"
-msgstr "Subskription"
-
-#, fuzzy
-msgid "Subscription sizing"
-msgstr "Subskription"
-
-#, fuzzy
-msgid "Subscription start date"
 msgstr "Subskription"
 
 msgid "Substitution"
@@ -46823,15 +46835,6 @@ msgstr ""
 "macht nur bei Ereignissen Sinn die durch eine negative Regel abgebrochen "
 "werde können."
 
-msgid ""
-"The credentials are part of your subscription and can be found in your "
-"contract. These credentials are also used for downloading <a href=\"https://"
-"checkmk.de/download\">Checkmk<a>."
-msgstr ""
-"Die Anmeldedaten sind Teil der Subskription und können im Vertrag gefunden "
-"werden. Diese Anmeldedaten werden auch verwendet um <a href=\"https://"
-"checkmk.de/download\">Checkmk<a> herunterzuladen."
-
 #, fuzzy
 msgid "The credentials for api calls with authentication."
 msgstr "Anmeldedaten für HTTP Basic Authentication"
@@ -46994,13 +46997,6 @@ msgstr ""
 
 msgid "The description of the interface as provided by the device"
 msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
-
-msgid ""
-"The details including start date, end date and sizing are part of your "
-"subscription and can be found in your contract."
-msgstr ""
-"Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
-"Subskription und können im Vertrag gefunden werden."
 
 #, python-format
 msgid "The directory %s does not exist or is not a directory."
@@ -62352,6 +62348,10 @@ msgstr "aktiviere Tonausgabe"
 msgid "enable this site"
 msgstr "diese Instanz aktivieren"
 
+#, fuzzy
+msgid "end"
+msgstr "Senden"
+
 msgid "entries"
 msgstr "Einträge"
 
@@ -63427,6 +63427,10 @@ msgstr "Anschluss wartet auf weitere Pakete aus dem Netzwerk"
 msgid "specify manually ->"
 msgstr "Manuell festlegen ->"
 
+#, fuzzy
+msgid "start"
+msgstr "Neustart"
+
 msgid "status entries"
 msgstr "Statuseinträge"
 
@@ -63720,6 +63724,39 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Add subscription details"
+#~ msgstr "Subskriptionsdetails hinzufügen"
+
+#~ msgid ""
+#~ "Set customer portal credentials and subscription details for "
+#~ "automatically submitting license usage reports to the Checkmk license "
+#~ "server '%s'."
+#~ msgstr ""
+#~ "Setze Kundenportal-Benutzerdaten und Subscriptions-Details, um "
+#~ "automatisch Berichte über die Lizenz-Nutzung an den Checkmk Lizenz Server "
+#~ "'%s' zu senden."
+
+#, fuzzy
+#~| msgid "Subscription"
+#~ msgid "Subscription end date"
+#~ msgstr "Subskription"
+
+#~ msgid ""
+#~ "The credentials are part of your subscription and can be found in your "
+#~ "contract. These credentials are also used for downloading <a href="
+#~ "\"https://checkmk.de/download\">Checkmk<a>."
+#~ msgstr ""
+#~ "Die Anmeldedaten sind Teil der Subskription und können im Vertrag "
+#~ "gefunden werden. Diese Anmeldedaten werden auch verwendet um <a href="
+#~ "\"https://checkmk.de/download\">Checkmk<a> herunterzuladen."
+
+#~ msgid ""
+#~ "The details including start date, end date and sizing are part of your "
+#~ "subscription and can be found in your contract."
+#~ msgstr ""
+#~ "Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
+#~ "Subskription und können im Vertrag gefunden werden."
 
 #, fuzzy
 #~| msgid "Host problems"
@@ -66899,9 +66936,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "See the availability"
 #~ msgstr "Verfügbarkeit ansehen"
-
-#~ msgid "See the availability views of hosts and services"
-#~ msgstr "Anzeigen der Verfügbarkeitsansichten von Hosts und Diensten"
 
 #~ msgid "Selection of multiple host groups"
 #~ msgstr "Auswahl von mehreren Hostgruppen"

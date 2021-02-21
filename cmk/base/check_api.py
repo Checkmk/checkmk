@@ -138,7 +138,7 @@ import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
     check_type, host_name, service_description,
 )
 from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import

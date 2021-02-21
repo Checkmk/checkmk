@@ -14,7 +14,7 @@ from testlib.base import Scenario
 
 from cmk.base import check_api
 import cmk.base.config as config
-import cmk.base.check_api_utils as check_api_utils
+import cmk.base.plugin_contexts as plugin_contexts
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
@@ -283,13 +283,13 @@ def test_get_effective_service_level(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    check_api_utils.set_service("cpu.loads", "CPU load")
+    plugin_contexts.set_service("cpu.loads", "CPU load")
 
-    check_api_utils.set_hostname("testhost1")
+    plugin_contexts.set_hostname("testhost1")
     assert check_api.get_effective_service_level() == 33
-    check_api_utils.set_hostname("testhost2")
+    plugin_contexts.set_hostname("testhost2")
     assert check_api.get_effective_service_level() == 10
-    check_api_utils.set_hostname("testhost3")
+    plugin_contexts.set_hostname("testhost3")
     assert check_api.get_effective_service_level() == 0
 
 

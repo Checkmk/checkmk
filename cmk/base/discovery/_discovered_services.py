@@ -32,7 +32,7 @@ import cmk.core_helpers.cache
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.check_api_utils as check_api_utils
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
@@ -166,7 +166,7 @@ def _discover_services(
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for host_extra_conf{_merged,} calls in the legacy checks.
-    check_api_utils.set_hostname(host_name)
+    plugin_contexts.set_hostname(host_name)
 
     service_table: cmk.base.check_utils.CheckTable = {}
     try:

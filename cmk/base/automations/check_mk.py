@@ -52,7 +52,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
-import cmk.base.check_api_utils as check_api_utils
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
 from cmk.base.check_utils import Service
@@ -606,7 +606,7 @@ class AutomationAnalyseServices(Automation):
     def _get_service_info(self, config_cache: config.ConfigCache, host_config: config.HostConfig,
                           servicedesc: str) -> Dict:
         hostname = host_config.hostname
-        check_api_utils.set_hostname(hostname)
+        plugin_contexts.set_hostname(hostname)
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
@@ -1322,7 +1322,7 @@ class AutomationActiveCheck(Automation):
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
-        check_api_utils.set_hostname(hostname)
+        plugin_contexts.set_hostname(hostname)
 
         for params in dict(host_config.active_checks).get(plugin, []):
             description = config.active_check_service_description(hostname, plugin, params)

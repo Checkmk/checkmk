@@ -48,7 +48,7 @@ from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api_utils as check_api_utils
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_table as check_table
 import cmk.base.sources as sources
 import cmk.base.config as config
@@ -341,11 +341,11 @@ def host_context(host_name: HostName, *, write_state: bool):
     """
     # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
     try:
-        check_api_utils.set_hostname(host_name)
+        plugin_contexts.set_hostname(host_name)
         item_state.load(host_name)
         yield
     finally:
-        check_api_utils.reset_hostname()
+        plugin_contexts.reset_hostname()
         if write_state:
             item_state.save(host_name)
         item_state.cleanup_item_states()
@@ -435,7 +435,7 @@ def _service_context(service: Service):
     This is used for both legacy and agent_based API.
     """
     # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
-    check_api_utils.set_service(str(service.check_plugin_name), service.description)
+    plugin_contexts.set_service(str(service.check_plugin_name), service.description)
     with value_store.context(service.check_plugin_name, service.item):
         yield
 

@@ -307,13 +307,13 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(metaclass=abc.ABCMeta):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
-        self.set_hostname = cmk.base.check_api_utils.set_hostname
-        self.set_service = cmk.base.check_api_utils.set_service
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
+        self.set_hostname = cmk.base.plugin_contexts.set_hostname
+        self.set_service = cmk.base.plugin_contexts.set_service
         self.name = name
         self.info = {}
 
-    def set_check_api_utils_globals(self, item=None, set_service=False):
+    def set_plugin_contexts_globals(self, item=None, set_service=False):
         description = None
         if set_service:
             description = self.info["service_description"]
@@ -348,7 +348,7 @@ class Check(BaseCheck):
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        self.set_check_api_utils_globals()
+        self.set_plugin_contexts_globals()
         return parse_func(info)
 
     def run_discovery(self, info):
@@ -356,7 +356,7 @@ class Check(BaseCheck):
         if not disco_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no discovery function defined")
-        self.set_check_api_utils_globals()
+        self.set_plugin_contexts_globals()
         # TODO: use standard sanitizing code
         return disco_func(info)
 
@@ -364,7 +364,7 @@ class Check(BaseCheck):
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        self.set_check_api_utils_globals(item, set_service=True)
+        self.set_plugin_contexts_globals(item, set_service=True)
         # TODO: use standard sanitizing code
         return check_func(item, params, info)
 
@@ -398,7 +398,7 @@ class ActiveCheck(BaseCheck):
         self.info = config.active_check_info[self.name[len('check_'):]]
 
     def run_argument_function(self, params):
-        self.set_check_api_utils_globals()
+        self.set_plugin_contexts_globals()
         return self.info['argument_function'](params)
 
     def run_service_description(self, params):

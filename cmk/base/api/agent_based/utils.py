@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Un
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
@@ -376,8 +376,8 @@ def check_levels_predictive(
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(
-            check_api_utils.host_name(),
-            check_api_utils.service_description(),
+            plugin_contexts.host_name(),
+            plugin_contexts.service_description(),
             metric_name,
             levels,
             "MAX",

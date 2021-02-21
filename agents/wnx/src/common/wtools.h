@@ -1151,6 +1151,7 @@ bool ChangeAccessRights(
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
+const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end);
 }  // namespace wtools
 
 #endif  // wtools_h__

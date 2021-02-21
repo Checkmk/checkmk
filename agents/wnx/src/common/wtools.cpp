@@ -835,19 +835,6 @@ std::vector<wchar_t> ReadPerfCounterKeyFromRegistry(PerfCounterReg type) {
     return result;
 }
 
-// simple scanner of multi_sz strings
-// #TODO gtest?
-const wchar_t* GetMultiSzEntry(wchar_t*& Pos, const wchar_t* End) {
-    auto* sz = Pos;
-    if (sz >= End) return nullptr;
-
-    auto len = wcslen(sz);
-    if (len == 0) return nullptr;  // last string in multi_sz
-
-    Pos += len + 1;
-    return sz;
-}
-
 std::optional<uint32_t> FindPerfIndexInRegistry(std::wstring_view Key) {
     if (Key.empty()) return {};
 
@@ -2697,6 +2684,27 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
     XLOG::l.i("User Access Protected '{}'", entry);
 
     return true;
+}
+
+// simple scanner of multi_sz strings
+const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end) {
+    if (pos == nullptr || end == nullptr) {
+        XLOG::l(XLOG_FUNC + "-Bad data");
+        return nullptr;
+    }
+
+    auto start = pos;
+    if (pos >= end) {
+        return nullptr;
+    }
+
+    auto len = wcslen(pos);
+    if (len == 0) {
+        return nullptr;
+    }
+
+    pos += len + 1;
+    return start;
 }
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str) {

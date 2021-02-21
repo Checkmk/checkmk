@@ -32,12 +32,12 @@ import cmk.core_helpers.cache
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.decorator
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
@@ -166,30 +166,30 @@ def _discover_services(
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for host_extra_conf{_merged,} calls in the legacy checks.
-    plugin_contexts.set_hostname(host_name)
 
     service_table: cmk.base.check_utils.CheckTable = {}
     try:
-        for check_plugin_name in plugin_candidates:
-            try:
-                service_table.update({
-                    service.id(): service for service in _discover_plugins_services(
-                        check_plugin_name=check_plugin_name,
-                        host_name=host_name,
-                        ipaddress=ipaddress,
-                        parsed_sections_broker=parsed_sections_broker,
-                        discovery_parameters=discovery_parameters,
-                    )
-                })
-            except (KeyboardInterrupt, MKTimeout):
-                raise
-            except Exception as e:
-                if discovery_parameters.on_error == "raise":
+        with plugin_contexts.current_host(host_name, write_state=False):
+            for check_plugin_name in plugin_candidates:
+                try:
+                    service_table.update({
+                        service.id(): service for service in _discover_plugins_services(
+                            check_plugin_name=check_plugin_name,
+                            host_name=host_name,
+                            ipaddress=ipaddress,
+                            parsed_sections_broker=parsed_sections_broker,
+                            discovery_parameters=discovery_parameters,
+                        )
+                    })
+                except (KeyboardInterrupt, MKTimeout):
                     raise
-                if discovery_parameters.on_error == "warn":
-                    console.error("Discovery of '%s' failed: %s\n" % (check_plugin_name, e))
+                except Exception as e:
+                    if discovery_parameters.on_error == "raise":
+                        raise
+                    if discovery_parameters.on_error == "warn":
+                        console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
-        return list(service_table.values())
+            return list(service_table.values())
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

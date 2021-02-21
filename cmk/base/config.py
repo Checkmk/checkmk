@@ -104,7 +104,6 @@ from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-impor
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_utils
 import cmk.base.default_config as default_config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -2244,8 +2243,6 @@ def _get_checkgroup_parameters(config_cache: 'ConfigCache', host: HostName, chec
     except MKGeneralException as e:
         raise MKGeneralException(str(e) + " (on host %s, checkgroup %s)" % (host, checkgroup))
 
-
-cmk.utils.cleanup.register_cleanup(plugin_contexts.reset_hostname)
 
 #.
 #   .--Host Configuration--------------------------------------------------.

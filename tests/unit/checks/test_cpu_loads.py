@@ -29,6 +29,7 @@ def test_cpu_loads_predictive(mocker):
     # make sure cpu_load check can handle predictive values
     mocker.patch("cmk.base.check_api._prediction.get_levels",
                  return_value=(None, (2.2, 4.2, None, None)))
+    # TODO: don't mock this. Use the context managers.
     mocker.patch("cmk.base.plugin_contexts._hostname", value="unittest")
     mocker.patch("cmk.base.plugin_contexts._service_description", value="unittest-sd")
     params = {

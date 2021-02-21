@@ -41,9 +41,9 @@ from cmk.core_helpers.type_defs import Mode
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 import cmk.base.obsolete_output as out
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 import cmk.base.ip_lookup as ip_lookup
 
@@ -394,25 +394,28 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
     if actchecks:
         cfg.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
-            # Make hostname available as global variable in argument functions
-            plugin_contexts.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = config.active_check_service_description(hostname, acttype, params)
 
-            if not description:
-                core_config.warning(
-                    "Skipping invalid service with empty description (active check: %s) on host %s"
-                    % (acttype, hostname))
-                continue
+            # Make hostname available as global variable in argument functions
+            with plugin_contexts.current_host(hostname, write_state=False):
 
-            if do_omit_service(hostname, description):
-                continue
+                description = config.active_check_service_description(hostname, acttype, params)
 
-            # compute argument, and quote ! and \ for Nagios
-            args = core_config.active_check_arguments(
-                hostname, description,
-                act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
+                if not description:
+                    core_config.warning(
+                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                    )
+                    continue
+
+                if do_omit_service(hostname, description):
+                    continue
+
+                # compute argument, and quote ! and \ for Nagios
+                args = core_config.active_check_arguments(
+                    hostname, description,
+                    act_info["argument_function"](params)).replace("\\",
+                                                                   "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -1004,8 +1007,6 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache,
                                 *,
                                 verify_site_python=True) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
-
-    plugin_contexts.set_hostname(hostname)
 
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)

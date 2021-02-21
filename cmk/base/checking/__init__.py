@@ -7,7 +7,6 @@
 
 import copy
 from collections import defaultdict
-from contextlib import contextmanager
 from typing import (
     Any,
     Callable,
@@ -47,7 +46,6 @@ from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.check_table as check_table
 import cmk.base.sources as sources
 import cmk.base.config as config
@@ -58,8 +56,9 @@ import cmk.base.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.api.agent_based import checking_classes, value_store
+from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
@@ -313,7 +312,7 @@ def _do_all_checks_on_host(
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    with plugin_contexts.host_context(host_config.hostname, write_state=not dry_run):
+    with plugin_contexts.current_host(host_config.hostname, write_state=not dry_run):
         for service in services:
             success = execute_check(
                 parsed_sections_broker,
@@ -421,7 +420,7 @@ def execute_check(
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-        with plugin_contexts.service_context(service):
+        with plugin_contexts.current_service(service):
             submittable = _legacy_mode.get_aggregated_result(
                 parsed_sections_broker,
                 host_config.hostname,
@@ -531,7 +530,7 @@ def get_aggregated_result(
         if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
-        with plugin_contexts.service_context(service):
+        with plugin_contexts.current_service(service):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

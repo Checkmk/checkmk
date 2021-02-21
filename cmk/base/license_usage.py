@@ -22,6 +22,8 @@ from cmk.utils.license_usage import (
     rot47,
 )
 
+import cmk.base.crash_reporting as crash_reporting
+
 logger = logging.getLogger("cmk.base.license_usage")
 
 license_usage_dir = cmk.utils.paths.license_usage_dir
@@ -36,6 +38,20 @@ _LICENSE_LABEL_EXCLUDE = "excluded"
 
 
 def try_history_update() -> None:
+    # 'try_history_update' is executed by every Check_MK service, thus we MUST be sure that there
+    # is no error. Nevertheless if an error occurs it must not be raised because every Check_MK
+    # service would crash, no host with Check_MK service  is checked anymore and might cause a
+    # notification.
+    try:
+        _try_history_update()
+    except Exception as e:
+        crash = crash_reporting.CMKBaseCrashReport.from_exception()
+        logger.error("Error during license usage history update (Crash ID: %s): %s",
+                     crash.ident_to_text(), e)
+        crash_reporting.CrashReportStore().save(crash)
+
+
+def _try_history_update() -> None:
     logger.debug("Try license usage history update.")
 
     license_usage_dir.mkdir(parents=True, exist_ok=True)

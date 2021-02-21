@@ -313,7 +313,7 @@ def _do_all_checks_on_host(
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
-    with host_context(host_config.hostname, write_state=not dry_run):
+    with plugin_contexts.host_context(host_config.hostname, write_state=not dry_run):
         for service in services:
             success = execute_check(
                 parsed_sections_broker,
@@ -329,25 +329,6 @@ def _do_all_checks_on_host(
                 plugins_missing_data.add(service.check_plugin_name)
 
     return num_success, sorted(plugins_missing_data)
-
-
-@contextmanager
-def host_context(host_name: HostName, *, write_state: bool):
-    """Make a bit of context information globally available
-
-    So that functions called by checks know this context.
-    This is used for both legacy and agent_based API.
-    """
-    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
-    try:
-        plugin_contexts.set_hostname(host_name)
-        item_state.load(host_name)
-        yield
-    finally:
-        plugin_contexts.reset_hostname()
-        if write_state:
-            item_state.save(host_name)
-        item_state.cleanup_item_states()
 
 
 def _get_services_to_fetch(
@@ -425,20 +406,6 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
     return True
 
 
-@contextmanager
-def _service_context(service: Service):
-    """Make a bit of context information globally available
-
-    So that functions called by checks know this context.
-    set_service is needed for predictive levels!
-    This is used for both legacy and agent_based API.
-    """
-    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
-    plugin_contexts.set_service(str(service.check_plugin_name), service.description)
-    with value_store.context(service.check_plugin_name, service.item):
-        yield
-
-
 def execute_check(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: config.HostConfig,
@@ -454,7 +421,7 @@ def execute_check(
     # check if we must use legacy mode. remove this block entirely one day
     if (plugin is not None and host_config.is_cluster and
             plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-        with _service_context(service):
+        with plugin_contexts.service_context(service):
             submittable = _legacy_mode.get_aggregated_result(
                 parsed_sections_broker,
                 host_config.hostname,
@@ -564,7 +531,7 @@ def get_aggregated_result(
         if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
-        with _service_context(service):
+        with plugin_contexts.service_context(service):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

@@ -9,15 +9,53 @@
 # But at the current state of affairs we have no choice, otherwise an
 # incremental cleanup is impossible.
 
+from contextlib import contextmanager
 from typing import Optional, Union
 
 from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, ServiceName
+
+from cmk.base.api.agent_based import value_store
+import cmk.base.item_state as item_state
+from cmk.base.check_utils import Service
 
 # Is set before check/discovery function execution
 # Host currently being checked
 _hostname: Optional[HostName] = None
 _check_type: Optional[CheckPluginNameStr] = None
 _service_description: Optional[ServiceName] = None
+
+
+@contextmanager
+def host_context(host_name_: HostName, *, write_state: bool):
+    """Make a bit of context information globally available
+
+    So that functions called by checks know this context.
+    This is used for both legacy and agent_based API.
+    """
+    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
+    try:
+        set_hostname(host_name_)
+        item_state.load(host_name_)
+        yield
+    finally:
+        reset_hostname()
+        if write_state:
+            item_state.save(host_name_)
+        item_state.cleanup_item_states()
+
+
+@contextmanager
+def service_context(service: Service):
+    """Make a bit of context information globally available
+
+    So that functions called by checks know this context.
+    set_service is needed for predictive levels!
+    This is used for both legacy and agent_based API.
+    """
+    # TODO: this is a mixture of legacy and new Check-API mechanisms. Clean this up!
+    set_service(str(service.check_plugin_name), service.description)
+    with value_store.context(service.check_plugin_name, service.item):
+        yield
 
 
 def set_hostname(hostname: Optional[HostName]) -> None:

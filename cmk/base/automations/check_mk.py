@@ -109,7 +109,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: List[str]) -> Dict[str, Any]:
-        # Error sensivity
+        # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]
             on_error = "raise"

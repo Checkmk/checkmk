@@ -170,7 +170,7 @@ def import_module(pathname):
 
     import importlib  # pylint: disable=import-outside-toplevel
     # TODO: load_module() is deprecated, we should avoid using it.
-    # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
+    # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.
     return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
 

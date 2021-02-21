@@ -66,11 +66,6 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 
-if not cmk_version.is_raw_edition():
-    import cmk.base.cee.keepalive as keepalive  # type: ignore[import] # pylint: disable=no-name-in-module
-else:
-    keepalive = None  # type: ignore[assignment]
-
 from . import _legacy_mode, _submit_to_core
 from .utils import (
     AggregatedResult,

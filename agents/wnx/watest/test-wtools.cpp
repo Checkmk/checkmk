@@ -652,4 +652,17 @@ TEST(Wtools, HandleDeleterInvalidAndNull) {
     }
 }
 
+TEST(Wtools, GetMultiSz) {
+    std::array<wchar_t, 12> data{L"abcde\0fgh\0\0"};
+    wchar_t* pos = data.data();
+    wchar_t* end = pos + 11;
+    pos = nullptr;
+    EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
+    pos = data.data();
+    EXPECT_EQ(GetMultiSzEntry(pos, nullptr), nullptr);
+    EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"abcde");
+    EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"fgh");
+    EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
+}
+
 }  // namespace wtools

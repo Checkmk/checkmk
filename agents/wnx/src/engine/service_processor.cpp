@@ -25,8 +25,8 @@
 #include "windows_service_api.h"
 
 namespace cma::srv {
-extern bool global_stop_signaled;  // semi-hidden global variable for global
-                                   // status #TODO ???
+extern bool g_global_stop_signaled;  // semi-hidden global variable for global
+                                     // status #TODO ???
 
 // Implementation of the Windows signals
 
@@ -59,7 +59,7 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 
 void ServiceProcessor::stopService() {
     XLOG::l.i("Stop Service called");
-    cma::srv::global_stop_signaled = true;
+    cma::srv::g_global_stop_signaled = true;
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up

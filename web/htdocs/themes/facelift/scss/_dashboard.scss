@@ -258,6 +258,7 @@ body.main.dashlet {
   &.view {
     padding: $h3-margin-bottom 0 0; // add padding-top for consistency with other tables
     overflow: hidden;
+    background-color: $dashlet-inner-bg-color;
 
     div#dashlet_content_wrapper[data-simplebar="init"] {
       height: 100%;

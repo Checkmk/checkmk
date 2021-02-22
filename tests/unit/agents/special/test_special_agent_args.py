@@ -68,7 +68,9 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_ibmsvc': ['HOSTNAME'],
     'agent_jenkins': ['HOSTNAME'],
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
-    'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
+    'agent_kubernetes': [
+        '--token', 'TOKEN', '--infos', 'INFOS', '--api-server-endpoint', 'ENDPOINT'
+    ],
     'agent_prometheus': [],
     'agent_rabbitmq': [
         '-P', 'PROTOCOL', '-m', 'SECTIONS', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'

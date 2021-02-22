@@ -60,7 +60,6 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
                    action='count',
                    default=0,
                    help='Verbose mode (for even more output use -vvv)')
-    p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
     p.add_argument('--port', type=int, default=443, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
     p.add_argument(
@@ -69,7 +68,9 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         required=True,
         help='Comma separated list of items that should be fetched',
     )
-    p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
+    p.add_argument('--api-server-endpoint',
+                   required=True,
+                   help='API server endpoint for Kubernetes API calls')
     p.add_argument('--path-prefix',
                    default='',
                    action=PathPrefixAction,
@@ -1380,12 +1381,12 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     logging.info('Constructing API client')
 
     config = client.Configuration()
-    if arguments.url_prefix:
-        config.host = '%s:%s%s' % (arguments.url_prefix.rstrip("/"), arguments.port,
-                                   arguments.path_prefix)
-    else:
-        config.host = 'https://%s:%s%s' % (arguments.host, arguments.port, arguments.path_prefix)
 
+    config.host = '%s:%s%s' % (
+        arguments.api_server_endpoint,
+        arguments.port,
+        arguments.path_prefix,
+    )
     config.api_key_prefix['authorization'] = 'Bearer'
     config.api_key['authorization'] = arguments.token
 

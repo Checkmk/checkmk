@@ -491,6 +491,13 @@ class QuicksearchManager:
     def generate_search_url(self, query: SearchQuery) -> str:
         search_objects = self._determine_search_objects(query)
 
+        # Hitting enter on the search field to open the search in the
+        # page content area is currently only supported for livestatus
+        # search plugins
+        search_objects = [
+            s for s in search_objects if isinstance(s, LivestatusQuicksearchConductor)
+        ]
+
         try:
             self._conduct_search(search_objects)
         except TooManyRowsError:

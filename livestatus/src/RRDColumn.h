@@ -40,9 +40,6 @@ class ColumnOffsets;
 template <class T>
 class RRDColumn : public ListColumn {
 public:
-    class Host;
-    class Service;
-    class Object_;
     RRDColumn(const std::string &name, const std::string &description,
               const ColumnOffsets &offsets, MonitoringCore *mc,
               RRDColumnArgs args)
@@ -57,7 +54,7 @@ public:
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
-protected:
+private:
     struct Data {
         std::chrono::system_clock::time_point start;
         std::chrono::system_clock::time_point end;
@@ -70,9 +67,8 @@ protected:
     MonitoringCore *_mc;
     RRDColumnArgs _args;
 
-private:
-    [[nodiscard]] virtual std::optional<std::pair<std::string, std::string>>
-    getHostNameServiceDesc(Row row) const = 0;
+    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(Row row) const;
 };
 
 namespace detail {

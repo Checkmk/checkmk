@@ -14,33 +14,22 @@
 
 #include "RRDColumn.h"
 
-template <class T>
-class RRDColumn<T>::Host : public RRDColumn<T> {
-public:
-    using RRDColumn::RRDColumn;
-
-private:
-    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
-    getHostNameServiceDesc(Row row) const override {
-        if (const auto *hst{columnData<host>(row)}) {
-            return {{hst->name, dummy_service_description()}};
-        }
-        return {};
+template <>
+[[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
+RRDColumn<host_struct>::getHostNameServiceDesc(Row row) const {
+    if (const auto *hst{columnData<host>(row)}) {
+        return {{hst->name, dummy_service_description()}};
     }
-};
+    return {};
+}
 
-template <class T>
-class RRDColumn<T>::Service : public RRDColumn<T> {
-public:
-    using RRDColumn::RRDColumn;
-
-private:
-    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
-    getHostNameServiceDesc(Row row) const override {
-        if (const auto *svc{columnData<service>(row)}) {
-            return {{svc->host_name, svc->description}};
-        }
-        return {};
+template <>
+[[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
+RRDColumn<service_struct>::getHostNameServiceDesc(Row row) const {
+    if (const auto *svc{columnData<service>(row)}) {
+        return {{svc->host_name, svc->description}};
     }
-};
+    return {};
+}
+
 #endif

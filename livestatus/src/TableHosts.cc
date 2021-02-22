@@ -609,8 +609,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "childs", "A list of all direct children of the host",
         offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
         false));
-    table->addDynamicColumn(std::make_unique<
-                            DynamicRRDColumn<RRDColumn<host>::Host>>(
+    table->addDynamicColumn(std::make_unique<DynamicRRDColumn<RRDColumn<host>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         mc, offsets));

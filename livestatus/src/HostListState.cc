@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "HostListStateColumn.h"
+#include "HostListState.h"
 
 #ifdef CMC
 #include <memory>
@@ -15,15 +15,14 @@
 #include "auth.h"
 #endif
 
-int32_t HostListStateColumn::operator()(const value_type &hsts,
-                                        const contact *auth_user) const {
+int32_t HostListState::operator()(const value_type &hsts,
+                                  const contact *auth_user) const {
     int32_t result = 0;
 #ifdef CMC
     for (const auto *hst : hsts) {
         if (auth_user == nullptr || hst->hasContact(auth_user)) {
             const auto *state = hst->state();
-            auto svcs =
-                ServiceListStateColumn::value_type(hst->_services.size());
+            auto svcs = ServiceListState::value_type(hst->_services.size());
             for (const auto &s : hst->_services) {
                 svcs.emplace(s.get());
             }
@@ -47,10 +46,10 @@ int32_t HostListStateColumn::operator()(const value_type &hsts,
     return result;
 }
 
-void HostListStateColumn::update(
-    const contact *auth_user, HostState current_state, bool has_been_checked,
-    const ServiceListStateColumn::value_type &services, bool handled,
-    int32_t &result) const {
+void HostListState::update(const contact *auth_user, HostState current_state,
+                           bool has_been_checked,
+                           const ServiceListState::value_type &services,
+                           bool handled, int32_t &result) const {
     switch (_logictype) {
         case Type::num_hst:
             result++;
@@ -92,47 +91,42 @@ void HostListStateColumn::update(
             }
             break;
         case Type::num_svc:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num, services, auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num, services, auth_user);
             break;
         case Type::num_svc_pending:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_pending, services,
-                auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_pending, services, auth_user);
             break;
         case Type::num_svc_handled_problems:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_handled_problems,
-                services, auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_handled_problems, services,
+                auth_user);
             break;
         case Type::num_svc_unhandled_problems:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_unhandled_problems,
-                services, auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_unhandled_problems, services,
+                auth_user);
             break;
         case Type::num_svc_ok:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_ok, services, auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_ok, services, auth_user);
             break;
         case Type::num_svc_warn:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_warn, services,
-                auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_warn, services, auth_user);
             break;
         case Type::num_svc_crit:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_crit, services,
-                auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_crit, services, auth_user);
             break;
         case Type::num_svc_unknown:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_unknown, services,
-                auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_unknown, services, auth_user);
             break;
         case Type::worst_svc_state: {
-            auto state = ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::worst_state, services,
-                auth_user);
+            auto state = ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::worst_state, services, auth_user);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {
                 result = state;
@@ -140,28 +134,27 @@ void HostListStateColumn::update(
             break;
         }
         case Type::num_svc_hard_ok:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_hard_ok, services,
-                auth_user);
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_hard_ok, services, auth_user);
             break;
         case Type::num_svc_hard_warn:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_hard_warn, services,
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_hard_warn, services,
                 auth_user);
             break;
         case Type::num_svc_hard_crit:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_hard_crit, services,
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_hard_crit, services,
                 auth_user);
             break;
         case Type::num_svc_hard_unknown:
-            result += ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::num_hard_unknown, services,
+            result += ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::num_hard_unknown, services,
                 auth_user);
             break;
         case Type::worst_svc_hard_state: {
-            auto state = ServiceListStateColumn::getValueFromServices(
-                _mc, ServiceListStateColumn::Type::worst_hard_state, services,
+            auto state = ServiceListState::getValueFromServices(
+                _mc, ServiceListState::Type::worst_hard_state, services,
                 auth_user);
             if (worse(static_cast<ServiceState>(state),
                       static_cast<ServiceState>(result))) {

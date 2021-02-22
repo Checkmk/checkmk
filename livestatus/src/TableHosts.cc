@@ -46,7 +46,7 @@
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
-#include "ServiceListStateColumn.h"
+#include "ServiceListState.h"
 #include "StringColumn.h"
 #include "TimeColumn.h"
 #include "TimeperiodsCache.h"
@@ -616,83 +616,72 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services", "The total number of services of the host",
-        offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num}));
+        offsets, ServiceListState{table->core(), ServiceListState::Type::num}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::worst_state}));
+        ServiceListState{table->core(), ServiceListState::Type::worst_state}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_ok}));
+        ServiceListState{table->core(), ServiceListState::Type::num_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_warn}));
+        ServiceListState{table->core(), ServiceListState::Type::num_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_crit}));
+        ServiceListState{table->core(), ServiceListState::Type::num_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
         offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_unknown}));
+        ServiceListState{table->core(), ServiceListState::Type::num_unknown}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
         offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_pending}));
+        ServiceListState{table->core(), ServiceListState::Type::num_pending}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_handled_problems",
         "The number of the host's services which have handled problems",
         offsets,
-        ServiceListStateColumn{
-            table->core(),
-            ServiceListStateColumn::Type::num_handled_problems}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_handled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_unhandled_problems",
         "The number of the host's services which have unhandled problems",
         offsets,
-        ServiceListStateColumn{
-            table->core(),
-            ServiceListStateColumn::Type::num_unhandled_problems}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_unhandled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListStateColumn{
-            table->core(), ServiceListStateColumn::Type::worst_hard_state}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::worst_hard_state}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_ok}));
+        ServiceListState{table->core(), ServiceListState::Type::num_hard_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_warn}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_crit}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
         offsets,
-        ServiceListStateColumn{
-            table->core(), ServiceListStateColumn::Type::num_hard_unknown}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_unknown}));
 
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "hard_state",

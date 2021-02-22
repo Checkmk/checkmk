@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef ServiceListStateColumn_h
-#define ServiceListStateColumn_h
+#ifndef ServiceListState_h
+#define ServiceListState_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -26,13 +26,13 @@ class MonitoringCore;
 #include "nagios.h"
 #endif
 
-class ServiceListStateColumn {
+class ServiceListState {
 #ifdef CMC
     using value_type = std::unordered_set<const Service *>;
 #else
     using value_type = servicesmember *;
 #endif
-    friend class HostListStateColumn;
+    friend class HostListState;
 
 public:
     enum class Type {
@@ -54,7 +54,7 @@ public:
         worst_hard_state,
     };
 
-    ServiceListStateColumn(MonitoringCore *mc, Type logictype)
+    ServiceListState(MonitoringCore *mc, Type logictype)
         : _mc(mc), _logictype(logictype) {}
 
 #ifdef CMC
@@ -93,4 +93,4 @@ private:
                        bool handled, int32_t &result);
 };
 
-#endif  // ServiceListStateColumn_h
+#endif  // ServiceListState_h

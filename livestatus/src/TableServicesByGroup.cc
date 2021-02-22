@@ -46,7 +46,9 @@ void TableServicesByGroup::answerQuery(Query *query) {
     for (const servicegroup *sg = servicegroup_list; sg != nullptr;
          sg = sg->next) {
         if (requires_authcheck &&
-            !is_authorized_for_service_group(core(), sg, query->authUser())) {
+            !is_authorized_for_service_group(core()->groupAuthorization(),
+                                             core()->serviceAuthorization(), sg,
+                                             query->authUser())) {
             continue;
         }
 

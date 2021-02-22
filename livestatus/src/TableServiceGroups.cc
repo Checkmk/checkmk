@@ -9,6 +9,7 @@
 
 #include "Column.h"
 #include "IntLambdaColumn.h"
+#include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
@@ -142,6 +143,7 @@ Row TableServiceGroups::get(const std::string &primary_key) const {
 }
 
 bool TableServiceGroups::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_service_group(core(), rowData<servicegroup>(row),
-                                           ctc);
+    return is_authorized_for_service_group(core()->groupAuthorization(),
+                                           core()->serviceAuthorization(),
+                                           rowData<servicegroup>(row), ctc);
 }

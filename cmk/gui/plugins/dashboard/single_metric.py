@@ -158,7 +158,7 @@ def _time_range_historic_dict_elements(with_elements) -> DictionaryElements:
             ("max", _("Maximum")),
         ],
         default_value="max",
-        title="RRD consolidation",
+        title=_("Metric compression (RRD)"),
         help=_("Consolidation function for the [cms_graphing#rrds|RRD] data column"),
     )
 

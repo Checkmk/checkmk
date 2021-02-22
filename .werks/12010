@@ -1,0 +1,14 @@
+Title: Fix for config update: Regex validation will ignore items that are not dictionaries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613986367
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+Since checkmk version 2.0.0b7 the Checkmk update procedure (cmk-update-config) validates regexes.
+This validation failed with the error message "AttributeError: 'str' object has no attribute 'get'"
+if the item of a rule was not of the type "dict" or "None".
+We can skip the regex validation if the item is not of type "dict".

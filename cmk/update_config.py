@@ -444,9 +444,11 @@ class UpdateConfig:
         num_errors = 0
         for ruleset in all_rulesets.get_rulesets().values():
             for folder, index, rule in ruleset.get_rules():
-                if not rule.get_rule_conditions().service_description:
+                if not isinstance(rule.get_rule_conditions().service_description, list):
                     continue
                 for item in rule.get_rule_conditions().service_description:
+                    if not isinstance(item, dict):
+                        continue
                     regex = item.get('$regex')
                     if regex is None:
                         continue

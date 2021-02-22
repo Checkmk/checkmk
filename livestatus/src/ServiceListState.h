@@ -21,7 +21,7 @@ class MonitoringCore;
 #include "Object.h"
 #include "ObjectGroup.h"
 #include "Service.h"
-#include "contact_fwd.h"
+#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

@@ -96,5 +96,6 @@ void TableComments::answerQuery(Query *query) {
 
 bool TableComments::isAuthorized(Row row, const contact *ctc) const {
     const auto *dtc = rowData<DowntimeOrComment>(row);
-    return is_authorized_for(core(), ctc, dtc->_host, dtc->_service);
+    return is_authorized_for(core()->serviceAuthorization(), ctc, dtc->_host,
+                             dtc->_service);
 }

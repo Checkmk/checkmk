@@ -21,6 +21,7 @@
 #include "Service.h"
 #include "State.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
 #endif
 
@@ -96,7 +97,8 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
             if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
+                is_authorized_for(_mc->serviceAuthorization(), auth_user,
+                                  svc->host_ptr, svc)) {
                 members.emplace_back(
                     svc->host_name, svc->description,
                     static_cast<ServiceState>(svc->current_state),

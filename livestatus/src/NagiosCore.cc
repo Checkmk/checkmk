@@ -80,7 +80,8 @@ const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
 }
 
 bool NagiosCore::host_has_contact(const Host *host, const Contact *contact) {
-    return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
+    return is_authorized_for(serviceAuthorization(), toImpl(contact),
+                             toImpl(host), nullptr);
 }
 
 bool NagiosCore::is_contact_member_of_contactgroup(const ContactGroup *group,

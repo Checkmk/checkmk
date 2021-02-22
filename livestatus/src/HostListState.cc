@@ -7,12 +7,12 @@
 
 #ifdef CMC
 #include <memory>
-#include <unordered_set>
 
-#include "Host.h"
 #include "State.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #endif
 
 int32_t HostListState::operator()(const value_type &hsts,
@@ -34,7 +34,8 @@ int32_t HostListState::operator()(const value_type &hsts,
     for (hostsmember *mem = hsts; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         if (auth_user == nullptr ||
-            is_authorized_for(_mc, auth_user, hst, nullptr)) {
+            is_authorized_for(_mc->serviceAuthorization(), auth_user, hst,
+                              nullptr)) {
             update(auth_user, static_cast<HostState>(hst->current_state),
                    hst->has_been_checked != 0, hst->services,
                    hst->problem_has_been_acknowledged != 0 ||

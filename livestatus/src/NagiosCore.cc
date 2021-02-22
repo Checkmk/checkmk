@@ -15,7 +15,6 @@
 #include "Logger.h"
 #include "NagiosGlobals.h"
 #include "StringUtils.h"
-#include "contact_fwd.h"
 #include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {

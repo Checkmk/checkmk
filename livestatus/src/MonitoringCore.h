@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "Metric.h"
-#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"

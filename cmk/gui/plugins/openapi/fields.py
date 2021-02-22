@@ -704,18 +704,29 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
     )
 
 
+ColumnTypes = typing.Union[Column, str]
+
+
 def column_field(
     table: typing.Type[Table],
     required: bool = False,
-    mandatory: Optional[typing.List[typing.Union[Column, str]]] = None,
+    mandatory: Optional[typing.List[ColumnTypes]] = None,
 ) -> '_ListOfColumns':
+    column_names: typing.List[str] = []
+    if mandatory is not None:
+        for col in mandatory:
+            if isinstance(col, Column):
+                column_names.append(col.name)
+            else:
+                column_names.append(col)
+
     return _ListOfColumns(
         _LiveStatusColumn(table=table, required=required),
         table=table,
         required=required,
-        mandatory=mandatory or [],
-        missing=mandatory,
-        description=f"The desired columns of the {table.__tablename__!r} table. If left empty, a "
+        mandatory=column_names,
+        missing=[getattr(table, col) for col in column_names],
+        description=f"The desired columns of the `{table.__tablename__}` table. If left empty, a "
         "default set of columns is used.",
     )
 
@@ -740,6 +751,15 @@ class _ListOfColumns(List):
         ... )
         >>> cols.deserialize(['alias'])
         [Column(hosts.name: string), Column(hosts.alias: string)]
+
+        >>> class FooSchema(BaseSchema):
+        ...      columns = _ListOfColumns(
+        ...          _LiveStatusColumn(table=Hosts),
+        ...          table=Hosts,
+        ...          mandatory=[Hosts.name])
+        >>> schema = FooSchema()
+        >>> schema.load({'columns': ['alias']})
+        OrderedDict([('columns', [Column(hosts.name: string), Column(hosts.alias: string)])])
 
     """
     default_error_messages = {

@@ -82,8 +82,8 @@ def connection_set(options: Optional[List[str]] = None,
             ("connection",
              CascadingDropdown(
                  choices=[
-                     ("ip_address", _("IP Address")),
                      ("host_name", _("Host name")),
+                     ("ip_address", _("IP Address")),
                      ("url_custom", _("Custom URL"),
                       Dictionary(
                           elements=[("url_address",
@@ -452,6 +452,25 @@ rulespec_registry.register(
     ))
 
 
+def _transform_kubernetes_connection_params(value):
+    '''Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
+    Note that keys are removed from the parameters dictionary!
+    '''
+    if 'url-prefix' in value:
+        # it is theoretically possible that a customer has split up the custom URL into
+        # base URL, port and path prefix in their rule.
+        url_suffix = ''
+        port = value.pop('port', None)
+        if port:
+            url_suffix += f':{port}'
+        path_prefix = value.pop('path-prefix', None)
+        if path_prefix:
+            url_suffix += f'/{path_prefix}'
+        return 'url_custom', value.pop('url-prefix') + url_suffix
+
+    return 'ipaddress', {k: value.pop(k) for k in ['port', 'path-prefix'] if k in value}
+
+
 def _special_agents_kubernetes_transform(value):
     if 'infos' not in value:
         value['infos'] = ['nodes']
@@ -459,13 +478,67 @@ def _special_agents_kubernetes_transform(value):
         value['no-cert-check'] = False
     if 'namespaces' not in value:
         value['namespaces'] = False
+
+    if 'api-server-endpoint' in value:
+        return value
+
+    value['api-server-endpoint'] = _transform_kubernetes_connection_params(value)
+
     return value
+
+
+def _kubernetes_connection_elements():
+    return [
+        ("port",
+         Integer(title=_("Port"),
+                 help=_("If no port is given, a default value of 443 will be used."),
+                 default_value=443)),
+        ("path-prefix",
+         TextAscii(title=_("Custom path prefix"),
+                   help=_("Specifies a URL path prefix, which is prepended to API calls "
+                          "to the Kubernetes API. This is a useful option for Rancher "
+                          "installations (more information can be found in the manual). "
+                          "If this option is not relevant for your installation, "
+                          "please leave it unchecked."),
+                   allow_empty=False)),
+    ]
 
 
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
             elements=[
+                (
+                    "api-server-endpoint",
+                    CascadingDropdown(
+                        choices=[
+                            (
+                                "hostname",
+                                _("Hostname"),
+                                Dictionary(elements=_kubernetes_connection_elements()),
+                            ),
+                            (
+                                "ipaddress",
+                                _("IP address"),
+                                Dictionary(elements=_kubernetes_connection_elements()),
+                            ),
+                            (
+                                "url_custom",
+                                _("Custom URL"),
+                                TextAscii(
+                                    allow_empty=False,
+                                    size=80,
+                                ),
+                            ),
+                        ],
+                        orientation='horizontal',
+                        title=_("API server endpoint"),
+                        help=
+                        _("The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
+                          "or the \"IP Address\" options are selected, the DNS hostname or IP address and "
+                          "a secure protocol (HTTPS) are used."),
+                    ),
+                ),
                 ("token", IndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
@@ -514,25 +587,6 @@ def _valuespec_special_agents_kubernetes():
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
-                ("port",
-                 Integer(title=_("Port"),
-                         help=_("If no port is given a default value of 443 will be used."),
-                         default_value=443)),
-                ("url-prefix",
-                 HTTPUrl(title=_("Custom URL prefix"),
-                         help=_("Defines the scheme (either HTTP or HTTPS) and host part "
-                                "of Kubernetes API calls like e.g. \"https://example.com\". "
-                                "If no prefix is specified HTTPS together with the IP of "
-                                "the host will be used."),
-                         allow_empty=False)),
-                ("path-prefix",
-                 TextAscii(
-                     title=_("Custom path prefix"),
-                     help=_(
-                         "Specifies a URL path prefix which is prepended to the path in calls "
-                         "to the Kubernetes API. This is e.g. useful if Rancher is used to "
-                         "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
-                     allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
             title=_("Kubernetes"),

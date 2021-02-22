@@ -35,7 +35,6 @@
 #include "DynamicRRDColumn.h"
 #include "HostGroupsColumn.h"
 #include "HostListColumn.h"
-#include "HostRRDColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
@@ -45,6 +44,8 @@
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
+#include "RRDColumn-impl.h"
+#include "RRDColumn.h"
 #include "ServiceListColumn.h"
 #include "ServiceListState.h"
 #include "StringColumn.h"
@@ -607,7 +608,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "childs", "A list of all direct children of the host",
         offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
         false));
-    table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
+    table->addDynamicColumn(std::make_unique<DynamicRRDColumn<RRDColumn::Host>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         mc, offsets));

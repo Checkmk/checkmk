@@ -43,7 +43,9 @@ void TableHostsByGroup::answerQuery(Query *query) {
 
     for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         if (requires_authcheck &&
-            !is_authorized_for_host_group(core(), hg, query->authUser())) {
+            !is_authorized_for_host_group(core()->groupAuthorization(),
+                                          core()->serviceAuthorization(), hg,
+                                          query->authUser())) {
             continue;
         }
 

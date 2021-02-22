@@ -11,6 +11,7 @@
 #include "HostListColumn.h"
 #include "HostListState.h"
 #include "IntLambdaColumn.h"
+#include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "StringColumn.h"
@@ -193,5 +194,7 @@ Row TableHostGroups::get(const std::string &primary_key) const {
 }
 
 bool TableHostGroups::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_host_group(core(), rowData<hostgroup>(row), ctc);
+    return is_authorized_for_host_group(core()->groupAuthorization(),
+                                        core()->serviceAuthorization(),
+                                        rowData<hostgroup>(row), ctc);
 }

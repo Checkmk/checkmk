@@ -38,8 +38,9 @@ bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
                            : service_has_contact(service_auth, hst, svc, ctc));
 }
 
-bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
-                                  const contact *ctc) {
+bool is_authorized_for_host_group(AuthorizationKind group_auth,
+                                  AuthorizationKind service_auth,
+                                  const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
         return true;
     }
@@ -50,10 +51,9 @@ bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
     }
 
     auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(mc->serviceAuthorization(), ctc, mem->host_ptr,
-                                 nullptr);
+        return is_authorized_for(service_auth, ctc, mem->host_ptr, nullptr);
     };
-    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+    if (group_auth == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
             if (has_contact(mem)) {

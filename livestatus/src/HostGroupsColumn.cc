@@ -12,6 +12,7 @@
 #include "ObjectGroup.h"
 #include "cmc.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
 #include "nagios.h"
 #endif
@@ -33,7 +34,9 @@ std::vector<std::string> HostGroupsColumn::getValue(
     if (const auto *p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto *hg = static_cast<hostgroup *>(list->object_ptr);
-            if (is_authorized_for_host_group(_mc, hg, auth_user)) {
+            if (is_authorized_for_host_group(_mc->groupAuthorization(),
+                                             _mc->serviceAuthorization(), hg,
+                                             auth_user)) {
                 group_names.emplace_back(hg->group_name);
             }
         }

@@ -21,6 +21,7 @@ from cmk.gui.plugins.metrics.utils import (
     metric_info,
     get_graph_template_choices,
 )
+from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
 from cmk.gui.plugins.views.utils import (
     data_source_registry,)
 
@@ -110,10 +111,6 @@ class APICallGrafanaConnector(APICallCollection):
         return metric_infos
 
     def _get_graph_recipes(self, request):
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import graph_recipes_for_api_request
-        except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
         _graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
         return graph_recipes
 

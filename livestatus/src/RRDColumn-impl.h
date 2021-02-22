@@ -14,7 +14,8 @@
 
 #include "RRDColumn.h"
 
-class RRDColumn::Host : public RRDColumn {
+template <class T>
+class RRDColumn<T>::Host : public RRDColumn<T> {
 public:
     using RRDColumn::RRDColumn;
 
@@ -28,7 +29,8 @@ private:
     }
 };
 
-class RRDColumn::Service : public RRDColumn {
+template <class T>
+class RRDColumn<T>::Service : public RRDColumn<T> {
 public:
     using RRDColumn::RRDColumn;
 
@@ -41,5 +43,4 @@ private:
         return {};
     }
 };
-
 #endif

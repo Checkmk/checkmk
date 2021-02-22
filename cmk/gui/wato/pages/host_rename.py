@@ -17,7 +17,7 @@ import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.globals import html, request
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -163,7 +163,10 @@ class ModeBulkRenameHost(WatoMode):
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)
         message += "</table>"
 
-        c = _confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
+        nr_rename = len(renamings)
+        c = _confirm(
+            _("Confirm renaming of %d %s") % (nr_rename, ungettext("host", "hosts", nr_rename)),
+            HTML(message))
         if c:
             title = _("Renaming of %s") % ", ".join(u"%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
@@ -345,7 +348,8 @@ def _confirm(html_title, message):
     if not html.request.has_var("_do_confirm") and not html.request.has_var("_do_actions"):
         # TODO: get the breadcrumb from all call sites
         wato_html_head(title=html_title, breadcrumb=Breadcrumb())
-    return confirm_with_preview(message)
+    confirm_options = [(_("Confirm"), "_do_confirm")]
+    return confirm_with_preview(message, confirm_options)
 
 
 def rename_hosts_background_job(renamings, job_interface=None):

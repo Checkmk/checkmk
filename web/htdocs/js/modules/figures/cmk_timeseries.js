@@ -333,8 +333,8 @@ class TimeseriesFigure extends cmk_figures.FigureBase {
         new_items.style("pointer-events", "all");
         new_items.append("label").text(d => d.definition.label);
 
-        new_items.on("click", (legend_d, idx, nodes) => {
-            let item = d3.select(nodes[idx]);
+        new_items.on("click", (event, legend_d) => {
+            let item = d3.select(event.currentTarget);
             item.classed("disabled", !item.classed("disabled"));
             item.style("background", (item.classed("disabled") && "grey") || null);
             let all_disabled = [];
@@ -546,7 +546,7 @@ class AverageScatterplotFigure extends TimeseriesFigure {
         //          filter_dimension -> tag_dimension
         //          result_dimension -> date_dimension
         let filter_dimension = this._crossfilter.dimension(d => d);
-        let result_dimension = this._crossfilter.dimension(d => d.timestamp);
+        let timestamp_dimension = this._crossfilter.dimension(d => d.timestamp);
 
         // Find focused scatter point and highlight it
         let scatter_plot = this._subplots_by_id["id_scatter"];
@@ -586,26 +586,27 @@ class AverageScatterplotFigure extends TimeseriesFigure {
             use_date = this.scale_x.invert(ev.layerX - this.margin.left);
         }
 
+        let nearest_bisect = d3.bisector(d => d.timestamp).left;
+
         // Find nearest mean point
         filter_dimension.filter(d => d.tag == "line_mean");
-        let results = result_dimension.bottom(Infinity);
-        let nearest_bisect = d3.bisector(d => d.timestamp).left;
+        let results = timestamp_dimension.bottom(Infinity);
         let idx = nearest_bisect(results, use_date.getTime() / 1000);
-
         let mean_point = results[idx];
-        if (mean_point == undefined) {
-            filter_dimension.dispose();
-            result_dimension.dispose();
-            return;
-        }
 
         // Get corresponding median point
         filter_dimension.filter(d => d.tag == "line_median");
-        let median_point = result_dimension.bottom(Infinity)[idx];
+        let median_point = timestamp_dimension.bottom(Infinity)[idx];
+
+        if (mean_point == undefined || median_point == undefined) {
+            filter_dimension.dispose();
+            timestamp_dimension.dispose();
+            return;
+        }
 
         // Get scatter points for this date
         filter_dimension.filter(d => d.timestamp == mean_point.timestamp && d.tag == "scatter");
-        let scatter_matches = result_dimension.top(Infinity);
+        let scatter_matches = timestamp_dimension.top(Infinity);
         scatter_matches.sort((first, second) => first.value > second.value);
         let top_matches = scatter_matches.slice(-5, -1).reverse();
         let bottom_matches = scatter_matches.slice(0, 4).reverse();
@@ -613,10 +614,17 @@ class AverageScatterplotFigure extends TimeseriesFigure {
         this._selected_meanpoint = mean_point;
         this._update_pin();
 
-        this._render_tooltip(top_matches, bottom_matches, mean_point, median_point, scatterpoint);
+        this._render_tooltip(
+            event,
+            top_matches,
+            bottom_matches,
+            mean_point,
+            median_point,
+            scatterpoint
+        );
 
         filter_dimension.dispose();
-        result_dimension.dispose();
+        timestamp_dimension.dispose();
     }
 
     _zoomed() {
@@ -642,7 +650,7 @@ class AverageScatterplotFigure extends TimeseriesFigure {
         }
     }
 
-    _render_tooltip(top_matches, bottom_matches, mean_point, median_point, scatterpoint) {
+    _render_tooltip(event, top_matches, bottom_matches, mean_point, median_point, scatterpoint) {
         this._tooltip.selectAll("table").remove();
 
         let table = this._tooltip.append("table");
@@ -685,7 +693,8 @@ class AverageScatterplotFigure extends TimeseriesFigure {
         bottom_rows.append("td").text(d => d.tooltip.split(" ")[0]);
         bottom_rows.append("td").text(d => d.value.toFixed(3));
 
-        this.tooltip_generator.update_position();
+        this.tooltip_generator.activate();
+        this.tooltip_generator.update_position(event);
     }
 
     _get_css(prop, tag, classes) {

@@ -28,6 +28,9 @@ from ..agent_based_api.v1 import (
 )
 from .size_trend import size_trend
 
+FSBlock = Tuple[str, float, float, float]
+FSBlocks = Sequence[FSBlock]
+
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
     "magic_normsize": 20,  # Standard size if 20 GB
@@ -397,7 +400,7 @@ def df_check_filesystem_list(
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],
-    fslist_blocks: Sequence[Tuple[str, float, float, float]],
+    fslist_blocks: FSBlocks,
     fslist_inodes=None,
     this_time=None,
 ) -> CheckResult:

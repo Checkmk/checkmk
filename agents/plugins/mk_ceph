@@ -22,6 +22,14 @@ if [ ! -z "$USER" ] && [ ! -z "$KEYRING" ]; then
     CEPH_CMD="ceph -n $USER --keyring=$KEYRING"
     echo "<<<ceph_status>>>"
     $CEPH_CMD -s -f json-pretty
-    echo "<<<ceph_df>>>"
-    $CEPH_CMD df detail
+    OUT=$($CEPH_CMD df detail --format json)
+    if [ $? -eq 0 ]; then
+        echo "<<<ceph_df_json:sep(0)>>>"
+        $CEPH_CMD version --format json
+        echo $OUT
+    else
+        # fallback for old versions if json output is not available
+        echo "<<<ceph_df>>>"
+        $CEPH_CMD df detail
+    fi
 fi

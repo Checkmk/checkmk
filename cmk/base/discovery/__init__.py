@@ -374,7 +374,6 @@ def discover_on_host(
             ),
         )
 
-        max_cachefile_age = config.discovery_max_cachefile_age()
         parsed_sections_broker = ParsedSectionsBroker()
         sources.update_host_sections(
             parsed_sections_broker,
@@ -1215,7 +1214,6 @@ def get_check_preview(
             mode=Mode.DISCOVERY,
             on_scan_error=on_error,
         ))
-    max_cachefile_age = config.discovery_max_cachefile_age()
 
     parsed_sections_broker = ParsedSectionsBroker()
     sources.update_host_sections(

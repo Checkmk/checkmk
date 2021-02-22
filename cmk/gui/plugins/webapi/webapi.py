@@ -788,6 +788,10 @@ class APICallRules(APICallCollection):
 #   +----------------------------------------------------------------------+
 
 
+def _format_missing_tags(tags):
+    return ", ".join(sorted(["%s:%s" % p for p in tags]))
+
+
 @api_call_collection_registry.register
 class APICallHosttags(APICallCollection):
     def get_api_calls(self):
@@ -850,11 +854,12 @@ class APICallHosttags(APICallCollection):
 
         missing_tags = used_tags - new_tags
         if missing_tags:
+            tags = _format_missing_tags(missing_tags)
             raise MKUserError(
                 None,
                 _("Unable to apply new hosttag configuration. The following tags "
                   "are still in use, but not mentioned in the updated "
-                  "configuration: %s") % ", ".join([":".join(p) for p in missing_tags]))
+                  "configuration: %s") % tags)
 
     def _get_used_tags_from_hosts_and_folders(self):
         used_tags = set()

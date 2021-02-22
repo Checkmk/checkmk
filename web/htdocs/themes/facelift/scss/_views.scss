@@ -544,9 +544,13 @@ table.data.single {
     }
 
     td.left {
-      width: 10%;
+      width: 1%;
       padding: 2px 20px 2px 16px;
       white-space: nowrap;
+    }
+
+    td:not(.left) {
+      width: auto;
     }
 
     td.invtree table {

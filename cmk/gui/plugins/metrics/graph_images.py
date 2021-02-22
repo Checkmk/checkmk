@@ -21,6 +21,7 @@ import cmk.gui.pdf as pdf
 from cmk.gui.exceptions import (
     MKGeneralException,
     MKUnauthenticatedException,
+    MKUserError,
 )
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
@@ -175,3 +176,76 @@ def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
     pdf_graph = doc.end(do_send=False)
     #open("/tmp/x.pdf", "w").write(pdf_graph)
     return pdf.pdf2png(pdf_graph)
+
+
+def graph_recipes_for_api_request(request):
+    # Get and validate the specification
+    graph_identification = request.get("specification", [])
+    if not graph_identification:
+        raise MKUserError(None, _("The graph specification is missing"))
+
+    if len(graph_identification) != 2:
+        raise MKUserError(None, _("Invalid graph specification given"))
+
+    graph_identification_types.verify(graph_identification[0])
+
+    # Default to 25h view
+    default_time_range = (time.time() - (25 * 3600), time.time())
+
+    # Get and validate the data range
+    graph_data_range = request.get("data_range", {})
+    graph_data_range.setdefault("time_range", default_time_range)
+
+    time_range = graph_data_range["time_range"]
+    if not time_range or len(time_range) != 2:
+        raise MKUserError(None, _("The graph data range is wrong or missing"))
+
+    try:
+        float(time_range[0])
+    except ValueError:
+        raise MKUserError(None, _("Invalid start time given"))
+
+    try:
+        float(time_range[1])
+    except ValueError:
+        raise MKUserError(None, _("Invalid end time given"))
+
+    graph_data_range["step"] = 60
+
+    try:
+        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
+    except livestatus.MKLivestatusNotFoundError as e:
+        raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
+
+    if request.get("consolidation_function"):
+        for graph_recipe in graph_recipes:
+            graph_recipe["consolidation_function"] = request.get("consolidation_function")
+
+    return graph_data_range, graph_recipes
+
+
+def graph_spec_from_request(request):
+    graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
+
+    try:
+        graph_recipe = graph_recipes[0]
+    except IndexError:
+        raise MKUserError(None, _("The requested graph does not exist"))
+
+    curves = artwork.compute_graph_artwork_curves(graph_recipe, graph_data_range)
+
+    api_curves = []
+    (start_time, end_time), step = graph_data_range["time_range"], 60  # empty graph
+
+    for c in curves:
+        start_time, end_time, step = c["rrddata"].twindow
+        api_curve = c.copy()
+        api_curve["rrddata"] = c["rrddata"].values
+        api_curves.append(api_curve)
+
+    return {
+        "start_time": start_time,
+        "end_time": end_time,
+        "step": step,
+        "curves": api_curves,
+    }

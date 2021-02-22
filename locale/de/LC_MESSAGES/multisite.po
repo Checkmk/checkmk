@@ -15426,6 +15426,10 @@ msgid "Download filename"
 msgstr "Download-Dateiname"
 
 #, fuzzy
+msgid "Download report"
+msgstr "Diesen Bericht herunterladen"
+
+#, fuzzy
 msgid "Download snmp walk"
 msgstr "SNMP-Walk herunterladen"
 
@@ -15436,10 +15440,6 @@ msgid "Download this package as an MKP file"
 msgstr "Dieses Paket als MKP herunterladen"
 
 msgid "Download this report"
-msgstr "Diesen Bericht herunterladen"
-
-#, fuzzy
-msgid "Download usage report"
 msgstr "Diesen Bericht herunterladen"
 
 msgid "Downloaded Agent"
@@ -18887,6 +18887,15 @@ msgid "For devices that measure smoke in percent"
 msgstr "Für Geräte, die Rauch in Prozent messen"
 
 msgid ""
+"For downloading and submitting license usage reports you must add "
+"subscription details."
+msgstr ""
+
+msgid ""
+"For downloading license usage reports you must add subscription details."
+msgstr ""
+
+msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -18973,6 +18982,11 @@ msgstr ""
 
 msgid "For specific SIDs"
 msgstr "Für bestimmte SIDs"
+
+msgid ""
+"For submitting license usage reports you must add customer portal "
+"credentials."
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -38462,6 +38476,10 @@ msgstr "Zu erstellender Bericht"
 msgid "Report to schedule"
 msgstr "Zu planender Bericht"
 
+#, fuzzy
+msgid "Report usage"
+msgstr "Speicherauslastung"
+
 msgid "Reporting"
 msgstr "Berichte"
 
@@ -44493,7 +44511,7 @@ msgid "Submit license usage report"
 msgstr "Fehlerbericht wird eingesendet..."
 
 #, fuzzy
-msgid "Submit usage report"
+msgid "Submit report"
 msgstr "Bericht einsenden"
 
 msgid "Submitting crash report..."
@@ -49081,6 +49099,25 @@ msgstr ""
 "Der Unterordner <i>%s</i> hat die explizite Instanz <i>%s</i> gesetzt, "
 "welche dem Kunden <i>%s</i> gehört. Das verletzt die CME Ordner Hierarchie."
 
+#, fuzzy
+msgid ""
+"The subscription details including start date, end date and sizing and the "
+"customer portal credentials are part of the subscription and can be found in "
+"your contract. The credentials are also used for downloading <a href="
+"\"https://checkmk.de/download\">Checkmk<a>."
+msgstr ""
+"Die Anmeldedaten sind Teil der Subskription und können im Vertrag gefunden "
+"werden. Diese Anmeldedaten werden auch verwendet um <a href=\"https://"
+"checkmk.de/download\">Checkmk<a> herunterzuladen."
+
+#, fuzzy
+msgid ""
+"The subscription details including start date, end date and sizing are part "
+"of the subscription and can be found in your contract."
+msgstr ""
+"Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
+"Subskription und können im Vertrag gefunden werden."
+
 msgid "The syslog facility does not match"
 msgstr "Das Syslog-Modul passt nicht"
 
@@ -49940,6 +49977,14 @@ msgid ""
 msgstr ""
 "Diese Texte können in die jeweilige Sprache des Anwenders lokalisiert "
 "werden. Sie können diese Lokalisierungen %s konfigurieren."
+
+#, fuzzy, python-format
+msgid ""
+"These values can be configured in the <a href=\"%s\">subscription "
+"settings<a>."
+msgstr ""
+"<br>Bitte die Details zu der Subskription in den <a href=\"%s"
+"\">Subskriptionseinstellungen<a> hinzufügen."
 
 #, python-format
 msgid "This %s does not exist."
@@ -63725,6 +63770,16 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, fuzzy
+#~| msgid "Download this report"
+#~ msgid "Download usage report"
+#~ msgstr "Diesen Bericht herunterladen"
+
+#, fuzzy
+#~| msgid "Submit Report"
+#~ msgid "Submit usage report"
+#~ msgstr "Bericht einsenden"
+
 #~ msgid "Add subscription details"
 #~ msgstr "Subskriptionsdetails hinzufügen"
 
@@ -63741,22 +63796,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~| msgid "Subscription"
 #~ msgid "Subscription end date"
 #~ msgstr "Subskription"
-
-#~ msgid ""
-#~ "The credentials are part of your subscription and can be found in your "
-#~ "contract. These credentials are also used for downloading <a href="
-#~ "\"https://checkmk.de/download\">Checkmk<a>."
-#~ msgstr ""
-#~ "Die Anmeldedaten sind Teil der Subskription und können im Vertrag "
-#~ "gefunden werden. Diese Anmeldedaten werden auch verwendet um <a href="
-#~ "\"https://checkmk.de/download\">Checkmk<a> herunterzuladen."
-
-#~ msgid ""
-#~ "The details including start date, end date and sizing are part of your "
-#~ "subscription and can be found in your contract."
-#~ msgstr ""
-#~ "Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
-#~ "Subskription und können im Vertrag gefunden werden."
 
 #, fuzzy
 #~| msgid "Host problems"

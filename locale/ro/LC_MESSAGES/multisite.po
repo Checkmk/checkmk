@@ -14709,6 +14709,10 @@ msgid "Download filename"
 msgstr ""
 
 #, fuzzy
+msgid "Download report"
+msgstr "Descarca"
+
+#, fuzzy
 msgid "Download snmp walk"
 msgstr "Descarca"
 
@@ -14721,10 +14725,6 @@ msgstr ""
 
 msgid "Download this report"
 msgstr ""
-
-#, fuzzy
-msgid "Download usage report"
-msgstr "Descarca"
 
 #, fuzzy
 msgid "Downloaded Agent"
@@ -18026,6 +18026,15 @@ msgid "For devices that measure smoke in percent"
 msgstr ""
 
 msgid ""
+"For downloading and submitting license usage reports you must add "
+"subscription details."
+msgstr ""
+
+msgid ""
+"For downloading license usage reports you must add subscription details."
+msgstr ""
+
+msgid ""
 "For each folder an automatic network scan can be configured. It will try to "
 "detect new hosts in the configured IP ranges by sending pings to each IP "
 "address to check whether or not a host is using this ip address. Each new "
@@ -18077,6 +18086,11 @@ msgid ""
 msgstr ""
 
 msgid "For specific SIDs"
+msgstr ""
+
+msgid ""
+"For submitting license usage reports you must add customer portal "
+"credentials."
 msgstr ""
 
 #, python-format
@@ -36267,6 +36281,10 @@ msgstr ""
 msgid "Report to schedule"
 msgstr ""
 
+#, fuzzy
+msgid "Report usage"
+msgstr "% utilizare"
+
 msgid "Reporting"
 msgstr ""
 
@@ -41953,7 +41971,7 @@ msgid "Submit license usage report"
 msgstr "% utilizare"
 
 #, fuzzy
-msgid "Submit usage report"
+msgid "Submit report"
 msgstr "Adaugă element"
 
 msgid "Submitting crash report..."
@@ -45649,6 +45667,18 @@ msgid ""
 "to customer <i>%s</i>. This violates the CME folder hierarchy."
 msgstr ""
 
+msgid ""
+"The subscription details including start date, end date and sizing and the "
+"customer portal credentials are part of the subscription and can be found in "
+"your contract. The credentials are also used for downloading <a href="
+"\"https://checkmk.de/download\">Checkmk<a>."
+msgstr ""
+
+msgid ""
+"The subscription details including start date, end date and sizing are part "
+"of the subscription and can be found in your contract."
+msgstr ""
+
 msgid "The syslog facility does not match"
 msgstr ""
 
@@ -46312,6 +46342,12 @@ msgstr ""
 msgid ""
 "These texts may be localized depending on the users' language. You can "
 "configure the localizations %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"These values can be configured in the <a href=\"%s\">subscription "
+"settings<a>."
 msgstr ""
 
 #, fuzzy, python-format

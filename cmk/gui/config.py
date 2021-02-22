@@ -346,6 +346,21 @@ def is_ntop_configured() -> bool:
     return False
 
 
+def get_ntop_misconfiguration_reason() -> str:
+    if not is_ntop_available():
+        return _("ntopng integration is only available in CEE")
+    ntop = get_ntop_connection()
+    assert isinstance(ntop, dict)
+    if not ntop.get("is_activated", False):
+        return _("ntopng integration is not activated under global settings.")
+    custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+    if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
+        return _("The ntopng username should be derived from \'ntopng Username\' "
+                 "under the current's user settings (identity) but this is not "
+                 "set for the current user.")
+    return ""
+
+
 #.
 #   .--Permissions---------------------------------------------------------.
 #   |        ____                     _         _                          |

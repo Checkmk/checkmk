@@ -46,7 +46,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params);  // updater
 int ExecVersion();                         // on version
 int ExecPatchHash();                       // on patch_hash
 int ExecShowConfig(std::string_view sec);  // on showconfig
-int ExecUpgradeParam(bool force_upgrade);  // om upgrade
+int ExecUpgradeParam(bool Force);          // om upgrade
 
 int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
@@ -56,7 +56,7 @@ int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
 void ExecUninstallClean();
 
-int ExecRealtimeTest(bool print);  // on rt
+int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    StdioLog stdio_log);  // on cvt
@@ -66,9 +66,9 @@ int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
 int ServiceAsService(std::wstring_view app_name,
-                     std::chrono::milliseconds delay,
-                     const std::function<bool(const void* some_context)>&
-                         internal_callback);  // service execution
+                     std::chrono::milliseconds Delay,
+                     std::function<bool(const void* Processor)>
+                         InternalCallback) noexcept;  // service execution
 
 void ProcessFirewallConfiguration(std::wstring_view app_name);
 [[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);

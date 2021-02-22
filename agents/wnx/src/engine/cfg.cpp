@@ -1978,14 +1978,6 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
     return true;
 }
 
-//*** WMIC uninstaller ***
-// Run
-// wmic product get name,version /format:csv
-//      to get name and version
-// Run
-// wmic product where name="Check MK Agent 2.0" call uninstall /nointeractive
-//      to remove the product
-// Oprations ARE VERY LONG
 constexpr std::string_view g_wmic_uninstall_command =
     "wmic product where name=\"{}\" call uninstall /nointeractive";
 
@@ -2012,19 +2004,21 @@ std::filesystem::path CreateWmicUninstallFile(
 }
 
 bool UninstallProduct(std::string_view name) {
-    std::filesystem::path temp{cma::cfg::GetTempDir()};
-    auto fname = CreateWmicUninstallFile(temp, name);
-    if (fname.empty()) {
-        return false;
+    if constexpr (tgt::IsWindows()) {
+        std::filesystem::path temp{cma::cfg::GetTempDir()};
+        auto fname = CreateWmicUninstallFile(temp, name);
+        if (fname.empty()) return false;
+        XLOG::l("Starting '{}'", fname.u8string());
+        auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
+        if (pid == 0) {
+            XLOG::l("Failed to start '{}'", fname);
+            return false;
+        }
+        XLOG::l("Started '{}' with pid [{}]", fname, pid);
+        return true;
     }
-    XLOG::l("Starting '{}'", fname.u8string());
-    auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
-    if (pid == 0) {
-        XLOG::l("Failed to start '{}'", fname);
-        return false;
-    }
-    XLOG::l("Started '{}' with pid [{}]", fname, pid);
-    return true;
+
+    return false;
 }
 
 details::ConfigInfo& GetCfg() { return details::g_config_info; }

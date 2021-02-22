@@ -443,21 +443,21 @@ TEST(LogTest, Functional) {
         auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
         ASSERT_EQ(result.size(), 9);
+        constexpr int start_position = 36;
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));
         EXPECT_NE(std::string::npos, result[2].find("[ERROR:CRITICAL]"));
 
-        constexpr size_t start_position = 35;
-        EXPECT_LE(start_position, result[3].find("[Trace]  trace"));
-        EXPECT_LE(start_position, result[4].find("[Warn ]  warn"));
-        EXPECT_LE(start_position, result[5].find("[Err  ]  error"));
-        EXPECT_LE(start_position, result[6].find(" info"));
-        EXPECT_LE(
+        EXPECT_EQ(start_position, result[3].find("[Trace]  trace"));
+        EXPECT_EQ(start_position, result[4].find("[Warn ]  warn"));
+        EXPECT_EQ(start_position, result[5].find("[Err  ]  error"));
+        EXPECT_EQ(start_position, result[6].find(" info"));
+        EXPECT_EQ(
             start_position,
             result[7].find(
                 "[ERROR:CRITICAL] <GTEST> This is critical ptr is 0x0 code is 5"));
-        EXPECT_LE(start_position,
+        EXPECT_EQ(start_position,
                   result[8].find("[Err  ] filesystem test c:\\a\\a"));
     }
     fs::remove(logf);

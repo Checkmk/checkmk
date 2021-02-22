@@ -12,7 +12,7 @@
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
-#include "ServiceListStateColumn.h"
+#include "ServiceListState.h"
 #include "StringColumn.h"
 #include "auth.h"
 #include "nagios.h"
@@ -70,72 +70,61 @@ void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::worst_state}));
+        ServiceListState{table->core(), ServiceListState::Type::worst_state}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services", "The total number of services in the group",
-        offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num}));
+        offsets, ServiceListState{table->core(), ServiceListState::Type::num}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_ok",
         "The number of services in the group that are OK", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_ok}));
+        ServiceListState{table->core(), ServiceListState::Type::num_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_warn}));
+        ServiceListState{table->core(), ServiceListState::Type::num_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_crit}));
+        ServiceListState{table->core(), ServiceListState::Type::num_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_unknown}));
+        ServiceListState{table->core(), ServiceListState::Type::num_unknown}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_pending}));
+        ServiceListState{table->core(), ServiceListState::Type::num_pending}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_handled_problems",
         "The number of services in the group that have handled problems",
         offsets,
-        ServiceListStateColumn{
-            table->core(),
-            ServiceListStateColumn::Type::num_handled_problems}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_handled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_unhandled_problems",
         "The number of services in the group that have unhandled problems",
         offsets,
-        ServiceListStateColumn{
-            table->core(),
-            ServiceListStateColumn::Type::num_unhandled_problems}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_unhandled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_ok}));
+        ServiceListState{table->core(), ServiceListState::Type::num_hard_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_warn}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT", offsets,
-        ServiceListStateColumn{table->core(),
-                               ServiceListStateColumn::Type::num_hard_crit}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<servicegroup>>(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN", offsets,
-        ServiceListStateColumn{
-            table->core(), ServiceListStateColumn::Type::num_hard_unknown}));
+        ServiceListState{table->core(),
+                         ServiceListState::Type::num_hard_unknown}));
 }
 
 void TableServiceGroups::answerQuery(Query *query) {

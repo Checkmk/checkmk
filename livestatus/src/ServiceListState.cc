@@ -3,7 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include "ServiceListStateColumn.h"
+#include "ServiceListState.h"
 
 #ifdef CMC
 #include "Service.h"
@@ -12,13 +12,13 @@
 #include "auth.h"
 #endif
 
-int32_t ServiceListStateColumn::operator()(const value_type &svcs,
-                                           const contact *auth_user) const {
+int32_t ServiceListState::operator()(const value_type &svcs,
+                                     const contact *auth_user) const {
     return getValueFromServices(_mc, _logictype, svcs, auth_user);
 }
 
 // static
-int32_t ServiceListStateColumn::getValueFromServices(
+int32_t ServiceListState::getValueFromServices(
     MonitoringCore *mc, Type logictype,
     // False positive: cppcheck wants const svcs but it already is!
     // cppcheck-suppress constParameter
@@ -52,10 +52,10 @@ int32_t ServiceListStateColumn::getValueFromServices(
 }
 
 // static
-void ServiceListStateColumn::update(Type logictype, ServiceState current_state,
-                                    ServiceState last_hard_state,
-                                    bool has_been_checked, bool handled,
-                                    int32_t &result) {
+void ServiceListState::update(Type logictype, ServiceState current_state,
+                              ServiceState last_hard_state,
+                              bool has_been_checked, bool handled,
+                              int32_t &result) {
     switch (logictype) {
         case Type::num:
             result++;

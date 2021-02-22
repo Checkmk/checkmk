@@ -125,7 +125,7 @@ liblivestatus_a_SOURCES = \
         Filter.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
-        HostListStateColumn.cc \
+        HostListState.cc \
         HostServiceState.cc \
         InputBuffer.cc \
         IntColumn.cc \
@@ -157,7 +157,7 @@ liblivestatus_a_SOURCES = \
         ServiceGroupMembersColumn.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
-        ServiceListStateColumn.cc \
+        ServiceListState.cc \
         StatsColumn.cc \
         Store.cc \
         StringFilter.cc \

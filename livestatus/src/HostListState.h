@@ -3,15 +3,15 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef HostListStateColumn_h
-#define HostListStateColumn_h
+#ifndef HostListState_h
+#define HostListState_h
 
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
 
 #include "LogEntry.h"
-#include "ServiceListStateColumn.h"
+#include "ServiceListState.h"
 class MonitoringCore;
 
 #ifdef CMC
@@ -25,7 +25,7 @@ class MonitoringCore;
 #include "nagios.h"
 #endif
 
-class HostListStateColumn {
+class HostListState {
 #ifdef CMC
     using value_type = std::unordered_set<const Host *>;
 #else
@@ -62,7 +62,7 @@ public:
         worst_svc_hard_state,
     };
 
-    HostListStateColumn(MonitoringCore *mc, Type logictype)
+    HostListState(MonitoringCore *mc, Type logictype)
         : _mc(mc), _logictype(logictype) {}
 #ifdef CMC
     int32_t operator()(const ObjectGroup &g, const contact *auth_user) const {
@@ -85,8 +85,8 @@ private:
 
     void update(const contact *auth_user, HostState current_state,
                 bool has_been_checked,
-                const ServiceListStateColumn::value_type &services,
-                bool handled, int32_t &result) const;
+                const ServiceListState::value_type &services, bool handled,
+                int32_t &result) const;
 };
 
-#endif  // HostListStateColumn_h
+#endif  // HostListState_h

@@ -6,10 +6,11 @@
 #include "ServiceListState.h"
 
 #ifdef CMC
-#include "Service.h"
 #include "State.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #endif
 
 int32_t ServiceListState::operator()(const value_type &svcs,
@@ -38,7 +39,8 @@ int32_t ServiceListState::getValueFromServices(
     for (servicesmember *mem = svcs; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
-            is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
+            is_authorized_for(mc->serviceAuthorization(), auth_user,
+                              svc->host_ptr, svc)) {
             update(logictype, static_cast<ServiceState>(svc->current_state),
                    static_cast<ServiceState>(svc->last_hard_state),
                    svc->has_been_checked != 0,

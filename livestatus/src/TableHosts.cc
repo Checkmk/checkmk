@@ -821,7 +821,8 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core(), ctc, rowData<host>(row), nullptr);
+    return is_authorized_for(core()->serviceAuthorization(), ctc,
+                             rowData<host>(row), nullptr);
 }
 
 Row TableHosts::get(const std::string &primary_key) const {

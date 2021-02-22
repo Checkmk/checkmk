@@ -91,18 +91,19 @@ Endpoint specific link relations are also possible.
 
 # Authentication
 
-To use this API from an automated client, a user needs to be set up in Checkmk. Ideally this
-would be an *automation* user, with which actions can be performed via the API. For a newly
-created site an automation user is already created. You can find it, like other users, in
-Checkmk at *Setup* > *Users*.
+To use this API from an automated client, a user needs to be set up in Checkmk. Any kind of user,
+be it *automation* or *GUI* users, can be used to access the REST API. On a newly created site
+some users are already created. You can configure them in Checkmk at *Setup* > *Users*.
 
-As an alternative, users who already logged into Checkmk can also access the API, although these
-users are not very suitable for automation, because their session will time out eventually.
-
-For scripting, please use the Bearer authentication format.
+For the various authentication methods that can be used please consult the following descriptions,
+which occur in the order of precedence. This means that on a request which receives multiple
+authentication methods, the one with the hightes priority "wins" and is used. This is especially
+convenient when developing automation scripts, as these can directly be used with either the
+currently logged in GUI user, or the "Bearer" authentication method which takes precedence over the
+GUI authentication method. The result is that the user doesn't have to log out to check that the
+scripts works with the other method.
 
 <SecurityDefinitions />
-
 
 # Client compatibility issues
 
@@ -133,13 +134,14 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 
 SECURITY_SCHEMES = {
-    'bearerAuth': {
+    'headerAuth': {
         'type': 'http',
         'scheme': 'bearer',
         'in': 'header',
-        'description': 'Use automation user credentials. The format of the header value is '
-                       '`$user $password`. This method has the highest precedence. If it '
-                       'succeeds, all other authentication methods are skipped.',
+        'description': 'Use user credentials in the `Authorization` HTTP header. '
+                       'The format of the header value is `$user $password`. This method has the '
+                       'highest precedence. If it succeeds, all other authentication methods are '
+                       'skipped.',
         'bearerFormat': 'username password',
     },
     'webserverAuth': {
@@ -147,8 +149,9 @@ SECURITY_SCHEMES = {
         'scheme': 'basic',
         'in': 'header',
         'description': "Use the authentication method of the webserver ('basic' or 'digest'). To "
-                       "use this, you'll have to re-configure the site's Apache instance "
-                       "yourself. This method takes precedence over the cookieAuth method."
+                       "use this, you'll either have to re-configure the site's Apache instance "
+                       "yourself, or disable multi-site logins via `omd config`. This method "
+                       "takes precedence over the `cookieAuth` method."
     }
 }
 

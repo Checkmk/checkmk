@@ -68,7 +68,8 @@ def _add_cookie_auth(check_dict):
         'type': 'apiKey',
         'description': 'Any user of Checkmk, who has already logged in, and thus got a cookie '
                        'assigned, can use the REST API. Some actions may or may not succeed due '
-                       'to group and permission restrictions.',
+                       'to group and permission restrictions. This authentication method has the'
+                       'least precedence.',
     }
 
 

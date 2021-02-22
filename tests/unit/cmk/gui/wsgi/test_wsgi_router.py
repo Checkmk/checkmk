@@ -43,10 +43,18 @@ def test_webserver_auth(wsgi_app, with_user):
                  status=200,
                  extra_environ={'REMOTE_USER': username})
 
+    wsgi_app.set_authorization(('Basic', ("unknown_random_dude", "foobazbar")))
+    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+                 status=401,
+                 extra_environ={'REMOTE_USER': username})
+
 
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
     wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+
+    # Add a failing Basic Auth to check if the other types will succeed.
+    wsgi_app.set_authorization(('Basic', ("foobazbar", "foobazbar")))
 
     login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
     login.form['_username'] = username

@@ -221,9 +221,10 @@ class Group(fields.String):
 
         group_exists = verify_group_exist(self._group_type, value)
         if self._should_exist and not group_exists:
-            self.fail("should_exist", name=value)
-        elif not self._should_exist and group_exists:
-            self.fail("should_not_exist", name=value)
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and group_exists:
+            raise self.make_error("should_not_exist", name=value)
 
 
 EXISTING_HOST_GROUP_NAME = Group(
@@ -559,9 +560,10 @@ class TimePeriodName(fields.String):
 
         _exists = verify_timeperiod_name_exists(value)
         if self._should_exist and not _exists:
-            self.fail("should_exist", name=value)
-        elif not self._should_exist and _exists:
-            self.fail("should_not_exist", name=value)
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and _exists:
+            raise self.make_error("should_not_exist", name=value)
 
 
 class TimePeriodAlias(fields.String):
@@ -595,9 +597,10 @@ class TimePeriodAlias(fields.String):
         # verified separately
         _new_entry, _ = is_alias_used("timeperiods", "", value)
         if self._should_exist and _new_entry:
-            self.fail("should_exist", name=value)
-        elif not self._should_exist and not _new_entry:
-            self.fail("should_not_exist", name=value)
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and not _new_entry:
+            raise self.make_error("should_not_exist", name=value)
 
 
 class TimeRange(BaseSchema):
@@ -881,9 +884,10 @@ class PasswordIdent(fields.String):
 
         exists = password_exists(value)
         if self._should_exist and not exists:
-            self.fail("should_exist", name=value)
-        elif not self._should_exist and exists:
-            self.fail("should_not_exist", name=value)
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and exists:
+            raise self.make_error("should_not_exist", name=value)
 
 
 class PasswordOwner(fields.String):
@@ -919,7 +923,7 @@ class PasswordOwner(fields.String):
             permitted_owners.append("admin")
 
         if value not in permitted_owners:
-            self.fail("invalid", name=value)
+            raise self.make_error("invalid", name=value)
 
 
 class PasswordShare(fields.String):
@@ -947,7 +951,7 @@ class PasswordShare(fields.String):
         super()._validate(value)
         shareable_groups = [group[0] for group in contact_group_choices()]
         if value not in ["all", *shareable_groups]:
-            self.fail("invalid", name=value)
+            raise self.make_error("invalid", name=value)
 
 
 class InputPassword(BaseSchema):
@@ -1076,9 +1080,10 @@ class Username(fields.String):
         # TODO: change to names list only
         usernames = load_users()
         if self._should_exist and value not in usernames:
-            self.fail("should_exist", username=value)
-        elif not self._should_exist and value in usernames:
-            self.fail("should_not_exist", username=value)
+            raise self.make_error("should_exist", username=value)
+
+        if not self._should_exist and value in usernames:
+            raise self.make_error("should_not_exist", username=value)
 
 
 class CustomTimeRange(BaseSchema):
@@ -1414,7 +1419,7 @@ class HostTagGroupId(fields.String):
         super()._validate(value)
         host_tag_group_config = load_tag_config()
         if not host_tag_group_config.valid_id(value):
-            self.fail("invalid", name=value)
+            raise self.make_error("invalid", name=value)
 
 
 class Tags(fields.List):
@@ -1454,10 +1459,10 @@ class Tags(fields.List):
             tag_id = tag.get("id")
             if tag_id is None:
                 if len(value) == 1:
-                    self.fail("invalid_none")
+                    raise self.make_error("invalid_none")
 
                 if none_tag_exists:
-                    self.fail("multi_none")
+                    raise self.make_error("multi_none")
 
                 none_tag_exists = True
 
@@ -1466,7 +1471,7 @@ class Tags(fields.List):
         for tag in tags:
             tag_id = tag.get("id")
             if tag_id in seen_ids:
-                self.fail("duplicate", name=tag_id)
+                raise self.make_error("duplicate", name=tag_id)
             seen_ids.add(tag_id)
 
 
@@ -1493,7 +1498,7 @@ class AuxTag(fields.String):
         super()._validate(value)
         available_aux_tags = load_aux_tags()
         if value not in available_aux_tags:
-            self.fail("invalid", name=value)
+            raise self.make_error("invalid", name=value)
 
 
 class HostTag(BaseSchema):

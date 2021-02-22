@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef HostRRDColumn_h
-#define HostRRDColumn_h
+#ifndef RRDColumn_impl_h
+#define RRDColumn_impl_h
 
 #include "config.h"  // IWYU pragma: keep
 
@@ -13,11 +13,8 @@
 #include <utility>
 
 #include "RRDColumn.h"
-#include "nagios.h"
-#include "pnp4nagios.h"
-class Row;
 
-class HostRRDColumn : public RRDColumn {
+class RRDColumn::Host : public RRDColumn {
 public:
     using RRDColumn::RRDColumn;
 
@@ -26,6 +23,20 @@ private:
     getHostNameServiceDesc(Row row) const override {
         if (const auto *hst{columnData<host>(row)}) {
             return {{hst->name, dummy_service_description()}};
+        }
+        return {};
+    }
+};
+
+class RRDColumn::Service : public RRDColumn {
+public:
+    using RRDColumn::RRDColumn;
+
+private:
+    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(Row row) const override {
+        if (const auto *svc{columnData<service>(row)}) {
+            return {{svc->host_name, svc->description}};
         }
         return {};
     }

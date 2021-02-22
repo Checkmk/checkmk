@@ -39,8 +39,9 @@
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
+#include "RRDColumn-impl.h"
+#include "RRDColumn.h"
 #include "ServiceGroupsColumn.h"
-#include "ServiceRRDColumn.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
@@ -633,7 +634,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return metrics;
         }));
     table->addDynamicColumn(std::make_unique<
-                            DynamicRRDColumn<ServiceRRDColumn>>(
+                            DynamicRRDColumn<RRDColumn::Service>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), offsets));

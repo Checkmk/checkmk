@@ -16,7 +16,7 @@
 
 #include "DynamicRRDColumn.h"
 #include "ListColumn.h"
-#include "contact_fwd.h"
+#include "nagios.h"
 class ColumnOffsets;
 class MonitoringCore;
 class Row;
@@ -24,6 +24,9 @@ class RowRenderer;
 
 class RRDColumn : public ListColumn {
 public:
+    class Host;
+    class Service;
+    class Object_;
     RRDColumn(const std::string &name, const std::string &description,
               const ColumnOffsets &, MonitoringCore *mc, RRDColumnArgs args);
 

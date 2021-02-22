@@ -201,6 +201,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
+        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",

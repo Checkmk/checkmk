@@ -35,12 +35,11 @@ def check_proxmox_ve_mem_usage(params: Mapping[str, Any], section: Section) -> C
     Metric('mem_used', 32768163840.0, levels=(53939421184.0, 60681848832.0), boundaries=(0.0, 67424276480.0))
     Metric('mem_used_percent', 48.59994878806002, levels=(80.0, 90.0), boundaries=(0.0, None))
     """
-    warn, crit = params.get("levels", (0, 0))
     yield from check_element(
         "Usage",
         float(section.get("mem", 0)),
         float(section.get("max_mem", 0)),
-        ("perc_used", (warn, crit)),
+        ("perc_used", params["levels"]),
         metric_name="mem_used",
         create_percent_metric=True,
     )
@@ -57,5 +56,5 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_mem_usage,
     check_ruleset_name="proxmox_ve_mem_usage",
-    check_default_parameters={"levels": (80., 90.)},
+    check_default_parameters={"levels": None},
 )

@@ -1,0 +1,14 @@
+Title: proxmox_ve_mem_usage: clear default levels
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614003467
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+Default levels for memory usage have shown to be counter productive so this
+change disables them. There are no changes for already configured rules or the
+check algorithm itself.
+

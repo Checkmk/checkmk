@@ -47,10 +47,10 @@ def test_check_proxmox_ve_mem_usage(params, section, expected_results) -> None:
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
-    from os.path import dirname, join
+    import os
+    from testlib.utils import cmk_path  # type: ignore[import]
     assert not pytest.main([
         "--doctest-modules",
-        join(dirname(__file__),
-             "../../../../../../cmk/base/plugins/agent_based/proxmox_ve_mem_usage.py")
+        os.path.join(cmk_path(), "cmk/base/plugins/agent_based/proxmox_ve_mem_usage.py")
     ])
     pytest.main(["-T=unit", "-vvsx", __file__])

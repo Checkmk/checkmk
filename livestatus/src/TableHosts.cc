@@ -518,72 +518,70 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
-        table->core(), false, DowntimeColumn::info::none));
+        mc, false, DowntimeColumn::info::none));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, table->core(), false, DowntimeColumn::info::medium));
+        offsets, mc, false, DowntimeColumn::info::medium));
     table->addColumn(std::make_unique<DowntimeColumn>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, table->core(), false, DowntimeColumn::info::full));
+        offsets, mc, false, DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, table->core(), false, false, false));
+        offsets, mc, false, false, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, table->core(), false, true, false));
+        offsets, mc, false, true, false));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, table->core(), false, true, true));
+        offsets, mc, false, true, true));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of the custom variables", offsets_custom_variables,
-        table->core(), AttributeKind::custom_variables));
+        mc, AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables",
-        offsets_custom_variables, table->core(),
-        AttributeKind::custom_variables));
+        offsets_custom_variables, mc, AttributeKind::custom_variables));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        offsets_custom_variables, table->core(),
-        AttributeKind::custom_variables));
+        offsets_custom_variables, mc, AttributeKind::custom_variables));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "tag_names", "A list of the names of the tags",
-        offsets_custom_variables, table->core(), AttributeKind::tags));
+        offsets_custom_variables, mc, AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "tag_values", "A list of the values of the tags",
-        offsets_custom_variables, table->core(), AttributeKind::tags));
+        offsets_custom_variables, mc, AttributeKind::tags));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "tags", "A dictionary of the tags", offsets_custom_variables,
-        table->core(), AttributeKind::tags));
+        mc, AttributeKind::tags));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_names", "A list of the names of the labels",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
+        offsets_custom_variables, mc, AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_values", "A list of the values of the labels",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
+        offsets_custom_variables, mc, AttributeKind::labels));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "labels", "A dictionary of the labels",
-        offsets_custom_variables, table->core(), AttributeKind::labels));
+        offsets_custom_variables, mc, AttributeKind::labels));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "label_source_names",
         "A list of the names of the label sources", offsets_custom_variables,
-        table->core(), AttributeKind::label_sources));
+        mc, AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsValuesColumn>(
         prefix + "label_source_values",
         "A list of the values of the label sources", offsets_custom_variables,
-        table->core(), AttributeKind::label_sources));
+        mc, AttributeKind::label_sources));
     table->addColumn(std::make_unique<CustomVarsDictColumn>(
         prefix + "label_sources", "A dictionary of the label sources",
-        offsets_custom_variables, table->core(), AttributeKind::label_sources));
+        offsets_custom_variables, mc, AttributeKind::label_sources));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -603,84 +601,90 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }),
-        table->core(), false));
+        offsets.add([](Row r) { return &r.rawData<host>()->parent_hosts; }), mc,
+        false));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct children of the host",
-        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }),
-        table->core(), false));
+        offsets.add([](Row r) { return &r.rawData<host>()->child_hosts; }), mc,
+        false));
     table->addDynamicColumn(std::make_unique<DynamicRRDColumn<HostRRDColumn>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
-        table->core(), offsets));
+        mc, offsets));
 
+    auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services", "The total number of services of the host",
-        offsets, ServiceListState{table->core(), ServiceListState::Type::num}));
+        offsets,
+        ServiceListState{get_service_auth, ServiceListState::Type::num}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListState{table->core(), ServiceListState::Type::worst_state}));
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::worst_state}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK", offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_ok}));
+        ServiceListState{get_service_auth, ServiceListState::Type::num_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN", offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_warn}));
+        ServiceListState{get_service_auth, ServiceListState::Type::num_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT", offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_crit}));
+        ServiceListState{get_service_auth, ServiceListState::Type::num_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
         offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_unknown}));
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_unknown}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
         offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_pending}));
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_pending}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_handled_problems",
         "The number of the host's services which have handled problems",
         offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::num_handled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_unhandled_problems",
         "The number of the host's services which have unhandled problems",
         offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::num_unhandled_problems}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
         offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::worst_hard_state}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK", offsets,
-        ServiceListState{table->core(), ServiceListState::Type::num_hard_ok}));
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_hard_ok}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN", offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_warn}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT", offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_crit}));
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
         offsets,
-        ServiceListState{table->core(),
+        ServiceListState{get_service_auth,
                          ServiceListState::Type::num_hard_unknown}));
 
     table->addColumn(std::make_unique<IntLambdaColumn<host>>(
@@ -727,7 +731,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
-        table->core()));
+        mc));
 
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",
@@ -748,7 +752,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
         offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
-        table->core()));
+        mc));
     table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,
@@ -763,19 +767,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
 
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host",
-        offsets_services, table->core(), 0));
+        offsets_services, mc, 0));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        offsets_services, table->core(), 1));
+        offsets_services, mc, 1));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        offsets_services, table->core(), 2));
+        offsets_services, mc, 2));
     table->addColumn(std::make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        offsets_services, table->core(), 3));
+        offsets_services, mc, 3));
 
     table->addColumn(std::make_unique<ListLambdaColumn<host>>(
         prefix + "metrics",

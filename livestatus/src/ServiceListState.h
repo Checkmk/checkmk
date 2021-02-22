@@ -9,9 +9,11 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <cstdint>
+#include <functional>
+#include <utility>
 
 #include "LogEntry.h"
-class MonitoringCore;
+#include "auth.h"
 
 #ifdef CMC
 #include <memory>
@@ -54,8 +56,13 @@ public:
         worst_hard_state,
     };
 
-    ServiceListState(MonitoringCore *mc, Type logictype)
-        : _mc(mc), _logictype(logictype) {}
+    // NOTE: Due to an ugly technical reason, we have to delay getting the
+    // service authorization, for details see the test
+    // Store.TheCoreIsNotAccessedDuringConstructionOfTheStore.
+    ServiceListState(std::function<AuthorizationKind()> get_service_auth,
+                     Type logictype)
+        : _get_service_auth{std::move(get_service_auth)}
+        , _logictype{logictype} {}
 
 #ifdef CMC
     int32_t operator()(const Host &hst, const contact *auth_user) const {
@@ -83,10 +90,10 @@ public:
     int32_t operator()(const value_type &svcs, const contact *auth_user) const;
 
 private:
-    MonitoringCore *_mc;
+    std::function<AuthorizationKind()> _get_service_auth;
     const Type _logictype;
-    static int32_t getValueFromServices(MonitoringCore *mc, Type logictype,
-                                        const value_type &svcs,
+    static int32_t getValueFromServices(AuthorizationKind service_auth,
+                                        Type logictype, const value_type &svcs,
                                         const contact *auth_user);
     static void update(Type logictype, ServiceState current_state,
                        ServiceState last_hard_state, bool has_been_checked,

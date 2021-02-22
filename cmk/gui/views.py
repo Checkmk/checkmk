@@ -3046,6 +3046,7 @@ def core_command(what, row, row_nr, total_rows):
         cmd = cmd_class()
         if config.user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
+            confirm_options = cmd.user_confirm_options(total_rows, cmdtag)
             if result:
                 executor = cmd.executor
                 commands, title = result
@@ -3059,7 +3060,7 @@ def core_command(what, row, row_nr, total_rows):
     if not isinstance(commands, list):
         commands = [commands]
 
-    return commands, title, executor
+    return commands, confirm_options, title, executor
 
 
 # Returns:
@@ -3081,21 +3082,29 @@ def do_actions(view, what, action_rows, backurl):
         return False  # no actions done
 
     command = None
-    title, executor = core_command(what, action_rows[0], 0,
-                                   len(action_rows))[1:3]  # just get the title and executor
-    if not confirm_with_preview(
-            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-                "title": title,
-                "count": len(action_rows),
-                "what": visual_info_registry[what]().title_plural,
-            },
-            method='GET'):
+    confirm_options, cmd_title, executor = core_command(
+        what,
+        action_rows[0],
+        0,
+        len(action_rows),
+    )[1:4]  # just get confirm_options, title and executor
+
+    command_title = _("Do you really want to %s") % cmd_title
+    if not confirm_with_preview(command_title, confirm_options, method='GET'):
         return False
+
+    if html.request.has_var("_do_confirm_host_downtime"):
+        html.request.set_var("_on_hosts", "on")
 
     count = 0
     already_executed = set()
     for nr, row in enumerate(action_rows):
-        core_commands, title, executor = core_command(what, row, nr, len(action_rows))
+        core_commands, _confirm_options, _title, executor = core_command(
+            what,
+            row,
+            nr,
+            len(action_rows),
+        )
         for command_entry in core_commands:
             site = row.get(
                 "site")  # site is missing for BI rows (aggregations can spawn several sites)

@@ -47,7 +47,7 @@ from cmk.gui.permissions import Permission
 from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.globals import g, html, request, display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import permission_registry
@@ -484,12 +484,30 @@ class Command(metaclass=abc.ABCMeta):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        what = "host" if cmdtag == "HOST" else "service"
+        return title + " the following %(count)d %(what)s?" % {
+            "count": len_action_rows,
+            "what": ungettext(what, what + "s", len_action_rows)
+        }
+
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple]:
+        return [(_("Confirm"), "_do_confirm")]
+
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
                num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+        result = self._action(cmdtag, spec, row, row_index, num_rows)
+        if result:
+            commands, title = result
+            return commands, self.user_dialog_suffix(title, num_rows, cmdtag)
+        return None
+
+    @abc.abstractmethod
+    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+                num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
         raise NotImplementedError()
 
     @property
@@ -545,6 +563,8 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
             "render": lambda s: s._spec["render"](),
             "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"]
                       (cmdtag, spec, row),
+            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"]
+                       (cmdtag, spec, row),
             "group": lambda s: command_group_registry[s._spec.get("group", "various")],
             "only_view": lambda s: s._spec.get("only_view"),
         })

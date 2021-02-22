@@ -16,7 +16,7 @@ from cmk.gui.type_defs import HTTPVariables
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
@@ -1035,6 +1035,12 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self):
         return PermissionECUpdateEvent
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if config.user.may("mkeventd.update_comment"):
@@ -1064,7 +1070,7 @@ class CommandECUpdateEvent(ECCommand):
         html.close_table()
         html.button('_mkeventd_update', _("Update"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
                 comment = html.request.get_unicode_input_mandatory(
@@ -1106,12 +1112,18 @@ class CommandECChangeState(ECCommand):
     def permission(self):
         return PermissionECChangeEventState
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" of the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         html.button('_mkeventd_changestate', _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
@@ -1143,16 +1155,22 @@ class CommandECCustomAction(ECCommand):
     def permission(self):
         return PermissionECCustomActions
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" for the following %d Event Console  %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, num_rows):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if html.request.var("_action_" + action_id):
-                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), (
-                    _("execute the action \"%s\"") % title)
+                title = _("execute the action \"%s\"") % title
+                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), title
 
 
 PermissionECArchiveEvent = permission_registry.register(
@@ -1179,10 +1197,16 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self):
         return PermissionECArchiveEvent
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         html.button("_delete_event", _("Archive Event"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_delete_event"):
             command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
             title = _("<b>archive</b>")
@@ -1224,7 +1248,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
               'configured.'))
         html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, num_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
                 tag: Optional[str] = "host"
@@ -1239,7 +1263,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
                                           "Filter: host_name = %s" % row['host_name'])
                 commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
 
-            return commands, "<b>archive all events of all hosts</b> of"
+            return commands, "<b>archive all events</b> of"
 
 
 #.

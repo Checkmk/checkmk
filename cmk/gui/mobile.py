@@ -465,21 +465,27 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
-    title_what = _("hosts") if what == "host" else _("services")
-    r = confirm_with_preview(
-        _("Do you really want to %(title)s the %(count)d %(what)s?") % {
-            "title": title,
-            "count": len(rows),
-            "what": title_what,
-        })
+    confirm_options, title, executor = views.core_command(
+        what,
+        rows[0],
+        0,
+        len(rows),
+    )[1:4]  # just get confirm_options, title and executor
+
+    confirm_title = _("Do you really want to %s") % title
+    r = confirm_with_preview(confirm_title, confirm_options)
     if r is not True:
         return r is None  # Show commands on negative answer
 
     count = 0
     already_executed: Set[str] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
+        nagios_commands, _confirm_options, title, executor = views.core_command(
+            what,
+            row,
+            nr,
+            len(rows),
+        )
         for command in nagios_commands:
             if command not in already_executed:
                 executor(command, row["site"])

@@ -160,23 +160,18 @@ export class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _compute_host_geometry(num_elements, box_area) {
-        let num_columns = 1;
+        let box_width = this._max_box_width;
+        let num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
         while (true) {
-            let box_width;
             if (num_elements >= num_columns * 2) {
                 box_width = box_area.width / (num_columns + 0.5);
             } else {
                 box_width = box_area.width / num_columns;
             }
 
-            if (box_width > this._max_box_width) {
-                box_width = this._max_box_width;
-                num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
-            }
-
-            let num_rows = Math.ceil(num_elements / num_columns);
-            let box_height = (box_width * Math.sqrt(3)) / 2;
-            let necessary_total_height = box_height * (num_rows + 1 / 3);
+            const num_rows = Math.ceil(num_elements / num_columns);
+            const box_height = (box_width * Math.sqrt(3)) / 2;
+            const necessary_total_height = box_height * (num_rows + 1 / 3);
 
             if (necessary_total_height <= box_area.height) {
                 return {

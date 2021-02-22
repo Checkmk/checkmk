@@ -9,11 +9,11 @@ from typing import (
     Callable,
     Dict,
     Generator,
-    List,
     Mapping,
     MutableMapping,
     Optional,
     Set,
+    Sequence,
     Tuple,
     Union,
 )
@@ -27,8 +27,6 @@ from ..agent_based_api.v1 import (
     State,
 )
 from .size_trend import size_trend
-
-state = State  # TODO: clean this up
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -52,10 +50,10 @@ def savefloat(raw: Any) -> float:
 
 def ungrouped_mountpoints_and_groups(
     mount_points: Dict[str, Dict],
-    group_patterns: Mapping[str, Tuple[List[str], List[str]]],
-) -> Tuple[Set[str], Dict[str, bytes]]:
+    group_patterns: Mapping[str, Tuple[Sequence[str], Sequence[str]]],
+) -> Tuple[Set[str], Dict[str, Set[str]]]:
     ungrouped_mountpoints = set(mount_points)
-    groups = {}
+    groups: Dict[str, Set[str]] = {}
     for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
         mp_groups = mountpoints_in_group(mount_points, patterns_inlcude, patterns_exclude)
         if mp_groups:
@@ -208,7 +206,11 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
     return levels
 
 
-def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patterns_exclude: List):
+def mountpoints_in_group(
+    mplist: Dict[str, Dict],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+) -> Set[str]:
     matching_mountpoints = set()
     for mountpoint in mplist:
         if any(
@@ -310,7 +312,7 @@ def df_check_filesystem_single(
     this_time=None,
 ) -> CheckResult:
     if size_mb == 0:
-        yield Result(state=state.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
         return
 
     # params might still be a tuple
@@ -344,7 +346,7 @@ def df_check_filesystem_single(
         crit_mb = used_max + crit_mb
         warn_mb = used_max + warn_mb
 
-    status = state.CRIT if used_mb >= crit_mb else state.WARN if used_mb >= warn_mb else state.OK
+    status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
     yield Metric("fs_size", size_mb, boundaries=(0, None))
     yield Metric(
@@ -357,8 +359,8 @@ def df_check_filesystem_single(
     # Expand infotext according to current params
     infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
     if (show_levels == "always" or  #
-        (show_levels == "onproblem" and status is not state.OK) or  #
-        (show_levels == "onmagic" and (status is not state.OK or levels.get("magic", 1.0) != 1.0))):
+        (show_levels == "onproblem" and status is not State.OK) or  #
+        (show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0))):
         infotext.append(levels["levels_text"])
     yield Result(state=status, summary=", ".join(infotext).replace('), (', ', '))
 
@@ -395,7 +397,7 @@ def df_check_filesystem_list(
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],
-    fslist_blocks: List[Tuple[str, float, float, float]],
+    fslist_blocks: Sequence[Tuple[str, float, float, float]],
     fslist_inodes=None,
     this_time=None,
 ) -> CheckResult:
@@ -441,7 +443,7 @@ def df_check_filesystem_list(
 
     matching_mountpoints = mountpoints_in_group(blocks_info, *params["patterns"])
     if not matching_mountpoints:
-        yield Result(state=state.UNKNOWN, summary="No filesystem matching the patterns")
+        yield Result(state=State.UNKNOWN, summary="No filesystem matching the patterns")
         return
 
     total_size_mb = group_sum("size_mb", blocks_info, matching_mountpoints)
@@ -463,7 +465,7 @@ def df_check_filesystem_list(
         this_time,
     )
 
-    yield Result(state=state.OK, summary="%d filesystems" % len(matching_mountpoints))
+    yield Result(state=State.OK, summary="%d filesystems" % len(matching_mountpoints))
 
 
 def _mb_to_perc(value: Optional[float], size_mb: float) -> Optional[float]:

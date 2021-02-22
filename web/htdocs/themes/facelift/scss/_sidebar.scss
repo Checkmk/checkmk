@@ -137,7 +137,7 @@ body.side {
 #side_header {
   height: 58px;
 
-  > a {
+  a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -145,11 +145,15 @@ body.side {
     height: 100%;
     text-decoration: none;
     outline: none;
+  }
 
-    img {
-      width: 48px;
-      height: auto;
-    }
+  img {
+    width: 48px;
+    height: auto;
+  }
+
+  .min & img {
+    width: 45px;
   }
 }
 

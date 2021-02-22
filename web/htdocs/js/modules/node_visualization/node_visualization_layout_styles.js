@@ -119,7 +119,7 @@ export class AbstractLayoutStyle {
             .classed("button", true)
             .classed("reset_options", true)
             .attr("value", "Reset default values")
-            .on("click", d => {
+            .on("click", () => {
                 this.reset_default_options();
             });
         this.options_selection
@@ -857,16 +857,15 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
     get_drag_callback(drag_function) {
         return d3
             .drag()
-            .on("start.drag", () => this.drag_start())
-            .on("drag.drag", () => {
-                drag_function(), this.changed_options();
-            })
-            .on("end.drag", () => this.drag_end());
+            .on("start.drag", event => this._drag_start(event))
+            .on("drag.drag", event => this._drag_drag(event, drag_function))
+            .on("end.drag", event => this._drag_end(event));
     }
 
-    drag_start() {
+    _drag_start(event) {
         this.drag_start_info = {};
-        this.drag_start_info.start_coords = d3.pointer(this.selection.node());
+        this.drag_start_info.start_coords = [event.x, event.y];
+        this.drag_start_info.delta = {x: 0, y: 0};
         this.drag_start_info.options = JSON.parse(JSON.stringify(this.style_config.options));
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
@@ -874,22 +873,23 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._layout_manager.dragging = true;
     }
 
-    change_rotation() {
-        let coords = d3.pointer(this.selection.node());
-        let offset =
-            ((this.drag_start_info.start_coords[1] - coords[1]) *
-                this._layout_manager.viewport.last_zoom.k) %
-            360;
-        let rotation = (this.drag_start_info.options.rotation + offset) % 360;
-        if (rotation < 0) rotation += 360;
-
-        this.style_config.options.rotation = parseInt(rotation);
-        this.force_style_translation();
+    _drag_drag(event, drag_function) {
+        this.drag_start_info.delta.x += event.dx;
+        this.drag_start_info.delta.y += event.dy;
+        drag_function(event);
+        this.changed_options();
     }
 
-    drag_end() {
+    _drag_end(event) {
         this._layout_manager.dragging = false;
         this._layout_manager.create_undo_step();
+    }
+
+    change_rotation() {
+        let rotation = (this.drag_start_info.options.rotation - this.drag_start_info.delta.y) % 360;
+        if (rotation < 0) rotation += 360;
+        this.style_config.options.rotation = parseInt(rotation);
+        this.force_style_translation();
     }
 
     add_optional_transition(selection_with_node_data) {
@@ -1134,9 +1134,9 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         };
     }
 
-    resize_layer_drag() {
+    resize_layer_drag(event) {
         let rotation_rad = (this.style_config.options.rotation / 180) * Math.PI;
-        let coords = d3.pointer(this.selection.node());
+        let coords = d3.pointer(event);
         let offset_y = this.drag_start_info.start_coords[0] - coords[0];
         let offset_x = this.drag_start_info.start_coords[1] - coords[1];
 
@@ -1426,12 +1426,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.pointer(this.selection.node());
-        let offset_x =
-            (this.drag_start_info.start_coords[1] - coords[1]) *
-            this._layout_manager.viewport.last_zoom.k;
         this.style_config.options.radius = parseInt(
-            Math.min(500, Math.max(10, this.drag_start_info.options.radius + offset_x))
+            Math.min(
+                500,
+                Math.max(10, this.drag_start_info.options.radius - this.drag_start_info.delta.y)
+            )
         );
         this.changed_options();
     }
@@ -1440,14 +1439,11 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this._layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
             this
         );
-        let coords = d3.pointer(this.selection.node());
-
-        let offset_x =
-            (this.drag_start_info.start_coords[1] - coords[1]) *
-            2 *
-            this._layout_manager.viewport.last_zoom.k;
         let degree = parseInt(
-            Math.min(360, Math.max(10, this.drag_start_info.options.degree + offset_x))
+            Math.min(
+                360,
+                Math.max(10, this.drag_start_info.options.degree - this.drag_start_info.delta.y)
+            )
         );
         this.style_config.options.degree = degree;
         this.changed_options();

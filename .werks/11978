@@ -1,0 +1,18 @@
+Title: ceph_df: support for octopus (15.2.6) and nautilus (14.2.15) with JSON output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1613987949
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+This werk will make the ceph plugin more resilient against subtle
+output changes in future versions of the ceph command line tool.
+This is achieved by changing the evaluation to JSON output.
+The ceph agent plugin must be redeployed in order to activate this new evalution method.
+When the new agent plugin is deployed the numbers that are reported by the ceph checks
+will change slightly, because the json output is more precise.
+If the JSON section cannot be generated the old output method without json will be used.

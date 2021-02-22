@@ -11,6 +11,7 @@ import mimetypes
 import os
 import re
 import urllib.parse
+from base64 import b64decode
 from typing import Any, Callable, Dict, Optional, Tuple, Type, List, Literal
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
@@ -52,22 +53,29 @@ def _verify_user(environ) -> RFC7662:
     verified: List[RFC7662] = []
 
     auth_header = environ.get('HTTP_AUTHORIZATION', '')
+    basic_user = None
     if auth_header:
-        user_id, secret = user_from_bearer_header(auth_header)
-        automation_user = automation_auth(user_id, secret)
-        gui_user = gui_user_auth(user_id, secret)
+        auth_type, _ = auth_header.split(None, 1)
+        if auth_type == 'Bearer':
+            user_id, secret = user_from_bearer_header(auth_header)
+            automation_user = automation_auth(user_id, secret)
+            if automation_user:
+                verified.append(automation_user)
 
-        if not (automation_user or gui_user):
-            raise MKAuthException(f"{user_id} not authorized.")
-
-        if automation_user:
-            verified.append(automation_user)
-
-        if gui_user:
-            verified.append(gui_user)
+            gui_user = gui_user_auth(user_id, secret)
+            if gui_user:
+                verified.append(gui_user)
+        elif auth_type == 'Basic':
+            # We store this for sanity checking below, once we get a REMOTE_USER key.
+            # If we don't get a REMOTE_USER key, this value will be ignored.
+            basic_user = user_from_basic_header(auth_header)
+        else:
+            raise MKAuthException(f"Unsupported Auth Type: {auth_type}")
 
     remote_user = environ.get('REMOTE_USER', '')
     if remote_user and userdb.user_exists(UserId(remote_user)):
+        if basic_user and basic_user[0] != remote_user:
+            raise MKAuthException("Mismatch in authentication headers.")
         verified.append(rfc7662_subject(UserId(remote_user), 'webserver'))
 
     cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
@@ -91,11 +99,48 @@ def _verify_user(environ) -> RFC7662:
     return final_candidate
 
 
-def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
+def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
+    """Decode a Basic Authorization header
+
+    Examples:
+
+        >>> user_from_basic_header("Basic Zm9vYmF6YmFyOmZvb2JhemJhcg==")
+        ('foobazbar', 'foobazbar')
+
+    Args:
+        auth_header:
+
+    Returns:
+
+    """
     try:
-        _, token = auth_header.split("Bearer", 1)
+        _, token = auth_header.split("Basic ", 1)
     except ValueError:
-        raise MKAuthException("Not a valid Bearer token.")
+        raise MKAuthException(f"Not a valid Basic token: {auth_header}")
+
+    user_entry = b64decode(token.strip()).decode('latin1')
+    user_id, secret = user_entry.split(":")
+    return UserId(user_id), secret
+
+
+def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
+    """
+
+    Examples:
+
+        >>> user_from_bearer_header("Bearer username password")
+        ('username', 'password')
+
+    Args:
+        auth_header:
+
+    Returns:
+
+    """
+    try:
+        _, token = auth_header.split("Bearer ", 1)
+    except ValueError:
+        raise MKAuthException(f"Not a valid Bearer token: {auth_header}")
     try:
         user_id, secret = token.strip().split(' ', 1)
     except ValueError:

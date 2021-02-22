@@ -601,15 +601,22 @@ export class FigureTooltip {
             .on("mousemove", event => this._mousemove(event));
     }
 
+    activate() {
+        this._tooltip.style("display", null);
+    }
+
+    deactivate() {
+        this._tooltip.style("display", "none");
+    }
+
     active() {
-        return this._tooltip.style("opacity") == 1;
+        return this._tooltip.style("display") != "none";
     }
 
     _mouseover(event) {
         let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
-
-        this._tooltip.style("opacity", 1);
+        this.activate();
     }
 
     _mousemove(event) {
@@ -620,7 +627,7 @@ export class FigureTooltip {
     }
 
     _mouseleave(event) {
-        this._tooltip.style("opacity", 0);
+        this.deactivate();
     }
 }
 

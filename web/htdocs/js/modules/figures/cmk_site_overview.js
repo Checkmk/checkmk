@@ -136,7 +136,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     this.plot.attr("transform", this._last_zoom);
                     if (this._use_canvas_for_hosts)
                         this._render_hexagon_content(this._hexagon_content);
-                    this.tooltip_generator.update_position();
+                    this.tooltip_generator.update_position(event);
                 })
         );
     }

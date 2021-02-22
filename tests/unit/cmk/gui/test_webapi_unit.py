@@ -9,6 +9,12 @@ import cmk.utils.version as cmk_version
 import cmk.gui.webapi  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
+from cmk.gui.plugins.webapi.webapi import _format_missing_tags
+
+
+def test_format_tags():
+    output = _format_missing_tags({("hallo", "welt"), ("hello", "world"), ("hello", None)})
+    assert output == 'hallo:welt, hello:None, hello:world'
 
 
 def test_registered_api_call_collections():

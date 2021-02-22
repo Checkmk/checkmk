@@ -606,6 +606,7 @@ class LayoutTable(Layout):
                         html.close_table()
                         html.close_td()
                         html.close_tr()
+                        odd = "odd"
 
                     # Table headers
                     if view.get("column_headers") != "off":

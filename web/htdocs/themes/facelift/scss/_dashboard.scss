@@ -922,13 +922,14 @@ div.servicestats {
 
   path.hexagon {
     &.critical,
-    &.unreachable {
+    &.down {
       fill: $hexagon-critical-color;
       fill-opacity: 0.8;
       stroke: $hexagon-critical-color;
     }
 
-    &.unknown {
+    &.unknown,
+    &.unreachable {
       fill: $hexagon-unknown-color;
       fill-opacity: 0.8;
       stroke: $hexagon-unknown-color;
@@ -975,12 +976,6 @@ div.servicestats {
         stroke: none;
       }
     }
-
-    &.unknown {
-      fill: $hexagon-critical-color;
-      fill-opacity: 0.8;
-      stroke: $hexagon-critical-color;
-    }
   }
 
   path.icon_element {
@@ -996,6 +991,13 @@ div.servicestats {
 
   g.hexagons {
     transform: translate(60px, 95px);
+  }
+
+  path.hexagon.ok {
+    fill: $success;
+    fill-opacity: 0.06;
+    stroke: $success;
+    stroke-opacity: 0.9;
   }
 
   div.stats_table {

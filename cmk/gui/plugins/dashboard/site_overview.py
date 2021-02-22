@@ -12,6 +12,7 @@ from cmk.utils.type_defs import HostName
 
 from cmk.gui import config
 import cmk.gui.sites as sites
+import cmk.gui.visuals as visuals
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
@@ -107,7 +108,7 @@ class SiteOverviewDashletDataGenerator:
 
         if render_mode == "hosts":
             assert site_id is not None
-            elements = cls._collect_hosts_data(site_id)
+            elements = cls._collect_hosts_data(site_id, context)
             default_title = _("Host overview")
         elif render_mode == "sites":
             elements = cls._collect_sites_data()
@@ -131,10 +132,10 @@ class SiteOverviewDashletDataGenerator:
         }
 
     @classmethod
-    def _collect_hosts_data(cls, site_id: SiteId) -> List[ABCElement]:
+    def _collect_hosts_data(cls, site_id: SiteId, context) -> List[ABCElement]:
         elements: List[ABCElement] = []
 
-        for host_name, host_stats in sorted(cls._get_host_stats(site_id).items(),
+        for host_name, host_stats in sorted(cls._get_host_stats(site_id, context).items(),
                                             key=lambda h: h[0]):
 
             elements.append(
@@ -164,10 +165,9 @@ class SiteOverviewDashletDataGenerator:
     @classmethod
     def _host_css_class(cls, host_stats: HostStats) -> str:
         css_class = {
-            3: "unreachable",
-            2: "critical",
-            1: "warning",
-            0: "ok",
+            2: "unreachable",
+            1: "down",
+            0: "up",
         }[host_stats.state]
         if host_stats.scheduled_downtime_depth > 0:
             css_class = "downtime"
@@ -184,10 +184,14 @@ class SiteOverviewDashletDataGenerator:
         return "ok"
 
     @classmethod
-    def _get_host_stats(cls, site_id: SiteId) -> Dict[HostName, HostStats]:
+    def _get_host_stats(cls, site_id: SiteId, context) -> Dict[HostName, HostStats]:
+        filter_headers, _only_sites = visuals.get_filter_headers(table="hosts",
+                                                                 infos=["host"],
+                                                                 context=context)
         try:
             sites.live().set_only_sites([site_id])
-            rows: LivestatusResponse = sites.live().query(cls._host_stats_query())
+            rows: LivestatusResponse = sites.live().query(cls._host_stats_query() + "\n" +
+                                                          filter_headers)
         finally:
             sites.live().set_only_sites(None)
 

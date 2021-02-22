@@ -5,7 +5,6 @@
 
 #include "auth.h"
 
-#include "MonitoringCore.h"
 #include "contact_fwd.h"
 
 contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
@@ -71,7 +70,9 @@ bool is_authorized_for_host_group(AuthorizationKind group_auth,
     return true;
 }
 
-bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
+bool is_authorized_for_service_group(AuthorizationKind group_auth,
+                                     AuthorizationKind service_auth,
+                                     const servicegroup *sg,
                                      const contact *ctc) {
     if (ctc == nullptr) {
         return true;
@@ -84,10 +85,9 @@ bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
 
     auto has_contact = [=](servicesmember *mem) {
         service *svc = mem->service_ptr;
-        return is_authorized_for(mc->serviceAuthorization(), ctc, svc->host_ptr,
-                                 svc);
+        return is_authorized_for(service_auth, ctc, svc->host_ptr, svc);
     };
-    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+    if (group_auth == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (servicesmember *mem = sg->members; mem != nullptr;
              mem = mem->next) {

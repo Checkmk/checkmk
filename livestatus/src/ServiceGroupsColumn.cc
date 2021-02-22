@@ -12,6 +12,7 @@
 #include "ObjectGroup.h"
 #include "cmc.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
 #include "nagios.h"
 #endif
@@ -33,7 +34,9 @@ std::vector<std::string> ServiceGroupsColumn::getValue(
     if (const auto *p = columnData<objectlist *>(row)) {
         for (objectlist *list = *p; list != nullptr; list = list->next) {
             auto *sg = static_cast<servicegroup *>(list->object_ptr);
-            if (is_authorized_for_service_group(_mc, sg, auth_user)) {
+            if (is_authorized_for_service_group(_mc->groupAuthorization(),
+                                                _mc->serviceAuthorization(), sg,
+                                                auth_user)) {
                 group_names.emplace_back(sg->group_name);
             }
         }

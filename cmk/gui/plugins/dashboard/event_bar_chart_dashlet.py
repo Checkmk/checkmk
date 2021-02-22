@@ -149,6 +149,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         args: HTTPVariables = []
         # Generic filters
         args.append(("filled_in", "filter"))
+        args.append(("_show_filter_form", "0"))
         args.append(("view_name", "events"))
         args.append(("logtime_from", str(time_frame["timestamp"])))
         args.append(("logtime_from_range", "unix"))

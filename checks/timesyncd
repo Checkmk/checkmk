@@ -11,11 +11,12 @@
 from cmk.base.check_legacy_includes.time import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.agent_based_api.v1.render as render
 
+# last_synchronized default values increased since a few systems required longer time
 factory_settings["timesyncd_default_levels"] = {
     "stratum_level": 10,
     "quality_levels": (200.0, 500.0),
     "alert_delay": (300, 3600),
-    "last_synchronized": (5400, 7200)
+    "last_synchronized": (7200, 10800)
 }
 
 

@@ -1,0 +1,12 @@
+Title: Dashboard: Fix broken graph hover effects
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613996195
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+The Checkmk time series graphs shown as dashlets were not showing the graph
+hover effects (position hightlighing and popup showing the current value).

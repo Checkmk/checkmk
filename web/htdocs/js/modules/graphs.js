@@ -827,14 +827,10 @@ function graph_activate_mouse_control(graph) {
             resize_img
         );
 
-        utils.add_event_handler("mousemove", global_graph_mouse_move);
+        utils.add_event_handler("mousemove", graph_mouse_resize);
     }
-}
 
-function global_graph_mouse_move(event) {
-    event = event || window.event; // IE FIX
-    update_mouse_hovering(event);
-    graph_mouse_resize(event);
+    utils.add_event_handler("mousemove", update_mouse_hovering);
 }
 
 function graph_start_resize(event, graph) {

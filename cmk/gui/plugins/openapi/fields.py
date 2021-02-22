@@ -835,15 +835,21 @@ class HostField(String):
         except MKUserError as e:
             raise self.make_error("invalid_name", host_name=value, invalid_reason=str(e))
 
-        host = watolib.Host.host(value)
-        if self._should_exist and not host:
-            raise self.make_error("should_exist", host_name=value)
+        if self._should_exist is not None:
+            host = watolib.Host.host(value)
+            if self._should_exist and not host:
+                raise self.make_error("should_exist", host_name=value)
 
-        if not self._should_exist and host:
-            raise self.make_error("should_not_exist", host_name=value)
+            if not self._should_exist and host:
+                raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_monitored is not None and not host_is_monitored(value):
-            raise self.make_error("should_be_monitored", host_name=value)
+        if self._should_be_monitored is not None:
+            monitored = host_is_monitored(value)
+            if self._should_be_monitored and not monitored:
+                raise self.make_error("should_be_monitored", host_name=value)
+
+            if not self._should_be_monitored and monitored:
+                raise self.make_error("should_not_be_monitored", host_name=value)
 
 
 def host_is_monitored(host_name: str) -> bool:

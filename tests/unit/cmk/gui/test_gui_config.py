@@ -1247,13 +1247,14 @@ def test_is_ntop_available():
         assert is_ntop_available
 
 
-@pytest.mark.parametrize("ntop_connection, custom_user, answer", [
+@pytest.mark.parametrize("ntop_connection, custom_user, answer, reason", [
     (
         {
             'is_activated': False
         },
         "",
         False,
+        "ntopng integration is not activated under global settings.",
     ),
     (
         {
@@ -1262,6 +1263,7 @@ def test_is_ntop_available():
         },
         "",
         True,
+        "",
     ),
     (
         {
@@ -1270,6 +1272,9 @@ def test_is_ntop_available():
         },
         "",
         False,
+        ("The ntopng username should be derived from \'ntopng Username\' "
+         "under the current's user settings (identity) but this is not "
+         "set for the current user."),
     ),
     (
         {
@@ -1278,6 +1283,7 @@ def test_is_ntop_available():
         },
         "a_ntop_user",
         True,
+        "",
     ),
 ])
 def test_is_ntop_configured_and_reason(
@@ -1285,9 +1291,12 @@ def test_is_ntop_configured_and_reason(
     ntop_connection,
     custom_user,
     answer,
+    reason,
 ):
     if cmk_version.is_raw_edition():
         assert not config.is_ntop_configured()
+        assert not config.get_ntop_misconfiguration_reason(
+        ) == "ntopng integration is only available in CEE"
     if not cmk_version.is_raw_edition():
         mocker.patch.object(
             config,
@@ -1297,3 +1306,4 @@ def test_is_ntop_configured_and_reason(
         if custom_user:
             config.user._set_attribute("ntop_alias", custom_user)
         assert config.is_ntop_configured() == answer
+        assert config.get_ntop_misconfiguration_reason() == reason

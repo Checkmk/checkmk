@@ -1,0 +1,13 @@
+Title: First column in single dataset layout of views consumed too much space
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p22
+Date: 1613997776
+Class: fix
+
+This does only affect the layout mode "Single dataset". A view that uses this
+layout is e.g. "Status of host HOSTNAME". The first column that displays the
+title of the row consumed too much space. In consequene the value
+corresponding to that title was pushed to the right side of the window.

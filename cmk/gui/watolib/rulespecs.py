@@ -36,7 +36,6 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     ModuleRegistry,
-    main_module_registry,
 )
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -1245,23 +1244,17 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        main_module_reg: ModuleRegistry,
         rulesepc_group_reg: RulespecGroupRegistry,
         rulespec_reg: RulespecRegistry,
     ) -> None:
         super().__init__(name)
-        self._main_module_registry = main_module_reg
         self._rulespec_group_registry = rulesepc_group_reg
         self._rulespec_registry = rulespec_reg
 
     def _topic(self, rulespec: Rulespec) -> str:
         if rulespec.is_deprecated:
             return _("Deprecated rulesets")
-        topic_prefix = main_module_from_rulespec_group_name(
-            rulespec.main_group_name,
-            self._main_module_registry,
-        ).topic.title
-        return f"{topic_prefix} > {self._rulespec_group_registry[rulespec.main_group_name]().title}"
+        return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
@@ -1292,7 +1285,6 @@ rulespec_registry = RulespecRegistry(rulespec_group_registry)
 match_item_generator_registry.register(
     MatchItemGeneratorRules(
         'rules',
-        main_module_registry,
         rulespec_group_registry,
         rulespec_registry,
     ))

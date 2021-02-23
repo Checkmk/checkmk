@@ -391,26 +391,26 @@ class IndexSearcher:
 
     @staticmethod
     def _first_topics() -> Iterable[str]:
-        # Note: this could just be a class attribute, however, due to the string concatenation,
-        # this would mess up the localization
+        # This is not a class attribute because it could mess up the localization if e.g.
+        # string concatenation is used
         return (
             _("Setup"),
             _("Hosts"),
-            _("Services") + " > " + _("Service monitoring rules"),
-            _("Services") + " > " + _("Service discovery rules"),
+            _("Service monitoring rules"),
+            _("Service discovery rules"),
         )
 
     @staticmethod
     def _last_topics() -> Iterable[str]:
-        # Note: this could just be a class attribute, however, due to the string concatenation,
-        # this would mess up the localization
+        # This is not a class attribute because it could mess up the localization if e.g.
+        # string concatenation is used
         return (
             # _("Business Intelligence"),
             _("Event Console rule packages"),
             _("Event Console rules"),
             _("Event Console settings"),
             # _("Users"),
-            _("Services") + " > " + _("Enforced services"),
+            _("Enforced services"),
             _("Global settings"),
             _("Miscellaneous"),
             _("Deprecated rulesets"),

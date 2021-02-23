@@ -75,13 +75,14 @@
       background-image: url("images/icon_quicksearch.png");
       background-position: center;
       background-repeat: no-repeat;
-      background-size: 19px;
+      background-size: 16px;
       filter: none;
       box-shadow: none;
 
       &.clearable {
         cursor: pointer;
         background-image: url("images/icon_close.svg");
+        background-size: 12px;
       }
     }
   }

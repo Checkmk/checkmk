@@ -77,6 +77,10 @@ read_python_version() {
 }
 PYTHON3=$(read_python_version python3 4)
 PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/python_path.cfg"
+fi
 export PYTHON2 PYTHON3
 
 # Detect whether or not the agent is being executed in a container

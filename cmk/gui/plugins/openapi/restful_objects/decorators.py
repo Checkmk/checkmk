@@ -313,6 +313,14 @@ class Endpoint:
         Returns:
         A wrapped function. The wrapper does input and output validation.
         """
+        self.operation_id = func.__module__ + "." + func.__name__
+        if self.method in ("get", "delete") and self.request_schema:
+            raise ValueError(
+                f"According to the OpenAPI 3 spec, consumers SHALL ignore request bodies on "
+                f"{self.method.upper()!r}. Please use another request method for the endpont: "
+                f"{self.operation_id} "
+                "See: https://swagger.io/specification/#operation-object")
+
         header_schema = None
         if self.header_params is not None:
             header_params = list(self.header_params)
@@ -334,8 +342,6 @@ class Endpoint:
         )
 
         _verify_parameters(self.path, path_schema)
-
-        self.operation_id = func.__module__ + "." + func.__name__
 
         def _mandatory_parameter_names(*_params):
             schema: Type[Schema]

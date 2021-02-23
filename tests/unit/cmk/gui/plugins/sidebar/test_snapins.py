@@ -28,7 +28,6 @@ def test_registered_snapins():
         'hosts',
         'master_control',
         'mkeventd_performance',
-        'nagios_legacy',
         'nagvis_maps',
         'performance',
         'problem_hosts',

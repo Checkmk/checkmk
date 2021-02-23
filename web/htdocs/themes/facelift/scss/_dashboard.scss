@@ -877,7 +877,9 @@ div.alert_statistics,
 div.hoststats,
 div.servicestats {
   g.element_box:hover {
-    opacity: 0.8;
+    path + path {
+      fill-opacity: 0.96;
+    }
   }
 
   div.tooltip {
@@ -914,6 +916,7 @@ div.servicestats {
     td.count {
       padding-left: 4px;
       text-align: right;
+      vertical-align: top;
     }
   }
 
@@ -962,20 +965,25 @@ div.servicestats {
     }
   }
 
-  g.element_box.host_element path.hexagon {
+  g.element_box.host_element path.hexagon,
+  path.hexagon.host_element {
     fill-opacity: 0.8;
     stroke-opacity: 0.8;
 
     &.ok {
       fill: $host-hexagon-ok-stroke-color;
-      fill-opacity: 1;
-      stroke: $host-hexagon-ok-stroke-color;
-      stroke-opacity: 1;
+      stroke: none;
 
-      &.inner {
-        fill: $host-hexagon-ok-color;
-        stroke: none;
+      + path.up:hover,
+      &:hover + path.up {
+        fill-opacity: 0.6;
       }
+    }
+
+    &.up {
+      fill: $host-hexagon-ok-color;
+      fill-opacity: 0.85;
+      stroke: none;
     }
   }
 
@@ -984,6 +992,10 @@ div.servicestats {
     stroke-dasharray: 3, 3;
     stroke: #404a55;
   }
+}
+
+div.site_overview.cmk_figure div.tooltip {
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
 div.hoststats,

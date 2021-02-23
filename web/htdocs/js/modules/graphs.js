@@ -830,7 +830,9 @@ function graph_activate_mouse_control(graph) {
         utils.add_event_handler("mousemove", graph_mouse_resize);
     }
 
-    utils.add_event_handler("mousemove", update_mouse_hovering);
+    if (graph.ajax_context.render_options.interaction) {
+        utils.add_event_handler("mousemove", update_mouse_hovering);
+    }
 }
 
 function graph_start_resize(event, graph) {
@@ -1267,10 +1269,11 @@ function render_graph_hover_popup(graph, event, popup_data) {
     hover.update_content(wrapper.innerHTML, event);
 }
 
+// Hide the tooltips that show the metric values at the position of the pointer
 function remove_all_graph_hover_popups() {
     for (const menu of document.getElementsByClassName("hover_menu")) {
-        const graph_container = menu.getElementsByClassName("graph_container");
-        if (graph_container) {
+        const graph_container = menu.getElementsByClassName("graph_hover_popup");
+        if (graph_container.length > 0) {
             hover.hide();
         }
     }

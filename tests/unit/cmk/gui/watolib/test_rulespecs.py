@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
 from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
     main_module_from_rulespec_group_name,
     MatchItemGeneratorRules,
     rulespec_group_registry,
@@ -1805,6 +1806,14 @@ def test_match_item_generator_rules():
             valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
             title=lambda: "Title",  # pylint: disable=unnecessary-lambda
         ))
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_deprecated_host_rulespec",
+            group=SomeRulespecGroup,
+            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            is_deprecated=True,
+        ))
 
     match_item_generator = MatchItemGeneratorRules(
         "rules",
@@ -1818,6 +1827,12 @@ def test_match_item_generator_rules():
             topic='Hosts > Rulespec Group',
             url='wato.py?mode=edit_ruleset&varname=some_host_rulespec',
             match_texts=['title', 'some_host_rulespec'],
+        ),
+        MatchItem(
+            title='Title',
+            topic='Deprecated rulesets',
+            url='wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec',
+            match_texts=['title', 'some_deprecated_host_rulespec'],
         )
     ]
 

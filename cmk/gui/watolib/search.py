@@ -413,6 +413,7 @@ class IndexSearcher:
             _("Services") + " > " + _("Enforced services"),
             _("Global settings"),
             _("Miscellaneous"),
+            _("Deprecated rulesets"),
             # _("Maintenance"),
         )
 

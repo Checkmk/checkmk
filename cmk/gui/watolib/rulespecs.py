@@ -1253,17 +1253,19 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
         self._rulespec_group_registry = rulesepc_group_reg
         self._rulespec_registry = rulespec_reg
 
-    def _topic_from_group_name(self, group_name: str) -> str:
+    def _topic(self, rulespec: Rulespec) -> str:
+        if rulespec.is_deprecated:
+            return _("Deprecated rulesets")
         topic_prefix = main_module_from_rulespec_group_name(
-            group_name,
+            rulespec.main_group_name,
             self._main_module_registry,
         ).topic.title
-        return f"{topic_prefix} > {self._rulespec_group_registry[group_name]().title}"
+        return f"{topic_prefix} > {self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=rulespec.title,
-            topic=self._topic_from_group_name(rulespec.main_group_name),
+            topic=self._topic(rulespec),
             url=makeuri_contextless(
                 request,
                 [("mode", "edit_ruleset"), ("varname", rulespec.name)],

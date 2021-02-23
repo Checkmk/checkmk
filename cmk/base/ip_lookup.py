@@ -7,7 +7,7 @@
 import errno
 import os
 import socket
-from typing import Any, cast, Dict, List, Optional, Tuple, Union
+from typing import Any, cast, Dict, List, Optional, Protocol, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -26,6 +26,29 @@ UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
+
+
+class _HostConfigLike(Protocol):
+    """This is what we expect from a HostConfig in *this* module"""
+    # Importing of the HostConfig class repeatedly lead to import cycles at various places.
+    hostname: HostName
+    is_ipv4_host: bool
+    is_ipv6_host: bool
+    is_no_ip_host: bool
+    is_snmp_host: bool
+    is_usewalk_host: bool
+
+    @property
+    def default_address_family(self) -> socket.AddressFamily:
+        ...
+
+    @property
+    def management_address(self) -> Optional[HostAddress]:
+        ...
+
+    @property
+    def is_dyndns_host(self) -> bool:
+        ...
 
 
 def fallback_ip_for(family: socket.AddressFamily) -> str:
@@ -55,15 +78,15 @@ def enforce_localhost() -> None:
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(host_config: config.HostConfig) -> Optional[HostAddress]:
+def lookup_ipv4_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
     return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET)
 
 
-def lookup_ipv6_address(host_config: config.HostConfig) -> Optional[HostAddress]:
+def lookup_ipv6_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
     return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET6)
 
 
-def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[HostAddress]:
+def lookup_mgmt_board_ip_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
     try:
         return lookup_ip_address(
             host_config,
@@ -81,7 +104,7 @@ def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[Hos
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
 def lookup_ip_address(
-    host_config: config.HostConfig,
+    host_config: _HostConfigLike,
     *,
     family: socket.AddressFamily,
     for_mgmt_board: bool = False,

@@ -143,7 +143,12 @@ def lookup_ip_address(
     if host_config.is_dyndns_host:
         return hostname
 
-    return cached_dns_lookup(hostname, family=family, is_no_ip_host=host_config.is_no_ip_host)
+    return cached_dns_lookup(
+        hostname,
+        family=family,
+        is_no_ip_host=host_config.is_no_ip_host,
+        use_dns_cache=config.use_dns_cache,
+    )
 
 
 # Variables needed during the renaming of hosts (see automation.py)
@@ -152,6 +157,7 @@ def cached_dns_lookup(
     *,
     family: socket.AddressFamily,
     is_no_ip_host: bool,
+    use_dns_cache: bool,
 ) -> Optional[str]:
     cache = _config_cache.get("cached_dns_lookup")
 
@@ -166,7 +172,7 @@ def cached_dns_lookup(
     ip_lookup_cache = _get_ip_lookup_cache()
 
     cached_ip = ip_lookup_cache.get(cache_id)
-    if cached_ip and config.use_dns_cache:
+    if cached_ip and use_dns_cache:
         cache[cache_id] = cached_ip
         return cached_ip
 

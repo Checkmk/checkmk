@@ -2436,10 +2436,18 @@ class html(ABCHTMLGenerator):
             self.close_b()
 
         if icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "title", "icon", "open" if isopen else "closed"],
-                     src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
-                     onclick=onclick)
+            self.img(
+                id_=img_id,
+                class_=[
+                    "treeangle",
+                    "title",
+                    # Although foldable_sidebar is given via the argument icon it should not be
+                    # displayed as big as an icon.
+                    "icon" if icon != "foldable_sidebar" else None,
+                    "open" if isopen else "closed",
+                ],
+                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                onclick=onclick)
         else:
             self.img(id_=img_id,
                      class_=["treeangle", "open" if isopen else "closed"],

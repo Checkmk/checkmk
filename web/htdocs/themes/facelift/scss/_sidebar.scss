@@ -56,6 +56,7 @@ body.side {
   float: right;
   width: 280px;
   height: 100%;
+  padding-top: $spacing;
 
   &.folded {
     display: none;
@@ -461,7 +462,7 @@ div.snapin {
 }
 
 #add_snapin {
-  margin-top: auto;
+  margin: auto 0 $spacing;
   text-align: center;
 
   a {

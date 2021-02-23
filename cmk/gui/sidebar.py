@@ -14,7 +14,6 @@ from typing import (
     Any,
     Dict,
     List,
-    NamedTuple,
     Optional,
     Tuple,
     Type,
@@ -302,16 +301,6 @@ class UserSidebarSnapin:
         return not self.__eq__(other)
 
 
-ShortcutMenuItem = NamedTuple("ShortcutMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("url", str),
-    ("target_name", str),
-    ("permission_name", Optional[str]),
-])
-
-
 class SidebarRenderer:
     def show(self, title: Optional[str] = None, content: Optional['HTML'] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
@@ -369,7 +358,6 @@ class SidebarRenderer:
             config.user.id, 'ui_sidebar_position', lambda x: None if x == "None" else "left")
         html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
 
-        self._show_shortcut_bar()
         self._show_snapin_bar(user_config)
 
         html.close_div()
@@ -392,20 +380,6 @@ class SidebarRenderer:
             json.dumps(restart_snapins),
             json.dumps(static_snapins),
         ))
-
-    def _show_shortcut_bar(self) -> None:
-        html.open_div(class_="shortcuts")
-        for item in _shortcut_menu_items():
-            if item.permission_name and not config.user.may(item.permission_name):
-                continue
-
-            html.open_a(href=item.url,
-                        target=item.target_name,
-                        class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
-            html.icon(item.icon_name)
-            html.div(item.title)
-            html.close_a()
-        html.close_div()
 
     def _show_snapins(self, user_config: UserSidebarConfig) -> Tuple[List, List, List]:
         refresh_snapins = []
@@ -574,51 +548,6 @@ class SidebarRenderer:
         if not config.user.get_attribute("nav_hide_icons_title"):
             html.div(_("Sidebar"))
         html.close_div()
-
-
-def _shortcut_menu_items() -> List[ShortcutMenuItem]:
-    return [
-        ShortcutMenuItem(
-            name="main",
-            title=_("Main"),
-            icon_name="main_dashboard",
-            url=makeuri_contextless(request, [("name", "main")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.main",
-        ),
-        ShortcutMenuItem(
-            name="system",
-            title=_("System"),
-            icon_name="main_cmk_dashboard",
-            url=makeuri_contextless(request, [("name", "checkmk")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.checkmk",
-        ),
-        ShortcutMenuItem(
-            name="problems",
-            title=_("Problems"),
-            icon_name="main_problems",
-            url=makeuri_contextless(request, [("name", "problems")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.problems",
-        ),
-        ShortcutMenuItem(
-            name="hosts",
-            title=_("Hosts"),
-            icon_name="main_folder",
-            url=makeuri_contextless(request, [("mode", "folder")], "wato.py"),
-            target_name="main",
-            permission_name="wato.hosts",
-        ),
-        ShortcutMenuItem(
-            name="manual",
-            title=_("Manual"),
-            icon_name="main_manual",
-            url="https://checkmk.com/cms.html",
-            target_name="blank",
-            permission_name=None,
-        ),
-    ]
 
 
 @cmk.gui.pages.register("side")

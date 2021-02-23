@@ -1746,42 +1746,6 @@ def test_rulespecs_get_by_group():
 
 
 def test_match_item_generator_rules():
-    class SomeMainModule(ABCMainModule):
-        @property
-        def mode_or_url(self):
-            return makeuri_contextless_rulespec_group(request, "rulespec_group")
-
-        @property
-        def topic(self):
-            return MainModuleTopicHosts
-
-        @property
-        def title(self):
-            return "Main Module"
-
-        @property
-        def icon(self):
-            return "icon"
-
-        @property
-        def permission(self):
-            return "some_permission"
-
-        @property
-        def description(self):
-            return "Description"
-
-        @property
-        def sort_index(self):
-            return 30
-
-        @property
-        def is_show_more(self):
-            return False
-
-    main_module_reg = ModuleRegistry()
-    main_module_reg.register(SomeMainModule)
-
     class SomeRulespecGroup(RulespecGroup):
         @property
         def name(self):
@@ -1817,14 +1781,13 @@ def test_match_item_generator_rules():
 
     match_item_generator = MatchItemGeneratorRules(
         "rules",
-        main_module_reg,
         rulespec_group_reg,
         rulespec_reg,
     )
     assert list(match_item_generator.generate_match_items()) == [
         MatchItem(
             title='Title',
-            topic='Hosts > Rulespec Group',
+            topic='Rulespec Group',
             url='wato.py?mode=edit_ruleset&varname=some_host_rulespec',
             match_texts=['title', 'some_host_rulespec'],
         ),
@@ -1844,3 +1807,10 @@ def test_all_rulespec_groups_have_main_group(load_plugins):
                 rulespec_group_name,
                 main_module_registry,
             )
+
+
+def test_rulespec_groups_have_unique_names(load_plugins):
+    # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
+    # distinguish where a rule is located in the menu hierarchy.
+    main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
+    assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"

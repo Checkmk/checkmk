@@ -107,7 +107,6 @@ def inventory_printer_io(parsed: Section):
         if tray.capacity_max == 0:  # useless
             continue
         if tray.states.availability in [
-                AvailabilityStatus.UNAVAILABLE_AND_ON_REQUEST,
                 AvailabilityStatus.UNAVAILABLE_BECAUSE_BROKEN,
                 AvailabilityStatus.UNKNOWN,
         ]:

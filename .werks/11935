@@ -1,0 +1,14 @@
+Title: Printer IO: No longer skip "Unavailable and on request" state in discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613382146
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+This state would be skipped in service discovery.
+This would result in scenarios where p.e. Trays dont get discovered until
+you add some paper.
+Now these services get discovered all the time.

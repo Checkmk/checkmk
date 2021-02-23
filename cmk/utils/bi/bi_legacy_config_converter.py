@@ -110,8 +110,10 @@ class BIRuleSchemaConverter:
                 "value": int(str(aggr_func_old[1][0]).rstrip("%"))
             }
             aggr_func_new["levels_warn"] = {
-                "type": "percentage" if str(aggr_func_old[1][1]).endswith("%") else "count",
-                "value": int(str(aggr_func_old[1][1]).rstrip("%"))
+                "levels_warn": {
+                    "type": "percentage" if str(aggr_func_old[1][1]).endswith("%") else "count",
+                    "value": int(str(aggr_func_old[1][1]).rstrip("%"))
+                }
             }
         return aggr_func_new
 

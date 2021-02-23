@@ -22,7 +22,7 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("NagVis Maps")
+        return _("NagVis maps")
 
     @classmethod
     def description(cls):

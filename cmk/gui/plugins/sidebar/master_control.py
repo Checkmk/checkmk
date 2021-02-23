@@ -30,7 +30,7 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Master Control")
+        return _("Master control")
 
     @classmethod
     def description(cls) -> str:

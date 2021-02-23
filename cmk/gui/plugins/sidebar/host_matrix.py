@@ -22,7 +22,7 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Host Matrix")
+        return _("Host matrix")
 
     @classmethod
     def description(cls):

@@ -101,7 +101,7 @@ class Hosts(HostSnapin):
 
     @classmethod
     def title(cls):
-        return _("All Hosts")
+        return _("All hosts")
 
     @classmethod
     def description(cls):
@@ -119,7 +119,7 @@ class ProblemHosts(HostSnapin):
 
     @classmethod
     def title(cls):
-        return _("Problem Hosts")
+        return _("Problem hosts")
 
     @classmethod
     def description(cls):

@@ -27,7 +27,7 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups")
+        return _("BI aggregation groups")
 
     @classmethod
     def description(cls) -> str:
@@ -48,7 +48,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups Tree")
+        return _("BI aggregation groups tree")
 
     @classmethod
     def description(cls) -> str:

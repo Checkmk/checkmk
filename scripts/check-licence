@@ -29,7 +29,7 @@ log() {
 }
 
 if [ ${#fails[*]} -ne 0 ]; then
-    log "These files are missing licence headers or the copyright is outdated:"
+    log "These files are missing licence headers:"
     log ${fails[@]}
     log
     exit 1

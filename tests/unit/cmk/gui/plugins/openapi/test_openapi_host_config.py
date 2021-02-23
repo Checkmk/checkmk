@@ -201,7 +201,7 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
         content_type='application/json',
     )
 
-    _resp = wsgi_app.call_method('delete',
+    _resp = wsgi_app.call_method('post',
                                  base + "/domain-types/host_config/actions/bulk-delete/invoke",
                                  params=json.dumps({"entries": ["foobar", "sample"]}),
                                  status=204,

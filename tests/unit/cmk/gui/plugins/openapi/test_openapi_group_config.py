@@ -157,7 +157,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     assert resp.json_body['extensions']['customer'] == 'global'
 
     _resp = wsgi_app.call_method(
-        'delete',
+        'post',
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),
         params=json.dumps({'entries': [f"{group['name']}" for group in groups]}),
         status=204,

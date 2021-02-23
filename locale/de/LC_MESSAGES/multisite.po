@@ -4,10 +4,10 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-18 07:00+0000\n"
-"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
+"PO-Revision-Date: 2021-02-23 13:47+0000\n"
+"Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -3165,9 +3165,8 @@ msgstr "Kunde hinzufügen"
 msgid "Add destination address"
 msgstr "Zieladresse hinzufügen"
 
-#, fuzzy
 msgid "Add details manually"
-msgstr "Manuell ausführen"
+msgstr "Details manuell hinzufügen"
 
 msgid "Add diskstate rule"
 msgstr "Regel hinzufügen"
@@ -5232,6 +5231,9 @@ msgstr "Maximale Zeit für das Apply-Lag"
 
 msgid "Apply Lag Minimum Time"
 msgstr "Minimale Zeit für das Apply-Lag"
+
+msgid "Apply conditions"
+msgstr "Bedingungen anwenden"
 
 msgid "Apply filters"
 msgstr "Filter anwenden"
@@ -8234,9 +8236,6 @@ msgstr "Ändere Ereignisstatus zu:"
 msgid "Change OK State to"
 msgstr "Ok-Status ändern zu"
 
-msgid "Change Selection"
-msgstr "Auswahl ändern"
-
 msgid "Change State"
 msgstr "Änderungsstatus"
 
@@ -9122,7 +9121,6 @@ msgstr ""
 "Wählen Sie die Schwellwerte für die Zeit (in Sekunden) die sich ein Dienst "
 "in einem 'activating' Zustand befinden darf."
 
-#, fuzzy
 msgid ""
 "Choose what kind of ouput data is sent to the Check_MK server: Only count "
 "the files, only report count and extrem files (i.e. the oldest, newest, "
@@ -9131,8 +9129,9 @@ msgid ""
 msgstr ""
 "Wählen Sie aus, welche Art von Ausgabedaten an den Check_MK-Server gesendet "
 "werden: Zählen Sie nur die Dateien, melden Sie nur die Anzahl der Dateien "
-"und Extremdateien (d.h. die ältesten, neuesten, größten und kleinsten, oder "
-"melden Sie die vollständigen Statistiken aller Dateien."
+"und die extrem en Dateien (d.h. die ältesten, neuesten, größten und "
+"kleinsten), melden Sie die vollständigen Statistiken aller Dateien, oder nur "
+"Informationen über einzelne Dateien."
 
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -9164,16 +9163,14 @@ msgstr ""
 "Wählen Sie, ob Sie nur die Versionsnummer abfragen, oder die Antwort auf "
 "eine Adressanfrage überprüfen wollen."
 
-#, fuzzy
 msgid "Chrony timesynchronisation"
-msgstr "Status der NTP Zeitsynchronisation"
+msgstr "Chrony Zeitsynchronisation"
 
 msgid "Cisco ASA Firewall Connections"
 msgstr "Cisco ASA Firewall Verbindungen"
 
-#, fuzzy
 msgid "Cisco CPU Memory"
-msgstr "Cisco Speicherverwendung"
+msgstr "Cisco CPU Speicher"
 
 #, fuzzy
 msgid "Cisco DOM discovery"
@@ -9185,20 +9182,18 @@ msgstr "Cisco IP SLA"
 msgid "Cisco Memory Usage"
 msgstr "Cisco Speicherverwendung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Cisco Memory Usage (%s)"
-msgstr "Cisco Speicherverwendung"
+msgstr "Cisco Speicherverwendung (%s)"
 
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr "Speicherverbrauch von Cisco Nexus Supervisor"
 
-#, fuzzy
 msgid "Cisco Prime"
-msgstr "Cisco IP SLA"
+msgstr "Cisco Prime"
 
-#, fuzzy
 msgid "Cisco Prime WiFi Access Points"
-msgstr "Accesspoint"
+msgstr "Cisco Prime WiFi Zugangspunkte"
 
 #, fuzzy
 msgid "Cisco Prime WiFi Connections"
@@ -9611,6 +9606,14 @@ msgid "Color A4"
 msgstr "Farbe A4"
 
 #, fuzzy
+msgid "Color background after SERVICE state"
+msgstr "Farbwert nach SERVICE Status"
+
+#, fuzzy
+msgid "Color background following it's METRIC THRESHOLDS if available"
+msgstr "Farbwert nach den METRIC THRESHOLDS wenn verfügbar"
+
+#, fuzzy
 msgid "Color for the average line"
 msgstr "Schwellwerte für die Tablespace-Grösse"
 
@@ -9807,7 +9810,6 @@ msgstr "Zugesicherter Speicher"
 msgid "Common Name"
 msgstr "Common Name"
 
-#, fuzzy
 msgid ""
 "Communication between different components of Checkmk (e.g. GUI and check "
 "engine) will be logged in this log level."
@@ -9996,9 +9998,8 @@ msgstr "Konfigurationsdateien ('*.mk' oder '*.conf') aus etc/checkmk: %s"
 msgid "Configuration generation"
 msgstr "Konfigurationserzeugung"
 
-#, fuzzy
 msgid "Configuration of Checkmk's Business Intelligence component"
-msgstr "Konfiguration von Check_MK's Business Intelligence Modul"
+msgstr "Konfiguration von Checkmk's Business Intelligence Modul"
 
 msgid "Configuration of RRD databases of hosts"
 msgstr "Konfiguration der RRD-Datenbanken von Hosts"
@@ -11418,9 +11419,8 @@ msgstr "Nutzer angelegt: %s"
 msgid "Created snapshot %s"
 msgstr "Sicherung %s erzeugt"
 
-#, fuzzy
 msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
-msgstr "Erstellt mit CheckMK Version $CHECK_MK_VERSION$"
+msgstr "Erstellt mit Checkmk Version $CHECK_MK_VERSION$"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -15426,6 +15426,10 @@ msgid "Download filename"
 msgstr "Download-Dateiname"
 
 #, fuzzy
+msgid "Download license usage report"
+msgstr "Der Lizenznutzungsbericht kann nicht heruntergeladen werden."
+
+#, fuzzy
 msgid "Download report"
 msgstr "Diesen Bericht herunterladen"
 
@@ -18458,6 +18462,10 @@ msgstr "Dateisysteme (Volumes, Laufwerke)"
 #, fuzzy
 msgid "Filesystems usage"
 msgstr "Dateisystembenutzung"
+
+#, fuzzy
+msgid "Fill color"
+msgstr "Wartende Verbindungen"
 
 msgid "Filter"
 msgstr "Filter"
@@ -23327,7 +23335,7 @@ msgstr ""
 "Sie die Bäckerei nicht nutzen, werden die konfigurierten IP-"
 "Adressbeschränkungen eines Hosts anhand der vom Agenten gemeldeten "
 "zulässigen IP-Adressen überprüft. Dies geschieht während der Überwachung "
-"durch den Check_MK-Service."
+"durch den Checkmk-Service."
 
 msgid ""
 "If you change this paths away from its default then the package will <b>not</"
@@ -29899,9 +29907,8 @@ msgstr "Metrik-Historie"
 msgid "Metric aggregation"
 msgstr "Metrik-Aggregation"
 
-#, fuzzy
-msgid "Metric color"
-msgstr "Metrik-Historie"
+msgid "Metric compression (RRD)"
+msgstr ""
 
 msgid "Metric label"
 msgstr "Metrik-Bezeichnung"
@@ -30155,6 +30162,10 @@ msgstr "Passwort für Automatisierungsbefehl fehlt."
 msgid "Missing spec parameter"
 msgstr "Der Parameter spec fehlt"
 
+#, fuzzy
+msgid "Missing test host name"
+msgstr "Fehlender Hostname"
+
 msgid "Missing variable siteid"
 msgstr "Variable siteid fehlt"
 
@@ -30335,6 +30346,9 @@ msgstr "MongoDB Collection-Größe"
 msgid "MongoDB database connections"
 msgstr "Bestehenden Verbindungen"
 
+msgid "Monitor"
+msgstr "Überwachen"
+
 msgid "Monitor & Graph Lanes"
 msgstr "Überwachung & Graphen für einzelne Lanes"
 
@@ -30366,6 +30380,10 @@ msgstr "Gruppenquotas überwachen"
 #, fuzzy
 msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
 msgstr "Hosts auf ungecheckte Services hin überwachen (Check_MK Discovery)"
+
+#, fuzzy
+msgid "Monitor menu entries"
+msgstr "Überwachung von Anforderungsmetriken"
 
 msgid "Monitor multiple JMX instances on the host"
 msgstr "Mehrere JMX-Instanzen auf dem Host überwachen"
@@ -31797,6 +31815,10 @@ msgstr "Hostname(n) unbekannt: %s"
 msgid "No such inventory tree."
 msgstr "Kein Inventarbaum gefunden."
 
+#, fuzzy
+msgid "No test host"
+msgstr "Kein Status-Host"
+
 msgid "No title"
 msgstr "Kein Titel"
 
@@ -32233,6 +32255,11 @@ msgstr ""
 "konfigurierbare Optionen bietet. Bitte beachten, dass die Match-Patterns in "
 "dieser Regel Case-Insensitiv sind, wobei die neue Regel Gross- und "
 "Kleinschreibung unterscheidet."
+
+msgid ""
+"Note: With this command you can archive all events of one host. Needs a rule "
+"\"Check event state in Event Console\" to be configured."
+msgstr ""
 
 msgid ""
 "Note: enabling performance data for the latency might cause "
@@ -37435,6 +37462,10 @@ msgstr "Zufällige zusätzliche Verzögerung"
 msgid "Randomize password"
 msgstr "Zufallsgesteuertes Passwort"
 
+#, fuzzy
+msgid "Range limits"
+msgstr "Alias anzeigen"
+
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatur"
 
@@ -41689,10 +41720,6 @@ msgstr "Namen von Plugins anzeigen"
 msgid "Show prediction for "
 msgstr "Vorhersage zeigen für"
 
-#, fuzzy
-msgid "Show range limits"
-msgstr "Alias anzeigen"
-
 msgid "Show reserved space"
 msgstr "Reserviertern Platz anzeigen"
 
@@ -44510,6 +44537,13 @@ msgstr "Bericht einsenden"
 msgid "Submit license usage report"
 msgstr "Fehlerbericht wird eingesendet..."
 
+msgid "Submit or download"
+msgstr ""
+
+#, fuzzy
+msgid "Submit or download license usage report"
+msgstr "Fehlerbericht wird eingesendet..."
+
 #, fuzzy
 msgid "Submit report"
 msgstr "Bericht einsenden"
@@ -45409,8 +45443,9 @@ msgstr "The connection %r does not exist"
 msgid "Test event generated and sent to Event Console."
 msgstr "Test-Ereignis generiert und zur Event Console geschickt"
 
-msgid "Test with this host name"
-msgstr "Test mit diesem Hostnamen"
+#, fuzzy
+msgid "Test hostname before activation"
+msgstr "Benutzer der Aktion ausführt"
 
 #, fuzzy
 msgid "Testing"
@@ -45418,6 +45453,10 @@ msgstr "Test läuft"
 
 msgid "Text"
 msgstr "Text"
+
+#, fuzzy
+msgid "Text color"
+msgstr "Hex-Farbe:"
 
 #, python-format
 msgid "Text from URL %s"
@@ -55744,15 +55783,16 @@ msgstr "Eigenschaften der %s-Gruppe %s bearbeitet"
 msgid "Updates"
 msgstr "Aktualisierungen"
 
-#, python-format
-msgid "Updates are <b>disabled</b> for this host: %s"
-msgstr "Agentenupdates sind für diesen Host <b>abgeschaltet</b>: %s"
-
-msgid "Updates are enabled for this host."
-msgstr "Agentenupdates sind für diesen Host aktiviert."
-
 msgid "Updates are expected at least every"
 msgstr "Aktualisierungen werden ... erwartet"
+
+#, fuzzy, python-format
+msgid "Updates will be <b>disabled</b> for this host: %s"
+msgstr "Agentenupdates sind für diesen Host <b>abgeschaltet</b>: %s"
+
+#, fuzzy
+msgid "Updates will be enabled for this host."
+msgstr "Agentenupdates sind für diesen Host aktiviert."
 
 msgid "Updating of search index started"
 msgstr "Aktualisierung des Suchindex gestartet"
@@ -63770,6 +63810,17 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Change Selection"
+#~ msgstr "Auswahl ändern"
+
+#, fuzzy
+#~| msgid "Metric History"
+#~ msgid "Metric color"
+#~ msgstr "Metrik-Historie"
+
+#~ msgid "Test with this host name"
+#~ msgstr "Test mit diesem Hostnamen"
+
 #, fuzzy
 #~| msgid "Download this report"
 #~ msgid "Download usage report"
@@ -66461,9 +66512,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ "eigene Berechtigung (siehe weiter unten) für die Verwaltung von Services "
 #~ "(Inventarisierung)."
 
-#~ msgid "Monitor"
-#~ msgstr "Überwachen"
-
 #~ msgid "Monitoring Agents - Agent Bakery"
 #~ msgstr "Monitoringagenten - Agentenbäckerei"
 
@@ -68178,9 +68226,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Disable graph"
 #~ msgstr "Graph deaktivieren"
-
-#~ msgid "Hex color:"
-#~ msgstr "Hex-Farbe:"
 
 #~ msgid "History time range"
 #~ msgstr "Zeitfenster"

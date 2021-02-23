@@ -4991,6 +4991,10 @@ msgid "Apply Lag Minimum Time"
 msgstr ""
 
 #, fuzzy
+msgid "Apply conditions"
+msgstr "%d condiții"
+
+#, fuzzy
 msgid "Apply filters"
 msgstr "Adaugă filtre"
 
@@ -7789,9 +7793,6 @@ msgstr ""
 msgid "Change OK State to"
 msgstr ""
 
-msgid "Change Selection"
-msgstr ""
-
 msgid "Change State"
 msgstr ""
 
@@ -9097,6 +9098,12 @@ msgid "Color A3"
 msgstr ""
 
 msgid "Color A4"
+msgstr ""
+
+msgid "Color background after SERVICE state"
+msgstr ""
+
+msgid "Color background following it's METRIC THRESHOLDS if available"
 msgstr ""
 
 msgid "Color for the average line"
@@ -14709,6 +14716,10 @@ msgid "Download filename"
 msgstr ""
 
 #, fuzzy
+msgid "Download license usage report"
+msgstr "% utilizare"
+
+#, fuzzy
 msgid "Download report"
 msgstr "Descarca"
 
@@ -17635,6 +17646,10 @@ msgstr ""
 #, fuzzy
 msgid "Filesystems usage"
 msgstr "Spațiu liber exact"
+
+#, fuzzy
+msgid "Fill color"
+msgstr "sesiuni"
 
 msgid "Filter"
 msgstr ""
@@ -27969,9 +27984,8 @@ msgstr " pe siteul de monitorizare: "
 msgid "Metric aggregation"
 msgstr "Agregare noua"
 
-#, fuzzy
-msgid "Metric color"
-msgstr " pe siteul de monitorizare: "
+msgid "Metric compression (RRD)"
+msgstr ""
 
 #, fuzzy
 msgid "Metric label"
@@ -28237,6 +28251,10 @@ msgstr ""
 msgid "Missing spec parameter"
 msgstr ""
 
+#, fuzzy
+msgid "Missing test host name"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Missing variable siteid"
 msgstr ""
 
@@ -28420,6 +28438,10 @@ msgstr ""
 msgid "MongoDB database connections"
 msgstr "Conexiuni Active"
 
+#, fuzzy
+msgid "Monitor"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Monitor & Graph Lanes"
 msgstr ""
 
@@ -28453,6 +28475,10 @@ msgstr " pe siteul de monitorizare: "
 
 msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
 msgstr ""
+
+#, fuzzy
+msgid "Monitor menu entries"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Monitor multiple JMX instances on the host"
 msgstr ""
@@ -29896,6 +29922,10 @@ msgstr ""
 msgid "No such inventory tree."
 msgstr ""
 
+#, fuzzy
+msgid "No test host"
+msgstr "(element fără element)"
+
 msgid "No title"
 msgstr ""
 
@@ -30258,6 +30288,11 @@ msgid ""
 "logfiles (Linux, Windows)' rule, since it offers more configurable options. "
 "Keep in mind, that the patterns configured in this rule were always checked "
 "case insensitive, whereas the new rule also adheres upper- and lowercase."
+msgstr ""
+
+msgid ""
+"Note: With this command you can archive all events of one host. Needs a rule "
+"\"Check event state in Event Console\" to be configured."
 msgstr ""
 
 msgid ""
@@ -35254,6 +35289,10 @@ msgstr ""
 msgid "Randomize password"
 msgstr ""
 
+#, fuzzy
+msgid "Range limits"
+msgstr "Arata in masa"
+
 msgid "Raritan EMX Rack: Temperature"
 msgstr ""
 
@@ -39454,10 +39493,6 @@ msgid "Show prediction for "
 msgstr ""
 
 #, fuzzy
-msgid "Show range limits"
-msgstr "Arata in masa"
-
-#, fuzzy
 msgid "Show reserved space"
 msgstr "spatiu utilizat"
 
@@ -41970,6 +42005,13 @@ msgstr ""
 msgid "Submit license usage report"
 msgstr "% utilizare"
 
+msgid "Submit or download"
+msgstr ""
+
+#, fuzzy
+msgid "Submit or download license usage report"
+msgstr "% utilizare"
+
 #, fuzzy
 msgid "Submit report"
 msgstr "Adaugă element"
@@ -42880,8 +42922,8 @@ msgid "Test event generated and sent to Event Console."
 msgstr "(nu trimite notificări câtre Event Console)"
 
 #, fuzzy
-msgid "Test with this host name"
-msgstr " pe siteul de monitorizare: "
+msgid "Test hostname before activation"
+msgstr "%d condiții"
 
 #, fuzzy
 msgid "Testing"
@@ -42889,6 +42931,10 @@ msgstr "testare"
 
 msgid "Text"
 msgstr ""
+
+#, fuzzy
+msgid "Text color"
+msgstr " pe siteul de monitorizare: "
 
 #, python-format
 msgid "Text from URL %s"
@@ -50902,15 +50948,16 @@ msgstr ""
 msgid "Updates"
 msgstr ""
 
-#, python-format
-msgid "Updates are <b>disabled</b> for this host: %s"
-msgstr ""
-
-msgid "Updates are enabled for this host."
-msgstr ""
-
 msgid "Updates are expected at least every"
 msgstr ""
+
+#, python-format
+msgid "Updates will be <b>disabled</b> for this host: %s"
+msgstr ""
+
+#, fuzzy
+msgid "Updates will be enabled for this host."
+msgstr "%s acest site"
 
 msgid "Updating of search index started"
 msgstr ""
@@ -57851,6 +57898,10 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Test with this host name"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
 #~ msgid "Add subscription details"
 #~ msgstr "foloseste descrierea"
 
@@ -59207,10 +59258,6 @@ msgstr ""
 #~ msgstr "Un titlu descriptiv despre această acțiune."
 
 #, fuzzy
-#~ msgid "Monitor"
-#~ msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
 #~ msgid "Monitoring Agents - Agent Bakery"
 #~ msgstr " pe siteul de monitorizare: "
 
@@ -59522,10 +59569,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Renaming host(s) in rulesets..."
 #~ msgstr "trimite notificare"
-
-#, fuzzy
-#~ msgid "Replication enabled for this site"
-#~ msgstr "%s acest site"
 
 #, fuzzy
 #~ msgid "Replication not enabled for this site"

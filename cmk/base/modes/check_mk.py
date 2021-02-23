@@ -741,7 +741,9 @@ modes.register(
 
 
 def mode_update_dns_cache() -> None:
-    ip_lookup.update_dns_cache()
+    config_cache = config.get_config_cache()
+    ip_lookup.update_dns_cache(
+        config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts())
 
 
 modes.register(

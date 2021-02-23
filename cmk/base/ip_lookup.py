@@ -7,7 +7,7 @@
 import errno
 import os
 import socket
-from typing import Any, cast, Dict, List, Optional, Protocol, Tuple, Union
+from typing import Any, cast, Dict, Iterable, List, Optional, Protocol, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -328,8 +328,7 @@ def _cache_path() -> str:
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
-def update_dns_cache() -> UpdateDNSCacheResult:
-    config_cache = config.get_config_cache()
+def update_dns_cache(host_configs: Iterable[_HostConfigLike]) -> UpdateDNSCacheResult:
 
     failed = []
 
@@ -340,9 +339,8 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     ip_lookup_cache.clear()
 
     console.verbose("Updating DNS cache...\n")
-    for hostname, family in _get_dns_cache_lookup_hosts(config_cache):
-        host_config = config_cache.get_host_config(hostname)
-        console.verbose("%s (IPv%d)..." % (hostname, family))
+    for host_config, family in _annotate_family(host_configs):
+        console.verbose("%s (IPv%d)..." % (host_config.hostname, family))
         try:
             ip = lookup_ip_address(host_config, family=family)
             console.verbose("%s\n" % ip)
@@ -353,7 +351,7 @@ def update_dns_cache() -> UpdateDNSCacheResult:
             raise
 
         except Exception as e:
-            failed.append(hostname)
+            failed.append(host_config.hostname)
             console.verbose("lookup failed: %s\n" % e)
             if cmk.utils.debug.enabled():
                 raise
@@ -365,15 +363,13 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     return len(ip_lookup_cache), failed
 
 
-def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLookupCacheId]:
-    hosts = []
-    for hostname in config_cache.all_active_hosts():
-        host_config = config_cache.get_host_config(hostname)
+def _annotate_family(
+    host_configs: Iterable[_HostConfigLike],
+) -> Iterable[Tuple[_HostConfigLike, socket.AddressFamily]]:
+    for host_config in host_configs:
 
         if host_config.is_ipv4_host:
-            hosts.append((hostname, socket.AF_INET))
+            yield host_config, socket.AF_INET
 
         if host_config.is_ipv6_host:
-            hosts.append((hostname, socket.AF_INET6))
-
-    return hosts
+            yield host_config, socket.AF_INET6

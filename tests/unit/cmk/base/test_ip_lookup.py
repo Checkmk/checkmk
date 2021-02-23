@@ -156,7 +156,9 @@ def test_update_dns_cache(monkeypatch, _cache_file):
     ts.add_host("dual", tags={"address_family": "ip-v4v6"})
     ts.apply(monkeypatch)
 
-    assert ip_lookup.update_dns_cache() == (3, ["dual"])
+    config_cache = config.get_config_cache()
+    assert ip_lookup.update_dns_cache(
+        config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()) == (3, ["dual"])
 
     # Check persisted data
     cache = ip_lookup._load_ip_lookup_cache(lock=False)

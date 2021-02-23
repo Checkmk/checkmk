@@ -1393,7 +1393,9 @@ class AutomationUpdateDNSCache(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: List[str]) -> ip_lookup.UpdateDNSCacheResult:
-        return ip_lookup.update_dns_cache()
+        config_cache = config.get_config_cache()
+        return ip_lookup.update_dns_cache(
+            config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts())
 
 
 automations.register(AutomationUpdateDNSCache())

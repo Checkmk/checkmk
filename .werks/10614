@@ -15,3 +15,4 @@ Site/Host overview dashlet:
 LI: The dashlet is now responsive to dashboard filters.
 LI: Host and service state colors are now in line with Checkmk standards. Before, down hosts were shown in yellow (now red) and unknown services as well as unreachable hosts in red (now orange).
 LI: The positioning of hexagons in the dashlet was fixed so they do not overflow beyond the dashlet borders anymore.
+LI: In host overview the tooltip now holds information about host state and problem services.

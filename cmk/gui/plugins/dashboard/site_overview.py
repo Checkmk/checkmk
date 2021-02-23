@@ -18,6 +18,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard import dashlet_registry, ABCFigureDashlet
 from cmk.gui.plugins.dashboard.utils import render_title_with_macros_string
+from cmk.gui.pages import page_registry, AjaxPage
 
 
 @dataclass
@@ -137,7 +138,6 @@ class SiteOverviewDashletDataGenerator:
 
         for host_name, host_stats in sorted(cls._get_host_stats(site_id, context).items(),
                                             key=lambda h: h[0]):
-
             elements.append(
                 HostElement(
                     title=host_name,
@@ -157,7 +157,7 @@ class SiteOverviewDashletDataGenerator:
                     num_services=host_stats.num_services,
                     num_problems=(host_stats.num_services_crit + host_stats.num_services_unknown +
                                   host_stats.num_services_warn),
-                    tooltip=str(html.render_h3(host_name)),
+                    tooltip="",  # host tooltips are fetched on hover through an ajax call
                 ))
 
         return elements
@@ -460,3 +460,42 @@ class SiteOverviewDashlet(ABCFigureDashlet):
     def generate_response_data(properties, context, settings):
         return SiteOverviewDashletDataGenerator.generate_response_data(
             properties, context, settings)
+
+
+@page_registry.register_page("ajax_host_overview_tooltip")
+class HostOverviewTooltipPage(AjaxPage):
+    def page(self):
+        title = html.request.get_str_input_mandatory("title")
+        host_css_class = html.request.get_str_input_mandatory("host_css_class")
+        service_css_class = html.request.get_str_input_mandatory("service_css_class")
+        num_services = html.request.get_integer_input_mandatory("num_services")
+        num_problems = html.request.get_integer_input_mandatory("num_problems")
+
+        with html.plugged():
+            html.h3(title)
+            html.span(
+                _("Host is %s" %
+                  (host_css_class if host_css_class != "downtime" else "in downtime")))
+
+            if host_css_class != "up":
+                return {"host_tooltip": html.drain()}
+
+            html.open_table()
+            problem_services_str = _("problem services")
+            if num_problems == 1:
+                problem_services_str = _("service in %s state" % service_css_class)
+            elif num_problems > 1:
+                problem_services_str += _(" (worst state: %s)" % service_css_class)
+
+            html.open_tr()
+            html.td(str(num_services), class_="count")
+            html.td(_("services") if num_services > 1 else _("service"))
+            html.close_tr()
+
+            html.open_tr()
+            html.td(str(num_problems), class_="count")
+            html.td(problem_services_str)
+            html.close_tr()
+
+            html.close_table()
+            return {"host_tooltip": html.drain()}

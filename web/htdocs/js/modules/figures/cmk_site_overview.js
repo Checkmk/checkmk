@@ -13,10 +13,11 @@ export class SiteOverview extends cmk_figures.FigureBase {
         this.margin = {top: 0, right: 0, bottom: 0, left: 0};
 
         this._max_box_width = 96;
+        this._host_tooltip = "";
+        this._last_hovered_host = null;
 
         // Debugging/demo stuff
         this._test_filter = false;
-        this._use_canvas_for_hosts = false;
     }
 
     initialize(debug) {
@@ -134,8 +135,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     let zoom_enabled = this._zoomable_modes.indexOf(this._data.render_mode) != -1;
                     this._last_zoom = zoom_enabled ? event.transform : d3.zoomIdentity;
                     this.plot.attr("transform", this._last_zoom);
-                    if (this._use_canvas_for_hosts)
-                        this._render_hexagon_content(this._hexagon_content);
+                    this._render_hexagon_content(this._hexagon_content);
                     this.tooltip_generator.update_position(event);
                 })
         );
@@ -170,6 +170,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
             }
 
             const num_rows = Math.ceil(num_elements / num_columns);
+
             const box_height = (box_width * Math.sqrt(3)) / 2;
             const necessary_total_height = box_height * (num_rows + 1 / 3);
 
@@ -215,8 +216,8 @@ export class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _compute_hosts() {
-        let data = this._crossfilter.allFiltered();
-        let geometry = this._compute_host_geometry(
+        const data = this._crossfilter.allFiltered();
+        const geometry = this._compute_host_geometry(
             data.length,
             this._compute_box_area(this.plot_size)
         );
@@ -229,11 +230,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
     _render_hexagon_content(hexagon_content) {
         if (this._data.render_mode == "hosts") {
-            if (this._use_canvas_for_hosts) {
-                this._render_host_hexagons_as_canvas(hexagon_content);
-            } else {
-                this._render_host_hexagons_as_svg(hexagon_content);
-            }
+            this._render_host_hexagons_as_canvas(hexagon_content);
         } else if (this._data.render_mode == "alert_statistics") {
             this._render_host_hexagons_as_svg(hexagon_content);
         } else {
@@ -243,7 +240,6 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
     _compute_host_elements(geometry, elements) {
         const hexbin = d3Hexbin.hexbin();
-        let outer_hexagon_path = hexbin.hexagon(geometry.radius);
         elements.forEach((d, idx) => {
             // Compute coordinates
             let x = ((idx % geometry.num_columns) + 0.5) * geometry.box_width;
@@ -263,9 +259,9 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 d.hexagon_config = [
                     {
                         id: "outer_hexagon",
-                        path: outer_hexagon_path,
+                        path: hexbin.hexagon(geometry.radius),
                         css_class: outer_css_class,
-                        tooltip: d.tooltip,
+                        tooltip: "",
                     },
                 ];
 
@@ -282,7 +278,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                         [0.5, 1, 1],
                     ];
                     for (const [min, max, map_val] of thresholds) {
-                        if (min < badness && badness <= max) {
+                        if (min <= badness && badness <= max) {
                             badness = map_val;
                             break;
                         }
@@ -293,8 +289,8 @@ export class SiteOverview extends cmk_figures.FigureBase {
                     d.hexagon_config.push({
                         id: "inner_hexagon",
                         path: hexbin.hexagon(geometry.radius * radius_factor),
-                        css_class: "ok inner",
-                        tooltip: d.tooltip,
+                        css_class: "up",
+                        tooltip: "",
                     });
                 }
             } else if (this._data.render_mode == "alert_statistics") {
@@ -321,9 +317,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
     _render_host_hexagons_as_svg(hexagon_content, transition_duration = 250) {
         let elements = hexagon_content.elements;
         // Prepare Box
-        let hexagon_boxes = this.plot.selectAll("g.element_box").data(elements, d => {
-            return d.title;
-        });
+        let hexagon_boxes = this.plot.selectAll("g.element_box").data(elements, d => d.title);
 
         hexagon_boxes = hexagon_boxes.join(enter =>
             enter
@@ -346,7 +340,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
                 d => d.hexagon_config,
                 d => d.id
             )
-            .join(enter => enter.append("path").classed("hexagon", true))
+            .join(enter => enter.append("path"))
             .attr("d", d => d.path)
             .attr("fill", d => d.color)
             .attr("class", d => "hexagon " + d.css_class);
@@ -361,11 +355,25 @@ export class SiteOverview extends cmk_figures.FigureBase {
     }
 
     _render_host_hexagons_as_canvas(hexagon_content) {
-        let elements = hexagon_content.elements;
+        const elements = hexagon_content.elements;
+        const host_classes_iterable = d3.group(elements, d => d.host_css_class).keys();
+        const service_classes_iterable = d3.group(elements, d => d.service_css_class).keys();
+
+        // Obtain all needed fill colors (per state) by creating a respectively classed DOM element
+        let fill_map = {};
+        for (const iterable of [host_classes_iterable, service_classes_iterable]) {
+            for (const css_class of iterable) {
+                const tmp_elem = this.svg
+                    .append("path")
+                    .attr("class", "hexagon host_element " + css_class);
+                fill_map[css_class] = tmp_elem.style("fill");
+                tmp_elem.remove();
+            }
+        }
 
         this.canvas.attr("width", this.plot_size.width).attr("height", this.plot_size.height);
 
-        let ctx = this.canvas.node().getContext("2d");
+        const ctx = this.canvas.node().getContext("2d");
         ctx.scale(this._last_zoom.k, this._last_zoom.k);
 
         // Quadtree: Used for coordinate lookup
@@ -377,14 +385,14 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
         elements.forEach(element => {
             ctx.save();
-            let trans_x = element.x + this._last_zoom.x / this._last_zoom.k;
-            let trans_y = element.y + this._last_zoom.y / this._last_zoom.k;
+            const trans_x = element.x + this._last_zoom.x / this._last_zoom.k;
+            const trans_y = element.y + this._last_zoom.y / this._last_zoom.k;
             if (trans_x < -40 || trans_x > this.plot_size.width + 40) return;
             if (trans_y < -40 || trans_y > this.plot_size.height + 40) return;
 
             ctx.translate(trans_x, trans_y);
             element.hexagon_config.forEach(hexagon => {
-                ctx.fillStyle = hexagon.color;
+                ctx.fillStyle = fill_map[hexagon.css_class];
                 let p = new Path2D(hexagon.path);
                 ctx.fill(p);
             });
@@ -394,18 +402,27 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
     _update_quadtree_svg(event) {
         if (this._quadtree.size() == 0) return;
-        let x = event.layerX - this.margin.left;
-        let y = event.layerY - this.margin.top;
-        let host = this._quadtree.find(
+        const x = event.layerX - this.margin.left;
+        const y = event.layerY - this.margin.top;
+        const host = this._quadtree.find(
             (x - this._last_zoom.x) / this._last_zoom.k,
             (y - this._last_zoom.y) / this._last_zoom.k,
             this._hexagon_content.geometry.radius
         );
 
-        let reduced_content = {geometry: this._hexagon_content.geometry};
+        if (host) {
+            // Only fetch host tooltip, when a new host is hovered
+            if (host != this._last_hovered_host) {
+                this._fetch_host_tooltip(host);
+                this._last_hovered_host = host;
+            }
+            host.tooltip = this._host_tooltip;
+            host.hexagon_config.forEach(d => (d.tooltip = this._host_tooltip));
+        }
+
+        const reduced_content = {geometry: this._hexagon_content.geometry};
         reduced_content.elements = host ? [host] : [];
         this._render_host_hexagons_as_svg(reduced_content, 0);
-        this.plot.selectAll("path.hexagon").attr("fill", "rgba(0, 0, 0, 0.2)");
     }
 
     _compute_sites() {
@@ -636,6 +653,21 @@ export class SiteOverview extends cmk_figures.FigureBase {
             geometry = compute_geometry(num_columns++);
         }
         return geometry;
+    }
+
+    _fetch_host_tooltip(host_data) {
+        d3.json(utils.makeuri_contextless(host_data, "ajax_host_overview_tooltip.py"), {
+            credentials: "include",
+            method: "POST",
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded",
+            },
+        })
+            .then(json_data => (this._host_tooltip = json_data.result.host_tooltip))
+            .catch(e => {
+                console.error(e);
+                this._show_error_info("Error fetching tooltip data");
+            });
     }
 }
 

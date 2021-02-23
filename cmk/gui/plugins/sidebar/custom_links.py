@@ -24,7 +24,7 @@ class CustomLinks(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Custom Links")
+        return _("Custom links")
 
     @classmethod
     def description(cls):

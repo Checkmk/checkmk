@@ -29,7 +29,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Event Console Performance")
+        return _("Event console performance")
 
     @classmethod
     def description(cls) -> str:

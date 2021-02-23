@@ -826,6 +826,10 @@ class Painter(metaclass=abc.ABCMeta):
         """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
 
+    def title_classes(self) -> List[str]:
+        """Additional css classes used to render the title"""
+        return []
+
     @abc.abstractproperty
     def columns(self) -> List[ColumnName]:
         """Livestatus columns needed for this painter"""
@@ -1872,6 +1876,7 @@ class Cell:
             onclick = "location.href=\'%s\'" % makeuri(
                 request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
+        classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
         html.write(self.title())

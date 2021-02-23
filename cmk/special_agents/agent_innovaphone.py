@@ -69,7 +69,7 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    if len(sys.argv) != 3:
+    if len(sys_argv) != 3:
         sys.stderr.write("usage: agent_innovaphone HOST USER PASSWORD\n")
         return 1
 

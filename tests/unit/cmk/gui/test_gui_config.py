@@ -259,7 +259,6 @@ def test_registered_permissions():
         'sidesnap.hosts',
         'sidesnap.master_control',
         'sidesnap.mkeventd_performance',
-        'sidesnap.nagios_legacy',
         'sidesnap.nagvis_maps',
         'sidesnap.performance',
         'sidesnap.problem_hosts',

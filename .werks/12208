@@ -1,0 +1,14 @@
+Title: agent_prometheus: addition of feature to only monitor specific namespaces
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614167179
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+In the previous version all namespaces were automatically monitored
+for cAdvisor and kube-state-metrics. This werk introduces the feature
+to monitor only specific namespaces if wanted.

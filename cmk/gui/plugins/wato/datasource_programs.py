@@ -634,6 +634,20 @@ def _valuespec_generic_metrics_prometheus():
                 ("omit_namespace", _("Don't use a namespace prefix")),
             ],
         ))
+
+    filter_namespace_element = ("namespace_include_patterns",
+                                ListOf(
+                                    RegExp(mode=RegExp.complete, title=_("Pattern")),
+                                    title=_("Filter namespaces"),
+                                    add_label=_("Add new pattern"),
+                                    allow_empty=False,
+                                    help=_(
+                                        "If your cluster has multiple namespaces, you can specify "
+                                        "a list of regex patterns. Only matching namespaces will "
+                                        "be monitored. Note that this concerns everything which "
+                                        "is part of the matching namespaces such as pods for "
+                                        "example."),
+                                ))
     return Dictionary(
         elements=[
             ("connection",
@@ -735,6 +749,7 @@ def _valuespec_generic_metrics_prometheus():
                                     ),
                                )),
                               namespace_element,
+                              filter_namespace_element,
                               ("entities",
                                ListChoice(
                                    choices=[
@@ -755,7 +770,7 @@ def _valuespec_generic_metrics_prometheus():
                                      "for the respective entities will be created."))),
                           ],
                           title=_("Kube state metrics"),
-                          optional_keys=[],
+                          optional_keys=["namespace_include_patterns"],
                       )),
                      ("cadvisor", _("cAdvisor"),
                       Dictionary(
@@ -825,6 +840,7 @@ def _valuespec_generic_metrics_prometheus():
                                         )),
                                    ],
                                )),
+                              filter_namespace_element,
                               (
                                   "entities",
                                   ListChoice(
@@ -845,7 +861,9 @@ def _valuespec_generic_metrics_prometheus():
                           ],
                           title=_("CAdvisor"),
                           validate=_check_not_empty_exporter_dict,
-                          optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                          optional_keys=[
+                              "diskio", "cpu", "df", "if", "memory", "namespace_include_patterns"
+                          ],
                       )),
                  ]),
                  add_label=_("Add new Scrape Target"),

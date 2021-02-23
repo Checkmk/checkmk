@@ -295,8 +295,8 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
-    height: 16px;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
+    height: 16px;
     margin-right: 4px;
     vertical-align: middle;
 
@@ -325,8 +325,8 @@ div.snapin {
     width: 100%;
     padding: $spacing 0;
     color: $font-color-sidebar;
-    box-sizing: border-box;
     border-bottom: 1px solid $snapin-heading-border-color;
+    box-sizing: border-box;
   }
 
   select {
@@ -554,8 +554,6 @@ div.add_snapin {
       background-color: $snapin-bg-color;
       border: 1px solid $snapin-bg-color;
       border-radius: 5px;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.15s 0s ease-in-out;
     }
 
     *,
@@ -568,12 +566,8 @@ div.add_snapin {
     }
 
     div.description {
-      padding: 16px;
-      font-size: $font-size-small;
-      font-weight: $font-weight-default;
-      line-height: 1.333;
-      letter-spacing: $letter-spacing-table;
-      text-rendering: optimizeLegibility;
+      padding: $spacing;
+      border-top: 1px solid $snapin-heading-border-color;
     }
 
     div.snapin {
@@ -584,33 +578,11 @@ div.add_snapin {
     }
 
     .head {
-      height: auto;
       padding: 8px;
-      color: $font-color-sidebar;
-      text-align: left;
-      background: transparent;
-
-      b.heading {
-        font-size: $font-size-default;
-        font-weight: 500;
-        letter-spacing: $letter-spacing-table;
-        text-transform: uppercase;
-      }
-    }
-
-    .snapin b,
-    .head b {
-      font-weight: $font-weight-bold;
     }
 
     .content {
-      color: $font-color-sidebar;
-    }
-
-    div.foldable {
-      b.treeangle {
-        color: $font-color-sidebar;
-      }
+      border-bottom: none;
     }
   }
 

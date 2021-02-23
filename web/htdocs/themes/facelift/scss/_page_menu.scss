@@ -76,7 +76,8 @@ div#top_heading {
       div.text_container {
         position: absolute;
         right: 6px;
-        font-size: 10px;
+        height: $font-size-small; // center the div correctly
+        font-size: $font-size-small;
       }
 
       div.icon_container,

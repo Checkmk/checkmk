@@ -441,6 +441,9 @@ class PainterServiceState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    def title_classes(self) -> List[str]:
+        return ["center"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['service_has_been_checked', 'service_state']
@@ -1743,6 +1746,9 @@ class PainterHostState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    def title_classes(self) -> List[str]:
+        return ["center"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_has_been_checked', 'host_state']
@@ -2633,6 +2639,9 @@ class PainterNumServices(Painter):
     def short_title(self, cell: Cell) -> str:
         return u""
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_num_services']
@@ -2653,6 +2662,9 @@ class PainterNumServicesOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_num_services_ok']
@@ -2672,6 +2684,9 @@ class PainterNumProblems(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Prob.")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -2695,6 +2710,9 @@ class PainterNumServicesWarn(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Wa")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_num_services_warn']
@@ -2714,6 +2732,9 @@ class PainterNumServicesCrit(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Cr")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -2735,6 +2756,9 @@ class PainterNumServicesUnknown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_num_services_unknown']
@@ -2754,6 +2778,9 @@ class PainterNumServicesPending(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -3281,6 +3308,9 @@ class PainterHgNumServicesOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("O")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['hostgroup_num_services_ok']
@@ -3300,6 +3330,9 @@ class PainterHgNumServicesWarn(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("W")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -3321,6 +3354,9 @@ class PainterHgNumServicesCrit(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("C")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['hostgroup_num_services_crit']
@@ -3340,6 +3376,9 @@ class PainterHgNumServicesUnknown(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("U")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -3361,6 +3400,9 @@ class PainterHgNumServicesPending(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("P")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['hostgroup_num_services_pending']
@@ -3380,6 +3422,9 @@ class PainterHgNumHostsUp(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Up")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -3401,6 +3446,9 @@ class PainterHgNumHostsDown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Dw")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['hostgroup_num_hosts_down']
@@ -3421,6 +3469,9 @@ class PainterHgNumHostsUnreach(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("Un")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['hostgroup_num_hosts_unreach']
@@ -3440,6 +3491,9 @@ class PainterHgNumHostsPending(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Pd")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4567,6 +4621,9 @@ class PainterLogState(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("State")
 
+    def title_classes(self) -> List[str]:
+        return ["center"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['log_state', 'log_state_type', 'log_service_description', 'log_type']
@@ -4601,6 +4658,9 @@ class PainterAlertStatsOk(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("OK")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['log_alerts_ok']
@@ -4620,6 +4680,9 @@ class PainterAlertStatsWarn(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("WARN")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
@@ -4641,6 +4704,9 @@ class PainterAlertStatsCrit(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("CRIT")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['log_alerts_crit']
@@ -4661,6 +4727,9 @@ class PainterAlertStatsUnknown(Painter):
     def short_title(self, cell: Cell) -> str:
         return _("UNKN")
 
+    def title_classes(self) -> List[str]:
+        return ["right"]
+
     @property
     def columns(self) -> List[ColumnName]:
         return ['log_alerts_unknown']
@@ -4680,6 +4749,9 @@ class PainterAlertStatsProblem(Painter):
 
     def short_title(self, cell: Cell) -> str:
         return _("Problems")
+
+    def title_classes(self) -> List[str]:
+        return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:

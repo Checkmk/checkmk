@@ -329,6 +329,14 @@ table.data {
     vertical-align: middle;
     background-color: $odd-tr-bg-color;
 
+    &.center {
+      text-align: center;
+    }
+
+    &.right {
+      text-align: right;
+    }
+
     /* Table header links (For sorting) */
     &.sort:hover {
       color: $primary-hover-font-color;

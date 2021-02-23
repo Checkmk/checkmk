@@ -117,7 +117,7 @@ def delete(params):
 
 @Endpoint(constructors.domain_type_action_href('contact_group_config', 'bulk-delete'),
           '.../delete',
-          method='delete',
+          method='post',
           request_schema=request_schemas.BulkDeleteContactGroup,
           output_empty=True)
 def bulk_delete(params):

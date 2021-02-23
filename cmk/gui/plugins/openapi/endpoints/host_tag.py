@@ -161,7 +161,7 @@ def update_host_tag_group(params):
     method='delete',
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
-    request_schema=request_schemas.DeleteHostTagGroup,
+    query_params=[request_schemas.DeleteHostTagGroup],
     output_empty=True,
 )
 def delete_host_tag_group(params):
@@ -174,11 +174,10 @@ def delete_host_tag_group(params):
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
 
-    allow_repair = params['body'].get("repair", False)
     affected = change_host_tags_in_folders(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK,
                                            watolib.Folder.root_folder())
     if any(affected):
-        if not allow_repair:
+        if not params["repair"]:
             return problem(
                 401, f'Deleting this host tag group "{ident}" requires additional authorization',
                 'The host tag group you intend to delete is used by other instances. You must authorize Checkmk '

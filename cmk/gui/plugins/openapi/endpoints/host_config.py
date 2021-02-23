@@ -325,7 +325,7 @@ def delete(params):
 
 @Endpoint(constructors.domain_type_action_href('host_config', 'bulk-delete'),
           '.../delete',
-          method='delete',
+          method='post',
           request_schema=request_schemas.BulkDeleteHost,
           output_empty=True)
 def bulk_delete(params):

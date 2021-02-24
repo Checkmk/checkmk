@@ -85,6 +85,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("ps_perf"): CheckPluginName("ps"),
     CheckPluginName("snmp_uptime"): CheckPluginName("uptime"),
     CheckPluginName("solaris_mem"): CheckPluginName("mem_used"),
+    CheckPluginName("statgrab_disk"): CheckPluginName("diskstat"),
     CheckPluginName("statgrab_mem"): CheckPluginName("mem_used"),
     CheckPluginName("statgrab_net"): CheckPluginName("interfaces"),
     CheckPluginName("ucs_bladecenter_if"): CheckPluginName("interfaces"),

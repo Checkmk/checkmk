@@ -2615,7 +2615,6 @@ def test_no_new_or_vanished_legacy_checks(config_check_info):
         'splunk_system_msg',
         'sshd_config',
         'statgrab_cpu',
-        'statgrab_disk',
         'statgrab_load',
         'steelhead_connections',
         'steelhead_peers',

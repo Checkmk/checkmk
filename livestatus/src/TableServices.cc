@@ -39,7 +39,6 @@
 #include "MonitoringCore.h"
 #include "NagiosGlobals.h"
 #include "Query.h"
-#include "RRDColumn-impl.h"
 #include "RRDColumn.h"
 #include "ServiceGroupsColumn.h"
 #include "StringColumn.h"

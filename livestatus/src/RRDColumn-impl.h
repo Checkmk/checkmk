@@ -13,11 +13,12 @@
 #include <utility>
 
 #include "RRDColumn.h"
+#include "pnp4nagios.h"
 
 template <>
 [[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
-RRDColumn<host_struct>::getHostNameServiceDesc(Row row) const {
-    if (const auto *hst{columnData<host>(row)}) {
+detail::RRDDataMaker::getHostNameServiceDesc(const host* row) {
+    if (const auto* hst{row}) {
         return {{hst->name, dummy_service_description()}};
     }
     return {};
@@ -25,8 +26,8 @@ RRDColumn<host_struct>::getHostNameServiceDesc(Row row) const {
 
 template <>
 [[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
-RRDColumn<service_struct>::getHostNameServiceDesc(Row row) const {
-    if (const auto *svc{columnData<service>(row)}) {
+detail::RRDDataMaker::getHostNameServiceDesc(const service* row) {
+    if (const auto* svc{row}) {
         return {{svc->host_name, svc->description}};
     }
     return {};

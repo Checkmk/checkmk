@@ -21,9 +21,10 @@
 #include "ListColumn.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "nagios.h"
 #if defined(CMC)
 #include "cmc.h"
+#else
+#include "nagios.h"
 #endif
 class MonitoringCore;
 class ColumnOffsets;
@@ -39,12 +40,25 @@ public:
     };
     RRDDataMaker(MonitoringCore *mc, const RRDColumnArgs &args)
         : _mc{mc}, _args{args} {}
-    [[nodiscard]] Data make(const std::pair<std::string, std::string>
-                                & /*host_name_service_description*/) const;
+
+    template <class T>
+    [[nodiscard]] Data operator()(const T *row) const {
+        auto host_name_service_description = getHostNameServiceDesc(row);
+        return host_name_service_description
+                   ? make(*host_name_service_description)
+                   : Data{};
+    }
 
 private:
     MonitoringCore *_mc;
     const RRDColumnArgs _args;
+
+    template <class T>
+    [[nodiscard]] static std::optional<std::pair<std::string, std::string>>
+    getHostNameServiceDesc(const T *row);
+
+    [[nodiscard]] Data make(const std::pair<std::string, std::string>
+                                & /*host_name_service_description*/) const;
 };
 }  // namespace detail
 
@@ -66,16 +80,6 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
-
-    [[nodiscard]] detail::RRDDataMaker::Data getData(Row row) const {
-        auto host_name_service_description = getHostNameServiceDesc(row);
-        return host_name_service_description
-                   ? data_maker_.make(*host_name_service_description)
-                   : detail::RRDDataMaker::Data{};
-    }
-
-    [[nodiscard]] std::optional<std::pair<std::string, std::string>>
-    getHostNameServiceDesc(Row row) const;
 };
 
 template <class T>
@@ -85,7 +89,7 @@ void RRDColumn<T>::output(Row row, RowRenderer &r,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    auto data = getData(row);
+    const auto data = data_maker_(columnData<T>(row));
     ListRenderer l(r);
     l.output(data.start);
     l.output(data.end);
@@ -99,7 +103,7 @@ template <class T>
 std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    auto data = getData(row);
+    const auto data = data_maker_(columnData<T>(row));
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
@@ -111,4 +115,7 @@ std::vector<std::string> RRDColumn<T>::getValue(
                    [](const auto &value) { return std::to_string(value); });
     return strings;
 }
+
+#include "RRDColumn-impl.h"  // IWYU pragma: keep
+
 #endif  // RRDColumn_h

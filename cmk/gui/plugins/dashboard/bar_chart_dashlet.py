@@ -90,7 +90,7 @@ class BarChartDataGenerator:
         # Adding 3600 (1h) because timestamp 0 corresponds to
         # 1970-01-01 01:00 (not 00:00)
         t = start_time + timestep - (start_time + 3600) % timestep
-        while t < end_time:
+        while t < end_time + timestep:
             if timestep == 86400:
                 t -= time.localtime(t).tm_hour * 3600
             timestamps.append(t)

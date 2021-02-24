@@ -438,10 +438,6 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
       $('x').children().css('background-color', '#f84');
     });
     """)
-    html.begin_form("commands", html.myfile + ".py#commands")
-    html.hidden_field("_do_actions", "yes")
-    html.hidden_field("actions", "yes")
-    html.hidden_fields()  # set all current variables, exception action vars
 
     one_shown = False
     html.open_div(**{"data-role": "collapsible-set"})
@@ -451,7 +447,14 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
             html.open_div(class_=["command_group"], **{"data-role": "collapsible"})
             html.h3(command.title)
             html.open_p()
+
+            html.begin_form("actions")
+            html.hidden_field("_do_actions", "yes")
+            html.hidden_field("actions", "yes")
             command.render(what)
+            html.hidden_fields()
+            html.end_form()
+
             html.close_p()
             html.close_div()
             one_shown = True
@@ -460,7 +463,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
         html.write(_('No commands are possible in this view'))
 
 
-# FIXME: Reduce ducplicate code with views.py
+# FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
     title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3]  # just get the title
     title_what = _("hosts") if what == "host" else _("services")

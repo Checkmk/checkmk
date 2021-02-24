@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 from cmk.utils import pnp_cleanup
 
@@ -16,6 +16,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_data_from_livestatus,
     get_graph_range,
     get_graph_templates,
+    GraphRecipe,
     GraphTemplate,
     metrics_used_in_expression,
     replace_expressions,
@@ -43,10 +44,10 @@ def matching_graph_templates(
 
 class GraphIdentificationTemplate(GraphIdentification):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "template"
 
-    def create_graph_recipes(self, ident_info, destination=None):
+    def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
         graph_identification_info = ident_info
 
         def get_info(key):

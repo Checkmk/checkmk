@@ -59,6 +59,7 @@ Atom = TypeVar('Atom')
 TransformedAtom = TypeVar('TransformedAtom')
 StackElement = Union[Atom, TransformedAtom]
 GraphTemplate = Dict[str, Any]
+GraphRecipe = Dict[str, Any]
 
 
 class AutomaticDict(OrderedDict):

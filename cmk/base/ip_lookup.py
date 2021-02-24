@@ -17,8 +17,6 @@ from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.base.config as config
-
 IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
@@ -78,59 +76,13 @@ def enforce_localhost() -> None:
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET)
-
-
-def lookup_ipv6_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET6)
-
-
-# TODO: move this to config.
-def lookup_mgmt_board_ip_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
-    try:
-        return _lookup_ip_address(
-            host_config=host_config,
-            family=host_config.default_address_family,
-            # TODO Cleanup:
-            # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
-            # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
-            # here.
-            configured_ip_address=host_config.management_address,
-            simulation_mode=config.simulation_mode,
-            override_dns=config.fake_dns,
-            use_dns_cache=config.use_dns_cache,
-        )
-    except MKIPAddressLookupError:
-        return None
-
-
-# TODO: move this to config.
-def lookup_ip_address(
-    host_config: _HostConfigLike,
-    *,
-    # TODO: either make this optional, or get rid of the specific functions above.
-    family: socket.AddressFamily,
-) -> Optional[HostAddress]:
-    return _lookup_ip_address(
-        host_config=host_config,
-        family=family,
-        configured_ip_address=(config.ipaddresses if family is socket.AF_INET else
-                               config.ipv6addresses).get(host_config.hostname),
-        simulation_mode=config.simulation_mode,
-        override_dns=config.fake_dns,
-        use_dns_cache=config.use_dns_cache,
-    )
-
-
 # Determine the IP address of a host. It returns either an IP address or, when
 # a hostname is configured as IP address, the hostname.
 # Or raise an exception when a hostname can not be resolved on the first
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-# TODO: make this public, and move the wrapper providing the config to cmk.base.config.
-def _lookup_ip_address(
+def lookup_ip_address(
     *,
     host_config: _HostConfigLike,
     family: socket.AddressFamily,
@@ -376,7 +328,7 @@ def update_dns_cache(
     for host_config, family in _annotate_family(host_configs):
         console.verbose(f"{host_config.hostname} ({family})...")
         try:
-            ip = _lookup_ip_address(
+            ip = lookup_ip_address(
                 host_config=host_config,
                 family=family,
                 configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET else

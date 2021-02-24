@@ -1046,10 +1046,7 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = ip_lookup.lookup_ip_address(
-                    host_config,
-                    family=host_config.default_address_family,
-                )
+                resolved_address = config.lookup_ip_address(host_config)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1421,10 +1418,7 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = ip_lookup.lookup_ip_address(
-                host_config,
-                family=host_config.default_address_family,
-            )
+            ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
                 for source in sources.make_sources(

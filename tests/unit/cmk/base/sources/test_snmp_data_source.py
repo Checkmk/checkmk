@@ -59,14 +59,14 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
         raise MKIPAddressLookupError("Failed to ...")
 
     Scenario().add_host(hostname).apply(monkeypatch)
-    monkeypatch.setattr(ip_lookup, "_lookup_ip_address", fake_lookup_ip_address)
+    monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
     monkeypatch.setattr(config, "host_attributes", {
         "hostname": {
             "management_address": "lolo"
         },
     })
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
+    assert config.lookup_mgmt_board_ip_address(host_config) is None
 
 
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):

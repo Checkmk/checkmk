@@ -41,7 +41,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.decorator
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.utils
 
@@ -109,7 +108,6 @@ def get_aggregated_result(
                 hostname,
                 source_type,
                 service.description,
-                ip_lookup.lookup_ip_address,
             ),
             check_legacy_info=config.check_info,
         )

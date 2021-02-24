@@ -29,7 +29,7 @@ def test_attribute_defaults(mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
-    ipaddress = ip_lookup.lookup_mgmt_board_ip_address(host_config)
+    ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
     source = IPMISource(hostname, ipaddress, mode=mode)
     assert source.hostname == hostname

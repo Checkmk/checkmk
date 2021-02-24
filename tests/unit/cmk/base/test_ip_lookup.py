@@ -203,7 +203,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, res
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.skipif(
@@ -220,7 +220,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("hostname, result_address", [
@@ -234,7 +234,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("tags, family", [
@@ -255,4 +255,4 @@ def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
+    assert config.lookup_mgmt_board_ip_address(host_config) is None

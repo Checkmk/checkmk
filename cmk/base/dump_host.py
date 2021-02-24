@@ -137,13 +137,7 @@ def _ip_address_for_dump_host(
     *,
     family: socket.AddressFamily,
 ) -> Optional[str]:
-    if host_config.is_cluster:
-        try:
-            return ip_lookup.lookup_ip_address(host_config, family=family)
-        except Exception:
-            return ""
-
     try:
-        return ip_lookup.lookup_ip_address(host_config, family=family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception:
-        return ip_lookup.fallback_ip_for(family)
+        return "" if host_config.is_cluster else ip_lookup.fallback_ip_for(family)

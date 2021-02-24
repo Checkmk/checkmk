@@ -1725,19 +1725,22 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch):
 
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         None,
-        lambda _x: "dummy.test.ip.0",
     ) is None
     # still None, we have no cluster:
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) is None
 
 
@@ -1746,19 +1749,22 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(monkeyp
     ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     # None for a node:
     assert config_cache.get_clustered_service_node_keys(
         'node1.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) is None
     # empty list for cluster (we have not clustered the service)
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) == []
 
 
@@ -1776,27 +1782,34 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
     }])
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
+    )
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda host_config, *, family: "dummy.test.ip.%s" % host_config.hostname[4],
     ) == [
         HostKey('node1.test', "dummy.test.ip.1", SourceType.HOST),
         HostKey('node2.test', "dummy.test.ip.2", SourceType.HOST),
     ]
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Unclustered',
-        lambda _x, *, family: "dummy.test.ip.0",
     ) == []
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         None,
-        lambda _x, *, family: "dummy.test.ip.0",
     ) is None
 
 

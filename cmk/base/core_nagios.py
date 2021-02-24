@@ -8,6 +8,7 @@
 import base64
 import os
 import py_compile
+import socket
 import sys
 from io import StringIO
 from pathlib import Path
@@ -1111,28 +1112,34 @@ if '-d' in sys.argv:
         for node in host_config.nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
-                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node_config)
+                needed_ipaddresses[node] = config.lookup_ip_address(node_config,
+                                                                    family=socket.AF_INET)
 
             if node_config.is_ipv6_host:
-                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node_config)
+                needed_ipv6addresses[node] = config.lookup_ip_address(node_config,
+                                                                      family=socket.AF_INET6)
 
         try:
             if host_config.is_ipv4_host:
-                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+                needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                        family=socket.AF_INET)
         except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
-                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+                needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                          family=socket.AF_INET6)
         except Exception:
             pass
     else:
         if host_config.is_ipv4_host:
-            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+            needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                    family=socket.AF_INET)
 
         if host_config.is_ipv6_host:
-            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+            needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                      family=socket.AF_INET6)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
@@ -1229,10 +1236,7 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
     needs to be loaded
     """
     try:
-        ipaddress = ip_lookup.lookup_ip_address(
-            host_config,
-            family=host_config.default_address_family,
-        )
+        ipaddress = config.lookup_ip_address(host_config)
     except Exception:
         ipaddress = None
 

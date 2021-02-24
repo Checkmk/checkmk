@@ -53,7 +53,6 @@ import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.decorator
 import cmk.base.inventory as inventory
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
@@ -120,10 +119,7 @@ def do_check(
         # address is unknown). When called as non keepalive ipaddress may be None or
         # is already an address (2nd argument)
         if ipaddress is None and not host_config.is_cluster:
-            ipaddress = ip_lookup.lookup_ip_address(
-                host_config,
-                family=host_config.default_address_family,
-            )
+            ipaddress = config.lookup_ip_address(host_config)
 
         # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
         # information from the monitored host and cache the result for the cluster checks to be
@@ -491,7 +487,6 @@ def get_aggregated_result(
                 host_config.hostname,
                 source_type,
                 service.description,
-                ip_lookup.lookup_ip_address,
             ) or [],
             plugin.sections,
         ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(
@@ -508,7 +503,6 @@ def get_aggregated_result(
                     host_config.hostname,
                     SourceType.MANAGEMENT,
                     service.description,
-                    ip_lookup.lookup_ip_address,
                 ) or [],
                 plugin.sections,
             ) if host_config.is_cluster else parsed_sections_broker.get_section_kwargs(

@@ -689,7 +689,7 @@ def _realhost_scenario(monkeypatch):
     }])
     ts.apply(monkeypatch)
 
-    def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
+    def fake_lookup_ip_address(*_a, **_kw):
         return ipaddress
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
@@ -755,7 +755,7 @@ def _cluster_scenario(monkeypatch):
     node1_hostname = 'test-node1'
     node2_hostname = 'test-node2'
 
-    def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
+    def fake_lookup_ip_address(*_a, **_kw):
         return ipaddress
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)

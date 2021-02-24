@@ -62,7 +62,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.decorator
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
@@ -191,10 +190,7 @@ def do_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
-            ipaddress = ip_lookup.lookup_ip_address(
-                host_config,
-                family=host_config.default_address_family,
-            )
+            ipaddress = config.lookup_ip_address(host_config)
             nodes = sources.make_nodes(
                 config_cache,
                 host_config,
@@ -356,10 +352,7 @@ def discover_on_host(
         if host_config.is_cluster:
             ipaddress = None
         else:
-            ipaddress = ip_lookup.lookup_ip_address(
-                host_config,
-                family=host_config.default_address_family,
-            )
+            ipaddress = config.lookup_ip_address(host_config)
 
         nodes = sources.make_nodes(
             config_cache,
@@ -557,10 +550,7 @@ def check_discovery(
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
     if ipaddress is None and not host_config.is_cluster:
-        ipaddress = ip_lookup.lookup_ip_address(
-            host_config,
-            family=host_config.default_address_family,
-        )
+        ipaddress = config.lookup_ip_address(host_config)
 
     nodes = sources.make_nodes(
         config_cache,
@@ -1117,8 +1107,7 @@ def _get_cluster_services(
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        node_ipaddress = ip_lookup.lookup_ip_address(node_config,
-                                                     family=node_config.default_address_family)
+        node_ipaddress = config.lookup_ip_address(node_config)
 
         services = analyse_discovered_services(
             host_name=node,
@@ -1194,10 +1183,7 @@ def get_check_preview(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
 
-    ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(
-        host_config,
-        family=host_config.default_address_family,
-    )
+    ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
         load_labels=False,

@@ -21,7 +21,6 @@ from cmk.utils.type_defs import (
 )
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 import cmk.base.section as section
 from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import HostLabel
@@ -94,8 +93,7 @@ def analyse_cluster_host_labels(
 
     for node in host_config.nodes:
         node_config = config_cache.get_host_config(node)
-        node_ipaddress = ip_lookup.lookup_ip_address(node_config,
-                                                     family=node_config.default_address_family)
+        node_ipaddress = config.lookup_ip_address(node_config)
 
         node_result = analyse_host_labels(
             host_name=node,

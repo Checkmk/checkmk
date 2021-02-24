@@ -21,7 +21,6 @@ from cmk.utils.log import console
 
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.utils.type_defs import HostName, HostAddress
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
@@ -127,7 +126,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
 
     if config.monitoring_host:
         host_config = config_cache.get_host_config(config.monitoring_host)
-        nagios_ip = ip_lookup.lookup_ipv4_address(host_config)
+        nagios_ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -140,7 +139,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
         console.verbose("%s " % host)
         host_config = config_cache.get_host_config(host)
         try:
-            ip = ip_lookup.lookup_ipv4_address(host_config)
+            ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -316,7 +315,7 @@ def _ip_to_hostname(config_cache: config.ConfigCache,
         for host in config_cache.all_active_realhosts():
             host_config = config_cache.get_host_config(host)
             try:
-                cache[ip_lookup.lookup_ipv4_address(host_config)] = host
+                cache[config.lookup_ip_address(host_config, family=socket.AF_INET)] = host
             except Exception:
                 pass
     else:

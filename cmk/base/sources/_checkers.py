@@ -130,7 +130,7 @@ class _Builder:
         if protocol is None:
             return
 
-        ip_address = ip_lookup.lookup_mgmt_board_ip_address(self._host_config)
+        ip_address = config.lookup_mgmt_board_ip_address(self._host_config)
         if ip_address is None:
             # HostAddress is not Optional.
             #
@@ -328,10 +328,7 @@ def _make_piggyback_nodes(
     nodes = []
     for hostname in host_config.nodes:
         node_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(
-            node_config,
-            family=node_config.default_address_family,
-        )
+        ipaddress = config.lookup_ip_address(node_config)
         sources = make_sources(
             HostConfig.make_host_config(hostname),
             ipaddress,

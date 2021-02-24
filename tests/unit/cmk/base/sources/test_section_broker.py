@@ -755,9 +755,9 @@ class TestMakeHostSectionsClusters:
     @pytest.fixture(autouse=True)
     def fake_lookup_ip_address(self, nodes, monkeypatch):
         monkeypatch.setattr(
-            ip_lookup,
+            config,
             "lookup_ip_address",
-            lambda host_config, family=None, for_mgmt_board=False: nodes[host_config.hostname],
+            lambda host_config, family=None: nodes[host_config.hostname],
         )
 
     @pytest.fixture
@@ -829,16 +829,16 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
     config_cache = make_scenario(hostname, tags).apply(monkeypatch)
     host_config = config.HostConfig.make_host_config(hostname)
 
-    def lookup_ip_address(host_config, family=None, for_mgmt_board=False):
+    def fake_lookup_ip_address(host_config, family=None):
         return hosts[host_config.hostname]
 
     def check(_, *args, **kwargs):
         return result.OK(AgentHostSections(sections={section_name: [[str(section_name)]]}))
 
     monkeypatch.setattr(
-        ip_lookup,
+        config,
         "lookup_ip_address",
-        lookup_ip_address,
+        fake_lookup_ip_address,
     )
     monkeypatch.setattr(
         Source,

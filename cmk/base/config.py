@@ -40,7 +40,6 @@ from typing import (
     Final,
 )
 
-from mypy_extensions import NamedArg
 from six import ensure_str
 
 import cmk.utils
@@ -61,7 +60,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.exceptions import MKIPAddressLookupError, MKGeneralException, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
 import cmk.utils.migrated_check_variables
@@ -106,6 +105,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_utils
 import cmk.base.default_config as default_config
+import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
@@ -3101,6 +3101,42 @@ class HostConfig:
         return self._config_cache.in_binary_hostlist(self.hostname, dyndns_hosts)
 
 
+def lookup_mgmt_board_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
+    try:
+        return ip_lookup.lookup_ip_address(
+            host_config=host_config,
+            family=host_config.default_address_family,
+            # TODO Cleanup:
+            # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
+            # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
+            # here.
+            configured_ip_address=host_config.management_address,
+            simulation_mode=simulation_mode,
+            override_dns=fake_dns,
+            use_dns_cache=use_dns_cache,
+        )
+    except MKIPAddressLookupError:
+        return None
+
+
+def lookup_ip_address(
+    host_config: HostConfig,
+    *,
+    family: Optional[socket.AddressFamily] = None,
+) -> Optional[HostAddress]:
+    if family is None:
+        family = host_config.default_address_family
+    return ip_lookup.lookup_ip_address(
+        host_config=host_config,
+        family=family,
+        configured_ip_address=(ipaddresses if family is socket.AF_INET else ipv6addresses).get(
+            host_config.hostname),
+        simulation_mode=simulation_mode,
+        override_dns=fake_dns,
+        use_dns_cache=use_dns_cache,
+    )
+
+
 #.
 #   .--Configuration Cache-------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -3699,8 +3735,6 @@ class ConfigCache:
         hostname: HostName,
         source_type: SourceType,
         service_descr: Optional[ServiceName],
-        lookup_ip_address: Callable[
-            [HostConfig, NamedArg(socket.AddressFamily, "family")], Optional[HostAddress]],
     ) -> Optional[List[HostKey]]:
         """Returns the node keys if a service is clustered, otherwise 'None' in order to
         decide whether we collect section content of the host or the nodes.
@@ -3724,10 +3758,7 @@ class ConfigCache:
         return [
             HostKey(
                 nodename,
-                lookup_ip_address(
-                    self.get_host_config(nodename),
-                    family=self.get_host_config(nodename).default_address_family,
-                ),
+                lookup_ip_address(self.get_host_config(nodename)),
                 source_type,
             )
             for nodename in nodes

@@ -171,10 +171,7 @@ export class SiteOverview extends cmk_figures.FigureBase {
 
             if (box_width > this._max_box_width) {
                 box_width = this._max_box_width;
-                num_columns = Math.max(
-                    Math.floor((box_area.width - 0.5 * this._max_box_width) / this._max_box_width),
-                    1
-                );
+                num_columns = Math.max(Math.floor(box_area.width / this._max_box_width), 1);
             }
 
             let num_rows = Math.ceil(num_elements / num_columns);

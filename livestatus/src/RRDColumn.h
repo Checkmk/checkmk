@@ -76,6 +76,15 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
+
+    static std::vector<std::string> defaultValue(
+        std::chrono::seconds timezone_offset) {
+        constexpr auto str = [](auto &&t) {
+            return std::to_string(std::chrono::system_clock::to_time_t(
+                std::chrono::system_clock::time_point{} + t));
+        };
+        return {str(timezone_offset), str(timezone_offset), std::to_string(0)};
+    }
 };
 
 template <class T>
@@ -101,9 +110,10 @@ template <class T>
 std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    const auto data = columnData<T>(row) == nullptr
-                          ? detail::RRDDataMaker::Data{}
-                          : data_maker_(*columnData<T>(row));
+    if (columnData<T>(row) == nullptr) {
+        return defaultValue(timezone_offset);
+    }
+    const auto data = data_maker_(*columnData<T>(row));
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));

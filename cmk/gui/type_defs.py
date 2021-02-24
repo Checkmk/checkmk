@@ -162,6 +162,7 @@ class TopicMenuTopic(NamedTuple):
     name: "str"
     title: "str"
     items: List[TopicMenuItem]
+    max_entries: int = 10
     icon: Optional[Icon] = None
     hide: bool = False
 

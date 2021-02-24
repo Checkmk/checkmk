@@ -346,6 +346,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
             TopicMenuTopic(
                 name=topic.name(),
                 title=topic.title(),
+                max_entries=topic.max_entries(),
                 items=[],
                 icon=topic.icon_name(),
                 hide=topic.hide(),

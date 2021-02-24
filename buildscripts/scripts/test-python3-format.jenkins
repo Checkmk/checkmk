@@ -22,7 +22,7 @@ node (NODE) {
             }
             ENV_VARS = ["TEST_CONTAINER=${TEST_CONTAINER}"]
             withEnv(ENV_VARS) {
-                sh("make -C $WRKSPACE/tests TEST_CONTAINER=${TEST_CONTAINER} test-format-python-docker")
+                sh("make -C $WORKSPACE/tests TEST_CONTAINER=${TEST_CONTAINER} test-format-python-docker")
             }
         }
         stage("Analyse Issues") {

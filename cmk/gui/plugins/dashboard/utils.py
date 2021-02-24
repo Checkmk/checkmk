@@ -11,72 +11,44 @@ import json
 import time
 import urllib.parse
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
-from cmk.utils.macros import (
-    MacroMapping,
-    replace_macros_in_str,
-)
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    SingleInfos,
-    VisualContext,
-)
 
-import cmk.gui.sites as sites
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.figures import create_figures_response
-import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _, _u
-from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
+import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
+from cmk.gui.figures import create_figures_response
 from cmk.gui.globals import g, html, request
-from cmk.gui.sites import get_alias_of_host
-from cmk.gui.valuespec import (
-    ValueSpec,
-    ValueSpecValidateFunc,
-    DictionaryEntry,
-    DictionaryElements,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    Checkbox,
-    TextUnicode,
-)
-from cmk.gui.plugins.views.utils import (
-    get_permitted_views,
-    get_all_views,
-    transform_painter_spec,
-)
+from cmk.gui.i18n import _, _u
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import (
-    make_topic_breadcrumb,
-    Breadcrumb,
-    BreadcrumbItem,
-)
+from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
+from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryElements,
+    DictionaryEntry,
+    DropdownChoice,
+    FixedValue,
+    TextUnicode,
+    ValueSpec,
+    ValueSpecValidateFunc,
+)
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]

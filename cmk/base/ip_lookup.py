@@ -86,15 +86,41 @@ def lookup_ipv6_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
     return lookup_ip_address(host_config, family=socket.AddressFamily.AF_INET6)
 
 
+# TODO: move this to config.
 def lookup_mgmt_board_ip_address(host_config: _HostConfigLike) -> Optional[HostAddress]:
     try:
-        return lookup_ip_address(
-            host_config,
+        return _lookup_ip_address(
+            host_config=host_config,
             family=host_config.default_address_family,
-            for_mgmt_board=True,
+            # TODO Cleanup:
+            # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
+            # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
+            # here.
+            configured_ip_address=host_config.management_address,
+            simulation_mode=config.simulation_mode,
+            override_dns=config.fake_dns,
+            use_dns_cache=config.use_dns_cache,
         )
     except MKIPAddressLookupError:
         return None
+
+
+# TODO: move this to config.
+def lookup_ip_address(
+    host_config: _HostConfigLike,
+    *,
+    # TODO: either make this optional, or get rid of the specific functions above.
+    family: socket.AddressFamily,
+) -> Optional[HostAddress]:
+    return _lookup_ip_address(
+        host_config=host_config,
+        family=family,
+        configured_ip_address=(config.ipaddresses if family is socket.AF_INET else
+                               config.ipv6addresses).get(host_config.hostname),
+        simulation_mode=config.simulation_mode,
+        override_dns=config.fake_dns,
+        use_dns_cache=config.use_dns_cache,
+    )
 
 
 # Determine the IP address of a host. It returns either an IP address or, when
@@ -103,40 +129,33 @@ def lookup_mgmt_board_ip_address(host_config: _HostConfigLike) -> Optional[HostA
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(
-    host_config: _HostConfigLike,
+# TODO: make this public, and move the wrapper providing the config to cmk.base.config.
+def _lookup_ip_address(
     *,
+    host_config: _HostConfigLike,
     family: socket.AddressFamily,
-    for_mgmt_board: bool = False,
+    configured_ip_address: Optional[HostAddress],
+    simulation_mode: bool,
+    override_dns: Optional[HostAddress],
+    use_dns_cache: bool,
 ) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
 
-    if config.fake_dns:
-        return config.fake_dns
+    if override_dns:
+        return override_dns
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
-                                                        host_config.is_snmp_host):
+    if simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
+                                                 host_config.is_snmp_host):
         return "127.0.0.1" if family is socket.AF_INET else "::1"
 
     hostname = host_config.hostname
 
-    # Now check, if IP address is hard coded by the user
-    if for_mgmt_board:
-        # TODO Cleanup:
-        # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
-        # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
-        # here.
-        ipa = host_config.management_address
-    elif family is socket.AddressFamily.AF_INET:
-        ipa = config.ipaddresses.get(hostname)
-    else:
-        ipa = config.ipv6addresses.get(hostname)
-
-    if ipa:
-        return ipa
+    # check if IP address is hard coded by the user
+    if configured_ip_address:
+        return configured_ip_address
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
@@ -147,7 +166,7 @@ def lookup_ip_address(
         hostname,
         family=family,
         is_no_ip_host=host_config.is_no_ip_host,
-        use_dns_cache=config.use_dns_cache,
+        use_dns_cache=use_dns_cache,
     )
 
 

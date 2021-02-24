@@ -1523,7 +1523,7 @@ table.data.job_table td {
     margin: $tag-margin;
   }
 
-  &.hasMaxTags #{ $self }__input {
+  &.tagify--hasMaxTags #{ $self }__input {
     display: none;
   }
 

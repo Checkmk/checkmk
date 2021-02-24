@@ -148,11 +148,12 @@ def test_transform_dashlets_mut(entry, result):
             {
                 "host": "vm-123",
                 "service": "CPU utilization",
-                "site": "site",
             },
             ["host", "service"],
             "Best graph $HOST_ALIAS$",
-            {},
+            {
+                "$SITE$": "site",
+            },
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "vm-123",
@@ -166,7 +167,6 @@ def test_transform_dashlets_mut(entry, result):
             {
                 "host": "vm-123",
                 "service": "CPU utilization",
-                "site": "site",
             },
             ["host", "service"],
             "Best graph $HOST_ALIAS$",
@@ -179,7 +179,6 @@ def test_transform_dashlets_mut(entry, result):
                 "$HOST_NAME$": "vm-123",
                 "$HOST_ALIAS$": "alias",
                 "$SERVICE_DESCRIPTION$": "CPU utilization",
-                "$SITE$": "site",
                 "$ADD_MACRO_1$": "1",
                 "$ADD_MACRO_2$": "2",
             },

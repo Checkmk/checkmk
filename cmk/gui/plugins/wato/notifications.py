@@ -260,6 +260,33 @@ class NotificationParameterMail(NotificationParameter):
             import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
+        elements += [
+            ("graphs_per_notification",
+             Integer(
+                 title=_("Graphs per notification (default: 5)"),
+                 label=_("Show up to"),
+                 unit=_("graphs"),
+                 help=_(
+                     "Sets a limit for the number of graphs that are displayed in a notification."),
+                 default_value=5,
+                 minvalue=0,
+             )),
+            ("notifications_with_graphs",
+             Integer(
+                 title=_("Bulk notifications with graphs (default: 5)"),
+                 label=_("Show graphs for the first"),
+                 unit=_("Notifications"),
+                 help=_(
+                     "Sets a limit for the number of notifications in a bulk for which graphs "
+                     "are displayed. If you do not use bulk notifications this option is ignored. "
+                     "Note that each graph increases the size of the mail and takes time to render"
+                     "on the monitoring server. Therefore, large bulks may exceed the maximum "
+                     "size for attachements or the plugin may run into a timeout so that a failed "
+                     "notification is produced."),
+                 default_value=5,
+                 minvalue=0,
+             )),
+        ]
         return elements
 
 

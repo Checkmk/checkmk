@@ -661,13 +661,20 @@ def rbn_fallback_contacts() -> Contacts:
 def rbn_finalize_plugin_parameters(hostname: HostName, plugin_name: NotificationPluginNameStr,
                                    rule_parameters: NotifyPluginParams) -> NotifyPluginParams:
     # Right now we are only able to finalize notification plugins with dict parameters..
-    if isinstance(rule_parameters, dict):
-        host_config = config.get_config_cache().get_host_config(hostname)
-        parameters = host_config.notification_plugin_parameters(plugin_name).copy()
-        parameters.update(rule_parameters)
-        return parameters
+    if not isinstance(rule_parameters, dict):
+        return rule_parameters
 
-    return rule_parameters
+    host_config = config.get_config_cache().get_host_config(hostname)
+    parameters = host_config.notification_plugin_parameters(plugin_name).copy()
+    parameters.update(rule_parameters)
+
+    # Added in 2.0.0b8. Applies if no value is set either in the notification rule
+    # or the rule "Parameters for HTML Email".
+    if plugin_name == "mail":
+        parameters.setdefault("graphs_per_notification", 5)
+        parameters.setdefault("notifications_with_graphs", 5)
+
+    return parameters
 
 
 # Create a table of all user specific notification rules. Important:
@@ -748,7 +755,7 @@ def rbn_split_plugin_context(plugin_context: PluginContext) -> List[PluginContex
 
     contexts = []
     keys_to_split = {"CONTACTNAME", "CONTACTALIAS", "CONTACTEMAIL", "CONTACTPAGER"} \
-                    | {key for key in plugin_context if key.startswith("CONTACT_")}
+        | {key for key in plugin_context if key.startswith("CONTACT_")}
 
     for i in range(num_contacts):
         context = plugin_context.copy()

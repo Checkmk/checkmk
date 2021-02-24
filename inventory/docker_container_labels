@@ -11,7 +11,7 @@ def inv_docker_container_labels(info, inventory_tree):
     if data is None:
         return
     container = inventory_tree.get_dict("software.applications.docker.container.")
-    container["labels"] = docker.format_labels({"Labels": data})
+    container["labels"] = docker.format_labels(data)
 
 
 inv_info['docker_container_labels'] = {

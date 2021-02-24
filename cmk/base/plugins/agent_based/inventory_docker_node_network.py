@@ -49,7 +49,7 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
             "name": network_name,
             "network_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
-            "labels": docker.format_labels(network),
+            "labels": docker.format_labels(network.get("Labels", {})),
         }
         try:
             network_inventory_attributes.update(

@@ -101,8 +101,5 @@ def get_short_id(string: str) -> str:
     return string.rsplit(":", 1)[-1][:12]
 
 
-def format_labels(obj: Dict) -> str:
-    labels = obj.get("Labels") or {}
-    if isinstance(labels, dict):
-        labels = iter(labels.items())
-    return ", ".join("%s: %s" % item for item in sorted(labels))
+def format_labels(labels: Dict[str, str]) -> str:
+    return ", ".join("%s: %s" % item for item in sorted(labels.items()))

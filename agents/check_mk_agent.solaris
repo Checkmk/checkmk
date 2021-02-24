@@ -5,26 +5,15 @@
 
 # Remove locale settings to eliminate localized outputs where possible
 
-read_python3_version() {
-    if command -v python3 >/dev/null 2>&1; then
-        python3_minor_version="$(python3 -c 'import sys; print(sys.version_info[1])')"
-        if [ "$python3_minor_version" -ge 4 ]; then
-            echo "$python3_minor_version"
-        fi
+read_python_version() {
+    if inpath $1 && [ $($1 -c 'import sys; print(sys.version_info[1])') -ge $2 ]; then
+        echo $1
+        return 0
     fi
+    return 1
 }
-read_python2_version() {
-    if command -v python2 >/dev/null 2>&1; then
-        python2 -c 'import sys; print(sys.version_info[1])'
-        return
-    fi
-    if command -v python >/dev/null 2>&1; then
-        python -c 'import sys; print(sys.version_info[1])'
-        return
-    fi
-}
-PYTHON3=$(read_python3_version)
-PYTHON2=$(read_python2_version)
+PYTHON3=$(read_python_version python3 4)
+PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
 export PYTHON2 PYTHON3
 
 export LC_ALL=C
@@ -532,7 +521,7 @@ run_agent_plugin() {
     fi
     if [ "${filename:(-2):(2)}" != "_2" ]; then
         if [ -n "$PYTHON3" ]; then
-            ./"$agent_plugin"
+            $PYTHON3 "$agent_plugin"
             return
         fi
         return
@@ -541,6 +530,6 @@ run_agent_plugin() {
         return
     fi
     if [ -n "$PYTHON2" ]; then
-        ./"$agent_plugin"
+        $PYTHON2 $agent_plugin"
     fi
 }

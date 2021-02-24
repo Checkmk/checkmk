@@ -317,9 +317,8 @@ def _compute_rates_single_disk(
 ) -> diskstat.Disk:
 
     raised_ignore_res_excpt = False
-    disk_with_rates = {
-        'queue_length': disk['queue_length'],
-    }
+    disk_with_rates = {k: disk[k] for k in ('queue_length',) if k in disk}
+
     for metric in set(disk) - {'queue_length', 'timestamp'}:
         try:
             disk_with_rates[metric] = get_rate(
@@ -334,6 +333,10 @@ def _compute_rates_single_disk(
 
     if raised_ignore_res_excpt:
         raise IgnoreResultsError('Initializing counters')
+
+    # statgrab_disk does not provide these
+    if not all(k in disk for k in ('read_ticks', 'read_ios', 'utilization')):
+        return disk_with_rates
 
     read_ticks_rate = disk_with_rates.pop('read_ticks')
     write_ticks_rate = disk_with_rates.pop('write_ticks')

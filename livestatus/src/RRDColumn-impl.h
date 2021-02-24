@@ -16,21 +16,15 @@
 #include "pnp4nagios.h"
 
 template <>
-[[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
-detail::RRDDataMaker::getHostNameServiceDesc(const host* row) {
-    if (const auto* hst{row}) {
-        return {{hst->name, dummy_service_description()}};
-    }
-    return {};
+[[nodiscard]] inline std::pair<std::string, std::string>
+detail::RRDDataMaker::getHostNameServiceDesc(const host& hst) {
+    return {hst.name, dummy_service_description()};
 }
 
 template <>
-[[nodiscard]] inline std::optional<std::pair<std::string, std::string>>
-detail::RRDDataMaker::getHostNameServiceDesc(const service* row) {
-    if (const auto* svc{row}) {
-        return {{svc->host_name, svc->description}};
-    }
-    return {};
+[[nodiscard]] inline std::pair<std::string, std::string>
+detail::RRDDataMaker::getHostNameServiceDesc(const service& svc) {
+    return {svc.host_name, svc.description};
 }
 
 #endif

@@ -12,7 +12,6 @@
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>
 #include <iterator>
-#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -42,11 +41,8 @@ public:
         : _mc{mc}, _args{args} {}
 
     template <class T>
-    [[nodiscard]] Data operator()(const T *row) const {
-        auto host_name_service_description = getHostNameServiceDesc(row);
-        return host_name_service_description
-                   ? make(*host_name_service_description)
-                   : Data{};
+    [[nodiscard]] Data operator()(const T &row) const {
+        return make(getHostNameServiceDesc(row));
     }
 
 private:
@@ -54,8 +50,8 @@ private:
     const RRDColumnArgs _args;
 
     template <class T>
-    [[nodiscard]] static std::optional<std::pair<std::string, std::string>>
-    getHostNameServiceDesc(const T *row);
+    [[nodiscard]] static std::pair<std::string, std::string>
+    getHostNameServiceDesc(const T &row);
 
     [[nodiscard]] Data make(const std::pair<std::string, std::string>
                                 & /*host_name_service_description*/) const;
@@ -89,7 +85,9 @@ void RRDColumn<T>::output(Row row, RowRenderer &r,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    const auto data = data_maker_(columnData<T>(row));
+    const auto data = columnData<T>(row) == nullptr
+                          ? detail::RRDDataMaker::Data{}
+                          : data_maker_(*columnData<T>(row));
     ListRenderer l(r);
     l.output(data.start);
     l.output(data.end);
@@ -103,7 +101,9 @@ template <class T>
 std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    const auto data = data_maker_(columnData<T>(row));
+    const auto data = columnData<T>(row) == nullptr
+                          ? detail::RRDDataMaker::Data{}
+                          : data_maker_(*columnData<T>(row));
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));

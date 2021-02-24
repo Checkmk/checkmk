@@ -35,7 +35,7 @@ try:
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
-        "error\tpymongo library is not installed. Please install it on the monitored system (pip install pymongo)\n"
+        "error\tpymongo library is not installed. Please install it on the monitored system (for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n"
     )
     sys.exit(1)
 

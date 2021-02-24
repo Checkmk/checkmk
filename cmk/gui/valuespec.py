@@ -5266,8 +5266,12 @@ class LDAPDistinguishedName(TextUnicode):
 
 class Password(TextAscii):
     # TODO: Cleanup kwargs
-    def __init__(self, is_stored_plain: bool = True, **kwargs: Any) -> None:
+    def __init__(self,
+                 is_stored_plain: bool = True,
+                 encrypt_value: bool = True,
+                 **kwargs: Any) -> None:
         self._is_stored_plain = is_stored_plain
+        self._encrypt_value = encrypt_value
         kwargs.setdefault("autocomplete", False)
 
         if self._is_stored_plain:
@@ -5291,10 +5295,16 @@ class Password(TextAscii):
             html.write(self._label)
             html.nbsp()
 
-        html.hidden_field(varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else "")
+        if self._encrypt_value:
+            html.hidden_field(varprefix + "_orig",
+                              value=ValueEncrypter.encrypt(value) if value else "")
+            default_value = ""
+        else:
+            default_value = value
+
         html.password_input(
             varprefix,
-            default_value="",
+            default_value=default_value,
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
             placeholder="******" if value else "",
@@ -5314,8 +5324,8 @@ class Password(TextAscii):
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
-        if value:
-            return value  # New password entered
+        if value or not self._encrypt_value:
+            return value  # New password entered or unencrypted password
 
         # Gather the value produced by render_input() and use it.
         value = html.request.get_str_input_mandatory(varprefix + "_orig", "")
@@ -5379,7 +5389,7 @@ class ValueEncrypter:
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
     def __init__(self, hidden: bool = True, **kwargs: Any) -> None:
-        super().__init__(hidden=hidden, **kwargs)
+        super().__init__(hidden=hidden, encrypt_value=False, **kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         super().render_input(varprefix, value)

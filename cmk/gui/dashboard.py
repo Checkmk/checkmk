@@ -7,7 +7,7 @@
 import copy
 import json
 import time
-from typing import Callable, Dict, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
 
 from six import ensure_str
 
@@ -791,7 +791,7 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             PageMenuDropdown(
                 name="add_dashlets",
                 title=_("Add"),
-                topics=list(_page_menu_topics(name, board, mode)),
+                topics=list(_page_menu_topics(name)),
                 is_enabled=True,
             ),
         ],
@@ -804,37 +804,36 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
     return menu
 
 
-def _page_menu_topics(name: DashboardName, board: DashboardConfig,
-                      mode: str) -> Iterator[PageMenuTopic]:
+def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
     yield PageMenuTopic(
         title=_("Views"),
-        entries=list(_dashboard_add_views_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_views_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Graphs"),
-        entries=list(_dashboard_add_graphs_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_graphs_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Metrics"),
-        entries=list(_dashboard_add_metrics_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_metrics_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Checkmk"),
-        entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
     )
 
     if config.is_ntop_configured():
         yield PageMenuTopic(
             title=_("Ntop"),
-            entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),
+            entries=list(_dashboard_add_ntop_dashlet_entries(name)),
         )
 
     yield PageMenuTopic(
         title=_("Other"),
-        entries=list(_dashboard_add_other_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_other_dashlet_entries(name)),
     )
 
 
@@ -953,8 +952,7 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return board["context"]
 
 
-def _dashboard_add_views_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                         mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
         title=_('New view'),
         icon_name='view',
@@ -980,8 +978,7 @@ def _dashboard_add_views_dashlet_entries(name: DashboardName, board: DashboardCo
     )
 
 
-def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                          mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title=_('Performance graph'),
@@ -1014,8 +1011,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardC
     )
 
 
-def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                           mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title='Average scatterplot',
@@ -1050,8 +1046,7 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: Dashboard
     )
 
 
-def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                           mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title='Site overview',
@@ -1133,8 +1128,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: Dashboard
     )
 
 
-def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                        mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title='Alerts',
@@ -1170,8 +1164,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardCon
     )
 
 
-def _dashboard_add_other_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                         mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title='Custom URL',

@@ -103,10 +103,12 @@ div.cmk_figure {
   div.tooltip {
     position: absolute;
     z-index: 1;
-    padding: 5px;
+    padding: 10px;
+    color: $graph-hover-popup-font-color;
     pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.6);
-    border: $tooltip-border;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
     border-radius: 5px;
 
     td {

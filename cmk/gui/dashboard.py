@@ -7,7 +7,19 @@
 import copy
 import json
 import time
-from typing import Callable, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Type, Union
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from six import ensure_str
 
@@ -41,6 +53,7 @@ from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
+    PageMenuLink,
     PageMenuSidePopup,
     PageMenuTopic,
 )
@@ -952,30 +965,62 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return board["context"]
 
 
+def _dashboard_add_dashlet_back_http_var() -> Tuple[str, str]:
+    return "back", makeuri(request, [('edit', '1')])
+
+
+def _dashboard_add_view_dashlet_link(
+    name: DashboardName,
+    create: Literal["0", "1"],
+    filename: str,
+) -> PageMenuLink:
+    return make_simple_link(
+        makeuri_contextless(
+            request,
+            [
+                ("name", name),
+                ("create", create),
+                _dashboard_add_dashlet_back_http_var(),
+            ],
+            filename=filename,
+        ))
+
+
 def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
     yield PageMenuEntry(
         title=_('New view'),
         icon_name='view',
-        item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=1&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "1", "create_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_('Link to existing view'),
         icon_name='view_link',
-        item=make_simple_link(
-            'create_link_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "0", "create_link_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_('Copy of existing view'),
         icon_name="view_copy",
-        item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "0", "create_view_dashlet.py"),
     )
+
+
+def _dashboard_add_non_view_dashlet_link(
+    name: DashboardName,
+    dashlet_type: str,
+) -> PageMenuLink:
+    return make_simple_link(
+        makeuri_contextless(
+            request,
+            [
+                ("name", name),
+                ("create", "0"),
+                _dashboard_add_dashlet_back_http_var(),
+                ("type", dashlet_type),
+            ],
+            filename="edit_dashlet.py",
+        ))
 
 
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
@@ -983,9 +1028,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
     yield PageMenuEntry(
         title=_('Performance graph'),
         icon_name='graph',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=pnpgraph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),
     )
 
     yield PageMenuEntry(
@@ -994,9 +1037,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
             'icon': 'graph',
             'emblem': 'add',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=custom_graph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
     )
 
     yield PageMenuEntry(
@@ -1005,9 +1046,7 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
             'icon': 'graph',
             'emblem': 'add',  # TODO: Need its own icon
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=combined_graph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
     )
 
 
@@ -1016,33 +1055,25 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
     yield PageMenuEntry(
         title='Average scatterplot',
         icon_name='scatterplot',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=average_scatterplot' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "average_scatterplot"),
     )
 
     yield PageMenuEntry(
         title='Barplot',
         icon_name='barplot',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=barplot' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "barplot"),
     )
 
     yield PageMenuEntry(
         title='Gauge',
         icon_name='gauge',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=gauge' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "gauge"),
     )
 
     yield PageMenuEntry(
         title='Single metric',
         icon_name='single_metric',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=single_metric' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "single_metric"),
     )
 
 
@@ -1051,9 +1082,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     yield PageMenuEntry(
         title='Site overview',
         icon_name='site_overview',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=site_overview' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "site_overview"),
     )
 
     yield PageMenuEntry(
@@ -1062,9 +1091,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
             'icon': 'alerts',
             'emblem': 'statistic'
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=alert_statistics' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "alert_statistics"),
     )
     yield PageMenuEntry(
         title='Host Statistics',
@@ -1072,9 +1099,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
             'icon': 'folder',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=hoststats' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "hoststats"),
     )
 
     yield PageMenuEntry(
@@ -1083,9 +1108,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
             'icon': 'services',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=servicestats' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "servicestats"),
     )
 
     yield PageMenuEntry(
@@ -1094,9 +1117,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
             'icon': 'notifications',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=notifications_bar_chart' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "notifications_bar_chart"),
     )
 
     yield PageMenuEntry(
@@ -1105,25 +1126,19 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
             'icon': 'alerts',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=alerts_bar_chart' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "alerts_bar_chart"),
     )
 
     yield PageMenuEntry(
         title='User notifications',
         icon_name='notifications',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=notify_users' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "notify_users"),
     )
 
     yield PageMenuEntry(
         title='Sidebar Snapin',
         icon_name='custom_snapin',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=snapin' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "snapin"),
         is_show_more=True,
     )
 
@@ -1136,9 +1151,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
             'icon': 'ntop',
             'emblem': 'warning',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_alerts' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_alerts"),
     )
 
     yield PageMenuEntry(
@@ -1147,9 +1160,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
             'icon': 'ntop',
             'emblem': 'more',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_flows' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_flows"),
     )
 
     yield PageMenuEntry(
@@ -1158,9 +1169,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
             'icon': 'ntop',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_top_talkers' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_top_talkers"),
     )
 
 
@@ -1169,18 +1178,14 @@ def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMe
     yield PageMenuEntry(
         title='Custom URL',
         icon_name='dashlet_url',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=url' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "url"),
         is_show_more=True,
     )
 
     yield PageMenuEntry(
         title='Static text',
         icon_name='dashlet_nodata',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=nodata' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "nodata"),
         is_show_more=True,
     )
 

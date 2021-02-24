@@ -98,7 +98,7 @@ def patch_package_code(f_name: str,
 
 
 def patch_windows_version(
-    f_name: str,
+    f_name: Path,
     *,
     new_version: str,
 ) -> bool:
@@ -123,7 +123,7 @@ def patch_windows_version(
         print("New version must have size 3")
         return False
 
-    p = Path(f_name)
+    p = f_name
     if not p.exists():
         print(f"The file {p} isn't found")
         return False

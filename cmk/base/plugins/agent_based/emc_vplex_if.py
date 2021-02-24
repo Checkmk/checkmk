@@ -13,7 +13,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
     type_defs,
 )
-from .utils import if64, interfaces
+from .utils import interfaces
 
 
 def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
@@ -45,6 +45,7 @@ def parse_emc_vplex_if(string_table: List[type_defs.StringTable]) -> interfaces.
 register.snmp_section(
     name="emc_vplex_if",
     parse_function=parse_emc_vplex_if,
+    parsed_section_name="interfaces",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1139.21.2.2",
@@ -77,17 +78,4 @@ register.snmp_section(
         exists(".1.3.6.1.4.1.1139.21.2.2.8.1.*"),
     ),
     supersedes=['if', 'if64'],
-)
-
-register.check_plugin(
-    name="emc_vplex_if",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
 )

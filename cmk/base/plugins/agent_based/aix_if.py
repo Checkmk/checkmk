@@ -8,7 +8,7 @@ from .agent_based_api.v1 import (
     register,
     type_defs,
 )
-from .utils import interfaces, if64
+from .utils import interfaces
 
 
 def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
@@ -100,17 +100,5 @@ def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
 register.agent_section(
     name="aix_if",
     parse_function=parse_aix_if,
-)
-
-register.check_plugin(
-    name="aix_if",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
+    parsed_section_name="interfaces",
 )

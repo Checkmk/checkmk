@@ -29,7 +29,6 @@
 #include "Metric.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "nagios.h"
 #if defined(CMC)
 #include "cmc.h"
 #endif

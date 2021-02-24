@@ -602,6 +602,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "mknotifyd",
                 "mknotifyd_connection",
                 "mssql_backup",
+                "mssql_blocked_sessions",
                 "mssql_counters_cache_hits",
                 "mssql_counters_file_sizes",
                 "mssql_counters_locks",

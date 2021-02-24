@@ -1755,6 +1755,15 @@ class PagetypeTopics(Overridable):
                          allow_empty=False,
                          with_emblem=False,
                      )),
+                    (2.5, "max_entries",
+                     Integer(
+                         title=_("Number of items"),
+                         help=_("You can define how much items this topic "
+                                "should show. The remaining items will be "
+                                "visible with the 'Show all' option, available "
+                                "under the last item of the topic."),
+                         default_value=10,
+                     )),
                     (2.5, "sort_index",
                      Integer(
                          title=_("Sort index"),
@@ -1770,6 +1779,7 @@ class PagetypeTopics(Overridable):
     def render_extra_columns(self, table):
         """Show some specific useful columns in the list view"""
         table.cell(_("Icon"), html.render_icon(self._["icon_name"]))
+        table.cell(_("Nr. of items"), str(self.max_entries()))
         table.cell(_("Sort index"), str(self._["sort_index"]))
 
     @classmethod
@@ -1851,6 +1861,9 @@ class PagetypeTopics(Overridable):
                 "sort_index": 105,
             },
         }
+
+    def max_entries(self) -> int:
+        return self._.get("max_entries", 10)
 
     def sort_index(self) -> int:
         return self._["sort_index"]

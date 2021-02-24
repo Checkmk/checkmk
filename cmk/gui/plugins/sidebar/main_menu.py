@@ -199,7 +199,9 @@ class MegaMenuRenderer:
         topic_id = "_".join(
             [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())])
 
-        html.open_div(id_=topic_id, class_=["topic"] + (["show_more_mode"] if show_more else []))
+        html.open_div(id_=topic_id,
+                      class_=["topic"] + (["show_more_mode"] if show_more else []),
+                      **{"data-max-entries": "%d" % topic.max_entries})
 
         self._show_topic_title(menu_id, topic_id, topic)
         self._show_items(topic_id, topic)

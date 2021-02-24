@@ -505,10 +505,13 @@ export function mega_menu_show_all_topics(current_topic_id) {
 export function mega_menu_hide_entries(menu_id) {
     let menu = document.getElementById(menu_id);
     let more_is_active = menu.classList.contains("more");
-    let max_entry_number = 10;
     let topics = menu.getElementsByClassName("topic");
     topics.forEach(topic => {
         if (topic.classList.contains("extended")) return;
+        let max_entry_number = Number(topic.getAttribute("data-max-entries"));
+        if (!max_entry_number) {
+            return;
+        }
         let entries = topic.getElementsByTagName("li");
         let show_all_items_entry = entries[entries.length - 1];
         if (entries.length > max_entry_number + 1) {

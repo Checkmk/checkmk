@@ -7,7 +7,7 @@
 import errno
 import os
 import socket
-from typing import Any, cast, Dict, Iterable, List, Optional, Protocol, Tuple, Union
+from typing import Any, cast, Dict, Iterable, List, Mapping, Optional, Protocol, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -353,7 +353,16 @@ def _cache_path() -> str:
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
-def update_dns_cache(host_configs: Iterable[_HostConfigLike]) -> UpdateDNSCacheResult:
+def update_dns_cache(
+    *,
+    host_configs: Iterable[_HostConfigLike],
+    configured_ipv4_addresses: Mapping[HostName, HostAddress],
+    configured_ipv6_addresses: Mapping[HostName, HostAddress],
+    # Do these two even make sense? If either is set, this function
+    # will just clear the cache.
+    simulation_mode: bool,
+    override_dns: Optional[HostAddress],
+) -> UpdateDNSCacheResult:
 
     failed = []
 
@@ -365,10 +374,18 @@ def update_dns_cache(host_configs: Iterable[_HostConfigLike]) -> UpdateDNSCacheR
 
     console.verbose("Updating DNS cache...\n")
     for host_config, family in _annotate_family(host_configs):
-        console.verbose("%s (IPv%d)..." % (host_config.hostname, family))
+        console.verbose(f"{host_config.hostname} ({family})...")
         try:
-            ip = lookup_ip_address(host_config, family=family)
-            console.verbose("%s\n" % ip)
+            ip = _lookup_ip_address(
+                host_config=host_config,
+                family=family,
+                configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET else
+                                       configured_ipv4_addresses).get(host_config.hostname),
+                simulation_mode=simulation_mode,
+                override_dns=override_dns,
+                use_dns_cache=False,  # it's cleared anyway
+            )
+            console.verbose(f"{ip}\n")
 
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we

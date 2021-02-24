@@ -80,14 +80,19 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         filter_headers, only_sites = get_filter_headers("log", self.filter_infos(), context)
         object_type_filter = self._get_object_type_filter(properties)
 
-        query = ("GET log\n"
-                 "Columns: log_state host_name service_description log_type log_time\n"
-                 "Filter: class = %d\n"
-                 "Filter: log_time >= %f\n"
-                 "Filter: log_time <= %f\n"
-                 "%s"
-                 "%s" % (self.log_class, time_range[0], time_range[1], object_type_filter,
-                         lqencode(filter_headers)))
+        query = (
+            "GET log\n"
+            "Columns: log_state host_name service_description log_type log_time\n"
+            "Filter: class = %d\n"
+            "Filter: log_time >= %f\n"
+            "Filter: log_time <= %f\n"
+            # Only show problem notifications
+            "Filter: log_state != 0\n"
+            # do not show internal notification events (just end user notifications)
+            "Filter: log_command_name != check-mk-notify\n"
+            "%s"
+            "%s" % (self.log_class, time_range[0], time_range[1], object_type_filter,
+                    lqencode(filter_headers)))
 
         with sites.only_sites(only_sites):
             try:
@@ -127,11 +132,13 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
             except livestatus.MKLivestatusNotFoundError:
                 raise MKGeneralException(_("The query returned no data."))
 
-    @classmethod
-    def _get_object_type_filter(cls, properties) -> str:
-        if properties["log_target"] != "both":
-            return "Filter: log_type ~ %s .*\n" % lqencode(properties["log_target"].upper())
-        return ""
+    def _get_object_type_filter(self, properties) -> str:
+        return "Filter: log_type ~ %s\n" % lqencode(
+            self._get_log_type_expr(properties["log_target"]))
+
+    def _get_log_type_expr(self, log_target: str) -> str:
+        object_type = "(HOST|SERVICE)" if log_target == "both" else log_target.upper()
+        return "%s %s$" % (object_type, self.log_type.upper())
 
     def _forge_tooltip_and_url(self, time_frame, properties, context):
         mode_properties = properties["render_mode"][1]
@@ -157,16 +164,23 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
         args.append(("logtime_until_range", "unix"))
         args.append(("logclass%d" % self.log_class, "on"))
 
-        # Target filters
-        if properties["log_target"] == "host":
-            args.append(("logst_h0", "on"))
+        # Only include "end user notitification entries. Exclude entries related to the internal
+        # raw notification events.
+        args.append(("is_log_notification_phase", "0"))
+
+        if properties["log_target"] in ("host", "both"):
+            #args.append(("logst_h0", "on"))
             args.append(("logst_h1", "on"))
             args.append(("logst_h2", "on"))
-        elif properties["log_target"] == "service":
-            args.append(("logst_s0", "on"))
+
+        if properties["log_target"] in ("service", "both"):
+            #args.append(("logst_s0", "on"))
             args.append(("logst_s1", "on"))
             args.append(("logst_s2", "on"))
             args.append(("logst_s3", "on"))
+
+        # Exclude e.g. "SERVICE NOTIFICATION RESULT" type
+        args.append(("log_type", self._get_log_type_expr(properties["log_target"])))
 
         # Context
         for fil in context.values():
@@ -177,13 +191,7 @@ class ABCEventBarChartDataGenerator(BarChartDataGenerator):
 
 
 def default_bar_chart_title(log_target: str, name: str) -> str:
-    log_target_to_title = {
-        "both": _("Host and service"),
-        "host": _("Host"),
-        "service": _("Service"),
-    }
-
-    return _("%s %s") % (log_target_to_title[log_target], name)
+    return _("Problem %s") % name
 
 
 def bar_chart_title(properties, context, settings) -> str:
@@ -291,7 +299,7 @@ class NotificationsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Notification timeline")
+        return _("Problem notifications")
 
     @classmethod
     def description(cls):
@@ -327,7 +335,7 @@ class AlertsBarChartDashlet(ABCEventBarChartDashlet):
 
     @classmethod
     def title(cls):
-        return _("Alert timeline")
+        return _("Problem alerts")
 
     @classmethod
     def description(cls):

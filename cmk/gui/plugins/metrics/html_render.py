@@ -27,6 +27,7 @@ from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import render_color_icon
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import GraphIdentifier
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
@@ -552,7 +553,7 @@ def forget_manual_vertical_zoom():
         save_user_graph_data_range(user_range)
 
 
-def resolve_graph_recipe(graph_identification, destination=None):
+def resolve_graph_recipe(graph_identification: GraphIdentifier, destination=None):
     try:
         return graph_identification_types.create_graph_recipes(graph_identification,
                                                                destination=None)
@@ -565,10 +566,12 @@ def resolve_graph_recipe(graph_identification, destination=None):
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
 
 
-def render_graphs_from_specification_html(graph_identification,
-                                          graph_data_range,
-                                          graph_render_options,
-                                          render_async=True):
+def render_graphs_from_specification_html(
+    graph_identification: GraphIdentifier,
+    graph_data_range,
+    graph_render_options,
+    render_async=True,
+):
 
     graph_recipes = resolve_graph_recipe(graph_identification)
     if not isinstance(graph_recipes, list):
@@ -829,7 +832,10 @@ default_dashlet_graph_render_options: Mapping[str, Any] = {
 }
 
 
-def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
+def host_service_graph_dashlet_cmk(
+    graph_identification: GraphIdentifier,
+    custom_graph_render_options,
+):
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)

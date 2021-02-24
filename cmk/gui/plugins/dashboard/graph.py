@@ -38,7 +38,7 @@ from cmk.gui.plugins.metrics.html_render import (
     resolve_graph_recipe,
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
     Dictionary,
     DictionaryElements,
@@ -269,7 +269,7 @@ class GraphDashlet(Dashlet):
             except livestatus.MKLivestatusNotFoundError:
                 raise MKUserError("host", _("The host could not be found on any active site."))
 
-    def graph_identification(self, context):
+    def graph_identification(self, context: VisualContext) -> GraphIdentifier:
         host = context.get("host")
         if not host:
             raise MKUserError('host', _('Missing needed host parameter.'))

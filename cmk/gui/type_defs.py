@@ -19,6 +19,7 @@ from typing import (
     TypedDict,
     Union,
 )
+
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
@@ -188,3 +189,6 @@ class SearchResult:
 
 
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
+
+# Graph specific
+GraphIdentifier = Tuple[str, Any]

@@ -88,13 +88,9 @@ def macro_mapping_from_context(
         ) if key in context and key in single_infos
     })
 
-    only_sites = visuals.get_only_sites_from_context(context)
-    if only_sites and len(only_sites) == 1:
-        macro_mapping["$SITE$"] = only_sites[0]
-
     if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
         macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
-            macro_mapping.get("$SITE$"),
+            additional_macros.get("$SITE$"),
             macro_mapping["$HOST_NAME$"],
         )
 

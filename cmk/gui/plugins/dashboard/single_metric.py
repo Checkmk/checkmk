@@ -36,21 +36,29 @@ def dashlet_title(
         return ""
     default_title = SingleMetricDashlet.default_display_title()
     _unused, metric_specs, metric_context = metric
-    metric_name = metric_specs.get("title")
+    additional_macros = {
+        k: v for k, v in (
+            (
+                "$SITE$",
+                metric_context.get("site"),
+            ),
+            (
+                "$METRIC_NAME$",
+                metric_specs.get("title"),
+            ),
+        ) if v
+    }
     return render_title_with_macros_string(
         {
             context_key: metric_context[metrics_key] for metrics_key, context_key in (
                 ("host_name", "host"),
                 ("service_description", "service"),
-                ("site", "site"),
             ) if metrics_key in metric_context
         },
         settings["single_infos"],
         settings.get("title", default_title),
         default_title,
-        **({
-            "$METRIC_NAME$": metric_name
-        } if metric_name else {}),
+        **additional_macros,
     )
 
 

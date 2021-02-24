@@ -6,7 +6,7 @@
 
 import json
 from itertools import chain
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Any, Dict, Iterable, Mapping
 from typing import Tuple as TupleType
 
 import livestatus
@@ -409,23 +409,21 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
 
     def _get_macro_mapping(self, title: str) -> MacroMapping:
-        context = self.context
-        site = self._get_site_from_dashlet_spec()
-        if site:
-            context["site"] = site
         macro_mapping = macro_mapping_from_context(
-            context,
+            self.context,
             self.single_infos(),
             self.display_title(),
             self.default_display_title(),
+            **self._get_additional_macros(),
         )
         return macro_mapping
 
-    def _get_site_from_dashlet_spec(self) -> Optional[str]:
+    def _get_additional_macros(self) -> Mapping[str, str]:
         try:
-            return self.dashlet_spec["_graph_identification"][1].get("site")
+            site = self.dashlet_spec["_graph_identification"][1].get("site")
         except KeyError:
-            return None
+            return {}
+        return {"$SITE$": site} if site else {}
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:

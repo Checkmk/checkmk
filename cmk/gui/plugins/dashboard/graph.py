@@ -41,10 +41,13 @@ from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import (
     Dictionary,
+    DictionaryElements,
+    DictionaryEntry,
     DropdownChoice,
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
     TextAsciiAutocomplete,
+    ValueSpec,
 )
 
 
@@ -296,7 +299,7 @@ class GraphDashlet(Dashlet):
         )
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> ValueSpec:
         return Dictionary(
             title=_('Properties'),
             render='form',
@@ -305,41 +308,45 @@ class GraphDashlet(Dashlet):
         )
 
     @staticmethod
-    def _vs_timerange():
+    def _vs_timerange() -> DictionaryEntry:
         # TODO: Cleanup: switch to generic Timerange() valuespec!
-        return ("timerange",
-                DropdownChoice(
-                    title=_('Timerange'),
-                    default_value='1',
-                    choices=[
-                        ("0", _("4 Hours")),
-                        ("1", _("25 Hours")),
-                        ("2", _("One Week")),
-                        ("3", _("One Month")),
-                        ("4", _("One Year")),
-                    ],
-                ))
+        return (
+            "timerange",
+            DropdownChoice(
+                title=_('Timerange'),
+                default_value='1',
+                choices=[
+                    ("0", _("4 Hours")),
+                    ("1", _("25 Hours")),
+                    ("2", _("One Week")),
+                    ("3", _("One Month")),
+                    ("4", _("One Year")),
+                ],
+            ),
+        )
+
+    @staticmethod
+    def _vs_graph_render_options() -> DictionaryEntry:
+        return (
+            "graph_render_options",
+            vs_graph_render_options(
+                default_values=default_dashlet_graph_render_options,
+                exclude=[
+                    "show_time_range_previews",
+                    "title_format",
+                    "show_title",
+                ],
+            ),
+        )
 
     @classmethod
-    def _parameter_elements(cls):
-        return [
-            cls._vs_timerange(),
-            (
-                "source",
-                GraphTemplate(),
-            ),
-            (
-                "graph_render_options",
-                vs_graph_render_options(
-                    default_values=default_dashlet_graph_render_options,
-                    exclude=[
-                        "show_time_range_previews",
-                        "title_format",
-                        "show_title",
-                    ],
-                ),
-            ),
-        ]
+    def _parameter_elements(cls) -> DictionaryElements:
+        yield cls._vs_timerange()
+        yield (
+            "source",
+            GraphTemplate(),
+        )
+        yield cls._vs_graph_render_options()
 
     @classmethod
     def script(cls):

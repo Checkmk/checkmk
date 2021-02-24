@@ -5,43 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import time
 import json
+import time
 import traceback
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union
 
 import livestatus
 
 import cmk.utils.render
 
-from cmk.gui import escaping
-from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
+from cmk.gui import escaping
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.sites import get_alias_of_host
-
-from cmk.gui.i18n import _u, _
-
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-
-from cmk.gui.plugins.metrics.utils import render_color_icon
-
 from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-
+from cmk.gui.plugins.metrics.utils import render_color_icon
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
+from cmk.gui.sites import get_alias_of_host
 from cmk.gui.utils.popups import MethodAjax
-
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
 

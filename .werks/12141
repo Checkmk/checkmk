@@ -1,0 +1,14 @@
+Title: Fix missing navigation after automatic logout and login
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614152128
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+When users were automatically logged out, for example due to inactivity, they
+have to login again. After logging back in into the user interface, the
+navigation was missing in some cases. We ensure now that the navigation is
+visible to all users in such a situation.

@@ -12,7 +12,7 @@ from cmk.gui.globals import html
 from cmk.gui.valuespec import ValueSpec, DictionaryEntry
 from cmk.gui.valuespec import (
     FixedValue,
-    PasswordSpec,
+    Password,
     Alternative,
     DropdownChoice,
     DualListChoice,
@@ -143,7 +143,7 @@ class ModeEditPassword(SimpleEditMode):
             admin_element = []
 
         elements: List[DictionaryEntry] = [
-            ("password", PasswordSpec(
+            ("password", Password(
                 title=_("Password"),
                 allow_empty=False,
             )),

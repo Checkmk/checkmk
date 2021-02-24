@@ -32,7 +32,7 @@
 // IWYU versionitis?
 #include "nagios.h"  // IWYU pragma: keep
 #if defined(CMC)
-#include "cmc.h"
+#include "cmc.h"  // IWYU pragma: keep
 #endif
 #include "MonitoringCore.h"
 #include "strutil.h"

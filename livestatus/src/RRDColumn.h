@@ -29,6 +29,8 @@
 #include "Metric.h"
 #include "Renderer.h"
 #include "Row.h"
+// IWYU versionitis?
+#include "nagios.h"  // IWYU pragma: keep
 #if defined(CMC)
 #include "cmc.h"
 #endif

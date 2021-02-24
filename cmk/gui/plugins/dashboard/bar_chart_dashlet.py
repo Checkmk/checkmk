@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Sequence, Tuple
+from itertools import chain
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -39,11 +41,11 @@ class BarChartDataGenerator:
     def _create_bar_chart_config(self, bar_elements, properties, context, settings):
         return {"elements": bar_elements}
 
-    def _int_time_range_from_rangespec(self, rangespec):
+    def _int_time_range_from_rangespec(self, rangespec) -> Tuple[int, int]:
         time_range, _range_title = Timerange().compute_range(rangespec)
-        return [int(t) for t in time_range]
+        return int(time_range[0]), int(time_range[1])
 
-    def _timestep_from_resolution(self, resolution):
+    def _timestep_from_resolution(self, resolution: str) -> int:
         if resolution == "h":
             return 60 * 60
         if resolution == "d":
@@ -69,32 +71,26 @@ class BarChartDataGenerator:
         respect to the given time range and resolution. All non-time values are
         set to an initial value (0 / "" / [])."""
         mode_properties = properties["render_mode"][1]
-        time_range = self._int_time_range_from_rangespec(mode_properties["time_range"])
+        start_time, end_time = self._int_time_range_from_rangespec(mode_properties["time_range"])
         basic_timestep = self._timestep_from_resolution(mode_properties["time_resolution"])
-        timestamps = self._forge_timestamps(time_range, basic_timestep)
-        bar_elements = []
-        for i, timestamp in enumerate(timestamps):
-            if i == len(timestamps) - 1:
-                ending_timestamp = time_range[1]
-            else:
-                ending_timestamp = timestamps[i + 1] - 1
-            bar_elements.append({
-                "timestamp": timestamp,
-                "ending_timestamp": ending_timestamp,
-                "value": 0,
-                "tag": "bar",
-            })
-        return bar_elements
+        timestamps = self._forge_timestamps(start_time, end_time, basic_timestep)
 
-    def _forge_timestamps(self, time_range, timestep):
+        return [{
+            "timestamp": timestamp,
+            "ending_timestamp": next_timestamp - 1,
+            "value": 0,
+            "tag": "bar",
+        } for timestamp, next_timestamp in zip(timestamps, chain(timestamps[1:], [end_time + 1]))]
+
+    def _forge_timestamps(self, start_time: int, end_time: int, timestep: int) -> Sequence[int]:
         """Forge timestamps within the given time range where the first and last
         timestep may be smaller than the given timestep. Yielding 'inner'
         timestamps rounded to the hour."""
-        timestamps = [time_range[0]]
+        timestamps = [start_time]
         # Adding 3600 (1h) because timestamp 0 corresponds to
         # 1970-01-01 01:00 (not 00:00)
-        t = time_range[0] + timestep - (time_range[0] + 3600) % timestep
-        while t < time_range[1]:
+        t = start_time + timestep - (start_time + 3600) % timestep
+        while t < end_time:
             if timestep == 86400:
                 t -= time.localtime(t).tm_hour * 3600
             timestamps.append(t)

@@ -79,6 +79,17 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("if64adm"): CheckPluginName("if64"),
     CheckPluginName("winperf_tcp_conn"): CheckPluginName("tcp_conn_stats"),
     CheckPluginName("datapower_tcp"): CheckPluginName("tcp_conn_stats"),
+    CheckPluginName("statgrab_net"): CheckPluginName("interfaces"),
+    CheckPluginName("emc_vplex_if"): CheckPluginName("interfaces"),
+    CheckPluginName("vms_if"): CheckPluginName("interfaces"),
+    CheckPluginName("if_brocade"): CheckPluginName("interfaces"),
+    CheckPluginName("if_lancom"): CheckPluginName("interfaces"),
+    CheckPluginName("ucs_bladecenter_if"): CheckPluginName("interfaces"),
+    CheckPluginName("aix_if"): CheckPluginName("interfaces"),
+    CheckPluginName("if"): CheckPluginName("interfaces"),
+    CheckPluginName("if_fortigate"): CheckPluginName("interfaces"),
+    CheckPluginName("hp_msa_if"): CheckPluginName("interfaces"),
+    CheckPluginName("if64_tplink"): CheckPluginName("interfaces"),
 }
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

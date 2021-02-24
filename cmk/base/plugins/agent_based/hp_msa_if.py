@@ -10,7 +10,6 @@ from .agent_based_api.v1 import (
 )
 from .utils import (
     hp_msa,
-    if64,
     interfaces,
 )
 
@@ -156,17 +155,5 @@ def parse_hp_msa_if(string_table: type_defs.StringTable) -> interfaces.Section:
 register.agent_section(
     name='hp_msa_if',
     parse_function=parse_hp_msa_if,
-)
-
-register.check_plugin(
-    name="hp_msa_if",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
+    parsed_section_name="interfaces",
 )

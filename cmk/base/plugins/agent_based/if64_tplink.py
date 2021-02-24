@@ -42,6 +42,7 @@ def parse_if64_tplink(string_table: List[type_defs.StringByteTable]) -> interfac
 register.snmp_section(
     name="if64_tplink",
     parse_function=parse_if64_tplink,
+    parsed_section_name="interfaces",
     fetch=[
         SNMPTree(
             base=".1.3.6.1",
@@ -75,17 +76,4 @@ register.snmp_section(
     ],
     detect=all_of(contains(".1.3.6.1.2.1.1.2.0", ".4.1.11863."), if64.HAS_ifHCInOctets),
     supersedes=['if', 'if64'],
-)
-
-register.check_plugin(
-    name="if64_tplink",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
 )

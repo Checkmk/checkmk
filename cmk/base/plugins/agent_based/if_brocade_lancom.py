@@ -156,6 +156,7 @@ def parse_if_lancom(string_table: List[StringByteTable]) -> interfaces.Section:
 register.snmp_section(
     name="if_brocade",
     parse_function=parse_if_brocade,
+    parsed_section_name="interfaces",
     fetch=IF64_BASE_TREE,
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"),
@@ -167,6 +168,7 @@ register.snmp_section(
 register.snmp_section(
     name="if_lancom",
     parse_function=parse_if_lancom,
+    parsed_section_name="interfaces",
     fetch=[
         IF64_BASE_TREE,
         # Lancom LCOS-MIB::lcsStatusWlanNetworksEntry
@@ -195,30 +197,4 @@ register.snmp_section(
         ),
     ),
     supersedes=['if', 'if64'],
-)
-
-register.check_plugin(
-    name="if_brocade",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
-)
-
-register.check_plugin(
-    name="if_lancom",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
 )

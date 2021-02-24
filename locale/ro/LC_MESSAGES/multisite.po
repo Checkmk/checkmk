@@ -4108,9 +4108,6 @@ msgstr "Grup nou"
 msgid "All Eventlogs"
 msgstr ""
 
-msgid "All Hosts"
-msgstr ""
-
 msgid "All OK services of a given site."
 msgstr ""
 
@@ -5439,6 +5436,10 @@ msgstr ""
 msgid "Auto shrink on"
 msgstr ""
 
+#, fuzzy
+msgid "Autodetect instances"
+msgstr "Adaugă instanță NGINX"
+
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr ""
 
@@ -5930,9 +5931,6 @@ msgstr "Agregare noua"
 msgid "BI Aggregation Groups"
 msgstr ""
 
-msgid "BI Aggregation Groups Tree"
-msgstr ""
-
 msgid "BI Aggregations"
 msgstr ""
 
@@ -5967,6 +5965,14 @@ msgstr "Reguli"
 #, fuzzy
 msgid "BI Visualization"
 msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "BI aggregation groups"
+msgstr "Agregare noua"
+
+#, fuzzy
+msgid "BI aggregation groups tree"
+msgstr "Agregare noua"
 
 msgid "BI compilation"
 msgstr ""
@@ -9781,6 +9787,10 @@ msgstr ""
 msgid "Connect via UNIX socket"
 msgstr ""
 
+#, fuzzy
+msgid "Connect without password"
+msgstr "Conexiune Noua"
+
 msgid "Connect without proxy"
 msgstr ""
 
@@ -10195,6 +10205,10 @@ msgstr ""
 
 msgid "Core started"
 msgstr ""
+
+#, fuzzy
+msgid "Core statistics"
+msgstr " Se potriveste grupurilor: %s"
 
 msgid "Core stopped"
 msgstr ""
@@ -11210,9 +11224,6 @@ msgstr ""
 msgid "Custom Icons"
 msgstr "Atribute personalizate"
 
-msgid "Custom Links"
-msgstr ""
-
 #, fuzzy
 msgid "Custom MBeans"
 msgstr "Atribute personalizate"
@@ -11312,6 +11323,10 @@ msgstr "Atribute personalizate"
 
 #, fuzzy
 msgid "Custom limit"
+msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Custom links"
 msgstr "Atribute personalizate"
 
 msgid "Custom localizations"
@@ -12976,6 +12991,10 @@ msgid "Deprecated choice, please re-select"
 msgstr ""
 
 #, fuzzy
+msgid "Deprecated rulesets"
+msgstr "Reguli neaplicate"
+
+#, fuzzy
 msgid "Deprecations"
 msgstr "Acțiune"
 
@@ -14164,6 +14183,9 @@ msgstr ""
 msgid "Do not deploy the PostgreSQL plugin"
 msgstr ""
 
+msgid "Do not deploy the Redis plugin"
+msgstr ""
+
 msgid "Do not deploy the SAP HANA plugin"
 msgstr ""
 
@@ -14668,6 +14690,10 @@ msgstr ""
 
 msgid "Don't use custom port"
 msgstr ""
+
+#, fuzzy
+msgid "Don't use password"
+msgstr "Parolâ Administrator:"
 
 msgid "Don't use quotes"
 msgstr ""
@@ -16217,9 +16243,6 @@ msgstr ""
 msgid "Event Console Events"
 msgstr ""
 
-msgid "Event Console Performance"
-msgstr ""
-
 msgid "Event Console alerts"
 msgstr ""
 
@@ -16311,6 +16334,10 @@ msgstr "cu comentariu"
 #, fuzzy
 msgid "Event console"
 msgstr "randuri"
+
+#, fuzzy
+msgid "Event console performance"
+msgstr "Acces la Consola de Evenimente"
 
 msgid "Event console rule"
 msgstr ""
@@ -20276,9 +20303,6 @@ msgstr "Numele Elementului"
 msgid "Host Labels"
 msgstr "Numele Elementului"
 
-msgid "Host Matrix"
-msgstr ""
-
 #, fuzzy
 msgid "Host Metrics"
 msgstr "serviciu"
@@ -20534,6 +20558,10 @@ msgstr "Numele Elementului"
 
 msgid "Host match list"
 msgstr ""
+
+#, fuzzy
+msgid "Host matrix"
+msgstr "serviciu"
 
 #, fuzzy
 msgid "Host memory usage"
@@ -21811,6 +21839,12 @@ msgid ""
 "will be deployed. For each configured or detected Apache instance there will "
 "be one new service with detailed statistics of the current number of clients "
 "and processes and their various states."
+msgstr ""
+
+msgid ""
+"If you activate this option, then the agent plugin <tt>mk_redis</tt> will be "
+"deployed. You can configure multiple instances or auto detect running "
+"instances."
 msgstr ""
 
 msgid ""
@@ -26637,9 +26671,6 @@ msgstr ""
 msgid "Mails received rate"
 msgstr ""
 
-msgid "Main"
-msgstr ""
-
 msgid "Main Overview"
 msgstr ""
 
@@ -26967,10 +26998,10 @@ msgstr ""
 msgid "Mark the nodes of the resources as preferred one"
 msgstr ""
 
-msgid "Master Control"
+msgid "Master Event Console"
 msgstr ""
 
-msgid "Master Event Console"
+msgid "Master control"
 msgstr ""
 
 msgid "Master election or mismatch checks in progress"
@@ -28026,9 +28057,6 @@ msgstr ""
 msgid "Metrics with all zero values"
 msgstr ""
 
-msgid "Micro Core Statistics"
-msgstr ""
-
 msgid "Microsoft Azure"
 msgstr ""
 
@@ -28941,6 +28969,10 @@ msgstr ""
 
 msgid "NagVis map"
 msgstr ""
+
+#, fuzzy
+msgid "NagVis maps"
+msgstr "Acces la Hărțile NagVis"
 
 msgid "NagVis: AJAX"
 msgstr ""
@@ -31413,9 +31445,6 @@ msgid "Offset"
 msgstr ""
 
 msgid "Ok"
-msgstr ""
-
-msgid "Old Nagios GUI"
 msgstr ""
 
 msgid "Older events"
@@ -34498,10 +34527,6 @@ msgid "Prob."
 msgstr "Probleme"
 
 #, fuzzy
-msgid "Problem Hosts"
-msgstr "Probleme"
-
-#, fuzzy
 msgid "Problem aggregations"
 msgstr "Agregare noua"
 
@@ -34511,6 +34536,10 @@ msgstr "Probleme"
 
 #, fuzzy
 msgid "Problem details"
+msgstr "Probleme"
+
+#, fuzzy
+msgid "Problem hosts"
 msgstr "Probleme"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
@@ -35611,6 +35640,10 @@ msgstr ""
 
 msgid "Redis clients"
 msgstr ""
+
+#, fuzzy
+msgid "Redis databases"
+msgstr "Dimensiunea Maxima"
 
 msgid "Redis info"
 msgstr ""
@@ -44612,9 +44645,6 @@ msgstr ""
 msgid "The latency range at which values should start to be considered."
 msgstr ""
 
-msgid "The legacy Nagios GUI has been removed."
-msgstr ""
-
 msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
@@ -45005,10 +45035,9 @@ msgid ""
 "matching this facility."
 msgstr ""
 
-#, python-format
 msgid ""
-"The ntopng username should be derived from the custom attribute '%s', but "
-"this attribute is not set for the current user."
+"The ntopng username should be derived from 'ntopng Username' under the "
+"current's user settings (identity) but this is not set for the current user."
 msgstr ""
 
 #, python-format
@@ -57179,8 +57208,11 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "ntopng is not configured. Please configure it under global settings."
+msgid "ntopng integration is not activated under global settings."
 msgstr "Acces la modulul <i>Setări Globale</i>"
+
+msgid "ntopng integration is only available in CEE"
+msgstr ""
 
 msgid "ntopng username to aquire data for"
 msgstr ""
@@ -57898,6 +57930,10 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Problem Hosts"
+#~ msgstr "Probleme"
+
+#, fuzzy
 #~ msgid "Test with this host name"
 #~ msgstr " pe siteul de monitorizare: "
 
@@ -58108,10 +58144,6 @@ msgstr ""
 #~| msgid "to port:"
 #~ msgid "Fill area plot"
 #~ msgstr "catre port:"
-
-#, fuzzy
-#~ msgid "Problem hosts"
-#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "Problem services"
@@ -60485,10 +60517,6 @@ msgstr ""
 #~ msgstr "urca snapshot-uri nesigure"
 
 #, fuzzy
-#~ msgid "Connect Timeout (sec)"
-#~ msgstr "Conexiune Noua"
-
-#, fuzzy
 #~ msgid "Connect via TCP"
 #~ msgstr "Acces prin TCP"
 
@@ -61027,10 +61055,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Multisite-URL of remote site"
 #~ msgstr "(Nu trimite site-ului de la distanță)"
-
-#, fuzzy
-#~ msgid "NagVis maps"
-#~ msgstr "Acces la Hărțile NagVis"
 
 #, fuzzy
 #~ msgid "Name of Channel or Queue"
@@ -61641,10 +61665,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "DELETE Requests"
 #~ msgstr "cereri"
-
-#, fuzzy
-#~ msgid "Deprecated rulesets"
-#~ msgstr "Reguli neaplicate"
 
 #, fuzzy
 #~ msgid "Do automatic host label discovery"

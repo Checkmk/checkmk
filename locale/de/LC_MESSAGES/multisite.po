@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-02-23 13:47+0000\n"
+"PO-Revision-Date: 2021-02-24 01:44+0000\n"
 "Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -4300,9 +4300,6 @@ msgstr "Alle kritischen Services einer bestimmten Instanz."
 msgid "All Eventlogs"
 msgstr "Alle Ereignisprotokolle"
 
-msgid "All Hosts"
-msgstr "Alle Hosts"
-
 msgid "All OK services of a given site."
 msgstr "Alle Services, mit Status OK, einer bestimmten Instanz."
 
@@ -5723,6 +5720,10 @@ msgstr "Auto-Shrink aus"
 msgid "Auto shrink on"
 msgstr "Auto-Shrink an"
 
+#, fuzzy
+msgid "Autodetect instances"
+msgstr "Entferne Instanzen"
+
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr "Instanzen automatisch erkennen, HTTPS auf folgenden Ports erwarten:"
 
@@ -6197,9 +6198,6 @@ msgstr "BI Aggregationsgruppe"
 msgid "BI Aggregation Groups"
 msgstr "BI Aggregationsgruppen"
 
-msgid "BI Aggregation Groups Tree"
-msgstr "Baum der BI-Aggregationsgruppen"
-
 msgid "BI Aggregations"
 msgstr "BI Aggregationen"
 
@@ -6230,6 +6228,14 @@ msgstr "BI-Pakete"
 
 msgid "BI Visualization"
 msgstr "BI Visualisierung"
+
+#, fuzzy
+msgid "BI aggregation groups"
+msgstr "Nach Aggregationsgruppen"
+
+#, fuzzy
+msgid "BI aggregation groups tree"
+msgstr "Baum der BI-Aggregationsgruppen"
 
 msgid "BI compilation"
 msgstr "BI-Kompilierung"
@@ -10016,9 +10022,8 @@ msgstr "Konfiguration von bestimmten Ereignisprotokollen"
 msgid "Configuration of monitoring agents for Linux, Windows and Unix"
 msgstr "Konfiguration von Monitoring-Agenten für Linux, Windows und Unix"
 
-#, fuzzy
 msgid "Configuration of the Checkmk Hardware and Software Inventory System"
-msgstr "Konfiguration der Check_MK Hardware/Software-Inventur"
+msgstr "Konfiguration der Checkmk Hardware/Software-Inventur"
 
 msgid "Configuration of update plugin"
 msgstr "Konfiguration des Updateplugins"
@@ -10393,6 +10398,10 @@ msgstr "Verbindung über TCP (IPv6)"
 
 msgid "Connect via UNIX socket"
 msgstr "Verbinde über UNIX socket"
+
+#, fuzzy
+msgid "Connect without password"
+msgstr "Verbinden ohne Proxy"
 
 msgid "Connect without proxy"
 msgstr "Verbinden ohne Proxy"
@@ -10799,6 +10808,10 @@ msgstr "Kern neu gestartet"
 msgid "Core started"
 msgstr "Kern gestartet"
 
+#, fuzzy
+msgid "Core statistics"
+msgstr "Knoten Statistiken"
+
 msgid "Core stopped"
 msgstr "Kern angehalten"
 
@@ -11030,9 +11043,8 @@ msgstr "Staat"
 msgid "Cr"
 msgstr "Cr"
 
-#, fuzzy
 msgid "Crash Checkmk Version"
-msgstr "Check_MK-Version"
+msgstr "Crash Checkmk-Version"
 
 #, fuzzy
 msgid "Crash Exception"
@@ -11819,9 +11831,6 @@ msgstr "URL für Benutzernotizen zu Hosts und Services"
 msgid "Custom Icons"
 msgstr "Benutzericons"
 
-msgid "Custom Links"
-msgstr "Angepasste Links"
-
 msgid "Custom MBeans"
 msgstr "Eigene MBeans"
 
@@ -11915,6 +11924,10 @@ msgstr "manueller Alarm"
 #, fuzzy
 msgid "Custom limit"
 msgstr "Individuelle Ereignisbegrenzung pro Regel"
+
+#, fuzzy
+msgid "Custom links"
+msgstr "Angepasste Links"
 
 msgid "Custom localizations"
 msgstr "Angepasste Lokalisierungen"
@@ -12668,9 +12681,8 @@ msgstr "Debugge Regelausführung"
 msgid "Debugging (log every single action)"
 msgstr "Debugging (jede Aktion loggen)"
 
-#, fuzzy
 msgid "Debugging of Checkmk helpers"
-msgstr "Debugging von Check_MK-Hilfsprozessen"
+msgstr "Debugging von Checkmk-Hilfsprozessen"
 
 msgid "December"
 msgstr "Dezember"
@@ -13518,21 +13530,17 @@ msgstr "Das %s Plugin ohne Konfiguration ausrollen"
 msgid "Deploy the APT plugin"
 msgstr "Das APT-Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy the Checkmk CUPS queues plugin"
-msgstr "Das Check_MK CUPS Queues Plugin ausrollen"
+msgstr "Das Checkmk CUPS Queues Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plugin"
-msgstr "Das Check_MK EMC ScaleIO Plugin ausrollen"
+msgstr "Das Checkmk EMC ScaleIO Plugin ausrollen"
 
-#, fuzzy
 msgid "Deploy the Checkmk Inventory plugin"
-msgstr "Bereitstellen des Check_MK Inventory Plugins"
+msgstr "Bereitstellen des Checkmk Inventory Plugins"
 
-#, fuzzy
 msgid "Deploy the Checkmk object counts plugin"
-msgstr "Das Check_MK-Instanzobjekte-Plugin ausrollen"
+msgstr "Das Checkmk-Instanzobjekte-Plugin ausrollen"
 
 msgid "Deploy the Jolokia plugin"
 msgstr "Das Jolokia Plugin ausrollen"
@@ -13630,6 +13638,9 @@ msgstr ""
 
 msgid "Deprecated choice, please re-select"
 msgstr ""
+
+msgid "Deprecated rulesets"
+msgstr "Veraltete Regelsätze"
 
 msgid "Deprecations"
 msgstr "Überholte Einstellungen"
@@ -14182,9 +14193,8 @@ msgstr "Erkennungs-Ausgabe"
 msgid "Discovery Outputs"
 msgstr "Erkennungs-Ausgaben"
 
-#, fuzzy
 msgid "Discovery and Checkmk settings"
-msgstr "Inventarisierungs/Check_MK Einstellungen"
+msgstr "Inventarisierungs/Checkmk Einstellungen"
 
 #, fuzzy
 msgid "Discovery mode"
@@ -14530,9 +14540,8 @@ msgstr "Zeigt alle BI-Aggregate an."
 msgid "Displays all aggregations of a certain group."
 msgstr "Alle Aggregate einer bestimmten Gruppe anzeigen."
 
-#, fuzzy
 msgid "Displays an introduction and Checkmk logo."
-msgstr "Zeigt eine Einführung und das Check_MK-Logo."
+msgstr "Zeigt eine Einführung und das Checkmk-Logo."
 
 msgid "Displays either sites and states or hosts and states of a site"
 msgstr ""
@@ -14591,9 +14600,8 @@ msgstr "Verteiltes Monitoring"
 msgid "Distributed monitoring"
 msgstr "Verteiltes Monitoring"
 
-#, fuzzy
 msgid "Distributed monitoring using multiple Checkmk sites"
-msgstr "Verteiltes Monitoring mit Hilfe mehrerer Check_MK-Instanzen"
+msgstr "Verteiltes Monitoring mit Hilfe mehrerer Checkmk-Instanzen"
 
 #, fuzzy
 msgid "Do a full service scan"
@@ -14806,21 +14814,17 @@ msgstr "Das Apache Status Plugin nicht ausrollen"
 msgid "Do not deploy the Arcserve plugin"
 msgstr "Arcserve-Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk CUPS queues plugin"
-msgstr "Das Check_MK CUPS Queues Plugin nicht ausrollen"
+msgstr "Das Checkmk CUPS Queues Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk EMC ScaleIO plugin"
-msgstr "Das Check_MK EMC ScaleIO Plugin nicht ausrollen"
+msgstr "Das Checkmk EMC ScaleIO Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk Inventory plugin"
-msgstr "Das Check_MK Inventory Plugin nicht ausrollen"
+msgstr "Das Checkmk Inventory Plugin nicht ausrollen"
 
-#, fuzzy
 msgid "Do not deploy the Checkmk site objects plugin"
-msgstr "Das Check_MK Plugin nicht ausrollen"
+msgstr "Das Checkmk Plugin nicht ausrollen"
 
 msgid "Do not deploy the DB2 plugin"
 msgstr "Das DB2 Plugin nicht ausrollen"
@@ -14849,6 +14853,10 @@ msgstr "ORACLE-Plugin nicht ausrollen"
 
 msgid "Do not deploy the PostgreSQL plugin"
 msgstr "Das PostgreSQL Plugin nicht ausrollen"
+
+#, fuzzy
+msgid "Do not deploy the Redis plugin"
+msgstr "Das %s Plugin nicht ausrollen"
 
 msgid "Do not deploy the SAP HANA plugin"
 msgstr "Das SAP HANA-Plugin nicht ausrollen"
@@ -15333,9 +15341,8 @@ msgstr "Echtzeitchecks nicht verarbeiten"
 msgid "Don't import"
 msgstr "Nicht importieren"
 
-#, fuzzy
 msgid "Don't install Checkmk service"
-msgstr "Wartungszeiten von Service"
+msgstr "Checkmk service nicht installieren"
 
 msgid "Don't publish to other users"
 msgstr "Nicht für andere Benutzer veröffentlichen"
@@ -15380,6 +15387,10 @@ msgstr "Verwende keinen Namespace Präfix"
 msgid "Don't use custom port"
 msgstr "Keinen benutzerdefinierten Port verwenden"
 
+#, fuzzy
+msgid "Don't use password"
+msgstr "Bearbeite Benutzerpasswort"
+
 msgid "Don't use quotes"
 msgstr "Keine Anführungszeichen verwenden"
 
@@ -15402,13 +15413,13 @@ msgstr "Download"
 msgid "Download %s package of agent for %s"
 msgstr "%s-Paket des Agenten für %s herunterladen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Download Checkmk %s agent"
-msgstr "Check_MK-%s-Agent herunterladen"
+msgstr "Checkmk-%s-Agent herunterladen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Download Checkmk Agent for host %s"
-msgstr "Check_MK-Agent für Host %s herunterladen"
+msgstr "Checkmk-Agent für Host %s herunterladen"
 
 msgid "Download SNMP walk"
 msgstr "SNMP-Walk herunterladen"
@@ -15449,9 +15460,8 @@ msgstr "Diesen Bericht herunterladen"
 msgid "Downloaded Agent"
 msgstr "Heruntergeladener Agent"
 
-#, fuzzy
 msgid "Downloads Checkmk agent and plugins for Linux"
-msgstr "Check_MK-Agent für Host %s herunterladen"
+msgstr "Checkmk-Agent für Host %s und Plugins für Linux herunterladen"
 
 #, fuzzy
 msgid "Downloads Checkmk agent and plugins for Windows"
@@ -17024,9 +17034,6 @@ msgstr "Ereignis der Event Console"
 msgid "Event Console Events"
 msgstr "Ereignisse der Event Console"
 
-msgid "Event Console Performance"
-msgstr "Event Console: Leistung"
-
 msgid "Event Console alerts"
 msgstr "Alarme der Event Console"
 
@@ -17111,6 +17118,10 @@ msgstr "Ereigniskommentar"
 
 msgid "Event console"
 msgstr "Event Console"
+
+#, fuzzy
+msgid "Event console performance"
+msgstr "Event Console: Leistung"
 
 msgid "Event console rule"
 msgstr "Eventkonsolen-Regel"
@@ -17453,9 +17464,8 @@ msgstr "Ausführungsintervall"
 msgid "Execution of checks"
 msgstr "Ausführung von Checks"
 
-#, fuzzy
 msgid "Execution time of Checkmk Agent"
-msgstr "Ausführungszeit des Check_MK-Agenten"
+msgstr "Ausführungszeit des Checkmk-Agenten"
 
 msgid "Executive"
 msgstr "Executive"
@@ -18693,14 +18703,13 @@ msgstr "Flexible benutzerdefinierte Alarme"
 msgid "Flexible and plain email notifications"
 msgstr "Flexible und einfache Text-E-Mail Alarmierung"
 
-#, fuzzy
 msgid ""
 "Flexible and plain email notifications are considered deprecated in version "
 "1.5.0 and  will be removed in Checkmk version 1.6.0. Please consider to "
 "switch to rulebased notifications."
 msgstr ""
 "Die flexible Alarmierung sowie die einfache Alarmierung über Emails werden "
-"ab der Version 1.5.0 als veraltet angesehen und werden in der Check_MK-"
+"ab der Version 1.5.0 als veraltet angesehen und werden in der Checkmk-"
 "Version 1.6.0 entfernt. Eine Umstellung auf die regelbasierte Alarmierung "
 "wird empfohlen."
 
@@ -19675,9 +19684,8 @@ msgstr "Globale Einstellung"
 msgid "Global settings"
 msgstr "Globale Einstellungen"
 
-#, fuzzy
 msgid "Global settings for Checkmk, Multisite and the monitoring core."
-msgstr "Globale Einstellungen für Check_MK, Multisite und den Monitoring-Kern."
+msgstr "Globale Einstellungen für Checkmk, Multisite und den Monitoring-Kern."
 
 #, fuzzy, python-format
 msgid "Global settings matching '%s'"
@@ -21184,9 +21192,8 @@ msgstr "Versteckt"
 msgid "Hide %s"
 msgstr "Site %s"
 
-#, fuzzy
 msgid "Hide Checkmk version"
-msgstr "Die Check_MK-Version verbergen"
+msgstr "Die Checkmk-Version verbergen"
 
 #, fuzzy
 msgid "Hide analysis"
@@ -21254,9 +21261,8 @@ msgstr "Antwort von Socket verstecken"
 msgid "Hide table actions"
 msgstr "Tabellenaktionen verstecken"
 
-#, fuzzy
 msgid "Hide the Checkmk version from the login box"
-msgstr "Die Check_MK-Version auf der Loginbox verbergen"
+msgstr "Die Checkmk-Version auf der Loginbox verbergen"
 
 #, fuzzy, python-format
 msgid "Hide this %s in dropdown menus"
@@ -21491,9 +21497,6 @@ msgstr "Host-Labels"
 #, fuzzy
 msgid "Host Labels"
 msgstr "Host-Labels"
-
-msgid "Host Matrix"
-msgstr "Hostmatrix"
 
 msgid "Host Metrics"
 msgstr "Hostmetriken"
@@ -21740,6 +21743,10 @@ msgstr "Hostgruppen-Name"
 
 msgid "Host match list"
 msgstr "Host-Bedingungen"
+
+#, fuzzy
+msgid "Host matrix"
+msgstr "Hostmatrix"
 
 #, fuzzy
 msgid "Host memory usage"
@@ -23291,6 +23298,16 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"If you activate this option, then the agent plugin <tt>mk_redis</tt> will be "
+"deployed. You can configure multiple instances or auto detect running "
+"instances."
+msgstr ""
+"Mit dieser Option aktivieren Sie das Plugin <tt>apache_status</tt>. Für jede "
+"Apache-Instanz entsteht dadurch ein neuer Service, die Statistiken über die "
+"Anzahl und Art der aktuellen Benutzer und Prozesse anzeigt."
+
+#, fuzzy
+msgid ""
 "If you activate this option, then the agent plugin <tt>nginx_status</tt> "
 "will be deployed. For each configured or detected NGINX instance there will "
 "be one new service with detailed statistics of the current number of clients "
@@ -24826,9 +24843,8 @@ msgstr "Grundeinstellung für Aggregationen"
 msgid "Initialized"
 msgstr "Initialisiert"
 
-#, fuzzy
 msgid "Initialized GIT for Checkmk"
-msgstr "GIT für Check_MK eingerichtet."
+msgstr "GIT für Checkmk eingerichtet."
 
 msgid "Initializing"
 msgstr "Initializing"
@@ -27343,9 +27359,8 @@ msgstr "Links zu allen Übersichten"
 msgid "Links to global views and dashboards"
 msgstr "Links zu globalen Ansichten und Übersichten"
 
-#, fuzzy
 msgid "Links to webpage, documentation and download of Checkmk"
-msgstr "Links zur Webseite, Dokumentation und Download von Check_MK"
+msgstr "Links zur Webseite, Dokumentation und Download von Checkmk"
 
 msgid "Linux"
 msgstr "Linux"
@@ -28582,9 +28597,6 @@ msgstr "Mail in ausgehender / deferred Mailschlange"
 msgid "Mails received rate"
 msgstr "Rate der empfangenen Mails"
 
-msgid "Main"
-msgstr "Hauptmenü"
-
 msgid "Main Overview"
 msgstr "Hauptübersicht"
 
@@ -28718,9 +28730,8 @@ msgstr "Das vollständige Hardware- und Softwareinventar eines Hosts"
 msgid "Manage Windows firewall rules for Checkmk agent"
 msgstr "Verwalten von Windows-Firewall-Regeln für den Checkmk-Agenten"
 
-#, fuzzy
 msgid "Manage and create Checkmk extension packages (MKPs)."
-msgstr "Check_MK-Erweiterungspakete (MKPs) verwalten und erstellen"
+msgstr "Checkmk-Erweiterungspakete (MKPs) verwalten und erstellen"
 
 msgid "Manage configuration read only mode"
 msgstr "Konfiguration des Schreibschutzes"
@@ -28729,9 +28740,8 @@ msgid "Manage event classification and correlation rules for the Event Console"
 msgstr ""
 "Regeln zur Klassifizierung und Korrelation von Ereignissen (Event Console)"
 
-#, fuzzy
 msgid "Manage longer running tasks in the Checkmk GUI"
-msgstr "Länger laufende Prozesse der Check_MK-GUI verwalten"
+msgstr "Länger laufende Prozesse der Checkmk-GUI verwalten"
 
 msgid "Manage monitored hosts and services and the hosts' folder structure."
 msgstr "Hosts, Services und Ordnerstruktur verwalten"
@@ -28921,11 +28931,12 @@ msgstr ""
 "Diejenigen Knoten als bevorzugt markieren, auf denen die Ressourcen gerade "
 "liegen"
 
-msgid "Master Control"
-msgstr "Hauptsteuerung"
-
 msgid "Master Event Console"
 msgstr "Master Event Console"
+
+#, fuzzy
+msgid "Master control"
+msgstr "Hauptsteuerung"
 
 msgid "Master election or mismatch checks in progress"
 msgstr "Master-Wahl oder Diskrepanzcheck läuft"
@@ -29335,17 +29346,15 @@ msgstr "Maximal zulässiges Alter der gemeldeten Daten in Sekunden"
 msgid "Maximum cache file age for clusters"
 msgstr "Maximales Cache-Dateialter für Cluster"
 
-#, fuzzy
 msgid "Maximum concurrent Checkmk checkers"
-msgstr "Maximale gleichzeitige Check_MK-Checks"
+msgstr "Maximale gleichzeitige Checkmk-Checks"
 
-#, fuzzy
 msgid "Maximum concurrent Checkmk checks (deprecated)"
-msgstr "Maximale gleichzeitige Check_MK-Checks"
+msgstr "Maximale gleichzeitige Checkmk-Checks"
 
 #, fuzzy
 msgid "Maximum concurrent Checkmk fetchers"
-msgstr "Maximale gleichzeitige Check_MK-Checks"
+msgstr "Maximale gleichzeitige Checkmk-Checks"
 
 msgid "Maximum concurrent Livestatus connections"
 msgstr "Maximale gleichzeitige Livestatusverbindungen"
@@ -29583,13 +29592,12 @@ msgstr ""
 "verwendet wird, nicht genug Rechte oder dessen Passwort ist falsch "
 "eingestellt."
 
-#, fuzzy
 msgid ""
 "Maybe these files are not compatible with your current Checkmk version. "
 "Please verify and only report this crash when you think this should be "
 "working."
 msgstr ""
-"Diese Dateien sind eventuell nicht kompatibel mit Ihrer aktuellen Check_MK-"
+"Diese Dateien sind eventuell nicht kompatibel mit Ihrer aktuellen Checkmk-"
 "Version. Bitte überprüfen Sie das und senden nur dann einen Crashreport, "
 "wenn Sie der Meinung sind, dass das funktionieren müsste."
 
@@ -29950,9 +29958,6 @@ msgstr "Metrik-System"
 
 msgid "Metrics with all zero values"
 msgstr "Metriken, die überall den Wert 0 haben"
-
-msgid "Micro Core Statistics"
-msgstr "Micro Core Statistik"
 
 msgid "Microsoft Azure"
 msgstr "Microsoft Azure"
@@ -30377,9 +30382,8 @@ msgstr "Dateisystemoperationen mittels Inotify überwachen (Linux)"
 msgid "Monitor group quotas"
 msgstr "Gruppenquotas überwachen"
 
-#, fuzzy
 msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
-msgstr "Hosts auf ungecheckte Services hin überwachen (Check_MK Discovery)"
+msgstr "Hosts auf ungecheckte Services hin überwachen (Checkmk Discovery)"
 
 #, fuzzy
 msgid "Monitor menu entries"
@@ -30424,9 +30428,8 @@ msgstr "Überwachte Services"
 msgid "Monitor user quotas"
 msgstr "Benutzerquotas überwachen"
 
-#, fuzzy
 msgid "Monitor via Checkmk Agent"
-msgstr "Per Check_MK-Agent überwachen"
+msgstr "Per Checkmk-Agent überwachen"
 
 msgid "Monitor via SNMP"
 msgstr "Per SNMP überwachen"
@@ -30852,6 +30855,10 @@ msgstr "NagVis Karten"
 msgid "NagVis map"
 msgstr "NagVis-Karte"
 
+#, fuzzy
+msgid "NagVis maps"
+msgstr "NagVis-Karte"
+
 msgid "NagVis: AJAX"
 msgstr "NagVis: AJAX"
 
@@ -30903,9 +30910,8 @@ msgstr "Name des Zertifikats"
 msgid "Name of Channel"
 msgstr "Kanalname"
 
-#, fuzzy
 msgid "Name of Checkmk site of update server"
-msgstr "Name der Check_MK-Instanz des Updateservers"
+msgstr "Name der Checkmk-Instanz des Updateservers"
 
 msgid "Name of Counter"
 msgstr "Name des Zählers"
@@ -32210,13 +32216,12 @@ msgstr "Hinweis beim Schließen"
 msgid "Note while creating"
 msgstr "Hinweis beim Erstellen"
 
-#, fuzzy
 msgid ""
 "Note: Expiration of acknowledgements only works when using the Checkmk Micro "
 "Core."
 msgstr ""
 "Hinweis: Das Ablaufen von Quittierungen funktioniert nur wenn Sie den "
-"Check_MK Micro Core einsetzen."
+"Checkmk Micro Core einsetzen."
 
 msgid ""
 "Note: If you also set a limit in the report, then the limit set here will "
@@ -33368,9 +33373,6 @@ msgstr "Offset"
 #, fuzzy
 msgid "Ok"
 msgstr "O"
-
-msgid "Old Nagios GUI"
-msgstr "Alte Nagios GUI"
 
 msgid "Older events"
 msgstr "Ältere Ereignisse"
@@ -36666,9 +36668,6 @@ msgstr "Privilegiert"
 msgid "Prob."
 msgstr "Probleme"
 
-msgid "Problem Hosts"
-msgstr "Problem-Hosts"
-
 #, fuzzy
 msgid "Problem aggregations"
 msgstr "Problem Aggregationen"
@@ -36679,6 +36678,10 @@ msgstr "Übersicht"
 
 msgid "Problem details"
 msgstr "Problem Details"
+
+#, fuzzy
+msgid "Problem hosts"
+msgstr "Problem-Hosts"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr "Das Problem ist bestätigt, periodische Benachrichtigungen sind aktiv"
@@ -37103,17 +37106,15 @@ msgstr "Abgefragter Hostname oder IP-Adresse"
 msgid "Queried host is a host system"
 msgstr "Der abgefragte Host ist ein Hostsystem"
 
-#, fuzzy
 msgid "Queried host is a host system with Checkmk Agent installed"
-msgstr "Der abgefragte Host ist ein ESX Host mit einem Check_MK Agent"
+msgstr "Der abgefragte Host ist ein ESX Host mit einem Checkmk Agent"
 
 msgid "Queried host is the vCenter"
 msgstr "Befragter Host ist das vCenter"
 
-#, fuzzy
 msgid "Queried host is the vCenter with Checkmk Agent installed"
 msgstr ""
-"Der abgefragte Host ist ein vCenter, auf dem ein Check_MK-Agent installiert "
+"Der abgefragte Host ist ein vCenter, auf dem ein Checkmk-Agent installiert "
 "ist"
 
 msgid "Query"
@@ -37766,6 +37767,10 @@ msgstr "URL für die Umleitung (muss HTTPS verwenden)"
 #, fuzzy
 msgid "Redis clients"
 msgstr "Clients"
+
+#, fuzzy
+msgid "Redis databases"
+msgstr "Event-Datenbank"
 
 #, fuzzy
 msgid "Redis info"
@@ -38603,9 +38608,8 @@ msgstr "Erwarteter Zustand des Schaltkontaktes"
 msgid "Reschedule"
 msgstr "Neu ansetzen"
 
-#, fuzzy
 msgid "Reschedule 'Checkmk' service"
-msgstr "'Check_MK'-Service neu ansetzen"
+msgstr "'Checkmk'-Service neu ansetzen"
 
 msgid "Reschedule active checks"
 msgstr "Aktive Checks neu ansetzen"
@@ -39782,9 +39786,8 @@ msgstr "Geplante Ausführung"
 msgid "Schedule title"
 msgstr "Berichtsplan-Name"
 
-#, fuzzy
 msgid "Scheduled Checkmk Report $TITLE$.\n"
-msgstr "Geplanter Check_MK-Report $TITLE$.\n"
+msgstr "Geplanter Checkmk-Report $TITLE$.\n"
 
 msgid "Scheduled Downtimes"
 msgstr "Angesetzte Wartungszeiten"
@@ -40162,9 +40165,8 @@ msgstr "Ereignisse in Taktischer Übersicht sehen"
 msgid "See events not related to a known host"
 msgstr "Ereignisse sehen, die nicht einem bekannten Host zugeordnet sind"
 
-#, fuzzy
 msgid "See hints how to improve your Checkmk installation"
-msgstr "Hinweise zur Verbesserung der Check_MK-Installation sehen"
+msgstr "Hinweise zur Verbesserung der Checkmk-Installation sehen"
 
 #, python-format
 msgid "See user %s"
@@ -41347,9 +41349,8 @@ msgstr ""
 msgid "Settings"
 msgstr "Einstellungen"
 
-#, fuzzy
 msgid "Settings concerning the connection to the Checkmk and SNMP agents"
-msgstr "Einstellungen für die Verbindungen zu Check_MK/SNMP Agenten"
+msgstr "Einstellungen für die Verbindungen zu Checkmk/SNMP Agenten"
 
 msgid "Settings for Parent Scan"
 msgstr "Einstellungen für Parent Scan"
@@ -41862,9 +41863,8 @@ msgstr ""
 msgid "Shows number of alerts grouped for each service."
 msgstr "Zeigt die Anzahl der Alarme gruppiert nach Services"
 
-#, fuzzy
 msgid "Shows the Checkmk logo."
-msgstr "Zeigt das Check_MK Logo an."
+msgstr "Zeigt das Checkmk Logo an."
 
 msgid ""
 "Shrink the font and add line breaks to the text until it fits in case the "
@@ -42362,9 +42362,8 @@ msgstr "Kleinste Dateigröße an"
 msgid "Smallest file size below"
 msgstr "Kleinste Dateigröße unter"
 
-#, fuzzy
 msgid "Smart PING (only with Checkmk Micro Core)"
-msgstr "Smart-PING (nur mit Check_MK Micro Core)"
+msgstr "Smart-PING (nur mit Checkmk Micro Core)"
 
 msgid ""
 "Smart PING is the default method for host checks when using the Check_MK "
@@ -44239,9 +44238,8 @@ msgstr "Status des Services, falls der Job deaktiviert ist"
 msgid "Status of service in case of missing job"
 msgstr "Status des Services, falls der Job fehlt"
 
-#, fuzzy
 msgid "Status of the Checkmk services"
-msgstr "Status der Check_MK-Services"
+msgstr "Status der Checkmk-Services"
 
 msgid "Status of the SLES license"
 msgstr "Status der SLES Lizenz"
@@ -44865,9 +44863,8 @@ msgstr "Benutzer abgleichen"
 msgid "Synchronized with master (my site id is %s.)"
 msgstr "Synchronisiert mit Master (Instanz-ID ist %s.)"
 
-#, fuzzy
 msgid "Synchronizes the email of the LDAP user account into Checkmk."
-msgstr "Synchronisiert E-Mails des LDAP Benutzerkontos nach Check_MK."
+msgstr "Synchronisiert E-Mails des LDAP Benutzerkontos nach Checkmk."
 
 msgid "Synchronizing"
 msgstr "Synchronisiere"
@@ -45062,9 +45059,8 @@ msgstr "TCP Port"
 msgid "TCP port for connection"
 msgstr "TCP Port für Verbindung"
 
-#, fuzzy
 msgid "TCP port for connection to Checkmk agent"
-msgstr "TCP Port für die Verbindung zum Check_MK Agent"
+msgstr "TCP Port für die Verbindung zum Checkmk Agent"
 
 msgid "TCP port number"
 msgstr "TCP-Portnummer"
@@ -45695,9 +45691,8 @@ msgstr ""
 "den Agenten so zu konfigurieren, dass er Plugins Ihrer Wahl mit den "
 "gegebenen Argumenten ausführt."
 
-#, fuzzy
 msgid "The Checkmk Micro Core"
-msgstr "Der Check_MK Micro Core"
+msgstr "Der Checkmk Micro Core"
 
 msgid ""
 "The Checkmk Microcore uses Checkmk checker processes to process the results "
@@ -45741,21 +45736,18 @@ msgstr ""
 "Beschränkungsregelsatz kompatibel ist. Siehe Regelsatz \"Erlaubter "
 "Agentenzugriff über IP-Adresse\"."
 
-#, fuzzy
 msgid "The Checkmk agent is queried via the ESX datasource program"
-msgstr ""
-"Den Check_MK-Agenten wird über das ESX Datenquellenprogramm kontaktiert"
+msgstr "Den Checkmk-Agenten wird über das ESX Datenquellenprogramm kontaktiert"
 
-#, fuzzy
 msgid ""
 "The Checkmk agent is queried via the datasource program for ESX systems. "
 "This is option will be deleted in a future release. Please configure the "
 "host to contact the Checkmk agent and the configured datasource programs "
 "instead."
 msgstr ""
-"Der Check_MK-Agent wird durch das Datenquellenprogramm für ESX-Systeme "
+"Der Checkmk-Agent wird durch das Datenquellenprogramm für ESX-Systeme "
 "aufgerufen. Diese Option wird in Zukunft nicht mehr unterstützt. Es wird "
-"empfohlen den Aufruf des Check_MK-Agenten direkt über die Datenquellen des "
+"empfohlen den Aufruf des Checkmk-Agenten direkt über die Datenquellen des "
 "Hosts zu konfigurieren."
 
 msgid ""
@@ -46011,14 +46003,13 @@ msgstr ""
 "tt> und <tt>DISTTAG</tt> innerhalb der RPM-Spec-Datei leer. Hier können Sie "
 "diese Tags manuell angeben."
 
-#, fuzzy
 msgid ""
 "The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
 "and improves the management of the inter site connections using livestatus. "
 "Using the Livestatus Proxy Daemon improves the responsiveness and "
 "performance of your GUI and will decrease resource usage."
 msgstr ""
-"Der Livestatus-Proxy-Daemon ist in der Check_MK Enterprise Edition enthalten "
+"Der Livestatus-Proxy-Daemon ist in der Checkmk Enterprise Edition enthalten "
 "und verbessert die Behandlung der Verbindungen zwischen mehreren Instanzen. "
 "Durch die Nutzung des Livestatus-Proxy-Daemon verbessern Sie die Antwortzeit "
 "und die Performance Ihrer Oberfläche bei gleichzeitiger Reduktion der "
@@ -46903,13 +46894,13 @@ msgstr ""
 "Die kritischen Probleme, welche diese Aggregation in einen Fehlerstatus "
 "versetzen, wurden quittiert. "
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
 "average check latency of %.3fs."
 msgstr ""
-"Die aktuelle Auslastung der Check_MK-Check-Hilfsprozesse ist %.2f%%. Die "
-"Check_MK-Services haben eine durchschnittliche Latenz von %.3fs."
+"Die aktuelle Auslastung der Checkmk-Check-Hilfsprozesse ist %.2f%%. Die "
+"Checkmk-Services haben eine durchschnittliche Latenz von %.3fs."
 
 #, python-format
 msgid "The current check helper usage is %.2f%%"
@@ -47428,13 +47419,12 @@ msgstr ""
 "Die verarbeiteten Emails können entweder gelöscht oder in einen Unterordner "
 "verschoben werden. Der Standard ist, dass sie nicht aufgeräumt werden."
 
-#, fuzzy
 msgid ""
 "The helper usage is below 50%, you may decrease the number of Checkmk "
 "helpers to reduce the memory consumption."
 msgstr ""
 "Die Hilfsprozess-Auslastung ist unter 50%. Sie könnten die Anzahl der "
-"Check_MK-Check-Hilfsprozesse reduzieren um die Belegung des Arbeitsspeichers "
+"Checkmk-Check-Hilfsprozesse reduzieren um die Belegung des Arbeitsspeichers "
 "zu reduzieren."
 
 msgid ""
@@ -47718,9 +47708,6 @@ msgstr "Die letzten..."
 msgid "The latency range at which values should start to be considered."
 msgstr "Der Latenzbereich, ab dem Werte berücksichtigt werden sollen."
 
-msgid "The legacy Nagios GUI has been removed."
-msgstr "Die alte Nagios GUI wurde entfernt."
-
 msgid ""
 "The levels on costs will be considered to be in the currency corresponding "
 "to the reported data."
@@ -47762,10 +47749,9 @@ msgstr ""
 "Das Log-Level für alle Logeinträge, die nicht anderen Kategorien zugeordnet "
 "sind."
 
-#, fuzzy
 msgid "The log level for downtime handling within the Checkmk Micro Core"
 msgstr ""
-"Der Loglevel für die Behandlung von geplanten Wartungszeiten im Check_MK "
+"Der Loglevel für die Behandlung von geplanten Wartungszeiten im Checkmk "
 "Micro Core"
 
 msgid ""
@@ -47801,20 +47787,17 @@ msgstr ""
 "Der Loglevel für die Behandlung von Livestatus-Anfragen im Check_MK Micro "
 "Core"
 
-#, fuzzy
 msgid "The log level for the handling of alerts within the Checkmk Micro Core"
-msgstr "Der Loglevel für die Behandlung von Alarmen im Check_MK Micro Core"
+msgstr "Der Loglevel für die Behandlung von Alarmen im Checkmk Micro Core"
 
-#, fuzzy
 msgid ""
 "The log level for the handling of notifications within the Checkmk Micro Core"
 msgstr ""
-"Der Loglevel für die Behandlung von Benachrichtigungen im Check_MK Micro Core"
+"Der Loglevel für die Behandlung von Benachrichtigungen im Checkmk Micro Core"
 
-#, fuzzy
 msgid ""
 "The log level for the handling of smart pings within the Checkmk Micro Core"
-msgstr "Der Loglevel für die Behandlung von Smart-PINGs im Check_MK Micro Core"
+msgstr "Der Loglevel für die Behandlung von Smart-PINGs im Checkmk Micro Core"
 
 msgid "The log level for user authentication related log entries."
 msgstr ""
@@ -48225,10 +48208,10 @@ msgstr ""
 "In der Event Console können Sie diese später als Bedingung einer Regel "
 "verwenden."
 
-#, python-format
+#, fuzzy
 msgid ""
-"The ntopng username should be derived from the custom attribute '%s', but "
-"this attribute is not set for the current user."
+"The ntopng username should be derived from 'ntopng Username' under the "
+"current's user settings (identity) but this is not set for the current user."
 msgstr ""
 "Der ntopng-Benutzername sollte aus dem benutzerdefinierten Attribut '%s' "
 "abgeleitet werden, aber dieses Attribut ist für den aktuellen Benutzer nicht "
@@ -49516,9 +49499,8 @@ msgstr "Der Bucketname"
 msgid "The version of this site is not a Check_MK Managed Services Edition"
 msgstr "Die Version dieser Instanz ist keine Check_MK Managed Services Edition"
 
-#, fuzzy
 msgid "The version of this site is not a Checkmk managed services edition"
-msgstr "Die Version dieser Instanz ist keine Check_MK Managed Services Edition"
+msgstr "Die Version dieser Instanz ist keine Checkmk Managed Services Edition"
 
 #, python-format
 msgid ""
@@ -50686,9 +50668,8 @@ msgstr ""
 msgid "This host has a baked agent"
 msgstr "Dieser Host verwendet einen gebackenen Agenten"
 
-#, fuzzy
 msgid "This host has no Checkmk agents."
-msgstr "Dieser Host hat keinen passenden gebackenen Agenten"
+msgstr "Dieser Host hat keine Checkmk Agenten."
 
 #, python-format
 msgid "This host is a cluster of %s"
@@ -50779,9 +50760,8 @@ msgstr ""
 "historischen Meldungen, nicht nur die neuen. Das führt zu enormen "
 "Datenmengen!"
 
-#, fuzzy
 msgid "This is not a valid Checkmk version number"
-msgstr "Das ist keine gültige Check_MK-Versionsnummer"
+msgstr "Das ist keine gültige Checkmk-Versionsnummer"
 
 msgid "This is not a valid Nagios timeperiod day specification."
 msgstr "Ungültige Tagesdefinition für eine Zeitperiode."
@@ -51299,14 +51279,12 @@ msgstr ""
 "verwenden. Wenn die Beschreibung leer ist, dann wird in jedem Fall die Port-"
 "Nummer verwendet."
 
-#, fuzzy
 msgid ""
 "This option makes checkmk use either the interface description, alias or "
 "port number as item."
 msgstr ""
-"Mit dieser Option kann Check_MK entweder die Schnittstellenbeschreibung, den "
-"Alias oder die Portnummer als Element verwenden. Die Portnummer ist der "
-"Fallback bzw. die Voreinstellung."
+"Mit dieser Option kann Checkmk entweder die Schnittstellenbeschreibung, den "
+"Alias oder die Portnummer als Element verwenden."
 
 msgid ""
 "This option makes the HTTP check produce more detailed performance data "
@@ -53715,9 +53693,8 @@ msgstr "Zeiteinstellungen für Signatur"
 msgid "Time allowed"
 msgstr "Zeitraum eingrenzen"
 
-#, fuzzy
 msgid "Time between new checks of type Checkmk"
-msgstr "Zeit zwischen neuen Checks vom Typ Check_MK"
+msgstr "Zeit zwischen neuen Checks vom Typ Checkmk"
 
 msgid "Time between new classical active checks"
 msgstr "Zeit zwischen neuen klassischen aktiven Checks"
@@ -53886,9 +53863,8 @@ msgstr "Zeitstatistik für verschiedene Seiten"
 msgid "Time spent in GC"
 msgstr "Zeit in GC"
 
-#, fuzzy
 msgid "Time spent waiting for Checkmk agent"
-msgstr "Wartezeit auf Antwort von Check_MK-Agent"
+msgstr "Wartezeit auf Antwort von Checkmk-Agent"
 
 msgid "Time spent waiting for SNMP responses"
 msgstr "Wartezeit auf Antwort von SNMP-Agent"
@@ -55085,9 +55061,8 @@ msgstr "URL der entfernten Website, z.B. https://10.3.1.2/testsite"
 msgid "URL prefix"
 msgstr "URL Präfix"
 
-#, fuzzy
 msgid "URL prefix for links to Checkmk"
-msgstr "URL-Präfix für Links zu Check_MK"
+msgstr "URL-Präfix für Links zu Checkmk"
 
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "URL zu HiveManagerNG, z.B. https://cloud.aerohive.com"
@@ -56343,9 +56318,8 @@ msgstr "Verwendung"
 msgid "Usage levels"
 msgstr "Auslastungsschwellwerte"
 
-#, fuzzy
 msgid "Use \"Checkmk Automation\" user"
-msgstr "Benutzer \"Check_MK Automation\" verwenden"
+msgstr "Benutzer \"Checkmk Automation\" verwenden"
 
 msgid ""
 "Use <tt>127.0.0.1</tt> should be correct in almost every situation. It is "
@@ -56714,9 +56688,8 @@ msgstr "Systemweite CAs nutzen"
 msgid "Use the <a href=\"%s\">global parameters</a> for this connection"
 msgstr "Die <a href=\"%s\">globalen Parameter</a> für diese Verbindung nutzen"
 
-#, fuzzy
 msgid "Use the Checkmk username as ntopng user name"
-msgstr "Benutzer \"Check_MK Automation\" verwenden"
+msgstr "Benutzer \"Checkmk Automation\" verwenden"
 
 msgid "Use the FQDN of the machine on which the agent is running."
 msgstr "Den FQDN des Hosts, auf dem der Agent läuft, benutzen."
@@ -56795,9 +56768,8 @@ msgstr ""
 msgid "Use the remote SID"
 msgstr "Benutze die Remote-ID"
 
-#, fuzzy
 msgid "Use the status of the Checkmk Agent"
-msgstr "Den Status des Check_MK-Agenten verwenden"
+msgstr "Den Status des Checkmk-Agenten verwenden"
 
 msgid "Use the status of the service..."
 msgstr "Den Zustand verwenden von Service..."
@@ -57457,17 +57429,16 @@ msgstr ""
 "Ihrem virtuellen Hostnamen unterscheiden (z.B. wenn der virtuelle Hostname "
 "nicht durch DNS auflösbar ist)."
 
-#, fuzzy
 msgid ""
 "Usually Checkmk uses a series of PING (ICMP echo request) in order to "
 "determine whether a host is up. In some cases this is not possible, however. "
 "With this rule you can specify an alternative way of determining the host's "
 "state."
 msgstr ""
-"Normalerweise verwendet Check_MK eine Serie von PINGs (ICMP Echo Request), "
-"um herauszufinden, ob ein Host oben ist. In einigen Fällen ist dies aber "
-"nicht möglich. Mithilfe dieses Regelsatzes können Sie einen alternative Weg "
-"für das Prüfen des Hoststatus auswählen."
+"Normalerweise verwendet Checkmk eine Serie von PINGs (ICMP Echo Request), um "
+"herauszufinden, ob ein Host oben ist. In einigen Fällen ist dies aber nicht "
+"möglich. Mithilfe dieses Regelsatzes können Sie einen alternative Weg für "
+"das Prüfen des Hoststatus auswählen."
 
 msgid ""
 "Usually the check goes to WARN if a VM or host is powered off and OK "
@@ -57599,9 +57570,8 @@ msgstr ""
 msgid "Valid till"
 msgstr "Gültig bis"
 
-#, fuzzy
 msgid "Valid until Checkmk version"
-msgstr "Check_MK-Version"
+msgstr "Gültig bis Checkmk-Version"
 
 #, fuzzy
 msgid "Validity of missing data"
@@ -58080,9 +58050,8 @@ msgstr ""
 "globalen Einstellungen.<br><br>Wenn Sie möchten, dann kopieren Sie die "
 "Regelsätze vom Master in die lokale Slave-Konfiguration."
 
-#, fuzzy
 msgid "WATO - Checkmk's Web Administration Tool"
-msgstr "WATO - Check_MK's Web Administration Tool"
+msgstr "WATO - Checkmk's Web Administration Tool"
 
 msgid "WATO Folder"
 msgstr "WATO Ordner"
@@ -60343,15 +60312,14 @@ msgstr "Sie sind für diese Aktion nicht berechtigt."
 msgid "You are required to change your password before proceeding."
 msgstr "Bevor Sie weitermachen können, müssen Sie Ihr Passwort ändern."
 
-#, fuzzy
 msgid ""
 "You are trying to Checkmk together with a threaded Apache multiprocessing "
 "module (MPM). Check_MK is only working with the prefork module. Please "
 "change the MPM module to make Check_MK work."
 msgstr ""
-"Sie versuchen gerade Check_MK zusammen mit Threaded-MPM (Apache Multi-"
+"Sie versuchen gerade Checkmk zusammen mit Threaded-MPM (Apache Multi-"
 "Processing-Modul). Check_MK funktioniert aber nur mit dem Prefork-Modul. "
-"Bitte ändern Sie das MPM-Modul, damit Check_MK läuft. "
+"Bitte ändern Sie das MPM-Modul, damit Check_MK läuft."
 
 msgid "You are trying to edit a rule which does not exist anymore."
 msgstr "Sie versuchen eine nicht mehr vorhandene Regel zu editieren."
@@ -61320,13 +61288,13 @@ msgstr ""
 msgid "You have %d users configured"
 msgstr "Sie haben %d Nutzer konfiguriert"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "You have %d users configured. Please review the number of users you have "
 "configured in Checkmk."
 msgstr ""
 "Sie haben %d Nutzer konfiguriert. Bitte prüfen Sie die Anzahl der Nutzer von "
-"Check_MK."
+"Checkmk."
 
 #, python-format
 msgid "You have a connection overflow rate of %.2f/s"
@@ -63101,8 +63069,12 @@ msgstr ""
 "Instanz und versuchen Sie es später erneut."
 
 #, fuzzy
-msgid "ntopng is not configured. Please configure it under global settings."
+msgid "ntopng integration is not activated under global settings."
 msgstr "Diese Einstellung wurde in den Globalen Einstellungen gesetzt."
+
+#, fuzzy
+msgid "ntopng integration is only available in CEE"
+msgstr "Direkt verbinden (nicht in CRE verfügbar)"
 
 msgid "ntopng username to aquire data for"
 msgstr "ntopng Benutzername für den Daten geholt werden sollen"
@@ -63810,6 +63782,27 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "All Hosts"
+#~ msgstr "Alle Hosts"
+
+#~ msgid "Event Console Performance"
+#~ msgstr "Event Console: Leistung"
+
+#~ msgid "Main"
+#~ msgstr "Hauptmenü"
+
+#~ msgid "Micro Core Statistics"
+#~ msgstr "Micro Core Statistik"
+
+#~ msgid "Old Nagios GUI"
+#~ msgstr "Alte Nagios GUI"
+
+#~ msgid "Problem Hosts"
+#~ msgstr "Problem-Hosts"
+
+#~ msgid "The legacy Nagios GUI has been removed."
+#~ msgstr "Die alte Nagios GUI wurde entfernt."
+
 #~ msgid "Change Selection"
 #~ msgstr "Auswahl ändern"
 
@@ -64207,11 +64200,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgstr "Infotext in der Ausgabe des Checks ändern"
 
 #, fuzzy
-#~| msgid "Problem Hosts"
-#~ msgid "Problem hosts"
-#~ msgstr "Problem-Hosts"
-
-#, fuzzy
 #~| msgid "Stale services"
 #~ msgid "Problem services"
 #~ msgstr "Veraltete Services"
@@ -64529,9 +64517,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Aggregation Groups"
 #~ msgstr "BI Aggregationsgruppen"
-
-#~ msgid "Deprecated rulesets"
-#~ msgstr "Veraltete Regelsätze"
 
 #, fuzzy
 #~| msgid ""
@@ -70576,9 +70561,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Configure the Server Address and the Portnumber of the target server"
 #~ msgstr ""
 #~ "Konfigurieren Sie hier die IP-Addresse und Portnummer des Zielservers."
-
-#~ msgid "Event Console performance"
-#~ msgstr "Event Console: Leistung"
 
 #~ msgid ""
 #~ "If you work with rule based notifications then you should configure an "

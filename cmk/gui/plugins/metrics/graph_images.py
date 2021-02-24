@@ -93,8 +93,9 @@ def ajax_graph_images_for_notifications():
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
         graph_recipes = graph_identification_types.create_graph_recipes(
             graph_identification, destination=html_render.GraphDestinations.notification)
+        num_graphs = html.request.get_integer_input("num_graphs") or len(graph_recipes)
 
-        for graph_recipe in graph_recipes:
+        for graph_recipe in graph_recipes[:num_graphs]:
             graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
                                                           graph_render_options)
             graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_options)

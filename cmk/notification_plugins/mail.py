@@ -604,15 +604,20 @@ def send_mail(message, target, from_address, context):
     return utils.send_mail_sendmail(message, target, from_address)
 
 
-def render_cmk_graphs(context):
+def render_cmk_graphs(context, is_bulk):
     if context["WHAT"] == "HOST":
         svc_desc = "_HOST_"
     else:
         svc_desc = context["SERVICEDESC"]
 
-    url = ("http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s" %
-           (site.get_apache_port(), os.environ["OMD_SITE"], quote(
-               context["HOSTNAME"]), quote(svc_desc)))
+    url = ("http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s&num_graphs=%s" %
+           (
+               site.get_apache_port(),
+               os.environ["OMD_SITE"],
+               quote(context["HOSTNAME"]),
+               quote(svc_desc),
+               quote(context["PARAMETER_GRAPHS_PER_NOTIFICATION"]),
+           ))
 
     try:
         json_data = urlopen(url).read()
@@ -634,8 +639,8 @@ def render_cmk_graphs(context):
     return [base64.b64decode(s) for s in base64_strings]
 
 
-def render_performance_graphs(context):
-    graphs = render_cmk_graphs(context)
+def render_performance_graphs(context, is_bulk):
+    graphs = render_cmk_graphs(context, is_bulk)
 
     attachments, graph_code = [], ''
     for source, graph_png in enumerate(graphs):
@@ -663,7 +668,7 @@ def render_performance_graphs(context):
     return attachments, graph_code
 
 
-def construct_content(context):
+def construct_content(context, is_bulk=False, notification_number=1):
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -672,6 +677,11 @@ def construct_content(context):
         elements = context["PARAMETER_ELEMENTSS"].split()
     else:
         elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
+
+    if is_bulk and "graph" in elements:
+        notifications_with_graphs = context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"]
+        if notification_number > int(notifications_with_graphs):
+            elements.remove("graph")
 
     # Prepare the mail contents
     template_txt, template_html = body_templates(
@@ -687,7 +697,7 @@ def construct_content(context):
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
-            attachments, graph_code = render_performance_graphs(context)
+            attachments, graph_code = render_performance_graphs(context, is_bulk)
             content_html += graph_code
         except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
@@ -697,8 +707,8 @@ def construct_content(context):
         extra_html_section = context['PARAMETER_INSERT_HTML_SECTION']
 
     content_html = utils.substitute_context(tmpl_head_html(extra_html_section), context) + \
-                   content_html + \
-                   utils.substitute_context(TMPL_FOOT_HTML, context)
+        content_html + \
+        utils.substitute_context(TMPL_FOOT_HTML, context)
 
     return content_txt, content_html, attachments
 
@@ -809,19 +819,20 @@ class BulkEmailContent(EmailContent):
         content_txt = ""
         content_html = ""
         parameters, contexts = context_function()
+        context = contexts[-1]
         hosts = set([])
-        for context in contexts:
-            context.update(parameters)
-            utils.html_escape_context(context)
-            extend_context(context)
 
-            txt, html, att = construct_content(context)
+        for i, c in enumerate(contexts, 1):
+            c.update(parameters)
+            utils.html_escape_context(c)
+            extend_context(c)
+
+            txt, html, att = construct_content(c, is_bulk=True, notification_number=i)
             content_txt += txt
             content_html += html
             attachments += att
-            hosts.add(context["HOSTNAME"])
+            hosts.add(c["HOSTNAME"])
 
-        context = contexts[-1]
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
         super(BulkEmailContent, self).__init__(

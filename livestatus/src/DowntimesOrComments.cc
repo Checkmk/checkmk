@@ -8,9 +8,8 @@
 #include "DowntimeOrComment.h"
 #include "Logger.h"
 
-DowntimesOrComments::DowntimesOrComments(Logger *logger) : _logger(logger) {}
-
-void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
+void DowntimesOrComments::registerDowntime(Logger *logger,
+                                           nebstruct_downtime_data *data) {
     unsigned long id = data->downtime_id;
     switch (data->type) {
         case NEBTYPE_DOWNTIME_ADD:
@@ -25,7 +24,7 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_logger)
+                Informational(logger)
                     << "Cannot delete non-existing downtime " << id;
             }
             break;
@@ -34,7 +33,8 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     }
 }
 
-void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
+void DowntimesOrComments::registerComment(Logger *logger,
+                                          nebstruct_comment_data *data) {
     unsigned long id = data->comment_id;
     switch (data->type) {
         case NEBTYPE_COMMENT_ADD:
@@ -49,7 +49,7 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_logger)
+                Informational(logger)
                     << "Cannot delete non-existing comment " << id;
             }
             break;

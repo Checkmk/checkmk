@@ -23,8 +23,6 @@
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _downtimes(Logger::getLogger("cmk.livestatus"))
-    , _comments(Logger::getLogger("cmk.livestatus"))
     , _log_cache(mc)
     , _table_columns(mc)
     , _table_commands(mc)
@@ -98,11 +96,11 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
 }
 
 void Store::registerDowntime(nebstruct_downtime_data *data) {
-    _downtimes.registerDowntime(data);
+    _downtimes.registerDowntime(logger(), data);
 }
 
 void Store::registerComment(nebstruct_comment_data *data) {
-    _comments.registerComment(data);
+    _comments.registerComment(logger(), data);
 }
 
 namespace {

@@ -97,7 +97,7 @@ class IPMISummarizer(AgentSummarizer):
         if host_sections is None:
             return "unknown"
 
-        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
+        section = host_sections.sections.get(SectionName("ipmi_firmware"))
         if not section:
             return "unknown"
 

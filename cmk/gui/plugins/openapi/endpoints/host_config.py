@@ -383,8 +383,9 @@ def serialize_host(host, attributes):
     members = constructors.DomainObjectMembers(base)
     members.object_property(
         name='folder_config',
-        value=constructors.object_href('folder_config',
-                                       host.folder().id()),
+        value=constructors.absolute_url(
+            constructors.object_href('folder_config',
+                                     host.folder().id())),
         prop_format='string',
         linkable=False,
     )

@@ -1,0 +1,13 @@
+Title: Number of fetchers is now initialized with previous Checkmk helpers
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1614243330
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0b8
+
+For a better compatibility of sites being updated from previous version to 2.0,
+we now use the previous setting of "Maximum concurrent Checkmk checks" to
+initialize the "Maximum concurrent Checkmk fetchers".

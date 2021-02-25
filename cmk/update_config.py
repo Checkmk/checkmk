@@ -22,6 +22,7 @@ import time
 import ast
 import gzip
 import multiprocessing
+import itertools
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -44,6 +45,7 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, UserId
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
+import cmk.utils.tty as tty
 
 import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
@@ -115,8 +117,12 @@ class UpdateConfig:
             self._initialize_base_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
+            self._logger.log(VERBOSE,
+                             f"{tty.red}!!! Some steps may last up to one hour !!!{tty.normal}")
+            total = len(self._steps())
+            count = itertools.count(1)
             for step_func, title in self._steps():
-                self._logger.log(VERBOSE, " + %s..." % title)
+                self._logger.log(VERBOSE, " %i/%i %s..." % (next(count), total, title))
                 try:
                     step_func()
                 except Exception:

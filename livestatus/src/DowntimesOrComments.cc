@@ -16,7 +16,13 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     switch (data->type) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD:
-            _entries[id] = std::make_unique<Downtime>(_mc, data);
+            _entries[id] = std::make_unique<Downtime>(
+                reinterpret_cast<host *>(_mc->find_host(data->host_name)),
+                data->service_description == nullptr
+                    ? nullptr
+                    : reinterpret_cast<service *>(_mc->find_service(
+                          data->host_name, data->service_description)),
+                data);
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
@@ -34,7 +40,13 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
     switch (data->type) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD:
-            _entries[id] = std::make_unique<Comment>(_mc, data);
+            _entries[id] = std::make_unique<Comment>(
+                reinterpret_cast<host *>(_mc->find_host(data->host_name)),
+                data->service_description == nullptr
+                    ? nullptr
+                    : reinterpret_cast<service *>(_mc->find_service(
+                          data->host_name, data->service_description)),
+                data);
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {

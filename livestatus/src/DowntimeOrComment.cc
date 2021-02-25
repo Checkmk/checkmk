@@ -5,8 +5,6 @@
 
 #include "DowntimeOrComment.h"
 
-#include "MonitoringCore.h"
-
 // TODO(sp): Remove ugly cast.
 DowntimeOrComment::DowntimeOrComment(host *hst, service *svc,
                                      nebstruct_downtime_struct *dt,
@@ -22,25 +20,16 @@ DowntimeOrComment::DowntimeOrComment(host *hst, service *svc,
 
 DowntimeOrComment::~DowntimeOrComment() = default;
 
-Downtime::Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt)
-    : DowntimeOrComment(reinterpret_cast<host *>(mc->find_host(dt->host_name)),
-                        dt->service_description == nullptr
-                            ? nullptr
-                            : reinterpret_cast<service *>(mc->find_service(
-                                  dt->host_name, dt->service_description)),
-                        dt, dt->downtime_id)
+Downtime::Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt)
+    : DowntimeOrComment(hst, svc, dt, dt->downtime_id)
     , _start_time(dt->start_time)
     , _end_time(dt->end_time)
     , _fixed(dt->fixed)
     , _duration(static_cast<int>(dt->duration))
     , _triggered_by(static_cast<int>(dt->triggered_by)) {}
 
-Comment::Comment(MonitoringCore *mc, nebstruct_comment_struct *co)
-    : DowntimeOrComment(reinterpret_cast<host *>(mc->find_host(co->host_name)),
-                        co->service_description == nullptr
-                            ? nullptr
-                            : reinterpret_cast<service *>(mc->find_service(
-                                  co->host_name, co->service_description)),
+Comment::Comment(host *hst, service *svc, nebstruct_comment_struct *co)
+    : DowntimeOrComment(hst, svc,
                         reinterpret_cast<nebstruct_downtime_struct *>(co),
                         co->comment_id)
     , _expire_time(co->expire_time)

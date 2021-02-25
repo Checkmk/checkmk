@@ -12,7 +12,6 @@
 #include <string>
 
 #include "nagios.h"
-class MonitoringCore;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
@@ -90,7 +89,7 @@ public:
     // OffsetIntColumn, should be unsigned long
     int _duration;
     int _triggered_by;
-    Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
+    Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
@@ -100,7 +99,7 @@ public:
     int _source;
     int _entry_type;
     int _expires;
-    Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
+    Comment(host *hst, service *svc, nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

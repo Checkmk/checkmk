@@ -36,7 +36,11 @@ import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.type_defs import MetricName as _MetricName
+from cmk.utils.type_defs import (
+    HostName,
+    MetricName as _MetricName,
+    ServiceName,
+)
 from cmk.utils.werks import parse_check_mk_version
 
 import cmk.gui.config as config
@@ -45,7 +49,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Choices, Row
+from cmk.gui.type_defs import Choices, RenderableRecipe, Row
 from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
@@ -774,6 +778,27 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
         info['service_description'] = service_description
 
     return info
+
+
+def metric_recipe_and_unit(
+    host_name: HostName,
+    service_description: ServiceName,
+    metric_name: _MetricName,
+    consolidation_function: str,
+    line_type: str = "stack",
+    visible: bool = True,
+) -> Tuple[RenderableRecipe, str]:
+    mi = metric_info.get(metric_name, {})
+    return (
+        RenderableRecipe(
+            title=mi.get("title", metric_name.title()),
+            expression=("rrd", host_name, service_description, metric_name, consolidation_function),
+            color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
+            line_type=line_type,
+            visible=visible,
+        ),
+        mi.get("unit", ""),
+    )
 
 
 #.

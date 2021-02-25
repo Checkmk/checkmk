@@ -190,5 +190,14 @@ class SearchResult:
 
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
-# Graph specific
+# Metric & graph specific
 GraphIdentifier = Tuple[str, Any]
+RenderingExpression = Tuple[Any, ...]
+
+
+class RenderableRecipe(NamedTuple):
+    title: str
+    expression: RenderingExpression
+    color: str
+    line_type: str
+    visible: bool

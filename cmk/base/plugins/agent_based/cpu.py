@@ -56,4 +56,5 @@ def parse_cpu(string_table: StringTable) -> Optional[Section]:
 register.agent_section(
     name="cpu",
     parse_function=parse_cpu,
+    supersedes=["ucd_cpu_load"],
 )

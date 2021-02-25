@@ -453,7 +453,7 @@ rulespec_registry.register(
 
 
 def _transform_kubernetes_connection_params(value):
-    '''Check_mk version 2.1: rework input of connection paramters to improve intuitive use.
+    '''Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
     Note that keys are removed from the parameters dictionary!
     '''
     if 'url-prefix' in value:

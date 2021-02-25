@@ -89,6 +89,13 @@ div.cmk_tab {
 }
 
 div.cmk_figure {
+  div.loading_img_icon {
+    background-image: url("images/load_graph.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: 24px 24px;
+  }
+
   div.loading_img {
     position: relative;
     left: 50%;

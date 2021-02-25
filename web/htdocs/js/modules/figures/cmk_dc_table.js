@@ -27,6 +27,18 @@ export class DCTableFigure extends cmk_figures.DCFigureBase {
         this._setup_chart();
     }
 
+    update_data(data) {
+        cmk_figures.DCFigureBase.prototype.update_data.call(this, data);
+        this._crossfilter.remove(() => true);
+        this._crossfilter.add(data);
+    }
+
+    reset() {
+        this._crossfilter.remove(() => true);
+        this.update_gui();
+        this.show_loading_image();
+    }
+
     update_gui() {
         // TODO: find better place
         this._chart.redraw();
@@ -63,6 +75,8 @@ export class DCTableFigure extends cmk_figures.DCFigureBase {
     }
 
     _setup_chart() {
+        if (this._dimension == null) this._dimension = this._crossfilter.dimension(d => d);
+
         let table_selection = this._div_selection
             .append("table")
             .attr("id", "dc_table_figure")
@@ -72,8 +86,8 @@ export class DCTableFigure extends cmk_figures.DCFigureBase {
             .dimension(this._dimension)
             .size(Infinity)
             .showSections(false)
-            .columns(this._columns)
-            .sortBy(this._sort_by)
+            .columns(this.columns())
+            .sortBy(this.sort_by())
             .order(d3.descending)
             .on("preRender", () => this._update_offset())
             .on("preRedraw", () => this._update_offset())
@@ -101,14 +115,14 @@ export class DCTableFigure extends cmk_figures.DCFigureBase {
 
     columns(columns) {
         if (!arguments.length) {
-            return this._columns;
+            return this._columns || [];
         }
         this._columns = columns;
     }
 
     sort_by(sort_by) {
         if (!arguments.length) {
-            return this._sort_by;
+            return this._sort_by ? this._sort_by : d => d.date;
         }
         this._sort_by = sort_by;
     }

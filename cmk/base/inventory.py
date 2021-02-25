@@ -358,29 +358,30 @@ def _do_inv_for_realhost(
         if run_only_plugin_names and inventory_plugin.name not in run_only_plugin_names:
             continue
 
-        kwargs = multi_host_sections.get_section_kwargs(
-            HostKey(host_config.hostname, ipaddress, SourceType.HOST),
-            inventory_plugin.sections,
-        )
-        if not kwargs:
-            console.vverbose(" %s%s%s%s: skipped (no data)\n", tty.yellow, tty.bold,
-                             inventory_plugin.name, tty.normal)
-            continue
+        for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
+            kwargs = multi_host_sections.get_section_kwargs(
+                HostKey(host_config.hostname, ipaddress, source_type),
+                inventory_plugin.sections,
+            )
+            if not kwargs:
+                console.vverbose(" %s%s%s%s: skipped (no data)\n", tty.yellow, tty.bold,
+                                 inventory_plugin.name, tty.normal)
+                continue
 
-        # Inventory functions can optionally have a second argument: parameters.
-        # These are configured via rule sets (much like check parameters).
-        if inventory_plugin.inventory_ruleset_name is not None:
-            kwargs["params"] = host_config.inventory_parameters(
-                str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
+            # Inventory functions can optionally have a second argument: parameters.
+            # These are configured via rule sets (much like check parameters).
+            if inventory_plugin.inventory_ruleset_name is not None:
+                kwargs["params"] = host_config.inventory_parameters(
+                    str(inventory_plugin.inventory_ruleset_name))  # TODO (mo): keep type!
 
-        exception = tree_aggregator.aggregate_results(
-            inventory_plugin.inventory_function(**kwargs),)
-        if exception:
-            console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
-                            tty.normal, exception)
-        else:
-            console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
-            console.vverbose(": ok\n")
+            exception = tree_aggregator.aggregate_results(
+                inventory_plugin.inventory_function(**kwargs),)
+            if exception:
+                console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
+                                tty.normal, exception)
+            else:
+                console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
+                console.vverbose(": ok\n")
     console.verbose("\n")
 
     tree_aggregator.trees.inventory.normalize_nodes()

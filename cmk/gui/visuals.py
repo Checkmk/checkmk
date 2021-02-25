@@ -971,6 +971,7 @@ def page_edit_visual(
             ('topic',
              DropdownChoice(
                  title=_("Topic in ’Monitor' menu"),
+                 default_value="my_workplace",
                  help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
                         "With this option, you can select in which section of the menu this "
                         "dashboard should be accessible. If you want to define a new "

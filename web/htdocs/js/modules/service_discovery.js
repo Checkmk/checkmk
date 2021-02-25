@@ -50,7 +50,7 @@ function get_post_data(host_name, folder_path, discovery_options, transid, reque
         request = Object.assign(request, request_vars);
     }
 
-    if (["bulk_update", "fix_all"].includes(discovery_options.action)) {
+    if (["bulk_update", "update_services"].includes(discovery_options.action)) {
         var checked_checkboxes = [];
         var checkboxes = document.getElementsByClassName("service_checkbox");
         for (var i = 0; i < checkboxes.length; i++) {

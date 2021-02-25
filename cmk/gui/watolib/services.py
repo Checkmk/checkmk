@@ -86,6 +86,7 @@ class DiscoveryAction:
     SINGLE_UPDATE = "single_update"
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"
+    UPDATE_SERVICES = "update_services"
 
 
 CheckTableEntry = Tuple  # TODO: Improve this type
@@ -361,9 +362,11 @@ class Discovery:
         return None
 
     def _get_table_target(self, table_source, check_type, item):
-        if (self._options.action == DiscoveryAction.FIX_ALL) and \
-            ((not self._options.show_checkboxes) or (checkbox_id(check_type, item)
-                                                       in self._discovery_info["update_services"])):
+        if self._options.action in [
+                DiscoveryAction.UPDATE_SERVICES,
+                DiscoveryAction.FIX_ALL,
+        ] and ((not self._options.show_checkboxes) or
+               (checkbox_id(check_type, item) in self._discovery_info["update_services"])):
             if table_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
             if table_source == DiscoveryState.IGNORED:

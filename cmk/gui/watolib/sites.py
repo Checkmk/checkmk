@@ -664,9 +664,22 @@ def _update_distributed_wato_file(sites):
         _delete_distributed_wato_file()
 
 
-def is_livestatus_encrypted(site):
+def is_livestatus_encrypted(site) -> bool:
     family_spec, address_spec = site["socket"]
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+
+
+def site_globals_editable(site_id, site) -> bool:
+    # Site is a remote site of another site. Allow to edit probably pushed site
+    # specific globals when remote WATO is enabled
+    if config.is_wato_slave_site():
+        return True
+
+    # Local site: Don't enable site specific locals when no remote sites configured
+    if not config.has_wato_slave_sites():
+        return False
+
+    return site["replication"] or config.site_is_local(site_id)
 
 
 def _delete_distributed_wato_file():

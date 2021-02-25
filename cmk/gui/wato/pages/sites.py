@@ -81,25 +81,12 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
-from cmk.gui.watolib.sites import is_livestatus_encrypted
+from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 from cmk.gui.watolib.activate_changes import (clear_site_replication_status,
                                               get_trial_expired_message)
 from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
 
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
-
-
-def _site_globals_editable(site_id, site):
-    # Site is a remote site of another site. Allow to edit probably pushed site
-    # specific globals when remote WATO is enabled
-    if watolib.is_wato_slave_site():
-        return True
-
-    # Local site: Don't enable site specific locals when no remote sites configured
-    if not config.has_wato_slave_sites():
-        return False
-
-    return site["replication"] or config.site_is_local(site_id)
 
 
 @mode_registry.register
@@ -716,7 +703,7 @@ class ModeDistributedMonitoring(WatoMode):
                 html.render_tt(site_id))
             html.icon_button(delete_url, _("Delete"), "delete")
 
-        if _site_globals_editable(site_id, site):
+        if site_globals_editable(site_id, site):
             globals_url = watolib.folder_preserving_link([("mode", "edit_site_globals"),
                                                           ("site", site_id)])
 
@@ -1405,7 +1392,7 @@ def _page_menu_dropdown_site_details(site_id: str, site: Dict,
 
 def _page_menu_entries_site_details(site_id: str, site: Dict,
                                     current_mode: str) -> Iterator[PageMenuEntry]:
-    if current_mode != "edit_site_globals" and _site_globals_editable(site_id, site):
+    if current_mode != "edit_site_globals" and site_globals_editable(site_id, site):
         yield PageMenuEntry(
             title=_("Global settings"),
             icon_name="configuration",

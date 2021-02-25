@@ -54,6 +54,7 @@ from cmk.gui.plugins.dashboard.utils import builtin_dashboards, get_all_dashboar
 from cmk.gui.plugins.userdb.utils import save_connection_config, load_connection_config, USER_SCHEME_SERIAL  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import filter_unknown_settings  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
@@ -183,6 +184,20 @@ class UpdateConfig:
         # Load full config (with undefined settings)
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
             full_config=True)
+        self._update_global_config(global_config)
+        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+        self._update_site_specific_global_settings()
+
+    def _update_site_specific_global_settings(self):
+        site_mgmt = SiteManagementFactory().factory()
+        configured_sites = site_mgmt.load_sites()
+        for site_id, site_spec in configured_sites.items():
+            if site_globals_editable(site_id, site_spec):
+                self._update_global_config(site_spec.setdefault("globals", {}))
+        site_mgmt.save_sites(configured_sites)
+
+    def _update_global_config(self, global_config):
         # Replace old settings with new ones
         for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
             if old_config_name in global_config:
@@ -198,9 +213,7 @@ class UpdateConfig:
 
         # Delete unused settings
         global_config = filter_unknown_settings(global_config)
-
-        # Write updated settings
-        cmk.gui.watolib.global_settings.save_global_settings(global_config)
+        return global_config
 
     def _rewrite_autochecks(self):
         check_variables = cmk.base.config.get_check_variables()

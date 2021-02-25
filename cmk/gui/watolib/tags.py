@@ -29,7 +29,7 @@ from cmk.gui.watolib.utils import (
     multisite_dir,
     wato_root_dir,
 )
-from cmk.utils.tags import TagGroup, TagConfig
+from cmk.utils.tags import TagGroup, TagConfig, BuiltinTagConfig
 
 
 class TagConfigFile(WatoSimpleConfigFile):
@@ -111,6 +111,7 @@ def load_tag_group(ident: str) -> Optional[TagGroup]:
 
     """
     tag_config = load_tag_config()
+    tag_config += BuiltinTagConfig()
     return tag_config.get_tag_group(ident)
 
 
@@ -128,9 +129,17 @@ def save_tag_group(tag_group: TagGroup):
     update_tag_config(tag_config)
 
 
-def tag_group_exists(ident: str) -> bool:
+def is_builtin(ident: str) -> bool:
+    """Verify if a tag group is a built-in"""
+    tag_config = BuiltinTagConfig()
+    return tag_config.tag_group_exists(ident)
+
+
+def tag_group_exists(ident: str, builtin_included=False) -> bool:
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
+    if builtin_included:
+        tag_config += BuiltinTagConfig()
     return tag_config.tag_group_exists(ident)
 
 

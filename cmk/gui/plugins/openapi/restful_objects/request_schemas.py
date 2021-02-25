@@ -28,7 +28,7 @@ from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
-from cmk.gui.watolib.tags import load_tag_config, load_aux_tags
+from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 
 EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
@@ -1457,8 +1457,8 @@ class HostTagGroupId(fields.String):
 
     def _validate(self, value):
         super()._validate(value)
-        host_tag_group_config = load_tag_config()
-        if not host_tag_group_config.valid_id(value):
+        group_exists = tag_group_exists(value, builtin_included=True)
+        if group_exists:
             raise self.make_error("invalid", name=value)
 
 

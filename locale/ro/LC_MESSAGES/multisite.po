@@ -5480,6 +5480,9 @@ msgstr " Activează această opțiune"
 msgid "Automatic agent updates"
 msgstr ""
 
+msgid "Automatic detection (Python 3 > Python 2)"
+msgstr ""
+
 msgid "Automatic disk space cleanup"
 msgstr ""
 
@@ -6979,6 +6982,23 @@ msgid ""
 "of the host this service is assigned to will be used. But by specifying one "
 "or several host addresses here, it is possible to let the check monitor one "
 "or multiple hosts."
+msgstr ""
+
+msgid ""
+"By default, python agent plugins are written in Python 3. However, since "
+"Python 2 is still often seen on many machines, we provide a fallback Python "
+"2 version alongside the Python 3 version of the plugins, that is used as a "
+"fallback if there is no Python 3 version available on the host.<br>With this "
+"rule, you can enforce the usage of either the Python 2 or Python 3 version."
+"<br>Additionally, you can provide a command, that will be used for python "
+"plugin execution."
+msgstr ""
+
+msgid ""
+"By default, the Checkmk UNIX agent will execute Python 3 plugins with "
+"<tt>python3</tt> and Python 2 plugins with <tt>python2</tt> or <tt>python</"
+"tt> (depending on the command found on the host system). Here you can "
+"specify a specific command, independent of the script that will be executed."
 msgstr ""
 
 msgid ""
@@ -15756,8 +15776,8 @@ msgid "Enable this ntopng instance"
 msgstr "Dezactiveaza Notificarile"
 
 msgid ""
-"Enable this option if you want to uninstall the Legacy Agent after the new "
-"Windows Agent have been installed."
+"Enable this option if you want to uninstall the legacy agent after the new "
+"Windows agent have been installed."
 msgstr ""
 
 #, fuzzy
@@ -15968,6 +15988,12 @@ msgid "Enforce IPv4 / IPv6"
 msgstr ""
 
 msgid "Enforce IPv6"
+msgstr ""
+
+msgid "Enforce Python 2 version"
+msgstr ""
+
+msgid "Enforce Python 3 version"
 msgstr ""
 
 msgid "Enforce change"
@@ -24578,11 +24604,12 @@ msgid ""
 "bulking."
 msgstr ""
 
-msgid "Legacy Agent Management"
-msgstr ""
-
 msgid "Legacy SNMP devices using SNMP v2c"
 msgstr ""
+
+#, fuzzy
+msgid "Legacy agent management"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Legacy check plugins"
@@ -30554,6 +30581,10 @@ msgid "Nr."
 msgstr ""
 
 #, fuzzy
+msgid "Nr. of items"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Ntop"
 msgstr "Element nou"
 
@@ -30879,6 +30910,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Number of issues"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Number of items"
 msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
@@ -34778,6 +34813,9 @@ msgstr ""
 msgid "Protocol to use for fetching updates"
 msgstr ""
 
+msgid "Provide command for python script execution"
+msgstr ""
+
 msgid ""
 "Provide individual credentials of an automation user with administrative "
 "privileges on the remote site."
@@ -34930,9 +34968,15 @@ msgstr ""
 msgid "Python Version"
 msgstr ""
 
+msgid "Python agent plugin execution (UNIX)"
+msgstr ""
+
 #, fuzzy
 msgid "Python environment"
 msgstr "Conexiuni Active"
+
+msgid "Python version for execution of python agent plugins"
+msgstr ""
 
 msgid "QOS class"
 msgstr ""
@@ -43161,6 +43205,14 @@ msgid ""
 "because it increases the the amount of context switches."
 msgstr ""
 
+msgid ""
+"The Checkmk agent UNIX will detect a Python 3 installation by looking for "
+"the command <tt>python3</tt>, and a Python 2 installation by looking for the "
+"commands <tt>python2</tt> or <tt>python</tt>. If this doesn't match to your "
+"host's Python installation, e.g., if Python 3 is available via <tt>python</"
+"tt>, you can enforce the right version by setting this rule entry."
+msgstr ""
+
 #, python-format
 msgid ""
 "The Checkmk agent does not listen on its own for incoming network "
@@ -50715,7 +50767,9 @@ msgstr ""
 msgid "Uninstall and remove this package"
 msgstr ""
 
-msgid "Uninstall the Legacy Agent after installation of the Windows Agent 1.6"
+msgid ""
+"Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
+"agent"
 msgstr ""
 
 msgid "Unique ID"
@@ -55018,6 +55072,12 @@ msgid ""
 "You can customize the order of the topics by changing this number. Lower "
 "numbers will be sorted first. Topics with the same number will be sorted "
 "alphabetically."
+msgstr ""
+
+msgid ""
+"You can define how much items this topic should show. The remaining items "
+"will be visible with the 'Show all' option, available under the last item of "
+"the topic."
 msgstr ""
 
 msgid ""

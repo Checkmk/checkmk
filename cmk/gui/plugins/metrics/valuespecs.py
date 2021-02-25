@@ -168,6 +168,12 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
              label="Show previews",
              default_value=default_values["show_time_range_previews"],
          )),
+        ("fixed_timerange",
+         Checkbox(
+             title=_("Timerange synchronization"),
+             label="Do not follow timerange changes of other graphs on the current page",
+             default_value=default_values["fixed_timerange"],
+         )),
     ]
 
     if exclude:

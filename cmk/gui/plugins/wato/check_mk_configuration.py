@@ -4206,7 +4206,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
 
     @property
     def title(self):
-        return _("SNMP settings")
+        return _("SNMP rules")
 
     @property
     def help(self):

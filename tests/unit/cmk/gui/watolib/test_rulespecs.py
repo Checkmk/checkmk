@@ -1303,7 +1303,7 @@ def _expected_rulespec_group_choices():
         ('datasource_programs/hw', '&nbsp;&nbsp;⌙ Hardware'),
         ('datasource_programs/os', '&nbsp;&nbsp;⌙ Operating systems'),
         ('datasource_programs/testing', '&nbsp;&nbsp;⌙ Testing'),
-        ('snmp', 'SNMP settings'),
+        ('snmp', 'SNMP rules'),
         ('static', 'Enforced services'),
         ('static/applications', '&nbsp;&nbsp;⌙ Applications, Processes & Services'),
         ('static/environment', '&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc.'),

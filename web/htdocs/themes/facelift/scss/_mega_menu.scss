@@ -285,7 +285,12 @@
               margin-left: 22px;
             }
 
-            img + span {
+            span.emblem {
+              margin: 0 4px 2px 0;
+            }
+
+            img + span,
+            span + span {
               margin-left: 0; /* No spacing if icons per entry are used */
             }
 

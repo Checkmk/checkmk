@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _l, _u, _
 from cmk.gui.globals import html, request
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, Icon
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -1446,6 +1446,25 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
     )
 
 
+_save_pagetype_icons: Dict[str, Icon] = {
+    "custom_graph": {
+        "icon": "save_graph",
+        "emblem": "add",
+    },
+    "dashboard": "save_dashboard",
+    "forecast_graph": {
+        "icon": "save_graph",
+        "emblem": "time",
+    },
+    "graph_collection": "save_graph",
+    "graph_tuning": {
+        "icon": "save_graph",
+        "emblem": "settings",
+    },
+    "view": "save_view",
+}
+
+
 def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dropdown_name: str,
                             type_title: str, form_name: str,
                             button_name: str) -> Iterator[PageMenuEntry]:
@@ -1460,18 +1479,10 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
         shortcut_title=_("Save & go to list"),
     )
 
-    if dropdown_name in [
-            "custom_graph",
-            "dashboard",
-            "forecast_graph",
-            "graph_collection",
-            "graph_tuning",
-            "view",
-    ]:
-
+    if dropdown_name in _save_pagetype_icons:
         yield PageMenuEntry(
             title=_("Result"),
-            icon_name="save",
+            icon_name=_save_pagetype_icons[dropdown_name],
             item=make_form_submit_link(form_name, "save_and_view"),
             is_list_entry=True,
             is_shortcut=True,

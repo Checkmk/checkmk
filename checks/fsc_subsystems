@@ -12,9 +12,9 @@ from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-imp
 
 
 def inventory_fsc_subsystems(info):
-    return [(line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
-            for line in info
-            if int(line[1]) > 0]
+    yield from ((line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
+                for line in info
+                if int(line[1]) > 0)
 
 
 def check_fsc_subsystems(item, params, info):
@@ -32,13 +32,11 @@ def check_fsc_subsystems(item, params, info):
             4: 'failed',
             5: 'unknown-init'
         }.get(status, 'invalid')
-        if status == 1 or status == 5:
+        if status in {1, 5}:
             return (0, "%s - no problems" % statusname)
-        elif status >= 2 and status <= 4:
+        if 2 <= status <= 4:
             return (2, "%s" % statusname)
         return (3, "unknown status %d" % status)
-
-    return (3, "Subsystem %s not found in SNMP data" % item)
 
 
 check_info["fsc_subsystems"] = {

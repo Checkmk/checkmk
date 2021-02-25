@@ -26,7 +26,8 @@
 # Agent plugin to monitor DB/2 databases on Linux.
 
 function compare_version_greater_equal {
-    local greater_one=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
+    local greater_one
+    greater_one=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
     if [ "$greater_one" == "$1" ] ; then
         return 0
     else
@@ -36,11 +37,12 @@ function compare_version_greater_equal {
 }
 
 function get_sections_for_single_db {
-    if [ ! -f $HOME/sqllib/db2profile ] ; then
+    if [ ! -f "$HOME"/sqllib/db2profile ] ; then
         exit 0
     fi
 
-    . $HOME/sqllib/db2profile >/dev/null 2>&1
+    # shellcheck source=/dev/null
+    . "$HOME"/sqllib/db2profile >/dev/null 2>&1
 
     local instance=$1
     local db=$2
@@ -136,7 +138,6 @@ for INSTANCE in $INSTANCES; do
             fi
             GET_PORT=0
         fi
-        SCRIPT=$(readlink -f "$0")
         waitmax -s 9 10 su "${INSTANCE}" -s /bin/bash -c "get_sections_for_single_db \"${INSTANCE}\" \"${DB}\" \"${VERSION_NUMBER}\" \"${NOW}\" \"${DB_PORT}\""
     done
 done

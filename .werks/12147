@@ -1,0 +1,28 @@
+Title: Baked agents implicitly lose their signature when new hosts are added
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1614258090
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+This Werk fixes a misbehavior that was caused by the combination of the two features
+from Werks #11403 and #11248.
+
+When a host gets linked to an already existing agent package, the matching signature
+will get invalidated. The reason for this is the package versioning, see Werk #11403.
+Additionally, agent packages will get baked automatically on adding new hosts, see
+Werk #11248. Hence, if an agent package that would match to a new host already exists
+at the time the host is added, it's signature will get invalidated without further notice,
+possibly leading to several errors on the next (automatic) agent updater call.
+
+With this werk, the versioning mechanism from Werk #11248 is prevented, if the agent
+bakery is called only with a subset of all hosts, because this is what is done when
+adding a new host.
+
+This can safely be done, because in most situations, the above mentioned versioning
+mechanism won't be needed for a newly added host.
+

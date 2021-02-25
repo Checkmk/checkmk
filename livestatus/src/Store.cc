@@ -23,8 +23,8 @@
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _downtimes(mc)
-    , _comments(mc)
+    , _downtimes(Logger::getLogger("cmk.livestatus"))
+    , _comments(Logger::getLogger("cmk.livestatus"))
     , _log_cache(mc)
     , _table_columns(mc)
     , _table_commands(mc)

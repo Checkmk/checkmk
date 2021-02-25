@@ -7,9 +7,8 @@
 
 #include "DowntimeOrComment.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 
-DowntimesOrComments::DowntimesOrComments(MonitoringCore *mc) : _mc(mc) {}
+DowntimesOrComments::DowntimesOrComments(Logger *logger) : _logger(logger) {}
 
 void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
     unsigned long id = data->downtime_id;
@@ -17,16 +16,16 @@ void DowntimesOrComments::registerDowntime(nebstruct_downtime_data *data) {
         case NEBTYPE_DOWNTIME_ADD:
         case NEBTYPE_DOWNTIME_LOAD:
             _entries[id] = std::make_unique<Downtime>(
-                reinterpret_cast<host *>(_mc->find_host(data->host_name)),
+                ::find_host(data->host_name),
                 data->service_description == nullptr
                     ? nullptr
-                    : reinterpret_cast<service *>(_mc->find_service(
-                          data->host_name, data->service_description)),
+                    : ::find_service(data->host_name,
+                                     data->service_description),
                 data);
             break;
         case NEBTYPE_DOWNTIME_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_mc->loggerLivestatus())
+                Informational(_logger)
                     << "Cannot delete non-existing downtime " << id;
             }
             break;
@@ -41,16 +40,16 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
         case NEBTYPE_COMMENT_ADD:
         case NEBTYPE_COMMENT_LOAD:
             _entries[id] = std::make_unique<Comment>(
-                reinterpret_cast<host *>(_mc->find_host(data->host_name)),
+                ::find_host(data->host_name),
                 data->service_description == nullptr
                     ? nullptr
-                    : reinterpret_cast<service *>(_mc->find_service(
-                          data->host_name, data->service_description)),
+                    : ::find_service(data->host_name,
+                                     data->service_description),
                 data);
             break;
         case NEBTYPE_COMMENT_DELETE:
             if (_entries.erase(id) == 0) {
-                Informational(_mc->loggerLivestatus())
+                Informational(_logger)
                     << "Cannot delete non-existing comment " << id;
             }
             break;

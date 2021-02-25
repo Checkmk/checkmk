@@ -1294,7 +1294,7 @@ def test_is_ntop_configured_and_reason(
 ):
     if cmk_version.is_raw_edition():
         assert not config.is_ntop_configured()
-        assert not config.get_ntop_misconfiguration_reason(
+        assert config.get_ntop_misconfiguration_reason(
         ) == "ntopng integration is only available in CEE"
     if not cmk_version.is_raw_edition():
         mocker.patch.object(

@@ -8,15 +8,13 @@
 #include "MonitoringCore.h"
 
 // TODO(sp): Remove ugly cast.
-DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
+DowntimeOrComment::DowntimeOrComment(host *hst, service *svc,
                                      nebstruct_downtime_struct *dt,
                                      unsigned long id)
     : _type(dt->downtime_type)
     , _is_service(dt->service_description != nullptr)
-    , _host(reinterpret_cast<host *>(mc->find_host(dt->host_name)))
-    , _service(_is_service ? reinterpret_cast<service *>(mc->find_service(
-                                 dt->host_name, dt->service_description))
-                           : nullptr)
+    , _host(hst)
+    , _service(svc)
     , _entry_time(dt->entry_time)
     , _author_name(dt->author_name)
     , _comment(dt->comment_data)
@@ -25,7 +23,12 @@ DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
 DowntimeOrComment::~DowntimeOrComment() = default;
 
 Downtime::Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt)
-    : DowntimeOrComment(mc, dt, dt->downtime_id)
+    : DowntimeOrComment(reinterpret_cast<host *>(mc->find_host(dt->host_name)),
+                        dt->service_description == nullptr
+                            ? nullptr
+                            : reinterpret_cast<service *>(mc->find_service(
+                                  dt->host_name, dt->service_description)),
+                        dt, dt->downtime_id)
     , _start_time(dt->start_time)
     , _end_time(dt->end_time)
     , _fixed(dt->fixed)
@@ -33,7 +36,12 @@ Downtime::Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt)
     , _triggered_by(static_cast<int>(dt->triggered_by)) {}
 
 Comment::Comment(MonitoringCore *mc, nebstruct_comment_struct *co)
-    : DowntimeOrComment(mc, reinterpret_cast<nebstruct_downtime_struct *>(co),
+    : DowntimeOrComment(reinterpret_cast<host *>(mc->find_host(co->host_name)),
+                        co->service_description == nullptr
+                            ? nullptr
+                            : reinterpret_cast<service *>(mc->find_service(
+                                  co->host_name, co->service_description)),
+                        reinterpret_cast<nebstruct_downtime_struct *>(co),
                         co->comment_id)
     , _expire_time(co->expire_time)
     , _persistent(co->persistent)

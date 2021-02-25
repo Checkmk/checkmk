@@ -77,7 +77,7 @@ public:
     virtual ~DowntimeOrComment();
 
 protected:
-    DowntimeOrComment(MonitoringCore *mc, nebstruct_downtime_struct *dt,
+    DowntimeOrComment(host *hst, service *svc, nebstruct_downtime_struct *dt,
                       unsigned long id);
 };
 
@@ -90,7 +90,7 @@ public:
     // OffsetIntColumn, should be unsigned long
     int _duration;
     int _triggered_by;
-    explicit Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
+    Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
@@ -100,7 +100,7 @@ public:
     int _source;
     int _entry_type;
     int _expires;
-    explicit Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
+    Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

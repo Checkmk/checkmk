@@ -24,6 +24,7 @@ import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -37,6 +38,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     ViewName,
+    Icon,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
@@ -1301,14 +1303,58 @@ class MenuSearchResultsRenderer:
             error_as_html = html.drain()
         return error_as_html
 
-    def _render_results(self, results: SearchResultsByTopic) -> str:
+    def _get_icon_mapping(
+        self,
+        default_icon: Icon = "topic_overview",
+    ) -> Dict[str, Tuple[Icon, Icon]]:
+        # {topic: (Icon(Topic): green, Icon(Item): colorful)}
+        mapping: Dict[str, Tuple[Icon, Icon]] = {}
+        for menu in [
+                mega_menu_registry.menu_setup(),
+                mega_menu_registry.menu_monitoring(),
+        ]:
+            mapping[menu.title] = (
+                menu.icon + "_active" if isinstance(menu.icon, str) else default_icon,
+                menu.icon if menu.icon else default_icon,
+            )
+
+            for topic in menu.topics():
+                mapping[topic.title] = (
+                    topic.icon if topic.icon else default_icon,
+                    topic.icon if topic.icon else default_icon,
+                )
+                for item in topic.items:
+                    mapping[item.title] = (
+                        topic.icon if topic.icon else default_icon,
+                        item.icon if item.icon else default_icon,
+                    )
+        for module_class in main_module_registry.values():
+            module = module_class()
+            if module.title not in mapping:
+                mapping[module.title] = (
+                    module.topic.icon_name
+                    if module.topic and module.topic.icon_name else default_icon,
+                    module.icon if module.icon else default_icon,
+                )
+        return mapping
+
+    def _render_results(
+        self,
+        results: SearchResultsByTopic,
+        default_icon: Icon = "topic_overview",
+    ) -> str:
         with html.plugged():
+            icon_mapping = self._get_icon_mapping(default_icon)
             for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
-                self._render_topic(topic)
+                icons = icon_mapping.get(topic, (default_icon, default_icon))
+                self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(list(search_results)):
-                    self._render_result(result, hidden=count >= self._max_num_displayed_results)
+                    self._render_result(
+                        result,
+                        hidden=count >= self._max_num_displayed_results,
+                    )
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
                     html.input(name="show_all_results",
@@ -1321,11 +1367,13 @@ class MenuSearchResultsRenderer:
             html_text = html.drain()
         return html_text
 
-    def _render_topic(self, topic):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
         html.open_h2()
         html.div(class_="spacer", content="")
-        # TODO: Add the corresponding icon
-        html.icon("topic_overview")
+        if not config.user.get_attribute("icons_per_item"):
+            html.icon(icons[0])
+        else:
+            html.icon(icons[1])
         html.span(topic)
         html.close_h2()
 

@@ -410,13 +410,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 DiscoveryAction.SINGLE_UPDATE,
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
         ]:
             discovery = Discovery(self._host, self._options, request)
             discovery.do_discovery(discovery_result)
             # did discovery! update the check table
             discovery_result = self._get_check_table()
 
-        if self._options.action == DiscoveryAction.UPDATE_HOST_LABELS:
+        if self._options.action in [
+                DiscoveryAction.UPDATE_HOST_LABELS,
+                DiscoveryAction.FIX_ALL,
+        ]:
             self._do_update_host_labels(discovery_result)
 
         if not self._host.locked():
@@ -1351,7 +1355,7 @@ def _page_menu_selected_services_entries(host: watolib.CREHost,
         title=_("Add missing, remove vanished"),
         icon_name="services_fix_all",
         item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
+            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))),
         name="fix_all",
         is_enabled=False,
         is_shortcut=True,

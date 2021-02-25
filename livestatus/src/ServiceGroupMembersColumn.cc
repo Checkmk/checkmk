@@ -60,8 +60,14 @@ std::string checkValue(Logger *logger, RelationalOperator relOp,
 std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<ListFilter>(kind, *this, relOp,
-                                        checkValue(logger(), relOp, value));
+    return std::make_unique<ListFilter>(
+        kind, name(),
+        // `timezone_offset` is unused
+        [this](Row row, const contact *auth_user,
+               std::chrono::seconds timezone_offset) {
+            return getValue(row, auth_user, timezone_offset);
+        },
+        relOp, checkValue(logger(), relOp, value), logger());
 }
 
 std::vector<std::string> ServiceGroupMembersColumn::getValue(

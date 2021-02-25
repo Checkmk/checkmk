@@ -137,8 +137,7 @@ if which smartctl > /dev/null 2>&1 ; then
                 TEMP=
                 # create temperature output as expected by checks/smart
                 # this is a hack, TODO: change checks/smart to support SCSI-disks
-                # shellcheck disable=SC2034
-                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _rest ; do
+                eval "$(smartctl -d scsi -i -A "$D" | while read -r a b c d _ ; do
                     [ "$a" == Serial ] && echo SN="$c"
                     [ "$a" == Current ] && [ "$b" == Drive ] && [ "$c" == Temperature: ] && echo TEMP="$d"
                 done)"

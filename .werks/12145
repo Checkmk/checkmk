@@ -1,0 +1,13 @@
+Title: Config update: Site specific global settings are now also updated
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614246996
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+During update from previous versions to Checkmk 2.0 some old global
+configuration settings are rewritten. This is now also done in the site
+specific global settings automatically during "omd update".

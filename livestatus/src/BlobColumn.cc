@@ -10,9 +10,8 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void detail::BlobColumn::output(
-    Row row, RowRenderer& r, const contact* /*auth_user*/,
-    std::chrono::seconds /*timezone_offset*/) const {
+void BlobColumn::output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+                        std::chrono::seconds /*timezone_offset*/) const {
     if (std::unique_ptr<std::vector<char>> blob = getValue(row)) {
         r.output(*blob);
     } else {
@@ -20,14 +19,14 @@ void detail::BlobColumn::output(
     }
 }
 
-std::unique_ptr<Filter> detail::BlobColumn::createFilter(
+std::unique_ptr<Filter> BlobColumn::createFilter(
     Filter::Kind /*unused*/, RelationalOperator /*unused*/,
     const std::string& /*unused*/) const {
     throw std::runtime_error("filtering on blob column '" + name() +
                              "' not supported");
 }
 
-std::unique_ptr<Aggregator> detail::BlobColumn::createAggregator(
+std::unique_ptr<Aggregator> BlobColumn::createAggregator(
     AggregationFactory /*factory*/) const {
     throw std::runtime_error("aggregating on blob column '" + name() +
                              "' not supported");

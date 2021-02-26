@@ -17,7 +17,6 @@
 #include "EventConsoleConnection.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-class Row;
 
 namespace {
 class ECTableConnection : public EventConsoleConnection {
@@ -55,7 +54,7 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
-    return std::make_unique<BlobColumn<Row>::Constant>(
+    return std::make_unique<BlobColumn::Constant>(
         name, "replication value",
         std::vector<char>{std::begin(result), std::end(result)});
 }

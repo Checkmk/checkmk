@@ -28,11 +28,13 @@
 class Aggregator;
 class RowRenderer;
 
-namespace detail {
 class BlobColumn : public Column {
 public:
     class Constant;
     class Reference;
+    template <class T>
+    class Callback;
+
     using Column::Column;
 
     [[nodiscard]] ColumnType type() const override { return ColumnType::blob; }
@@ -50,20 +52,16 @@ public:
     [[nodiscard]] virtual std::unique_ptr<std::vector<char>> getValue(
         Row row) const = 0;
 };
-}  // namespace detail
 
 template <class T>
-class BlobColumn : public ::detail::BlobColumn {
+class BlobColumn::Callback : public BlobColumn {
 public:
-    using ::detail::BlobColumn::Constant;
-    using ::detail::BlobColumn::Reference;
     struct File;
-    BlobColumn(const std::string &name, const std::string &description,
-               const ColumnOffsets &offsets,
-               std::function<std::vector<char>(const T &)> f)
-        : detail::BlobColumn{name, description, offsets}
-        , get_value_{std::move(f)} {}
-    ~BlobColumn() override = default;
+    Callback(const std::string &name, const std::string &description,
+             const ColumnOffsets &offsets,
+             std::function<std::vector<char>(const T &)> f)
+        : BlobColumn{name, description, offsets}, get_value_{std::move(f)} {}
+    ~Callback() override = default;
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
         Row row) const override {
         const T *data = columnData<T>(row);
@@ -75,10 +73,10 @@ private:
     const std::function<std::vector<char>(const T &)> get_value_;
 };
 
-class detail::BlobColumn::Constant : public ::detail::BlobColumn {
+class BlobColumn::Constant : public BlobColumn {
 public:
     Constant(std::string name, std::string description, std::vector<char> v)
-        : detail::BlobColumn(std::move(name), std::move(description), {})
+        : BlobColumn(std::move(name), std::move(description), {})
         , v{std::move(v)} {};
     ~Constant() override = default;
     [[nodiscard]] std::unique_ptr<std::vector<char>> getValue(
@@ -90,7 +88,7 @@ private:
     const std::vector<char> v;
 };
 
-class detail::BlobColumn::Reference : public ::detail::BlobColumn {
+class BlobColumn::Reference : public BlobColumn {
 public:
     Reference(std::string name, std::string description,
               const std::vector<char> &v)
@@ -106,7 +104,7 @@ private:
 };
 
 template <class T>
-struct BlobColumn<T>::File : BlobColumn {
+struct BlobColumn::Callback<T>::File : BlobColumn::Callback<T> {
     File(const std::string &name, const std::string &description,
          const ColumnOffsets &offsets,
          const std::function<std::filesystem::path()> &basepath,
@@ -170,12 +168,13 @@ std::vector<char> detail::FileImpl<T>::operator()(const T &data) const {
 }
 
 template <class T>
-BlobColumn<T>::File::File(
+BlobColumn::Callback<T>::File::File(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets,
     const std::function<std::filesystem::path()> &basepath,
     std::function<std::filesystem::path(const T &)> filepath)
-    : BlobColumn{name, description, offsets,
-                 detail::FileImpl{basepath, std::move(filepath)}} {}
+    : BlobColumn::Callback<T>{name, description, offsets,
+                              detail::FileImpl{basepath, std::move(filepath)}} {
+}
 
 #endif  // BlobColumn_h

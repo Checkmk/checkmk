@@ -711,19 +711,19 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                 mk_inventory_last(mc->mkInventoryPath() / hst.name));
         }));
 
-    table->addColumn(std::make_unique<BlobColumn<host>::File>(
+    table->addColumn(std::make_unique<BlobColumn::Callback<host>::File>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<BlobColumn<host>::File>(
+    table->addColumn(std::make_unique<BlobColumn::Callback<host>::File>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW-Inventory", offsets,
         [mc]() { return mc->mkInventoryPath(); },
         [](const host &r) {
             return std::filesystem::path{std::string{r.name} + ".gz"};
         }));
-    table->addColumn(std::make_unique<BlobColumn<host>::File>(
+    table->addColumn(std::make_unique<BlobColumn::Callback<host>::File>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets, [mc]() { return mc->structuredStatusPath(); },

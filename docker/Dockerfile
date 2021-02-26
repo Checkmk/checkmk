@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:buster-slim
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
@@ -54,7 +54,7 @@ RUN set -e \
 #
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.
-COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.stretch_*.deb Check_MK-pubkey.gpg /
+COPY check-mk-${CMK_EDITION}-${CMK_VERSION}_0.buster_*.deb Check_MK-pubkey.gpg /
 
 # Now install the Checkmk version specific things
 # hadolint ignore=DL3003,DL3008,DL4006
@@ -64,7 +64,7 @@ RUN set -e \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
-    && PKG_FILE="${PKG_NAME}_0.stretch_$(dpkg --print-architecture).deb" \
+    && PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb" \
     && CREDENTIALS_URL="http://localhost:8000/secret" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
         echo "Receive download credentials from ${CREDENTIALS_URL}..." && \

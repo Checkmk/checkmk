@@ -1,0 +1,17 @@
+Title: Docker container: Update base image to Debian buster
+Class: security
+Compatible: compat
+Component: core
+Date: 1614339679
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0b8
+
+The Checkmk docker container image was previously based on the
+debian:stretch-slim image. The base image has now been updated to
+debian:buster-slim.
+
+If you build the container images on your own, based on the Dockerfile from our
+git, you will now have to use the Checkmk packages for Debian buster instead of
+the stretch packages.

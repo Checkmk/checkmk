@@ -59,7 +59,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
-    addColumn(std::make_unique<TimeColumn<LogEntry>>(
+    addColumn(std::make_unique<TimeColumn::Callback<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
             return std::chrono::system_clock::from_time_t(r._time);

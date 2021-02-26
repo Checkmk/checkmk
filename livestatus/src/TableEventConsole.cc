@@ -192,10 +192,10 @@ std::unique_ptr<DoubleColumn::Callback<ECRow>> ECRow::makeDoubleColumn(
 }
 
 // static
-std::unique_ptr<TimeColumn<ECRow>> ECRow::makeTimeColumn(
+std::unique_ptr<TimeColumn::Callback<ECRow>> ECRow::makeTimeColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<TimeColumn<ECRow>>(
+    return std::make_unique<TimeColumn::Callback<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             return std::chrono::system_clock::from_time_t(
                 static_cast<std::time_t>(r.getDouble(name)));

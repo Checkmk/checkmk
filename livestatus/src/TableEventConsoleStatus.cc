@@ -5,7 +5,6 @@
 
 #include "TableEventConsoleStatus.h"
 
-#include <memory>
 #include <vector>
 
 #include "Column.h"

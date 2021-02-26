@@ -19,12 +19,11 @@
 #include "MonitoringCore.h"
 #include "StringColumn.h"
 #include "Table.h"
+#include "TimeColumn.h"
 #include "nagios.h"
 class ColumnOffsets;
 template <class T>
 class ListLambdaColumn;
-template <class T>
-class TimeColumn;
 class Query;
 class Row;
 
@@ -46,7 +45,7 @@ public:
     static std::unique_ptr<DoubleColumn::Callback<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<TimeColumn<ECRow>> makeTimeColumn(
+    static std::unique_ptr<TimeColumn::Callback<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<ListLambdaColumn<ECRow>> makeListColumn(

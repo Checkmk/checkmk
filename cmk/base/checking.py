@@ -522,7 +522,7 @@ def get_aggregated_result(
 
     """
     if plugin is None:
-        return False, True, CHECK_NOT_IMPLEMENTED
+        return True, True, CHECK_NOT_IMPLEMENTED
 
     check_function = (plugin.cluster_check_function
                       if host_config.is_cluster else plugin.check_function)

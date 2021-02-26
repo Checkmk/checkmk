@@ -12,7 +12,6 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostName
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 
 from cmk.base.check_utils import CheckTable, Service
@@ -107,10 +106,6 @@ class HostCheckTable(CheckTable):
         skip_ignored: bool,
     ) -> bool:
         hostname = host_config.hostname
-
-        # drop unknown plugins:
-        if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
-            return False
 
         if skip_ignored and config.service_ignored(hostname, service.check_plugin_name,
                                                    service.description):

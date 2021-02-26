@@ -57,7 +57,20 @@ from cmk.base.check_utils import Service
                 description=u'Temperature SMART /dev/sdb',
             ),
         }),
-        ("ignore-not-existing-checks", {}),
+        ("ignore-not-existing-checks", {
+            (CheckPluginName('bla_blub'), 'ITEM'): Service(
+                check_plugin_name=CheckPluginName('bla_blub'),
+                item='ITEM',
+                description='Blub ITEM',
+                parameters={},
+            ),
+            (CheckPluginName('blub_bla'), 'ITEM'): Service(
+                check_plugin_name=CheckPluginName('blub_bla'),
+                item='ITEM',
+                description='Unimplemented check blub_bla / ITEM',
+                parameters=None,
+            ),
+        }),
         ("ignore-disabled-rules", {
             (CheckPluginName('smart_temp'), 'ITEM2'): Service(
                 check_plugin_name=CheckPluginName('smart_temp'),

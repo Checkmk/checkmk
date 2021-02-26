@@ -1,0 +1,27 @@
+Title: Display services of unimplemented check plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614349859
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0b8
+
+Previously services which were discovered by check plugins
+that are not available anymore have been filtered, and
+where (almost) never seen.
+They were reported as 'vanished' by the Checkmk Discovery check,
+but did *not* show on the discovery page, nor in the services
+page.
+
+They are now treated as regular services, with the service
+description "Unimplemented check &lt;name&gt;".
+They will always be in {{UNKNOWN}} state.
+
+This situation can occur for instance if you uninstall an MKP, or
+modify a plugin locally and make a mistake.
+
+If you suddenly encounter such services after an upgrade to Checkmk 2.0,
+it means that you had such services in your configuration all along.
+You can remove them from your configuration just as any other service.

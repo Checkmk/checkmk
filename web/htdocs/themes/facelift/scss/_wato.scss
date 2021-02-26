@@ -212,6 +212,40 @@ div#service_container {
       position: relative;
     }
   }
+
+  div#fixall {
+    background-color: $headline-color;
+    border-radius: 2px;
+
+    img {
+      float: left;
+      margin: 12px 0 0 12px;
+    }
+
+    ul {
+      float: left;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding-left: 10px;
+    }
+
+    li {
+      display: inline-block;
+      padding: 0 10px;
+      border-right: 1px solid $white;
+    }
+
+    li:last-child {
+      border-right: none;
+    }
+
+    input.button {
+      padding: 7px 10px;
+      margin-left: 10px;
+      background-color: $success;
+      color: $black;
+    }
+  }
 }
 
 table.data tr.data > td.bulkactions {

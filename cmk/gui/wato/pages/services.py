@@ -15,6 +15,7 @@ import six
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.gui.htmllib import HTML
 import cmk.gui.escaping as escaping
@@ -26,7 +27,7 @@ from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.page_menu import (
@@ -445,6 +446,7 @@ class DiscoveryPageRenderer:
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
             html.div("", id_="row_info")
+            self._show_fix_all(discovery_result)
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
@@ -559,6 +561,78 @@ class DiscoveryPageRenderer:
         for entry in check_table:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
+
+    def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
+        if not discovery_result:
+            return
+
+        if not config.user.may("wato.services"):
+            return
+
+        undecided_services = 0
+        vanished_services = 0
+        new_host_labels = 0
+        vanished_host_labels = 0
+        changed_host_labels = 0
+
+        for service in discovery_result.check_table:
+            if service[0] == DiscoveryState.UNDECIDED:
+                undecided_services += 1
+            if service[0] == DiscoveryState.VANISHED:
+                vanished_services += 1
+
+        active_host_labels = DiscoveredHostLabelsStore(self._host.name()).load()
+
+        for label in active_host_labels:
+            if label not in discovery_result.host_labels:
+                vanished_host_labels += 1
+        for label in discovery_result.host_labels:
+            if label not in active_host_labels:
+                new_host_labels += 1
+            elif discovery_result.host_labels[label] != active_host_labels[label]:
+                changed_host_labels += 1
+
+        if all(v == 0 for v in [
+                undecided_services,
+                vanished_services,
+                new_host_labels,
+                vanished_host_labels,
+                changed_host_labels,
+        ]):
+            return
+
+        html.open_div(id_="fixall")
+        html.icon("fixall", _("Services/Host labels to fix"))
+
+        html.open_ul()
+        html.li(
+            ungettext("Undecided service: %d", "Undecided services: %d", undecided_services) %
+            undecided_services)
+        html.li(
+            ungettext("Vanished service: %d", "Vanished services: %d", vanished_services) %
+            vanished_services)
+        html.li(
+            ungettext("New host label: %d", "New host labels: %d", new_host_labels) %
+            new_host_labels)
+        html.li(
+            ungettext("Vanished host label: %d", "Vanished host labels: %d", vanished_host_labels) %
+            vanished_host_labels)
+        html.li(
+            ungettext("Changed host label: %d", "Changed host labels: %d", changed_host_labels) %
+            changed_host_labels)
+        html.close_ul()
+
+        html.jsbutton("_fixall",
+                      _("Fix all"),
+                      onclick=_fix_all_entries(
+                          self._host,
+                          self._options,
+                          bool(undecided_services) or bool(vanished_services),
+                          bool(new_host_labels) or bool(vanished_host_labels) or
+                          bool(changed_host_labels),
+                      ))
+
+        html.close_div()
 
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not config.user.may("wato.services"):
@@ -1358,7 +1432,7 @@ def _page_menu_selected_services_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))),
         name="fix_all",
         is_enabled=False,
-        is_shortcut=True,
+        is_shortcut=False,
         css_classes=["action"],
     )
 
@@ -1408,10 +1482,21 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))),
         name="update_host_labels",
         is_enabled=False,
-        is_shortcut=True,
+        is_shortcut=False,
         is_suggested=True,
         css_classes=["action"],
     )
+
+
+def _fix_all_entries(host: watolib.CREHost, options: DiscoveryOptions, services: bool,
+                     labels: bool) -> str:
+    if services and labels:
+        return _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))
+    if services:
+        return _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
+    if labels:
+        return _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
+    return ""
 
 
 def _start_js_call(host: watolib.CREHost,

@@ -46,7 +46,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntLambdaColumn<Comment>>(
         "type", "The type of the comment: 1 is host, 2 is service", offsets,
         [](const Comment &r) { return r._type; }));
-    addColumn(std::make_unique<BoolColumn<Comment>>(
+    addColumn(std::make_unique<BoolColumn::Callback<Comment>>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Comment &r) { return r._is_service; }));

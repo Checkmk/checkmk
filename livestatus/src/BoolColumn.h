@@ -20,8 +20,10 @@
 class Aggregator;
 class RowRenderer;
 
-namespace detail {
 struct BoolColumn : Column {
+    template <class T, bool = false>
+    class Callback;
+
     using Column::Column;
     ~BoolColumn() override = default;
 
@@ -39,15 +41,14 @@ struct BoolColumn : Column {
 
     virtual std::int32_t getValue(Row row) const = 0;
 };
-}  // namespace detail
 
-template <class T, bool Default = false>
-class BoolColumn : public detail::BoolColumn {
+template <class T, bool Default>
+class BoolColumn::Callback : public BoolColumn {
 public:
-    BoolColumn(const std::string& name, const std::string& description,
-               const ColumnOffsets& offsets, std::function<bool(const T&)> f)
-        : detail::BoolColumn{name, description, offsets}, f_{std::move(f)} {}
-    ~BoolColumn() override = default;
+    Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets, std::function<bool(const T&)> f)
+        : BoolColumn{name, description, offsets}, f_{std::move(f)} {}
+    ~Callback() override = default;
 
     std::int32_t getValue(Row row) const override {
         const T* data = columnData<T>(row);

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -21,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "nagios.h"
 #include "test_utilities.h"
+class DowntimeOrComment;
 
 // TODO(sp) Move this to a better place.
 TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
@@ -58,7 +60,13 @@ struct HostMacroExpanderTest : public ::testing::Test {
     TestHost test_host{{{"ERNIE", "Bert"},  //
                         {"HARRY", "Hirsch"},
                         {"_TAG_GUT", "Guten Tag!"}}};
-    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> comments_;
+    NagiosCore core{downtimes_,
+                    comments_,
+                    NagiosPaths{},
+                    NagiosLimits{},
+                    NagiosAuthorization{},
                     Encoding::utf8};
     ColumnOffsets offsets{};
     StringColumn<host> oshmc{"funny_column_name", "Cool description!", offsets,

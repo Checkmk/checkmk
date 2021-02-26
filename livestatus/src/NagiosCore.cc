@@ -27,10 +27,14 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
 }
 
-NagiosCore::NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
-                       NagiosAuthorization authorization,
-                       Encoding data_encoding)
-    : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
+NagiosCore::NagiosCore(
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &downtimes,
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &comments,
+    NagiosPaths paths, const NagiosLimits &limits,
+    NagiosAuthorization authorization, Encoding data_encoding)
+    : _downtimes{downtimes}
+    , _comments{comments}
+    , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
     , _paths(std::move(paths))
     , _limits(limits)
     , _authorization(authorization)
@@ -263,55 +267,6 @@ bool NagiosCore::pnp4nagiosEnabled() const {
 
 bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
-}
-
-void NagiosCore::registerDowntime(nebstruct_downtime_data *data) {
-    unsigned long id = data->downtime_id;
-    switch (data->type) {
-        case NEBTYPE_DOWNTIME_ADD:
-        case NEBTYPE_DOWNTIME_LOAD:
-            _downtimes[id] = std::make_unique<Downtime>(
-                ::find_host(data->host_name),
-                data->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(data->host_name,
-                                     data->service_description),
-                data);
-            break;
-        case NEBTYPE_DOWNTIME_DELETE:
-            if (_downtimes.erase(id) == 0) {
-                Informational(_logger_livestatus)
-                    << "Cannot delete non-existing downtime " << id;
-            }
-            break;
-        default:
-            break;
-    }
-}
-
-void NagiosCore::registerComment(nebstruct_comment_data *data) {
-    unsigned long id = data->comment_id;
-
-    switch (data->type) {
-        case NEBTYPE_COMMENT_ADD:
-        case NEBTYPE_COMMENT_LOAD:
-            _comments[id] = std::make_unique<Comment>(
-                ::find_host(data->host_name),
-                data->service_description == nullptr
-                    ? nullptr
-                    : ::find_service(data->host_name,
-                                     data->service_description),
-                data);
-            break;
-        case NEBTYPE_COMMENT_DELETE:
-            if (_comments.erase(id) == 0) {
-                Informational(_logger_livestatus)
-                    << "Cannot delete non-existing comment " << id;
-            }
-            break;
-        default:
-            break;
-    }
 }
 
 std::vector<DowntimeData> NagiosCore::downtimes_for_object(

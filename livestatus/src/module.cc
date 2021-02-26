@@ -27,6 +27,7 @@
 #include <cstring>
 #include <deque>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -35,6 +36,7 @@
 
 #include "Average.h"
 #include "ChronoUtils.h"
+#include "DowntimeOrComment.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
@@ -132,6 +134,12 @@ bool g_any_event_handler_enabled;
 double g_average_active_latency;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Average g_avg_livestatus_usage;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> fl_downtimes;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> fl_comments;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosCore *fl_core = nullptr;
@@ -496,7 +504,26 @@ int broker_check(int event_type, void *data) {
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto *co = static_cast<nebstruct_comment_data *>(data);
-    fl_core->registerComment(co);
+    unsigned long id = co->comment_id;
+    switch (co->type) {
+        case NEBTYPE_COMMENT_ADD:
+        case NEBTYPE_COMMENT_LOAD:
+            fl_comments[id] = std::make_unique<Comment>(
+                ::find_host(co->host_name),
+                co->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(co->host_name, co->service_description),
+                co);
+            break;
+        case NEBTYPE_COMMENT_DELETE:
+            if (fl_comments.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing comment " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
@@ -504,7 +531,26 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    fl_core->registerDowntime(dt);
+    unsigned long id = dt->downtime_id;
+    switch (dt->type) {
+        case NEBTYPE_DOWNTIME_ADD:
+        case NEBTYPE_DOWNTIME_LOAD:
+            fl_downtimes[id] = std::make_unique<Downtime>(
+                ::find_host(dt->host_name),
+                dt->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(dt->host_name, dt->service_description),
+                dt);
+            break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            if (fl_downtimes.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing downtime " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
@@ -592,8 +638,9 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
-                                     fl_data_encoding);
+            fl_core =
+                new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
+                               fl_authorization, fl_data_encoding);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;

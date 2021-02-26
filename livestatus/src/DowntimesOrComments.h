@@ -18,8 +18,12 @@
 class Logger;
 
 struct DowntimesOrComments {
-    void registerDowntime(Logger *logger, nebstruct_downtime_data *data);
-    void registerComment(Logger *logger, nebstruct_comment_data *data);
+    static void registerDowntime(
+        std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &entries,
+        Logger *logger, nebstruct_downtime_data *data);
+    static void registerComment(
+        std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &entries,
+        Logger *logger, nebstruct_comment_data *data);
 
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
 };

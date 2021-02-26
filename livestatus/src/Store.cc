@@ -12,6 +12,7 @@
 #include <stdexcept>
 
 #include "CrashReport.h"
+#include "DowntimesOrComments.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"
@@ -96,11 +97,11 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
 }
 
 void Store::registerDowntime(nebstruct_downtime_data *data) {
-    _downtimes.registerDowntime(logger(), data);
+    DowntimesOrComments::registerDowntime(_downtimes._entries, logger(), data);
 }
 
 void Store::registerComment(nebstruct_comment_data *data) {
-    _comments.registerComment(logger(), data);
+    DowntimesOrComments::registerComment(_comments._entries, logger(), data);
 }
 
 namespace {

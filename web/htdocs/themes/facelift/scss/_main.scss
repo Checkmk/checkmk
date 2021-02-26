@@ -492,8 +492,16 @@ div.warning {
 }
 
 div.really {
-  color: $black;
-  background-color: $warning;
+  &,
+  h3,
+  body.main & a {
+    color: $black;
+    background-color: $warning;
+  }
+
+  h3 {
+    padding-left: 0;
+  }
 }
 
 div.success {

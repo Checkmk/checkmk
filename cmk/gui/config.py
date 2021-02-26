@@ -1185,13 +1185,6 @@ def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> boo
     return False
 
 
-def default_site() -> Optional[SiteId]:
-    for site_name, _site in sites.items():
-        if site_is_local(site_name):
-            return site_name
-    return None
-
-
 def is_single_local_site() -> bool:
     if len(sites) > 1:
         return False
@@ -1208,10 +1201,10 @@ def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
 
 
 def site_attribute_default_value() -> Optional[SiteId]:
-    def_site = default_site()
+    site_id = omd_site()
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if def_site and def_site in authorized_site_ids:
-        return def_site
+    if site_id in authorized_site_ids:
+        return site_id
     return None
 
 

@@ -262,10 +262,19 @@ class BulkInputHostGroup(BaseSchema):
     )
 
 
+class UpdateGroup(BaseSchema):
+    alias = fields.String(
+        example="Example Group",
+        description="The alias of the group",
+        required=True,
+    )
+    customer = fields.customer_field(required=False, should_exist=True)
+
+
 class UpdateHostGroup(BaseSchema):
     """Updating a host group"""
     name = EXISTING_HOST_GROUP_NAME
-    attributes = fields.Nested(InputHostGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateHostGroup(BaseSchema):
@@ -274,7 +283,6 @@ class BulkUpdateHostGroup(BaseSchema):
                           example=[{
                               'name': 'windows',
                               'attributes': {
-                                  'name': 'windows updated',
                                   'alias': 'Windows Servers',
                               },
                           }])
@@ -308,7 +316,7 @@ class UpdateContactGroup(BaseSchema):
         required=True,
         should_exist=True,
     )
-    attributes = fields.Nested(InputContactGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateContactGroup(BaseSchema):
@@ -317,7 +325,6 @@ class BulkUpdateContactGroup(BaseSchema):
                           example=[{
                               'name': 'OnCall',
                               'attributes': {
-                                  'name': 'OnCall updated',
                                   'alias': 'Not on Sundays',
                               },
                           }])
@@ -344,7 +351,7 @@ class BulkInputServiceGroup(BaseSchema):
 class UpdateServiceGroup(BaseSchema):
     """Updating a service group"""
     name = EXISTING_SERVICE_GROUP_NAME
-    attributes = fields.Nested(InputServiceGroup)
+    attributes = fields.Nested(UpdateGroup)
 
 
 class BulkUpdateServiceGroup(BaseSchema):

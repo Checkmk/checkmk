@@ -18,6 +18,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_templates,
     GraphRecipe,
     GraphTemplate,
+    horizontal_rules_from_thresholds,
     metrics_used_in_expression,
     replace_expressions,
     split_expression,
@@ -111,7 +112,7 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
         "metrics": metrics,
         "unit": units.pop(),
         "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
-        "horizontal_rules": _horizontal_rules_from_thresholds(graph_template.get(
+        "horizontal_rules": horizontal_rules_from_thresholds(graph_template.get(
             "scalars", []), translated_metrics),  # e.g. lines for WARN and CRIT
         "omit_zero_metrics": graph_template.get("omit_zero_metrics", False),
         "consolidation_function": graph_template.get("consolidation_function", "max"),
@@ -203,34 +204,3 @@ def metric_unit_color(metric_expression, translated_metrics, optional_metrics=No
             (metric_expression, metric_name, ", ".join(sorted(translated_metrics.keys())) or
              "None"))
     return {"unit": unit["id"], "color": color}
-
-
-def _horizontal_rules_from_thresholds(thresholds, translated_metrics):
-    horizontal_rules = []
-    for entry in thresholds:
-        if len(entry) == 2:
-            expression, title = entry
-        else:
-            expression = entry
-            if expression.endswith(":warn"):
-                title = _("Warning")
-            elif expression.endswith(":crit"):
-                title = _("Critical")
-            else:
-                title = expression
-
-        try:
-            value, unit, color = evaluate(expression, translated_metrics)
-            if value:
-                horizontal_rules.append((
-                    value,
-                    unit["render"](value),
-                    color,
-                    title,
-                ))
-        # Scalar value like min and max are always optional. This makes configuration
-        # of graphs easier.
-        except Exception:
-            pass
-
-    return horizontal_rules

@@ -11,6 +11,7 @@ import pytest  # type: ignore[import]
 import cmk.utils.version
 
 import cmk.gui.config
+import cmk.gui.metrics as metrics
 from cmk.gui.plugins.metrics import utils
 
 
@@ -221,3 +222,23 @@ def test_graph_titles():
     graphs_without_title = sorted(graph_id for graph_id, graph_info in utils.graph_info.items()
                                   if not graph_info.get("title"))
     assert not graphs_without_title, f"Please provide titles for the following graphs: {', '.join(graphs_without_title)}"
+
+
+@pytest.mark.parametrize("perf_string, result", [
+    pytest.param('one=5;;;; power=5;;;; output=5;;;;', [], id="Unknown thresholds from check"),
+    pytest.param('one=5;7;6;; power=5;9;10;; output=5;2;3;;', [
+        (7.0, '7.00', '#ffff00', 'Warning'),
+        (10.0, '10.0 W', '#ff0000', 'Critical power'),
+        (-2.0, '-2.00', '#ffff00', 'Warning output'),
+    ],
+                 id="Thresholds present"),
+])
+def test_horizontal_rules_from_thresholds(perf_string, result):
+    assert utils.horizontal_rules_from_thresholds(
+        [
+            "one:warn",
+            ("power:crit", "Critical power"),
+            ("output:warn,-1,*", "Warning output"),
+        ],
+        metrics.translate_perf_data(perf_string),
+    ) == result

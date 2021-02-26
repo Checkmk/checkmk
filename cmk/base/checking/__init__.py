@@ -466,7 +466,7 @@ def get_aggregated_result(
     """
     if plugin is None:
         return AggregatedResult(
-            submit=False,
+            submit=True,
             data_received=True,
             result=CHECK_NOT_IMPLEMENTED,
             cache_info=None,

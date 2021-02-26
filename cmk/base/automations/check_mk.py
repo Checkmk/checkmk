@@ -653,8 +653,8 @@ class AutomationAnalyseServices(Automation):
 
             plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             if plugin is None:
-                # Just to be safe, and to let mypy know.
-                # plugin should never be None for services that are in the check_table.
+                # plugin can only be None if we looked for the "Unimplemented check..." description.
+                # In this case we can run into the 'not found' case below.
                 continue
 
             parameters = service.parameters

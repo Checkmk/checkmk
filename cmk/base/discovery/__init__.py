@@ -1234,12 +1234,11 @@ def get_check_preview(
                 output = u"WAITING - %s check, cannot be done offline" % check_source.title()
                 ruleset_name: Optional[RulesetName] = None
             else:
-                if plugin is None:
-                    continue  # Skip not existing check silently
 
-                ruleset_name = str(plugin.check_ruleset_name) if plugin.check_ruleset_name else None
-                wrapped_params = (None if plugin.check_default_parameters is None else Parameters(
-                    wrap_parameters(params)))
+                ruleset_name = (str(plugin.check_ruleset_name)
+                                if plugin and plugin.check_ruleset_name else None)
+                wrapped_params = (Parameters(wrap_parameters(params)) if plugin and
+                                  plugin.check_default_parameters is not None else None)
 
                 exitcode, output, _perfdata = checking.get_aggregated_result(
                     parsed_sections_broker,

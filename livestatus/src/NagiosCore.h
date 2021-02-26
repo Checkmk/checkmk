@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DowntimesOrComments.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
@@ -123,7 +124,11 @@ public:
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
+
+    DowntimesOrComments _downtimes;
     void registerDowntime(nebstruct_downtime_data *data);
+
+    DowntimesOrComments _comments;
     void registerComment(nebstruct_comment_data *data);
 
 private:
@@ -136,7 +141,9 @@ private:
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
 
-    void *implInternal() const override { return const_cast<Store *>(&_store); }
+    void *implInternal() const override {
+        return const_cast<NagiosCore *>(this);
+    }
 
     static const Contact *fromImpl(const contact *c) {
         return reinterpret_cast<const Contact *>(c);

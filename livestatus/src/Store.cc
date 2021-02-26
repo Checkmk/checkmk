@@ -12,7 +12,6 @@
 #include <stdexcept>
 
 #include "CrashReport.h"
-#include "DowntimesOrComments.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"
@@ -21,6 +20,7 @@
 #include "Query.h"
 #include "StringUtils.h"
 #include "mk_logwatch.h"
+#include "nagios.h"
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
@@ -94,14 +94,6 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
         return _table_dummy;
     }
     return *it->second;
-}
-
-void Store::registerDowntime(nebstruct_downtime_data *data) {
-    DowntimesOrComments::registerDowntime(_downtimes._entries, logger(), data);
-}
-
-void Store::registerComment(nebstruct_comment_data *data) {
-    DowntimesOrComments::registerComment(_comments._entries, logger(), data);
 }
 
 namespace {

@@ -43,14 +43,13 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         status=200,
     )
 
-    group['name'] += " updated"
-    # group['alias'] += " alolo"
+    update_group = {"alias": f"{alias} update"}
 
     wsgi_app.follow_link(
         resp,
         '.../update',
         base=base,
-        params=json.dumps(group),
+        params=json.dumps(update_group),
         headers={'If-Match': 'foo bar'},
         status=412,
         content_type='application/json',
@@ -60,7 +59,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
         resp,
         '.../update',
         base=base,
-        params=json.dumps(group),
+        params=json.dumps(update_group),
         headers={'If-Match': resp.headers['ETag']},
         status=200,
         content_type='application/json',
@@ -104,7 +103,6 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     update_groups = [{
         'name': group['name'],
         'attributes': {
-            'name': f"{group['name']} updated",
             'alias': group['alias'],
         },
     } for group in groups]

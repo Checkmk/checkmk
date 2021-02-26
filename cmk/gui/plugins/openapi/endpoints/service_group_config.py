@@ -138,7 +138,7 @@ def bulk_delete(params):
           path_params=[NAME_FIELD],
           etag='both',
           response_schema=response_schemas.ServiceGroup,
-          request_schema=request_schemas.InputServiceGroup)
+          request_schema=request_schemas.UpdateGroup)
 def update(params):
     """Update a service group"""
     name = params['name']

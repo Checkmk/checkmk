@@ -123,7 +123,7 @@ def bulk_delete(params):
           path_params=[NAME_FIELD],
           etag='both',
           response_schema=response_schemas.HostGroup,
-          request_schema=request_schemas.InputHostGroup)
+          request_schema=request_schemas.UpdateGroup)
 def update(params):
     """Update a host group"""
     name = params['name']

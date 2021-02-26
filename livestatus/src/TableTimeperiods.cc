@@ -18,10 +18,10 @@
 
 TableTimeperiods::TableTimeperiods(MonitoringCore* mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<timeperiod>>(
+    addColumn(std::make_unique<StringColumn::Callback<timeperiod>>(
         "name", "The name of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.name; }));
-    addColumn(std::make_unique<StringColumn<timeperiod>>(
+    addColumn(std::make_unique<StringColumn::Callback<timeperiod>>(
         "alias", "The alias of the timeperiod", offsets,
         [](const timeperiod& tp) { return tp.alias; }));
     // unknown timeperiod is assumed to be 24X7

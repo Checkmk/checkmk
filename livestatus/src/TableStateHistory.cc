@@ -119,7 +119,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "Shows if the host or service is within its notification period",
         offsets,
         [](const HostServiceState &r) { return r._in_notification_period; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "notification_period",
         "The notification period of the host or service in question", offsets,
         [](const HostServiceState &r) { return r._notification_period; }));
@@ -127,23 +127,23 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "in_service_period",
         "Shows if the host or service is within its service period", offsets,
         [](const HostServiceState &r) { return r._in_service_period; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "service_period",
         "The service period of the host or service in question", offsets,
         [](const HostServiceState &r) { return r._service_period; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "debug_info", "Debug information", offsets,
         [](const HostServiceState &r) { return r._debug_info; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "host_name", "Host name", offsets,
         [](const HostServiceState &r) { return r._host_name; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "service_description", "Description of the service", offsets,
         [](const HostServiceState &r) { return r._service_description; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "log_output", "Logfile output relevant for this state", offsets,
         [](const HostServiceState &r) { return r._log_output; }));
-    addColumn(std::make_unique<StringColumn<HostServiceState>>(
+    addColumn(std::make_unique<StringColumn::Callback<HostServiceState>>(
         "long_log_output", "Complete logfile output relevant for this state",
         offsets, [](const HostServiceState &r) { return r._long_log_output; }));
 

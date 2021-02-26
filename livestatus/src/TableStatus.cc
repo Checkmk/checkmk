@@ -161,7 +161,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Reference>(
         "num_services", "The total number of services", g_num_services));
 
-    addColumn(std::make_unique<StringColumn<TableStatus>>(
+    addColumn(std::make_unique<StringColumn::Callback<TableStatus>>(
         "program_version", "The version of the monitoring daemon", offsets,
         [](const TableStatus & /*r*/) { return get_program_version(); }));
 
@@ -200,7 +200,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numCachedLogMessages());
         }));
-    addColumn(std::make_unique<StringColumn<TableStatus>>(
+    addColumn(std::make_unique<StringColumn::Callback<TableStatus>>(
         "livestatus_version", "The version of the MK Livestatus module",
         offsets, [](const TableStatus & /*r*/) { return VERSION; }));
     addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(

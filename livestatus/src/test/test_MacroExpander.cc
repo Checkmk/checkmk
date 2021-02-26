@@ -70,11 +70,12 @@ struct HostMacroExpanderTest : public ::testing::Test {
                     NagiosAuthorization{},
                     Encoding::utf8};
     ColumnOffsets offsets{};
-    StringColumn<host> oshmc{"funny_column_name", "Cool description!", offsets,
-                             [this](const host &r) {
-                                 return HostMacroExpander::make(r, &this->core)
-                                     ->expandMacros(r.notes);
-                             }};
+    StringColumn::Callback<host> oshmc{"funny_column_name", "Cool description!",
+                                       offsets, [this](const host &r) {
+                                           return HostMacroExpander::make(
+                                                      r, &this->core)
+                                               ->expandMacros(r.notes);
+                                       }};
 };
 
 // Second test fixture: A single host with a single service
@@ -91,7 +92,7 @@ struct ServiceMacroExpanderTest : public HostMacroExpanderTest {
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    StringColumn<service> ossmc{
+    StringColumn::Callback<service> ossmc{
         "navn", "Beskrivelse", offsets, [this](const service &r) {
             return ServiceMacroExpander::make(r, &this->core)
                 ->expandMacros(r.notes);

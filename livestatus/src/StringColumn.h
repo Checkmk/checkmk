@@ -24,10 +24,12 @@ class Aggregator;
 class Row;
 class RowRenderer;
 
-namespace detail {
 struct StringColumn : ::Column {
     class Constant;
     class Reference;
+    template <class T>
+    class Callback;
+
     using ::Column::Column;
     ~StringColumn() override = default;
 
@@ -56,22 +58,19 @@ struct StringColumn : ::Column {
 
     [[nodiscard]] virtual std::string getValue(Row row) const = 0;
 };
-}  // namespace detail
 
 // TODO(ml, sp): C++-20 should let us use strings as default
 // template parameter (see P0732).
 template <class T>
-class StringColumn : public ::detail::StringColumn {
+class StringColumn::Callback : public StringColumn {
 public:
-    using ::detail::StringColumn::Constant;
-    using ::detail::StringColumn::Reference;
     struct PerfData;
 
-    StringColumn(const std::string& name, const std::string& description,
-                 const ColumnOffsets& offsets,
-                 const std::function<std::string(const T&)>& f)
-        : detail::StringColumn{name, description, offsets}, f_{f} {}
-    ~StringColumn() override = default;
+    Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets,
+             const std::function<std::string(const T&)>& f)
+        : StringColumn{name, description, offsets}, f_{f} {}
+    ~Callback() override = default;
 
     [[nodiscard]] std::string getValue(Row row) const override {
         using namespace std::string_literals;
@@ -83,13 +82,13 @@ private:
     const std::function<std::string(const T&)> f_;
 };
 
-class detail::StringColumn::Constant : public detail::StringColumn {
+class StringColumn::Constant : public StringColumn {
 public:
     // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
              // cppcheck-suppress passedByValue
              std::string x)
-        : detail::StringColumn{name, description, {}}, x_{std::move(x)} {}
+        : StringColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;
 
     [[nodiscard]] std::string getValue(Row /*row*/) const override {
@@ -100,11 +99,11 @@ private:
     const std::string x_;
 };
 
-class detail::StringColumn::Reference : public detail::StringColumn {
+class StringColumn::Reference : public StringColumn {
 public:
     Reference(const std::string& name, const std::string& description,
               const std::string& x)
-        : detail::StringColumn{name, description, {}}, x_{x} {}
+        : StringColumn{name, description, {}}, x_{x} {}
     ~Reference() override = default;
     [[nodiscard]] std::string getValue(Row /*row*/) const override {
         return x_;
@@ -115,8 +114,8 @@ private:
 };
 
 template <class T>
-struct StringColumn<T>::PerfData : StringColumn {
-    using StringColumn<T>::StringColumn;
+struct StringColumn::Callback<T>::PerfData : StringColumn::Callback<T> {
+    using StringColumn::Callback<T>::Callback;
     [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const override {
         return std::make_unique<PerfdataAggregator>(

@@ -29,10 +29,10 @@
 
 TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringColumn<Downtime>>(
+    addColumn(std::make_unique<StringColumn::Callback<Downtime>>(
         "author", "The contact that scheduled the downtime", offsets,
         [](const Downtime &r) { return r._author_name; }));
-    addColumn(std::make_unique<StringColumn<Downtime>>(
+    addColumn(std::make_unique<StringColumn::Callback<Downtime>>(
         "comment", "A comment text", offsets,
         [](const Downtime &r) { return r._comment; }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(

@@ -17,13 +17,12 @@
 #include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "StringColumn.h"
 #include "Table.h"
 #include "nagios.h"
 class ColumnOffsets;
 template <class T>
 class ListLambdaColumn;
-template <class T>
-class StringColumn;
 template <class T>
 class TimeColumn;
 class Query;
@@ -38,7 +37,7 @@ public:
     ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
-    static std::unique_ptr<StringColumn<ECRow>> makeStringColumn(
+    static std::unique_ptr<StringColumn::Callback<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
     static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(

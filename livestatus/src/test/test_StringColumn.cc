@@ -23,8 +23,7 @@ TEST(StringColumn, ConstantString) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col =
-        StringColumn<DummyRow>::Constant{"name"s, "description"s, v};
+    const auto col = StringColumn::Constant{"name"s, "description"s, v};
 
     EXPECT_EQ(v, col.getValue(row));
 }
@@ -33,8 +32,7 @@ TEST(StringColumn, ConstantDefaultRow) {
     const auto v = "hello"s;
 
     const auto row = DummyRow{nullptr};
-    const auto col =
-        StringColumn<DummyRow>::Constant{"name"s, "description"s, v};
+    const auto col = StringColumn::Constant{"name"s, "description"s, v};
 
     EXPECT_EQ(v, col.getValue(row));
 }
@@ -43,8 +41,7 @@ TEST(StringColumn, Reference) {
     auto v = "hello"s;
 
     const auto row = DummyRow{nullptr};
-    const auto col =
-        StringColumn<DummyRow>::Reference{"name"s, "description"s, v};
+    const auto col = StringColumn::Reference{"name"s, "description"s, v};
 
     EXPECT_EQ(v, col.getValue(row));
 
@@ -57,7 +54,7 @@ TEST(StringColumn, GetValueLambda) {
 
     const auto val = DummyValue{};
     const auto row = DummyRow{&val};
-    const auto col = StringColumn<DummyRow>{
+    const auto col = StringColumn::Callback<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};
@@ -69,7 +66,7 @@ TEST(StringColumn, GetValueDefault) {
     auto v = "hello"s;
 
     const auto row = DummyRow{nullptr};
-    const auto col = StringColumn<DummyRow>{
+    const auto col = StringColumn::Callback<DummyRow>{
         "name"s, "description"s, {}, [v](const DummyRow& /*row*/) {
             return v;
         }};

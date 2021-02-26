@@ -981,7 +981,7 @@ div.servicestats {
     }
 
     &.up {
-      fill: $host-hexagon-ok-color;
+      fill: $headline-color;
       fill-opacity: 0.85;
       stroke: none;
     }
@@ -992,10 +992,6 @@ div.servicestats {
     stroke-dasharray: 3, 3;
     stroke: #404a55;
   }
-}
-
-div.site_overview.cmk_figure div.tooltip {
-  background-color: rgba(0, 0, 0, 0.75);
 }
 
 div.hoststats,

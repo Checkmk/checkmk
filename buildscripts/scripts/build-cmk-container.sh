@@ -9,6 +9,28 @@ unset LANG
 log() { echo "[$(date '+%F %T')] ==============================" "$@"; }
 die() { log "$@"; exit 1; }
 
+# Tag Containers and push them to a Registry
+docker_push () {
+    REGISTRY=$1
+    FOLDER=$2
+    log "Erstelle \"${VERSION}\" tag..."
+    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
+
+    log "Erstelle \"{$BRANCH}-latest\" tag..."
+    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
+
+    log "Erstelle \"latest\" tag..."
+    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
+
+    log "Lade zu ($REGISTRY) hoch..."
+    docker login ${REGISTRY} -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
+    DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
+    if [ "$SET_LATEST_TAG" = "yes" ]; then
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:latest"
+    fi
+}
+
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ]; then
     echo "Aufrufen: bw-docker-bauen [BRANCH] [EDITION] [VERSION] [SET_LATEST_TAG] [DEMO]"
     echo "          bw-docker-bauen 1.5.0 enterprise 1.5.0p4 no no"
@@ -57,20 +79,12 @@ log "Verschiebe Image-Tarball..."
 mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "/bauwelt/download/${VERSION}/"
 
 if [ $EDITION = raw ]; then
-    log "Erstelle \"{$BRANCH}-latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "checkmk/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
-
-    log "Erstelle \"latest\" tag..."
-    docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "checkmk/check-mk-${EDITION}${DEMO}:latest"
-
-    log "Lade zu Docker-Hub hoch..."
-    docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSPHRASE}
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}"
-    DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}${DEMO}:${BRANCH}-latest"
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
-        DOCKERCLOUD_NAMESPACE=checkmk docker push "checkmk/check-mk-${EDITION}${DEMO}:latest"
-    fi
+    docker_push "" "checkmk"
+else
+    docker_push "registry.checkmk.com" "/${EDITION}"
 fi
 
 log "Räume temporäres Verzeichnis $TMP_PATH weg"
 rm -rf "$TMP_PATH"
+
+

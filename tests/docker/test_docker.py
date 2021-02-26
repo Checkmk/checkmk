@@ -279,7 +279,7 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
     pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:
@@ -416,7 +416,7 @@ def test_container_agent(request, client):
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert "0.0.0.0:6556" in _exec_run(c, ["netstat", "-tln"])[-1]
+    assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):

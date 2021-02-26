@@ -801,6 +801,40 @@ def metric_recipe_and_unit(
     )
 
 
+def horizontal_rules_from_thresholds(
+    thresholds: Iterable[Union[str, Tuple[str, str]]],
+    translated_metrics: TranslatedMetrics,
+):
+    horizontal_rules = []
+    for entry in thresholds:
+        if isinstance(entry, tuple):
+            expression, title = entry
+        else:
+            expression = entry
+            if expression.endswith(":warn"):
+                title = _("Warning")
+            elif expression.endswith(":crit"):
+                title = _("Critical")
+            else:
+                title = expression
+
+        try:
+            value, unit, color = evaluate(expression, translated_metrics)
+            if value:
+                horizontal_rules.append((
+                    value,
+                    unit["render"](value),
+                    color,
+                    title,
+                ))
+        # Scalar value like min and max are always optional. This makes configuration
+        # of graphs easier.
+        except Exception:
+            pass
+
+    return horizontal_rules
+
+
 #.
 #   .--Colors--------------------------------------------------------------.
 #   |                      ____      _                                     |

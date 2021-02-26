@@ -93,25 +93,6 @@ def test_create_graph_recipe_from_template():
     }
 
 
-@pytest.mark.parametrize("perf_string, result", [
-    pytest.param('one=5;;;; power=5;;;; output=5;;;;', [], id="Unknown thresholds from check"),
-    pytest.param('one=5;7;6;; power=5;9;10;; output=5;2;3;;', [
-        (7.0, '7.00', '#ffff00', 'Warning'),
-        (10.0, '10.0 W', '#ff0000', 'Critical power'),
-        (-2.0, '-2.00', '#ffff00', 'Warning output'),
-    ],
-                 id="Thresholds present"),
-])
-def test_horizontal_rules_from_thresholds(perf_string, result):
-    thresholds = [
-        "one:warn",
-        ("power:crit", "Critical power"),
-        ("output:warn,-1,*", "Warning output"),
-    ]
-    translated_metrics = metrics.translate_perf_data(perf_string)
-    assert gt._horizontal_rules_from_thresholds(thresholds, translated_metrics) == result
-
-
 @pytest.mark.parametrize("expression, perf_string, check_command, result_color", [
     ('load15', 'load1=0.38;40;80;0;8 load5=0.62;40;80;0;8 load15=0.68;40;80;0;8',
      'check_mk-cpu.loads', '#2c5766'),

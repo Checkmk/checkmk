@@ -136,10 +136,10 @@ double g_average_active_latency;
 Average g_avg_livestatus_usage;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> fl_downtimes;
+static std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> fl_comments;
+static std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosCore *fl_core = nullptr;

@@ -28,8 +28,8 @@ void NagiosPaths::dump(Logger *logger) const {
 }
 
 NagiosCore::NagiosCore(
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &downtimes,
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &comments,
+    std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+    std::map<unsigned long, std::unique_ptr<Comment>> &comments,
     NagiosPaths paths, const NagiosLimits &limits,
     NagiosAuthorization authorization, Encoding data_encoding)
     : _downtimes{downtimes}
@@ -272,8 +272,7 @@ bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
 std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<DowntimeData> result;
-    for (const auto &entry : _downtimes) {
-        auto *dt = static_cast<Downtime *>(entry.second.get());
+    for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == h && dt->_service == s) {
             result.push_back({
                 dt->_id,
@@ -296,8 +295,7 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
 std::vector<CommentData> NagiosCore::comments_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<CommentData> result;
-    for (const auto &entry : _comments) {
-        auto *co = static_cast<Comment *>(entry.second.get());
+    for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
             result.push_back(
                 {co->_id, co->_author_name, co->_comment,

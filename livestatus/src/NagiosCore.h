@@ -58,11 +58,10 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(
-        std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &downtimes,
-        std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &comments,
-        NagiosPaths paths, const NagiosLimits &limits,
-        NagiosAuthorization authorization, Encoding data_encoding);
+    NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+               std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+               NagiosPaths paths, const NagiosLimits &limits,
+               NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
     Host *getHostByDesignation(const std::string &designation) override;
@@ -129,8 +128,8 @@ public:
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &_downtimes;
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> &_comments;
+    std::map<unsigned long, std::unique_ptr<Downtime>> &_downtimes;
+    std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
     Logger *_logger_livestatus;

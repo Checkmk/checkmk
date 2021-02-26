@@ -18,7 +18,8 @@
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "test/Utilities.h"
-class DowntimeOrComment;
+class Comment;
+class Downtime;
 
 namespace fs = std::filesystem;
 
@@ -85,8 +86,8 @@ TEST_F(CrashReportFixture, TestDeleteIdWithNonExistingId) {
 }
 
 class CrashReportTableFixture : public CrashReportFixture {
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> comments_;
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
 
 public:
     NagiosCore core{downtimes_,

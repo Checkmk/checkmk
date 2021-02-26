@@ -22,7 +22,8 @@
 #include "gtest/gtest.h"
 #include "nagios.h"
 #include "test_utilities.h"
-class DowntimeOrComment;
+class Comment;
+class Downtime;
 
 // TODO(sp) Move this to a better place.
 TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
@@ -60,8 +61,8 @@ struct HostMacroExpanderTest : public ::testing::Test {
     TestHost test_host{{{"ERNIE", "Bert"},  //
                         {"HARRY", "Hirsch"},
                         {"_TAG_GUT", "Guten Tag!"}}};
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> comments_;
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
     NagiosCore core{downtimes_,
                     comments_,
                     NagiosPaths{},

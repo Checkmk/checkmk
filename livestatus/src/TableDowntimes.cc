@@ -8,7 +8,7 @@
 #include <chrono>
 #include <map>
 #include <memory>
-#include <utility>
+#include <type_traits>
 
 #include "BoolColumn.h"
 #include "Column.h"
@@ -87,18 +87,15 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
-    for (const auto &entry : core()->impl<NagiosCore>()->_downtimes) {
-        // NOTE: Our typing is horrible here, so we need a downcast. Use
-        // templates instead?
-        const auto *r = static_cast<const Downtime *>(entry.second.get());
-        if (!query->processDataset(Row(r))) {
+    for (const auto &[id, dt] : core()->impl<NagiosCore>()->_downtimes) {
+        if (!query->processDataset(Row{dt.get()})) {
             break;
         }
     }
 }
 
 bool TableDowntimes::isAuthorized(Row row, const contact *ctc) const {
-    const auto *dtc = rowData<DowntimeOrComment>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, dtc->_host,
-                             dtc->_service);
+    const auto *dt = rowData<Downtime>(row);
+    return is_authorized_for(core()->serviceAuthorization(), ctc, dt->_host,
+                             dt->_service);
 }

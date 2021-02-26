@@ -8,7 +8,7 @@
 #include <chrono>
 #include <map>
 #include <memory>
-#include <utility>
+#include <type_traits>
 
 #include "BoolColumn.h"
 #include "Column.h"
@@ -84,18 +84,15 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
-    for (const auto &entry : core()->impl<NagiosCore>()->_comments) {
-        // NOTE: Our typing is horrible here, so we need a downcast. Use
-        // templates instead?
-        const auto *r = static_cast<const Comment *>(entry.second.get());
-        if (!query->processDataset(Row(r))) {
+    for (const auto &[id, co] : core()->impl<NagiosCore>()->_comments) {
+        if (!query->processDataset(Row{co.get()})) {
             break;
         }
     }
 }
 
 bool TableComments::isAuthorized(Row row, const contact *ctc) const {
-    const auto *dtc = rowData<DowntimeOrComment>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, dtc->_host,
-                             dtc->_service);
+    const auto *co = rowData<Comment>(row);
+    return is_authorized_for(core()->serviceAuthorization(), ctc, co->_host,
+                             co->_service);
 }

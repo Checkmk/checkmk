@@ -21,7 +21,8 @@
 #include "nagios.h"
 #include "opids.h"
 #include "test_utilities.h"
-class DowntimeOrComment;
+class Comment;
+class Downtime;
 
 namespace {
 std::string b16encode(const std::string& str) {
@@ -46,8 +47,8 @@ struct CustomVarsDictFilterTest : public ::testing::Test {
         return filter.accepts(Row{&test_host}, {}, {});
     }
 
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> comments_;
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
     NagiosCore core{downtimes_,
                     comments_,
                     NagiosPaths{},

@@ -24,11 +24,12 @@
 #include "contact_fwd.h"
 #include "opids.h"
 
-namespace detail {
 class DoubleColumn : public Column {
 public:
     class Constant;
     class Reference;
+    template <class T>
+    class Callback;
     using Column::Column;
     ~DoubleColumn() override = default;
 
@@ -53,7 +54,6 @@ public:
             factory, [this](Row row) { return this->getValue(row); });
     }
 };
-}  // namespace detail
 
 // NOTE: The C++ spec explicitly disallows doubles as non-type template
 // parameters. We could add an int or perhaps even some std::ratio if we want.
@@ -61,15 +61,13 @@ public:
 // TODO(ml, sp): C++-20 should let us use double as default
 // template parameter (see P0732).
 template <class T>
-class DoubleColumn : public ::detail::DoubleColumn {
+class DoubleColumn::Callback : public DoubleColumn {
 public:
-    using ::detail::DoubleColumn::Constant;
-    using ::detail::DoubleColumn::Reference;
-    DoubleColumn(const std::string& name, const std::string& description,
-                 const ColumnOffsets& offsets,
-                 const std::function<double(const T&)>& f)
-        : detail::DoubleColumn{name, description, offsets}, f_{f} {}
-    ~DoubleColumn() override = default;
+    Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets,
+             const std::function<double(const T&)>& f)
+        : DoubleColumn{name, description, offsets}, f_{f} {}
+    ~Callback() override = default;
     [[nodiscard]] double getValue(Row row) const override {
         const T* data = columnData<T>(row);
         return data == nullptr ? 0.0 : f_(*data);
@@ -79,10 +77,10 @@ private:
     const std::function<double(const T&)> f_;
 };
 
-class detail::DoubleColumn::Constant : public detail::DoubleColumn {
+class DoubleColumn::Constant : public DoubleColumn {
 public:
     Constant(const std::string& name, const std::string& description, double x)
-        : detail::DoubleColumn{name, description, {}}, x_{x} {}
+        : DoubleColumn{name, description, {}}, x_{x} {}
     ~Constant() override = default;
     double getValue(Row /*row*/) const override { return x_; }
 
@@ -90,11 +88,11 @@ private:
     const double x_;
 };
 
-class detail::DoubleColumn::Reference : public detail::DoubleColumn {
+class DoubleColumn::Reference : public DoubleColumn {
 public:
     Reference(const std::string& name, const std::string& description,
               double& x)
-        : detail::DoubleColumn{name, description, {}}, x_{x} {}
+        : DoubleColumn{name, description, {}}, x_{x} {}
     ~Reference() override = default;
     double getValue(Row /*row*/) const override { return x_; }
 

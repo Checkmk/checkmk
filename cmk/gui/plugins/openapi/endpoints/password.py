@@ -69,7 +69,12 @@ def update_password(params):
     """Update a password"""
     body = params['body']
     ident = params['name']
-    password_details = load_password_to_modify(ident)
+    try:
+        password_details = load_password_to_modify(ident)
+    except KeyError:
+        return problem(
+            404, f'Password "{ident}" is not known.',
+            'The password you asked for is not known. Please check for eventual misspellings.')
     password_details.update(body)
     save_password(ident, password_details)
     return _serve_password(ident, load_password(ident))

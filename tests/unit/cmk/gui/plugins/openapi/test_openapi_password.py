@@ -29,6 +29,18 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
 
     _resp = wsgi_app.call_method(
         'put',
+        base + "/objects/password/fooz",
+        params=json.dumps({
+            "title": "foobu",
+            "comment": "Something but nothing random"
+        }),
+        status=404,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
         base + "/objects/password/foo",
         params=json.dumps({
             "title": "foobu",

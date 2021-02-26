@@ -248,7 +248,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     convert_cgroups_from_tuple,
     host_attribute_matches,
-    default_site,
     format_config_value,
     liveproxyd_config_dir,
     mk_repr,

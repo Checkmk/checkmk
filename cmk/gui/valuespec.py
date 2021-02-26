@@ -6252,7 +6252,7 @@ class SetupSiteChoice(DropdownChoice):
 
     def _site_default_value(self):
         if config.is_wato_slave_site():
-            return False
+            return config.wato_distributed_central_site
 
         default_value = config.site_attribute_default_value()
         if default_value:

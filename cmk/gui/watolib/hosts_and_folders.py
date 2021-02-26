@@ -39,7 +39,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     convert_cgroups_from_tuple,
     host_attribute_matches,
-    default_site,
     format_config_value,
     ALL_HOSTS,
     ALL_SERVICES,
@@ -1284,14 +1283,22 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def site_id(self) -> SiteId:
+        """Returns the ID of the site that responsible for hosts in this folder
+
+        - Use explicitly set site attribute
+        - Go down the folder hierarchy to find a folder with set site attribute
+        - Remote sites: Use the ID of the central site
+        - Standalone an central sites: Use the ID of the local site
+        """
         if "site" in self._attributes:
             return self._attributes["site"]
         if self.has_parent():
             return self.parent().site_id()
-        ds = default_site()
-        if isinstance(ds, SiteId):
-            return ds
-        raise Exception("unknown site ID")
+        if not config.is_wato_slave_site():
+            return config.omd_site()
+
+        assert config.wato_distributed_central_site is not None
+        return config.wato_distributed_central_site
 
     def all_site_ids(self) -> List[SiteId]:
         site_ids: Set[SiteId] = set()

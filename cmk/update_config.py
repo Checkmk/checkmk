@@ -135,8 +135,9 @@ class UpdateConfig:
             self._initialize_base_environment()
 
             self._logger.log(VERBOSE, "Updating Checkmk configuration...")
-            self._logger.log(VERBOSE,
-                             f"{tty.red}!!! Some steps may last up to one hour !!!{tty.normal}")
+            self._logger.log(
+                VERBOSE, f"{tty.red}ATTENTION: Some steps may take a long time depending "
+                f"on your installation, e.g. during major upgrades.{tty.normal}")
             total = len(self._steps())
             count = itertools.count(1)
             for step_func, title in self._steps():

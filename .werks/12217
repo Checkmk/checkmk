@@ -1,0 +1,13 @@
+Title: Set topic to "Other" if view topic is empty
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614328982
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+When editing views with an empty topic, the error message 'Element "" does not
+exist anymore' was shown.

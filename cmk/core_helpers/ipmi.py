@@ -172,7 +172,7 @@ class IPMIFetcher(AgentFetcher):
                     continue
                 sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
 
-        return AgentRawData(b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" +
+        return AgentRawData(b"<<<ipmi_sensors:sep(124)>>>\n" +
                             b"".join(b"|".join(sensor) + b"\n" for sensor in sensors))
 
     def _firmware_section(self) -> AgentRawData:
@@ -187,7 +187,7 @@ class IPMIFetcher(AgentFetcher):
             self._logger.debug("Exception", exc_info=True)
             return AgentRawData(b"")
 
-        output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        output = b"<<<ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
                 output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
@@ -286,7 +286,7 @@ class IPMISummarizer(AgentSummarizer):
         if host_sections is None:
             return "unknown"
 
-        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
+        section = host_sections.sections.get(SectionName("ipmi_firmware"))
         if not section:
             return "unknown"
 

@@ -384,10 +384,6 @@ msgid "%s"
 msgstr ""
 
 #, python-format
-msgid "%s %s"
-msgstr ""
-
-#, python-format
 msgid "%s (Customer missing)"
 msgstr ""
 
@@ -1970,6 +1966,9 @@ msgstr ""
 #, fuzzy
 msgid "API key/token"
 msgstr "API accesibil"
+
+msgid "API server endpoint"
+msgstr ""
 
 msgid "APIs"
 msgstr ""
@@ -4064,10 +4063,6 @@ msgstr ""
 #, fuzzy
 msgid "Alert on too high power consumption"
 msgstr "APC consum de Curent"
-
-#, fuzzy
-msgid "Alert timeline"
-msgstr "Sterge Elementul"
 
 msgid "Alerted"
 msgstr ""
@@ -12309,12 +12304,6 @@ msgid ""
 "(* and ?) are supported and will produce multiple services at once."
 msgstr ""
 
-msgid ""
-"Defines the scheme (either HTTP or HTTPS) and host part of Kubernetes API "
-"calls like e.g. \"https://example.com\". If no prefix is specified HTTPS "
-"together with the IP of the host will be used."
-msgstr ""
-
 #, fuzzy
 msgid "Defines what information to query."
 msgstr "Informații Adiționale"
@@ -20389,10 +20378,6 @@ msgid "Host and Service Events"
 msgstr ""
 
 #, fuzzy
-msgid "Host and service"
-msgstr "sesiuni"
-
-#, fuzzy
 msgid "Host and service configuration rule"
 msgstr "Adaugp o noua configurație de utilizator"
 
@@ -21598,7 +21583,7 @@ msgid ""
 "range."
 msgstr ""
 
-msgid "If no port is given a default value of 443 will be used."
+msgid "If no port is given, a default value of 443 will be used."
 msgstr ""
 
 msgid ""
@@ -30509,10 +30494,6 @@ msgstr "Notificari"
 msgid "Notification time period"
 msgstr ""
 
-#, fuzzy
-msgid "Notification timeline"
-msgstr "Notificari"
-
 msgid "Notifications"
 msgstr "Notificari"
 
@@ -34561,9 +34542,17 @@ msgstr ""
 msgid "Prob."
 msgstr "Probleme"
 
+#, fuzzy, python-format
+msgid "Problem %s"
+msgstr "Probleme"
+
 #, fuzzy
 msgid "Problem aggregations"
 msgstr "Agregare noua"
+
+#, fuzzy
+msgid "Problem alerts"
+msgstr "Probleme"
 
 #, fuzzy
 msgid "Problem dashboard"
@@ -34579,6 +34568,10 @@ msgstr "Probleme"
 
 msgid "Problem is acknowledged, but is configured to be periodic"
 msgstr ""
+
+#, fuzzy
+msgid "Problem notifications"
+msgstr "trimite notificare"
 
 #, python-format
 msgid "Problem while executing hook function %s in hook %s: %s"
@@ -40540,9 +40533,10 @@ msgid "Specific version"
 msgstr ""
 
 msgid ""
-"Specifies a URL path prefix which is prepended to the path in calls to the "
-"Kubernetes API. This is e.g. useful if Rancher is used to manage Kubernetes "
-"clusters. If no prefix is given \"/\" will be used."
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Kubernetes API. This is a useful option for Rancher installations (more "
+"information can be found in the manual). If this option is not relevant for "
+"your installation, please leave it unchecked."
 msgstr ""
 
 msgid ""
@@ -43531,6 +43525,12 @@ msgid ""
 "such URLs to the according remote site. Please refer to the <a target=_blank "
 "href='%s'>online documentation</a> for details. The prefix should end with a "
 "slash. Omit the <tt>/nagvis/</tt> from the prefix."
+msgstr ""
+
+msgid ""
+"The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
+"or the \"IP Address\" options are selected, the DNS hostname or IP address "
+"and a secure protocol (HTTPS) are used."
 msgstr ""
 
 msgid "The User Base DN could be found."
@@ -49353,6 +49353,10 @@ msgstr ""
 
 msgid "Timerange"
 msgstr ""
+
+#, fuzzy
+msgid "Timerange synchronization"
+msgstr "foloseste descrierea"
 
 msgid "Times"
 msgstr ""
@@ -57988,6 +57992,18 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Alert timeline"
+#~ msgstr "Sterge Elementul"
+
+#, fuzzy
+#~ msgid "Host and service"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Notification timeline"
+#~ msgstr "Notificari"
 
 #, fuzzy
 #~ msgid "Problem Hosts"

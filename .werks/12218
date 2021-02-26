@@ -1,0 +1,13 @@
+Title: Remove custom graph and combined graph option from CRE dashboards
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1614333463
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+The options in the "Add" menu of dashboards related in an error, because this features are not available in CRE.
+Also the "Graphs" topic in the main menu section "Customize" was visible, even if empty.

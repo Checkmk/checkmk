@@ -1031,23 +1031,25 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
         item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),
     )
 
-    yield PageMenuEntry(
-        title=_('Custom graph'),
-        icon_name={
-            'icon': 'graph',
-            'emblem': 'add',
-        },
-        item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
-    )
+    if not cmk_version.is_raw_edition():
 
-    yield PageMenuEntry(
-        title=_('Combined graph'),
-        icon_name={
-            'icon': 'graph',
-            'emblem': 'add',  # TODO: Need its own icon
-        },
-        item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
-    )
+        yield PageMenuEntry(
+            title=_('Custom graph'),
+            icon_name={
+                'icon': 'graph',
+                'emblem': 'add',
+            },
+            item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
+        )
+
+        yield PageMenuEntry(
+            title=_('Combined graph'),
+            icon_name={
+                'icon': 'graph',
+                'emblem': 'add',  # TODO: Need its own icon
+            },
+            item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
+        )
 
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:

@@ -185,6 +185,8 @@ class MegaMenuRenderer:
         html.close_div()
         html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
         for topic in topics:
+            if not topic.items:
+                continue
             self._show_topic(topic, menu.name)
         html.div(None, class_=["topic", "sentinel"])
         html.close_div()

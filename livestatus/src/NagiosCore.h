@@ -12,11 +12,13 @@
 #include <cstddef>
 #include <filesystem>
 #include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "DowntimesOrComments.h"
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
@@ -125,10 +127,10 @@ public:
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
-    DowntimesOrComments _downtimes;
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _downtimes;
     void registerDowntime(nebstruct_downtime_data *data);
 
-    DowntimesOrComments _comments;
+    std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _comments;
     void registerComment(nebstruct_comment_data *data);
 
 private:

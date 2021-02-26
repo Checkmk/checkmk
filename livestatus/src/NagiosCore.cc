@@ -11,8 +11,6 @@
 #include <memory>
 #include <utility>
 
-#include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"
 #include "Logger.h"
 #include "NagiosGlobals.h"
 #include "StringUtils.h"
@@ -268,19 +266,58 @@ bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
 }
 
 void NagiosCore::registerDowntime(nebstruct_downtime_data *data) {
-    DowntimesOrComments::registerDowntime(_downtimes._entries,
-                                          _logger_livestatus, data);
+    unsigned long id = data->downtime_id;
+    switch (data->type) {
+        case NEBTYPE_DOWNTIME_ADD:
+        case NEBTYPE_DOWNTIME_LOAD:
+            _downtimes[id] = std::make_unique<Downtime>(
+                ::find_host(data->host_name),
+                data->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(data->host_name,
+                                     data->service_description),
+                data);
+            break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            if (_downtimes.erase(id) == 0) {
+                Informational(_logger_livestatus)
+                    << "Cannot delete non-existing downtime " << id;
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 void NagiosCore::registerComment(nebstruct_comment_data *data) {
-    DowntimesOrComments::registerComment(_comments._entries, _logger_livestatus,
-                                         data);
+    unsigned long id = data->comment_id;
+
+    switch (data->type) {
+        case NEBTYPE_COMMENT_ADD:
+        case NEBTYPE_COMMENT_LOAD:
+            _comments[id] = std::make_unique<Comment>(
+                ::find_host(data->host_name),
+                data->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(data->host_name,
+                                     data->service_description),
+                data);
+            break;
+        case NEBTYPE_COMMENT_DELETE:
+            if (_comments.erase(id) == 0) {
+                Informational(_logger_livestatus)
+                    << "Cannot delete non-existing comment " << id;
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<DowntimeData> result;
-    for (const auto &entry : _downtimes._entries) {
+    for (const auto &entry : _downtimes) {
         auto *dt = static_cast<Downtime *>(entry.second.get());
         if (dt->_host == h && dt->_service == s) {
             result.push_back({
@@ -304,7 +341,7 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
 std::vector<CommentData> NagiosCore::comments_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<CommentData> result;
-    for (const auto &entry : _comments._entries) {
+    for (const auto &entry : _comments) {
         auto *co = static_cast<Comment *>(entry.second.get());
         if (co->_host == h && co->_service == s) {
             result.push_back(

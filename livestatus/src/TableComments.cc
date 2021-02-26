@@ -13,7 +13,6 @@
 #include "BoolColumn.h"
 #include "Column.h"
 #include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
 #include "NagiosCore.h"
@@ -85,7 +84,7 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
-    for (const auto &entry : core()->impl<NagiosCore>()->_comments._entries) {
+    for (const auto &entry : core()->impl<NagiosCore>()->_comments) {
         // NOTE: Our typing is horrible here, so we need a downcast. Use
         // templates instead?
         const auto *r = static_cast<const Comment *>(entry.second.get());

@@ -51,7 +51,7 @@ def save_password(ident: str, details: Password, new_password=False):
     entries = password_store.load_for_modification()
     entries[ident] = details
     password_store.save(entries)
-    _add_change(ident, new_password=new_password)
+    _add_change(ident, change_type="new" if new_password else "edit")
 
 
 def remove_password(ident: str):
@@ -59,21 +59,28 @@ def remove_password(ident: str):
     entries = load_passwords_to_modify()
     _ = entries.pop(ident)
     password_store.save(entries)
-    _add_change(ident, new_password=False)
+    _add_change(ident, change_type="delete")
 
 
-def _add_change(ident, new_password):
-    if new_password:
+def _add_change(ident, change_type):
+    if change_type == "new":  # create password
         add_change(
             "add-password",
             f"Added the password {ident}",
             domains=[ConfigDomainCore],
             sites=None,
         )
-    else:  # update or delete
+    elif change_type == "edit":
         add_change(
             "edit-password",
             f"Edited the password '{ident}'",
+            domains=[ConfigDomainCore],
+            sites=None,
+        )
+    else:  # delete
+        add_change(
+            "delete-password",
+            f"Removed the password '{ident}'",
             domains=[ConfigDomainCore],
             sites=None,
         )

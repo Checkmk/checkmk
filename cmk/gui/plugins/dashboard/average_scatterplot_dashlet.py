@@ -20,7 +20,7 @@ from cmk.gui.plugins.dashboard.utils import (
 )
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol, metric_in_all_rrd_columns
 from cmk.gui.plugins.metrics.utils import get_metric_info, MetricName
-from cmk.gui.valuespec import DictionaryElements, GraphColor, Timerange
+from cmk.gui.valuespec import ColorWithThemeOrMetricDefault, DictionaryElements, Timerange
 
 
 class AverageScatterplotDataGenerator:
@@ -214,13 +214,27 @@ class AverageScatterplotDashlet(ABCFigureDashlet):
                 title=_("Time range"),
                 default_value='d0',
             )),
-            ("metric_color",
-             GraphColor(title=_("Color for the main metric scattered dots"),
-                        default_value="default")),
-            ("avg_color", GraphColor(title=_("Color for the average line"),
-                                     default_value="default")),
-            ("median_color",
-             GraphColor(title=_("Color for the median line"), default_value="default")),
+            (
+                "metric_color",
+                ColorWithThemeOrMetricDefault(
+                    title=_("Color of the scattered dots"),
+                    default_value="default",
+                ),
+            ),
+            (
+                "avg_color",
+                ColorWithThemeOrMetricDefault(
+                    title=_("Color of the average"),
+                    default_value="default",
+                ),
+            ),
+            (
+                "median_color",
+                ColorWithThemeOrMetricDefault(
+                    title=_("Color of the median"),
+                    default_value="default",
+                ),
+            ),
         ]
 
     @staticmethod

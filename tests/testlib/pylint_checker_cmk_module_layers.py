@@ -120,6 +120,8 @@ _COMPONENTS = (
     (Component("cmk.base.api.agent_based"), _is_default_allowed_import),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
+    # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
+    (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),

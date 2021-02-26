@@ -208,7 +208,7 @@ class UpdateConfig:
         for site_id, site_spec in configured_sites.items():
             if site_globals_editable(site_id, site_spec):
                 self._update_global_config(site_spec.setdefault("globals", {}))
-        site_mgmt.save_sites(configured_sites)
+        site_mgmt.save_sites(configured_sites, activate=False)
 
     def _update_global_config(self, global_config):
         # Replace old settings with new ones

@@ -527,8 +527,9 @@ class SingleSiteConnection(Helpers):
             # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
             self.socket.send(query.encode("utf-8") + b"\n\n")
-            if SingleSiteConnection.collect_queries.active:
-                SingleSiteConnection.collect_queries.queries.append(query)
+            if self.__class__ == SingleSiteConnection:
+                if self.__class__.collect_queries.active:
+                    self.__class__.collect_queries.queries.append(query)
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -1053,8 +1054,7 @@ class LocalConnection(SingleSiteConnection):
         if not omd_root:
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context.")
-        SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", 'local', *args,
-                                      **kwargs)
+        super().__init__("unix:" + omd_root + "/tmp/run/live", 'local', *args, **kwargs)
 
 
 def _combine_query(query: str, headers: Union[str, List[str]]):

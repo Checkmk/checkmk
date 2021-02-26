@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -277,7 +278,7 @@ void NagiosCore::registerComment(nebstruct_comment_data *data) {
 std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<DowntimeData> result;
-    for (const auto &entry : _store._downtimes) {
+    for (const auto &entry : _store._downtimes._entries) {
         auto *dt = static_cast<Downtime *>(entry.second.get());
         if (dt->_host == h && dt->_service == s) {
             result.push_back({
@@ -301,7 +302,7 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
 std::vector<CommentData> NagiosCore::comments_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<CommentData> result;
-    for (const auto &entry : _store._comments) {
+    for (const auto &entry : _store._comments._entries) {
         auto *co = static_cast<Comment *>(entry.second.get());
         if (co->_host == h && co->_service == s) {
             result.push_back(

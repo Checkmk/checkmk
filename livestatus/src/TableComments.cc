@@ -6,6 +6,7 @@
 #include "TableComments.h"
 
 #include <chrono>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -84,7 +85,7 @@ std::string TableComments::name() const { return "comments"; }
 std::string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
-    for (const auto &entry : core()->impl<Store>()->_comments) {
+    for (const auto &entry : core()->impl<Store>()->_comments._entries) {
         // NOTE: Our typing is horrible here, so we need a downcast. Use
         // templates instead?
         const auto *r = static_cast<const Comment *>(entry.second.get());

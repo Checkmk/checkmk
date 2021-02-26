@@ -17,14 +17,10 @@
 #include "nagios.h"
 class Logger;
 
-class DowntimesOrComments {
-public:
+struct DowntimesOrComments {
     void registerDowntime(Logger *logger, nebstruct_downtime_data *data);
     void registerComment(Logger *logger, nebstruct_comment_data *data);
-    [[nodiscard]] auto begin() const { return _entries.cbegin(); }
-    [[nodiscard]] auto end() const { return _entries.cend(); }
 
-private:
     std::map<unsigned long, std::unique_ptr<DowntimeOrComment>> _entries;
 };
 

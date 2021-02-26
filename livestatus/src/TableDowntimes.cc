@@ -6,6 +6,7 @@
 #include "TableDowntimes.h"
 
 #include <chrono>
+#include <map>
 #include <memory>
 #include <utility>
 
@@ -87,7 +88,7 @@ std::string TableDowntimes::name() const { return "downtimes"; }
 std::string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
-    for (const auto &entry : core()->impl<Store>()->_downtimes) {
+    for (const auto &entry : core()->impl<Store>()->_downtimes._entries) {
         // NOTE: Our typing is horrible here, so we need a downcast. Use
         // templates instead?
         const auto *r = static_cast<const Downtime *>(entry.second.get());

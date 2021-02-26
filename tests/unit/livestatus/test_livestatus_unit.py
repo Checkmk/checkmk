@@ -199,3 +199,16 @@ def test_create_socket_no_cert(tmp_path):
     with pytest.raises(livestatus.MKLivestatusConfigError,
                        match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)
+
+
+def test_local_connection(mock_livestatus):
+    live = mock_livestatus
+    live.set_sites(['local'])
+    live.add_table("status", [
+        {
+            'program_start': 1,
+        },
+    ])
+    live.expect_query("GET status\nColumns: program_start\nColumnHeaders: off")
+    with mock_livestatus(expect_status_query=False):
+        livestatus.LocalConnection().query_value("GET status\nColumns: program_start")

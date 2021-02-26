@@ -333,14 +333,21 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_host_stats_query(self, context_filters):
         return ("GET hosts\n"
+                # Total
                 "Stats: state >= 0\n"
+
+                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
+
+                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "StatsAnd: 3\n"
+
+                # Stale
                 "Stats: host_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
@@ -348,18 +355,25 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_service_stats_query(self, context_filters):
         return ("GET services\n"
+                # Total
                 "Stats: state >= 0\n"
+
+                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 4\n"
+
+                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 5\n"
+
+                # Stale
                 "Stats: service_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: service_scheduled_downtime_depth = 0\n"

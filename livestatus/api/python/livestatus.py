@@ -347,7 +347,6 @@ class SingleSiteConnection(Helpers):
     # So we only collect in a specific thread, and not in all of them. We also use
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
-    collect_queries.active = False
 
     def __init__(self,
                  socketurl: str,
@@ -527,9 +526,8 @@ class SingleSiteConnection(Helpers):
             # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
             self.socket.send(query.encode("utf-8") + b"\n\n")
-            if self.__class__ == SingleSiteConnection:
-                if self.__class__.collect_queries.active:
-                    self.__class__.collect_queries.queries.append(query)
+            if getattr(self.collect_queries, 'active', False):
+                self.collect_queries.queries.append(query)
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]

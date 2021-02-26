@@ -18,6 +18,8 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
     map_types = {
         '.1.3.6.1.2.1.25.2.1.1': 'other',
         '.1.3.6.1.2.1.25.2.1.2': 'RAM',
+        'iso.3.6.1.2.1.25.2.1.2': 'RAM',  # OKI 8300e bug
+        '.2.3848679438.841888046.842346034.774975026': 'RAM',  # HP Officejet Pro 8600 N911g
         '.1.3.6.1.2.1.25.2.1.3': 'virtual memory',
         '.1.3.6.1.2.1.25.2.1.4': 'fixed disk',
         '.1.3.6.1.2.1.25.2.1.5': 'removeable disk',

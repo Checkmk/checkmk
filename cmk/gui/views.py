@@ -1640,6 +1640,9 @@ def transform_view_to_valuespec_value(view):
         if key in view:
             view["view"][key] = view[key]
 
+    if view["topic"] == "":
+        view["topic"] = "other"
+
     view["view"]['options'] = []
     for key, _title in view_editor_options():
         if view.get(key):

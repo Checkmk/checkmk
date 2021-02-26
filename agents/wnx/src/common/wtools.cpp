@@ -2619,7 +2619,8 @@ bool RemoveCmaUser(const std::wstring& user_name) noexcept {
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
-bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2631,18 +2632,13 @@ bool ProtectPathFromUserWrite(const std::filesystem::path& path) {
 
     for (auto const t : command_templates) {
         auto cmd = fmt::format(t.data(), path.wstring());
-        if (!cma::tools::RunCommandAndWait(cmd)) {
-            // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
-            return false;
-        }
+        commands.emplace_back(cmd);
     }
-    XLOG::l.i("User Write Protected '{}'", path);
-
-    return true;
+    XLOG::l.i("Protect path from User write '{}'", path);
 }
 
-bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands) {
     // CONTEXT: to prevent malicious file creation or modification  in folder
     // "programdata/checkmk" we must remove inherited write rights for
     // Users in checkmk root data folder.
@@ -2654,18 +2650,13 @@ bool ProtectFileFromUserWrite(const std::filesystem::path& path) {
 
     for (auto const t : command_templates) {
         auto cmd = fmt::format(t.data(), path.wstring());
-        if (!cma::tools::RunCommandAndWait(cmd)) {
-            // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
-            return false;
-        }
+        commands.emplace_back(cmd);
     }
-    XLOG::l.i("User Write Protected '{}'", path);
-
-    return true;
+    XLOG::l.i("Protect file from User write '{}'", path);
 }
 
-bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands) {
     // CONTEXT: some files must be protected from the user fully
 
     constexpr std::wstring_view command_templates[] = {
@@ -2675,15 +2666,57 @@ bool ProtectPathFromUserAccess(const std::filesystem::path& entry) {
 
     for (auto const t : command_templates) {
         auto cmd = fmt::format(t.data(), entry.wstring());
-        if (!cma::tools::RunCommandAndWait(cmd)) {
-            // logging is almost useless: at this phase logfile is absent
-            XLOG::l.e("Failed command '{}'", wtools::ToUtf8(cmd));
-            return false;
-        }
+        commands.emplace_back(cmd);
     }
-    XLOG::l.i("User Access Protected '{}'", entry);
+    XLOG::l.i("Protect path from User access '{}'", entry);
+}
 
-    return true;
+namespace {
+std::filesystem::path MakeCmdFileInTemp(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    namespace fs = std::filesystem;
+    try {
+        auto pid = ::GetCurrentProcessId();
+        static int counter = 0;
+        counter++;
+
+        std::error_code ec;
+        auto temp_folder = fs::temp_directory_path(ec);
+        auto tmp_file =
+            temp_folder / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
+        std::ofstream ofs(tmp_file, std::ios::trunc);
+        for (const auto& c : commands) {
+            ofs << ToUtf8(c) << "\n";
+        }
+
+        return tmp_file;
+    } catch (const std::exception& e) {
+        XLOG::l("Exception creating file '{}'", e.what());
+        return {};
+    }
+}
+}  // namespace
+
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    XLOG::l.i("'{}' Starting executing commands [{}]", ToUtf8(name),
+              commands.size());
+    if (commands.empty()) {
+        return {};
+    }
+
+    auto to_exec = MakeCmdFileInTemp(name, commands);
+    if (!to_exec.empty()) {
+        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), false);
+        if (pid != 0) {
+            XLOG::l.i("Process is started '{}'  with pid [{}]", to_exec, pid);
+            return to_exec;
+        }
+
+        XLOG::l("Process is failed to start '{}'", to_exec);
+    }
+
+    return {};
 }
 
 // simple scanner of multi_sz strings

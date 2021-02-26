@@ -22,7 +22,8 @@
 namespace cma {
 
 namespace security {
-void ProtectFiles(const std::filesystem::path& root) {
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands) {
     for (const auto& p : {
              root / cfg::kAppDataAppName / cfg::files::kUserYmlFile,
              root / cfg::kAppDataAppName / cfg::dirs::kBakery /
@@ -33,19 +34,15 @@ void ProtectFiles(const std::filesystem::path& root) {
              root / cfg::kAppDataAppName / cfg::dirs::kUpdate,
 
          }) {
-        if (!wtools::ProtectPathFromUserAccess(p)) {
-            XLOG::l.e("Protection of the '{}' failed!", p);
-        }
+        wtools::ProtectPathFromUserAccess(p, commands);
     }
 }
 
-void ProtectAll(const std::filesystem::path& root) {
-    if (!wtools::ProtectPathFromUserWrite(root)) {
-        XLOG::l.crit("Protection of the folder '{}' failed!", root);
-        return;
-    }
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands) {
+    wtools::ProtectPathFromUserWrite(root, commands);
 
-    ProtectFiles(root);
+    ProtectFiles(root, commands);
 }
 
 }  // namespace security

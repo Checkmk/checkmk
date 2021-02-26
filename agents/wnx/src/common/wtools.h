@@ -1122,24 +1122,23 @@ public:
     BSTR data_;
 };
 
-/// \brief Set correct access rights for the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users write access from the specified path(usually it is
-///  %ProgramData%/checkmk)
-bool ProtectPathFromUserWrite(const std::filesystem::path& path);
+/// \brief Add command to set correct access rights for the path
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users Access to the specified path
-bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+/// \brief Add command to remove user write to the path
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the file
+/// \brief Add command to remove user access to the path
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
 ///
-///  Normally called once on the start of the service.
-///  Removes Users Access Writes to the specified file
-bool ProtectFileFromUserWrite(const std::filesystem::path& path);
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
 
 /// \brief Changes Access Rights in Windows crazy manner
 ///

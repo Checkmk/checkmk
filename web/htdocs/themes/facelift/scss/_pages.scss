@@ -1520,7 +1520,7 @@ table.data.job_table td {
   #{ $self }__input {
     flex-grow: 0;
     padding: $tag-padding;
-    margin: $tag-margin;
+    margin: $tag-input-margin;
   }
 
   &.tagify--hasMaxTags #{ $self }__input {
@@ -1548,7 +1548,7 @@ table.data.job_table td {
       position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      margin: $tag-margin;
+      margin: $tag-readonly-margin;
       color: $tag-font-color;
     }
 

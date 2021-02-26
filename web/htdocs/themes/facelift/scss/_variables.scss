@@ -332,7 +332,8 @@ $logwatch-text-color-2: $darkgrey;
 // -----------------------------------------------------------------------------
 // Tags
 // -----------------------------------------------------------------------------
-$tag-margin: 0 5px 2px 0;
+$tag-input-margin: 0 5px 2px 0;
+$tag-readonly-margin: 0 10px 2px 0;
 $tag-padding: 0.1em 0.3em;
 $tag-font-color: $font-color;
 $tag-opacity: 1;

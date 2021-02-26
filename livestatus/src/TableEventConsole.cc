@@ -174,10 +174,10 @@ std::unique_ptr<StringColumn<ECRow>> ECRow::makeStringColumn(
 }
 
 // static
-std::unique_ptr<IntLambdaColumn<ECRow>> ECRow::makeIntColumn(
+std::unique_ptr<IntColumn::Callback<ECRow>> ECRow::makeIntColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<IntLambdaColumn<ECRow>>(
+    return std::make_unique<IntColumn::Callback<ECRow>>(
         name, description, offsets,
         [name](const ECRow &r) { return r.getInt(name); });
 }

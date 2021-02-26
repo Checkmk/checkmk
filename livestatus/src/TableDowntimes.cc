@@ -35,7 +35,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StringColumn<Downtime>>(
         "comment", "A comment text", offsets,
         [](const Downtime &r) { return r._comment; }));
-    addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "id", "The id of the downtime", offsets,
         [](const Downtime &r) { return r._id; }));
     addColumn(std::make_unique<TimeColumn<Downtime>>(
@@ -43,7 +43,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         [](const Downtime &r) {
             return std::chrono::system_clock::from_time_t(r._entry_time);
         }));
-    addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
         offsets, [](const Downtime &r) { return r._type; }));
@@ -62,13 +62,13 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         [](const Downtime &r) {
             return std::chrono::system_clock::from_time_t(r._end_time);
         }));
-    addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
         [](const Downtime &r) { return r._fixed; }));
-    addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
         [](const Downtime &r) { return r._duration; }));
-    addColumn(std::make_unique<IntLambdaColumn<Downtime>>(
+    addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         offsets, [](const Downtime &r) { return r._triggered_by; }));

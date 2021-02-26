@@ -35,7 +35,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<StringColumn<Comment>>(
         "comment", "A comment text", offsets,
         [](const Comment &r) { return r._comment; }));
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "id", "The id of the comment", offsets,
         [](const Comment &r) { return r._id; }));
     addColumn(std::make_unique<TimeColumn<Comment>>(
@@ -43,7 +43,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         [](const Comment &r) {
             return std::chrono::system_clock::from_time_t(r._entry_time);
         }));
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "type", "The type of the comment: 1 is host, 2 is service", offsets,
         [](const Comment &r) { return r._type; }));
     addColumn(std::make_unique<BoolColumn::Callback<Comment>>(
@@ -51,17 +51,17 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         "0, if this entry is for a host, 1 if it is for a service", offsets,
         [](const Comment &r) { return r._is_service; }));
 
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "persistent", "Whether this comment is persistent (0/1)", offsets,
         [](const Comment &r) { return r._persistent; }));
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "source", "The source of the comment (0 is internal and 1 is external)",
         offsets, [](const Comment &r) { return r._source; }));
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flapping and 4 is acknowledgement",
         offsets, [](const Comment &r) { return r._entry_type; }));
-    addColumn(std::make_unique<IntLambdaColumn<Comment>>(
+    addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "expires", "Whether this comment expires", offsets,
         [](const Comment &r) { return r._expires; }));
     addColumn(std::make_unique<TimeColumn<Comment>>(

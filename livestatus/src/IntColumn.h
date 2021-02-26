@@ -21,6 +21,7 @@ class Aggregator;
 class Row;
 class RowRenderer;
 
+namespace deprecated {
 class IntColumn : public Column {
 public:
     using Column::Column;
@@ -44,5 +45,6 @@ public:
     // parameter passing hell..
     virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 };
+}  // namespace deprecated
 
 #endif  // IntColumn_h

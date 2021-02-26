@@ -103,7 +103,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
-    EXPECT_TRUE(pid == 0);
+    EXPECT_EQ(pid, 0);
 
     killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
     EXPECT_EQ(killed, 0);
@@ -663,6 +663,37 @@ TEST(Wtools, GetMultiSz) {
     EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"abcde");
     EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"fgh");
     EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
+}
+
+TEST(Wtools, ExecuteCommandsAsync) {
+    namespace fs = std::filesystem;
+    using namespace std::chrono_literals;
+
+    auto output_file = fmt::format(L"{}cmk_test_{}.output",
+                                   fs::temp_directory_path().wstring(),
+                                   ::GetCurrentProcessId());
+    std::vector<std::wstring> commands{L"echo x>" + output_file,
+                                       L"@echo powershell Start-Sleep 1"};
+    auto result = ExecuteCommandsAsync(L"test", commands);
+    std::error_code ec;
+    ON_OUT_OF_SCOPE({
+        if (!result.empty()) {
+            std::filesystem::remove(result, ec);
+        }
+        std::filesystem::remove(output_file, ec);
+    });
+    EXPECT_FALSE(result.empty());
+    EXPECT_TRUE(std::filesystem::exists(result));
+    auto table = tst::ReadFileAsTable(result);
+    EXPECT_EQ(table[0], ToUtf8(commands[0]));
+    EXPECT_EQ(table[1], ToUtf8(commands[1]));
+
+    tst::WaitForSuccessSilent(5000ms, [output_file]() {
+        std::error_code ec;
+        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+    });
+    auto output = tst::ReadFileAsTable(output_file);
+    EXPECT_EQ(output[0], "x");
 }
 
 }  // namespace wtools

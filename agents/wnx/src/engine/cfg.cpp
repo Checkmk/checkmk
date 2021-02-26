@@ -802,12 +802,17 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
         if (protection == Protection::yes) {
-            cma::security::ProtectAll(fs::path(app_data_folder) /
-                                      cma::cfg::kAppDataCompanyName);
+            XLOG::l.i("Protection requested");
+            std::vector<std::wstring> commands;
+
+            cma::security::ProtectAll(
+                fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName,
+                commands);
+            wtools::ExecuteCommandsAsync(L"all", commands);
         }
 
         if (ret == 0) return app_data;
-        XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
+        XLOG::l("Failed to access ProgramData Folder {}", ret);
 
         if constexpr (false) {
             // Public fallback
@@ -1259,8 +1264,10 @@ void ConfigInfo::initFolders(
 
     if (!service_valid_name.empty()) {
         auto exe_path = FindServiceImagePath(service_valid_name);
-        wtools::ProtectFileFromUserWrite(exe_path);
-        wtools::ProtectPathFromUserAccess(root);
+        std::vector<std::wstring> commands;
+        wtools::ProtectFileFromUserWrite(exe_path, commands);
+        wtools::ProtectPathFromUserAccess(root, commands);
+        wtools::ExecuteCommandsAsync(L"data", commands);
     }
 
     if (folders_.getData().empty())

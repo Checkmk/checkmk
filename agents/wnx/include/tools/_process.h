@@ -81,10 +81,11 @@ inline bool RunDetachedCommand(const std::string& Command) {
 
 // NOTE: LAST and BEST attempt to have standard windows starter
 // Returns process id on success
+/// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
 inline uint32_t RunStdCommand(
     std::wstring_view command,    // full command with arguments
     bool wait_for_end,            // important flag! set false when you are sure
-    BOOL inherit_handle = FALSE,  // not optimal, but default
+    BOOL inherit_handle = FALSE,  // recommended option
     HANDLE stdio_handle = 0,      // when we want to catch output
     HANDLE stderr_handle = 0,     // same
     DWORD creation_flags = 0,     // never checked this

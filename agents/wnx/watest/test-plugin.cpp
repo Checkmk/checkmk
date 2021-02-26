@@ -720,7 +720,7 @@ TEST(PluginTest, FilesAndFolders) {
             cma::cfg::groups::kPlugins, cma::cfg::vars::kPluginsExecution);
         std::vector<Plugins::ExeUnit> exe_units;
         cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-        ASSERT_EQ(exe_units.size(), 3);
+        ASSERT_EQ(exe_units.size(), 4);
 
         EXPECT_EQ(exe_units[2].async(), false);
         EXPECT_EQ(exe_units[2].cacheAge(), 0);

@@ -36,8 +36,10 @@ class ServiceProcessor;
 namespace cma {
 
 namespace security {
-void ProtectFiles(const std::filesystem::path& root);
-void ProtectAll(const std::filesystem::path& root);
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands);
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands);
 }  // namespace security
 
 namespace tools {

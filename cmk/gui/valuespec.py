@@ -6086,14 +6086,17 @@ class Color(ValueSpec):
             raise MKUserError(varprefix, _("You need to select a color."))
 
 
-def GraphColor(title, default_value):
+def ColorWithThemeOrMetricDefault(
+    title: str,
+    default_value: str,
+) -> Alternative:
     return Alternative(
         title=title,
         elements=[
             FixedValue(
                 "default",
-                title=_("Use default color"),
-                totext=_("Use default color of the theme or medium"),
+                title=_("Default color"),
+                totext=_("Use the default color of the theme or the metric."),
             ),
             Color(title=_("Use the following color")),
         ],

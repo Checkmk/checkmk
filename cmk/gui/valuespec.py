@@ -6104,6 +6104,29 @@ def ColorWithThemeOrMetricDefault(
     )
 
 
+def ColorWithThemeAndMetricDefault(
+    title: str,
+    default_value: str,
+) -> Alternative:
+    return Alternative(
+        title=title,
+        elements=[
+            FixedValue(
+                "default_theme",
+                title=_("Default theme color"),
+                totext=_("Use the default color of the theme."),
+            ),
+            FixedValue(
+                "default_metric",
+                title=_("Default metric color"),
+                totext=_("Use the default color of the metric."),
+            ),
+            Color(title=_("Use the following color")),
+        ],
+        default_value=default_value,
+    )
+
+
 class SSHKeyPair(ValueSpec):
     def render_input(self, varprefix, value):
         if value:

@@ -780,6 +780,10 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     return info
 
 
+def metric_title(metric_name: _MetricName) -> str:
+    return metric_info.get(metric_name, {}).get("title", metric_name.title())
+
+
 def metric_recipe_and_unit(
     host_name: HostName,
     service_description: ServiceName,
@@ -791,7 +795,7 @@ def metric_recipe_and_unit(
     mi = metric_info.get(metric_name, {})
     return (
         RenderableRecipe(
-            title=mi.get("title", metric_name.title()),
+            title=metric_title(metric_name),
             expression=("rrd", host_name, service_description, metric_name, consolidation_function),
             color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
             line_type=line_type,

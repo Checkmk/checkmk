@@ -1026,6 +1026,15 @@ def _dashboard_add_non_view_dashlet_link(
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
+        title='Single metric graph',
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'add',
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "single_timeseries"),
+    )
+
+    yield PageMenuEntry(
         title=_('Performance graph'),
         icon_name='graph',
         item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),

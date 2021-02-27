@@ -686,7 +686,21 @@ TEST(PluginTest, HackPluginWithPiggyBack) {
     }
 }
 
-TEST(PluginTest, FilesAndFolders) {
+TEST(PluginTest, RemoveForbiddenNames) {
+    PathVector files;
+
+    auto forbidden_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.EXE"};
+    auto good_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.PY"};
+    auto ok_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.checkmk.py"};
+    files.emplace_back(forbidden_file);
+    files.emplace_back(good_file);
+    files.emplace_back(ok_file);
+    EXPECT_TRUE(std::ranges::find(files, forbidden_file) != files.end());
+    cma::RemoveForbiddenNames(files);
+    EXPECT_TRUE(std::ranges::find(files, forbidden_file) == files.end());
+}
+
+TEST(PluginTest, FilesAndFoldersIntegration) {
     using namespace cma::cfg;
     using namespace wtools;
     namespace fs = std::filesystem;

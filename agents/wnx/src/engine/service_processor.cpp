@@ -272,6 +272,7 @@ void ServiceProcessor::preLoadConfig() {
 
     cma::FilterPathByExtension(files, execute);
     cma::RemoveDuplicatedNames(files);
+    cma::RemoveForbiddenNames(files);
 
     auto yaml_units = GetArray<YAML::Node>(cma::cfg::groups::kPlugins,
                                            cma::cfg::vars::kPluginsExecution);

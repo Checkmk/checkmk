@@ -710,7 +710,13 @@ bool CleanDataFolder(CleanMode mode) {
                 "Removing SMART from the Program Data Folder");
             RemoveCapGeneratedFile();
             RemoveOwnGeneratedFiles();
-            RemoveDirs(path);
+            if (g_remove_dirs_on_clean) {
+                XLOG::l.i("cleaning dirs...");
+                RemoveDirs(path);
+            } else {
+                XLOG::l.i(
+                    "ATTENTION: cleaning of the dirs is disabled in this release");
+            }
         } break;
 
         case CleanMode::all:

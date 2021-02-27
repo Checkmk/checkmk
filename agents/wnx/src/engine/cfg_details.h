@@ -36,6 +36,7 @@ std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
 
 enum class CleanMode { none, smart, all };
 
+constexpr bool g_remove_dirs_on_clean = false;  // TEMPORARY
 CleanMode GetCleanDataFolderMode();
 bool CleanDataFolder(CleanMode mode);
 

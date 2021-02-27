@@ -562,7 +562,7 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     details::CleanDataFolder(details::CleanMode::smart);
 
     for (auto& n : table) {
-        EXPECT_TRUE(!fs::exists(pd / n));
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean);
     }
 }
 
@@ -596,7 +596,8 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     EXPECT_TRUE(!fs::exists(pd / files::kUserYmlFile));
 
     for (auto& n : table_removed) {
-        EXPECT_TRUE(!fs::exists(pd / n)) << "directory exists: " << n.data();
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
+            << "directory state is invalid : " << n.data();
     }
 
     // restore removed folders
@@ -617,7 +618,8 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
         if (fs::exists(pd / n / "1.tmp")) ++exists_count;
     }
 
-    EXPECT_EQ(exists_count, user_folders_count_)
+    EXPECT_EQ(exists_count == user_folders_count_,
+              details::g_remove_dirs_on_clean)
         << "you delete wrong count of folders";
 }
 

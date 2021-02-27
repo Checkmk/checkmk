@@ -49,9 +49,9 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.agent_based.decorator as decorator
 import cmk.base.sources as sources
 import cmk.base.config as config
-import cmk.base.decorator
 import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
@@ -127,8 +127,7 @@ def _show_inventory_results_on_console(trees: InventoryTrees) -> None:
                             (tty.bold, tty.yellow, trees.status_data.count_entries(), tty.normal))
 
 
-@cmk.base.decorator.handle_check_mk_check_result("check_mk_active-cmk_inv",
-                                                 "Check_MK HW/SW Inventory")
+@decorator.handle_check_mk_check_result("check_mk_active-cmk_inv", "Check_MK HW/SW Inventory")
 def do_inv_check(
     hostname: HostName, options: Dict[str, int]
 ) -> Tuple[ServiceState, List[ServiceDetails], List[ServiceAdditionalDetails], List[MetricTuple]]:

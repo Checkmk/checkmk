@@ -14,7 +14,6 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
-from cmk.utils.check_utils import section_name_of
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import AgentRawData, ParsedSectionName, result, SectionName, SourceType
 
@@ -31,9 +30,8 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
-from cmk.base.checking._legacy_mode import _MultiHostSections
+from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources import make_nodes, make_sources, Source, update_host_sections
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.host_sections import (

@@ -21,7 +21,6 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-from cmk.base.discovery import DiscoveryParameters
 import cmk.base.config as config
 
 

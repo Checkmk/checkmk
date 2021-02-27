@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 from typing import List, Union
 
-from cmk.base import inventory
+from cmk.base.agent_based import inventory
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 

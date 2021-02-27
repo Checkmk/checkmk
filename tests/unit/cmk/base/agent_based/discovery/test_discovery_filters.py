@@ -9,10 +9,9 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import CheckPluginName
-from cmk.utils.labels import DiscoveredHostLabelsStore
 
 import cmk.base.config as config
-from cmk.base.discovery import _filters
+from cmk.base.agent_based.discovery import _filters
 
 
 @pytest.mark.parametrize("parameters_rediscovery", [

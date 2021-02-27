@@ -51,8 +51,7 @@ import cmk.base.sources as sources
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.decorator
-import cmk.base.inventory as inventory
+import cmk.base.agent_based.inventory as inventory
 import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
@@ -86,7 +85,7 @@ ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List
 #   '----------------------------------------------------------------------'
 
 
-@cmk.base.decorator.handle_check_mk_check_result("mk", "Check_MK")
+@cmk.base.agent_based.decorator.handle_check_mk_check_result("mk", "Check_MK")
 def do_check(
     hostname: HostName,
     ipaddress: Optional[HostAddress],

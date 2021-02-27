@@ -16,7 +16,7 @@ from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.check_table as check_table
 import cmk.base.sources as sources
-import cmk.base.checking as checking
+import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out

@@ -7,7 +7,7 @@
 from cmk.utils.type_defs import CheckPluginName
 from cmk.base.check_utils import Service
 
-from cmk.base.discovery._discovered_services import _analyse_discovered_services
+from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
 
 
 def _service(plugin_name: str, item: str) -> Service:

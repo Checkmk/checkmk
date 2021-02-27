@@ -52,15 +52,15 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.agent_based.decorator as decorator
 import cmk.base.autochecks as autochecks
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
 import cmk.base.sources as sources
-import cmk.base.checking as checking
+import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.decorator
 import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
@@ -516,7 +516,7 @@ def _get_post_discovery_services(
 #   '----------------------------------------------------------------------'
 
 
-@cmk.base.decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
+@decorator.handle_check_mk_check_result("discovery", "Check_MK Discovery")
 def check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],

@@ -33,7 +33,6 @@ import cmk.core_helpers.cache
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.decorator
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
 from cmk.base.api.agent_based import checking_classes

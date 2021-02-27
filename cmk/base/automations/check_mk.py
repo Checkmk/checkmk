@@ -51,17 +51,17 @@ from cmk.core_helpers import factory
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.agent_based.checking as checking
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.check_api as check_api
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
 from cmk.base.check_utils import Service
-import cmk.base.checking
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.core import CoreAction, do_restart
 import cmk.base.core_config as core_config
 import cmk.base.sources as sources
-import cmk.base.discovery as discovery
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
@@ -661,7 +661,7 @@ class AutomationAnalyseServices(Automation):
             if isinstance(parameters, cmk.base.config.TimespecificParamList):
                 effective_parameters: LegacyCheckParameters = {
                     "tp_computed_params": {
-                        "params": cmk.base.checking.time_resolved_check_parameters(parameters),
+                        "params": checking.time_resolved_check_parameters(parameters),
                         "computed_at": time.time()
                     }
                 }

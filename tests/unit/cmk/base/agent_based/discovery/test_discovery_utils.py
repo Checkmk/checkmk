@@ -6,7 +6,7 @@
 
 import time
 
-from cmk.base.discovery.utils import QualifiedDiscovery, TimeLimitFilter
+from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter
 
 
 def test_time_limit_filter_iterates():

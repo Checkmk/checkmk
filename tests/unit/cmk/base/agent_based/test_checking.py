@@ -10,7 +10,7 @@
 import pytest  # type: ignore[import]
 import cmk.base.core
 import cmk.base.config
-import cmk.base.checking
+import cmk.base.agent_based.checking as checking
 from cmk.base.api.agent_based.checking_classes import Result, State as state, Metric
 
 
@@ -185,7 +185,7 @@ def test_time_resolved_check_parameters(monkeypatch, rules, active_timeperiods, 
         lambda tp: _check_timeperiod(tp, active_timeperiods),
     )
 
-    resolved_check_params = cmk.base.checking.time_resolved_check_parameters(rules)
+    resolved_check_params = checking.time_resolved_check_parameters(rules)
     assert expected_result == resolved_check_params
 
 
@@ -194,7 +194,7 @@ def _check_timeperiod(timeperiod, active_timeperiods):
 
 
 @pytest.mark.parametrize("subresults, aggregated_results", [
-    ([], cmk.base.checking.ITEM_NOT_FOUND),
+    ([], checking.ITEM_NOT_FOUND),
     ([
         Result(state=state.OK, notice="details"),
     ], (0, "Everything looks OK - 1 detail available\ndetails", [])),
@@ -208,4 +208,4 @@ def _check_timeperiod(timeperiod, active_timeperiods):
     ], (0, "summary\nsummary", [("name", 42.0, None, None, None, None)])),
 ])
 def test_aggregate_result(subresults, aggregated_results):
-    assert cmk.base.checking._aggregate_results(subresults) == aggregated_results
+    assert checking._aggregate_results(subresults) == aggregated_results

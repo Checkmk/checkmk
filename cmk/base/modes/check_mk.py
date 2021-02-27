@@ -55,9 +55,9 @@ import cmk.base.core
 import cmk.base.core_nagios
 import cmk.base.sources as sources
 import cmk.base.diagnostics
-import cmk.base.discovery as discovery
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.dump_host
-import cmk.base.inventory as inventory
+import cmk.base.agent_based.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
@@ -1594,7 +1594,7 @@ _CheckingOptions = TypedDict(
 
 
 def mode_check(options: _CheckingOptions, args: List[str]) -> None:
-    import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
+    import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
         import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel

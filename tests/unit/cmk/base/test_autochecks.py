@@ -17,7 +17,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.discovery as discovery
+import cmk.base.agent_based.discovery as discovery
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,

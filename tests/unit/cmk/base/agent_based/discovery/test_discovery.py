@@ -25,13 +25,12 @@ from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import (
     ServiceLabel,
     DiscoveredServiceLabels,
-    DiscoveredHostLabels,
     HostLabel,
 )
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-import cmk.base.discovery as discovery
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 
 

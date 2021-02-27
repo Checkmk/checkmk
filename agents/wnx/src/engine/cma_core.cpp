@@ -7,6 +7,7 @@
 #include <chrono>
 #include <ctime>
 #include <filesystem>
+#include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
@@ -17,7 +18,10 @@
 #include "glob_match.h"
 #include "section_header.h"  // we have logging here
 #include "service_processor.h"
+#include "tools/_misc.h"
 #include "windows_service_api.h"
+namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma {
 
@@ -211,6 +215,15 @@ void RemoveDuplicatedNames(PathVector& paths) {
                               });
 
     paths.erase(end, paths.end());
+}
+
+// remove so-called forbidden files, we do not want to execute
+void RemoveForbiddenNames(PathVector& paths) {
+    const auto end = rs::remove_if(paths, [](fs::path const& p) {
+        return tools::IsEqual(p.filename().string(), "cmk-update-agent.exe");
+    });
+
+    paths.erase(end.begin(), end.end());
 }
 
 // make a list of files to be run(check exists normally is true)

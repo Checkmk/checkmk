@@ -64,6 +64,10 @@ msgstr " (invalid)"
 msgid " (owned by %s)"
 msgstr ""
 
+#, fuzzy, python-format
+msgid " (worst state: %s)"
+msgstr " Se potriveste grupurilor: %s"
+
 msgid " - Broken"
 msgstr ""
 
@@ -20519,6 +20523,10 @@ msgstr ""
 msgid "Host information"
 msgstr "Adaugă informații despre contact"
 
+#, fuzzy, python-format
+msgid "Host is %s"
+msgstr "(altul: %s)"
+
 msgid "Host is active"
 msgstr ""
 
@@ -35177,6 +35185,9 @@ msgid "REST API documentation"
 msgstr "Acțiune"
 
 msgid "REST API interactive GUI"
+msgstr ""
+
+msgid "REST API: Use HTTP ETags for optimistic locking"
 msgstr ""
 
 msgid "REST Endpoint URL"
@@ -53853,6 +53864,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"When multiple HTTP clients want to update an object at the same time, it can "
+"happen that the slower client will overwrite changes by the faster one. This "
+"is commonly referred to as the 'lost update problem'. To prevent this "
+"situation from happening, Checkmk's REST API does 'optimistic locking' using "
+"HTTP ETag headers. In this case the Object's ETag has to be sent to the "
+"server with a HTTP If-Match header. This behavior can be deactivated, but "
+"this will allow the 'lost update problem' to occur."
+msgstr ""
+
+msgid ""
 "When performing walks on an OID during checking, Check_MK fetches all sub "
 "OIDs regardless whether these values are needed or not. For example, if you "
 "monitor a single network interface of a switch with hundreds of ports, the "
@@ -57476,6 +57497,10 @@ msgstr "Adaugă configurație de ajustare"
 msgid "previous notifications of this type are cancelled"
 msgstr ""
 
+#, fuzzy
+msgid "problem services"
+msgstr "Probleme"
+
 msgid "procedure call is used"
 msgstr ""
 
@@ -57639,6 +57664,10 @@ msgstr ""
 
 msgid "service"
 msgstr "serviciu"
+
+#, fuzzy, python-format
+msgid "service in %s state"
+msgstr "Statusul Serverului"
 
 msgid "services"
 msgstr "servicii"
@@ -58220,10 +58249,6 @@ msgstr ""
 #~| msgid "to port:"
 #~ msgid "Fill area plot"
 #~ msgstr "catre port:"
-
-#, fuzzy
-#~ msgid "Problem services"
-#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "Computation plugin information"
@@ -59880,10 +59905,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service name "
 #~ msgstr "Numele Elementului"
-
-#, fuzzy
-#~ msgid "Service states"
-#~ msgstr "Statusul Serverului"
 
 # georgem ##############
 #, fuzzy

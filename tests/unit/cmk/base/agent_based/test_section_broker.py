@@ -15,7 +15,7 @@ from testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import AgentRawData, ParsedSectionName, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostKey, ParsedSectionName, result, SectionName, SourceType
 
 from cmk.core_helpers import (
     FetcherType,
@@ -34,8 +34,7 @@ from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources import make_nodes, make_sources, Source, update_host_sections
 from cmk.base.sources.agent import AgentHostSections
-from cmk.base.sources.host_sections import (
-    HostKey,
+from cmk.base.agent_based.data_provider import (
     HostSections,
     ParsedSectionsBroker,
 )

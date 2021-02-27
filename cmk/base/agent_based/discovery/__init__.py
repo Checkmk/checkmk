@@ -48,6 +48,7 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -63,10 +64,10 @@ import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 import cmk.base.utils
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
-from cmk.base.sources.host_sections import HostSections, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import (
     DiscoveredHostLabels,

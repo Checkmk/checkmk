@@ -8,7 +8,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, Iterator, List, MutableMapping, Optional, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -16,8 +16,9 @@ import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, HostKey, result, SourceType
 
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
@@ -27,7 +28,6 @@ from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
 from .agent import AgentHostSections
-from .host_sections import HostKey, HostSections, ParsedSectionsBroker
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
@@ -226,6 +226,7 @@ def make_nodes(
     return _make_piggyback_nodes(mode, config_cache, host_config)
 
 
+# TODO: remove unused arg
 def fetch_all(
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
@@ -253,8 +254,9 @@ def fetch_all(
             )
 
 
+# TODO: remove unused arg
 def update_host_sections(
-    parsed_sections_broker: ParsedSectionsBroker,
+    parsed_sections_broker: MutableMapping[HostKey, HostSections],
     nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence[Source]]],
     *,
     max_cachefile_age: int,

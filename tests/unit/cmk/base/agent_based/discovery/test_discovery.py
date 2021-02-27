@@ -13,7 +13,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName, SectionName, SourceType, DiscoveryResult
+from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType, DiscoveryResult
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -21,7 +21,7 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
-from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.discovered_labels import (
     ServiceLabel,
     DiscoveredServiceLabels,

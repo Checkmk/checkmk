@@ -24,6 +24,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostAddress,
     HostName,
+    HostKey,
     ParsedSectionName,
     SourceType,
 )
@@ -35,9 +36,9 @@ import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.section as section
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.check_utils import CheckTable, Service
-from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import (
     DiscoveredServiceLabels,
     ServiceLabel,

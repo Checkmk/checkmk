@@ -44,13 +44,13 @@ import cmk.base.item_state as item_state
 from cmk.base.utils import worst_service_state
 
 from cmk.base.api.agent_based import register as agent_based_register
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent
 from cmk.base.check_utils import (
     LegacyCheckParameters,
     Service,
     MGMT_ONLY as LEGACY_MGMT_ONLY,
     HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
 )
-from cmk.base.sources.host_sections import ParsedSectionsBroker, ParsedSectionContent
 
 from cmk.core_helpers.cache import ABCRawDataSection
 

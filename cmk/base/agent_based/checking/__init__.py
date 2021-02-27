@@ -32,6 +32,7 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
+    HostKey,
     MetricTuple,
     ServiceAdditionalDetails,
     ServiceCheckResult,
@@ -56,11 +57,11 @@ import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
-from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 
 from . import _legacy_mode, _submit_to_core
 from .utils import (

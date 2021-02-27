@@ -35,6 +35,7 @@ from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
+    HostKey,
     InventoryPluginName,
     MetricTuple,
     result,
@@ -50,6 +51,7 @@ from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 import cmk.base.sources as sources
 import cmk.base.config as config
 import cmk.base.section as section
@@ -60,7 +62,6 @@ from cmk.base.api.agent_based.inventory_classes import (
     TableRow,
 )
 from cmk.base.sources import Source
-from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 
 
 class InventoryTrees(NamedTuple):

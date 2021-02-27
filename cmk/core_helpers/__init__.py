@@ -37,7 +37,7 @@ Todo:
 """
 
 import enum
-from typing import Any, Dict, Literal, Optional, Type
+from typing import Any, Dict, Type
 
 from . import cache
 from ._base import Fetcher, FileCache, Parser, Summarizer, verify_ipaddress

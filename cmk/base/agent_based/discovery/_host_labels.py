@@ -17,12 +17,13 @@ from cmk.utils.log import console
 from cmk.utils.type_defs import (
     HostAddress,
     HostName,
+    HostKey,
     SourceType,
 )
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.section as section
-from cmk.base.sources.host_sections import HostKey, ParsedSectionsBroker
 from cmk.base.discovered_labels import HostLabel
 
 from .type_defs import DiscoveryParameters

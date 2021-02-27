@@ -40,9 +40,8 @@ import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.decorator
 import cmk.base.item_state as item_state
-import cmk.base.utils
+from cmk.base.utils import worst_service_state
 
 from cmk.base.api.agent_based import register as agent_based_register
 from cmk.base.check_utils import (
@@ -193,7 +192,7 @@ def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
 
     for subresult in subresults:
         st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
-        status = cmk.base.utils.worst_service_state(st, status)
+        status = worst_service_state(st, status)
 
         if text:
             infotexts.append(text + state_markers[st])

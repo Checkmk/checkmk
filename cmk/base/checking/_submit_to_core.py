@@ -33,6 +33,7 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+# TODO: make this two arguments!
 import cmk.base.config as config
 
 if not cmk_version.is_raw_edition():

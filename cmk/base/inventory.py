@@ -26,7 +26,6 @@ from typing import (
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty

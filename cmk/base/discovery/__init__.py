@@ -26,7 +26,6 @@ import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
-import cmk.utils.misc
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
@@ -66,7 +65,6 @@ import cmk.base.section as section
 import cmk.base.utils
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
-from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.sources.host_sections import HostSections, ParsedSectionsBroker
 from cmk.base.core_config import MonitoringCore
@@ -82,7 +80,7 @@ from .type_defs import DiscoveryParameters
 from .utils import TimeLimitFilter, QualifiedDiscovery
 
 ServicesTable = Dict[ServiceID, Tuple[str, Service, List[HostName]]]
-ServicesByTransition = Dict[str, List[ServiceWithNodes]]
+ServicesByTransition = Dict[str, List[autochecks.ServiceWithNodes]]
 
 CheckPreviewEntry = Tuple[str, CheckPluginNameStr, Optional[RulesetName], Item,
                           LegacyCheckParameters, LegacyCheckParameters, str, Optional[int], str,
@@ -445,7 +443,7 @@ def _get_post_discovery_services(
     service_filters: _ServiceFilters,
     result: DiscoveryResult,
     mode: str,
-) -> List[ServiceWithNodes]:
+) -> List[autochecks.ServiceWithNodes]:
     """
     The output contains a selction of services in the states "new", "old", "ignored", "vanished"
     (depending on the value of `mode`) and "clusterd_".
@@ -457,7 +455,7 @@ def _get_post_discovery_services(
         Discovered checks that are shadowed by manual checks will vanish that way.
 
     """
-    post_discovery_services: List[ServiceWithNodes] = []
+    post_discovery_services: List[autochecks.ServiceWithNodes] = []
     for check_source, discovered_services_with_nodes in services.items():
         if check_source in ("custom", "legacy", "active", "manual"):
             # This is not an autocheck or ignored and currently not
@@ -1085,8 +1083,10 @@ def _group_by_transition(
         transition_services: Iterable[Tuple[str, Service, List[HostName]]]) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
     for transition, service, found_on_nodes in transition_services:
-        services_by_transition.setdefault(transition,
-                                          []).append(ServiceWithNodes(service, found_on_nodes))
+        services_by_transition.setdefault(
+            transition,
+            [],
+        ).append(autochecks.ServiceWithNodes(service, found_on_nodes))
     return services_by_transition
 
 

@@ -36,7 +36,7 @@ register.snmp_section(
         ),
     ],
     detect=if64.HAS_ifHCInOctets,
-    supersedes=['if'],
+    supersedes=['if', 'statgrab_net'],
 )
 
 # Note: This section is by default deactivated (hard-coded in

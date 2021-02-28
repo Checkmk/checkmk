@@ -48,7 +48,6 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
-import cmk.base.sources as sources
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
@@ -57,7 +56,7 @@ import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
 from cmk.base.api.agent_based.type_defs import Parameters
@@ -150,40 +149,17 @@ def do_check(
             run_only_plugin_names=run_only_plugin_names,
         )
 
-        nodes = sources.make_nodes(
-            config_cache,
-            host_config,
-            ipaddress,
-            mode,
-            sources.make_sources(
-                host_config,
-                ipaddress,
+        with CPUTracker() as tracker:
+
+            broker, source_results = make_broker(
+                config_cache=config_cache,
+                host_config=host_config,
+                ip_address=ipaddress,
                 mode=mode,
                 selected_sections=selected_sections,
-            ),
-        )
-
-        if not fetcher_messages:
-            # Note: `fetch_all(sources)` is almost always called in similar
-            #       code in discovery and inventory.  The only other exception
-            #       is `cmk.base.discovery.check_discovery(...)`.  This does
-            #       not seem right.
-            fetcher_messages = list(
-                sources.fetch_all(
-                    nodes,
-                    max_cachefile_age=host_config.max_cachefile_age,
-                    host_config=host_config,
-                ))
-
-        with CPUTracker() as tracker:
-            broker = ParsedSectionsBroker()
-            result = sources.update_host_sections(
-                broker,
-                nodes,
-                max_cachefile_age=host_config.max_cachefile_age,
-                host_config=host_config,
+                file_cache_max_age=host_config.max_cachefile_age,
                 fetcher_messages=fetcher_messages,
-                selected_sections=selected_sections,
+                on_scan_error="raise",
             )
 
             num_success, plugins_missing_data = _do_all_checks_on_host(
@@ -204,7 +180,7 @@ def do_check(
                     parsed_sections_broker=broker,
                 )
 
-            for source, host_sections in result:
+            for source, host_sections in source_results:
                 source_state, source_output = source.summarize(host_sections)
                 if source_output != "":
                     status = max(status, source_state)

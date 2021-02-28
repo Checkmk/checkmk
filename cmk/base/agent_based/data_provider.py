@@ -7,30 +7,46 @@
 from typing import (
     Any,
     Dict,
+    Iterable,
     Iterator,
     List,
-    MutableMapping,
+    Mapping,
     Optional,
+    Sequence,
     Set,
     Tuple,
+    TYPE_CHECKING,
 )
 
 import cmk.utils.caching as caching
+from cmk.utils.log import console
+import cmk.utils.piggyback
+import cmk.utils.tty as tty
 from cmk.utils.type_defs import (
+    HostAddress,
+    HostName,
     HostKey,
     ParsedSectionName,
+    result,
     SourceType,
 )
 
-from cmk.core_helpers.host_sections import HostSections
-
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.base.sources import fetch_all, make_nodes, make_sources
+from cmk.base.sources.agent import AgentHostSections
+from cmk.core_helpers.host_sections import HostSections
+
+if TYPE_CHECKING:
+    from cmk.base.sources import Source
+    from cmk.base.config import ConfigCache, HostConfig
+    from cmk.core_helpers.protocol import FetcherMessage
+    from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
 ParsedSectionContent = Any
 
 
-class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
+class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
     """Object for aggregating, parsing and disributing the sections
 
     An instance of this class allocates all raw sections of a given host or cluster and
@@ -38,9 +54,12 @@ class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
     'parsed_section_name' and 'supersedes' to all plugin functions that require this kind
     of data (inventory, discovery, checking, host_labels).
     """
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        data: Mapping[HostKey, HostSections],
+    ) -> None:
         super().__init__()
-        self._data: Dict[HostKey, HostSections] = {}
+        self._data = data
 
         # This holds the result of the parsing of individual raw sections (by raw section name)
         self._memoized_parsing_results = caching.DictCache()
@@ -56,12 +75,6 @@ class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
 
     def __getitem__(self, key: HostKey) -> HostSections:
         return self._data.__getitem__(key)
-
-    def __setitem__(self, key: HostKey, value: HostSections) -> None:
-        self._data.__setitem__(key, value)
-
-    def __delitem__(self, key: HostKey) -> None:
-        self._data.__delitem__(key)
 
     def __repr__(self) -> str:
         return "%s(data=%r)" % (type(self).__name__, self._data)
@@ -213,7 +226,7 @@ class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
     ) -> Any:
         # lookup the parsing result in the cache, it might have been computed
         # during resolving of the supersedings (or set to None b/c the section
-        # *is* superseeded)
+        # *is* superseded)
         cache_key = host_key + (section.name,)
         if cache_key in self._memoized_parsing_results:
             return self._memoized_parsing_results[cache_key]
@@ -224,3 +237,115 @@ class ParsedSectionsBroker(MutableMapping[HostKey, HostSections]):
             return self._memoized_parsing_results.setdefault(cache_key, None)
 
         return self._memoized_parsing_results.setdefault(cache_key, section.parse_function(data))
+
+
+def _collect_host_sections(
+    *,
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence['Source']]],
+    file_cache_max_age: int,
+    fetcher_messages: Sequence['FetcherMessage'],
+    selected_sections: 'SectionNameCollection',
+) -> Tuple[  #
+        Mapping[HostKey, HostSections],  #
+        Sequence[Tuple['Source', result.Result[HostSections, Exception]]]  #
+]:
+    """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
+
+    Communication errors are not raised through by this functions. All agent related errors are
+    caught by the source.run() method and saved in it's _exception attribute. The caller should
+    use source.get_summary_result() to get the state, output and perfdata of the agent execution
+    or source.exception to get the exception object.
+    """
+    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+
+    flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
+
+    # TODO (ml): Can we somehow verify that this is correct?
+    # if fetcher_message["fetcher_type"] != source.id:
+    #     raise LookupError("Checker and fetcher missmatch")
+    # (mo): this is not enough, but better than nothing:
+    if len(flat_node_sources) != len(fetcher_messages):
+        raise LookupError("Checker and fetcher missmatch")
+
+    collected_host_sections: Dict[HostKey, HostSections] = {}
+    results: List[Tuple['Source', result.Result[HostSections, Exception]]] = []
+    # Special agents can produce data for the same check_plugin_name on the same host, in this case
+    # the section lines need to be extended
+    for fetcher_message, (hostname, ipaddress, source) in zip(fetcher_messages, flat_node_sources):
+        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+
+        source.file_cache_max_age = file_cache_max_age
+
+        host_sections = collected_host_sections.setdefault(
+            HostKey(hostname, ipaddress, source.source_type),
+            source.default_host_sections,
+        )
+
+        source_result = source.parse(fetcher_message.raw_data, selection=selected_sections)
+        results.append((source, source_result))
+        if source_result.is_ok():
+            console.vverbose("  -> Add sections: %s\n" %
+                             sorted([str(s) for s in source_result.ok.sections.keys()]))
+            host_sections.add(source_result.ok)
+        else:
+            console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
+
+    for hostname, ipaddress, _sources in nodes:
+        # Store piggyback information received from all sources of this host. This
+        # also implies a removal of piggyback files received during previous calls.
+        host_sections = collected_host_sections.setdefault(
+            HostKey(hostname, ipaddress, SourceType.HOST),
+            AgentHostSections(),
+        )
+        cmk.utils.piggyback.store_piggyback_raw_data(
+            hostname,
+            host_sections.piggybacked_raw_data,
+        )
+
+    return collected_host_sections, results
+
+
+def make_broker(
+    *,
+    config_cache: 'ConfigCache',
+    host_config: 'HostConfig',
+    ip_address: Optional[HostAddress],
+    mode: 'Mode',
+    selected_sections: 'SectionNameCollection',
+    file_cache_max_age: int,
+    fetcher_messages: Sequence['FetcherMessage'],
+    on_scan_error: str,
+) -> Tuple[ParsedSectionsBroker, Sequence[Tuple['Source', result.Result[HostSections, Exception]]]]:
+    nodes = make_nodes(
+        config_cache,
+        host_config,
+        ip_address,
+        mode,
+        make_sources(
+            host_config,
+            ip_address,
+            mode=mode,
+            selected_sections=selected_sections,
+            on_scan_error=on_scan_error,
+        ),
+    )
+
+    if not fetcher_messages:
+        # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
+        # Note: `fetch_all(sources)` is almost always called in similar
+        #       code in discovery and inventory.  The only two exceptions
+        #       are `cmk.base.checking.do_check(...)` and
+        #       `cmk.base.discovery.check_discovery(...)`.
+        #       This does not seem right.
+        fetcher_messages = list(fetch_all(
+            nodes=nodes,
+            file_cache_max_age=file_cache_max_age,
+        ))
+
+    collected_host_sections, results = _collect_host_sections(
+        nodes=nodes,
+        file_cache_max_age=file_cache_max_age,
+        fetcher_messages=fetcher_messages,
+        selected_sections=selected_sections,
+    )
+    return ParsedSectionsBroker(collected_host_sections), results

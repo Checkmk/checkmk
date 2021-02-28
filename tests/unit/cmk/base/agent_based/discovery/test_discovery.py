@@ -505,9 +505,7 @@ def test__check_service_table(monkeypatch, grouped_services, parameters, result_
 
 @pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test__find_candidates():
-    broker = ParsedSectionsBroker()
-
-    broker._data = {
+    broker = ParsedSectionsBroker({
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names have been are chosen arbitrarily.
         HostKey("test_node", "1.2.3.4", SourceType.HOST): AgentHostSections({
@@ -522,7 +520,7 @@ def test__find_candidates():
             # is already mgmt_ prefixed:
             SectionName("mgmt_snmp_info"): [[['a', 'b', 'c', 'd']]],  # type: ignore[dict-item]
         }),
-    }
+    })
 
     preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
     parsed_sections_of_interest = {
@@ -704,8 +702,7 @@ def _realhost_scenario(monkeypatch):
         }
     })
 
-    broker = ParsedSectionsBroker()
-    broker.update({
+    broker = ParsedSectionsBroker({
         HostKey(hostname=hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
             AgentHostSections(
                 sections={
@@ -794,8 +791,7 @@ def _cluster_scenario(monkeypatch):
         }
     })
 
-    broker = ParsedSectionsBroker()
-    broker.update({
+    broker = ParsedSectionsBroker({
         HostKey(hostname=node1_hostname, ipaddress=ipaddress, source_type=SourceType.HOST):
             AgentHostSections(
                 sections={

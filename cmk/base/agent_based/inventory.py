@@ -51,8 +51,7 @@ from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-import cmk.base.sources as sources
+from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.api.agent_based.inventory_classes import (
@@ -220,64 +219,27 @@ def _do_active_inventory_for(
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
-    parsed_sections_broker, source_results = _fetch_parsed_sections_broker_for_inv(
-        config_cache,
-        host_config,
-        ipaddress,
-        selected_sections,
+    broker, results = make_broker(
+        config_cache=config_cache,
+        host_config=host_config,
+        ip_address=ipaddress,
+        selected_sections=selected_sections,
+        mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
+        file_cache_max_age=host_config.max_cachefile_age,
+        fetcher_messages=(),
+        on_scan_error="raise",
     )
 
     return ActiveInventoryResult(
         trees=_do_inv_for_realhost(
             host_config,
             ipaddress,
-            parsed_sections_broker=parsed_sections_broker,
+            parsed_sections_broker=broker,
             run_only_plugin_names=run_only_plugin_names,
         ),
-        source_results=source_results,
-        safe_to_write=_safe_to_write_tree(source_results) and selected_sections is NO_SELECTION,
+        source_results=results,
+        safe_to_write=_safe_to_write_tree(results) and selected_sections is NO_SELECTION,
     )
-
-
-def _fetch_parsed_sections_broker_for_inv(
-    config_cache: config.ConfigCache,
-    host_config: config.HostConfig,
-    ipaddress: Optional[HostAddress],
-    selected_sections: SectionNameCollection,
-) -> Tuple[ParsedSectionsBroker, Sequence[Tuple[Source, result.Result[HostSections, Exception]]]]:
-    if host_config.is_cluster:
-        return ParsedSectionsBroker(), []
-
-    mode = (Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS)
-
-    nodes = sources.make_nodes(
-        config_cache,
-        host_config,
-        ipaddress,
-        mode,
-        sources.make_sources(
-            host_config,
-            ipaddress,
-            mode=mode,
-            selected_sections=selected_sections,
-        ),
-    )
-    parsed_sections_broker = ParsedSectionsBroker()
-    results = sources.update_host_sections(
-        parsed_sections_broker,
-        nodes,
-        max_cachefile_age=host_config.max_cachefile_age,
-        host_config=host_config,
-        fetcher_messages=list(
-            sources.fetch_all(
-                nodes,
-                max_cachefile_age=host_config.max_cachefile_age,
-                host_config=host_config,
-            )),
-        selected_sections=selected_sections,
-    )
-
-    return parsed_sections_broker, results
 
 
 def _safe_to_write_tree(

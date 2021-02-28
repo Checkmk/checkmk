@@ -696,7 +696,7 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
                 'right': 'example.com'
             }, {
                 'op': '!=',
-                'left': 'status',
+                'left': 'state',
                 'right': '0'
             }],
         }),

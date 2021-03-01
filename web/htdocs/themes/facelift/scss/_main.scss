@@ -663,6 +663,10 @@ table.vs_dict_text {
 table.valuespec_tuple {
   border-spacing: 2px;
 
+  &.horizontal tr:nth-child(1) td {
+    padding-top: 0; // override nform default
+  }
+
   td {
     padding: 0;
 
@@ -744,6 +748,8 @@ div.valuespec_listof_floating_container {
       vertical-align: top;
 
       &.vlof_buttons img {
+        width: 12px;
+        height: 15px;
         margin-top: 4px;
       }
 

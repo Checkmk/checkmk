@@ -1410,16 +1410,12 @@ class html(ABCHTMLGenerator):
             cls = 'error'
             prefix = _('ERROR')
 
-        code = HTML()
-
         if self.output_format == "html":
-            code += self.render_div(self.render_text(msg), class_=cls)
+            code = self.render_div(self.render_text(msg), class_=cls)
             if self.mobile:
-                code += self.render_center(code)
-        else:
-            code += self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
-
-        return code
+                return self.render_center(code)
+            return code
+        return self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"

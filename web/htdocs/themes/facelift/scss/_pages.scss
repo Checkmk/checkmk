@@ -1520,7 +1520,7 @@ table.data.job_table td {
   #{ $self }__input {
     flex-grow: 0;
     padding: $tag-padding;
-    margin: $tag-input-margin;
+    margin-left: 0;
   }
 
   &.tagify--hasMaxTags #{ $self }__input {
@@ -1541,22 +1541,29 @@ table.data.job_table td {
     }
   }
 
+  a {
+    margin-right: $spacing;
+
+    tag {
+      margin-right: 0;
+    }
+  }
+
   tag {
-    margin: 0 5px 2px 0;
+    margin-right: $spacing;
 
     > div {
       position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      margin: $tag-readonly-margin;
       color: $tag-font-color;
     }
 
     x {
       position: absolute;
-      top: 0;
-      right: 2px;
+      right: 0;
       z-index: 1;
+      margin-right: 0;
       font-size: 10px;
       line-height: 14px;
     }
@@ -1648,6 +1655,5 @@ table.data.job_table td {
 }
 
 .tagify.display[readonly] tag {
-  padding: 1px 0;
-  margin: 0;
+  padding: 2px 0;
 }

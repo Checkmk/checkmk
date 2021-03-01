@@ -659,9 +659,9 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                 _("Filter context missing"),
                 str(
                     html.render_warning(
-                        _("Unable to render this dashlet, "
+                        _("Unable to render this element, "
                           "because we miss some required context information (%s). Please update the "
-                          "form on the right to make this dashlet render.") %
+                          "form on the right to make this element render.") %
                         ", ".join(sorted(missing_single_infos)))))
 
         title = dashlet.render_title_html()
@@ -710,8 +710,8 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
     if not isinstance(e, MKUserError):
         # Do not write regular error messages related to normal user interaction and validation to
         # the web.log
-        logger.exception("Problem while rendering dashlet %d of type %s", dashlet.dashlet_id,
-                         dashlet.type_name())
+        logger.exception("Problem while rendering dashboard element %d of type %s",
+                         dashlet.dashlet_id, dashlet.type_name())
 
     with html.plugged():
         if isinstance(e, MKException):
@@ -722,7 +722,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
                 exc_txt = ensure_str(str(e))
 
             html.show_error(
-                _("Problem while rendering dashlet %d of type %s: %s. Have a look at "
+                _("Problem while rendering dashboard element %d of type %s: %s. Have a look at "
                   "<tt>var/log/web.log</tt> for further information.") %
                 (dashlet.dashlet_id, dashlet.type_name(), exc_txt))
             return html.drain()
@@ -1311,7 +1311,7 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
     try:
         return dashboard['dashlets'][ident]
     except IndexError:
-        raise MKGeneralException(_('The dashlet does not exist.'))
+        raise MKGeneralException(_('The dashboard element does not exist.'))
 
 
 def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> None:
@@ -1376,10 +1376,10 @@ def ajax_dashlet() -> None:
             break
 
     if not dashlet_spec:
-        raise MKUserError("id", _('The dashlet can not be found on the dashboard.'))
+        raise MKUserError("id", _('The element can not be found on the dashboard.'))
 
     if dashlet_spec['type'] not in dashlet_registry:
-        raise MKUserError("id", _('The requested dashlet type does not exist.'))
+        raise MKUserError("id", _('The requested element type does not exist.'))
 
     mtime = html.request.get_integer_input_mandatory('mtime', 0)
 
@@ -1698,12 +1698,12 @@ class EditDashletPage(Page):
         if self._ident is None:
             type_name = html.request.get_str_input_mandatory('type')
             mode = 'add'
-            title = _('Add Dashlet')
+            title = _('Add element')
 
             try:
                 dashlet_type = dashlet_registry[type_name]
             except KeyError:
-                raise MKUserError("type", _('The requested dashlet type does not exist.'))
+                raise MKUserError("type", _('The requested element type does not exist.'))
 
             # Initial configuration
             dashlet_spec: DashletConfig = {
@@ -1733,12 +1733,12 @@ class EditDashletPage(Page):
             dashlet_spec['single_infos'] = single_infos
         else:
             mode = 'edit'
-            title = _('Edit Dashlet')
+            title = _('Edit element')
 
             try:
                 dashlet_spec = self._dashboard['dashlets'][self._ident]
             except IndexError:
-                raise MKUserError("id", _('The dashlet does not exist.'))
+                raise MKUserError("id", _('The element does not exist.'))
 
             type_name = dashlet_spec['type']
             dashlet_type = dashlet_registry[type_name]
@@ -1783,7 +1783,8 @@ class EditDashletPage(Page):
             settings_elements = set(el[0] for el in vs_general._get_elements())
             properties_elements = set(el[0] for el in vs_type._get_elements())
             assert settings_elements.isdisjoint(
-                properties_elements), "Dashlet settings and properties have a shared option name"
+                properties_elements
+            ), "Dashboard element settings and properties have a shared option name"
 
         if html.request.var('save') and html.transaction_valid():
             try:
@@ -1876,7 +1877,7 @@ def page_clone_dashlet() -> None:
     try:
         dashlet_spec = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     new_dashlet_spec = dashlet_spec.copy()
     dashlet_type = get_dashlet_type(new_dashlet_spec)
@@ -1908,7 +1909,7 @@ def page_delete_dashlet() -> None:
     try:
         _dashlet_spec = dashboard['dashlets'][ident]  # noqa: F841
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     dashboard['dashlets'].pop(ident)
     dashboard['mtime'] = int(time.time())
@@ -1945,7 +1946,7 @@ def check_ajax_update() -> Tuple[DashletConfig, DashboardConfig]:
     try:
         dashlet_spec = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     return dashlet_spec, dashboard
 

@@ -77,7 +77,7 @@ class ViewDashlet(ABCViewDashlet):
 
     @classmethod
     def description(cls):
-        return _("Copies a view to a dashlet")
+        return _("Copies a view to a dashboard element")
 
     @classmethod
     def vs_parameters(cls):

@@ -607,21 +607,21 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         edits.appendChild(
             create_a_button(
                 "edit",
-                "Edit properties of this dashlet",
+                "Edit properties of this element",
                 click_actions("edit_dashlet.py")
             )
         );
 
         // Add clone dashlet button
         edits.appendChild(
-            create_a_button("clone", "Clone this dashlet", click_actions("clone_dashlet.py"))
+            create_a_button("clone", "Clone this element", click_actions("clone_dashlet.py"))
         );
 
         // Add delete dashlet button
         edits.appendChild(
-            create_a_button("del", "Delete this dashlet", () =>
+            create_a_button("del", "Delete this element", () =>
                 forms.confirm_dialog(
-                    {text: "Do you really want to delete this dashlet?"},
+                    {text: "Do you really want to delete this element?"},
                     click_actions("delete_dashlet.py")
                 )
             )
@@ -915,7 +915,7 @@ function persist_dashlet_pos(nr) {
         !Number.isInteger(dashlet.h)
     ) {
         alert(
-            "Error: Invalid dashlet coordinates found. Please report " +
+            "Error: Invalid element coordinates found. Please report " +
                 "this issue (" +
                 JSON.stringify(dashlet) +
                 ")."

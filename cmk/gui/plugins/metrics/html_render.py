@@ -297,7 +297,7 @@ def render_graph_canvas(graph_render_options):
     graph_width = size[0] * html_size_per_ex
     graph_height = size[1] * html_size_per_ex
     return '<canvas style="position: relative; width: %dpx; height: %dpx;"' \
-           ' width=%d height=%d></canvas>' % (graph_width, graph_height, graph_width*2, graph_height*2)
+           ' width=%d height=%d></canvas>' % (graph_width, graph_height, graph_width * 2, graph_height * 2)
 
 
 def show_pin_time(graph_artwork, graph_render_options):
@@ -397,7 +397,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
             descr = ""
 
         output += '<th class="%s" style="%s" title=\"%s\">%s</th>' % \
-                        (" ".join(classes), font_size_style, escaping.escape_attribute(descr), title)
+            (" ".join(classes), font_size_style, escaping.escape_attribute(descr), title)
     output += '</tr>'
 
     # Render the curve related rows
@@ -416,7 +416,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
                 inactive_cls = ""
 
             output += '<td class="scalar%s" style="%s">%s</td>' % \
-                        (inactive_cls, font_size_style, curve["scalars"][scalar][1])
+                (inactive_cls, font_size_style, curve["scalars"][scalar][1])
 
         output += '</tr>'
 
@@ -615,9 +615,9 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
     graph_height = size[1] * html_size_per_ex
 
     content = html.render_div("", class_="title") \
-            + html.render_div("",
-                class_="content",
-                style="width:%dpx;height:%dpx" % (graph_width, graph_height))
+        + html.render_div("",
+                          class_="content",
+                          style="width:%dpx;height:%dpx" % (graph_width, graph_height))
 
     output = html.render_div(html.render_div(content, class_=["graph", "loading_graph"]),
                              class_="graph_load_container") \
@@ -807,7 +807,7 @@ class GraphDestinations:
     @classmethod
     def choices(cls):
         return [
-            (GraphDestinations.dashlet, _("Dashlet")),
+            (GraphDestinations.dashlet, _("Dashboard element")),
             (GraphDestinations.view, _("View")),
             (GraphDestinations.report, _("Report")),
             (GraphDestinations.notification, _("Notification")),

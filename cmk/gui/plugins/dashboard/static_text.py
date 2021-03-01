@@ -45,7 +45,7 @@ class StaticTextDashlet(Dashlet):
                  title=_('Text'),
                  size=50,
                  help=_(
-                     "You can enter a text here that will be displayed in the dashlet when "
+                     "You can enter a text here that will be displayed in the element when "
                      "viewing the dashboard. It is also possible to insert a limited set of HTML "
                      "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."),
              )),

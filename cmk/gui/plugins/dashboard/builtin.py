@@ -410,7 +410,7 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 8,
+        'source': 'METRIC_disk_latency',
         'show_title': True,
         'position': (-36, 15),
         'type': 'pnpgraph',
@@ -439,7 +439,7 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 2,
+        'source': 'METRIC_major_page_faults',
         'show_title': True,
         'position': (27, 15),
         'type': 'pnpgraph',
@@ -468,7 +468,7 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 1,
+        'source': 'mem_used_percent',
         'background': True,
         'position': (27, 1),
         'show_title': True,
@@ -497,7 +497,7 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 2,
+        'source': 'disk_throughput',
         'show_title': True,
         'position': (-36, 1),
         'type': 'pnpgraph',

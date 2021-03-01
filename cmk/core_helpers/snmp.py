@@ -257,7 +257,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         The SNMP walk cache applies to individual OIDs that are marked as to-be-cached
         in the section definition plugins using `OIDCached`.
         """
-        return mode in (Mode.DISCOVERY, Mode.CHECKING)
+        return mode is Mode.CHECKING
 
     def _is_cache_read_enabled(self, mode: Mode) -> bool:
         """Decide whether to try to read data from cache

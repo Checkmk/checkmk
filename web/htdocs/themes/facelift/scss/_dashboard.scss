@@ -721,7 +721,7 @@ svg {
     }
   }
   .status_background {
-    opacity: 0.4;
+    opacity: 0.3;
     fill: $dashlet-inner-bg-color;
   }
 
@@ -730,7 +730,13 @@ svg {
   }
 
   .area {
-    opacity: 0.4;
+    opacity: 0.3;
+  }
+
+  .svcstate {
+    // Default UX timeseries blue #008EFF, No variable yet, thus equal on themes
+    fill: rgb(0, 142, 255);
+    stroke: rgb(0, 142, 255);
   }
 
   .state0 {

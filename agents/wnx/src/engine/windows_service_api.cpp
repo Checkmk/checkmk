@@ -963,11 +963,6 @@ int ServiceAsService(
 
     ProcessFirewallConfiguration(app_name);
 
-    std::filesystem::path plugins = cma::cfg::GetUserPluginsDir();
-    auto result = cma::encrypt::OnFile::DecodeAll(
-        plugins, L"*.exe", cma::encrypt::SourceType::python);
-    XLOG::l.i("Decoding is '{}'", result ? "successful" : "failed");
-
     // infinite loop to protect from exception
     while (1) {
         try {

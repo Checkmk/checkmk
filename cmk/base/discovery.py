@@ -507,8 +507,6 @@ def discover_on_host(
 
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
 
-    cmk.base.checkers.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
-
     hostname = host_config.hostname
     result = DiscoveryResult()
     discovery_parameters = DiscoveryParameters(

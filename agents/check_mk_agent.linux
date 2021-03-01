@@ -83,6 +83,20 @@ if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
 fi
 export PYTHON2 PYTHON3
 
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ $(
+    $PYTHON3 -c 'pass' >/dev/null 2>&1
+    echo $?
+) -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ $(
+    $PYTHON2 -c 'pass' >/dev/null 2>&1
+    echo $?
+) -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
+
 # Detect whether or not the agent is being executed in a container
 # environment.
 if [ -f /.dockerenv ]; then
@@ -1209,6 +1223,14 @@ run_agent_plugin() {
     fi
 
     if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=(${FAILED_PYTHON_PLUGINS[@]} "$agent_plugin")
+            fi
+            return
+        fi
         if [ -n "$PYTHON3" ]; then
             $PYTHON3 "$agent_plugin"
             return
@@ -1451,6 +1473,19 @@ get_file_mtime() {
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
+section_checkmk_failed_plugins() {
+    failed=("$@")
+    if [ -n "$failed" ]; then
+        echo "<<<check_mk>>>"
+        echo "FailedPythonPlugins: ${failed[@]}"
+        if [ -n "$NO_PYTHON" ]; then
+            echo "FailedPythonReason: No suitable python installation found."
+        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            echo "FailedPythonReason: Configured python command not found."
+        fi
+    fi
+}
+
 section_checkmk
 
 [ -z "$MK_SKIP_LABELS" ] && section_labels
@@ -1618,6 +1653,8 @@ run_local_checks
 
 # Plugins
 run_plugins
+
+section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"
 
 # Agent output snippets created by cronjobs, etc.
 if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then

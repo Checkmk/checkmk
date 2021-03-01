@@ -165,6 +165,7 @@ class AgentSummarizerDefault(AgentSummarizer):
             for sub_result in [
                     self._sub_result_version(agent_info),
                     self._sub_result_only_from(agent_info),
+                    self._sub_result_python_plugins(agent_info),
             ]:
                 if not sub_result:
                     continue
@@ -255,6 +256,17 @@ class AgentSummarizerDefault(AgentSummarizer):
         assert isinstance(mismatch_state, int)
         return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
                 (", ".join(infotexts), state_markers[mismatch_state]), [])
+
+    def _sub_result_python_plugins(
+        self,
+        agent_info: Dict[str, Optional[str]],
+    ) -> Optional[ServiceCheckResult]:
+        failed_plugins = agent_info.get("failedpythonplugins")
+        fail_reason = agent_info.get("failedpythonreason")
+        if failed_plugins is None or fail_reason is None:
+            return None
+
+        return (1, f"Failed to execute python plugins: {failed_plugins} ({fail_reason})", [])
 
     @staticmethod
     def _is_expected_agent_version(

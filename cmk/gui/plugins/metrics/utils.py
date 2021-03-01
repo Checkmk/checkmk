@@ -193,7 +193,7 @@ def indexed_color(idx, total):
     red = int(base_color in [0, 3, 4, 6])
     green = int(base_color in [1, 3, 5, 6])
     blue = int(base_color in [2, 4, 5, 6])
-    return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+    return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -907,6 +907,10 @@ _cmk_color_palette = {
 }
 
 
+def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
+    return "#%02x%02x%02x" % (red, green, blue)
+
+
 def get_palette_color_by_index(i, shading='a'):
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return "%s/%s" % (color_key, shading)
@@ -982,7 +986,7 @@ def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
 
 
 def render_color(color_rgb: Tuple[float, float, float]) -> str:
-    return "#%02x%02x%02x" % (
+    return rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
         int(color_rgb[2] * 255),

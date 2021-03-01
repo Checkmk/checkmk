@@ -15,21 +15,14 @@ a look at the articles about extending Checkmk in our `official guide <https://c
    :maxdepth: 1
    :glob:
 
-   apidoc/cmk/cmk.base*_api
-
-.. toctree::
-   :caption: GUI
-   :maxdepth: 1
-   :glob:
-
-   apidoc/cmk/cmk.gui*_api
+   apidoc/cmk/cmk.base*_api.v*
 
 .. toctree::
    :caption: Dynamic configuration
    :maxdepth: 1
    :glob:
 
-   apidoc/cmk/cmk.cee.dcd.*_api
+   apidoc/cmk/cmk.cee.dcd.*_api.v*
 
 Indices and tables
 ==================

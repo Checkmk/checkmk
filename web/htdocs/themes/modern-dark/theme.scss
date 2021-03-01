@@ -39,10 +39,12 @@
 @import "../facelift/scss/cee/_graphs_cee.scss";
 @import "../facelift/scss/cee/_reporting.scss";
 @import "../facelift/scss/cee/_ntop.scss";
+@import "../facelift/scss/cee/_license_usage.scss";
 @if $ENTERPRISE == "yes" {
   @include graphs_cee;
   @include reporting;
   @include ntop;
+  @include license_usage;
 }
 
 // Note: In case you add something here, you will have to add some dummy files

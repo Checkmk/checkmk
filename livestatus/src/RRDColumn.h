@@ -17,7 +17,7 @@
 #include <vector>
 
 #include "DynamicRRDColumn.h"
-#include "ListColumn.h"
+#include "ListLambdaColumn.h"
 #include "Renderer.h"
 #include "Row.h"
 #if defined(CMC)
@@ -59,12 +59,12 @@ private:
 }  // namespace detail
 
 template <class T>
-class RRDColumn : public deprecated::ListColumn {
+class RRDColumn : public ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
               const ColumnOffsets &offsets, MonitoringCore *mc,
               const RRDColumnArgs &args)
-        : deprecated::ListColumn{name, description, offsets}
+        : ListColumn{name, description, offsets}
         , data_maker_{detail::RRDDataMaker{mc, args}} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,

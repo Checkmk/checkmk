@@ -792,6 +792,18 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                 ],
             ),
             PageMenuDropdown(
+                name="add_dashlets",
+                title=_("Add"),
+                topics=list(_page_menu_topics(name)),
+                is_enabled=True,
+            ),
+            PageMenuDropdown(
+                name="dashboards",
+                title=_("Dashboards"),
+                topics=list(_page_menu_dashboards()),
+                is_enabled=True,
+            ),
+            PageMenuDropdown(
                 name="related",
                 title=_("Related"),
                 topics=[
@@ -801,12 +813,6 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                     ),
                 ],
             ),
-            PageMenuDropdown(
-                name="add_dashlets",
-                title=_("Add"),
-                topics=list(_page_menu_topics(name)),
-                is_enabled=True,
-            ),
         ],
         breadcrumb=breadcrumb,
         has_pending_changes=bool(get_pending_changes_info()),
@@ -815,6 +821,24 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)
 
     return menu
+
+
+def _page_menu_dashboards() -> Iterable[PageMenuTopic]:
+    yield PageMenuTopic(
+        title=_("Dashboards"),
+        entries=[
+            PageMenuEntry(
+                title=board["title"],
+                icon_name=board["icon"] or "dashboard",
+                item=make_simple_link(
+                    makeuri_contextless(
+                        request,
+                        [("name", name)],
+                        filename="dashboard.py",
+                    )),
+            ) for name, board in get_permitted_dashboards().items()
+        ],
+    )
 
 
 def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:

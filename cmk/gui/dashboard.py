@@ -919,6 +919,12 @@ def _dashboard_related_entries(name):
             is_shortcut=True,
             is_suggested=False,
         )
+    if config.user.may("general.edit_dashboards"):
+        yield PageMenuEntry(
+            title=_("Customize Dashboards"),
+            icon_name="dashboard",
+            item=make_simple_link("edit_dashboards.py"),
+        )
 
 
 def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,

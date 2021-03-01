@@ -322,6 +322,7 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // Generates a chunk object which includes the following data
         // {
         //   id:                 ID to identify this chunk
+        //   type:               bi / topology
         //   tree:               hierarchy tree
         //   nodes:              visible nodes as list
         //   nodes_by_id:        all nodes by id
@@ -331,6 +332,9 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         //   layout_settings:    layout configuration
         // }
         let chunk = {};
+
+        // Required to differentiate between bi and topology view
+        chunk.type = chunk_rawdata.type;
 
         let hierarchy = d3.hierarchy(chunk_rawdata.hierarchy);
 
@@ -609,6 +613,9 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
     }
 
     update_node_chunk_descendants_and_links(node_chunk) {
+        // This feature is only supported/useful for bi visualization
+        if (node_chunk.type != "bi") return;
+
         node_chunk.nodes = node_chunk.tree.descendants();
         let chunk_links = [];
         node_chunk.nodes.forEach(node => {

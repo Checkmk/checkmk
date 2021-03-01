@@ -571,7 +571,7 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Checkmk Agent'),
+                'title': _('Checkmk agent'),
                 'topic': _('Data sources'),
                 'tags': [
                     {
@@ -649,7 +649,7 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'address_family',
-                'title': _('IP Address Family'),
+                'title': _('IP address family'),
                 'topic': u'Address',
                 'tags': [
                     {

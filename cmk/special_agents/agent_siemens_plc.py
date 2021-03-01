@@ -131,7 +131,7 @@ def parse_spec(hostspec):
 
 
 def parse_arguments(sys_argv):
-    parser = argparse.ArgumentParser('Checkmk Siemens PLC Agent',
+    parser = argparse.ArgumentParser('Checkmk Siemens PLC agent',
                                      formatter_class=argparse.RawTextHelpFormatter)
 
     parser.add_argument('--hostspec',

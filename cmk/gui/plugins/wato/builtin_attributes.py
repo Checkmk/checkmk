@@ -109,7 +109,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return HostAddress(
-            title=_("IPv4 Address"),
+            title=_("IPv4 address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "

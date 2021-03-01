@@ -288,7 +288,7 @@ class ModeDiagHost(WatoMode):
                 )),
                 ('ipaddress',
                  HostAddress(
-                     title=_("IPv4 Address"),
+                     title=_("IPv4 address"),
                      allow_empty=False,
                      allow_ipv6_address=False,
                  )),

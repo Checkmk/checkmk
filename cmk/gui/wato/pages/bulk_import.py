@@ -457,9 +457,9 @@ class ModeBulkImport(WatoMode):
             ("host_name", _("Hostname")),
             ("alias", _("Alias")),
             ("site", _("Monitored on site")),
-            ("ipaddress", _("IPv4 Address")),
-            ("ipv6address", _("IPv6 Address")),
-            ("snmp_community", _("SNMP Community")),
+            ("ipaddress", _("IPv4 address")),
+            ("ipv6address", _("IPv6 address")),
+            ("snmp_community", _("SNMP community")),
         ]
 
         # Add tag groups

@@ -4529,7 +4529,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Checkmk Agent")
+        return _("Checkmk agent")
 
 
 def _valuespec_agent_ports():

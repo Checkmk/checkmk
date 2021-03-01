@@ -301,12 +301,18 @@ div#snapin_tactical_overview {
   width: 100%;
 }
 
+#snapin_container_tactical_overview.more th span.more,
+#snapin_container_tactical_overview.less th span.less {
+  display: inline;
+}
+
 table.tacticaloverview {
   /* remove the border-spacing of the first and last element */
   width: calc(100% + 2 * #{$spacing});
   margin: 0 (-$spacing);
   border-collapse: separate;
   border-spacing: $spacing 0;
+  table-layout: fixed;
 
   th {
     font-size: $font-size-small;
@@ -315,6 +321,10 @@ table.tacticaloverview {
     letter-spacing: 0;
     color: $tactical-overview-th-font-color;
     text-align: left;
+
+    span {
+      display: none;
+    }
   }
 
   td {

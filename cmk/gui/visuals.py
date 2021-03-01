@@ -899,6 +899,7 @@ def page_edit_visual(
         dropdown_name=what[:-1],
         mode=mode,
         type_title=visual_type.title,
+        type_title_plural=visual_type.plural_title,
         ident_attr_name=visual_type.ident_attr,
         sub_pages=sub_pages,
         form_name="visual",

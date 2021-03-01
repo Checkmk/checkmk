@@ -278,7 +278,7 @@ class PageMenu:
 def make_display_options_dropdown() -> PageMenuDropdown:
     return PageMenuDropdown(
         name="display",
-        title=_("View"),
+        title=_("Display"),
         topics=[
             PageMenuTopic(
                 title=_("General display options"),

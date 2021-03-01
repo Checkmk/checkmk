@@ -1244,6 +1244,7 @@ class Overridable(Base):
             dropdown_name=cls.type_name(),
             mode=mode,
             type_title=cls.phrase("title"),
+            type_title_plural=cls.phrase("title_plural"),
             ident_attr_name="name",
             sub_pages=None,
             form_name="edit",
@@ -1413,8 +1414,8 @@ def PublishTo(title: _Optional[str] = None,
 
 
 def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: str, type_title: str,
-                             ident_attr_name: str, sub_pages: SubPagesSpec, form_name: str,
-                             visualname: _Optional[str]) -> PageMenu:
+                             type_title_plural, ident_attr_name: str, sub_pages: SubPagesSpec,
+                             form_name: str, visualname: _Optional[str]) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -1422,19 +1423,20 @@ def make_edit_form_page_menu(breadcrumb: Breadcrumb, dropdown_name: str, mode: s
                 title=type_title.title(),
                 topics=[
                     PageMenuTopic(
-                        title=_("Save this %s and go to") % type_title.title(),
+                        title=_("Save this %s and go to") % type_title,
                         entries=list(
                             _page_menu_entries_save(
                                 breadcrumb,
                                 sub_pages,
                                 dropdown_name,
                                 type_title,
+                                type_title_plural,
                                 form_name=form_name,
                                 button_name="save",
                             )),
                     ),
                     PageMenuTopic(
-                        title=_("For this %s") % type_title.title(),
+                        title=_("For this %s") % type_title,
                         entries=list(
                             _page_menu_entries_sub_pages(mode, sub_pages, ident_attr_name,
                                                          visualname)),
@@ -1466,11 +1468,11 @@ _save_pagetype_icons: Dict[str, Icon] = {
 
 
 def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dropdown_name: str,
-                            type_title: str, form_name: str,
+                            type_title: str, type_title_plural: str, form_name: str,
                             button_name: str) -> Iterator[PageMenuEntry]:
     """Provide the different "save" buttons"""
     yield PageMenuEntry(
-        title=_("List"),
+        title=_("List of %s") % type_title_plural,
         icon_name="save",
         item=make_form_submit_link(form_name, button_name),
         is_list_entry=True,
@@ -1481,13 +1483,13 @@ def _page_menu_entries_save(breadcrumb: Breadcrumb, sub_pages: SubPagesSpec, dro
 
     if dropdown_name in _save_pagetype_icons:
         yield PageMenuEntry(
-            title=_("Result"),
+            title=type_title.title(),
             icon_name=_save_pagetype_icons[dropdown_name],
             item=make_form_submit_link(form_name, "save_and_view"),
             is_list_entry=True,
             is_shortcut=True,
             is_suggested=True,
-            shortcut_title=_("Save & go to %s") % type_title.title(),
+            shortcut_title=_("Save & go to %s") % type_title,
         )
 
     parent_item = breadcrumb[-2]

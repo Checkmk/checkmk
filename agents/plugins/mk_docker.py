@@ -152,15 +152,15 @@ class Section(list):
 
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
-    def __init__(self, name=None, separator=0, piggytarget=None):
+    def __init__(self, name=None, piggytarget=None):
         super(Section, self).__init__()
-        self.sep = chr(separator)
         if piggytarget is not None:
             self.append('<<<<%s>>>>' % piggytarget)
         if name is not None:
-            self.append('<<<docker_%s:sep(%d)>>>' % (name, separator))
+            self.append('<<<docker_%s:sep(124)>>>' % name)
             version_json = json.dumps(Section.version_info)
-            self.append(self.sep.join(('@docker_version_info', version_json)))
+            self.append('@docker_version_info|%s' % version_json)
+            self.append('<<<docker_%s:sep(0)>>>' % name)
 
     def write(self):
         if self[0].startswith('<<<<'):

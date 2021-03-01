@@ -30,11 +30,29 @@ visualization for direct interaction with the API's resources).
 * You are familiar with at least one of the applications for which sample code is available.
 * It helps if you have already worked with ReDoc and/or Swagger UI.
 
-
 # Responses
 
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
+
+# Updating values
+
+When an object is updated by multiple requests at the same time, it can happen that the second
+request will overwrite important values from the first request. This is known as the "lost update
+problem" and can be prevented by a locking scheme. The scheme that Checkmk uses for this is called
+an "optimistic lock" and allows read access even when writes are happening. It works as follows:
+
+1. The user fetches the object to be modified.
+2. The server responds with the data and an HTTP `ETag` header containing a value which is something
+   like the "checksum" of the object.
+3. In order to modify the object, the user sends an update request with an HTTP `If-Match` header
+   which contains the value of the previously fetched `ETag`. This ensures that the writer has seen
+   the object to be modified. If any modifications by someone else were to happen between the
+   request (1) and the update (3) these values would not match and the update would fail.
+
+This scheme es used for most `PUT` requests throughout the REST API and always works the same way.
+Detailed documentation of the various involved fields as well as the possible error messages can
+be found on the documentation of each affected endpoint.
 
 # Link relations
 

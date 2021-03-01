@@ -18,6 +18,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 from cmk.utils.type_defs.protocol import Protocol
+from ._base import MKFetcherError
 
 from cmk.snmplib.type_defs import AbstractRawData, SNMPRawData
 
@@ -376,7 +377,8 @@ class FetcherMessage(Protocol):
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
-                    status=50,
+                    status=logging.INFO
+                    if isinstance(raw_data.error, MKFetcherError) else logging.CRITICAL,
                     payload_length=len(error_payload),
                     stats_length=len(stats),
                 ),

@@ -1,0 +1,20 @@
+Title: Bake&Sign sometimes misses some signatures
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1614605265
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+In some situations, the agent bakery will fail to sign some agent
+packages after baking in "Bake and sign" mode.
+
+This may occur when a host is added to an already existing agent
+configuration, resulting in a rebaking of the package under the
+same configuration hash.
+
+With this Werk, all agents will be signed when baking in
+"Bake and sign" mode.

@@ -520,8 +520,6 @@ class LoginPage(Page):
         html.open_div(id_="login_window")
 
         html.img(src=html.theme_url("images/mk-logo.svg"), id_="logo")
-        html.div("" if "hide_version" in config.login_screen else cmk_version.__version__,
-                 id_="version")
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')

@@ -90,11 +90,11 @@ def save_gui_messages(messages, user_id=None):
 def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
-            'title': _('Popup Message in the GUI (shows up alert window)'),
+            'title': _('Open window in the user interface'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Send hint to user menu'),
+            'title': _('Show hint in the \'User\' menu'),
             'handler': notify_gui_msg,
         },
         'mail': {
@@ -102,7 +102,7 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_mail,
         },
         'dashlet': {
-            'title': _('Send hint to dashlet'),
+            'title': _('Show notification in dashboard element \'User notifications\''),
             'handler': notify_gui_msg,
         },
     }
@@ -286,7 +286,7 @@ def _process_notify_message(msg):
     message += "<table>"
     for method in msg['methods']:
         message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                        (_notify_methods()[method]["title"], num_success[method], num_recipients)
+            (_notify_methods()[method]["title"], num_success[method], num_recipients)
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)

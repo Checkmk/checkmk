@@ -462,7 +462,7 @@ def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[s
 
 def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
     available_macros = chain(
-        ["$DEFAULT_TITLE$ " + _u("(default title of the dashlet)")],
+        ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
         _get_title_macros_from_single_infos(dashlet_type.single_infos()),
         dashlet_type.get_additional_title_macros(),
     )
@@ -484,20 +484,20 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
              FixedValue(
                  dashlet_type.type_name(),
                  totext=dashlet_type.title(),
-                 title=_('Dashlet Type'),
+                 title=_('Element type'),
              )),
             visuals.single_infos_spec(single_infos),
             ('background',
              Checkbox(
-                 title=_('Colored Background'),
+                 title=_('Colored background'),
                  label=_('Render background'),
-                 help=_('Render gray background color behind the dashlets content.'),
+                 help=_('Render gray background color behind the elements content.'),
                  default_value=True,
              )),
             ('show_title',
              DropdownChoice(
                  title=_("Show title header"),
-                 help=_('Render the titlebar including title and link above the dashlet.'),
+                 help=_('Render the titlebar including title and link above the element.'),
                  choices=[
                      (False, _("Don't show any header")),
                      (True, _("Show header with highlighted background")),
@@ -507,12 +507,12 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
              )),
             ('title',
              TextUnicode(
-                 title=_('Custom Title') + '<sup>*</sup>',
+                 title=_('Custom title') + '<sup>*</sup>',
                  placeholder=_(
                      "This option is macro-capable, please check the inline help for more "
                      "information."),
                  help=" ".join((
-                     _('Most dashlets have a hard coded static title and some are aware of their '
+                     _('Most elements have a hard coded static title and some are aware of their '
                        'content and set the title dynamically, like the view snapin, which '
                        'displays the title of the view. If you like to use any other title, set it '
                        'here.'),
@@ -523,7 +523,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
             ('title_url',
              TextUnicode(
                  title=_('Link of Title'),
-                 help=_('The URL of the target page the link of the dashlet should link to.'),
+                 help=_('The URL of the target page the link of the element should link to.'),
                  size=50,
              )),
         ],
@@ -592,7 +592,7 @@ class FigureDashletPage(AjaxPage):
         try:
             dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
         except KeyError:
-            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+            raise MKUserError("type", _('The requested element type does not exist.'))
 
         settings = dashlet_vs_general_settings(
             dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
@@ -856,7 +856,7 @@ def _transform_builtin_dashboards() -> None:
             dashlet.setdefault('show_title', True)
 
             if dashlet.get('url', '').startswith('dashlet_hoststats') or \
-                dashlet.get('url', '').startswith('dashlet_servicestats'):
+                    dashlet.get('url', '').startswith('dashlet_servicestats'):
 
                 # hoststats and servicestats
                 dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]

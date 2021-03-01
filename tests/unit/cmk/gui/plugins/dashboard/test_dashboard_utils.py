@@ -239,7 +239,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             [],
             [],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li></ul>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
             "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
             id="default title only",
@@ -248,7 +248,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             ["host"],
             [],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li>"
             "<li><tt>$HOST_NAME$</tt></li>"
             "<li><tt>$HOST_ALIAS$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
@@ -259,7 +259,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             [],
             ["$MACRO$"],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li>"
             "<li><tt>$MACRO$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
             "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
@@ -269,7 +269,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             ["service", "host"],
             ["$MACRO1$", "$MACRO2$ (some explanation)"],
             "You can use the following macros to fill in the corresponding information:"
-            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the dashlet)</tt></li>"
+            "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li>"
             "<li><tt>$HOST_NAME$</tt></li>"
             "<li><tt>$HOST_ALIAS$</tt></li>"
             "<li><tt>$SERVICE_DESCRIPTION$</tt></li>"

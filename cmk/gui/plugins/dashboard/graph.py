@@ -70,13 +70,13 @@ class GraphTemplate(DropdownChoiceWithHostAndServiceHints):
             "sorted": True,
             "no_preselect": True,
             "help": _(
-                "Select the graph to be displayed by this dashlet. In case the current selection "
-                "displays 'Deprecated choice, please re-select', this dashlet was created before "
+                "Select the graph to be displayed by this element. In case the current selection "
+                "displays 'Deprecated choice, please re-select', this element was created before "
                 "the release of version 2.0. Before this version, the graph selection was based on "
-                "a single number indexing the output of the corresponding service. Such dashlets "
+                "a single number indexing the output of the corresponding service. Such elements "
                 "will continue to work, however, if you want to re-edit them, you have to re-"
                 "select the graph. To check which graph is currently selected, look at the title "
-                "of the dashlet in the dashboard.",),
+                "of the element in the dashboard.",),
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)

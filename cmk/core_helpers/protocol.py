@@ -32,7 +32,7 @@ from typing import Final, Iterator, Sequence, Type, Union
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.exceptions import MKTimeout
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 from cmk.utils.type_defs.protocol import Protocol
 
@@ -374,7 +374,8 @@ class FetcherMessage(Protocol):
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
-                    status=50,
+                    status=logging.INFO
+                    if isinstance(raw_data.error, MKFetcherError) else logging.CRITICAL,
                     payload_length=len(error_payload),
                     stats_length=len(stats),
                 ),

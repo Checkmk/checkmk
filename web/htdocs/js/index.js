@@ -92,6 +92,13 @@ try {
     ntop_top_talkers = null;
 }
 
+var license_usage_timeseries_graph;
+try {
+    license_usage_timeseries_graph = require("license_usage_timeseries_graph");
+} catch (e) {
+    license_usage_timeseries_graph = null;
+}
+
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -152,6 +159,9 @@ export const cmk_export = {
             alerts: ntop_alerts,
             flows: ntop_flows,
             top_talkers: ntop_top_talkers,
+        },
+        license_usage: {
+            timeseries_graph: license_usage_timeseries_graph,
         },
     },
 };

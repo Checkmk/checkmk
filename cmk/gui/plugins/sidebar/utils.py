@@ -354,7 +354,10 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
         topic.items.append(
             TopicMenuItem(
                 name=name,
-                title=visual_title(visual_type_name, visual, visual["context"]),
+                title=visual_title(visual_type_name,
+                                   visual,
+                                   visual["context"],
+                                   skip_title_context=True),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],

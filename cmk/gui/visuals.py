@@ -1885,7 +1885,10 @@ def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) 
     return set(single_info_keys).difference(context)
 
 
-def visual_title(what: VisualTypeName, visual: Visual, context: VisualContext) -> str:
+def visual_title(what: VisualTypeName,
+                 visual: Visual,
+                 context: VisualContext,
+                 skip_title_context: bool = False) -> str:
     title = _u(visual["title"])
 
     # In case we have a site context given replace the $SITE$ macro in the titles.
@@ -1893,7 +1896,7 @@ def visual_title(what: VisualTypeName, visual: Visual, context: VisualContext) -
     assert isinstance(site_filter_vars, dict)
     title = title.replace("$SITE$", site_filter_vars.get("site", ""))
 
-    if visual["add_context_to_title"]:
+    if visual["add_context_to_title"] and not skip_title_context:
         title = _add_context_title(visual, title)
 
     # Execute title plugin functions which might be added by the user to

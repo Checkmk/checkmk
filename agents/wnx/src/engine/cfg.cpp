@@ -714,8 +714,6 @@ bool CleanDataFolder(CleanMode mode) {
             XLOG::details::LogWindowsEventInfo(
                 event_log_code_99,
                 "Removing SMART from the Program Data Folder");
-            auto killed_processes_count = wtools::KillProcessesByDir(path);
-            XLOG::l.i("Killed [{}] processes", killed_processes_count);
             RemoveCapGeneratedFile();
             RemoveOwnGeneratedFiles();
             if (g_remove_dirs_on_clean) {

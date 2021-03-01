@@ -131,6 +131,7 @@ int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
 
         auto shift = p.lexically_relative(dir).u8string();
         if (!shift.empty() && shift[0] != '.') {
+            XLOG::l.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;
         }

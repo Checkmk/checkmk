@@ -1224,26 +1224,7 @@ class SingleValuePlot extends SubPlot {
         const plot_size = this._renderer.plot_size;
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
         const svc_status_display = cmk_figures.getIn(this, "definition", "svc_status_display");
-
-        let status_cls = cmk_figures.svc_status_css(
-            "background",
-            cmk_figures.getIn(this, "definition", "svc_status_display")
-        );
-
-        if (status_cls) {
-            this.svg
-                .selectAll("rect.status_background")
-                .data([null])
-                .join("rect")
-                .attr("class", `status_background ${status_cls}`)
-                .attr("y", 0)
-                .attr("x", 0)
-                .attr("width", plot_size.width)
-                .attr("height", plot_size.height);
-        } else {
-            this.svg.selectAll("rect.status_background").remove();
-        }
-
+        cmk_figures.background_status_component(this.svg, svc_status_display, plot_size);
         cmk_figures.metric_value_component(
             this.svg,
             value,

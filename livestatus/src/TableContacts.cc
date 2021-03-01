@@ -153,12 +153,12 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
             return g_timeperiods_cache->inTimeperiod(
                 ct.service_notification_period_ptr);
         }));
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(),
                                   AttributeKind::custom_variables}));
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(),
@@ -168,10 +168,10 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         offsets,
         GetCustomAttribute{table->core(), AttributeKind::custom_variables}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "tag_names", "A list of all tags of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(), AttributeKind::tags}));
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "tag_values",
         "A list of the values of all tags of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(), AttributeKind::tags}));
@@ -179,10 +179,10 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "tags", "A dictionary of the tags", offsets,
         GetCustomAttribute{table->core(), AttributeKind::tags}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_names", "A list of all labels of the contact", offsets,
         GetCustomAttributeElem<0>{table->core(), AttributeKind::labels}));
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_values",
         "A list of the values of all labels of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(), AttributeKind::labels}));
@@ -190,12 +190,12 @@ void TableContacts::addColumns(Table *table, const std::string &prefix,
         prefix + "labels", "A dictionary of the labels", offsets,
         GetCustomAttribute{table->core(), AttributeKind::labels}));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_source_names", "A list of all sources of the contact",
         offsets,
         GetCustomAttributeElem<0>{table->core(),
                                   AttributeKind::label_sources}));
-    table->addColumn(std::make_unique<ListLambdaColumn<contact>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<contact>>(
         prefix + "label_source_values",
         "A list of the values of all sources of the contact", offsets,
         GetCustomAttributeElem<1>{table->core(),

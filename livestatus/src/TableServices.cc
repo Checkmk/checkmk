@@ -505,7 +505,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return g_timeperiods_cache->inTimeperiod(r.notification_period_ptr);
         }));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
         offsets, [](const service &r) {
@@ -606,7 +606,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         offsets.add(
             [](Row r) { return &r.rawData<service>()->servicegroups_ptr; }),
         table->core()));
-    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in", offsets,
         [](const service &svc) {
@@ -618,7 +618,7 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return names;
         }));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<service>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets, [mc](const service &r) {

@@ -498,7 +498,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                    g_timeperiods_cache->inTimeperiod(it->second);
         }));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
         offsets, [](const host &hst) {
@@ -753,7 +753,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         prefix + "groups", "A list of all host groups this host is in",
         offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
         mc));
-    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,
         [](const host &hst) {
@@ -781,7 +781,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "A list of all services including full state information. The list of entries can grow in future versions.",
         offsets_services, mc, 3));
 
-    table->addColumn(std::make_unique<ListLambdaColumn<host>>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "metrics",
         "A list of all metrics of this object that historically existed",
         offsets, [mc](const host &r) {

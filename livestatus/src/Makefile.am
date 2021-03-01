@@ -59,6 +59,7 @@ test_neb_SOURCES = \
     test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
     test/test_IntColumn.cc \
+    test/test_ListColumn.cc \
     test/test_LogEntry.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
@@ -131,6 +132,7 @@ liblivestatus_a_SOURCES = \
         IntColumn.cc \
         IntFilter.cc \
         ListColumn.cc \
+        ListLambdaColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \

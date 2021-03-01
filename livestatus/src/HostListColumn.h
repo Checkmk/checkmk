@@ -21,12 +21,12 @@ class MonitoringCore;
 class Row;
 class RowRenderer;
 
-class HostListColumn : public ListColumn {
+class HostListColumn : public deprecated::ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
                    const ColumnOffsets &offsets, MonitoringCore *mc,
                    bool show_state)
-        : ListColumn(name, description, offsets)
+        : deprecated::ListColumn(name, description, offsets)
         , _mc(mc)
         , _show_state(show_state) {}
 

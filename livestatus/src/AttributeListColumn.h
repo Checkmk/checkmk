@@ -21,11 +21,11 @@
 class ColumnOffsets;
 class Row;
 
-class AttributeListColumn : public ListColumn {
+class AttributeListColumn : public deprecated::ListColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
                         const ColumnOffsets &offsets)
-        : ListColumn(name, description, offsets)
+        : deprecated::ListColumn(name, description, offsets)
         , _int_view_column(name, description, offsets) {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(

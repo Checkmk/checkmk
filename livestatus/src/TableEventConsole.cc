@@ -203,10 +203,10 @@ std::unique_ptr<TimeColumn::Callback<ECRow>> ECRow::makeTimeColumn(
 }
 
 // static
-std::unique_ptr<ListLambdaColumn<ECRow>> ECRow::makeListColumn(
+std::unique_ptr<ListColumn::Callback<ECRow>> ECRow::makeListColumn(
     const std::string &name, const std::string &description,
     const ColumnOffsets &offsets) {
-    return std::make_unique<ListLambdaColumn<ECRow>>(
+    return std::make_unique<ListColumn::Callback<ECRow>>(
         name, description, offsets, [name](const ECRow &r) {
             auto result = r.getString(name);
             return result.empty() || result == "\002"
@@ -272,8 +272,8 @@ bool TableEventConsole::isAuthorizedForEvent(Row row,
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     const MonitoringCore::Contact *ctc, Row row, bool &result) const {
-    auto col =
-        std::static_pointer_cast<ListColumn>(column("event_contact_groups"));
+    auto col = std::static_pointer_cast<deprecated::ListColumn>(
+        column("event_contact_groups"));
     if (const auto *r = col->columnData<ECRow>(row)) {
         // TODO(sp) This check for None is a hack...
         if (r->getString(col->name()) == "\002") {

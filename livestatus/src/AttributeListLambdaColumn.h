@@ -47,13 +47,14 @@ private:
 };
 
 template <class T>
-class AttributeListColumn2 : public ListColumn {
+class AttributeListColumn2 : public deprecated::ListColumn {
 public:
     AttributeListColumn2(const std::string& name,
                          const std::string& description,
                          const ColumnOffsets& offsets,
                          const AttributeBitmaskLambdaColumn<T>& bitmask_col)
-        : ListColumn(name, description, offsets), bitmask_col_{bitmask_col} {}
+        : deprecated::ListColumn(name, description, offsets)
+        , bitmask_col_{bitmask_col} {}
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,

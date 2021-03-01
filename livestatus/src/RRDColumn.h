@@ -59,12 +59,12 @@ private:
 }  // namespace detail
 
 template <class T>
-class RRDColumn : public ListColumn {
+class RRDColumn : public deprecated::ListColumn {
 public:
     RRDColumn(const std::string &name, const std::string &description,
               const ColumnOffsets &offsets, MonitoringCore *mc,
               const RRDColumnArgs &args)
-        : ListColumn{name, description, offsets}
+        : deprecated::ListColumn{name, description, offsets}
         , data_maker_{detail::RRDDataMaker{mc, args}} {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,

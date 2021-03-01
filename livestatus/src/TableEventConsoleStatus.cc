@@ -5,8 +5,6 @@
 
 #include "TableEventConsoleStatus.h"
 
-#include <vector>
-
 #include "Column.h"
 #include "DoubleColumn.h"
 #include "IntLambdaColumn.h"

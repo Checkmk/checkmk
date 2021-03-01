@@ -62,20 +62,14 @@ class GaugeFigure extends cmk_figures.FigureBase {
     render() {
         this._render_levels();
         this.render_title(this._data.title, this._data.title_url);
-
-        let plot = this._data.plot_definitions.filter(d => d.plot_type == "single_value")[0];
-        let border_component = cmk_figures.getIn(plot, "border_style");
-        if (border_component) cmk_figures.state_component(this, border_component);
     }
 
     _render_fixed_elements() {
         const limit = (7 * Math.PI) / 12;
         this.plot
-            .selectAll("path.background")
+            .selectAll("path.gauge_span")
             .data([null])
-            .join(enter => enter.append("path").classed("background", true))
-            .attr("fill", "grey")
-            .attr("opacity", 0.1)
+            .join(enter => enter.append("path").classed("gauge_span", true))
             .attr(
                 "d",
                 d3
@@ -139,16 +133,6 @@ class GaugeFigure extends cmk_figures.FigureBase {
 
         this._render_gauge_range_labels(domain, formatter);
 
-        const last_value = data[data.length - 1];
-        const value = cmk_figures.renderable_value(last_value, domain, plot);
-
-        cmk_figures.metric_value_component(
-            this.plot,
-            value,
-            {x: 0, y: -this._radius / 5},
-            {font_size: this._radius / 3.5, style: value.style}
-        );
-
         if (domain[0] === domain[1]) return;
         const limit = (7 * Math.PI) / 12;
         const scale_x = d3.scaleLinear().domain(domain).range([-limit, limit]);
@@ -156,9 +140,8 @@ class GaugeFigure extends cmk_figures.FigureBase {
         this.plot
             .selectAll("path.level")
             .data(cmk_figures.make_levels(domain, plot.metric.bounds))
-            .join(enter => enter.append("path").classed("level", true))
+            .join(enter => enter.append("path"))
             .attr("class", d => "level " + d.style)
-            .attr("opacity", 0.9)
             .attr(
                 "d",
                 d3
@@ -173,12 +156,13 @@ class GaugeFigure extends cmk_figures.FigureBase {
             .join("title")
             .text(d => d.from + " -> " + d.to);
         // gauge bar
+        const last_value = data[data.length - 1];
+        const value = cmk_figures.renderable_value(last_value, domain, plot);
         this.plot
             .selectAll("path.single_value")
             .data([{...value, value: cmk_figures.clamp(last_value.value, domain)}])
             .join("path")
-            .attr("class", d => "single_value " + d.style)
-            .attr("opacity", 0.9)
+            .attr("class", "single_value")
             .attr(
                 "d",
                 d3
@@ -188,6 +172,15 @@ class GaugeFigure extends cmk_figures.FigureBase {
                     .startAngle(d => -limit)
                     .endAngle(d => scale_x(d.value))
             );
+
+        const svc_status_display = cmk_figures.getIn(plot, "svc_status_display");
+        cmk_figures.background_status_component(this.svg, svc_status_display, this.figure_size);
+        cmk_figures.metric_value_component(
+            this.plot,
+            value,
+            {x: 0, y: -this._radius / 5},
+            {font_size: this._radius / 3.5, ...svc_status_display}
+        );
 
         if (data.length > 10) this._render_histogram(domain, data);
     }

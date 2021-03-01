@@ -719,19 +719,10 @@ export function state_component(figurebase, state) {
 }
 
 export function renderable_value(value, domain, plot) {
-    const levels = make_levels(domain, plot.metric.bounds);
     const formatter = plot_render_function(plot);
-
-    let style = {color: "#3CC2FF", style: ""};
-    if (levels.length) {
-        let state = levels.find(element => clamp(value.value, domain) >= element.from);
-        style = {color: state.color, style: state.style};
-    }
-
     return {
         ...split_unit(formatter(value.value)),
         url: value.url || "",
-        ...style,
     };
 }
 
@@ -766,6 +757,23 @@ export function svc_status_css(paint, params) {
 
     if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
     return status_cls;
+}
+export function background_status_component(selection, params, rect_size) {
+    let status_cls = svc_status_css("background", params);
+
+    if (status_cls) {
+        selection
+            .selectAll("rect.status_background")
+            .data([null])
+            .join(enter => enter.insert("rect", ":first-child"))
+            .attr("class", `status_background ${status_cls}`)
+            .attr("y", 0)
+            .attr("x", 0)
+            .attr("width", rect_size.width)
+            .attr("height", rect_size.height);
+    } else {
+        selection.selectAll("rect.status_background").remove();
+    }
 }
 export function metric_value_component(selection, value, attr, style) {
     let css_class = svc_status_css("text", style);

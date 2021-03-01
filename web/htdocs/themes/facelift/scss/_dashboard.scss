@@ -758,6 +758,13 @@ svg {
     fill: $color-state-3-background;
     stroke: $color-state-3-background;
   }
+  // gauge
+  .gauge_span {
+    // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
+    // Gives enough contrast on both themes against the color of the gauge level
+    // which is $primary-font-color
+    fill: $darkgrey;
+  }
 }
 
 svg.renderer {

@@ -176,9 +176,6 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
     if is_sidebar_reload_needed():
         html.reload_whole_page()
 
-    from cmk.gui.log import logger
-    logger.warning("HIER3")
-
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 

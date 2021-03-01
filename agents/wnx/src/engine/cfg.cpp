@@ -313,6 +313,11 @@ std::wstring GetRootInstallDir() noexcept {
     return root / dirs::kFileInstallDir;
 }
 
+std::wstring GetRootUtilsDir() noexcept {
+    auto root = GetCfg().getRootDir();
+    return root / dirs::kAgentUtils;
+}
+
 std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
 
 std::wstring GetStateDir() noexcept { return GetCfg().getStateDir(); }

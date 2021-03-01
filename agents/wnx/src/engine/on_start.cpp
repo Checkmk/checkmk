@@ -54,7 +54,6 @@ void LogFolders() {
 }
 
 bool FindAndPrepareWorkingFolders(AppType Type) {
-    using namespace cma::cfg;
     namespace fs = std::filesystem;
 
     switch (Type) {

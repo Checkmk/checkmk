@@ -50,6 +50,7 @@ constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
 constexpr std::wstring_view kDatFile = L"checkmk.dat";
 constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";
 constexpr std::wstring_view kBakeryYmlFile = L"check_mk.bakery.yml";
+constexpr std::wstring_view kExecuteUpdateFile = L"execute_update.cmd";
 
 // extensions
 constexpr const wchar_t* kDefaultBakeryExt = L".bakery.yml";
@@ -125,6 +126,7 @@ std::wstring GetUserPluginsDir() noexcept;
 std::wstring GetSystemPluginsDir() noexcept;
 std::wstring GetRootDir() noexcept;
 std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
+std::wstring GetRootUtilsDir() noexcept;
 std::wstring GetUserDir() noexcept;
 std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;

@@ -1204,6 +1204,15 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "alerts_bar_chart"),
     )
 
+    yield PageMenuEntryCEEOnly(
+        title=_('Percentage of service problems'),
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'statistic'
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "problem_graph"),
+    )
+
     yield PageMenuEntry(
         title='User notifications',
         icon_name='notifications',

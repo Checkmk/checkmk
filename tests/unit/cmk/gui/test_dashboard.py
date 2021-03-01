@@ -57,6 +57,7 @@ def test_dashlet_registry_plugins():
             'barplot',
             'gauge',
             'notifications_bar_chart',
+            'problem_graph',
             'single_metric',
             'site_overview',
             'custom_graph',

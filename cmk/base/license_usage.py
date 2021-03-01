@@ -15,7 +15,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
-from cmk.utils.license_usage import (
+from cmk.utils.license_usage.samples import (
     LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,

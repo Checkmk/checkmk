@@ -8,7 +8,7 @@ import pytest
 from datetime import datetime, timedelta
 
 import cmk.utils.store as store
-from cmk.utils.license_usage import (
+from cmk.utils.license_usage.samples import (
     LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,

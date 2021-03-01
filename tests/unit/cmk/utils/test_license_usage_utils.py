@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.utils.license_usage as license_usage
+import cmk.utils.license_usage.samples as license_usage_samples
 
 
 @pytest.mark.parametrize("prev_dump_version, sample, result", [
@@ -20,7 +20,7 @@ import cmk.utils.license_usage as license_usage
         "num_hosts": 2,
         "num_services": 4,
     },
-     license_usage.LicenseUsageSample(
+     license_usage_samples.LicenseUsageSample(
          version="",
          edition="",
          platform="",
@@ -31,7 +31,7 @@ import cmk.utils.license_usage as license_usage
          num_hosts_excluded=0,
          num_services=4,
          num_services_excluded=0,
-         extensions=license_usage.LicenseUsageExtensions(ntop=False,),
+         extensions=license_usage_samples.LicenseUsageExtensions(ntop=False,),
      )),
     ("1.1", {
         "version": "",
@@ -45,7 +45,7 @@ import cmk.utils.license_usage as license_usage
         "num_services": 4,
         "num_services_excluded": 5,
     },
-     license_usage.LicenseUsageSample(
+     license_usage_samples.LicenseUsageSample(
          version="",
          edition="",
          platform="",
@@ -56,7 +56,7 @@ import cmk.utils.license_usage as license_usage
          num_hosts_excluded=3,
          num_services=4,
          num_services_excluded=5,
-         extensions=license_usage.LicenseUsageExtensions(ntop=False,),
+         extensions=license_usage_samples.LicenseUsageExtensions(ntop=False,),
      )),
     ("1.1", {
         "version": "",
@@ -73,7 +73,7 @@ import cmk.utils.license_usage as license_usage
             "ntop": True,
         },
     },
-     license_usage.LicenseUsageSample(
+     license_usage_samples.LicenseUsageSample(
          version="",
          edition="",
          platform="",
@@ -84,8 +84,8 @@ import cmk.utils.license_usage as license_usage
          num_hosts_excluded=3,
          num_services=4,
          num_services_excluded=5,
-         extensions=license_usage.LicenseUsageExtensions(ntop=True,),
+         extensions=license_usage_samples.LicenseUsageExtensions(ntop=True,),
      )),
 ])
 def test__migrate_sample(prev_dump_version, sample, result):
-    assert license_usage._migrate_sample(prev_dump_version, sample) == result
+    assert license_usage_samples._migrate_sample(prev_dump_version, sample) == result

@@ -45,7 +45,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
-import cmk.utils.license_usage as license_usage
+import cmk.utils.license_usage.samples as license_usage_samples
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -1789,7 +1789,7 @@ def _add_extensions_for_license_usage():
     extensions_filepath = license_usage_dir.joinpath("extensions.json")
 
     with store.locked(extensions_filepath):
-        extensions = license_usage.LicenseUsageExtensions(ntop=config.is_ntop_configured(),)
+        extensions = license_usage_samples.LicenseUsageExtensions(ntop=config.is_ntop_configured(),)
         store.save_bytes_to_file(extensions_filepath, extensions.serialize())
 
 

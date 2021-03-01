@@ -50,7 +50,7 @@ class ABCFileCache(Generic[TRawData], abc.ABC):
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
-        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r" % (
+        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r)" % (
             type(self).__name__,
             self.path,
             self.max_age,

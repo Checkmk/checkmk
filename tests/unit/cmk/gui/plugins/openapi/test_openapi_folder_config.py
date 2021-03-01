@@ -114,19 +114,15 @@ def test_openapi_folders(wsgi_app, with_automation_user):
         content_type='application/json',
     )
 
-    base = '/NO_SITE/check_mk/api/v0'
-
     # First test without an ETag, fails with 428 (precondition required)
     wsgi_app.follow_link(resp,
                          '.../update',
-                         base=base,
                          status=428,
                          params='{"title": "foobar"}',
                          content_type='application/json')
     # First test without the proper ETag, fails with 412 (precondition failed)
     wsgi_app.follow_link(resp,
                          '.../update',
-                         base=base,
                          status=412,
                          headers={'If-Match': 'Witty Sensationalist Header!'},
                          params='{"title": "foobar"}',
@@ -134,7 +130,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # With the right ETag, the operation shall succeed
     resp = wsgi_app.follow_link(resp,
                                 '.../update',
-                                base=base,
                                 status=200,
                                 headers={'If-Match': resp.headers['ETag']},
                                 params='{"title": "foobar"}',
@@ -142,7 +137,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # Even twice, as this is idempotent.
     resp = wsgi_app.follow_link(resp,
                                 '.../update',
-                                base=base,
                                 status=200,
                                 headers={'If-Match': resp.headers['ETag']},
                                 params='{"title": "foobar"}',
@@ -151,7 +145,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # Move to the same source should give a 400
     wsgi_app.follow_link(resp,
                          '.../invoke;action="move"',
-                         base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '~'}),
@@ -160,7 +153,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # Check that unknown folders also give a 400
     wsgi_app.follow_link(resp,
                          '.../invoke;action="move"',
-                         base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": 'asdf'}),
@@ -169,7 +161,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # Check that moving onto itself gives a 400
     wsgi_app.follow_link(other_folder,
                          '.../invoke;action="move"',
-                         base=base,
                          status=400,
                          headers={'If-Match': other_folder.headers['ETag']},
                          params=json.dumps({"destination": '~other_folder'}),
@@ -178,7 +169,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     # Check that moving into it's own subfolder is not possible.
     wsgi_app.follow_link(new_folder,
                          '.../invoke;action="move"',
-                         base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '/new_folder/sub_folder'}),
@@ -186,7 +176,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     wsgi_app.follow_link(new_folder,
                          '.../invoke;action="move"',
-                         base=base,
                          status=200,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '\\other_folder'}),
@@ -201,7 +190,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
         # With the right ETag, the operation shall succeed
         wsgi_app.follow_link(resp,
                              '.../delete',
-                             base=base,
                              status=204,
                              headers={'If-Match': resp.headers['ETag']})
 

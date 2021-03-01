@@ -42,7 +42,6 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     resp = wsgi_app.follow_link(
         resp,
         'self',
-        base=base,
         status=200,
     )
 
@@ -51,7 +50,6 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         params=json.dumps(update_group),
         headers={'If-Match': 'foo bar'},
         status=412,
@@ -61,7 +59,6 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     resp = wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         params=json.dumps(update_group),
         headers={'If-Match': resp.headers['ETag']},
         status=200,
@@ -71,7 +68,6 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     wsgi_app.follow_link(
         resp,
         '.../delete',
-        base=base,
         headers={'If-Match': resp.headers['ETag']},
         status=204,
         content_type='application/json',

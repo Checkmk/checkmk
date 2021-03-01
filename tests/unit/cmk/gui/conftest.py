@@ -292,7 +292,7 @@ class WebTestAppForCMK(webtest.TestApp):
         except KeyError:
             return False
 
-    def follow_link(self, resp: webtest.TestResponse, rel, base='', **kw) -> webtest.TestResponse:
+    def follow_link(self, resp: webtest.TestResponse, rel, **kw) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
         rel = _expand_rel(rel)
         if resp.status.startswith("2") and resp.content_type.endswith("json"):

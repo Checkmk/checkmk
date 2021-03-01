@@ -74,14 +74,12 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     resp = wsgi_app.follow_link(
         resp,
         'self',
-        base=base,
         status=200,
     )
 
     resp = wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         status=200,
         params='{"attributes": {"ipaddress": "127.0.0.1"}}',
         headers={'If-Match': resp.headers['ETag']},
@@ -92,7 +90,6 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     resp = wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         status=200,
         params='{"update_attributes": {"alias": "bar"}}',
         headers={'If-Match': resp.headers['ETag']},
@@ -103,7 +100,6 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     resp = wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         status=200,
         params='{"remove_attributes": ["alias"]}',
         headers={'If-Match': resp.headers['ETag']},
@@ -115,7 +111,6 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     wsgi_app.follow_link(
         resp,
         '.../update',
-        base=base,
         status=400,
         params='{"attributes": {"foobaz": "bar"}}',
         headers={'If-Match': resp.headers['ETag']},
@@ -125,7 +120,6 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     wsgi_app.follow_link(
         resp,
         '.../delete',
-        base=base,
         status=204,
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',

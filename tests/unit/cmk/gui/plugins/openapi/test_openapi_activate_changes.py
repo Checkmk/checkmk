@@ -77,7 +77,6 @@ def test_openapi_activate_changes(
         resp = wsgi_app.follow_link(
             resp,
             CMK_WAIT_FOR_COMPLETION,
-            base=base,
         )
         if resp.status_code == 204:
             break
@@ -87,7 +86,6 @@ def test_openapi_activate_changes(
     wsgi_app.follow_link(
         host_created,
         '.../delete',
-        base=base,
         status=204,
         headers={'If-Match': host_created.headers['ETag']},
         content_type='application/json',
@@ -106,7 +104,6 @@ def test_openapi_activate_changes(
         resp = wsgi_app.follow_link(
             resp,
             CMK_WAIT_FOR_COMPLETION,
-            base=base,
         )
         if resp.status_code == 204:
             break

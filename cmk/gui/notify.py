@@ -148,12 +148,11 @@ def page_notify():
 
 
 def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    menu = make_simple_form_page_menu(
-        breadcrumb,
-        form_name="notify",
-        button_name="save",
-        save_title=_("Send notification"),
-    )
+    menu = make_simple_form_page_menu(_("Users"),
+                                      breadcrumb,
+                                      form_name="notify",
+                                      button_name="save",
+                                      save_title=_("Send notification"))
 
     menu.dropdowns.insert(
         1,

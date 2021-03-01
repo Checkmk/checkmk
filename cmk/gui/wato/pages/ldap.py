@@ -242,7 +242,8 @@ class ModeEditLDAPConnection(LDAPMode):
         return _("Edit LDAP connection: %s") % html.render_text(self._connection_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Connection"),
+                                          breadcrumb,
                                           form_name="connection",
                                           button_name="_save",
                                           save_title=_("Save"))

@@ -104,10 +104,11 @@ class ModeDiagnostics(WatoMode):
         return _("Support diagnostics")
 
     def page_menu(self, breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Diagnostics"),
+                                          breadcrumb,
                                           form_name="diagnostics",
                                           button_name="_collect_dump",
-                                          save_title=_("Collect dump"))
+                                          save_title=_("Collect diagnostics"))
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(

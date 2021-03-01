@@ -2036,7 +2036,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule_pack", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule pack"),
+                                          breadcrumb,
+                                          form_name="rule_pack",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2167,7 +2170,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2764,7 +2770,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return _('Upload SNMP MIBs')
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("MIBs"),
+                                          breadcrumb,
                                           form_name="upload_form",
                                           button_name="upload_button",
                                           save_title=_("Upload"))

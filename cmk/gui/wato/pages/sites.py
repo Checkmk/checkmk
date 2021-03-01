@@ -177,7 +177,10 @@ class ModeEditSite(WatoMode):
         return self.mode_url(site=self._site_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="site", button_name="save")
+        menu = make_simple_form_page_menu(_("Connection"),
+                                          breadcrumb,
+                                          form_name="site",
+                                          button_name="save")
         if not self._new and isinstance(self._site_id, str):
             menu.dropdowns.insert(
                 1, _page_menu_dropdown_site_details(self._site_id, self._site, self.name()))

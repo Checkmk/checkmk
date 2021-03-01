@@ -89,12 +89,11 @@ class ModeBulkImport(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not html.request.has_var("file_id"):
-            return make_simple_form_page_menu(
-                breadcrumb,
-                form_name="upload",
-                button_name="_do_upload",
-                save_title=_("Upload"),
-            )
+            return make_simple_form_page_menu(_("Hosts"),
+                                              breadcrumb,
+                                              form_name="upload",
+                                              button_name="_do_upload",
+                                              save_title=_("Upload"))
 
         # preview phase, after first upload
         return PageMenu(

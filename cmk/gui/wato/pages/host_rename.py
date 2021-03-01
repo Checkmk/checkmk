@@ -118,7 +118,8 @@ class ModeBulkRenameHost(WatoMode):
         return _("Bulk renaming of hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Hosts"),
+                                          breadcrumb,
                                           form_name="bulk_rename_host",
                                           button_name="_start",
                                           save_title=_("Bulk rename"))
@@ -392,7 +393,8 @@ class ModeRenameHost(WatoMode):
                                     self._host.name())
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Host"),
+                                          breadcrumb,
                                           form_name="rename_host",
                                           button_name="rename",
                                           save_title=_("Rename"))

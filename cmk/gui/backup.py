@@ -708,7 +708,10 @@ class PageEditBackupJob:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_job", button_name="save")
+        return make_simple_form_page_menu(_("Job"),
+                                          breadcrumb,
+                                          form_name="edit_job",
+                                          button_name="save")
 
     def vs_backup_schedule(self):
         return Alternative(
@@ -1215,7 +1218,10 @@ class PageEditBackupTarget:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_target", button_name="save")
+        return make_simple_form_page_menu(_("Target"),
+                                          breadcrumb,
+                                          form_name="edit_target",
+                                          button_name="save")
 
     def vs_backup_target(self):
         if self._new:

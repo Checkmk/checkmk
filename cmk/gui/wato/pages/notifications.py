@@ -1378,7 +1378,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                       "bulking or choose another notification plugin which allows bulking."))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        return make_simple_form_page_menu(_("Notification rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():

@@ -40,12 +40,11 @@ class ModeRandomHosts(WatoMode):
         return ModeFolder
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="random",
-            button_name="start",
-            save_title=_("Start!"),
-        )
+        return make_simple_form_page_menu(_("Hosts"),
+                                          breadcrumb,
+                                          form_name="random",
+                                          button_name="start",
+                                          save_title=_("Start!"))
 
     def action(self) -> ActionResult:
         if not html.check_transaction():

@@ -89,7 +89,7 @@ class ModeDiagHost(WatoMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="actions",
-                    title=_("Actions"),
+                    title=_("Test"),
                     topics=[
                         PageMenuTopic(
                             title=_("Host properties"),
@@ -107,8 +107,8 @@ class ModeDiagHost(WatoMode):
                             title=_("Options"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Test"),
-                                    icon_name="save",
+                                    title=_("Run tests"),
+                                    icon_name="connection_tests",
                                     item=make_form_submit_link("diag_host", "_try"),
                                     is_shortcut=True,
                                     is_suggested=True,

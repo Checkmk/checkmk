@@ -1674,7 +1674,8 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
 
 
 def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb,
+    return make_simple_form_page_menu(_("View"),
+                                      breadcrumb,
                                       form_name="choose_view",
                                       button_name="save",
                                       save_title=_("Continue"))
@@ -1841,7 +1842,10 @@ class EditDashletPage(Page):
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb, form_name="dashlet", button_name="save")
+    return make_simple_form_page_menu(_("Element"),
+                                      breadcrumb,
+                                      form_name="dashlet",
+                                      button_name="save")
 
 
 def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:

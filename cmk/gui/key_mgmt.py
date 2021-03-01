@@ -208,12 +208,11 @@ class PageEditKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="create",
-            save_title=_("Create"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="create",
+                                          save_title=_("Create"))
 
     def action(self) -> ActionResult:
         if html.check_transaction():
@@ -297,12 +296,11 @@ class PageUploadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="upload",
-            save_title=_("Upload"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="upload",
+                                          save_title=_("Upload"))
 
     def action(self) -> ActionResult:
         if html.check_transaction():
@@ -424,12 +422,11 @@ class PageDownloadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="download",
-            save_title=_("Download"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="download",
+                                          save_title=_("Download"))
 
     def action(self) -> ActionResult:
         if html.check_transaction():

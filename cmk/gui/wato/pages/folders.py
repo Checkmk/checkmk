@@ -1079,7 +1079,8 @@ class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
                 watolib.Folder.folder(html.request.var("backfolder")))
             breadcrumb.append(self._breadcrumb_item())
 
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Folder"),
+                                          breadcrumb,
                                           form_name="edit_host",
                                           button_name="save",
                                           save_is_enabled=is_enabled)

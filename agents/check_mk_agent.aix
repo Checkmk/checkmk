@@ -20,6 +20,13 @@ if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
 fi
 export PYTHON2 PYTHON3
 
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ $($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?) -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ $($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?) -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
 
 if [ -e $HOME/.profile ]
 then
@@ -150,6 +157,14 @@ function run_agent_plugin {
         return
     fi
     if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=(${FAILED_PYTHON_PLUGINS[@]} "$agent_plugin")
+            fi
+            return
+        fi
         if [ -n "$PYTHON3" ]; then
             $PYTHON3 "$agent_plugin"
             return
@@ -498,4 +513,14 @@ if [ -d "$MK_VARDIR/job" ]; then
         fi
     done
     cd "$CDIR" 2> /dev/null || exit
+fi
+
+if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[@]}"
+    if [ -n "$NO_PYTHON" ]; then
+        echo "FailedPythonReason: No suitable python installation found."
+    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+        echo "FailedPythonReason: Configured python command not found."
+    fi
 fi

@@ -789,9 +789,12 @@ class AgentSummarizerDefault(AgentSummarizer):
             for sub_status, sub_output in (r for r in [
                     self._check_version(agent_info.get("version")),
                     self._check_only_from(agent_info.get("onlyfrom")),
+                    self._check_python_plugins(agent_info.get("failedpythonplugins"),
+                                               agent_info.get("failedpythonreason")),
             ] if r):
                 status = max(status, sub_status)
                 output.append(sub_output)
+
         return status, ", ".join(output)
 
     @staticmethod
@@ -873,6 +876,16 @@ class AgentSummarizerDefault(AgentSummarizer):
             ", ".join(infotexts),
             state_markers[mismatch_state],
         )
+
+    def _check_python_plugins(
+        self,
+        agent_failed_plugins: Optional[str],
+        agent_fail_reason: Optional[str],
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+        if agent_failed_plugins is None or agent_fail_reason is None:
+            return None
+
+        return 1, f"Failed to execute python plugins: {agent_failed_plugins} ({agent_fail_reason})"
 
     @staticmethod
     def _is_expected_agent_version(

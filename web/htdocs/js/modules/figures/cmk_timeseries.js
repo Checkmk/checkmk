@@ -1036,7 +1036,10 @@ class AreaPlot extends SubPlot {
 
     render() {
         let color = this.get_color();
-        let status_cls = cmk_figures.getIn(this, "definition", "fill_style", "style") || "";
+        let svc_status_display = cmk_figures.getIn(this, "definition", "svc_status_display");
+        let status_cls = cmk_figures.svc_status_css("background", svc_status_display);
+        // Give svcstate class default, when stautus in plot_def, otherwise plot_def style overtakes
+        if (svc_status_display && !status_cls) status_cls = "svcstate";
 
         draw_subplot(this, "area", status_cls, {fill: color, opacity: this.get_opacity()});
         if (this.definition.style === "with_topline")
@@ -1220,36 +1223,33 @@ class SingleValuePlot extends SubPlot {
 
         const plot_size = this._renderer.plot_size;
         const font_size = Math.min(plot_size.width / 5, (plot_size.height * 2) / 3);
-        let inner_status_display = cmk_figures.getIn(this, "definition", "text_style");
+        const svc_status_display = cmk_figures.getIn(this, "definition", "svc_status_display");
 
-        const config = new URLSearchParams(this._post_body);
+        let status_cls = cmk_figures.svc_status_css(
+            "background",
+            cmk_figures.getIn(this, "definition", "svc_status_display")
+        );
 
-        let fill_component = cmk_figures.getIn(this, "definition", "fill_style");
-        if (fill_component) {
-            let style = fill_component.style ? " " + fill_component.style : "";
+        if (status_cls) {
             this.svg
                 .selectAll("rect.status_background")
                 .data([null])
                 .join("rect")
-                .attr("class", `status_background${style}`)
+                .attr("class", `status_background ${status_cls}`)
                 .attr("y", 0)
                 .attr("x", 0)
                 .attr("width", plot_size.width)
                 .attr("height", plot_size.height);
         } else {
             this.svg.selectAll("rect.status_background").remove();
-            if (this.definition.metric_status_display == null) value.color = "#3CC2FF"; // default blue
         }
 
         cmk_figures.metric_value_component(
             this.svg,
             value,
             {x: plot_size.width / 2, y: plot_size.height / 2 + font_size / 3},
-            {font_size, ...inner_status_display}
+            {font_size, ...svc_status_display}
         );
-
-        let border_component = cmk_figures.getIn(this, "definition", "border_style");
-        if (border_component) cmk_figures.state_component(this._renderer, border_component);
     }
 
     get_color() {

@@ -761,8 +761,16 @@ export function plot_render_function(plot) {
     if (js_render) return get_function(js_render);
     return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
 }
+export function svc_status_css(paint, params) {
+    let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
 
+    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
+    return status_cls;
+}
 export function metric_value_component(selection, value, attr, style) {
+    let css_class = svc_status_css("text", style);
+    if (!css_class) css_class = "single_value";
+
     let link = selection
         .selectAll("a.single_value")
         .data([value])
@@ -777,7 +785,7 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
-        .attr("class", style.style ? style.style : "single_value")
+        .attr("class", css_class)
         .style("font-size", style.font_size + "px");
 
     let unit = text

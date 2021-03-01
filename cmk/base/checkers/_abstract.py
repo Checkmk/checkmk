@@ -59,11 +59,10 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     #       can change these class attributes to object attributes.
     #
     # Set by the user via command line to prevent using cached information at all.
-    # Is also set by inventory for SNMP checks to handle the special situation that
-    # the inventory is not allowed to use the regular checking based SNMP data source
-    # cache.
     disabled: bool = False
-    snmp_disabled: bool = False
+    # Set by discovery for SNMP checks to force the (re-)detection of SNMP sections.
+    force_snmp_cache_refresh: bool = False
+
     agent_disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.

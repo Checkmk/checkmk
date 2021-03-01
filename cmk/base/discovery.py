@@ -618,7 +618,7 @@ def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
     # SNMP data sources *may* use the cache. Note the cached data results from
     # the last time a *discovery* was done. It contains all sections for
     # which the detection triggered at that time.
-    checkers.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
+    checkers.FileCacheFactory.force_snmp_cache_refresh = not use_cached_snmp_data
 
 
 def _make_services_audit_log_object(services: List[Service]) -> Set[str]:

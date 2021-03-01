@@ -54,8 +54,14 @@ class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
     def make(self) -> SNMPFileCache:
         return SNMPFileCache(
             path=self.path,
+            max_age=0,
+            disabled=self.disabled,
+            use_outdated=False,
+            simulation=self.simulation,
+        ) if self.force_snmp_cache_refresh else SNMPFileCache(
+            path=self.path,
             max_age=self.max_age,
-            disabled=self.disabled | self.snmp_disabled,
+            disabled=self.disabled,
             use_outdated=self.use_outdated,
             simulation=self.simulation,
         )

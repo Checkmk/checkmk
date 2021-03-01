@@ -1,0 +1,17 @@
+Title: Outdated data during full scan discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614623230
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+During full scan discovery on the WATO discovery page
+outdated data has been used. While this was not
+noticable in most cases, it could lead to missing
+or unexpectedly present services.
+This was the case for instance if you disabled SNMP
+sections, added a new plugin or changed an SNMP
+detection specification.

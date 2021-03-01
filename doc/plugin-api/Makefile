@@ -38,7 +38,7 @@ apidoc:
 	    "$(REPO_PATH)/cmk"
 # sphinx-apidoc file / module selection is not very powerful. Sort out the
 # non api files on our own here
-	find source/apidoc -type f ! -name 'cmk.*.plugins.*.*_api*' -exec rm {} \;
+	find source/apidoc -type f ! -name 'cmk.*.plugins.*.*_api.v*' -exec rm {} \;
 
 # TODO: Don't understand why we need this. Something calls the % target below
 # with the "$(REPO_PATH)/defines.make" target once we include this file above.

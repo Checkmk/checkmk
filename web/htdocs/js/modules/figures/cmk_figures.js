@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
+import * as utils from "utils";
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
@@ -73,6 +74,7 @@ class Scheduler {
 
     _schedule() {
         if (!this._enabled) return;
+        if (!utils.is_window_active()) return;
         let now = Math.floor(new Date().getTime() / 1000);
         if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
@@ -134,6 +136,7 @@ export class MultiDataFetcher {
     }
 
     _schedule_operations() {
+        if (!utils.is_window_active()) return;
         for (let url_id in this._fetch_operations) {
             for (let body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);

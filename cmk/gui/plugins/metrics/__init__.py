@@ -17,9 +17,10 @@ from cmk.utils.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
-    unit_info, metric_info, check_metrics, perfometer_info, graph_info, scalar_colors, parse_color,
-    render_color, darken_color, lighten_color, KB, MB, GB, TB, PB, m, K, M, G, T, P, scale_symbols,
-    parse_color_into_hexrgb, MAX_CORES, MAX_NUMBER_HOPS, indexed_color, skype_mobile_devices,
+    check_metrics, darken_color, G, GB, graph_info, indexed_color, K, KB, lighten_color, m, M,
+    MAX_CORES, MAX_NUMBER_HOPS, MB, metric_info, MONITORING_STATUS_COLORS, P, parse_color,
+    parse_color_into_hexrgb, PB, perfometer_info, render_color, scalar_colors, scale_symbols,
+    skype_mobile_devices, T, TB, unit_info,
 )
 
 #.

@@ -88,11 +88,6 @@ perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
 # This is needed to maintain backwards-compatibility.
 graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")
 
-scalar_colors = {
-    "warn": "#ffff00",
-    "crit": "#ff0000",
-}
-
 #.
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |
@@ -909,6 +904,22 @@ _cmk_color_palette = {
 
 def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
     return "#%02x%02x%02x" % (red, green, blue)
+
+
+# These colors are also used in the CSS stylesheets, do not change one without changing the other.
+MONITORING_STATUS_COLORS = {
+    "critical/down": rgb_color_to_hex_color(255, 50, 50),
+    "unknown/unreachable": rgb_color_to_hex_color(255, 136, 0),
+    "warning": rgb_color_to_hex_color(255, 254, 68),
+    "in_downtime": rgb_color_to_hex_color(60, 194, 255),
+    "on_down_host": rgb_color_to_hex_color(16, 99, 176),
+    "ok/up": rgb_color_to_hex_color(19, 211, 137),
+}
+
+scalar_colors = {
+    "warn": MONITORING_STATUS_COLORS["warning"],
+    "crit": MONITORING_STATUS_COLORS["critical/down"],
+}
 
 
 def get_palette_color_by_index(i, shading='a'):

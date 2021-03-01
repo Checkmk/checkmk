@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+from cmk.gui.plugins.metrics import graph_info, metric_info, MONITORING_STATUS_COLORS
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -289,61 +285,61 @@ register_omd_apache_metrics()
 metric_info["cmk_hosts_up"] = {
     "title": _("UP hosts"),
     "unit": "count",
-    "color": "#13d389",
+    "color": MONITORING_STATUS_COLORS["ok/up"],
 }
 
 metric_info["cmk_hosts_down"] = {
     "title": _("DOWN hosts"),
     "unit": "count",
-    "color": "#e85555",
+    "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
 metric_info["cmk_hosts_unreachable"] = {
     "title": _("Unreachable hosts"),
     "unit": "count",
-    "color": "#fcb97b",
+    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
 }
 
 metric_info["cmk_hosts_in_downtime"] = {
     "title": _("Hosts in downtime"),
     "unit": "count",
-    "color": "#888888",
+    "color": MONITORING_STATUS_COLORS["in_downtime"],
 }
 
 metric_info["cmk_services_ok"] = {
     "title": _("OK services"),
     "unit": "count",
-    "color": "#13d389",
+    "color": MONITORING_STATUS_COLORS["ok/up"],
 }
 
 metric_info["cmk_services_in_downtime"] = {
     "title": _("Services in downtime"),
     "unit": "count",
-    "color": "#888888",
+    "color": MONITORING_STATUS_COLORS["in_downtime"],
 }
 
 metric_info["cmk_services_on_down_hosts"] = {
     "title": _("Services of down hosts"),
     "unit": "count",
-    "color": "11/b",
+    "color": MONITORING_STATUS_COLORS["on_down_host"],
 }
 
 metric_info["cmk_services_warning"] = {
     "title": _("WARNING services"),
     "unit": "count",
-    "color": "#ffd703",
+    "color": MONITORING_STATUS_COLORS["warning"],
 }
 
 metric_info["cmk_services_unknown"] = {
     "title": _("UNKNOWN services"),
     "unit": "count",
-    "color": "#fcb97b",
+    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
 }
 
 metric_info["cmk_services_critical"] = {
     "title": _("CRITICAL services"),
     "unit": "count",
-    "color": "#e85555",
+    "color": MONITORING_STATUS_COLORS["critical/down"],
 }
 
 #.

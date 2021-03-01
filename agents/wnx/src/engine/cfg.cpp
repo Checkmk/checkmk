@@ -675,10 +675,16 @@ void RemoveDirs(const std::filesystem::path& path) {
     namespace fs = std::filesystem;
     std::error_code ec;
     auto del_dirs = details::RemovableDirTable();
-    for (auto& d : del_dirs) fs::remove_all(path / d, ec);
+    for (auto& d : del_dirs) {
+        fs::remove_all(path / d, ec);
+        XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
+    }
 
     auto std_dirs = details::AllDirTable();
-    for (auto& d : std_dirs) fs::remove(path / d, ec);
+    for (auto& d : std_dirs) {
+        fs::remove(path / d, ec);
+        XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
+    }
 }
 }  // namespace
 
@@ -708,6 +714,8 @@ bool CleanDataFolder(CleanMode mode) {
             XLOG::details::LogWindowsEventInfo(
                 event_log_code_99,
                 "Removing SMART from the Program Data Folder");
+            auto killed_processes_count = wtools::KillProcessesByDir(path);
+            XLOG::l.i("Killed [{}] processes", killed_processes_count);
             RemoveCapGeneratedFile();
             RemoveOwnGeneratedFiles();
             if (g_remove_dirs_on_clean) {
@@ -2023,18 +2031,18 @@ std::filesystem::path CreateWmicUninstallFile(
 }
 
 bool UninstallProduct(std::string_view name) {
-    std::filesystem::path temp{cma::cfg::GetTempDir()};
+    std::filesystem::path temp{cfg::GetTempDir()};
     auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;
     }
-    XLOG::l("Starting '{}'", fname.u8string());
-    auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
+    XLOG::l.i("Starting uninstallation command '{}'", fname);
+    auto pid = tools::RunStdCommand(fname.wstring(), true);
     if (pid == 0) {
         XLOG::l("Failed to start '{}'", fname);
         return false;
     }
-    XLOG::l("Started '{}' with pid [{}]", fname, pid);
+    XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname, pid);
     return true;
 }
 

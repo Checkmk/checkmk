@@ -320,6 +320,7 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'ceph_osds_default_levels',
         'ceph_status_default_levels',
         'check_mk_only_from_default',
+        'checkpoint_connections_default_levels',
         'checkpoint_memory_default_levels',
         'checkpoint_packets_default_levels',
         'checkpoint_sensorstatus_to_nagios',

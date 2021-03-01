@@ -5,27 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
 
 
 def _parameter_valuespec_checkpoint_connections():
-    return Tuple(
-        help=_("This rule sets limits to the current number of connections through "
-               "a Checkpoint firewall."),
-        title=_("Maximum number of firewall connections"),
-        elements=[
-            Integer(title=_("Warning at"), default_value=40000),
-            Integer(title=_("Critical at"), default_value=50000),
-        ],
+    return Transform(
+        Dictionary(elements=[
+            (
+                "levels",
+                Tuple(help=_("This rule sets limits to the current number of connections through "
+                             "a Checkpoint firewall."),
+                      title=_("Maximum number of firewall connections"),
+                      elements=[
+                          Integer(title=_("Warning at"), minvalue=0.0),
+                          Integer(
+                              title=_("Critical at"),
+                              minvalue=0,
+                          ),
+                      ]),
+            ),
+        ]),
+        forth=lambda x: x if isinstance(x, dict) else {"levels": x},
     )
 
 

@@ -22,6 +22,9 @@ icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
 
 apc_ats_output_default_levels = {"output_voltage_max": (240, 250), "load_perc_max": (85, 95)}
 
+# checkpoint_connections was ported in PR #316
+checkpoint_connections_default_levels = (40000, 50000)
+
 # The plugin cisco_asa_svcsessions does not exist anymore (checkmk.com/de/werk/11150)
 # Still we need to be able to load the autochecks file.
 cisco_asa_svc_default_levels = {}  # type: ignore[var-annotated]

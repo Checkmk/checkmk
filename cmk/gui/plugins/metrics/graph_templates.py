@@ -30,6 +30,11 @@ from cmk.gui.plugins.metrics.utils import (
 RPNAtom = Tuple  # TODO: Improve this type
 
 
+# Performance graph dashlets already use graph_id, but for example in reports, we still use
+# graph_index. Therefore, this function needs to support both. We should switch to graph_id
+# everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot easily
+# build a corresponding transform, so even after switching to graph_id everywhere, we will need to
+# keep this functionality here for some time to support already created dashlets, reports etc.
 def matching_graph_templates(
     graph_identification_info: Mapping,
     translated_metrics: TranslatedMetrics,
@@ -76,7 +81,11 @@ class GraphIdentificationTemplate(GraphIdentification):
             )
             # Put the specification of this graph into the graph_recipe
             spec_info = graph_identification_info.copy()
+            # Performance graph dashlets already use graph_id, but for example in reports, we still
+            # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
+            # done, we can remove the line below.
             spec_info["graph_index"] = index
+            spec_info["graph_id"] = graph_template["id"]
             graph_recipe["specification"] = ("template", spec_info)
             graph_recipes.append(graph_recipe)
         return graph_recipes

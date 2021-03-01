@@ -75,7 +75,7 @@ class ModeAuditLog(WatoMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="log",
-                    title=_("Actions"),
+                    title=_("Audit log"),
                     topics=[
                         PageMenuTopic(
                             title=_("Actions"),

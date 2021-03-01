@@ -50,11 +50,10 @@ class ModeBulkEdit(WatoMode):
         return _("Bulk edit hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="edit_host",
-            button_name="_save",
-        )
+        return make_simple_form_page_menu(_("Hosts"),
+                                          breadcrumb,
+                                          form_name="edit_host",
+                                          button_name="_save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
@@ -129,12 +128,12 @@ class ModeBulkCleanup(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         hosts = get_hosts_from_checkboxes()
 
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="bulkcleanup",
-            button_name="_save",
-            save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
-        )
+        return make_simple_form_page_menu(_("Attributes"),
+                                          breadcrumb,
+                                          form_name="bulkcleanup",
+                                          button_name="_save",
+                                          save_is_enabled=bool(
+                                              self._get_attributes_for_bulk_cleanup(hosts)))
 
     def action(self) -> ActionResult:
         if not html.check_transaction():

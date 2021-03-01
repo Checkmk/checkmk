@@ -1104,12 +1104,11 @@ class ModeRuleSearchForm(WatoMode):
         return _("Search rulesets and rules")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(
-            breadcrumb,
-            form_name="rule_search",
-            button_name="_do_search",
-            save_title=_("Search"),
-        )
+        menu = make_simple_form_page_menu(_("Search"),
+                                          breadcrumb,
+                                          form_name="rule_search",
+                                          button_name="_do_search",
+                                          save_title=_("Search"))
         action_topic = menu.dropdowns[0].topics[0]
         action_topic.entries.insert(
             1,
@@ -1374,7 +1373,8 @@ class ABCEditRuleMode(WatoMode):
         return _("Edit rule: %s") % self._rulespec.title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
                                           form_name="rule_editor",
                                           button_name="save",
                                           add_abort_link=True,

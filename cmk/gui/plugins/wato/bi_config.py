@@ -290,7 +290,8 @@ class ModeBIEditPack(ABCBIMode):
         return redirect(mode_url("bi_packs"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("BI pack"),
+                                          breadcrumb,
                                           form_name="bi_pack",
                                           button_name="_save",
                                           save_title=_("Save") if self._bi_pack else _("Create"))
@@ -978,7 +979,8 @@ class ModeBIEditRule(ABCBIMode):
         return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
                                           form_name="birule",
                                           button_name="_save",
                                           save_title=_("Create") if self._new else _("Save"),
@@ -1457,7 +1459,8 @@ class BIModeEditAggregation(ABCBIMode):
         return _("Edit Aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Aggregation"),
+                                          breadcrumb,
                                           form_name="biaggr",
                                           button_name="_save",
                                           save_is_enabled=bi_valuespecs.is_contact_for_pack(
@@ -2004,7 +2007,7 @@ class ModeBIRuleTree(ABCBIMode):
             self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb)
+        return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)

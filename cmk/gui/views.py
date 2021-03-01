@@ -1255,7 +1255,8 @@ def show_create_view_dialog(next_url=None):
     breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")
     html.header(
         title, breadcrumb,
-        make_simple_form_page_menu(breadcrumb,
+        make_simple_form_page_menu(_("View"),
+                                   breadcrumb,
                                    form_name="create_view",
                                    button_name="save",
                                    save_title=_("Continue")))

@@ -355,7 +355,8 @@ class ModeTimeperiodImportICal(WatoMode):
         return _("Import iCalendar File to create a time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("iCalendar"),
+                                          breadcrumb,
                                           form_name="import_ical",
                                           button_name="upload",
                                           save_title=_("Import"))
@@ -656,7 +657,10 @@ class ModeEditTimeperiod(WatoMode):
         return _("Edit time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="timeperiod", button_name="save")
+        return make_simple_form_page_menu(_("Time period"),
+                                          breadcrumb,
+                                          form_name="timeperiod",
+                                          button_name="save")
 
     def _valuespec(self):
         if self._new:

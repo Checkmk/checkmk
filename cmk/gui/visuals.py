@@ -656,7 +656,8 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = _('Create %s') % visual_type_registry[what]().title
+    visual_name = visual_type_registry[what]().title
+    title = _('Create %s') % visual_name
     what_s = what[:-1]
 
     vs_infos = SingleInfoSelection(info_keys)
@@ -664,7 +665,8 @@ def page_create_visual(what, info_keys, next_url=None):
     breadcrumb = visual_page_breadcrumb(what, title, "create")
     html.header(
         title, breadcrumb,
-        make_simple_form_page_menu(breadcrumb,
+        make_simple_form_page_menu(visual_name.capitalize(),
+                                   breadcrumb,
                                    form_name="create_visual",
                                    button_name="save",
                                    save_title=_("Continue")))

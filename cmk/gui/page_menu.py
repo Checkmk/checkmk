@@ -394,7 +394,8 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
     )
 
 
-def make_simple_form_page_menu(breadcrumb: Breadcrumb,
+def make_simple_form_page_menu(title: str,
+                               breadcrumb: Breadcrumb,
                                form_name: Optional[str] = None,
                                button_name: Optional[str] = None,
                                save_title: Optional[str] = None,
@@ -417,7 +418,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
         dropdowns=[
             PageMenuDropdown(
                 name="actions",
-                title=_("Actions"),
+                title=title,
                 topics=[
                     PageMenuTopic(
                         title=_("Actions"),

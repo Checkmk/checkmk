@@ -583,7 +583,10 @@ class ModeEditUser(WatoMode):
         return _("Edit user %s") % self._user_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="user", button_name="save")
+        menu = make_simple_form_page_menu(_("User"),
+                                          breadcrumb,
+                                          form_name="user",
+                                          button_name="save")
 
         action_dropdown = menu.dropdowns[0]
         action_dropdown.topics.append(

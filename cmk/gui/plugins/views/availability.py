@@ -1158,7 +1158,10 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
 
 
 def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb, form_name="editanno", button_name="save")
+    return make_simple_form_page_menu(_("Annotation"),
+                                      breadcrumb,
+                                      form_name="editanno",
+                                      button_name="save")
 
 
 def _validate_reclassify_of_states(value, varprefix):

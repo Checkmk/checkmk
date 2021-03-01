@@ -250,7 +250,10 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         pass
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="group", button_name="save")
+        return make_simple_form_page_menu(_("Group"),
+                                          breadcrumb,
+                                          form_name="group",
+                                          button_name="save")
 
     def page(self) -> None:
         html.begin_form("group")

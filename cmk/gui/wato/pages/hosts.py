@@ -60,12 +60,12 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         super(ABCHostMode, self).__init__()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb)
+        menu = make_simple_form_page_menu(_("Host"), breadcrumb)
         menu.dropdowns.insert(
             0,
             PageMenuDropdown(
                 name="save",
-                title=_("Save"),
+                title=_("Host"),
                 topics=[
                     self._page_menu_save_topic(),
                 ],
@@ -102,7 +102,7 @@ class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
         if not self._is_cluster():
             yield PageMenuEntry(
                 title=_("Save & go to connection tests"),
-                icon_name="save_to_diagnose",
+                icon_name="connection_tests",
                 item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
                 is_shortcut=True,
                 is_suggested=True,

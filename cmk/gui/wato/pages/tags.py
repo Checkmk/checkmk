@@ -607,7 +607,10 @@ class ModeEditAuxtag(ABCEditTagMode):
         return _("Edit auxiliary tag")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="aux_tag", button_name="save")
+        return make_simple_form_page_menu(_("Tag"),
+                                          breadcrumb,
+                                          form_name="aux_tag",
+                                          button_name="save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
@@ -684,7 +687,10 @@ class ModeEditTagGroup(ABCEditTagMode):
         return _("Edit tag group")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="tag_group", button_name="save")
+        return make_simple_form_page_menu(_("Tag group"),
+                                          breadcrumb,
+                                          form_name="tag_group",
+                                          button_name="save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():

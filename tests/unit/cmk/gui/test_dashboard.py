@@ -51,7 +51,6 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'single_metric',
         'snapin',
         'site_overview',
         'alert_statistics',
@@ -65,6 +64,7 @@ def test_dashlet_registry_plugins():
             'ntop_alerts',
             'ntop_flows',
             'ntop_top_talkers',
+            'single_metric',
         ]
 
     dashboard._transform_old_dict_based_dashlets()

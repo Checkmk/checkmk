@@ -5,7 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
+from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest
 
+
+@managedtest
 def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -66,6 +69,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
     }
 
 
+@managedtest
 def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -94,6 +98,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
     )
 
 
+@managedtest
 def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
@@ -131,6 +136,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_auto
     assert resp.json_body["extensions"]["customer"] == "global"
 
 
+@managedtest
 def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

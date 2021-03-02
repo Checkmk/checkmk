@@ -25,7 +25,7 @@ builtin_dashboards["problems"] = {
                      "monitored devices."),
     "dashlets": [
         {
-            "title": _("Host Statistics"),
+            "title": _("Host statistics"),
             "type": 'hoststats',
             "position": (1, 1),
             "refresh": 60,
@@ -38,7 +38,7 @@ builtin_dashboards["problems"] = {
             'single_infos': [],
         },
         {
-            "title": _("Service Statistics"),
+            "title": _("Service statistics"),
             "type": 'servicestats',
             "position": (31, 1),
             "refresh": 60,

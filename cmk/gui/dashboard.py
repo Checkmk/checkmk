@@ -424,7 +424,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 # Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:
 #
 # dashlet_types["hoststats"] = {
-#     "title"       : _("Host Statistics"),
+#     "title"       : _("Host statistics"),
 #     "sort_index"  : 45,
 #     "description" : _("Displays statistics about host states as globe and a table."),
 #     "render"      : dashlet_hoststats,
@@ -1171,7 +1171,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "alert_statistics"),
     )
     yield PageMenuEntry(
-        title='Host Statistics',
+        title='Host statistics',
         icon_name={
             'icon': 'folder',
             'emblem': 'statistic',
@@ -1180,7 +1180,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntry(
-        title='Service Statistics',
+        title='Service statistics',
         icon_name={
             'icon': 'services',
             'emblem': 'statistic',
@@ -1222,7 +1222,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
     yield PageMenuEntry(
-        title='Sidebar Snapin',
+        title='Sidebar element',
         icon_name='custom_snapin',
         item=_dashboard_add_non_view_dashlet_link(name, "snapin"),
         is_show_more=True,

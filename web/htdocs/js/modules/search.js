@@ -25,6 +25,7 @@ class Search {
             add_class(document.getElementById(this.clear_id), "clearable");
             this.display_search_results();
             const obj = document.getElementById(this.search_id);
+            add_class(obj, "search");
             g_call_ajax_obj = call_ajax(
                 "ajax_search_" + this.id + ".py?q=" + encodeURIComponent(this.get_current_input()),
                 {
@@ -37,6 +38,7 @@ class Search {
             );
         } else {
             remove_class(document.getElementById(this.clear_id), "clearable");
+            remove_class(document.getElementById(this.search_id, "search"));
             this.display_menu_items();
         }
     }
@@ -115,8 +117,7 @@ export function on_click_show_all_results(topic) {
     let topic_results = document.getElementById(topic).getElementsByTagName("li");
     add_class(window.event.target, "hidden");
     topic_results.forEach(li => {
-        let link = li.getElementsByTagName("a")[0];
-        link.className == "hidden" && remove_class(link, "hidden");
+        li.className == "hidden" && remove_class(li, "hidden");
     });
 }
 

@@ -195,6 +195,7 @@ class UpdateConfig:
 
     def _update_global_settings(self):
         self._update_installation_wide_global_settings()
+        self._update_site_specific_global_settings()
         self._update_remote_site_specific_global_settings()
 
     def _update_installation_wide_global_settings(self):
@@ -204,6 +205,15 @@ class UpdateConfig:
             full_config=True)
         self._update_global_config(global_config)
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
+
+    def _update_site_specific_global_settings(self):
+        """Update the sitespecific.mk of the local site (which is a remote site)"""
+        if not cmk.gui.config.is_wato_slave_site():
+            return
+
+        global_config = cmk.gui.watolib.global_settings.load_site_global_settings()
+        self._update_global_config(global_config)
+        cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
 
     def _update_remote_site_specific_global_settings(self):
         """Update the site specific global settings in the central site configuration"""

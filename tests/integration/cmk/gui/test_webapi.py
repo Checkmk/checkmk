@@ -1103,6 +1103,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                 u'specification': [
                     u'template', {
                         u'graph_index': 0,
+                        'graph_id': 'cmk_cpu_time_by_phase',
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
                         u'site': web.site.id

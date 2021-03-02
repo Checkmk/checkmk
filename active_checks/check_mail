@@ -130,9 +130,10 @@ def prepare_messages_for_ec(args: Args, mails: MailMessages) -> Tuple[List[str],
         # replace match groups in "forward_app"
         if args.forward_app:
             application = args.forward_app
-            matches = re.match(args.match_subject, subject)
-            for num, match in enumerate(matches.groups() if matches else []):
-                application = application.replace('\\%d' % (num + 1,), match)
+            if args.match_subject:
+                matches = re.match(args.match_subject, subject)
+                for num, match in enumerate(matches.groups() if matches else []):
+                    application = application.replace('\\%d' % (num + 1,), match)
         else:
             application = subject.replace('\n', '')
 

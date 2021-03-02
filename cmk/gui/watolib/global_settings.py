@@ -59,5 +59,9 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
             domain().save(domain_config, custom_site_path=custom_site_path)
 
 
+def load_site_global_settings(custom_site_path=None):
+    return load_configuration_settings(site_specific=True, custom_site_path=custom_site_path)
+
+
 def save_site_global_settings(settings, custom_site_path=None):
     save_global_settings(settings, site_specific=True, custom_site_path=custom_site_path)

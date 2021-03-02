@@ -85,6 +85,7 @@ from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 from cmk.gui.watolib.activate_changes import (clear_site_replication_status,
                                               get_trial_expired_message)
 from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
+from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
 
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 
@@ -974,7 +975,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         # 3. Site specific global settings
 
         if watolib.is_wato_slave_site():
-            self._current_settings = watolib.load_configuration_settings(site_specific=True)
+            self._current_settings = load_site_global_settings()
         else:
             self._current_settings = self._site.get("globals", {})
 
@@ -1093,7 +1094,7 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
     def _save(self):
         watolib.SiteManagementFactory().factory().save_sites(self._configured_sites, activate=False)
         if self._site_id == config.omd_site():
-            watolib.save_site_global_settings(self._current_settings)
+            save_site_global_settings(self._current_settings)
 
     def _show_global_setting(self):
         forms.section(_("Global setting"))

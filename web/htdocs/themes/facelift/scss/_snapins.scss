@@ -122,14 +122,12 @@ div.snapin table.master_control {
 
     &.left {
       display: inline-block;
-      font-size: $font-size-default;
       font-weight: $font-weight-default;
       line-height: 22px;
       letter-spacing: $letter-spacing-table;
       text-align: left;
 
       a {
-        font-size: 11px;
         font-weight: normal;
         text-align: left;
       }
@@ -164,7 +162,6 @@ table.mkeventd_performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &:nth-of-type(2) {
       padding: 0;
@@ -212,7 +209,6 @@ table.performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &.right {
       padding: 0;
@@ -266,7 +262,7 @@ table.sitestate {
 
     &.state {
       width: 60px;
-      font-size: 9px;
+      font-size: $font-size-small;
     }
   }
 }
@@ -313,7 +309,7 @@ table.tacticaloverview {
   border-spacing: $spacing 0;
 
   th {
-    font-size: 9px;
+    font-size: $font-size-small;
     font-weight: normal;
     line-height: 1.6;
     letter-spacing: 0;
@@ -359,7 +355,6 @@ table.tacticaloverview td span,
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
-  font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
   color: $font-color-sidebar;
@@ -369,7 +364,6 @@ div.tacticalalert,
 div.tacticalinfo {
   height: 25px;
   margin-top: 8px;
-  font-size: 12px;
   line-height: 25px;
   text-align: center;
   border-radius: $theme-border-radius;
@@ -407,7 +401,6 @@ div.spacertop {
     float: right;
     margin-top: -2px;
     margin-bottom: 2px;
-    font-size: 11px;
     border: $primary-border;
   }
 
@@ -421,7 +414,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $font-size-default;
   }
 
   div.statebullet {
@@ -533,7 +525,6 @@ div.spacertop {
 
   input {
     margin: 0;
-    font-size: 11px;
     background-repeat: no-repeat;
   }
 
@@ -584,7 +575,6 @@ div.spacertop {
   input {
     width: 100%;
     padding: 6px 0 6px $spacing;
-    font-size: 14px;
     color: $font-color-sidebar;
     background-color: $sidebar-input-field-bg-color;
     background-image: url("images/icon_quicksearch.png");
@@ -593,15 +583,18 @@ div.spacertop {
   }
 
   input::placeholder {
-    font-size: $font-size-global;
     line-height: 16px;
     letter-spacing: 0;
     color: $font-color;
   }
 
   div.topic {
-    margin: 3px 0 3px 2px;
-    font-size: 125%;
+    margin: 0 0 4px 4px;
+    font-size: $font-size-large;
+
+    &:not(:first-child) {
+      margin-top: $spacing;
+    }
   }
 }
 
@@ -611,7 +604,6 @@ div.spacertop {
   width: 223px;
   padding: 8px;
   margin-top: 2px;
-  font-size: 80%;
   color: $font-color-sidebar;
   background-color: $sidebar-input-field-bg-color;
 
@@ -619,7 +611,6 @@ div.spacertop {
     display: block;
     width: 217px;
     padding-left: 5px;
-    margin-bottom: 5px;
     color: $font-color-sidebar;
     text-align: left;
     text-decoration: none;
@@ -633,7 +624,6 @@ div.spacertop {
   div.error,
   div.warning {
     padding: 2px;
-    font-size: 12px;
   }
 }
 
@@ -659,7 +649,6 @@ table.cmc_stats {
 
   td {
     padding: 0;
-    font-size: 11px;
     font-weight: $font-weight-default;
     letter-spacing: $letter-spacing-table;
 
@@ -682,7 +671,7 @@ table.cmc_stats {
 
   input {
     padding: 3px 4px;
-    font-size: 9px;
+    font-size: $font-size-small;
     text-align: center;
   }
 
@@ -699,8 +688,6 @@ table.cmc_stats {
       display: inline-block;
 
       td {
-        font-size: 11px;
-
         &.tuple_td:nth-of-type(2) {
           padding-left: 8px;
         }

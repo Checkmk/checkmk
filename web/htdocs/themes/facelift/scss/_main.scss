@@ -47,7 +47,6 @@ td,
 th,
 select,
 textarea {
-  font-size: 12px;
 }
 
 input.number {
@@ -127,7 +126,6 @@ input[type="checkbox"] {
     height: 12.5px;
     padding: 0;
     margin: -2px 4px 0 0;
-    font-size: 12px;
     vertical-align: middle;
     background-color: $inpage-highlight-color;
     border: 1px $inpage-highlight-color solid;
@@ -229,7 +227,7 @@ input.button.hot {
   body.main .popup_menu .wato div.globalvars & {
     width: $toggle-switch-width;
     height: $toggle-switch-height;
-    font-size: 8px;
+    font-size: $font-size-small;
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
@@ -354,7 +352,7 @@ h1 {
   margin-top: 0;
   margin-bottom: 5px;
   margin-left: 5px;
-  font-size: 23px;
+  font-size: $font-size-page-title;
   color: rgb(255, 255, 255);
 }
 
@@ -363,7 +361,6 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  font-size: 11px;
   color: rgb(0, 0, 0);
 }
 
@@ -479,7 +476,7 @@ div.warning {
   h1 {
     margin-bottom: 5px;
     margin-left: 0;
-    font-size: 16px;
+    font-size: $font-size-large;
     font-weight: $font-weight-bold;
     color: $white;
   }
@@ -592,7 +589,7 @@ table.dictionary {
   width: 100%;
 
   b.header {
-    font-size: 80%;
+    font-size: $font-size-small;
     font-weight: normal;
   }
 
@@ -626,10 +623,8 @@ td.dictleft div.dictelement {
   margin-top: 3px;
   margin-bottom: 10px;
   margin-left: 0;
-  font-size: 11px;
 
   * {
-    font-size: 11px;
   }
 
   &:empty {
@@ -676,7 +671,7 @@ table.valuespec_tuple {
   }
 
   span.title {
-    font-size: 8pt;
+    font-size: $font-size-small;
   }
 }
 
@@ -692,7 +687,7 @@ table.vs_date {
 
   th {
     padding: 0;
-    font-size: 7pt;
+    font-size: $font-size-small;
     font-weight: normal;
     text-align: center;
   }
@@ -1155,7 +1150,7 @@ body.main .popup_menu table.werks td span {
 /* NOWIKI formatting in Werks */
 td.nowiki {
   h3 {
-    font-size: 13px;
+    font-size: $font-size-large;
     font-weight: bold;
     color: rgb(0, 0, 0);
   }
@@ -1301,20 +1296,20 @@ div.vs_age.inline {
  *       where needed
  */
 * {
+  font-size: inherit;
   letter-spacing: $letter-spacing-default;
   text-shadow: none;
 }
 
 html {
+  font-size: $font-size-normal;
   height: 100%;
-  font-size: $font-size-global;
 }
 
 .link,
 .title {
   display: inline-block;
   padding: 0 2px; /* affects spacing in sidebar plugins */
-  font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
   color: $font-color;
@@ -1481,7 +1476,6 @@ select.vlof_filter {
 }
 
 div.timerange {
-  font-size: $font-size-default;
   color: $darkgrey;
 }
 
@@ -1505,7 +1499,6 @@ body.main .popup_menu .hot span {
 
 div.info {
   margin: 16px 0 8px;
-  font-size: $font-size-default;
   font-weight: 500;
   letter-spacing: $letter-spacing-default;
   color: $font-color;
@@ -1563,7 +1556,6 @@ tr.hidden {
 
 div#row_info {
   padding-right: 10px;
-  font-size: $font-size-global;
   font-weight: $font-weight-default;
   text-align: right;
 }

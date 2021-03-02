@@ -24,7 +24,7 @@ div#top_heading {
   a.title {
     padding: 0;
     margin: 6px 0 0;
-    font-size: 18px;
+    font-size: $font-size-page-title;
     font-weight: bold;
     color: $font-color;
     text-decoration: none;
@@ -114,7 +114,6 @@ div#top_heading {
   }
 
   div.breadcrumb {
-    font-size: 11px;
     white-space: nowrap;
 
     span,
@@ -227,7 +226,6 @@ div#top_heading {
         h2 {
           padding: 6px 5px 4px;
           margin: 0;
-          font-size: 12px;
 
           &:hover {
             cursor: pointer;
@@ -272,7 +270,6 @@ div#top_heading {
           div.topic_title {
             display: inline-block;
             padding: $spacing 0 2px 12px;
-            font-size: $font-size-global;
             font-weight: normal;
             color: rgba($font-color, 0.5);
             cursor: default;
@@ -309,7 +306,6 @@ div#top_heading {
 
             input.text {
               position: relative;
-              font-size: 11px;
             }
 
             input.button {
@@ -454,7 +450,6 @@ div#top_heading {
 
           height: 30px;
           padding: 0 8px;
-          font-size: 12px;
           font-weight: bold;
           line-height: 16px;
           color: $button-font-color-default;
@@ -505,7 +500,6 @@ div#page_menu_popups {
 
     .confirm_content {
       padding: 0;
-      font-size: $font-size-global;
       color: $font-color;
       text-align: left;
     }
@@ -539,7 +533,6 @@ div#page_menu_popups {
       h3 {
         padding: 0;
         margin: 0;
-        font-size: $font-size-global;
         font-weight: $font-weight-bold;
         color: $font-color;
       }

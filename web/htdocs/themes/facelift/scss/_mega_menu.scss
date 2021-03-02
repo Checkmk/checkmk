@@ -19,7 +19,6 @@
   }
 
   div.username {
-    font-size: 11px;
     color: #808080;
     text-align: right;
   }
@@ -157,7 +156,6 @@
     #werks_link {
       flex-grow: 1;
       margin: auto 0 auto 48px;
-      font-size: $font-size-default;
 
       #werks_link_to,
       #messages_link_to {
@@ -172,7 +170,6 @@
 
     .info_line {
       margin: auto $spacing auto 0;
-      font-size: $font-size-default;
       color: rgba($font-color, 0.7);
     }
 
@@ -277,7 +274,7 @@
           h2 {
             padding-bottom: 4px;
             margin: 0;
-            font-size: 14px;
+            font-size: $font-size-large;
             font-weight: bold;
             color: $font-color;
 
@@ -311,7 +308,6 @@
 
           ul {
             padding-left: 0;
-            font-size: 12px;
             line-height: $menu-item-spacing;
           }
 
@@ -352,7 +348,7 @@
               padding: 2px;
               margin: 0;
               margin-top: 2px;
-              font-size: 9px;
+              font-size: $font-size-small;
               line-height: 12px;
               letter-spacing: 0;
               color: $hot-font-color;

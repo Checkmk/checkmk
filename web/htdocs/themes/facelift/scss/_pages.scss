@@ -26,13 +26,12 @@ h4 {
 }
 
 h3 {
-  font-size: 16px;
+  font-size: $font-size-large;
   font-weight: normal;
 }
 
 @mixin table-header-mixin {
   padding: 5px 0 5px 8px;
-  font-size: $font-size-global;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
@@ -81,7 +80,6 @@ body {
     padding: $main-body-padding;
     margin: 0;
     font-family: $font-family-default;
-    font-size: $font-size-default;
     font-weight: $font-weight-default;
     color: $font-color;
     background: $color-background;
@@ -129,7 +127,7 @@ body {
           height: 31px;
           max-width: 100px;
           padding-left: 0;
-          font-size: 21px;
+          font-size: $font-size-page-title;
 
           img {
             width: 24px;
@@ -150,7 +148,6 @@ body {
           }
 
           div.breadcrumb {
-            font-size: 11px;
             white-space: nowrap;
 
             span,
@@ -175,7 +172,6 @@ body {
 
         &.right {
           width: 1%;
-          font-size: 13px;
           color: $font-color;
           text-align: right;
 
@@ -209,7 +205,6 @@ body {
       top: -14px;
       width: 100%;
       font-family: monospace;
-      font-size: 11px;
       color: rgb(255, 255, 255);
     }
 
@@ -272,7 +267,7 @@ body {
 }
 
 #reload_pause_counter {
-  font-size: 120%;
+  font-size: $font-size-large;
   font-weight: bold;
   color: $lightgrey;
   text-align: center;
@@ -322,7 +317,6 @@ table.data {
   th {
     height: 24px;
     padding: 0 8px;
-    font-size: $font-size-default;
     letter-spacing: $letter-spacing-table;
     color: $table-secondary-font-color;
     text-align: left;
@@ -351,7 +345,6 @@ table.data {
   }
 
   td {
-    font-size: $font-size-default;
     letter-spacing: $letter-spacing-default;
     color: $font-color;
 
@@ -455,7 +448,7 @@ table.data {
     height: 16px;
     padding: 4px;
     margin: 0;
-    font-size: 10px;
+    font-size: $font-size-small;
     font-weight: bold;
     line-height: 5px;
     text-align: center;
@@ -467,7 +460,7 @@ table.data {
   td.host {
     padding-top: 1ex;
     padding-left: 0;
-    font-size: 120%;
+    font-size: $font-size-large;
     font-weight: bold;
     border-style: none;
   }
@@ -589,7 +582,6 @@ tr.data.group_end {
 tr.groupheader td {
   padding: 0;
   margin: 0;
-  font-size: $font-size-global;
   font-weight: $font-weight-bold;
   color: $font-color;
   background: transparent;
@@ -742,7 +734,6 @@ input[type="checkbox"] {
   margin-right: 8px;
   margin-bottom: 8px;
   margin-left: 0;
-  font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $input-button-color;
@@ -894,7 +885,6 @@ table.nform {
       position: relative;
       height: auto;
       padding: 4px 10px 3px 9px;
-      font-size: $font-size-global;
       font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
       color: $secondary-font-color;
@@ -1092,7 +1082,6 @@ div.help {
   width: auto;
   padding: 8px 16px;
   margin: 8px 0;
-  font-size: 12px;
   font-weight: normal;
   color: rgb(0, 0, 0);
   text-align: left;
@@ -1352,7 +1341,6 @@ div.log_output {
 
   pre {
     font-family: monospace;
-    font-size: $font-size-global;
     color: $font-color;
   }
 }
@@ -1564,7 +1552,7 @@ table.data.job_table td {
       right: 0;
       z-index: 1;
       margin-right: 0;
-      font-size: 10px;
+      font-size: $font-size-small;
       line-height: 14px;
     }
 

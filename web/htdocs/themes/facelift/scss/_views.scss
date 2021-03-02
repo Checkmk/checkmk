@@ -38,7 +38,6 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-size: 11px;
     font-weight: bold;
     color: $font-color;
     background-color: $floatfilter-bg-color;
@@ -448,7 +447,7 @@ table.boxlayout {
   }
 
   td {
-    font-size: 9px;
+    font-size: $font-size-small;
     border-style: none;
 
     &.tl,
@@ -634,7 +633,6 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-        font-size: $font-size-global;
         letter-spacing: $letter-spacing-table;
         text-transform: uppercase;
       }
@@ -945,7 +943,6 @@ div.avlegend {
 
   h3 {
     margin-top: 0;
-    font-size: 13px;
     color: rgb(0, 0, 0);
   }
 
@@ -957,7 +954,6 @@ div.avlegend {
 
     &.state {
       padding: 2px 0;
-      font-size: 12px;
       text-align: center;
     }
 

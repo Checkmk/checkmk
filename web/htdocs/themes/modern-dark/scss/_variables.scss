@@ -50,9 +50,9 @@ $font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mon
   monospace;
 $font-family-default: $font-family-sans-serif;
 
-$font-size__base: 1rem; // Assumes the browser default, typically `16px`
-$font-size-global: 12px;
-$font-size-default: 11px;
+$font-size-page-title: 18px;
+$font-size-large: 14px;
+$font-size-normal: 12px;
 $font-size-small: 10px;
 
 $font-weight-default: 400;

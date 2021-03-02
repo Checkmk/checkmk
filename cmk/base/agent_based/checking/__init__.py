@@ -120,32 +120,9 @@ def do_check(
         if ipaddress is None and not host_config.is_cluster:
             ipaddress = config.lookup_ip_address(host_config)
 
-        # When monitoring Checkmk clusters, the cluster nodes are responsible for fetching all
-        # information from the monitored host and cache the result for the cluster checks to be
-        # performed on the cached information.
-        #
-        # This means that in case of SNMP nodes, they need to take the clustered services of the
-        # node into account, fetch the needed sections and cache them for the cluster host.
-        #
-        # But later, when checking the node services, the node has to only deal with the unclustered
-        # services.
-        #
-        # TODO: clean this up. The fetched sections are computed in the checkers
-        #       _make_configured_snmp_sections now.
-        #
-        belongs_to_cluster = len(config_cache.clusters_of(hostname)) > 0
-
-        services_to_fetch = _get_services_to_fetch(
-            host_name=hostname,
-            belongs_to_cluster=belongs_to_cluster,
-            config_cache=config_cache,
-        )
-
-        services_to_check = _filter_clustered_services(
+        services_to_check = _get_services_to_check(
             config_cache=config_cache,
             host_name=hostname,
-            belongs_to_cluster=belongs_to_cluster,
-            services=services_to_fetch,
             run_only_plugin_names=run_only_plugin_names,
         )
 
@@ -303,62 +280,31 @@ def _do_all_checks_on_host(
     return num_success, sorted(plugins_missing_data)
 
 
-def _get_services_to_fetch(
-    host_name: HostName,
-    belongs_to_cluster: bool,
-    config_cache: config.ConfigCache,
-) -> List[Service]:
-    """Gather list of services to fetch the sections for
-
-    Please note that explicitly includes the services that are assigned to cluster nodes.  In SNMP
-    clusters the nodes have to fetch the information for the checking phase of the clustered
-    services.
-    """
-    host_check_table = check_table.get_check_table(
-        host_name, filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED)
-
-    services = config.resolve_service_dependencies(
-        host_name=host_name,
-        services=sorted(host_check_table.values(), key=lambda s: s.description),
-    )
-
-    return [
-        service for service in services
-        if not service_outside_check_period(config_cache, host_name, service.description)
-    ]
-
-
-def _filter_clustered_services(
+def _get_services_to_check(
     *,
     config_cache: config.ConfigCache,
     host_name: HostName,
-    belongs_to_cluster: bool,
-    services: List[Service],
     run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
 ) -> List[Service]:
-    """If the host belongs to a cluster, exclude the services that are not assigned to this host"""
-    def _is_not_of_host(service):
-        return host_name != config_cache.host_of_clustered_service(host_name, service.description)
+    """Gather list of services to check"""
+    services = config.resolve_service_dependencies(
+        host_name=host_name,
+        services=sorted(
+            check_table.get_check_table(host_name).values(),
+            key=lambda service: service.description,
+        ),
+    )
 
-    # When check types are specified via command line, enforce them.
-    # Otherwise start with all check plugin names.
     if run_only_plugin_names is None:
-        used_plugins = {s.check_plugin_name for s in services}
-    else:
-        used_plugins = run_only_plugin_names.intersection(s.check_plugin_name for s in services)
+        return [
+            service for service in services
+            if not service_outside_check_period(config_cache, host_name, service.description)
+        ]
 
-    # Filter out check types which are not used on the node
-    if belongs_to_cluster:
-        removed_plugins = {
-            plugin for plugin in used_plugins if all(
-                _is_not_of_host(service) for service in services
-                if service.check_plugin_name == plugin)
-        }
-        used_plugins -= removed_plugins
-
+    # If check types are specified via command line, drop all others
     return [
-        service for service in services if (service.check_plugin_name in used_plugins and
-                                            not (belongs_to_cluster and _is_not_of_host(service)))
+        service for service in services if service.check_plugin_name in run_only_plugin_names and
+        not service_outside_check_period(config_cache, host_name, service.description)
     ]
 
 

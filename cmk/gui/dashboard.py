@@ -811,6 +811,16 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                         title=_("Dashboards"),
                         entries=list(_dashboard_related_entries(name)),
                     ),
+                    PageMenuTopic(
+                        title=_("Customize"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Customize Dashboards"),
+                                icon_name="dashboard",
+                                item=make_simple_link("edit_dashboards.py"),
+                            )
+                        ] if config.user.may("general.edit_dashboards") else [],
+                    ),
                 ],
             ),
         ],
@@ -942,12 +952,6 @@ def _dashboard_related_entries(name):
                 )),
             is_shortcut=True,
             is_suggested=False,
-        )
-    if config.user.may("general.edit_dashboards"):
-        yield PageMenuEntry(
-            title=_("Customize Dashboards"),
-            icon_name="dashboard",
-            item=make_simple_link("edit_dashboards.py"),
         )
 
 

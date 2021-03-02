@@ -1,0 +1,11 @@
+Title: inv_if: Fix missing interface description and alias in HW/SW inventory tree if not "do status data inventory"
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1614671303
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+

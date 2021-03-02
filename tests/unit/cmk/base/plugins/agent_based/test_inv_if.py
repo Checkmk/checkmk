@@ -433,6 +433,8 @@ def test_inventory_if():
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 1},
                      inventory_columns={
+                         'description': 'Vlan-interface1',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -440,14 +442,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'Vlan-interface1',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 32769},
                      inventory_columns={
+                         'description': 'port-channel 1',
+                         'alias': '',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -455,28 +455,24 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'port-channel 1',
-                         'alias': '',
-                         'last_change': 1601251200
-                     }),
+                     status_columns={'last_change': 1601251200}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49152},
                      inventory_columns={
+                         'description': 'AUX0',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '',
                          'oper_status': 1,
                          'admin_status': 1,
                          'port_type': 23
                      },
-                     status_columns={
-                         'description': 'AUX0',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49153},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/1',
+                         'alias': 'Uplink sw-ks-01',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -484,14 +480,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/1',
-                         'alias': 'Uplink sw-ks-01',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49154},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/2',
+                         'alias': 'Uplink sw-ks-01',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -499,14 +493,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/2',
-                         'alias': 'Uplink sw-ks-01',
-                         'last_change': 1601251200
-                     }),
+                     status_columns={'last_change': 1601251200}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49155},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/3',
+                         'alias': 'pve-muc',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -514,14 +506,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/3',
-                         'alias': 'pve-muc',
-                         'last_change': 1596240000
-                     }),
+                     status_columns={'last_change': 1596240000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49156},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/4',
+                         'alias': 'pve-muc-ipmi',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -529,14 +519,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/4',
-                         'alias': 'pve-muc-ipmi',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49157},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/5',
+                         'alias': 'monitoring',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -544,14 +532,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/5',
-                         'alias': 'monitoring',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49158},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/6',
+                         'alias': 'monitoring-ipmi',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -559,14 +545,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/6',
-                         'alias': 'monitoring-ipmi',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49159},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/7',
+                         'alias': 'pve-muc',
                          'speed': 10000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -574,14 +558,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/7',
-                         'alias': 'pve-muc',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49160},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/8',
+                         'alias': 'pve-muc1-ipmi',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -589,14 +571,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/8',
-                         'alias': 'pve-muc1-ipmi',
-                         'last_change': 1601251200
-                     }),
+                     status_columns={'last_change': 1601251200}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49161},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/9',
+                         'alias': 'esxi',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -604,14 +584,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/9',
-                         'alias': 'esxi',
-                         'last_change': 1599004800
-                     }),
+                     status_columns={'last_change': 1599004800}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49162},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/10',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -619,14 +597,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/10',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49163},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/11',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -634,14 +610,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/11',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49164},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/12',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -649,14 +623,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/12',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49165},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/13',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -664,14 +636,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/13',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49166},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/14',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -679,14 +649,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/14',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49167},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/15',
+                         'alias': '',
                          'speed': 1000000000,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 1,
@@ -694,14 +662,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': False
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/15',
-                         'alias': '',
-                         'last_change': 1597190400
-                     }),
+                     status_columns={'last_change': 1597190400}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49168},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/16',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -709,14 +675,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/16',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49169},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/17',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -724,14 +688,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/17',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49170},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/18',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -739,14 +701,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/18',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49171},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/19',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -754,14 +714,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/19',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49172},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/20',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -769,14 +727,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/20',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49173},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/21',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -784,14 +740,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/21',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49174},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/22',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -799,14 +753,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/22',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49175},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/23',
+                         'alias': ' ',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -814,14 +766,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/23',
-                         'alias': ' ',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49176},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/24',
+                         'alias': ' ',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -829,14 +779,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/24',
-                         'alias': ' ',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49177},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/25',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -844,14 +792,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/25',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49178},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/26',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -859,14 +805,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/26',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49179},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/27',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -874,14 +818,12 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/27',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             TableRow(path=['networking', 'interfaces'],
                      key_columns={'index': 49180},
                      inventory_columns={
+                         'description': 'gigabitEthernet 1/0/28',
+                         'alias': '',
                          'speed': 0,
                          'phys_address': '74:DA:88:58:16:11',
                          'oper_status': 2,
@@ -889,11 +831,7 @@ def test_inventory_if():
                          'port_type': 6,
                          'available': True
                      },
-                     status_columns={
-                         'description': 'gigabitEthernet 1/0/28',
-                         'alias': '',
-                         'last_change': 1593648000
-                     }),
+                     status_columns={'last_change': 1593648000}),
             Attributes(path=['networking'],
                        inventory_attributes={
                            'available_ethernet_ports': 19,

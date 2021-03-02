@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-type_defs
-~~~~~~~~~
+.. rubric:: type_defs
 
 This module contains type definitions that users can use if they choose
 to leverage the power of type annotations in their check plugins.

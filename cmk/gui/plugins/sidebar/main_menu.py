@@ -147,13 +147,14 @@ class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))
 
-        num_unacknowledged_werks = num_unacknowledged_incompatible_werks()
-        tooltip_text = ungettext("%d unacknowledged incompatible werk",
-                                 "%d unacknowledged incompatible werks", num_unacknowledged_werks)
+        num_unack_werks = num_unacknowledged_incompatible_werks()
+        tooltip_text = ungettext("%d unacknowledged incompatible werk" % num_unack_werks,
+                                 "%d unacknowledged incompatible werks" % num_unack_werks,
+                                 num_unack_werks)
 
         return {
-            "count": num_unacknowledged_werks,
-            "text": _("%d open incompatible werks") % num_unacknowledged_werks,
+            "count": num_unack_werks,
+            "text": _("%d open incompatible werks") % num_unack_werks,
             "tooltip": tooltip_text,
         }
 

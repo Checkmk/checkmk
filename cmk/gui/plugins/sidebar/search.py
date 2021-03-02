@@ -1360,7 +1360,8 @@ class MenuSearchResultsRenderer:
                     html.input(name="show_all_results",
                                value=_("Show all results"),
                                type_="button",
-                               onclick=f"cmk.search.on_click_show_all_results('{topic}');")
+                               onclick=f"cmk.search.on_click_show_all_results('{topic}');",
+                               class_="button")
                 html.close_ul()
                 html.close_div()
             html.div(None, class_=["topic", "sentinel"])
@@ -1378,13 +1379,12 @@ class MenuSearchResultsRenderer:
         html.close_h2()
 
     def _render_result(self, result, hidden=False):
-        html.open_li()
+        html.open_li(class_="hidden" if hidden else "")
         html.open_a(
             href=result.url,
             target="main",
-            onclick=
-            f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
-            class_="hidden" if hidden else "")
+            onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');"
+        )
         html.write_text(result.title)
         html.close_a()
         html.close_li()

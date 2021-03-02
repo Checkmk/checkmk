@@ -317,21 +317,22 @@
           }
 
           li {
+            margin-left: 28px;
+
             a {
               display: block;
-              margin-left: 28px;
 
               & > img,
               & > span.emblem {
                 margin-left: -28px; /* No spacing if icons per entry are used */
               }
+
+              &.active {
+                color: $success;
+              }
             }
 
-            a.active {
-              color: $success;
-            }
-
-            a.hidden {
+            &.hidden {
               display: none;
             }
 
@@ -414,6 +415,19 @@
 
         div.sentinel {
           flex-grow: 1000;
+        }
+
+        &.search div.topic li {
+          margin-left: 40px;
+          list-style: initial;
+
+          a {
+            margin-left: 0;
+          }
+        }
+
+        input.button {
+          margin-left: 27px;
         }
       }
 

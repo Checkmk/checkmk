@@ -28,7 +28,7 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def description(cls):
-        return _("Displays a sidebar element.")
+        return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
     def sort_index(cls):
@@ -45,10 +45,12 @@ class SnapinDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("snapin", DropdownChoice(
-                title=_("Element"),
-                choices=cls._snapin_choices,
-            )),
+            ("snapin",
+             DropdownChoice(
+                 title=_("Sidebar element"),
+                 help=_("Choose the sidebar element you would like to show."),
+                 choices=cls._snapin_choices,
+             )),
         ]
 
     @classmethod

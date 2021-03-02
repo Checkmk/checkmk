@@ -311,7 +311,7 @@ class HostStatsDashlet(ABCFigureDashlet):
 
     @classmethod
     def title(cls):
-        return _("Host Statistics")
+        return _("Host statistics")
 
     @classmethod
     def description(cls):
@@ -351,7 +351,7 @@ class ServiceStatsDashlet(ABCFigureDashlet):
 
     @classmethod
     def title(cls):
-        return _("Service Statistics")
+        return _("Service statistics")
 
     @classmethod
     def description(cls):

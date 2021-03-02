@@ -40,7 +40,7 @@ TMP_PATH=$(mktemp --directory -p /bauwelt/tmp --suffix=.cmk-docker)
 DOCKER_PATH="$TMP_PATH/check-mk-${EDITION}-${VERSION}${SUFFIX}${DEMO}/docker"
 DOCKER_IMAGE_ARCHIVE="check-mk-${EDITION}-docker-${VERSION}${DEMO}.tar.gz"
 PKG_NAME="check-mk-${EDITION}-${VERSION}${DEMO}"
-PKG_FILE="${PKG_NAME}_0.stretch_$(dpkg --print-architecture).deb"
+PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb"
 
 trap "rm -rf \"$TMP_PATH\"" SIGTERM SIGHUP SIGINT
 

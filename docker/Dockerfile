@@ -68,10 +68,10 @@ RUN set -e \
     && CREDENTIALS_URL="http://localhost:8000/secret" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
         echo "Receive download credentials from ${CREDENTIALS_URL}..." && \
-        CMK_DL_CREDENTIALS=$(curl -sS "${CREDENTIALS_URL}") && \
+        CMK_DL_CREDENTIALS=$(curl -fsS "${CREDENTIALS_URL}") && \
         echo "Downloading ${PKG_FILE}..." && \
         echo "--user \"${CMK_DL_CREDENTIALS}\"" \
-            | curl -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
+            | curl -f -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
        fi \
     && gpg -q --import "/Check_MK-pubkey.gpg" \
     && dpkg-sig --verify "${PKG_FILE}" \

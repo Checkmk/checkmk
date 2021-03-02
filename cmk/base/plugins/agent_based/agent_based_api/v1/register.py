@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-register
-~~~~~~~~
+.. rubric:: register
 
 The "register" namespace contains functions to inform Checkmk about plugins.
 

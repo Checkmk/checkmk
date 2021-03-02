@@ -15,6 +15,10 @@
 
 {{ automodule(pkgname, automodule_options) }}
 
+{%- for submodule in submodules %}
+{{ automodule(submodule, automodule_options) }}
+{% endfor %}
+
 {%- if subpackages %}
 {{ toctree(subpackages) }}
 {% endif %}

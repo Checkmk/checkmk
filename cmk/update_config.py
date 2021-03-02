@@ -154,7 +154,7 @@ class UpdateConfig:
     def _steps(self):
         return [
             (self._migrate_topology_dashlet, "Migrate deprecated network topology dashlet"),
-            (self._rewrite_removed_global_settings, "Rewriting removed global settings"),
+            (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
             (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
             (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
@@ -193,16 +193,20 @@ class UpdateConfig:
         root_folder.save()
         root_folder.rewrite_hosts_files()
 
-    def _rewrite_removed_global_settings(self):
+    def _update_global_settings(self):
+        self._update_installation_wide_global_settings()
+        self._update_remote_site_specific_global_settings()
+
+    def _update_installation_wide_global_settings(self):
+        """Update the globals.mk of the local site"""
         # Load full config (with undefined settings)
         global_config = cmk.gui.watolib.global_settings.load_configuration_settings(
             full_config=True)
         self._update_global_config(global_config)
         cmk.gui.watolib.global_settings.save_global_settings(global_config)
 
-        self._update_site_specific_global_settings()
-
-    def _update_site_specific_global_settings(self):
+    def _update_remote_site_specific_global_settings(self):
+        """Update the site specific global settings in the central site configuration"""
         site_mgmt = SiteManagementFactory().factory()
         configured_sites = site_mgmt.load_sites()
         for site_id, site_spec in configured_sites.items():

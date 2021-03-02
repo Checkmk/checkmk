@@ -114,4 +114,4 @@ checks = {'': [(u'CMCIII-IO1', {}, [(0, 'Status: OK', [])]),
                  (u'CMCIII-IO2 Input 8',
                   {},
                   [(0, u'Status: Off, Logic: 0:Off / 1:On, Delay: 0.5 s', [])]),
-                 (u'Doors Input', {}, [(2, u'Status: Closed, Delay: 1 s', [])])]}
+                 (u'Doors Input', {}, [(0, u'Status: Closed, Delay: 1 s', [])])]}

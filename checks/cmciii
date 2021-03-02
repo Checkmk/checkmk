@@ -392,6 +392,11 @@ def check_cmciii_io(item, params, parsed):
         if key in attrs:
             infotext += ", %s: %s" % (key, attrs[key])
 
+    if state_readable in ["Open", "Closed"]:
+        # Some door sensors have been mapped to Input instead of Access
+        # by the vendor
+        return {"Open": 1, "Closed": 0}[state_readable], infotext
+
     if "Relay" in attrs:
         if state_readable == "OK":
             return 0, infotext

@@ -1,0 +1,15 @@
+Title: tab character in service description causes stale services
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614591828
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+A tab character in a service description caused services of the affected host
+to go stale, including the Check_MK service. This was first observed when
+checking RabbitMQ queues. Tab characters are now removed from all service
+descriptions, so that services can be processed normally.

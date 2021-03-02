@@ -6,8 +6,8 @@
 # force load of environment
 
 read_python_version() {
-    if inpath $1 && [ $($1 -c 'import sys; print(sys.version_info[1])') -ge $2 ]; then
-        echo $1
+    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge "$2" ]; then
+        echo "$1"
         return 0
     fi
     return 1
@@ -22,9 +22,9 @@ export PYTHON2 PYTHON3
 
 if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
     NO_PYTHON=true
-elif [ -n "$PYTHON3" ] && [ $($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?) -eq 127 ]; then
+elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
     WRONG_PYTHON_COMMAND=true
-elif [ -z "$PYTHON3" ] && [ $($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?) -eq 127 ]; then
+elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
     WRONG_PYTHON_COMMAND=true
 fi
 
@@ -161,7 +161,7 @@ function run_agent_plugin {
             if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
                 FAILED_PYTHON_PLUGINS=("$agent_plugin")
             else
-                FAILED_PYTHON_PLUGINS=(${FAILED_PYTHON_PLUGINS[@]} "$agent_plugin")
+                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
             fi
             return
         fi
@@ -517,7 +517,7 @@ fi
 
 if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
     echo "<<<check_mk>>>"
-    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[@]}"
+    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
     if [ -n "$NO_PYTHON" ]; then
         echo "FailedPythonReason: No suitable python installation found."
     elif [ -n "$WRONG_PYTHON_COMMAND" ]; then

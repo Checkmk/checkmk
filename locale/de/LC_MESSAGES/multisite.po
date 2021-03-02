@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-03-01 07:00+0000\n"
-"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
+"PO-Revision-Date: 2021-03-02 07:00+0000\n"
+"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -62,9 +62,9 @@ msgstr " (ungültig)"
 msgid " (owned by %s)"
 msgstr " (gehört %s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid " (worst state: %s)"
-msgstr "schlechtester Zustand"
+msgstr " (schlechtester Zustand: %s)"
 
 msgid " - Broken"
 msgstr " - Kaputt"
@@ -9620,17 +9620,20 @@ msgstr "Farbwert des Hintergrunds nach SERVICE Status"
 msgid "Color background following it's METRIC THRESHOLDS if available"
 msgstr "Farbwert des Hintergrunds nach den METRIC THRESHOLDS wenn verfügbar"
 
-msgid "Color for the average line"
-msgstr "Farbe für die Durchschnittslinie"
-
-msgid "Color for the main metric scattered dots"
-msgstr "Farbe für die vereinzelten Punkte der Hauptmetrik"
-
-msgid "Color for the median line"
-msgstr "Farbe für die Median-Linie"
-
 msgid "Color gradient"
 msgstr "Farbverlauf"
+
+#, fuzzy
+msgid "Color of the average"
+msgstr "Farbe für die Durchschnittslinie"
+
+#, fuzzy
+msgid "Color of the median"
+msgstr "Farbe für die Median-Linie"
+
+#, fuzzy
+msgid "Color of the scattered dots"
+msgstr "Farbe für die vereinzelten Punkte der Hauptmetrik"
 
 msgid "Color value after SERVICE state"
 msgstr "Farbwert nach SERVICE Status"
@@ -11974,6 +11977,10 @@ msgstr "Anpassen"
 msgid "Customize %s and use them"
 msgstr "Die %s anpassen und benutzen"
 
+#, fuzzy
+msgid "Customize Dashboards"
+msgstr "Anpassen des eingebauten Dashboards"
+
 msgid "Customize GUI design"
 msgstr "GUI-Desing anpassen"
 
@@ -12633,6 +12640,10 @@ msgstr "Standard Benutzerprofil"
 msgid "Default Value"
 msgstr "Standardwert"
 
+#, fuzzy
+msgid "Default color"
+msgstr "Standardfarbe verwenden"
+
 msgid "Default configuration"
 msgstr "Standardkonfiguration"
 
@@ -12657,6 +12668,10 @@ msgstr "Standard Levels"
 
 msgid "Default line style"
 msgstr "Voreingestellter Linien Stil"
+
+#, fuzzy
+msgid "Default metric color"
+msgstr "Metrik-Historie"
 
 msgid "Default parameters for detected services"
 msgstr "Standardparameter für erkannte Services"
@@ -12691,6 +12706,10 @@ msgstr "Standardtabellenlayout"
 
 msgid "Default template for all reports"
 msgstr "Standardschablone für alle Berichte"
+
+#, fuzzy
+msgid "Default theme color"
+msgstr "Standardzeitbereich"
 
 msgid "Default time range"
 msgstr "Standardzeitbereich"
@@ -13292,9 +13311,8 @@ msgstr ""
 msgid "Deploy custom files with agent"
 msgstr "Benutzerdefinierte Dateien mit Agent ausrollen"
 
-#, fuzzy
 msgid "Deploy in minutes"
-msgstr "Deployments"
+msgstr "In Minutenschnelle aufgesetzt"
 
 msgid "Deploy iptables plugin"
 msgstr "Das iptables Plugins ausrollen"
@@ -13982,9 +14000,8 @@ msgstr "Erkenne Services"
 msgid "Discover services during creation"
 msgstr "Erkennen von Services während der Erstellung"
 
-#, fuzzy
 msgid "Discover single interfaces"
-msgstr "Benutzerschnittstelle"
+msgstr "Erkenne einzelne Interfaces"
 
 msgid "Discovered by plugin"
 msgstr "Erkannt durch Plugin"
@@ -14109,9 +14126,8 @@ msgstr "Typ von Platte/Laufwerk"
 msgid "Disks"
 msgstr "Platten"
 
-#, fuzzy
 msgid "Diskstat"
-msgstr "Plattenstatus"
+msgstr "Diskstat"
 
 msgid "Diskstate"
 msgstr "Plattenstatus"
@@ -14122,7 +14138,6 @@ msgstr "Plattenzustände"
 msgid "Disovered host labels of the host"
 msgstr "Entdeckte Host-Labels des Hosts"
 
-#, fuzzy
 msgid "Disovered services of the host"
 msgstr "Erkannte Services des Hosts"
 
@@ -14322,6 +14337,11 @@ msgstr "Zeigt eine einzelne Metrik eines bestimmten Hosts und Services an."
 
 msgid "Displays a static text to the user."
 msgstr "Zeigt dem Benutzer einen statischen Text."
+
+#, fuzzy
+msgid ""
+"Displays a timeseries for a single metric of a specific host and service."
+msgstr "Zeigt eine einzelne Metrik eines bestimmten Hosts und Services an."
 
 msgid "Displays all BI aggregations."
 msgstr "Zeigt alle BI-Aggregate an."
@@ -14581,9 +14601,8 @@ msgstr "Plugin für Windows Broadcom-Bonding nicht ausrollen"
 msgid "Do not deploy plugin for Windows interfaces"
 msgstr "Nicht für Windows Interfaces ausrollen."
 
-#, fuzzy
 msgid "Do not deploy plugin plugin"
-msgstr "Das Mailman Plugin nicht ausrollen"
+msgstr "Plugin nicht ausrollen"
 
 #, python-format
 msgid "Do not deploy the %s plugin"
@@ -14673,9 +14692,8 @@ msgstr "Das Netstat-Plugin nicht bereitstellen"
 msgid "Do not deploy the plesk plugins"
 msgstr "Die plesk Plugins nicht ausrollen"
 
-#, fuzzy
 msgid "Do not discover single interfaces"
-msgstr "Nicht für Windows Interfaces ausrollen."
+msgstr "Einzelne Interfaces nicht erkennen"
 
 msgid "Do not display a date"
 msgstr "Kein Datum anzeigen"
@@ -15059,13 +15077,11 @@ msgstr "DOCSIS ausgehende Kanäle"
 msgid "Docsis Upstream Channels"
 msgstr "DOCSIS eingehende Kanäle"
 
-#, fuzzy
 msgid "Document count delta"
-msgstr "Dokumentation"
+msgstr "Dokument Count-Delta"
 
-#, fuzzy
 msgid "Document count growth per minute"
-msgstr "Garbagecollections pro Minute zählen"
+msgstr "Zuwachs der Dokumentenanzahl pro Minute zählen"
 
 msgid "Documentation"
 msgstr "Dokumentation"
@@ -21370,9 +21386,8 @@ msgstr "Hostmatrix"
 msgid "Host memory usage"
 msgstr "Nutzung von gesamten Speichers"
 
-#, fuzzy
 msgid "Host monitoring rules"
-msgstr "Kein Monitoring-Kern"
+msgstr "Monitoring-Regeln für Hosts"
 
 msgid "Host name"
 msgstr "Hostname"
@@ -21403,18 +21418,17 @@ msgid ""
 msgstr ""
 "Host/Service muss den folgenden Servicelevel haben, damit alarmiert wird"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Host or service %ss"
-msgstr "von Service %s"
+msgstr "Host oder Service %ss"
 
 msgid ""
 "Host or service must be in the following service level to get notification"
 msgstr ""
 "Host/Service muss den folgenden Servicelevel haben, damit alarmiert wird"
 
-#, fuzzy
 msgid "Host overview"
-msgstr "Hostgruppenübersicht"
+msgstr "Hostübersicht"
 
 msgid "Host performance data"
 msgstr "Leistungsdaten von Host"
@@ -21428,13 +21442,12 @@ msgstr "Hostprobleme"
 msgid "Host problems for NagStaMon"
 msgstr "Hostprobleme für NagStaMon"
 
-#, fuzzy
 msgid "Host properties"
 msgstr "Hosteigenschaften"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Host properties of: %s"
-msgstr "Hosteigenschaften"
+msgstr "Hosteigenschaften von: %s"
 
 msgid "Host related aggregations"
 msgstr "Host-bezogene Aggregate"
@@ -21550,9 +21563,8 @@ msgstr "Hostgruppen-Name"
 msgid "Hostgroups"
 msgstr "Hostgruppen"
 
-#, fuzzy
 msgid "Hostgroups having certain problems"
-msgstr "Hosts mit Serviceproblemen"
+msgstr "Hostgruppen mit bestimmten Problemen"
 
 msgid "Hostgroups, merged"
 msgstr "Hostgruppen (zusammengeführt)"
@@ -21563,9 +21575,8 @@ msgstr "Hostname"
 msgid "Hostname / IP address of Graphite server"
 msgstr "Hostname / IP-Adresse des Graphite-Servers"
 
-#, fuzzy
 msgid "Hostname aggregations"
-msgstr "Hostname Aggregationen"
+msgstr "Hostname-Aggregationen"
 
 msgid "Hostname matching"
 msgstr "Matchen der Hostnamen"
@@ -21582,9 +21593,8 @@ msgstr "Übersetzung von Hostnamen für eingehende Meldungen"
 msgid "Hostname translation for piggybacked hosts"
 msgstr "Übersetzung von Hostnamen für Huckepack-Hosts"
 
-#, fuzzy
 msgid "Hostname, IP address or host alias the event is relevant for"
-msgstr "Hostname/IP Adresse der Master Event Console:"
+msgstr "Hostname, IP-Adresse oder Hostalias, für die das Ereignis relevant ist"
 
 msgid "Hostname, marked red if down (Deprecated)"
 msgstr "Hostname, rot markiert, wenn down (veraltet)"
@@ -29757,6 +29767,10 @@ msgstr "Der Parameter \"host\" ist nicht gesetzt."
 #, python-format
 msgid "Missing mandatory topology keys: %r"
 msgstr "Fehlende Plichtfelder für Topologie: %r"
+
+#, fuzzy, python-format
+msgid "Missing needed %s parameter."
+msgstr "Der Parameter host ist nicht gesetzt."
 
 msgid "Missing needed custom_graph parameter."
 msgstr "Der Parameter custom_graph fehlt."
@@ -53696,6 +53710,10 @@ msgstr "Automatischer Benutzerabgleich"
 msgid "Times"
 msgstr "Times"
 
+#, fuzzy
+msgid "Timeseries"
+msgstr "Zeitperioden"
+
 msgid "Timespan for difference calculation of summed up values"
 msgstr "Zeitspanne für die Differenzbildung der aufsummierten Werte"
 
@@ -56175,12 +56193,6 @@ msgstr "Zugangsdaten angeben"
 msgid "Use custom connection parameters"
 msgstr "Individuelle Verbindungseinstellungen nutzen"
 
-msgid "Use default color"
-msgstr "Standardfarbe verwenden"
-
-msgid "Use default color of the theme or medium"
-msgstr "Standardfarbe der Darstellung oder des Mediums verwenden"
-
 msgid "Use default layout"
 msgstr "Standardlayout verwenden"
 
@@ -56397,6 +56409,18 @@ msgstr "Den Alias als DNS-Name / IP-Adresse verwenden"
 
 msgid "Use the credentials of the 'automation' user"
 msgstr "Die Anmeldeinformationen des Benutzers \"automation\" verwenden."
+
+#, fuzzy
+msgid "Use the default color of the metric."
+msgstr "Standardfarbe der Darstellung oder des Mediums verwenden"
+
+#, fuzzy
+msgid "Use the default color of the theme or the metric."
+msgstr "Standardfarbe der Darstellung oder des Mediums verwenden"
+
+#, fuzzy
+msgid "Use the default color of the theme."
+msgstr "Standardfarbe der Darstellung oder des Mediums verwenden"
 
 #, fuzzy, python-format
 msgid "Use the default language (%s)"
@@ -63545,11 +63569,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Change Selection"
 #~ msgstr "Auswahl ändern"
 
-#, fuzzy
-#~| msgid "Metric History"
-#~ msgid "Metric color"
-#~ msgstr "Metrik-Historie"
-
 #~ msgid "Test with this host name"
 #~ msgstr "Test mit diesem Hostnamen"
 
@@ -67411,9 +67430,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Time when downtime was created"
 #~ msgstr "Zeit, wann die Wartungszeit erstellt wurde"
-
-#~ msgid "Timeperiods"
-#~ msgstr "Zeitperioden"
 
 #~ msgid "URL to this frame"
 #~ msgstr "URL auf diesen Frame"

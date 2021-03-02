@@ -9131,17 +9131,19 @@ msgstr ""
 msgid "Color background following it's METRIC THRESHOLDS if available"
 msgstr ""
 
-msgid "Color for the average line"
-msgstr ""
-
-msgid "Color for the main metric scattered dots"
-msgstr ""
-
-msgid "Color for the median line"
-msgstr ""
-
 msgid "Color gradient"
 msgstr ""
+
+#, fuzzy
+msgid "Color of the average"
+msgstr "Parola"
+
+msgid "Color of the median"
+msgstr ""
+
+#, fuzzy
+msgid "Color of the scattered dots"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Color value after SERVICE state"
 msgstr ""
@@ -11504,6 +11506,10 @@ msgid "Customize %s and use them"
 msgstr ""
 
 #, fuzzy
+msgid "Customize Dashboards"
+msgstr "rapoarte"
+
+#, fuzzy
 msgid "Customize GUI design"
 msgstr "Atribute personalizate"
 
@@ -12183,6 +12189,10 @@ msgstr ""
 msgid "Default Value"
 msgstr ""
 
+#, fuzzy
+msgid "Default color"
+msgstr "Matrice"
+
 msgid "Default configuration"
 msgstr ""
 
@@ -12210,6 +12220,10 @@ msgstr "doua nivele"
 #, fuzzy
 msgid "Default line style"
 msgstr "doua nivele"
+
+#, fuzzy
+msgid "Default metric color"
+msgstr "afiseaza erori"
 
 msgid "Default parameters for detected services"
 msgstr ""
@@ -12242,6 +12256,10 @@ msgstr ""
 
 msgid "Default template for all reports"
 msgstr ""
+
+#, fuzzy
+msgid "Default theme color"
+msgstr "afiseaza erori"
 
 msgid "Default time range"
 msgstr ""
@@ -13880,6 +13898,10 @@ msgid "Displays a single metric of a specific host and service."
 msgstr ""
 
 msgid "Displays a static text to the user."
+msgstr ""
+
+msgid ""
+"Displays a timeseries for a single metric of a specific host and service."
 msgstr ""
 
 msgid "Displays all BI aggregations."
@@ -28265,6 +28287,10 @@ msgstr ""
 #, python-format
 msgid "Missing mandatory topology keys: %r"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Missing needed %s parameter."
+msgstr "(fără parametri)"
 
 msgid "Missing needed custom_graph parameter."
 msgstr ""
@@ -49372,6 +49398,10 @@ msgstr "foloseste descrierea"
 msgid "Times"
 msgstr ""
 
+#, fuzzy
+msgid "Timeseries"
+msgstr "Perioada de timp Noua"
+
 msgid "Timespan for difference calculation of summed up values"
 msgstr ""
 
@@ -51787,12 +51817,6 @@ msgstr ""
 msgid "Use custom connection parameters"
 msgstr ""
 
-msgid "Use default color"
-msgstr ""
-
-msgid "Use default color of the theme or medium"
-msgstr ""
-
 #, fuzzy
 msgid "Use default layout"
 msgstr "Matrice"
@@ -52001,6 +52025,17 @@ msgstr ""
 
 msgid "Use the credentials of the 'automation' user"
 msgstr ""
+
+#, fuzzy
+msgid "Use the default color of the metric."
+msgstr "afiseaza erori"
+
+msgid "Use the default color of the theme or the metric."
+msgstr ""
+
+#, fuzzy
+msgid "Use the default color of the theme."
+msgstr "afiseaza erori"
 
 #, python-format
 msgid "Use the default language (%s)"
@@ -60052,10 +60087,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Time of log entry"
 #~ msgstr "Cluster nou"
-
-#, fuzzy
-#~ msgid "Timeperiods"
-#~ msgstr "Perioada de timp Noua"
 
 #, fuzzy
 #~ msgid "Total Memory Levels"

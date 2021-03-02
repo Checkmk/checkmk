@@ -157,7 +157,23 @@
     #werks_link {
       flex-grow: 1;
       margin: auto 0 auto 48px;
-      font-size: 12px;
+      font-size: $font-size-default;
+
+      #werks_link_to,
+      #messages_link_to {
+        height: 16px;
+        padding: 2px 3px;
+        font-size: $font-size-default;
+        line-height: 12px;
+        color: $white;
+        background-color: rgb(226, 40, 40);
+        border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 8px;
+        box-shadow: none;
+        box-sizing: border-box;
+      }
     }
 
     .info_line {
@@ -457,20 +473,18 @@
       span#messages_label,
       span#werks_label {
         position: absolute;
-        padding: 1px;
-        font-size: $font-size-default;
+        padding: 1px 2px;
+        font-size: 9px;
         font-weight: bold;
-        color: $unmonitored-bg-color;
-        background-color: $white;
-        border-radius: 50%;
-      }
-
-      span#messages_label {
-        color: $unmonitored-bg-color;
-      }
-
-      span#werks_label {
-        color: $color-state-error-border;
+        line-height: 12px;
+        color: $white;
+        background-color: rgb(226, 40, 40);
+        border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
+        border-style: solid;
+        border-width: 1px;
+        border-radius: 8px;
+        box-shadow: none;
+        box-sizing: border-box;
       }
     }
   }

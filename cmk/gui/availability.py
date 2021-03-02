@@ -1142,11 +1142,13 @@ def compute_availability_groups(what: AVObjectType, av_data: AVData,
     for title, group_id in sorted(titled_groups, key=lambda x: x[1] or ""):
         group_table = []
         for entry in av_data:
-            group_ids: AVGroupIds = entry["groups"]
-            if group_id is None and group_ids:
+            row_group_ids: AVGroupIds = entry["groups"]
+            if group_id is None and row_group_ids:
                 continue  # This is not an ungrouped object
-            if group_id and group_ids and group_id not in group_ids:
+            if group_id and row_group_ids and group_id not in row_group_ids:
                 continue  # Not this group
+            if group_id and not row_group_ids:
+                continue  # This is an ungrouped object
             group_table.append(entry)
         availability_tables.append((title, group_table))
 

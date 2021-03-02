@@ -1,0 +1,12 @@
+Title: Availability: Fix services appearing in wrong groups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614671202
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+The availability rows can be grouped by service groups. In case this is done
+the availability tables showed services in groups which they don't belong to.

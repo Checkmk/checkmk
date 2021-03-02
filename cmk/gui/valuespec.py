@@ -6278,7 +6278,9 @@ class SetupSiteChoice(DropdownChoice):
 
     def _site_default_value(self):
         if config.is_wato_slave_site():
-            return config.wato_distributed_central_site
+            # Placeholder for "central site". This is only relevant when using WATO on a remote site
+            # and a host / folder has no site set.
+            return ""
 
         default_value = config.site_attribute_default_value()
         if default_value:

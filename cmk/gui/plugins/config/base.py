@@ -12,9 +12,7 @@ from typing import (
     Tuple as _Tuple,
     Union as _Union,
     Literal as _Literal,
-    Optional as _Optional,
 )
-from livestatus import SiteId as _SiteId
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -493,8 +491,6 @@ wato_icon_categories = [
 
 _ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
 wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
-
-wato_distributed_central_site: _Optional[_SiteId] = None
 
 #.
 #   .--BI------------------------------------------------------------------.

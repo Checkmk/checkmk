@@ -213,6 +213,7 @@ class UpdateConfig:
 
         global_config = cmk.gui.watolib.global_settings.load_site_global_settings()
         self._update_global_config(global_config)
+
         cmk.gui.watolib.global_settings.save_site_global_settings(global_config)
 
     def _update_remote_site_specific_global_settings(self):

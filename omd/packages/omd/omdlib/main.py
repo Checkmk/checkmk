@@ -1588,14 +1588,21 @@ def call_scripts(site: SiteContext, phase: str) -> None:
                 encoding="utf-8")
             if p.stdout is None:
                 raise Exception("stdout needs to be set")
-            stdout = p.stdout.read()
+
+            wrote_output = False
+            for line in p.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
             exitcode = p.wait()
             if exitcode == 0:
                 sys.stdout.write(tty.ok + '\n')
             else:
                 sys.stdout.write(tty.error + ' (exit code: %d)\n' % exitcode)
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:

@@ -421,7 +421,12 @@ table.boxlayout {
   border-spacing: 0;
 
   td.boxcolumn {
-    padding-right: 20px;
+    padding-right: $spacing;
+    vertical-align: top;
+
+    &:last-child {
+      padding-right: 0;
+    }
   }
 
   &.graph table.data tr.data {

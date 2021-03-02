@@ -31,7 +31,7 @@ h3 {
 }
 
 @mixin table-header-mixin {
-  padding: 5px 0 5px 8px;
+  padding: 6px 0 4px 8px;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
@@ -756,7 +756,7 @@ button {
 input,
 select {
   &.number {
-    text-align: left;
+    text-align: right;
   }
 
   &.button {
@@ -881,7 +881,7 @@ table.nform {
       vertical-align: middle;
       cursor: pointer;
       background-color: transparent;
-      border-radius: 5px 5px 0 0;
+      border-radius: $theme-border-radius $theme-border-radius 0 0;
     }
 
     td {
@@ -928,8 +928,8 @@ table.nform {
       max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
-      white-space: nowrap;
       letter-spacing: $letter-spacing-default;
+      white-space: nowrap;
     }
 
     div.checkbox {

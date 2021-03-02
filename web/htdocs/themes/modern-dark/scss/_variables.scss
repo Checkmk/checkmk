@@ -82,7 +82,8 @@ $button-height: 28px;
 // -----------------------------------------------------------------------------
 $theme-border-radius: 4px;
 $spacing: 10px;
-$spacing-half: 5px;
+$spacing-half: (0.5 * $spacing);
+$spacing-quarter: (0.25 * $spacing);
 $menu-item-spacing: (2.2 * $spacing);
 $single-column-mega-menu: 340px;
 

@@ -40,19 +40,6 @@ th {
   white-space: nowrap;
 }
 
-/* Default font size for the complete Multisite GUI */
-button,
-input,
-td,
-th,
-select,
-textarea {
-}
-
-input.number {
-  text-align: right;
-}
-
 /* Styling for input elements */
 button,
 input,
@@ -1573,7 +1560,7 @@ tr.hidden {
 }
 
 div#row_info {
-  padding-right: 10px;
+  padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;
 }

@@ -1,0 +1,17 @@
+Title: watchdog_sensors: support Vertiv Geist Watchdog 15 firmware update
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614612765
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+A firmware update in the Vertiv Geist Watchdog 15 sensor required an update to
+the watchdog_sensors check, so that the services of this device could be
+discovered. The relevant message is:
+Newer firmware requires a small change in snmp_scan_function: from
+.1.3.6.1.4.1.21239.5.1 to .1.3.6.1.4.1.21239.42.1
+The new OID has been added, so that the updated firmware is supported.

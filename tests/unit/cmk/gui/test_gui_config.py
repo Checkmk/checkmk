@@ -56,8 +56,8 @@ def test_sorted_sites(mocker):
 def test_registered_permission_sections():
     expected_sections = [
         ('bookmark_list', (50, u'Bookmark lists', True)),
-        ('custom_snapin', (50, u'Custom snapins', True)),
-        ('sidesnap', (50, u'Sidebar snapins', True)),
+        ('custom_snapin', (50, u'Custom sidebar elements', True)),
+        ('sidesnap', (50, u'Sidebar elements', True)),
         ('notification_plugin', (50, u'Notification plugins', True)),
         ('wato', (50, u"WATO - Checkmk's Web Administration Tool", False)),
         ('background_jobs', (50, u'Background jobs', False)),

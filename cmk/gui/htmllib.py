@@ -2656,11 +2656,11 @@ class html(ABCHTMLGenerator):
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.open_div(title="Show more items" if not with_text else "", class_="show_more")
+        self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
             self.write_text(_("show more"))
         self.close_div()
-        self.open_div(title="Show less items" if not with_text else "", class_="show_less")
+        self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
         if with_text:
             self.write_text(_("show less"))
         self.close_div()

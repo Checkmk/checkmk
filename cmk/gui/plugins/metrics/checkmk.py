@@ -220,7 +220,7 @@ def register_omd_apache_metrics():
         }
 
         metric_info[ty + "_cmk_snapins"] = {
-            "title": _("Checkmk: Snapins"),
+            "title": _("Checkmk: Sidebar elements"),
             "unit": unit,
             "color": "#ff4040",
         }
@@ -238,7 +238,7 @@ def register_omd_apache_metrics():
         }
 
         metric_info[ty + "_nagvis_snapin"] = {
-            "title": _("NagVis: Snapin"),
+            "title": _("NagVis: Sidebar element"),
             "unit": unit,
             "color": "#f2904e",
         }

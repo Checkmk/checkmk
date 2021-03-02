@@ -155,10 +155,10 @@ permission_registry.register(
     Permission(
         section=mkeventd.PermissionSectionEventConsole,
         name="see_in_tactical_overview",
-        title=_("See events in tactical overview snapin"),
+        title=_("See events in the sidebar element 'Overview'"),
         description=_(
             "Whether or not the user is permitted to see the number of open events in the "
-            "tactical overview snapin."),
+            "sidebar element 'Overview'."),
         defaults=config.builtin_role_ids,
     ))
 

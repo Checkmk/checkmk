@@ -51,6 +51,7 @@ def source_fixture(scenario, hostname, ipaddress, mode):
         mode=mode,
         selected_sections=NO_SELECTION,
         on_scan_error="raise",
+        force_cache_refresh=False,
     )
 
 
@@ -94,6 +95,7 @@ class TestSNMPSource_SNMP:
             mode=mode,
             selected_sections=NO_SELECTION,
             on_scan_error="raise",
+            force_cache_refresh=False,
         )
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
@@ -121,6 +123,7 @@ class TestSNMPSource_MGMT:
             hostname,
             ipaddress,
             mode=mode,
+            force_cache_refresh=False,
             selected_sections=NO_SELECTION,
             on_scan_error="raise",
         )
@@ -151,6 +154,7 @@ class TestSNMPSummaryResult:
             hostname,
             "1.2.3.4",
             mode=mode,
+            force_cache_refresh=False,
             selected_sections=NO_SELECTION,
             source_type=SourceType.HOST,
             id_="snmp_id",

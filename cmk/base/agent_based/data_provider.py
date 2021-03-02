@@ -314,6 +314,7 @@ def make_broker(
     selected_sections: 'SectionNameCollection',
     file_cache_max_age: int,
     fetcher_messages: Sequence['FetcherMessage'],
+    force_snmp_cache_refresh: bool,
     on_scan_error: str,
 ) -> Tuple[ParsedSectionsBroker, Sequence[Tuple['Source', result.Result[HostSections, Exception]]]]:
     nodes = make_nodes(
@@ -326,6 +327,7 @@ def make_broker(
             ip_address,
             mode=mode,
             selected_sections=selected_sections,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
             on_scan_error=on_scan_error,
         ),
     )

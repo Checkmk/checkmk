@@ -150,12 +150,12 @@ class SNMPFileCache(FileCache[SNMPRawData]):
 
 
 class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
-    def make(self) -> SNMPFileCache:
+    def make(self, *, force_cache_refresh: bool = False) -> SNMPFileCache:
         return SNMPFileCache(
             path=self.path,
-            max_age=self.max_age,
-            disabled=self.disabled | self.snmp_disabled,
-            use_outdated=self.use_outdated,
+            max_age=0 if force_cache_refresh else self.max_age,
+            disabled=self.disabled,
+            use_outdated=False if force_cache_refresh else self.disabled,
             simulation=self.simulation,
         )
 

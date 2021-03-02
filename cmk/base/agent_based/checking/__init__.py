@@ -159,6 +159,7 @@ def do_check(
                 selected_sections=selected_sections,
                 file_cache_max_age=host_config.max_cachefile_age,
                 fetcher_messages=fetcher_messages,
+                force_snmp_cache_refresh=False,
                 on_scan_error="raise",
             )
 

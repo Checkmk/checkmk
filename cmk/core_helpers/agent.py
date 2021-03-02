@@ -85,23 +85,27 @@ class NoCache(AgentFileCache):
 
 
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
-    def make(self) -> DefaultAgentFileCache:
+    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
+    # to implement it here anyway:
+    def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
         return DefaultAgentFileCache(
             path=self.path,
-            max_age=self.max_age,
+            max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
-            use_outdated=self.use_outdated,
+            use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
 
 
 class NoCacheFactory(FileCacheFactory[AgentRawData]):
-    def make(self) -> NoCache:
+    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
+    # to implement it here anyway. At the time of this writing NoCache does nothing either way.
+    def make(self, *, force_cache_refresh: bool = False) -> NoCache:
         return NoCache(
             path=self.path,
-            max_age=self.max_age,
+            max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
-            use_outdated=self.use_outdated,
+            use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
 

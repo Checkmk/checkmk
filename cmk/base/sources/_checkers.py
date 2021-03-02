@@ -42,6 +42,7 @@ class _Builder:
         mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
+        force_snmp_cache_refresh: bool,
     ) -> None:
         super().__init__()
         self._host_config = host_config
@@ -51,6 +52,7 @@ class _Builder:
         self._mode = mode
         self._selected_sections = selected_sections
         self._on_scan_error = on_scan_error
+        self._force_snmp_cache_refresh = force_snmp_cache_refresh
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -118,6 +120,7 @@ class _Builder:
                 mode=self._mode,
                 selected_sections=self._selected_sections,
                 on_scan_error=self._on_scan_error,
+                force_cache_refresh=self._force_snmp_cache_refresh,
             ))
 
     def _initialize_mgmt_boards(self) -> None:
@@ -139,6 +142,7 @@ class _Builder:
                     mode=self._mode,
                     selected_sections=self._selected_sections,
                     on_scan_error=self._on_scan_error,
+                    force_cache_refresh=self._force_snmp_cache_refresh,
                 ))
         elif protocol == "ipmi":
             self._add(IPMISource(
@@ -196,6 +200,7 @@ def make_sources(
     ipaddress: Optional[HostAddress],
     *,
     mode: Mode,
+    force_snmp_cache_refresh: bool = False,
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: str = "raise",
 ) -> Sequence[Source]:
@@ -206,6 +211,7 @@ def make_sources(
         mode=mode,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
     ).sources
 
 
@@ -263,6 +269,7 @@ def _make_piggyback_nodes(
             HostConfig.make_host_config(hostname),
             ipaddress,
             mode=mode,
+            force_snmp_cache_refresh=False,
         )
         nodes.append((hostname, ipaddress, sources))
     return nodes

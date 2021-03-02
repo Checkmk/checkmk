@@ -198,6 +198,7 @@ def do_discovery(
                 selected_sections=selected_sections,
                 file_cache_max_age=config.discovery_max_cachefile_age() if use_caches else 0,
                 fetcher_messages=(),
+                force_snmp_cache_refresh=False,
                 on_scan_error=on_error,
             )
             _do_discovery_for(
@@ -342,6 +343,7 @@ def discover_on_host(
             selected_sections=NO_SELECTION,
             file_cache_max_age=max_cachefile_age,
             fetcher_messages=(),
+            force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
         )
 
@@ -391,10 +393,6 @@ def _set_cache_opts_of_checkers(*, use_cached_snmp_data: bool) -> None:
     # line in. As far as I can tell, this property is never being read after the
     # callsites of this function.
     cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
-    # SNMP data sources *may* use the cache. Note the cached data results from
-    # the last time a *discovery* was done. It contains all sections for
-    # which the detection triggered at that time.
-    cmk.core_helpers.cache.FileCacheFactory.snmp_disabled = not use_cached_snmp_data
 
 
 def _make_services_audit_log_object(services: List[Service]) -> Set[str]:
@@ -524,6 +522,7 @@ def check_discovery(
         selected_sections=NO_SELECTION,
         file_cache_max_age=(config.discovery_max_cachefile_age()
                             if cmk.core_helpers.cache.FileCacheFactory.maybe else 0),
+        force_snmp_cache_refresh=False,
         on_scan_error=discovery_parameters.on_error,
     )
 
@@ -1149,6 +1148,7 @@ def get_check_preview(
         file_cache_max_age=max_cachefile_age,
         selected_sections=NO_SELECTION,
         fetcher_messages=(),
+        force_snmp_cache_refresh=not use_cached_snmp_data,
         on_scan_error=on_error,
     )
 

@@ -227,6 +227,7 @@ def _do_active_inventory_for(
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
         file_cache_max_age=host_config.max_cachefile_age,
         fetcher_messages=(),
+        force_snmp_cache_refresh=False,
         on_scan_error="raise",
     )
 

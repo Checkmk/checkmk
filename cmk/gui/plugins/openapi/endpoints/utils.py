@@ -18,7 +18,7 @@ from cmk.utils import version
 
 from cmk.utils.version import is_managed_edition
 if is_managed_edition():
-    import cmk.gui.cme.managed as managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
 GroupName = Literal[

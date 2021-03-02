@@ -26,7 +26,7 @@ from cmk.utils.exceptions import MKException
 import cmk.utils.version as version
 
 if version.is_managed_edition():
-    from cmk.gui.cme import managed
+    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
 class String(_fields.String):

@@ -119,7 +119,6 @@ div.cmk_figure {
     border-radius: 5px;
 
     td {
-      font-size: 11px;
     }
   }
 
@@ -268,7 +267,6 @@ div.cmk_figure {
   }
 
   g.title rect {
-    font-size: $font-size-default;
     fill: $dashlet-body-bg-color;
 
     &.highlighted {

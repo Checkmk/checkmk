@@ -78,7 +78,6 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $font-size-default;
     font-weight: 500;
     letter-spacing: 2px;
     color: $font-color;
@@ -141,7 +140,6 @@ div.dashlet {
 
       th,
       td {
-        font-size: 11px;
         font-weight: normal;
       }
     }
@@ -197,7 +195,7 @@ div.dashlet > div.title span {
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
 table.dashlet_overview h2 {
   margin: 8px 0;
-  font-size: 13px;
+  font-size: $font-size-large;
 }
 
 div.dashlet_inner div.stats table.hoststats a,
@@ -886,7 +884,6 @@ div.servicestats {
     h3 {
       margin-top: 2px;
       margin-bottom: 2px;
-      font-size: 1.1em;
     }
 
     td.color {

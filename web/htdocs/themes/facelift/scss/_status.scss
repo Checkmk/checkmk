@@ -178,7 +178,7 @@ b.stmark {
   top: -1px;
   padding: 1.5px 3px;
   margin-left: 2px;
-  font-size: 9px;
+  font-size: $font-size-small;
   border-radius: 4px;
 }
 
@@ -196,7 +196,7 @@ img.pluginurl {
   width: 56px;
   height: 16px;
   padding: 2px;
-  font-size: 9px;
+  font-size: $font-size-small;
   line-height: 12px;
   color: rgb(255, 255, 255);
   text-align: center;
@@ -277,7 +277,6 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-size: $font-size-default;
     font-weight: $font-weight-bold;
     letter-spacing: 0;
     color: $color-perfometer-title;

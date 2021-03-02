@@ -178,7 +178,7 @@ div.graph {
       top: 5px;
       z-index: 10;
       width: 100%;
-      font-size: 120%;
+      font-size: $font-size-large;
       font-weight: normal;
     }
   }
@@ -189,7 +189,6 @@ div.graph {
     top: 10px;
     z-index: 10;
     margin: 0;
-    font-size: 100%;
     font-weight: bold;
     text-align: center;
   }
@@ -207,7 +206,6 @@ div.graph table.legend th,
 div.graph table,
 legend td {
   padding: 2px 8px 2.5px 2px;
-  font-size: 11px;
   white-space: nowrap;
 }
 

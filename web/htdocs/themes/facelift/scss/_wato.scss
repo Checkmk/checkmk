@@ -58,7 +58,7 @@
 /* TODO: Reproduce this html element */
 .wato div.sitestatus {
   padding: 0 10px;
-  font-size: 9px;
+  font-size: $font-size-small;
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
@@ -365,7 +365,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      font-size: $font-size-default;
       color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -426,7 +425,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-size: 13px;
   font-weight: 500;
   color: $font-color;
 }
@@ -501,7 +499,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   div.title {
     position: absolute;
     top: 12px;
-    font-size: 13px;
     font-weight: bold;
     color: rgb(255, 255, 255);
 
@@ -642,7 +639,6 @@ form#form_timeperiod td.vlof_content {
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
-  font-size: 11px;
 }
 
 /* main menu */
@@ -873,7 +869,6 @@ div.varname {
   #row_info {
     float: right;
     padding-right: $spacing;
-    font-size: $font-size-global;
     font-weight: $font-weight-default;
   }
 }
@@ -939,7 +934,6 @@ div.varname {
       width: 160px;
       height: 24px;
       padding-top: 10px;
-      font-size: 11px;
       color: $black;
       border-radius: $theme-border-radius;
       box-shadow: none;

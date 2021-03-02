@@ -55,7 +55,6 @@ body.login {
     top: 40px;
     right: 40px;
     width: 150px;
-    font-size: 11px;
     letter-spacing: $letter-spacing-table;
     text-align: right;
   }
@@ -63,7 +62,6 @@ body.login {
   #label_user,
   #label_pass {
     left: 40px;
-    font-size: $font-size-global;
     letter-spacing: $letter-spacing-table;
   }
 
@@ -146,7 +144,6 @@ body.login {
     left: 10px;
     width: 350px;
     margin: 0 auto 10px;
-    font-size: 11px;
     color: $darkgrey;
     text-align: center;
   }

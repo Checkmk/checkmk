@@ -21,7 +21,6 @@ body.side {
   margin: 0;
   overflow: hidden;
   font-family: $font-family-default;
-  font-size: 14px;
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
@@ -198,7 +197,7 @@ body.main .popup_menu #side_header > span {
 
 #side_version {
   margin: $spacing;
-  font-size: 8px;
+  font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color-sidebar;
@@ -260,7 +259,6 @@ div.snapin {
 
     b.heading {
       padding-bottom: 3px;
-      font-size: $font-size-global;
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
@@ -347,7 +345,6 @@ div.snapin {
 
   h3 {
     margin: 2px 0;
-    font-size: 100%;
     color: $font-color;
   }
 
@@ -408,7 +405,6 @@ div.snapin {
 
     h2 {
       margin-top: 0;
-      font-size: 12px;
       color: rgb(255, 0, 0);
     }
 

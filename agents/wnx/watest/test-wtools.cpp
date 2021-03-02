@@ -547,4 +547,58 @@ TEST(Wtools, ExpandString) {
     EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
 }
 
+namespace {
+// waiter for the result. In fact polling with grane 20ms
+template <typename T, typename B>
+bool WaitForSuccess(std::chrono::duration<T, B> allowed_wait,
+                    std::function<bool()> func) {
+    using namespace std::chrono;
+
+    constexpr auto grane = 20ms;
+    auto wait_time = allowed_wait;
+
+    while (wait_time >= 0ms) {
+        auto success = func();
+        if (success) return true;
+
+        cma::tools::sleep(grane);
+        wait_time -= grane;
+    }
+
+    return false;
+}
+
+}  // namespace
+
+TEST(Wtools, ExecuteCommandsAsync) {
+    namespace fs = std::filesystem;
+    using namespace std::chrono_literals;
+
+    auto output_file = fmt::format(L"{}cmk_test_{}.output",
+                                   fs::temp_directory_path().wstring(),
+                                   ::GetCurrentProcessId());
+    std::vector<std::wstring> commands{L"echo x>" + output_file,
+                                       L"@echo powershell Start-Sleep 1"};
+    auto script_file = ExecuteCommandsAsync(L"test", commands);
+    std::error_code ec;
+    ON_OUT_OF_SCOPE({
+        if (!script_file.empty()) {
+            fs::remove(script_file, ec);
+        }
+        fs::remove(output_file, ec);
+    });
+    EXPECT_FALSE(script_file.empty());
+    EXPECT_TRUE(fs::exists(script_file));
+    auto table = tst::ReadFileAsTable(script_file.u8string());
+    EXPECT_EQ(table[0], ConvertToUTF8(commands[0]));
+    EXPECT_EQ(table[1], ConvertToUTF8(commands[1]));
+
+    WaitForSuccess(5000ms, [output_file]() {
+        std::error_code ec;
+        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+    });
+    auto output = tst::ReadFileAsTable(ConvertToUTF8(output_file));
+    EXPECT_EQ(output[0], "x");
+}
+
 }  // namespace wtools

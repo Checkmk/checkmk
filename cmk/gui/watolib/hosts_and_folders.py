@@ -1287,8 +1287,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         - Use explicitly set site attribute
         - Go down the folder hierarchy to find a folder with set site attribute
-        - Remote sites: Use the ID of the central site
-        - Standalone an central sites: Use the ID of the local site
+        - Remote sites: Use "" -> Assigned to central site
+        - Standalone and central sites: Use the ID of the local site
         """
         if "site" in self._attributes:
             return self._attributes["site"]
@@ -1297,8 +1297,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if not config.is_wato_slave_site():
             return config.omd_site()
 
-        assert config.wato_distributed_central_site is not None
-        return config.wato_distributed_central_site
+        # Placeholder for "central site". This is only relevant when using WATO on a remote site
+        # and a host / folder has no site set.
+        return SiteId("")
 
     def all_site_ids(self) -> List[SiteId]:
         site_ids: Set[SiteId] = set()

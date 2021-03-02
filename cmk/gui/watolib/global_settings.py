@@ -46,7 +46,6 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
             "wato_enabled",
             "userdb_automatic_sync",
             "user_login",
-            "wato_distributed_central_site",
     ]:
         if varname in vars_:
             per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]

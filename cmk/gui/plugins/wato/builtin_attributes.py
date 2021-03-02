@@ -790,6 +790,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def get_tag_groups(self, value):
+        # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
+        # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
             return {"site": ""}
 

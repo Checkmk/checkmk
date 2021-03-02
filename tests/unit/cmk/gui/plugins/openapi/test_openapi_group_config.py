@@ -10,7 +10,10 @@ import string
 
 import pytest  # type: ignore[import]
 
+from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
 
+
+@managedtest
 @pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
 def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user
@@ -75,6 +78,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     )
 
 
+@managedtest
 @pytest.mark.parametrize("group_type", ['host', 'service', 'contact'])
 def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user
@@ -165,6 +169,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
     )
 
 
+@managedtest
 @pytest.mark.parametrize("group_type", ['host', 'contact', 'service'])
 def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user):
     username, secret = with_automation_user

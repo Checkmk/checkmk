@@ -12,8 +12,10 @@ from freezegun import freeze_time
 from cmk.gui.plugins.openapi.endpoints.user_config import user_config_attributes
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
+from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
 
 
+@managedtest
 def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -59,6 +61,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
     assert resp.json_body["extensions"]["attributes"]["customer"] == "provider"
 
 
+@managedtest
 def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -91,6 +94,7 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
     }
 
 
+@managedtest
 def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -176,6 +180,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
     }
 
 
+@managedtest
 def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -260,6 +265,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     assert len(resp.json_body["value"]) == 1
 
 
+@managedtest
 def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -376,6 +382,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
     }
 
 
+@managedtest
 def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypatch):
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
                         lambda: True)
@@ -413,6 +420,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
     }
 
 
+@managedtest
 def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",

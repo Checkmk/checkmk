@@ -1,0 +1,12 @@
+Title: OverflowError on bad varnishstats uptime value
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614671183
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+{{varnishstats}} might generate bad values for uptime, e.g. 18446744073709545410.
+This change catches the error and provides the user with a hint to {{varnishstats}}.

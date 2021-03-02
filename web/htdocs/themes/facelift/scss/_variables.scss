@@ -112,8 +112,8 @@ $color-state-9-background: rgb(191, 90, 191);
 
 $color-state-error-border: rgb(226, 40, 40); // red
 
-$color-state-success-background: rgb(170, 225, 153); // green
-$color-state-success-border: rgb(154, 219, 133); // green
+$color-state-success-background: $success; // green
+$color-state-success-border: null; // green
 
 $color-perfometer-title: $font-color;
 

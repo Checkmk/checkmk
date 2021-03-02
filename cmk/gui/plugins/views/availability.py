@@ -111,7 +111,7 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     avoptions.update(config.user.load_file("avoptions", {}))
 
     form_name = html.request.get_ascii_input("filled_in")
-    if form_name == "avoption_display":
+    if form_name == "avoptions_display":
         avoption_entries = availability.get_av_display_options(what)
     elif form_name == "avoptions_computation":
         avoption_entries = availability.get_av_computation_options()
@@ -316,7 +316,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
 
     if html.has_user_errors():
         form_name = html.request.get_ascii_input_mandatory("filled_in")
-        if form_name in ("avoption_display", "avoptions_computation"):
+        if form_name in ("avoptions_display", "avoptions_computation"):
             html.final_javascript("cmk.page_menu.open_popup(%s);" %
                                   json.dumps("popup_" + form_name))
 

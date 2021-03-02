@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from dataclasses import dataclass
 import json
 import time
 from typing import (
@@ -852,6 +853,7 @@ def _page_menu_dashboards() -> Iterable[PageMenuTopic]:
 
 
 def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
+
     yield PageMenuTopic(
         title=_("Views"),
         entries=list(_dashboard_add_views_dashlet_entries(name)),
@@ -999,6 +1001,14 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return board["context"]
 
 
+@dataclass
+class PageMenuEntryCEEOnly(PageMenuEntry):
+    def __post_init__(self) -> None:
+        if cmk_version.is_raw_edition():
+            self.is_enabled = False
+            self.disabled_tooltip = _("Enterprise feature")
+
+
 def _dashboard_add_dashlet_back_http_var() -> Tuple[str, str]:
     return "back", makeuri(request, [('edit', '1')])
 
@@ -1021,6 +1031,7 @@ def _dashboard_add_view_dashlet_link(
 
 
 def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
+
     yield PageMenuEntry(
         title=_('New view'),
         icon_name='view',
@@ -1059,7 +1070,7 @@ def _dashboard_add_non_view_dashlet_link(
 
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Single metric graph',
         icon_name={
             'icon': 'graph',
@@ -1074,48 +1085,46 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
         item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),
     )
 
-    if not cmk_version.is_raw_edition():
+    yield PageMenuEntryCEEOnly(
+        title=_('Custom graph'),
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'add',
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
+    )
 
-        yield PageMenuEntry(
-            title=_('Custom graph'),
-            icon_name={
-                'icon': 'graph',
-                'emblem': 'add',
-            },
-            item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
-        )
-
-        yield PageMenuEntry(
-            title=_('Combined graph'),
-            icon_name={
-                'icon': 'graph',
-                'emblem': 'add',  # TODO: Need its own icon
-            },
-            item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
-        )
+    yield PageMenuEntryCEEOnly(
+        title=_('Combined graph'),
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'add',  # TODO: Need its own icon
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
+    )
 
 
-def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
+def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Average scatterplot',
         icon_name='scatterplot',
         item=_dashboard_add_non_view_dashlet_link(name, "average_scatterplot"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Barplot',
         icon_name='barplot',
         item=_dashboard_add_non_view_dashlet_link(name, "barplot"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Gauge',
         icon_name='gauge',
         item=_dashboard_add_non_view_dashlet_link(name, "gauge"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Single metric',
         icon_name='single_metric',
         item=_dashboard_add_non_view_dashlet_link(name, "single_metric"),
@@ -1124,13 +1133,13 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Site overview',
         icon_name='site_overview',
         item=_dashboard_add_non_view_dashlet_link(name, "site_overview"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alert statistics',
         icon_name={
             'icon': 'alerts',
@@ -1156,7 +1165,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "servicestats"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Notification timeline',
         icon_name={
             'icon': 'notifications',
@@ -1165,7 +1174,7 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
         item=_dashboard_add_non_view_dashlet_link(name, "notifications_bar_chart"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alert timeline',
         icon_name={
             'icon': 'alerts',
@@ -1188,9 +1197,9 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
     )
 
 
-def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
+def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alerts',
         icon_name={
             'icon': 'ntop',
@@ -1199,7 +1208,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
         item=_dashboard_add_non_view_dashlet_link(name, "ntop_alerts"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Flows',
         icon_name={
             'icon': 'ntop',
@@ -1208,7 +1217,7 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
         item=_dashboard_add_non_view_dashlet_link(name, "ntop_flows"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Top talkers',
         icon_name={
             'icon': 'ntop',

@@ -1640,7 +1640,7 @@ def configure_attributes(new,
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write(content)
+                    html.write_text(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(content))

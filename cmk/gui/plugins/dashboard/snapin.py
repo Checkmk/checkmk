@@ -24,11 +24,11 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def title(cls):
-        return _("Sidebar Snapin")
+        return _("Sidebar element")
 
     @classmethod
     def description(cls):
-        return _("Displays a sidebar snapin.")
+        return _("Displays a sidebar element.")
 
     @classmethod
     def sort_index(cls):
@@ -45,12 +45,10 @@ class SnapinDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("snapin",
-             DropdownChoice(
-                 title=_("Snapin"),
-                 help=_("Choose the snapin you would like to show."),
-                 choices=cls._snapin_choices,
-             )),
+            ("snapin", DropdownChoice(
+                title=_("Element"),
+                choices=cls._snapin_choices,
+            )),
         ]
 
     @classmethod
@@ -68,11 +66,11 @@ class SnapinDashlet(IFrameDashlet):
         dashlet = self._dashlet_spec
         snapin = sidebar.snapin_registry.get(self._dashlet_spec['snapin'])
         if not snapin:
-            raise MKUserError(None, _('The configured snapin does not exist.'))
+            raise MKUserError(None, _('The configured element does not exist.'))
         snapin_instance = snapin()
 
         html.set_browser_reload(self.refresh_interval())
-        html.html_head(_('Snapin Dashlet'))
+        html.html_head(_('Sidebar element'))
         html.open_body(class_="side", data_theme=html.get_theme())
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")

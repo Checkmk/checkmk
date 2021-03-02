@@ -407,7 +407,7 @@ class SidebarRenderer:
         html.open_div(id_="add_snapin")
         html.open_a(href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
                     target="main")
-        html.icon("add", title=_("Add snapins to your sidebar"))
+        html.icon("add", title=_("Add elements to your sidebar"))
         html.close_a()
         html.close_div()
 
@@ -461,7 +461,7 @@ class SidebarRenderer:
                 html.open_span(class_="closesnapin")
                 close_url = "sidebar_openclose.py?name=%s&state=off" % name
                 html.icon_button(url=None,
-                                 title=_("Remove this snapin"),
+                                 title=_("Remove this element"),
                                  icon="close",
                                  onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" %
                                  close_url)
@@ -485,7 +485,7 @@ class SidebarRenderer:
             # Icon for mini/maximizing
             html.span("",
                       class_="minisnapin",
-                      title=_("Toggle this snapin"),
+                      title=_("Open/close this element"),
                       onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
         # End of header
@@ -595,7 +595,7 @@ def ajax_snapin():
                 snapin_instance.show()
             except Exception as e:
                 write_snapin_exception(e)
-                e_message = _("Exception during snapin refresh (snapin \'%s\')"
+                e_message = _("Exception during element refresh (element \'%s\')"
                              ) % snapin_instance.type_name()
                 logger.error("%s %s: %s", html.request.requested_url, e_message,
                              traceback.format_exc())
@@ -698,13 +698,13 @@ class CustomSnapins(pagetypes.Overridable):
     @classmethod
     def phrase(cls, phrase):
         return {
-            "title": _("Custom snapin"),
-            "title_plural": _("Custom snapins"),
-            #"add_to"         : _("Add to custom snapin list"),
-            "clone": _("Clone snapin"),
-            "create": _("Create snapin"),
-            "edit": _("Edit snapin"),
-            "new": _("New snapin"),
+            "title": _("Custom sidebar element"),
+            "title_plural": _("Custom sidebar elements"),
+            #"add_to"         : _("Add to custom element list"),
+            "clone": _("Clone element"),
+            "create": _("Create element"),
+            "edit": _("Edit element"),
+            "new": _("New element"),
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
@@ -716,7 +716,7 @@ class CustomSnapins(pagetypes.Overridable):
             # sort-index, key, valuespec
             [(2.5, "custom_snapin",
               CascadingDropdown(
-                  title=_("Snapin type"),
+                  title=_("Element type"),
                   choices=cls._customizable_snapin_type_choices,
               ))])]
 
@@ -761,7 +761,7 @@ def page_add_snapin() -> None:
     if not config.user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-    title = _("Available snapins")
+    title = _("Add sidebar element")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_customize(), title)
     html.header(title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
@@ -821,10 +821,10 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
         addname = html.request.var("name")
 
         if addname is None or addname not in snapin_registry:
-            raise MKUserError(None, _("Invalid snapin %s") % addname)
+            raise MKUserError(None, _("Invalid sidebar element %s") % addname)
 
         if addname in _used_snapins():
-            raise MKUserError(None, _("Snapin %s is already enabled") % addname)
+            raise MKUserError(None, _("Element %s is already enabled") % addname)
 
         user_config = UserSidebarConfig(config.user, config.sidebar)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname)

@@ -52,7 +52,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
     @property
     def title(self) -> str:
-        return _("Sidebar snapins")
+        return _("Sidebar elements")
 
     @property
     def do_sort(self) -> bool:

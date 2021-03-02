@@ -35,11 +35,6 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
-        'average_scatterplot',
-        'alerts_bar_chart',
-        'barplot',
-        'gauge',
-        'notifications_bar_chart',
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
@@ -51,14 +46,19 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'single_metric',
         'snapin',
-        'site_overview',
-        'alert_statistics',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_plugins += [
+            'alerts_bar_chart',
+            'alert_statistics',
+            'average_scatterplot',
+            'barplot',
+            'gauge',
+            'notifications_bar_chart',
+            'single_metric',
+            'site_overview',
             'custom_graph',
             'combined_graph',
             'ntop_alerts',

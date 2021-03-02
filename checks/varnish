@@ -380,7 +380,11 @@ def inventory_varnish_uptime(parsed):
 
 def check_varnish_uptime(_no_item, _no_params, parsed):
     if "uptime" in parsed:
-        return check_uptime_seconds(_no_params, parsed["uptime"]["value"])
+        try:
+            return check_uptime_seconds(_no_params, parsed["uptime"]["value"])
+        except OverflowError:
+            return (3, f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
+                    'Output of `varnishstats` seems to be faulty.')
 
 
 check_info["varnish"] = {

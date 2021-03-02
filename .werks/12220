@@ -1,0 +1,15 @@
+Title: Fix saving of values in suggestion fields
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614703726
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+If you entered a value in suggestion fields, like e.g. the parent option in the
+settings of a host, the value was only saved if you clicked enter.
+
+Now this value will also be stored, if you click elsewhere.

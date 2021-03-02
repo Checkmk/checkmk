@@ -161,18 +161,12 @@
 
       #werks_link_to,
       #messages_link_to {
-        height: 16px;
-        padding: 2px 3px;
-        font-size: $font-size-default;
-        line-height: 12px;
-        color: $white;
-        background-color: rgb(226, 40, 40);
-        border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
-        border-style: solid;
-        border-width: 1px;
-        border-radius: 8px;
-        box-shadow: none;
-        box-sizing: border-box;
+        &:not(:empty) {
+          padding: 2px 5px;
+          color: $white;
+          background-color: $danger;
+          border-radius: $theme-border-radius;
+        }
       }
     }
 
@@ -458,6 +452,7 @@
     }
 
     a.popup_trigger {
+      position: relative;
       display: block;
       padding: $spacing 4px $spacing 0;
       font-size: $font-size-small;
@@ -473,18 +468,12 @@
       span#messages_label,
       span#werks_label {
         position: absolute;
-        padding: 1px 2px;
-        font-size: 9px;
-        font-weight: bold;
-        line-height: 12px;
+        top: 2px;
+        right: 4px;
+        padding: 2px 4px 0;
         color: $white;
-        background-color: rgb(226, 40, 40);
-        border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
-        border-style: solid;
-        border-width: 1px;
+        background-color: $danger;
         border-radius: 8px;
-        box-shadow: none;
-        box-sizing: border-box;
       }
     }
   }

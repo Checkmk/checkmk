@@ -134,6 +134,10 @@ msgstr " pentru o perioadâ de %s"
 msgid " for host %s"
 msgstr " pentru elementul %s"
 
+#, fuzzy, python-format
+msgid " for the following %d Event Console  %s"
+msgstr "Acces la Consola de Evenimente"
+
 #, python-format
 msgid " in %d days"
 msgstr " în %d zile"
@@ -149,6 +153,14 @@ msgstr "%s mai mare decât"
 msgid " next week"
 msgstr " săptămâna viitoare"
 
+#, fuzzy
+msgid " of"
+msgstr "(nimic)"
+
+#, fuzzy, python-format
+msgid " of the following %d Event Console %s"
+msgstr "Acces la Consola de Evenimente"
+
 msgid " or "
 msgstr " sau "
 
@@ -158,6 +170,14 @@ msgstr " sau int"
 #, python-format
 msgid " spread over %d minutes "
 msgstr " peste următoarele %d minute "
+
+#, fuzzy, python-format
+msgid " the following %d Event Console %s"
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy, python-format
+msgid " the following %d crash %s"
+msgstr "Adaugă instanță NGINX"
 
 msgid " to:"
 msgstr " către:"
@@ -682,6 +702,9 @@ msgstr ""
 msgid "(SLA alert levels at %d/%d incidents left)"
 msgstr ""
 
+msgid "(TLS, HTTP and DNS names)"
+msgstr ""
+
 msgid "(This module is not yet implemented)"
 msgstr ""
 
@@ -1055,28 +1078,28 @@ msgid ""
 msgstr ""
 
 #, fuzzy, python-format
-msgid "<b>%%s of %s length</b> on"
+msgid "<b>%%s of %s length</b>"
 msgstr "<b>programează o întrerupere imediată până la sfârșitul lunii</b> pe"
 
 #, fuzzy, python-format
-msgid "<b>%s for the next %d minutes</b> on"
+msgid "<b>%s for the next %d minutes</b>"
 msgstr ""
 "<b>programează o întrerupere imediată pentru următoarele %d minute</b> pe"
 
 #, fuzzy, python-format
-msgid "<b>%s until 24:00:00</b> on"
+msgid "<b>%s until 24:00:00</b>"
 msgstr "<b>programează o întrerupere imediată până la 24:00:00</b> pe"
 
 #, fuzzy, python-format
-msgid "<b>%s until end of month</b> on"
+msgid "<b>%s until end of month</b>"
 msgstr "<b>programează o întrerupere imediată până la sfârșitul lunii</b> pe"
 
 #, fuzzy, python-format
-msgid "<b>%s until end of year</b> on"
+msgid "<b>%s until end of year</b>"
 msgstr "<b>programează o întrerupere imediată până la sfârșitul lunii</b> pe"
 
 #, fuzzy, python-format
-msgid "<b>%s until sunday night</b> on"
+msgid "<b>%s until sunday night</b>"
 msgstr "<b>programează o întrerupere imediată până duminică noaptea</b> pe"
 
 msgid ""
@@ -1190,8 +1213,8 @@ msgstr "<b>șterge toți timpii morți programați</b> pentru "
 msgid "<b>remove from your favorites</b>"
 msgstr "<b>șterge din favoritele tale</b>"
 
-#, python-format
-msgid "<b>schedule a downtime from %s to %s</b> on "
+#, fuzzy, python-format
+msgid "<b>schedule a downtime from %s to %s</b>"
 msgstr "<b>programează o întrerupere de la %s până la %s</b> pe "
 
 msgid "<b>send a custom notification</b> regarding"
@@ -2808,9 +2831,6 @@ msgstr "Adaugă Contoar"
 msgid "Add Counter Object"
 msgstr "Adaugă Contoar"
 
-msgid "Add Dashlet"
-msgstr ""
-
 msgid "Add Exception"
 msgstr "Adaugă Excepție"
 
@@ -2951,6 +2971,10 @@ msgstr ""
 
 msgid "Add element"
 msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Add elements to your sidebar"
+msgstr "Adaugă un snapin pe sidebar"
 
 #, fuzzy
 msgid "Add exception"
@@ -3210,12 +3234,12 @@ msgid "Add service group"
 msgstr "Grup nou"
 
 #, fuzzy
-msgid "Add site connection"
-msgstr "Conexiune Noua"
+msgid "Add sidebar element"
+msgstr "Adaungă un nou element"
 
 #, fuzzy
-msgid "Add snapins to your sidebar"
-msgstr "Adaugă un snapin pe sidebar"
+msgid "Add site connection"
+msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "Add some label"
@@ -4009,6 +4033,10 @@ msgstr ""
 
 msgid "Alert Statistics: Number of warnings"
 msgstr ""
+
+#, fuzzy
+msgid "Alert handler"
+msgstr "Adaugă o regulă de rol"
 
 msgid "Alert handler Stopped"
 msgstr ""
@@ -4964,6 +4992,10 @@ msgstr "cereri"
 msgid "Applications"
 msgstr "Numele Aplicatiei"
 
+#, fuzzy
+msgid "Applications overview"
+msgstr "Numele Aplicatiei"
+
 msgid "Applications, Processes & Services"
 msgstr ""
 
@@ -5645,9 +5677,6 @@ msgstr "Optiuni tabel"
 msgid "Available physical processors in shared pool"
 msgstr ""
 
-msgid "Available snapins"
-msgstr ""
-
 #, fuzzy
 msgid "Available temp space"
 msgstr "Vizibilitatea Elementelor/Serviciilor"
@@ -5986,6 +6015,10 @@ msgstr "foloseste configuratia locala"
 #, fuzzy
 msgid "BI host details"
 msgstr "servicii"
+
+#, fuzzy
+msgid "BI pack"
+msgstr "Adaugă bookmark"
 
 msgid "BI pack ID"
 msgstr ""
@@ -6602,6 +6635,9 @@ msgstr "Import in masa"
 #, fuzzy
 msgid "Bulk move"
 msgstr "Import in masa"
+
+msgid "Bulk notifications with graphs (default: 5)"
+msgstr ""
 
 msgid "Bulk removal of explicit attributes"
 msgstr ""
@@ -7484,6 +7520,9 @@ msgstr ""
 msgid "Can still edit"
 msgstr ""
 
+msgid "Cancel"
+msgstr ""
+
 msgid "Cancel notifications for this plugin type"
 msgstr ""
 
@@ -7766,6 +7805,10 @@ msgstr ""
 msgid "Category"
 msgstr ""
 
+#, fuzzy
+msgid "Category overview"
+msgstr "Privire de ansamblu"
+
 msgid "Cell padding"
 msgstr ""
 
@@ -7887,6 +7930,13 @@ msgstr ""
 #, python-format
 msgid "Changed global configuration variable %s to %s."
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Changed host label: %d"
+msgid_plural "Changed host labels: %d"
+msgstr[0] "Numarul maxim de conexiuni"
+msgstr[1] "Numarul maxim de conexiuni"
+msgstr[2] "Numarul maxim de conexiuni"
 
 msgid "Changed host selection has been saved."
 msgstr ""
@@ -8311,10 +8361,6 @@ msgstr ""
 msgid "Checkmk - The official guide"
 msgstr ""
 
-#, fuzzy
-msgid "Checkmk Agent"
-msgstr "Acces la Agenți"
-
 msgid "Checkmk Agent Local-Directory"
 msgstr ""
 
@@ -8374,6 +8420,10 @@ msgstr "Perioada de timp Noua"
 #, fuzzy
 msgid "Checkmk Windows agent service settings"
 msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+msgid "Checkmk agent"
+msgstr "Acces la Agenți"
 
 msgid "Checkmk agent network service (Linux)"
 msgstr ""
@@ -8488,8 +8538,8 @@ msgid "Checkmk: Other"
 msgstr " Parametrul este: %r"
 
 #, fuzzy
-msgid "Checkmk: Snapins"
-msgstr "(fără parametri)"
+msgid "Checkmk: Sidebar elements"
+msgstr "Adaugă un snapin pe sidebar"
 
 #, fuzzy
 msgid "Checkmk: Views"
@@ -8634,9 +8684,6 @@ msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
 "no monitoring core in this site. This can be useful for instances running "
 "only a GUI for connecting to other monitoring sites."
-msgstr ""
-
-msgid "Choose the snapin you would like to show."
 msgstr ""
 
 msgid "Choose the type of action to perform"
@@ -8858,6 +8905,10 @@ msgstr ""
 msgid "Client"
 msgstr ""
 
+#, fuzzy
+msgid "Client Contacted Services"
+msgstr "Setari"
+
 msgid "Client ID"
 msgstr ""
 
@@ -8916,6 +8967,10 @@ msgstr ""
 msgid "Clone custom graph"
 msgstr "Atribute personalizate"
 
+#, fuzzy
+msgid "Clone element"
+msgstr "Adaungă un nou element"
+
 # georgem ##############
 #, fuzzy
 msgid "Clone forecast graph"
@@ -8930,9 +8985,6 @@ msgstr ""
 
 #, python-format
 msgid "Clone report schedule entry %s"
-msgstr ""
-
-msgid "Clone snapin"
 msgstr ""
 
 #, fuzzy
@@ -9091,8 +9143,8 @@ msgid "Collect diagnostic dump"
 msgstr "Adaugă informații despre contact"
 
 #, fuzzy
-msgid "Collect dump"
-msgstr "Numele Aplicatiei"
+msgid "Collect diagnostics"
+msgstr "Adaugă informații despre contact"
 
 msgid "Collect information about OS and Checkmk version"
 msgstr ""
@@ -9151,8 +9203,9 @@ msgstr ""
 msgid "Color value following it's METRIC THRESHOLDS if available"
 msgstr ""
 
-msgid "Colored Background"
-msgstr ""
+#, fuzzy
+msgid "Colored background"
+msgstr "Sterge Elementul"
 
 msgid "Coloring"
 msgstr ""
@@ -9724,9 +9777,9 @@ msgstr ""
 msgid "Confirm overwrite of the remote site configuration"
 msgstr ""
 
-#, python-format
-msgid "Confirm renaming of %d hosts"
-msgstr ""
+#, fuzzy, python-format
+msgid "Confirm renaming of %d %s"
+msgstr ", rulează pe %s"
 
 #, fuzzy
 msgid "Confirm tag group deletion"
@@ -10189,7 +10242,7 @@ msgstr ""
 msgid "Copied the event rules from the master into the local configuration"
 msgstr ""
 
-msgid "Copies a view to a dashlet"
+msgid "Copies a view to a dashboard element"
 msgstr ""
 
 msgid "Copy Rules From Master"
@@ -10361,14 +10414,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Could not save changes: %s"
 msgstr "Activare schimbări"
-
-#, fuzzy, python-format
-msgid "Could query available interfaces for host %s and user %s."
-msgstr "Un titlu pentru view"
-
-#, python-format
-msgid "Could query available interfaces for user %s."
-msgstr ""
 
 msgid "Count"
 msgstr ""
@@ -10619,6 +10664,10 @@ msgstr ""
 msgid "Create custom graph"
 msgstr "Atribute personalizate"
 
+#, fuzzy
+msgid "Create element"
+msgstr "Regula Noua"
+
 # georgem ##############
 #, fuzzy
 msgid "Create forecast graph"
@@ -10722,9 +10771,6 @@ msgid "Create service labels for all groups that result from this rule."
 msgstr ""
 
 msgid "Create service labels that get discovered by this rule."
-msgstr ""
-
-msgid "Create snapin"
 msgstr ""
 
 #, fuzzy
@@ -11264,9 +11310,6 @@ msgstr "Atribute personalizate"
 msgid "Custom Time Span:"
 msgstr ""
 
-msgid "Custom Title"
-msgstr ""
-
 msgid "Custom URL"
 msgstr ""
 
@@ -11386,12 +11429,12 @@ msgid "Custom settings"
 msgstr ""
 
 #, fuzzy
-msgid "Custom snapin"
-msgstr "Atribute personalizate"
+msgid "Custom sidebar element"
+msgstr "foloseste numele portului"
 
 #, fuzzy
-msgid "Custom snapins"
-msgstr "Atribute personalizate"
+msgid "Custom sidebar elements"
+msgstr "foloseste numele portului"
 
 msgid "Custom states"
 msgstr ""
@@ -11818,6 +11861,10 @@ msgstr "rapoarte"
 msgid "Dashboard Properties"
 msgstr ""
 
+#, fuzzy
+msgid "Dashboard element"
+msgstr "rapoarte"
+
 msgid "Dashboards"
 msgstr ""
 
@@ -11827,12 +11874,6 @@ msgid ""
 "can select in which section of the menu this dashboard should be accessible. "
 "If you want to define a new topic name you can do this here <a "
 "href='%s'>here</a>."
-msgstr ""
-
-msgid "Dashlet"
-msgstr ""
-
-msgid "Dashlet Type"
 msgstr ""
 
 msgid "Data"
@@ -13072,6 +13113,10 @@ msgstr "foloseste descrierea"
 msgid "Deselect all checkboxes"
 msgstr "Verificări active"
 
+#, fuzzy
+msgid "Design"
+msgstr "Atribute personalizate"
+
 msgid "Design This Graph"
 msgstr ""
 
@@ -13891,8 +13936,9 @@ msgid ""
 "Displays a scatterplot and average lines for for a selected type of service."
 msgstr ""
 
-msgid "Displays a sidebar snapin."
-msgstr ""
+#, fuzzy
+msgid "Displays a sidebar element."
+msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Displays a single metric of a specific host and service."
 msgstr ""
@@ -14391,13 +14437,9 @@ msgstr ""
 msgid "Do transfer context"
 msgstr ""
 
-#, python-format
-msgid "Do you really want to %(title)s the %(count)d %(what)s?"
-msgstr ""
-
-#, python-format
-msgid "Do you really want to %(title)s the following %(count)d %(what)s?"
-msgstr ""
+#, fuzzy, python-format
+msgid "Do you really want to %s"
+msgstr "O agregare legată de un singur element"
 
 #, python-format
 msgid ""
@@ -15162,9 +15204,6 @@ msgstr ""
 msgid "Edit Dashboards"
 msgstr ""
 
-msgid "Edit Dashlet"
-msgstr ""
-
 #, fuzzy
 msgid "Edit Downtimes"
 msgstr "Întreruperi adhoc"
@@ -15242,6 +15281,10 @@ msgstr "Editeaza regulile de loguri"
 
 #, fuzzy
 msgid "Edit dashboard"
+msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Edit element"
 msgstr "Adaugă element"
 
 # georgem ##############
@@ -15344,9 +15387,6 @@ msgstr ""
 
 #, python-format
 msgid "Edit site specific global settings of %s"
-msgstr ""
-
-msgid "Edit snapin"
 msgstr ""
 
 msgid "Edit stored report"
@@ -15589,9 +15629,21 @@ msgstr ""
 msgid "Electrical voltage"
 msgstr ""
 
+#, fuzzy
+msgid "Element"
+msgstr "Adaugă element"
+
+#, fuzzy, python-format
+msgid "Element %s is already enabled"
+msgstr "Acces la Consola de Evenimente"
+
 #, python-format
 msgid "Element '%r' does not exist anymore"
 msgstr ""
+
+#, fuzzy
+msgid "Element type"
+msgstr "Adaugă element"
 
 msgid "Elements"
 msgstr ""
@@ -16105,6 +16157,10 @@ msgid "Enterasys Switch: Temperature"
 msgstr ""
 
 #, fuzzy
+msgid "Enterprise feature"
+msgstr "Cluster nou"
+
+#, fuzzy
 msgid "Entersekt Certificate Expiration"
 msgstr "Dezactiveaza Notificarile"
 
@@ -16221,6 +16277,12 @@ msgid "Escalate downtimes based on aggregated WARN state"
 msgstr ""
 
 msgid "Escape HTML"
+msgstr ""
+
+msgid "Escape HTML codes in host output"
+msgstr ""
+
+msgid "Escape HTML codes in service output"
 msgstr ""
 
 msgid "Escape HTML globally enabled"
@@ -16557,7 +16619,7 @@ msgid "Exception"
 msgstr "Adaugă Excepție"
 
 #, python-format
-msgid "Exception during snapin refresh (snapin '%s')"
+msgid "Exception during element refresh (element '%s')"
 msgstr ""
 
 #, python-format
@@ -17884,6 +17946,9 @@ msgstr ""
 msgid "Fix affected folders, hosts and rules."
 msgstr ""
 
+msgid "Fix all"
+msgstr ""
+
 msgid "Fix this"
 msgstr ""
 
@@ -18963,6 +19028,10 @@ msgstr " pentru elementul %s"
 
 msgid "Graphs of services with description:"
 msgstr ""
+
+#, fuzzy
+msgid "Graphs per notification (default: 5)"
+msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Graylog"
@@ -20280,6 +20349,10 @@ msgstr "(fără Nivel de serviciu)"
 msgid "Host Address"
 msgstr "Adresă"
 
+#, fuzzy, python-format
+msgid "Host Address %s"
+msgstr "Adresă"
+
 #, fuzzy
 msgid "Host Alert"
 msgstr "Numele Elementului"
@@ -20347,6 +20420,10 @@ msgstr "Numele Elementului"
 #, fuzzy
 msgid "Host Metrics"
 msgstr "serviciu"
+
+#, fuzzy, python-format
+msgid "Host Name %s"
+msgstr "Numele Elementului"
 
 msgid "Host Parent/Child topology"
 msgstr ""
@@ -20859,6 +20936,14 @@ msgid "Hosts Connected"
 msgstr ""
 
 #, fuzzy
+msgid "Hosts Contacted (as Client)"
+msgstr " Se potriveste grupurilor: %s"
+
+#, fuzzy
+msgid "Hosts Contacts (as Server)"
+msgstr " Se potriveste grupurilor: %s"
+
+#, fuzzy
 msgid "Hosts and Folders"
 msgstr "Adresă"
 
@@ -21262,10 +21347,6 @@ msgstr ""
 msgid "IP Address"
 msgstr ""
 
-#, fuzzy
-msgid "IP Address Family"
-msgstr "Adresă"
-
 msgid "IP Address of Host"
 msgstr ""
 
@@ -21287,6 +21368,10 @@ msgstr ""
 
 msgid "IP address"
 msgstr ""
+
+#, fuzzy
+msgid "IP address family"
+msgstr "Adresă"
 
 msgid "IP address or FQDN of JVM webserver"
 msgstr ""
@@ -21538,16 +21623,16 @@ msgid ""
 "will also automatically add/remove them as neccessary."
 msgstr ""
 
+#, python-format
 msgid ""
 "If active, the long output of this service will contain a list of all the "
 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-"Please note that HTML output will only work if rules in the rulesets "
-"\"Escape HTML codes in host output\" or \"Escape HTML codes in service output"
-"\" are created or the global setting \"Escape HTML codes in service output\" "
-"is disabled. This might expose you to Cross-Site-Scripting attacks (everyone "
-"with write-access to checks could get scripts executed on the monitoring "
-"site in the context of the user of the monitoring site) so please do this if "
-"you understand the consequences."
+"Please note that HTML output will only work if rules in the rulesets \"%s\" "
+"or \"%s\" are created or the global setting \"%s\" is disabled. This might "
+"expose you to Cross-Site-Scripting attacks (everyone with write-access to "
+"checks could get scripts executed on the monitoring site in the context of "
+"the user of the monitoring site), so please do this if you understand the "
+"consequences."
 msgstr ""
 
 msgid "If agent_hash is omitted, hostname needs to be given."
@@ -23262,6 +23347,11 @@ msgid "Interface"
 msgstr ""
 
 # georgem ##############
+#, fuzzy, python-format
+msgid "Interface %s"
+msgstr "Grup nou"
+
+# georgem ##############
 #, fuzzy
 msgid "Interface groups"
 msgstr "Grup nou"
@@ -23609,15 +23699,15 @@ msgstr ""
 msgid "Invalid rule <tt>%s</tt>"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Invalid sidebar element %s"
+msgstr " Parametrul este: %r"
+
 msgid "Invalid site"
 msgstr ""
 
 msgid "Invalid site given"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "Invalid snapin %s"
-msgstr " Parametrul este: %r"
 
 #, python-format
 msgid "Invalid snapshot (contains invalid tarfile %s)"
@@ -25538,9 +25628,6 @@ msgstr ""
 msgid "Linux-User:"
 msgstr "Utilizator nou"
 
-msgid "List"
-msgstr ""
-
 msgid ""
 "List all allowed expected answers here. If query for an IP address then the "
 "answer will be host names, that end with a dot. Multiple IP addresses within "
@@ -25556,6 +25643,10 @@ msgstr ""
 
 msgid "List grouped interfaces separately"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "List of %s"
+msgstr "% din Flash"
 
 msgid ""
 "List of all aggregations, containing the name of aggregations and state "
@@ -25767,6 +25858,9 @@ msgid "Local Authentication Data"
 msgstr ""
 
 msgid "Local Client - Remote Server"
+msgstr ""
+
+msgid "Local Contacted Ports (as Server)"
 msgstr ""
 
 msgid "Local DNS resolving (Linux, Unix)"
@@ -28734,7 +28828,7 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Most dashlets have a hard coded static title and some are aware of their "
+"Most elements have a hard coded static title and some are aware of their "
 "content and set the title dynamically, like the view snapin, which displays "
 "the title of the view. If you like to use any other title, set it here."
 msgstr ""
@@ -29026,7 +29120,7 @@ msgstr ""
 msgid "NagVis: Other"
 msgstr ""
 
-msgid "NagVis: Snapin"
+msgid "NagVis: Sidebar element"
 msgstr ""
 
 msgid "Nagios 3"
@@ -29509,6 +29603,10 @@ msgstr ""
 msgid "Network statistics"
 msgstr " Se potriveste grupurilor: %s"
 
+#, fuzzy, python-format
+msgid "Network statistics and flows of %s"
+msgstr " Se potriveste grupurilor: %s"
+
 #, fuzzy
 msgid "Network topology"
 msgstr "Adresă"
@@ -29600,6 +29698,10 @@ msgstr "Conexiune Noua"
 msgid "New custom graph..."
 msgstr "Grup nou"
 
+#, fuzzy
+msgid "New element"
+msgstr "Adaungă un nou element"
+
 msgid "New event created"
 msgstr ""
 
@@ -29622,6 +29724,13 @@ msgstr "Grup nou"
 msgid "New graph"
 msgstr "Cautare noua"
 
+#, fuzzy, python-format
+msgid "New host label: %d"
+msgid_plural "New host labels: %d"
+msgstr[0] "Verificări active"
+msgstr[1] "Verificări active"
+msgstr[2] "Verificări active"
+
 #, fuzzy
 msgid "New list"
 msgstr "Element nou"
@@ -29632,10 +29741,6 @@ msgstr "Nume nou"
 #, fuzzy, python-format
 msgid "New rule: %s"
 msgstr "%s regulă %s"
-
-#, fuzzy
-msgid "New snapin"
-msgstr "Nume nou"
 
 msgid "New stored report"
 msgstr ""
@@ -30326,6 +30431,10 @@ msgstr ""
 
 msgid "Not shared"
 msgstr ""
+
+#, fuzzy
+msgid "Not started."
+msgstr "Statusul Serverului"
 
 msgid "Not supported"
 msgstr ""
@@ -31873,6 +31982,13 @@ msgstr ""
 msgid "Open this table for filtering / sorting"
 msgstr ""
 
+msgid "Open window in the user interface"
+msgstr ""
+
+#, fuzzy
+msgid "Open/close this element"
+msgstr "Adaungă un nou element"
+
 msgid "OpenHardwareMonitor (Windows)"
 msgstr ""
 
@@ -32548,6 +32664,10 @@ msgstr ""
 
 msgid "Pack only Medium and Low sensitivity files"
 msgstr ""
+
+#, fuzzy
+msgid "Package"
+msgstr "Acces la Agenți"
 
 #, fuzzy, python-format
 msgid "Package %s"
@@ -34181,9 +34301,6 @@ msgid ""
 "used."
 msgstr ""
 
-msgid "Popup Message in the GUI (shows up alert window)"
-msgstr ""
-
 msgid "Port"
 msgstr ""
 
@@ -34504,14 +34621,15 @@ msgstr ""
 msgid "Primary / Secondary"
 msgstr ""
 
-msgid "Primary Address Family"
-msgstr ""
-
 msgid "Primary Device"
 msgstr ""
 
 msgid "Primary IP address family of dual-stack hosts"
 msgstr ""
+
+#, fuzzy
+msgid "Primary address family"
+msgstr "Adresă"
 
 msgid "Primitive sequence errors"
 msgstr ""
@@ -34613,8 +34731,8 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Problem while rendering dashlet %d of type %s: %s. Have a look at <tt>var/"
-"log/web.log</tt> for further information."
+"Problem while rendering dashboard element %d of type %s: %s. Have a look at "
+"<tt>var/log/web.log</tt> for further information."
 msgstr ""
 
 msgid "Problems"
@@ -35975,6 +36093,9 @@ msgstr ""
 msgid "Remap states"
 msgstr ""
 
+msgid "Remote Contacted Ports (as Client)"
+msgstr ""
+
 msgid "Remote Desktop Licenses (Windows)"
 msgstr ""
 
@@ -36098,6 +36219,10 @@ msgstr "Adaugă filtre"
 msgid "Remove tag condition"
 msgstr "(fără condiții)"
 
+#, fuzzy
+msgid "Remove this element"
+msgstr "Adaungă un nou element"
+
 msgid "Remove this graph from the collection"
 msgstr ""
 
@@ -36106,9 +36231,6 @@ msgid "Remove this package"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Remove this rule pack from the Extension Packages module"
-msgstr ""
-
-msgid "Remove this snapin"
 msgstr ""
 
 msgid "Remove vanished services"
@@ -36236,7 +36358,7 @@ msgstr ""
 msgid "Render background"
 msgstr ""
 
-msgid "Render gray background color behind the dashlets content."
+msgid "Render gray background color behind the elements content."
 msgstr ""
 
 msgid "Render horizontal rules between rows"
@@ -36245,7 +36367,7 @@ msgstr ""
 msgid "Render in iframe"
 msgstr ""
 
-msgid "Render the titlebar including title and link above the dashlet."
+msgid "Render the titlebar including title and link above the element."
 msgstr ""
 
 msgid "Render vertical rules between columns"
@@ -36996,6 +37118,10 @@ msgid "Rule search"
 msgstr "Cautare noua"
 
 #, fuzzy
+msgid "Rule tree"
+msgstr "Reguli"
+
+#, fuzzy
 msgid "Rule tree of"
 msgstr "Reguli"
 
@@ -37118,6 +37244,10 @@ msgstr ""
 
 msgid "Run synchronously"
 msgstr ""
+
+#, fuzzy
+msgid "Run tests"
+msgstr "cereri"
 
 msgid "Runnable (Waiting for resource)"
 msgstr ""
@@ -37416,6 +37546,9 @@ msgstr ""
 msgid "SNMP check for EMC Isilon quotas"
 msgstr ""
 
+msgid "SNMP community"
+msgstr ""
+
 msgid "SNMP community (SNMP Versions 1 and 2c)"
 msgstr ""
 
@@ -37447,10 +37580,6 @@ msgstr ""
 #, fuzzy
 msgid "SNMP rules"
 msgstr "%s regulă %s"
-
-#, fuzzy
-msgid "SNMP settings"
-msgstr "Setari"
 
 msgid "SNMP trap processing"
 msgstr ""
@@ -37681,12 +37810,15 @@ msgstr ""
 msgid "Schedule"
 msgstr ""
 
-msgid "Schedule downtimes"
-msgstr ""
+#, fuzzy, python-format
+msgid "Schedule downtime for %d %s"
+msgstr "Întreruperi adhoc"
 
-msgid ""
-"Schedule downtimes on the affected <b>hosts</b> instead of on the individual "
-"services"
+#, fuzzy
+msgid "Schedule downtime on host"
+msgstr "Întreruperi adhoc"
+
+msgid "Schedule downtimes"
 msgstr ""
 
 msgid "Schedule execution"
@@ -38065,7 +38197,7 @@ msgstr ""
 msgid "See all events"
 msgstr ""
 
-msgid "See events in tactical overview snapin"
+msgid "See events in the sidebar element 'Overview'"
 msgstr ""
 
 msgid "See events not related to a known host"
@@ -38139,13 +38271,13 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Select the graph to be displayed by this dashlet. In case the current "
-"selection displays 'Deprecated choice, please re-select', this dashlet was "
+"Select the graph to be displayed by this element. In case the current "
+"selection displays 'Deprecated choice, please re-select', this element was "
 "created before the release of version 2.0. Before this version, the graph "
 "selection was based on a single number indexing the output of the "
-"corresponding service. Such dashlets will continue to work, however, if you "
+"corresponding service. Such elements will continue to work, however, if you "
 "want to re-edit them, you have to re-select the graph. To check which graph "
-"is currently selected, look at the title of the dashlet in the dashboard."
+"is currently selected, look at the title of the element in the dashboard."
 msgstr ""
 
 #, python-format
@@ -38228,12 +38360,6 @@ msgid "Send events to local event console into unix socket"
 msgstr ""
 
 msgid "Send events to remote syslog host"
-msgstr ""
-
-msgid "Send hint to dashlet"
-msgstr ""
-
-msgid "Send hint to user menu"
 msgstr ""
 
 msgid "Send metrics to Graphite / InfluxDB"
@@ -38369,6 +38495,10 @@ msgstr "Numele Elementului"
 
 msgid "Service"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Service %s"
+msgstr "serviciu"
 
 #, fuzzy
 msgid "Service Alert"
@@ -38863,6 +38993,10 @@ msgid ""
 "configured check intervals."
 msgstr ""
 
+#, fuzzy
+msgid "Services/Host labels to fix"
+msgstr "Numele Elementului"
+
 #, python-format
 msgid "Services: %d total (%d added, %d removed, %d kept)"
 msgstr ""
@@ -39186,6 +39320,19 @@ msgstr ""
 msgid "Set width"
 msgstr ""
 
+msgid ""
+"Sets a limit for the number of graphs that are displayed in a notification."
+msgstr ""
+
+msgid ""
+"Sets a limit for the number of notifications in a bulk for which graphs are "
+"displayed. If you do not use bulk notifications this option is ignored. Note "
+"that each graph increases the size of the mail and takes time to renderon "
+"the monitoring server. Therefore, large bulks may exceed the maximum size "
+"for attachements or the plugin may run into a timeout so that a failed "
+"notification is produced."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Sets custom user attributes based on the group memberships in LDAP. This "
@@ -39206,6 +39353,10 @@ msgstr ""
 
 msgid "Sets levels on total operation errors since last counter reset."
 msgstr ""
+
+#, fuzzy
+msgid "Setting"
+msgstr "Setari"
 
 msgid ""
 "Setting levels on non-unicast packet rates is optional. This may help to "
@@ -39487,7 +39638,14 @@ msgstr ""
 msgid "Show graph title on graph area"
 msgstr ""
 
+#, fuzzy
+msgid "Show graphs for the first"
+msgstr " pentru hostul %s"
+
 msgid "Show header with highlighted background"
+msgstr ""
+
+msgid "Show hint in the 'User' menu"
 msgstr ""
 
 #, fuzzy
@@ -39537,6 +39695,10 @@ msgstr "Confirmă %s"
 msgid "Show legend"
 msgstr ""
 
+#, fuzzy
+msgid "Show less"
+msgstr "afiseaza toate"
+
 msgid "Show license usage information of Checkmk sites."
 msgstr ""
 
@@ -39554,6 +39716,10 @@ msgstr "afiseaza erori"
 #, fuzzy
 msgid "Show more / Show less"
 msgstr "afiseaza erori"
+
+#, fuzzy
+msgid "Show notification in dashboard element 'User notifications'"
+msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "Show number of groups"
@@ -39703,6 +39869,10 @@ msgstr ""
 msgid "Show unacknowledged incompatible werks"
 msgstr ""
 
+#, fuzzy
+msgid "Show up to"
+msgstr "afiseaza erori"
+
 msgid "Show user rules"
 msgstr "Arata regulile de utilizator"
 
@@ -39755,8 +39925,13 @@ msgstr ""
 msgid "Sidebar"
 msgstr "Numele Aplicatiei"
 
-msgid "Sidebar Snapin"
-msgstr ""
+#, fuzzy
+msgid "Sidebar element"
+msgstr "Adaugă element"
+
+#, fuzzy
+msgid "Sidebar elements"
+msgstr "Adaugă element"
 
 msgid "Sidebar integration"
 msgstr ""
@@ -39764,9 +39939,6 @@ msgstr ""
 #, fuzzy
 msgid "Sidebar position"
 msgstr "%d condiții"
-
-msgid "Sidebar snapins"
-msgstr ""
 
 #, fuzzy
 msgid "Sidecar name"
@@ -40224,19 +40396,6 @@ msgstr ""
 msgid "Smoke Detection"
 msgstr ""
 
-msgid "Snapin"
-msgstr ""
-
-#, python-format
-msgid "Snapin %s is already enabled"
-msgstr ""
-
-msgid "Snapin Dashlet"
-msgstr ""
-
-msgid "Snapin type"
-msgstr ""
-
 msgid "Snapshot build currently in progress"
 msgstr ""
 
@@ -40554,11 +40713,12 @@ msgstr "Acces la Agenți"
 msgid "Specific date"
 msgstr ""
 
-msgid "Specific destination"
-msgstr ""
-
 msgid "Specific list of instances"
 msgstr ""
+
+#, fuzzy
+msgid "Specific location"
+msgstr "Adaugă notificare"
 
 msgid "Specific objects"
 msgstr ""
@@ -43546,7 +43706,7 @@ msgstr ""
 msgid "The URL must begin with <tt>https</tt>."
 msgstr ""
 
-msgid "The URL of the target page the link of the dashlet should link to."
+msgid "The URL of the target page the link of the element should link to."
 msgstr ""
 
 msgid "The URL prefix must end with a slash."
@@ -43982,6 +44142,10 @@ msgstr ""
 msgid "The configured custom graph does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+#, fuzzy
+msgid "The configured element does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
 #, python-format
 msgid ""
 "The configured ldap user filter group could not be found. Please check <a "
@@ -44008,10 +44172,6 @@ msgid ""
 "want to modify this host, you will have to change the site attribute to the "
 "local site. But this may make the host be monitored from multiple sites."
 msgstr ""
-
-#, fuzzy
-msgid "The configured snapin does not exist."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
 msgid ""
@@ -44130,11 +44290,9 @@ msgstr ""
 msgid "The customer ID %s does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
-msgid "The dashlet can not be found on the dashboard."
-msgstr ""
-
-msgid "The dashlet does not exist."
-msgstr ""
+#, fuzzy
+msgid "The dashboard element does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "The data for the background checks is recomputed at most in this interval."
@@ -44235,6 +44393,13 @@ msgid ""
 "The eWON router can act as a proxy to metrics from a secondary non-snmp "
 "device.Here you can make settings to the monitoring of the proxied device."
 msgstr ""
+
+msgid "The element can not be found on the dashboard."
+msgstr ""
+
+#, fuzzy
+msgid "The element does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid ""
 "The email address and visible name used in the From header of notifications "
@@ -45453,8 +45618,9 @@ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 msgid "The requested dashboard does not exist."
 msgstr ""
 
-msgid "The requested dashlet type does not exist."
-msgstr ""
+#, fuzzy
+msgid "The requested element type does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
 msgid "The requested global setting does not exist."
@@ -48693,6 +48859,9 @@ msgstr ""
 msgid "This setting only applies if the WebSphere MQ reports the queue length"
 msgstr ""
 
+msgid "This sidebar element is only available on the manager's central site."
+msgstr ""
+
 #, fuzzy
 msgid "This site does not exist."
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
@@ -48737,9 +48906,6 @@ msgstr ""
 msgid ""
 "This snapin contains custom links which can be configured via the "
 "configuration variable <tt>custom_links</tt> in <tt>multisite.mk</tt>"
-msgstr ""
-
-msgid "This snapin is only available on the managers central site."
 msgstr ""
 
 msgid ""
@@ -49530,9 +49696,6 @@ msgstr "Adaugă un snapin pe sidebar"
 msgid "Toggle the visibility of this metric"
 msgstr ""
 
-msgid "Toggle this snapin"
-msgstr ""
-
 msgid "Token"
 msgstr ""
 
@@ -49654,6 +49817,14 @@ msgstr ""
 
 msgid "Total Traffic Minimum"
 msgstr ""
+
+#, fuzzy
+msgid "Total Unique Hosts Contacts"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Total Unique Port Contacts"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Total accumulated Active Energy of Power Channel"
 msgstr ""
@@ -50657,14 +50828,14 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Unable to render this dashlet, because we miss some required context "
-"information (%s). Please update the form on the right to make this dashlet "
+"Unable to render this element, because we miss some required context "
+"information (%s). Please update the form on the right to make this element "
 "render."
 msgstr ""
 
 #, python-format
 msgid ""
-"Unable to render this dashlet, because we miss some required context "
+"Unable to render this element, because we miss some required context "
 "information (%s). You can either add this as a fixed setting to either the "
 "report scheduler, report or report element or call the report creation with "
 "the missing HTTP variables."
@@ -50760,6 +50931,13 @@ msgstr ""
 
 msgid "Undecided clustered services"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Undecided service: %d"
+msgid_plural "Undecided services: %d"
+msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
+msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
+msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
 
 msgid "Undecided services (currently not monitored)"
 msgstr ""
@@ -52806,6 +52984,20 @@ msgstr ""
 msgid "Vanished clustered services (located on cluster host)"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Vanished host label: %d"
+msgid_plural "Vanished host labels: %d"
+msgstr[0] "Optiuni tabel"
+msgstr[1] "Optiuni tabel"
+msgstr[2] "Optiuni tabel"
+
+#, fuzzy, python-format
+msgid "Vanished service: %d"
+msgid_plural "Vanished services: %d"
+msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
+msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
+msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
+
 msgid "Vanished services (monitored, but no longer exist)"
 msgstr ""
 
@@ -54325,7 +54517,7 @@ msgstr ""
 
 msgid ""
 "Whether or not the user is permitted to see the number of open events in the "
-"tactical overview snapin."
+"sidebar element 'Overview'."
 msgstr ""
 
 msgid ""
@@ -55165,7 +55357,7 @@ msgid "You can enable this checkbox to show empty hostgroups"
 msgstr ""
 
 msgid ""
-"You can enter a text here that will be displayed in the dashlet when viewing "
+"You can enter a text here that will be displayed in the element when viewing "
 "the dashboard. It is also possible to insert a limited set of HTML tags, "
 "some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
 msgstr ""
@@ -55962,8 +56154,9 @@ msgstr ""
 msgid "You need to set the \"%s\" parameter."
 msgstr ""
 
-msgid "You need to specify a URL in the dashlet properties"
-msgstr ""
+#, fuzzy
+msgid "You need to specify a URL in the element properties"
+msgstr "%s nu este un număr întreg valid."
 
 msgid "You need to specify a backup job."
 msgstr ""
@@ -56668,6 +56861,12 @@ msgstr "Setari"
 msgid "even when the host is in downtime"
 msgstr ""
 
+msgid "event"
+msgid_plural "events"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
 msgid "events per second"
 msgstr ""
 
@@ -56801,6 +57000,10 @@ msgstr "Grup nou"
 msgid "graph number %d"
 msgstr ""
 
+#, fuzzy
+msgid "graphs"
+msgstr "Grup nou"
+
 msgid "group by"
 msgstr ""
 
@@ -56858,7 +57061,10 @@ msgid "hits for pass"
 msgstr ""
 
 msgid "host"
-msgstr ""
+msgid_plural "hosts"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 #, fuzzy
 msgid "host tags"
@@ -56895,6 +57101,10 @@ msgstr ""
 
 msgid "htpasswd"
 msgstr ""
+
+#, fuzzy
+msgid "iCalendar"
+msgstr "Curata fisierul de loguri"
 
 #, fuzzy
 msgid "iCalendar File"
@@ -57340,9 +57550,6 @@ msgstr ""
 msgid "objects"
 msgstr ""
 
-msgid "of"
-msgstr ""
-
 msgid "of Service"
 msgstr ""
 
@@ -57586,7 +57793,10 @@ msgid "repeat:"
 msgstr ""
 
 msgid "report"
-msgstr ""
+msgid_plural "reports"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
 msgid "report element"
 msgstr ""
@@ -57697,8 +57907,12 @@ msgstr ""
 msgid "send only every"
 msgstr ""
 
+#, fuzzy
 msgid "service"
-msgstr "serviciu"
+msgid_plural "services"
+msgstr[0] "serviciu"
+msgstr[1] "serviciu"
+msgstr[2] "serviciu"
 
 #, fuzzy, python-format
 msgid "service in %s state"
@@ -58058,6 +58272,39 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Could query available interfaces for host %s and user %s."
+#~ msgstr "Un titlu pentru view"
+
+#, fuzzy
+#~| msgid "Settings"
+#~ msgid "SNMP settings"
+#~ msgstr "Setari"
+
+#, fuzzy
+#~ msgid "Checkmk: Snapins"
+#~ msgstr "(fără parametri)"
+
+#, fuzzy
+#~ msgid "Collect dump"
+#~ msgstr "Numele Aplicatiei"
+
+#, fuzzy
+#~ msgid "Custom snapin"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Custom snapins"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Invalid snapin %s"
+#~ msgstr " Parametrul este: %r"
+
+#, fuzzy
+#~ msgid "New snapin"
+#~ msgstr "Nume nou"
+
+#, fuzzy
 #~ msgid "Alert timeline"
 #~ msgstr "Sterge Elementul"
 
@@ -58304,9 +58551,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "On selected services"
 #~ msgstr "Afectat de serviciu"
-
-#~ msgid "Host Name"
-#~ msgstr "Numele Elementului"
 
 #~ msgid "The host name of the event"
 #~ msgstr "Numele elementului pentru eveniment"
@@ -58666,10 +58910,6 @@ msgstr ""
 #~ msgstr "Numarul maxim de conexiuni"
 
 #, fuzzy
-#~ msgid "Changed color set to: %d"
-#~ msgstr "Numarul maxim de conexiuni"
-
-#, fuzzy
 #~ msgid "Check connecting to a TCP port"
 #~ msgstr "Conexiune Noua"
 
@@ -58692,10 +58932,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cloned rule in ruleset '%s'"
 #~ msgstr "%d reguli wato în set-ul de reguli"
-
-#, fuzzy
-#~ msgid "Clustered Services"
-#~ msgstr "Setari"
 
 #, fuzzy
 #~ msgid "Collection count levels"
@@ -58808,10 +59044,6 @@ msgstr ""
 #~ msgstr "Notificari"
 
 #, fuzzy
-#~ msgid "Confirm renaming of host"
-#~ msgstr ", rulează pe %s"
-
-#, fuzzy
 #~ msgid "Confirm rule deletion"
 #~ msgstr "Dezactiveaza Notificarile"
 
@@ -58822,10 +59054,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Costs and usage"
 #~ msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
-#~ msgid "Create New Rule"
-#~ msgstr "Regula Noua"
 
 #, fuzzy
 #~ msgid "Create Random Hosts"
@@ -58884,15 +59112,7 @@ msgstr ""
 #~ msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
-#~ msgid "Customer Management"
-#~ msgstr "foloseste numele portului"
-
-#, fuzzy
 #~ msgid "Delete all maps"
-#~ msgstr "Sterge Elementul"
-
-#, fuzzy
-#~ msgid "Delete background jobs"
 #~ msgstr "Sterge Elementul"
 
 #, fuzzy
@@ -59109,10 +59329,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Host Contact"
-#~ msgstr " Se potriveste grupurilor: %s"
-
-#, fuzzy
-#~ msgid "Host Contact (Regex)"
 #~ msgstr " Se potriveste grupurilor: %s"
 
 #, fuzzy

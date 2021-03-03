@@ -63,7 +63,7 @@ from cmk.gui.page_menu import (
     make_form_submit_link,
     make_confirmed_form_submit_link,
 )
-from cmk.gui.utils.urls import makeuri, make_confirm_link
+from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:
@@ -567,19 +567,39 @@ class ModeFolder(WatoMode):
 
         if not self._folder.locked_hosts():
             menu_items.extend([
-                MenuItem("newhost", _("Create new host"), "new", "hosts",
-                         _("Add a new host to the monitoring (agent must be installed)")),
                 MenuItem(
-                    "newcluster", _("Create new cluster"), "new_cluster", "hosts",
-                    _("Use Check_MK clusters if an item can move from one host "
-                      "to another at runtime"))
+                    mode_or_url=makeuri_contextless(global_request,
+                                                    [("mode", "newhost"),
+                                                     ("folder", self._folder.path())]),
+                    title=_("Create new host"),
+                    icon="new",
+                    permission="hosts",
+                    description=_("Add a new host to the monitoring (agent must be installed)"),
+                ),
+                MenuItem(
+                    mode_or_url=makeuri_contextless(global_request,
+                                                    [("mode", "newcluster"),
+                                                     ("folder", self._folder.path())]),
+                    title=_("Create new cluster"),
+                    icon="new_cluster",
+                    permission="hosts",
+                    description=_("Use Check_MK clusters if an item can move from one host "
+                                  "to another at runtime"),
+                )
             ])
 
         if not self._folder.locked_subfolders():
             menu_items.extend([
                 MenuItem(
-                    "newfolder", _("Create new folder"), "newfolder", "hosts",
-                    _("Folders group your hosts, can inherit attributes and can have permissions."))
+                    mode_or_url=makeuri_contextless(global_request,
+                                                    [("mode", "newfolder"),
+                                                     ("folder", self._folder.path())]),
+                    title=_("Create new folder"),
+                    icon="newfolder",
+                    permission="hosts",
+                    description=_(
+                        "Folders group your hosts, can inherit attributes and can have permissions."
+                    ))
             ])
 
         MainMenu(menu_items).show()

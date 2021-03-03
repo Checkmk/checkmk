@@ -1,0 +1,13 @@
+Title: check_mail: better error message if email could not be copied
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614795415
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+If a mail could not be copied the resulting error was a raw Exception with the title: "Response from server: SERVER".
+This werk changes the Exception type to RuntimeError by reusing the function "verified_result".

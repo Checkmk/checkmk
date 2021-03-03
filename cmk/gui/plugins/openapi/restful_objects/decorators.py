@@ -370,6 +370,7 @@ class Endpoint:
                              "'response_schema' may not be used.")
 
         self.wrapped = wrapped
+        self.wrapped.path = self.path
         return self.wrapped
 
     def wrap_with_validation(

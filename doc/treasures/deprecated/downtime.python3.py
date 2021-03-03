@@ -1,5 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#  type: ignore
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -20,7 +21,13 @@
 #    implement the "Remove all downtimes" button in a normal hosts/
 #    services views.
 
-import os, sys, getopt, urllib, re
+import getopt
+import os
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -37,20 +44,18 @@ def verbose(text):
 
 
 def usage():
-    sys.stdout.write("""Usage: downtime [-r] [OPTIONS] HOST [SERVICE1] [SERVICE2...]
-
+    sys.stdout.write(
+        """Usage: downtime [-r] [OPTIONS] HOST [SERVICE1] [SERVICE2...]
 This program sets and removes downtimes on hosts and services
 via command line. If you run this script from within an OMD
 site then most options will be guessed automatically. Currently
 the script only supports cookie based login - no HTTP basic
 authentication.
-
 Before you use this script, please read:
 http://mathias-kettner.de/checkmk_multisite_automation.html
 You need to create an automation user - best with the name 'automation'
 - and make sure that this user either has the admin role or is contact
 for all relevant objects.
-
 Options:
   -v, --verbose    Show what's going on (specify twice for more verbose output)
   -s, --set        Set downtime (this is the default and thus optional)
@@ -62,17 +67,27 @@ Options:
   -S, --secret     Automation secret (default: read from user settings)
   -U, --url        Base-URL of Multisite (default: guess local OMD site)
   -a, --all        Include all services when setting/removing host downtime
-""")
+"""
+    )
 
 
-short_options = 'vhrsc:d:u:S:aU:'
+short_options = "vhrsc:d:u:S:aU:"
 long_options = [
-    "verbose", "help", "set", "remove", "comment=", "url=", "duration=", "user=", "secret=", "all"
+    "verbose",
+    "help",
+    "set",
+    "remove",
+    "comment=",
+    "url=",
+    "duration=",
+    "user=",
+    "secret=",
+    "all",
 ]
 
 opt_all = False
 opt_verbose = 0
-opt_mode = 'set'
+opt_mode = "set"
 opt_comment = "Automatic downtime"
 opt_user = "automation"
 opt_secret = None
@@ -90,34 +105,35 @@ except getopt.GetoptError as err:
 
 for o, a in opts:
     # Docu modes
-    if o in ['-h', '--help']:
+    if o in ["-h", "--help"]:
         usage()
         sys.exit(0)
 
     # Modifiers
-    elif o in ['-v', '--verbose']:
+    elif o in ["-v", "--verbose"]:
         opt_verbose += 1
-    elif o in ['-a', '--all']:
+    elif o in ["-a", "--all"]:
         opt_all = True
-    elif o in ['-s', '--set']:
-        opt_mode = 'set'
-    elif o in ['-r', '--remove']:
-        opt_mode = 'remove'
-    elif o in ['-c', '--comment']:
+    elif o in ["-s", "--set"]:
+        opt_mode = "set"
+    elif o in ["-r", "--remove"]:
+        opt_mode = "remove"
+    elif o in ["-c", "--comment"]:
         opt_comment = a
-    elif o in ['-d', '--duration']:
+    elif o in ["-d", "--duration"]:
         opt_duration = int(a)
-    elif o in ['-u', '--user']:
+    elif o in ["-u", "--user"]:
         opt_user = a
-    elif o in ['-S', '--secret']:
+    elif o in ["-S", "--secret"]:
         opt_secret = a
-    elif o in ['-U', '--url']:
+    elif o in ["-U", "--url"]:
         opt_url = a
 
 if omd_site and not opt_secret:
     try:
-        opt_secret = open(omd_root + "/var/check_mk/web/" + opt_user +
-                          "/automation.secret").read().strip()
+        opt_secret = (
+            open(omd_root + "/var/check_mk/web/" + opt_user + "/automation.secret").read().strip()
+        )
     except Exception as e:
         bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))
 
@@ -150,7 +166,9 @@ verbose("Secret:        " + (opt_secret or "(none specified)"))
 
 
 def make_url(base, variables):
-    vartext = "&".join(["%s=%s" % (varname, urllib.quote(value)) for (varname, value) in variables])
+    vartext = "&".join(
+        ["%s=%s" % (varname, urllib.parse.quote(value)) for (varname, value) in variables]
+    )
     return base + "?" + vartext
 
 
@@ -158,15 +176,15 @@ def set_downtime(variables, add_vars):
     url = make_url(opt_url + "view.py", variables + add_vars)
     verbose("URL:           " + url)
     try:
-        pipe = urllib.urlopen(url)
+        pipe = urllib.request.urlopen(url)
         lines = pipe.readlines()
         verbose(" --> Got %d lines of response" % len(lines))
         if opt_verbose > 1:
             for line in lines:
                 verbose("OUTPUT: %s" % line.rstrip())
         for line in lines:
-            for error in re.findall('<div class="error">([^<]+)', line):
-                bail_out(error)
+            if line.startswith(b"<div class=error>"):
+                bail_out(line[17:].split("<")[0])
     except Exception as e:
         bail_out("Cannot call Multisite URL: %s" % e)
 

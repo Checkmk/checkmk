@@ -39,6 +39,8 @@ class ApiSettings(NamedTuple):
     API_URL: str
     USERNAME: str
     PASSWORD: str
+
+
 DowntimeMode = Literal[
     "host",
     "service",
@@ -58,31 +60,33 @@ def _set_downtime(
     comment=None,
 ):
     keys = {
-        'downtime_type': mode,
-        'start_time': start_time,
-        'end_time': end_time,
-        'comment': comment,
+        "downtime_type": mode,
+        "start_time": start_time,
+        "end_time": end_time,
+        "comment": comment,
     }
 
     if duration:
         keys["duration"] = duration
 
     # Somewhat host specific. No need to introduce another concept to the user.
-    if services and mode == 'host':
-        mode = 'service'
+    if services and mode == "host":
+        mode = "service"
 
-    if mode == 'host':
-        keys['host_name'] = host_or_group
-    elif mode == 'service':
-        keys.update({
-            'downtime_type': 'service',
-            'host_name': host_or_group,
-            'service_descriptions': services,
-        })
-    elif mode == 'hostgroup':
-        keys['hostgroup_name'] = host_or_group
-    elif mode == 'servicegroup':
-        keys['servicegroup_name'] = host_or_group
+    if mode == "host":
+        keys["host_name"] = host_or_group
+    elif mode == "service":
+        keys.update(
+            {
+                "downtime_type": "service",
+                "host_name": host_or_group,
+                "service_descriptions": services,
+            }
+        )
+    elif mode == "hostgroup":
+        keys["hostgroup_name"] = host_or_group
+    elif mode == "servicegroup":
+        keys["servicegroup_name"] = host_or_group
     else:
         raise RuntimeError(f"Unsupported downtime mode: {mode!r}")
 
@@ -92,9 +96,9 @@ def _set_downtime(
         headers={
             "Authorization": f"Bearer {api.USERNAME} {api.PASSWORD}",
             "Accept": "application/json",
-            "Content-Type": 'application/json'
+            "Content-Type": "application/json",
         },
-        data=json.dumps(keys).encode('utf-8'),
+        data=json.dumps(keys).encode("utf-8"),
     )
     try:
         response = urllib.request.urlopen(request)
@@ -126,7 +130,8 @@ def _remove_downtime(
         keys = {"delete_type": "params", "hostname": host}
     elif services:
         raise RuntimeError(
-            f"Unsupported downtime remove action: host must be specified for {services}")
+            f"Unsupported downtime remove action: host must be specified for {services}"
+        )
     else:
         raise RuntimeError("Must specify")
 
@@ -136,9 +141,9 @@ def _remove_downtime(
         headers={
             "Authorization": f"Bearer {api.USERNAME} {api.PASSWORD}",
             "Accept": "application/json",
-            "Content-Type": 'application/json'
+            "Content-Type": "application/json",
         },
-        data=json.dumps(keys).encode('utf-8'),
+        data=json.dumps(keys).encode("utf-8"),
     )
     try:
         response = urllib.request.urlopen(request)
@@ -150,15 +155,17 @@ def _remove_downtime(
 
 
 class MultilineFormatter(argparse.HelpFormatter):
-    """Wrap the text automatically, but allow to insert manual paragraph breaks.
-    """
+    """Wrap the text automatically, but allow to insert manual paragraph breaks."""
+
     def _fill_text(self, text, width, indent):
-        text = self._whitespace_matcher.sub(' ', text).strip()
-        paragraphs = text.split(' --- ')
-        multiline_text = ''
+        text = self._whitespace_matcher.sub(" ", text).strip()
+        paragraphs = text.split(" --- ")
+        multiline_text = ""
         for paragraph in paragraphs:
-            formatted_paragraph = textwrap.fill(
-                paragraph, width, initial_indent=indent, subsequent_indent=indent) + '\n\n'
+            formatted_paragraph = (
+                textwrap.fill(paragraph, width, initial_indent=indent, subsequent_indent=indent)
+                + "\n\n"
+            )
             multiline_text = multiline_text + formatted_paragraph
         return multiline_text
 
@@ -168,87 +175,102 @@ def main():
         description=__doc__,
         formatter_class=MultilineFormatter,
     )
-    omd_root = os.getenv('OMD_ROOT')
-    omd_site = os.getenv('OMD_SITE')
+    omd_root = os.getenv("OMD_ROOT")
+    omd_site = os.getenv("OMD_SITE")
     parser.set_defaults(
-        action='set',
+        action="set",
         base_url=f"http://localhost/{omd_site}/check_mk/" if omd_site else None,
         comment="Automatic downtime",
         duration=None,
         host=None,
-        mode='host',
-        user='automation',
+        mode="host",
+        user="automation",
         verbosity=0,
     )
     parser.add_argument(
-        'host',
+        "host",
         type=str,
-        metavar='HOST_OR_GROUP',
-        help="Can be a host, hostgroup or a servicegroup. See --mode for the master switch.")
-    parser.add_argument('services',
-                        type=str,
-                        metavar='SERVICE',
-                        nargs='*',
-                        help="For servicegroups these options are ignored.")
+        metavar="HOST_OR_GROUP",
+        help="Can be a host, hostgroup or a servicegroup. See --mode for the master switch.",
+    )
     parser.add_argument(
-        '-v',
-        '--verbose',
-        dest='verbosity',
-        action='count',
-        help="Show what's going on (specify multiple times for more verbose output)")
+        "services",
+        type=str,
+        metavar="SERVICE",
+        nargs="*",
+        help="For servicegroups these options are ignored.",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        dest="verbosity",
+        action="count",
+        help="Show what's going on (specify multiple times for more verbose output)",
+    )
     actions = parser.add_argument_group(
-        description="The main actions:").add_mutually_exclusive_group()
-    actions.add_argument('-s',
-                         '--set',
-                         dest='action',
-                         action='store_const',
-                         const='set',
-                         help="Set downtime (this is the default)")
-    actions.add_argument('-r',
-                         '--remove',
-                         dest='action',
-                         action='store_const',
-                         const='remove',
-                         help="Remove all downtimes from that host/service")
+        description="The main actions:"
+    ).add_mutually_exclusive_group()
+    actions.add_argument(
+        "-s",
+        "--set",
+        dest="action",
+        action="store_const",
+        const="set",
+        help="Set downtime (this is the default)",
+    )
+    actions.add_argument(
+        "-r",
+        "--remove",
+        dest="action",
+        action="store_const",
+        const="remove",
+        help="Remove all downtimes from that host/service",
+    )
 
     def iso_regex(arg_value):
         try:
-            datetime.datetime.fromisoformat(arg_value.replace('Z', '+00:00'))
+            datetime.datetime.fromisoformat(arg_value.replace("Z", "+00:00"))
         except ValueError:
             raise RuntimeError("Invalid datetime specified: must conform to ISO 8601 format")
         return arg_value
 
     setting = parser.add_argument_group(description="When setting downtimes, these can be used:")
-    setting.add_argument('--start',
-                         dest='start_time',
-                         help="The start time of the downtime. Must conform to the "
-                         "ISO 8601 format: 2021-07-21T17:32:28Z",
-                         type=iso_regex)
-    setting.add_argument('--end',
-                         dest='end_time',
-                         help="The end time of the downtime. Must conform to the "
-                         "ISO 8601 format: 2021-07-21T17:32:28Z",
-                         type=iso_regex)
-    setting.add_argument('--mode',
-                         dest='mode',
-                         choices=['host', 'hostgroup', 'servicegroup'],
-                         help="How to interpret the HOST_OR_GROUP argument. (default: %(default)r)")
-    setting.add_argument('-d',
-                         '--duration',
-                         type=int,
-                         help="Duration of the downtime in minutes (default: %(default)s)")
-    setting.add_argument('-c',
-                         '--comment',
-                         type=str,
-                         help='Comment for the downtime (default: %(default)r)')
+    setting.add_argument(
+        "--start",
+        dest="start_time",
+        help="The start time of the downtime. Must conform to the "
+        "ISO 8601 format: 2021-07-21T17:32:28Z",
+        type=iso_regex,
+    )
+    setting.add_argument(
+        "--end",
+        dest="end_time",
+        help="The end time of the downtime. Must conform to the "
+        "ISO 8601 format: 2021-07-21T17:32:28Z",
+        type=iso_regex,
+    )
+    setting.add_argument(
+        "--mode",
+        dest="mode",
+        choices=["host", "hostgroup", "servicegroup"],
+        help="How to interpret the HOST_OR_GROUP argument. (default: %(default)r)",
+    )
+    setting.add_argument(
+        "-d",
+        "--duration",
+        type=int,
+        help="Duration of the downtime in minutes (default: %(default)s)",
+    )
+    setting.add_argument(
+        "-c", "--comment", type=str, help="Comment for the downtime (default: %(default)r)"
+    )
 
     removing = parser.add_argument_group(description="When removing downtimes, these can be used:")
     removing.add_argument(
-        '--id',
-        dest='downtime_id',
+        "--id",
+        dest="downtime_id",
         type=int,
-        help=
-        "Remove a specific downtime using its id. This has priority over specified host name and services"
+        help="Remove a specific downtime using its id. This has priority over specified host name and services",
     )
 
     def api_url(value: str) -> Optional[str]:
@@ -258,20 +280,19 @@ def main():
         return value
 
     parser.add_argument(
-        '-U',
-        '--url',
+        "-U",
+        "--url",
         type=api_url,
-        dest='base_url',
-        help="Base-URL of Multisite (default: guess local OMD site, fail if not possible).")
+        dest="base_url",
+        help="Base-URL of Multisite (default: guess local OMD site, fail if not possible).",
+    )
     credentials = parser.add_argument_group(description="Credential options:")
-    credentials.add_argument('-u',
-                             '--user',
-                             type=str,
-                             help='Name of automation user (default: %(default)r)')
-    credentials.add_argument('-S',
-                             '--secret',
-                             type=str,
-                             help="Automation secret (default: read from user settings)")
+    credentials.add_argument(
+        "-u", "--user", type=str, help="Name of automation user (default: %(default)r)"
+    )
+    credentials.add_argument(
+        "-S", "--secret", type=str, help="Automation secret (default: read from user settings)"
+    )
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
@@ -279,7 +300,8 @@ def main():
     # More error handling.
     if args.base_url is None:
         parser.error(
-            "-U, --url: Please give a valid URL. The automation URL must end with /check_mk/")
+            "-U, --url: Please give a valid URL. The automation URL must end with /check_mk/"
+        )
 
     def _read_secret(username: str) -> str:
         with open(f"{omd_root or ''}/var/check_mk/web/{username}/automation.secret") as secret:
@@ -293,8 +315,10 @@ def main():
             if args.verbosity > 0:
                 traceback.print_exception(*sys.exc_info(), file=sys.stderr)
                 print(file=sys.stderr)  # newline
-            parser.error(f"-S, --secret: Cannot read automation secret (give -v for stacktrace). "
-                         f"Please specify the automation secret for the user '{args.user}'.")
+            parser.error(
+                f"-S, --secret: Cannot read automation secret (give -v for stacktrace). "
+                f"Please specify the automation secret for the user '{args.user}'."
+            )
     manage_downtime(args)
 
 
@@ -310,15 +334,16 @@ def _get_api_settings(username, secret, url) -> ApiSettings:
 def manage_downtime(args: argparse.Namespace):
     logging.basicConfig(level=VERBOSITY[min(args.verbosity, 2)])
     api = _get_api_settings(args.user, args.secret, args.base_url)
-    if args.action == 'set':
+    if args.action == "set":
         if not args.start_time or not args.end_time:
             raise RuntimeError(
-                f"Time frame for downtime must be specified: both start and end times must be set")
+                f"Time frame for downtime must be specified: both start and end times must be set"
+            )
         output("Mode", "set downtime")
         output("Start time", f"{args.start_time}")
         output("End time", f"{args.end_time}")
         output("Duration", f"{args.duration} minutes")
-    elif args.action == 'remove':
+    elif args.action == "remove":
         output("Mode", "remove downtimes")
     output("Host", args.host)
     if args.services:
@@ -326,16 +351,18 @@ def manage_downtime(args: argparse.Namespace):
     output("Multisite-URL", args.base_url)
     output("User", args.user)
     output("Secret", args.secret or "(none specified)")
-    if args.action == 'set':
-        _set_downtime(api,
-                      args.mode,
-                      args.host,
-                      args.services,
-                      args.start_time,
-                      args.end_time,
-                      duration=args.duration,
-                      comment=args.comment)
-    elif args.action == 'remove':
+    if args.action == "set":
+        _set_downtime(
+            api,
+            args.mode,
+            args.host,
+            args.services,
+            args.start_time,
+            args.end_time,
+            duration=args.duration,
+            comment=args.comment,
+        )
+    elif args.action == "remove":
         _remove_downtime(
             api,
             args.downtime_id,
@@ -359,5 +386,5 @@ def output(title: str, message: str, level: int = 1) -> str:
     return msg
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

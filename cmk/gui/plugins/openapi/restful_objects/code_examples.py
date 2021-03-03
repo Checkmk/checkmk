@@ -234,11 +234,12 @@ resp = session.{{ method }}(
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
 )
-data = resp.json()
-if resp.ok:
-    print(data)
+if resp.status_code == 200:
+    print(resp.json())
+elif resp.status_code == 204:
+    print("Done")
 else:
-    raise RuntimeError(repr(data))
+    raise RuntimeError(repr(resp.json()))
 """
 
 CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])

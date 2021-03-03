@@ -199,16 +199,18 @@ def process_level_elements():
          DropdownChoice(
              title=_("Enable per-process details in long-output"),
              label=_("Enable per-process details"),
-             help=_(
-                 "If active, the long output of this service will contain a list of all the "
-                 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                 "Please note that HTML output will only work if rules in the rulesets "
-                 "\"Escape HTML codes in host output\" or \"Escape HTML codes in service output\" "
-                 "are created or the global setting \"Escape HTML codes in service output\" "
-                 "is disabled. This might expose you to "
-                 "Cross-Site-Scripting attacks (everyone with write-access to checks could get "
-                 "scripts executed on the monitoring site in the context of the user of the "
-                 "monitoring site) so please do this if you understand the consequences."),
+             help=_("If active, the long output of this service will contain a list of all the "
+                    "matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                    "Please note that HTML output will only work if rules in the rulesets "
+                    "\"%s\" or \"%s\" are created or the global setting \"%s\" is disabled. "
+                    "This might expose you to Cross-Site-Scripting attacks (everyone with "
+                    "write-access to checks could get scripts executed on the monitoring site "
+                    "in the context of the user of the monitoring site), so please do this if "
+                    "you understand the consequences.") % (
+                        _("Escape HTML codes in host output"),
+                        _("Escape HTML codes in service output"),
+                        _("Escape HTML codes in service output"),
+                    ),
              choices=[
                  (None, _("Disable")),
                  ("text", _("Text output")),

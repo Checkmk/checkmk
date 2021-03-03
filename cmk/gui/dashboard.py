@@ -801,28 +801,8 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
             PageMenuDropdown(
                 name="dashboards",
                 title=_("Dashboards"),
-                topics=list(_page_menu_dashboards()),
+                topics=list(_page_menu_dashboards(name)),
                 is_enabled=True,
-            ),
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Dashboards"),
-                        entries=list(_dashboard_related_entries(name)),
-                    ),
-                    PageMenuTopic(
-                        title=_("Customize"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Customize Dashboards"),
-                                icon_name="dashboard",
-                                item=make_simple_link("edit_dashboards.py"),
-                            )
-                        ] if config.user.may("general.edit_dashboards") else [],
-                    ),
-                ],
             ),
         ],
         breadcrumb=breadcrumb,
@@ -834,21 +814,26 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
     return menu
 
 
-def _page_menu_dashboards() -> Iterable[PageMenuTopic]:
+def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
+    linked_dashboards = ("main", "problems", "checkmk")
+
     yield PageMenuTopic(
-        title=_("Dashboards"),
+        title=_("Related Dashboards"),
+        entries=list(_dashboard_related_entries(name, linked_dashboards)),
+    )
+    yield PageMenuTopic(
+        title=_("Other Dashboards"),
+        entries=list(_dashboard_other_entries(name, linked_dashboards)),
+    )
+    yield PageMenuTopic(
+        title=_("Customize"),
         entries=[
             PageMenuEntry(
-                title=board["title"],
-                icon_name=board["icon"] or "dashboard",
-                item=make_simple_link(
-                    makeuri_contextless(
-                        request,
-                        [("name", name)],
-                        filename="dashboard.py",
-                    )),
-            ) for name, board in get_permitted_dashboards().items()
-        ],
+                title=_("Customize Dashboards"),
+                icon_name="dashboard",
+                item=make_simple_link("edit_dashboards.py"),
+            )
+        ] if config.user.may("general.edit_dashboards") else [],
     )
 
 
@@ -933,8 +918,32 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
     )
 
 
-def _dashboard_related_entries(name):
-    linked_dashboards = ("main", "problems", "checkmk")
+def _dashboard_other_entries(
+    name: str,
+    linked_dashboards: Tuple[str, str, str],
+) -> Iterable[PageMenuEntry]:
+    for dashboard_name, dashboard in get_permitted_dashboards().items():
+        if name in linked_dashboards and dashboard_name in linked_dashboards:
+            continue
+        if dashboard["hidden"]:
+            continue
+
+        yield PageMenuEntry(
+            title=dashboard["title"],
+            icon_name=dashboard["icon"] or "dashboard",
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("name", dashboard_name)],
+                    filename="dashboard.py",
+                )),
+        )
+
+
+def _dashboard_related_entries(
+    name: str,
+    linked_dashboards: Tuple[str, str, str],
+) -> Iterable[PageMenuEntry]:
     if name not in linked_dashboards:
         return  # only the three main dashboards are related
 

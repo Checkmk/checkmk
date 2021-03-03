@@ -404,7 +404,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, group: str) -> str:  # pylint: disable=arguments-differ
+    def mode_url(cls, *, group: str, host: str, item: str, service: str) -> str:  # pylint: disable=arguments-differ
         ...
 
     @overload
@@ -778,8 +778,15 @@ class ModeEditRuleset(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        back_url = self.mode_url(
+            varname=self._name,
+            host=self._hostname or "",
+            item=ensure_str(watolib.mk_repr(self._item)),
+            service=ensure_str(watolib.mk_repr(self._service)),
+        )
+
         if not html.check_transaction():
-            return redirect(self.mode_url(varname=self._name))
+            return redirect(back_url)
 
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")
@@ -803,7 +810,7 @@ class ModeEditRuleset(WatoMode):
             ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
 
         rulesets.save()
-        return redirect(self.mode_url(varname=self._name))
+        return redirect(back_url)
 
     def page(self):
         if not config.wato_hide_varnames:
@@ -977,12 +984,12 @@ class ModeEditRuleset(WatoMode):
         ]
         if html.request.var("rule_folder"):
             vars_.append(("rule_folder", folder.path()))
-        if html.request.var("host"):
+        if self._hostname:
             vars_.append(("host", self._hostname))
-        if html.request.var("item"):
-            vars_.append(("item", watolib.mk_repr(self._item)))
-        if html.request.var("service"):
-            vars_.append(("service", watolib.mk_repr(self._service)))
+        if self._item:
+            vars_.append(("item", ensure_str(watolib.mk_repr(self._item))))
+        if self._service:
+            vars_.append(("service", ensure_str(watolib.mk_repr(self._service))))
 
         return make_action_link(vars_)
 

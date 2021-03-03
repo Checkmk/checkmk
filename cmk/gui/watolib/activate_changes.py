@@ -1713,10 +1713,10 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
             self._status_details = _("Queued for update")
-        else:
-            if self._time_started is None:
-                raise Exception("start time not set")
+        elif self._time_started is not None:
             self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+        else:
+            self._status_details = _("Not started.")
 
         if phase == PHASE_DONE:
             self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)

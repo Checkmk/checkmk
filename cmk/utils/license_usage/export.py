@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
+import abc
 from typing import (
     Dict,
     List,
     NamedTuple,
-    Tuple,
     Optional,
     Union,
 )
@@ -25,20 +25,18 @@ RawSubscriptionDetails = NamedTuple(
         ("limit", Optional[int]),
     ],
 )
-ShortSample = Tuple[float, int]
-
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
 RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
 
 
-class MonthlyServiceAverages:
+class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
     today = datetime.today()
 
     def __init__(
         self,
         username: str,
         subscription_details: RawSubscriptionDetails,
-        short_samples: List[ShortSample],
+        short_samples: List,
     ) -> None:
         self._username = username
         self._subscription_details = subscription_details
@@ -71,16 +69,15 @@ class MonthlyServiceAverages:
             "num_services": counter["num_services"],
         } for daily_service_date, counter in self._daily_services.items()]
 
+    @abc.abstractmethod
+    def _calculate_daily_services(self) -> None:
+        raise NotImplementedError()
+
     def calculate_averages(self) -> None:
         if not self._short_samples:
             return
 
-        for sample_time, num_services in self._short_samples:
-            sample_date = datetime.fromtimestamp(sample_time)
-            self._daily_services.setdefault(
-                datetime(sample_date.year, sample_date.month, sample_date.day),
-                Counter(),
-            ).update(num_services=num_services)
+        self._calculate_daily_services()
 
         if self.subscription_start is None:
             # It does not make sense to calculate monthly averages if we do not
@@ -101,7 +98,7 @@ class MonthlyServiceAverages:
                 month_start = month_end
                 month_end = month_start + relativedelta(months=+1)
 
-            if month_end >= MonthlyServiceAverages.today:
+            if month_end >= ABCMonthlyServiceAverages.today:
                 # Skip last, incomplete month
                 break
 
@@ -135,21 +132,31 @@ class MonthlyServiceAverages:
 
     def _get_last_service_report(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if not self._monthly_service_averages:
-            return MonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         return self._monthly_service_averages[-1]
 
     def _get_highest_service_report(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if not self._monthly_service_averages:
-            return MonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         return max(self._monthly_service_averages, key=lambda d: d["num_services"])
 
     def _get_subscription_exceeded_first(self,) -> Union[RawMonthlyServiceAverage, Dict[str, None]]:
         if self.subscription_limit is None:
-            return MonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+            return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
         for service_average in self._monthly_service_averages:
             if service_average["num_services"] >= self.subscription_limit:
                 return service_average
-        return MonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+        return ABCMonthlyServiceAverages._DEFAULT_MONTHLY_SERVICE_AVERAGE
+
+
+class MonthlyServiceAverages(ABCMonthlyServiceAverages):
+    def _calculate_daily_services(self) -> None:
+        for sample_time, num_services in self._short_samples:
+            sample_date = datetime.fromtimestamp(sample_time)
+            self._daily_services.setdefault(
+                datetime(sample_date.year, sample_date.month, sample_date.day),
+                Counter(),
+            ).update(num_services=num_services)
 
 
 class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
@@ -157,7 +164,7 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
         self,
         username: str,
         subscription_details: RawSubscriptionDetails,
-        short_samples: List[ShortSample],
+        short_samples: List,
         samples: List[Dict],
     ) -> None:
         super().__init__(username, subscription_details, short_samples)
@@ -173,7 +180,49 @@ class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
         return aggregation
 
 
-class MonthlyServiceAveragesOfCmkUser(MonthlyServiceAverages):
+class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
+    def __init__(
+        self,
+        username: str,
+        subscription_details: RawSubscriptionDetails,
+        short_samples: List,
+    ) -> None:
+        super().__init__(username, subscription_details, short_samples)
+        self._last_daily_services: Dict = {}
+
+    @property
+    def last_daily_services(self) -> Dict:
+        return self._last_daily_services
+
+    def _calculate_daily_services(self) -> None:
+        max_date = self._get_max_date()
+
+        for site_id, history in self._short_samples:
+            self._last_daily_services.setdefault(site_id, None)
+
+            for sample in history:
+                sample_date = datetime.fromtimestamp(sample.sample_time)
+                self._daily_services.setdefault(
+                    datetime(sample_date.year, sample_date.month, sample_date.day),
+                    Counter(),
+                ).update(num_services=sample.num_services)
+
+                if max_date is None:
+                    continue
+
+                if ((sample_date.year, sample_date.month, sample_date.day) >=
+                    (max_date.year, max_date.month, max_date.day)):
+                    self._last_daily_services[site_id] = sample
+
+    def _get_max_date(self) -> Optional[datetime]:
+        try:
+            max_sample_time = max(sample.sample_time
+                                  for _site_id, history in self._short_samples
+                                  for sample in history)
+            return datetime.fromtimestamp(max_sample_time)
+        except ValueError:
+            return None
+
     def get_aggregation(self) -> Dict:
         aggregation = super().get_aggregation()
         aggregation.update({

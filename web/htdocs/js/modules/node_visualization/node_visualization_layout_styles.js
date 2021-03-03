@@ -492,6 +492,7 @@ export class AbstractLayoutStyle {
 class ForceSimulation {
     constructor() {
         this._simulation = d3.forceSimulation();
+        this._simulation.alpha(0);
         this._simulation.alphaMin(0.1);
         this._simulation.on("tick", () => this.tick_called());
         this._setup_forces();

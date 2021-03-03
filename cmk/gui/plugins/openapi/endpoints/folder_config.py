@@ -31,8 +31,11 @@ from cmk.gui.watolib import CREFolder
 # TODO: Remove all hard-coded response creation in favour of a generic one
 # TODO: Implement formal description (GET endpoint) of move action
 
-FOLDER_FIELD = {
+PATH_FOLDER_FIELD = {
     'folder': fields.FolderField(
+        description=("The path of the folder being requested. Please be aware that slashes can't "
+                     "be used in the URL. Also, escaping the slashes via %2f will not work. Please "
+                     "replace the path delimiters with the tilde character `~`."),
         example='~my~fine~folder',
         required=True,
     )
@@ -67,7 +70,7 @@ def create(params):
     constructors.domain_object_collection_href('folder_config', '{folder}', 'hosts'),
     '.../collection',
     method='get',
-    path_params=[FOLDER_FIELD],
+    path_params=[PATH_FOLDER_FIELD],
     response_schema=response_schemas.DomainObjectCollection,
 )
 def hosts_of_folder(params):
@@ -80,7 +83,7 @@ def hosts_of_folder(params):
 @Endpoint(constructors.object_href('folder_config', '{folder}'),
           '.../persist',
           method='put',
-          path_params=[FOLDER_FIELD],
+          path_params=[PATH_FOLDER_FIELD],
           etag='both',
           response_schema=response_schemas.ConcreteFolder,
           request_schema=request_schemas.UpdateFolder)
@@ -149,7 +152,7 @@ def bulk_update(params):
 @Endpoint(constructors.object_href('folder_config', '{folder}'),
           '.../delete',
           method='delete',
-          path_params=[FOLDER_FIELD],
+          path_params=[PATH_FOLDER_FIELD],
           output_empty=True)
 def delete(params):
     """Delete a folder"""
@@ -162,7 +165,7 @@ def delete(params):
 @Endpoint(constructors.object_action_href('folder_config', '{folder}', action_name='move'),
           'cmk/move',
           method='post',
-          path_params=[FOLDER_FIELD],
+          path_params=[PATH_FOLDER_FIELD],
           response_schema=response_schemas.ConcreteFolder,
           request_schema=request_schemas.MoveFolder,
           etag='both')
@@ -272,7 +275,7 @@ def _folders_collection(
             missing=False,
         )
     }],
-    path_params=[FOLDER_FIELD],
+    path_params=[PATH_FOLDER_FIELD],
 )
 def show_folder(params):
     """Show a folder"""

@@ -1,0 +1,15 @@
+Title: Windows agent ignores cmk-update-agent.exe always
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614787731
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0b8
+
+This plugin is incompatible with current version of the Windows agent. Still, 
+it  may be left in plugins directory after an update. To prevent possible 
+problems with monitoring since this release Windows agent ignores this 
+executable.

@@ -1466,7 +1466,11 @@ class ABCEditRuleMode(WatoMode):
 
         if html.request.has_var("_export_rule"):
             return redirect(
-                mode_url("edit_rule", varname=self._name, folder=watolib.Folder.current().path()))
+                mode_url("edit_rule",
+                         _export_rule="ON",
+                         varname=self._name,
+                         rule_id=self._rule.id,
+                         folder=watolib.Folder.current().path()))
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
@@ -1672,7 +1676,8 @@ class ABCEditRuleMode(WatoMode):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _show_rule_representation(self):
-        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_config()))
+        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
+        content = html.render_text(pretty_rule_config)
 
         html.write(_("This rule representation can be used for Web API calls."))
         html.br()

@@ -328,7 +328,7 @@ class Age(ValueSpec):
 
         html.open_div(class_=["vs_age", self._cssclass])
         if self._label:
-            html.write(self._label + " ")
+            html.span(self._label, class_="vs_floating_text")
 
         takeover = 0
         for uid, title, val, tkovr_fac in [("days", _("days"), days, 24),
@@ -419,12 +419,10 @@ class NumericRenderer:
 
     def render_input(self, varprefix: str, text: str) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
         self.text_input(varprefix, text)
         if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+            html.span(self._unit, class_="vs_floating_text")
 
     def format_text(self, text: str) -> str:
         if self._thousand_sep:
@@ -606,8 +604,7 @@ class TextAscii(ValueSpec):
     # NOTE: Class hierarchy is broken, we can get Unicode here!
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         html.text_input(
             varprefix,
@@ -2556,7 +2553,7 @@ class DropdownChoice(ValueSpec):
 
     def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
         if self._label:
-            html.write("%s " % self._label)
+            html.span(self._label, class_="vs_floating_text")
 
         choices = self.choices()
         defval = choices[0][0] if choices else None
@@ -2843,12 +2840,9 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        html.dropdown(vp,
-                      options,
-                      deflt=def_val,
-                      onchange=onchange,
-                      ordered=self._sorted,
-                      label=self._label)
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
+        html.dropdown(vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted)
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -3623,8 +3617,7 @@ class AbsoluteDate(ValueSpec):
 
     def render_input(self, varprefix: Any, value: Any) -> None:
         if self._label:
-            html.write("%s" % self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         year, month, day, hour, mmin, sec = self.split_date(value)
         values: List[_Optional[_Tuple[str, _Optional[int], int]]] = [
@@ -4432,7 +4425,7 @@ class Alternative(ValueSpec):
         if self._on_change:
             onchange += self._on_change
         if self._orientation == "horizontal":
-            html.open_table()
+            html.open_table(class_="alternative")
             html.open_tr()
             html.open_td()
         html.dropdown(varprefix + "_use",
@@ -4440,7 +4433,6 @@ class Alternative(ValueSpec):
                       deflt=("???" if sel_option is None else sel_option),
                       onchange=onchange)
         if self._orientation == "vertical":
-            html.br()
             html.br()
 
         for nr, vs in enumerate(self._elements):
@@ -4573,16 +4565,18 @@ class Tuple(ValueSpec):
                     title = ""
                 if self._orientation == "vertical":
                     html.open_td(class_="tuple_left")
-                    html.write(title)
+                    if title:
+                        html.span(title, class_="vs_floating_text")
 
                     html.close_td()
                 elif self._orientation == "horizontal":
                     html.open_td(class_="tuple_td")
-                    html.open_span(class_=["title"])
-                    html.write(title)
+                    if title:
+                        html.open_span(class_=["title"])
+                        html.write(title)
 
                     html.close_span()
-                    if self._title_br:
+                    if self._title_br and title:
                         html.br()
                     else:
                         html.write_text(" ")
@@ -5053,8 +5047,7 @@ class ElementSelection(ValueSpec):
             html.write(self._empty_text)
         else:
             if self._label:
-                html.write("%s" % self._label)
-                html.nbsp()
+                html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
     def value_to_text(self, value):
@@ -5292,8 +5285,7 @@ class Password(TextAscii):
             value = ""
 
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         if self._encrypt_value:
             html.hidden_field(varprefix + "_orig",
@@ -6400,8 +6392,7 @@ class DropdownChoiceWithHostAndServiceHints(DropdownChoice):
 
     def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         html.dropdown(
             varprefix,

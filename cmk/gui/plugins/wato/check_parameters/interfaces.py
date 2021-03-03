@@ -838,7 +838,7 @@ def _parameter_valuespec_if():
                      default_value=16000000,
                      explicit=Integer(title=_("Other speed in bits per second"),
                                       label=_("Bits per second"),
-                                      size=10))),
+                                      size=12))),
                 ("assumed_speed_out",
                  OptionalDropdownChoice(
                      title=_("Assumed output speed"),

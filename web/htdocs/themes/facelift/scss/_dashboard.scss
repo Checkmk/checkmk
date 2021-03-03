@@ -923,49 +923,59 @@ div.servicestats {
 
   div.stats_table {
     position: absolute;
-    right: 25px;
+    right: 0;
 
     table {
       pointer-events: all;
+      border-collapse: collapse;
+    }
+
+    td:last-child {
+      width: 115px; // aligns the host and service stats tables
     }
 
     a {
       text-decoration: none;
       cursor: pointer;
 
-      &.count {
-        float: right;
-        padding-right: 0.5 * $spacing;
-
-        &:hover {
-          font-weight: $font-weight-bold;
-        }
+      &.box {
+        display: inline-block;
+        width: $spacing-half;
+        height: 14px;
+        padding: 0;
+        background-color: $font-color;
+        border-radius: $theme-border-radius;
 
         &.critical {
-          color: $hexagon-critical-color;
+          background-color: $hexagon-critical-color;
         }
 
         &.unknown {
-          color: $hexagon-unknown-color;
+          background-color: $hexagon-unknown-color;
         }
 
         &.warning {
-          color: $hexagon-warning-color;
+          background-color: $hexagon-warning-color;
         }
 
         &.downtime {
-          color: $hexagon-downtime-color;
+          background-color: $hexagon-downtime-color;
         }
 
         &.host_down {
-          color: $hexagon-host-down-color;
+          background-color: $hexagon-host-down-color;
         }
 
         &.ok {
-          color: $success;
+          background-color: $success;
         }
       }
 
+      &.count {
+        float: right;
+      }
+
+      &.count:hover,
       &.text:hover {
         color: $success;
       }
@@ -979,10 +989,10 @@ div.servicestats {
 
 div.stats_table {
   div.hoststats & {
-    top: 55px;
+    top: 44px;
   }
 
   div.servicestats & {
-    top: 40px;
+    top: 28px;
   }
 }

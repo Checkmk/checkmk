@@ -85,14 +85,6 @@ b.state0,
   }
 }
 
-.count.state0,
-.count.hstate0 {
-  &,
-  a {
-    color: $success !important;
-  }
-}
-
 .hstate {
   white-space: nowrap;
 }
@@ -109,13 +101,6 @@ b.state1,
   }
 }
 
-.count.state1 {
-  &,
-  a {
-    color: $color-state-1-background !important;
-  }
-}
-
 /* CRIT/DOWN */
 .bibox_box.state2,
 span.content.state2,
@@ -129,14 +114,6 @@ b.state2,
   }
 }
 
-.count.state2,
-.count.hstate1 {
-  &,
-  a {
-    color: $color-state-2-background !important;
-  }
-}
-
 /* UNKNOWN / UNREACH */
 .bibox_box.state3,
 span.content.state3,
@@ -147,14 +124,6 @@ b.state3,
   a {
     color: $white !important;
     background-color: $color-state-3-background !important;
-  }
-}
-
-.count.state3,
-.count.hstate2 {
-  &,
-  a {
-    color: $color-state-3-background !important;
   }
 }
 

@@ -1,0 +1,20 @@
+Title: Windows agent uses separate script to protect own files from unathorized access
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614788442
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.0.0b8
+
+Previously, the protection algorithm was hard-coded into the Windows agent and 
+it was called synchronously. Such approach may lead to some rare but important 
+problems, because the start of the Windows agent service required a lot of 
+time and Windows service manager may not accept this delay.
+
+Since this release Windows agent uses batch script, which runs in a separate 
+and independent process. This script provides the identical functionality as 
+before, but it doesn't interfere with Windows agent service thus solving the 
+problem with delay.

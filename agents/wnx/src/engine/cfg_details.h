@@ -36,7 +36,10 @@ std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
 
 enum class CleanMode { none, smart, all };
 
-constexpr bool g_remove_dirs_on_clean = false;  // TEMPORARY
+// The flag is based on AW report - only on positive report true
+// TODO(sk): Update comment and build till 5.03.2021
+constexpr bool g_remove_dirs_on_clean = true;
+
 CleanMode GetCleanDataFolderMode();
 bool CleanDataFolder(CleanMode mode);
 

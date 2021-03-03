@@ -145,60 +145,6 @@ check_info["fortigate_node.cpu"] = {
 }
 
 #.
-#   .--Memory--------------------------------------------------------------.
-#   |               __  __                                                 |
-#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
-#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
-#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
-#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
-#   |                                                |___/                 |
-#   '----------------------------------------------------------------------'
-
-#fortigate_node_memory_default_levels = (70, 80)
-factory_settings['fortigate_node_memory_default_levels'] = {
-    'levels': (70.0, 80.0),
-}
-
-
-def inventory_fortigate_node_mem(parsed):
-    for hostname in parsed["nodes"]:
-        yield hostname, {}
-
-
-def check_fortigate_node_mem(item, params, parsed):
-    data = parsed.get("nodes", {}).get(item)
-    if data is None:
-        return
-
-    current = data["memory"]
-    # This check is only able to check the used space
-    # The checkgroup "memory" might set negative values which act as levels for free space
-    # These levels are converted to used space, too..
-    # But that's not the rule we are using. FIXME: CMK-3581
-    if isinstance(params, dict):
-        warn, crit = map(abs, params["levels"])
-    else:
-        warn, crit = map(abs, params)
-
-    yield check_levels(
-        current,
-        "mem_usage",  # FIXME: CMK-3581
-        (warn, crit),
-        infoname="Usage",
-        human_readable_func=get_percent_human_readable,
-    )
-
-
-check_info["fortigate_node.memory"] = {
-    "inventory_function": inventory_fortigate_node_mem,
-    "check_function": check_fortigate_node_mem,
-    "service_description": "Memory %s",
-    "has_perfdata": True,
-    "default_levels_variable": "fortigate_node_memory_default_levels",
-    "group": "fortigate_node_memory",
-}
-
-#.
 #   .--Sessions------------------------------------------------------------.
 #   |                ____                _                                 |
 #   |               / ___|  ___  ___ ___(_) ___  _ __  ___                 |

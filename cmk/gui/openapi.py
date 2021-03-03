@@ -34,7 +34,9 @@ if not version.is_raw_edition():
 
 def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
     endpoint: Endpoint
-    for endpoint in ENDPOINT_REGISTRY:
+    methods = ['get', 'put', 'post', 'delete']
+    for endpoint in sorted(ENDPOINT_REGISTRY,
+                           key=lambda e: (e.func.__module__, methods.index(e.method))):
         if target in endpoint.blacklist_in:
             continue
         SPEC.path(

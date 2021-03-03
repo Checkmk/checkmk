@@ -1,0 +1,13 @@
+Title: Ruleset edit page: Fix move / delete of rules disable rule analyzation
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614785191
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+The ruleset page is showing a rule match analyzation in the moment it has
+contextual information about host name and service. The delete rule and move
+rule actions were dropping these contextual information accidentally.

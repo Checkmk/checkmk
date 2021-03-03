@@ -353,9 +353,7 @@ class Mailbox:
                     self._connection.create(target)
 
                 # Copy the mail
-                ty, data = verified_result(self._connection.copy(str(mail_index), folder))
-                if ty != 'OK':
-                    raise Exception("Response from server: [%s]" % data)
+                verified_result(self._connection.copy(str(mail_index), folder))
 
         except Exception as exc:
             raise CleanupMailboxError('Failed to copy mail: %r' % exc) from exc

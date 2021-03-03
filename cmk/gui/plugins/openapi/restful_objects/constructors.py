@@ -396,6 +396,8 @@ def object_property(
     title: Optional[str] = None,
     linkable: bool = True,
     links: Optional[List[LinkType]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+    choices: Optional[List[Any]] = None,
 ) -> Dict[str, Any]:
     """Render an object-property
 
@@ -422,6 +424,12 @@ def object_property(
         links:
             (Optional) Additional links to be appended to the list.
 
+        extensions:
+            (Optional) Additional keywords which will be presented under the 'extensions' key.
+
+        choices:
+            (Optional) A list of informational values which can be used for 'value'.
+
     Returns:
         A dictionary representing an object-property.
 
@@ -432,12 +440,19 @@ def object_property(
         'value': value,
         'format': prop_format,
         'title': title,
-        'choices': [],
     }
+    if choices is not None:
+        property_obj['choices'] = choices
+
     if linkable:
         property_obj['links'] = [link_rel('self', f"{base}/properties/{name}")]
-        if links:
-            property_obj['links'].extend(links)
+
+    if links:
+        property_obj.setdefault('links', [])
+        property_obj['links'].extend(links)
+
+    if extensions:
+        property_obj['extensions'] = extensions
 
     return property_obj
 

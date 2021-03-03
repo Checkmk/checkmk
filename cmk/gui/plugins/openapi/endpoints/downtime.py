@@ -20,7 +20,9 @@ from typing import Literal
 from cmk.gui import config, sites
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
+from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import QueryException
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
@@ -30,15 +32,30 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import (
-    OPTIONAL_HOST_NAME,
-    SERVICE_DESCRIPTION,
-)
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
                        'service_by_query']
+
+SERVICE_DESCRIPTION_SHOW = {
+    'service_description': fields.String(
+        description="The service description. No exception is raised when the specified service "
+        "description does not exist",
+        example="Memory",
+        required=False,
+    )
+}
+
+HOST_NAME_SHOW = {
+    'host_name': fields.String(
+        description=
+        "The host name. No exception is raised when the specified host name does not exist",
+        pattern=HOST_NAME_REGEXP,
+        example="example.com",
+        required=False,
+    )
+}
 
 
 class DowntimeParameter(BaseSchema):
@@ -50,6 +67,7 @@ class DowntimeParameter(BaseSchema):
           method='post',
           tag_group='Monitoring',
           request_schema=request_schemas.CreateHostRelatedDowntime,
+          additional_status_codes=[422],
           output_empty=True)
 def create_host_related_downtime(params):
     """Create a host related scheduled downtime"""
@@ -82,16 +100,23 @@ def create_host_related_downtime(params):
         )
 
     elif downtime_type == 'host_by_query':
-        downtime_commands.schedule_hosts_downtimes_with_query(
-            live,
-            body['query'],
-            start_time=body['start_time'],
-            end_time=body['end_time'],
-            recur=body['recur'],
-            duration=body['duration'],
-            user_id=config.user.ident,
-            comment=body.get('comment', ''),
-        )
+        try:
+            downtime_commands.schedule_hosts_downtimes_with_query(
+                live,
+                body['query'],
+                start_time=body['start_time'],
+                end_time=body['end_time'],
+                recur=body['recur'],
+                duration=body['duration'],
+                user_id=config.user.ident,
+                comment=body.get('comment', ''),
+            )
+        except QueryException:
+            return problem(
+                status=422,
+                title="Query did not match any host",
+                detail="The provided query returned an empty list so no downtime was set",
+            )
     else:
         return problem(status=400,
                        title="Unhandled downtime-type.",
@@ -100,12 +125,15 @@ def create_host_related_downtime(params):
     return Response(status=204)
 
 
-@Endpoint(constructors.collection_href('downtime', 'service'),
-          'cmk/create_service',
-          method='post',
-          tag_group='Monitoring',
-          request_schema=request_schemas.CreateServiceRelatedDowntime,
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href('downtime', 'service'),
+    'cmk/create_service',
+    method='post',
+    tag_group='Monitoring',
+    request_schema=request_schemas.CreateServiceRelatedDowntime,
+    additional_status_codes=[422],
+    output_empty=True,
+)
 def create_service_related_downtime(params):
     """Create a service related scheduled downtime"""
     body = params['body']
@@ -140,16 +168,23 @@ def create_service_related_downtime(params):
             comment=body.get('comment', f"Downtime for servicegroup {body['servicegroup_name']!r}"),
         )
     elif downtime_type == 'service_by_query':
-        downtime_commands.schedule_services_downtimes_with_query(
-            live,
-            query=body['query'],
-            start_time=body['start_time'],
-            end_time=body['end_time'],
-            recur=body['recur'],
-            duration=body['duration'],
-            user_id=config.user.ident,
-            comment=body.get('comment', ''),
-        )
+        try:
+            downtime_commands.schedule_services_downtimes_with_query(
+                live,
+                query=body['query'],
+                start_time=body['start_time'],
+                end_time=body['end_time'],
+                recur=body['recur'],
+                duration=body['duration'],
+                user_id=config.user.ident,
+                comment=body.get('comment', ''),
+            )
+        except QueryException:
+            return problem(
+                status=422,
+                title="Query did not match any service",
+                detail="The provided query returned an empty list so no downtime was set",
+            )
     else:
         return problem(status=400,
                        title="Unhandled downtime-type.",
@@ -163,8 +198,8 @@ def create_service_related_downtime(params):
           method='get',
           tag_group='Monitoring',
           query_params=[
-              OPTIONAL_HOST_NAME,
-              SERVICE_DESCRIPTION,
+              HOST_NAME_SHOW,
+              SERVICE_DESCRIPTION_SHOW,
               DowntimeParameter,
           ],
           response_schema=response_schemas.DomainObjectCollection)
@@ -193,7 +228,7 @@ def show_downtimes(param):
 
     host_name = param.get('host_name')
     if host_name is not None:
-        q = q.filter(Downtimes.host_name.contains(host_name))
+        q = q.filter(And(Downtimes.host_name.op("=", host_name), Downtimes.is_service.equals(0)))
 
     service_description = param.get('service_description')
     if service_description is not None:
@@ -219,15 +254,17 @@ def delete_downtime(params):
     elif delete_type == "by_id":
         downtime_commands.delete_downtime(live, body['downtime_id'])
     elif delete_type == "params":
-        hostname = body['hostname']
-        if "services" not in body:
-            host_expr = Downtimes.host_name.op("~", hostname)
+        hostname = body['host_name']
+        if "service_descriptions" not in body:
+            host_expr = And(Downtimes.host_name.op("=", hostname), Downtimes.is_service.op('=', 0))
             downtime_commands.delete_downtime_with_query(live, host_expr)
         else:
-            services_expr = And(*[
-                Downtimes.host_name == body['hostname'],
-                Or(*[Downtimes.service_description == svc_desc for svc_desc in body['services']])
-            ])
+            services_expr = And(
+                Downtimes.host_name.op('=', hostname),
+                Or(*[
+                    Downtimes.service_description == svc_desc
+                    for svc_desc in body['service_descriptions']
+                ]))
             downtime_commands.delete_downtime_with_query(live, services_expr)
     else:
         return problem(status=400,
@@ -246,9 +283,8 @@ def _serve_downtimes(downtimes):
 def _serialize_downtimes(downtimes):
     entries = []
     for downtime in downtimes:
-        service_description = downtime.get("service_description")
-        if service_description:
-            downtime_detail = "service: %s" % service_description
+        if downtime["is_service"]:
+            downtime_detail = "service: %s" % downtime["service_description"]
         else:
             downtime_detail = "host: %s" % downtime["host_name"]
 
@@ -263,7 +299,7 @@ def _serialize_downtimes(downtimes):
                     constructors.link_rel(
                         rel='.../delete',
                         href=f'/objects/host/{downtime["host_name"]}/objects/downtime/{downtime_id}',
-                        method='delete',
+                        method='post',
                         title='Delete the downtime',
                     ),
                 ]))

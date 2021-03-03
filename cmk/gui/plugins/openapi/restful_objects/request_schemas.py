@@ -12,9 +12,9 @@ from cmk.utils.defines import weekday_ids
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_host_downtime,
-    schedule_hostgroup_host_downtime,
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
+    schedule_hostgroup_host_downtime,
 )
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -22,13 +22,14 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import 
 )
 from cmk.gui.plugins.openapi.fields import HostField, query_field, AttributesField
 from cmk.gui.plugins.openapi.livestatus_helpers import tables
-from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
+
+import cmk.gui.plugins.openapi.endpoints.utils as utils
 
 EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
@@ -219,7 +220,7 @@ class Group(fields.String):
     def _validate(self, value):
         super()._validate(value)
 
-        group_exists = verify_group_exist(self._group_type, value)
+        group_exists = utils.verify_group_exist(self._group_type, value)
         if self._should_exist and not group_exists:
             raise self.make_error("should_exist", name=value)
         if not self._should_exist and group_exists:
@@ -785,15 +786,24 @@ class CreateServiceDowntime(CreateDowntimeBase):
 
 
 class CreateServiceGroupDowntime(CreateDowntimeBase):
-    servicegroup_name = SERVICEGROUP_NAME
+    servicegroup_name = Group(
+        group_type="service",
+        example="windows",
+        required=True,
+        description=param_description(schedule_servicegroup_service_downtime.__doc__,
+                                      'servicegroup_name'),
+        should_exist=True,
+    )
     duration = HOST_DURATION
 
 
 class CreateHostGroupDowntime(CreateDowntimeBase):
-    hostgroup_name = fields.String(
+    hostgroup_name = Group(
+        group_type="host",
+        example="windows",
         required=True,
         description=param_description(schedule_hostgroup_host_downtime.__doc__, 'hostgroup_name'),
-        example='Servers',
+        should_exist=True,
     )
     duration = HOST_DURATION
 
@@ -832,7 +842,7 @@ class DeleteDowntimeBase(BaseSchema):
     delete_type = fields.String(
         required=True,
         description="The option how to delete a downtime.",
-        enum=['params', 'query'],
+        enum=['params', 'query', "by_id"],
         example="params",
     )
 
@@ -846,11 +856,13 @@ class DeleteDowntimeById(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByName(DeleteDowntimeBase):
-    hostname = fields.String(
+    host_name = fields.String(
         required=True,
         description="If set alone, then all downtimes of the host will be removed.",
-        example="example.com")
-    services = fields.List(
+        pattern=fields.HOST_NAME_REGEXP,
+        example="example.com",
+    )
+    service_descriptions = fields.List(
         SERVICE_DESCRIPTION_FIELD,
         description="If set, the downtimes of the listed services of the specified host will be "
         "removed. If a service has multiple downtimes then all will be removed",

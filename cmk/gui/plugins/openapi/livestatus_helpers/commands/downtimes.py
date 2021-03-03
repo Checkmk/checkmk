@@ -33,6 +33,10 @@ RecurMode = Literal[
 ]  # yapf: disable
 
 
+class QueryException(Exception):
+    pass
+
+
 def del_host_downtime(connection, downtime_id: int):
     """Delete a host downtime.
 
@@ -112,9 +116,11 @@ def schedule_services_downtimes_with_query(
         [Services.description, Services.host_name],
         query,
     )
-    for host_name, service_description in [
-        (row['host_name'], row['description']) for row in q.iterate(connection)
-    ]:
+    result = [(row['host_name'], row['description']) for row in q.iterate(connection)]
+    if not result:
+        raise QueryException
+
+    for host_name, service_description in result:
         if not comment:
             downtime_comment = f"Downtime for service {service_description}@{host_name}"
         else:
@@ -426,6 +432,9 @@ def schedule_hosts_downtimes_with_query(
 
     q = Query([Hosts.name]).filter(query)
     hosts = [row['name'] for row in q.iterate(connection)]
+    if not hosts:
+        raise QueryException
+
     if not comment:
         comment = f"Downtime for hosts {', '.join(hosts)}"
 

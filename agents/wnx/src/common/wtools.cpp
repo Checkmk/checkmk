@@ -52,7 +52,8 @@ void AppRunner::kill() {
     auto proc_id = process_id_.exchange(0);
     if (proc_id == 0) {
         XLOG::d(
-            "Attempt to kill process which is not started or already killed");
+            "Attempt to kill process which is not started or already killed: '{}'",
+            wtools::ConvertToUTF8(getCmdLine()));
         return;
     }
 

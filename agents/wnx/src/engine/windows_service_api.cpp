@@ -4,6 +4,7 @@
 
 #include "windows_service_api.h"  // windows api abstracted
 
+#include <psapi.h>
 #include <shlobj_core.h>
 
 #include <chrono>
@@ -946,6 +947,65 @@ void ProcessFirewallConfiguration(std::wstring_view app_name) {
     }
 }
 
+namespace {
+std::wstring GetProcessPath(uint32_t pid) noexcept {
+    HANDLE h =
+        ::OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (h == nullptr) return {};
+    ON_OUT_OF_SCOPE(::CloseHandle(h));
+
+    wchar_t buffer[MAX_PATH];
+    if (::GetModuleFileNameEx(h, nullptr, buffer, MAX_PATH) != 0) return buffer;
+
+    return {};
+}
+
+int KillProcessesByDir(const std::filesystem::path& dir) noexcept {
+    constexpr size_t minimum_path_len = 12;  // safety
+
+    if (dir.empty()) return -1;
+
+    if (dir.u8string().size() < minimum_path_len) return -1;
+
+    int killed_count = 0;
+
+    wtools::ScanProcessList([dir, &killed_count, minimum_path_len](
+                                const PROCESSENTRY32W& entry) -> bool {
+        namespace fs = std::filesystem;
+        auto pid = entry.th32ProcessID;
+        auto exe = GetProcessPath(pid);
+        if (exe.length() < minimum_path_len) return true;  // skip short path
+
+        fs::path p{exe};
+
+        auto shift = p.lexically_relative(dir).u8string();
+        if (!shift.empty() && shift[0] != '.') {
+            XLOG::l.i("Killing process '{}'", p.u8string());
+            wtools::KillProcessUnsafe(pid, 99);
+            killed_count++;
+        }
+        return true;  // continue, we want to scan all process in the system
+    });
+
+    return killed_count;
+}
+
+void KillProcessesInUserFolder() {
+    std::filesystem::path user_dir{cfg::GetUserDir()};
+    std::error_code ec;
+    if (user_dir.empty() ||
+        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
+        auto killed_processes_count = KillProcessesByDir(user_dir);
+        XLOG::l.i("Killed [{}] processes from the user folder",
+                  killed_processes_count);
+    } else {
+        XLOG::l.i("Kill isn't possible, the path '{}' looks as bad",
+                  user_dir.u8string());
+    }
+}
+
+}  // namespace
+
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
@@ -976,10 +1036,12 @@ int ServiceAsService(
                                           // itself or from outside
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
+                    KillProcessesInUserFolder();
                     XLOG::l.i("Service is stopped normally");
                     return 0;
 
                 case wtools::ServiceController::StopType::fail:
+                    KillProcessesInUserFolder();
                     XLOG::l.i("Service is stopped due to abnormal situation");
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:

@@ -687,13 +687,14 @@ textarea,
 div.snapin textarea,
 #mk_side_search_field,
 .tagify__input {
-  height: auto;
+  height: $input-field-height;
   padding: 3px 6px;
   color: $font-color;
   background-color: $inpage-highlight-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
+  box-sizing: border-box;
 }
 
 span.select2 .select2-selection {
@@ -730,6 +731,7 @@ input[type="checkbox"] {
 @mixin button-mixin {
   display: inline-block;
   width: auto;
+  height: $input-field-height;
   margin-top: 8px;
   margin-right: 8px;
   margin-bottom: 8px;
@@ -739,6 +741,7 @@ input[type="checkbox"] {
   color: $input-button-color;
   background-color: $input-button-bg-color;
   box-shadow: none;
+  box-sizing: border-box;
 
   &:hover,
   &:active {
@@ -905,16 +908,9 @@ table.nform {
     }
   }
 
-  > tbody > tr td {
-    color: $primary-font-color;
-  }
-
   > tbody > tr > td {
-    vertical-align: middle;
-
-    &.simple {
-      line-height: 20px;
-    }
+    padding-bottom: $spacing-half;
+    vertical-align: top;
   }
 
   tr td.legend {
@@ -923,9 +919,8 @@ table.nform {
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
-    line-height: 28px;
     text-align: left;
-    vertical-align: baseline;
+    vertical-align: top;
     overflow-wrap: break-word;
 
     div.title {
@@ -933,18 +928,14 @@ table.nform {
       max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
-      font-weight: $font-weight-bold;
       white-space: nowrap;
+      letter-spacing: $letter-spacing-default;
     }
 
     div.checkbox {
       float: right;
       margin-top: 3px;
     }
-  }
-
-  td.legend.simple {
-    padding-top: 5px;
   }
 
   &.narrow td.legend {
@@ -955,16 +946,8 @@ table.nform {
     padding-right: 10px;
     padding-left: 10px;
 
-    &.simple {
-      padding-bottom: 0;
-    }
-
     span.checkbox {
       display: inline-block;
-
-      &:not(first-of-type) {
-        margin-top: 4px;
-      }
     }
   }
 
@@ -1018,7 +1001,7 @@ table.nform {
   }
 
   .listchoice td {
-    height: 24px;
+    height: $input-field-height;
     vertical-align: middle;
   }
 
@@ -1030,8 +1013,8 @@ table.nform {
     border-spacing: 4px;
   }
 
-  tbody tr:nth-child(1) td {
-    padding-top: 4px;
+  > tbody > tr:nth-child(1) > td {
+    padding-top: $spacing-half;
   }
 
   tr td.legend {
@@ -1059,6 +1042,24 @@ table.nform {
         max-width: 420px;
       }
     }
+  }
+
+  span.select2-container {
+    margin: $input-field-margin;
+    vertical-align: top;
+  }
+
+  input {
+    margin: $input-field-margin;
+    vertical-align: initial;
+  }
+
+  .vs_floating_text {
+    display: inline-block;
+    height: $input-field-height;
+    box-sizing: border-box;
+    margin: $input-field-margin;
+    line-height: $input-field-height;
   }
 }
 

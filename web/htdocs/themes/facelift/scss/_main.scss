@@ -288,6 +288,7 @@ input.button.hot {
   margin-left: 5px;
   overflow: hidden;
   color: rgba($font-color, 0.2);
+  font-weight: $font-weight-default;
 
   &.required::before {
     color: $success;
@@ -587,6 +588,7 @@ td > div.error {
 
 table.dictionary {
   width: 100%;
+  border-collapse: collapse;
 
   b.header {
     font-size: $font-size-small;
@@ -615,6 +617,10 @@ table.dictionary {
     div.help {
       white-space: normal;
     }
+
+    > span {
+      margin: $input-field-margin;
+    }
   }
 }
 
@@ -633,8 +639,8 @@ td.dictleft div.dictelement {
 
   &.indent {
     padding-left: 10px;
-    margin-left: 8px;
-    border-left: 2px solid rgb(204, 204, 204);
+    margin-left: 6px;
+    border-left: 2px dotted rgba($font-color, 0.5);
 
     ul {
       margin-top: 1px;
@@ -656,7 +662,7 @@ table.vs_dict_text {
 }
 
 table.valuespec_tuple {
-  border-spacing: 2px;
+  border-collapse: collapse;
 
   &.horizontal tr:nth-child(1) td {
     padding-top: 0; // override nform default
@@ -726,10 +732,27 @@ table.valuespec_listof {
   .unused {
     display: none;
   }
+
+  tr:first-child > td {
+    &.vlof_buttons,
+    &.vlof_content {
+      padding-top: 0;
+    }
+
+    &.vlof_buttons {
+      padding-bottom: $spacing-half;
+    }
+  }
 }
 
-div.valuespec_listof.floating > table > tbody > tr > td:first-child {
-  vertical-align: top;
+div.valuespec_listof {
+  table {
+    border-collapse: collapse;
+  }
+
+  &.floating > table > tbody > tr > td:first-child {
+    vertical-align: top;
+  }
 }
 
 div.valuespec_listof_floating_container {
@@ -836,18 +859,11 @@ textarea.tt {
   font-family: monospace;
 }
 
-div.listofstrings {
+div.listofstrings.horizontal {
+  clear: left;
+
   > div {
-    margin-bottom: 2px;
-  }
-
-  &.horizontal {
-    clear: left;
-
-    > div {
-      float: left;
-      margin-right: 2px;
-    }
+    float: left;
   }
 }
 
@@ -860,13 +876,21 @@ table.listchoice {
     margin: 0;
 
     span.checkbox {
-      height: 10px;
+      height: $input-field-height;
     }
 
     input[type="checkbox"] {
       height: 12px;
       margin: 0;
     }
+  }
+}
+
+table.alternative {
+  border-collapse: collapse;
+
+  td:first-child {
+    padding-right: 0.5 * $spacing;
   }
 }
 
@@ -901,7 +925,7 @@ div#hover_menu {
      on the pages. In this case it was the perfometer which had 30. */
   z-index: 50;
   width: auto;
-  color: rgb(0, 0, 0);
+  color: $font-color;
 
   div.error,
   div.message {
@@ -1200,7 +1224,7 @@ table.modifydowntimes > tbody > tr {
 }
 
 .select2-container .select2-selection--single {
-  height: 23px;
+  height: $input-field-height;
   border: none;
 }
 
@@ -1213,7 +1237,7 @@ table.modifydowntimes > tbody > tr {
     border-radius: 4px;
 
     .select2-selection__rendered {
-      line-height: 23px;
+      line-height: $input-field-height;
       color: $select2-rendered-color;
     }
 

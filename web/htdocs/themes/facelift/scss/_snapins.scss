@@ -94,7 +94,7 @@ table.hostmatrix {
 /*
  * Master control snapin
  */
-div.snapin table.master_control {
+table.master_control {
   width: 100%;
   margin: 0;
   border-spacing: 0;
@@ -123,7 +123,6 @@ div.snapin table.master_control {
     &.left {
       display: inline-block;
       font-weight: $font-weight-default;
-      line-height: 22px;
       letter-spacing: $letter-spacing-table;
       text-align: left;
 
@@ -132,13 +131,11 @@ div.snapin table.master_control {
         text-align: left;
       }
     }
-
-    /* TODO: Reproduce this html element */
-    img.iconbutton {
-      width: 60px;
-      height: 16px;
-    }
   }
+}
+
+div#snapin_master_control div.foldable:not(:last-child) {
+  margin-bottom: 4px;
 }
 
 /* Styles shared/inherited by different performance tables */
@@ -328,7 +325,7 @@ table.tacticaloverview {
   }
 
   td {
-    height: 24px;
+    height: $input-field-height;
     text-align: right;
     background: $tactical-overview-td-bg-color;
     border-radius: $popup-filters-border-radius;

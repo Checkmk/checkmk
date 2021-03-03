@@ -361,7 +361,7 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_content {
-    padding: 8px 0;
+    padding: $spacing-half 0 0;
     vertical-align: top;
 
     .valuespec_tuple {
@@ -377,7 +377,7 @@ table.nform table.valuespec_listof {
   .vlof_buttons {
     width: 44px;
     min-width: 44px;
-    padding-right: 8px;
+    padding-right: $spacing-half;
     text-align: center;
     vertical-align: middle;
 
@@ -387,7 +387,7 @@ table.nform table.valuespec_listof {
     }
 
     a:not(:last-child) {
-      margin-right: 4px;
+      margin-right: $spacing-half;
     }
   }
 }

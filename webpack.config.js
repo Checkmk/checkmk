@@ -4,7 +4,7 @@
 
 const path = require("path");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
-const TerserPlugin = require('terser-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 module.exports = {
@@ -47,6 +47,7 @@ module.exports = {
             path.resolve(__dirname, "web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/license_usage"),
         ],

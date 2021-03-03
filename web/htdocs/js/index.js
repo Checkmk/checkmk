@@ -44,9 +44,10 @@ import * as page_menu from "page_menu";
 
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
+try {
+    require("cmk_figures_plugins_cee");
+} catch (e) {}
 import * as graphs from "graphs";
-
-import * as cmk_tabs from "cmk_tabs";
 
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
@@ -153,7 +154,6 @@ export const cmk_export = {
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
         figures: cmk_figures,
-        tabs: cmk_tabs,
         ntop: {
             host_details: ntop_host_details,
             alerts: ntop_alerts,

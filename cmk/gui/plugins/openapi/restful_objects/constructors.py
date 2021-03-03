@@ -86,6 +86,7 @@ def link_rel(
     profile: Optional[str] = None,
     title: Optional[str] = None,
     parameters: Optional[Dict[str, str]] = None,
+    body_params: Optional[Dict[str, str]] = None,
 ) -> LinkType:
     """Link to a separate entity
 
@@ -107,6 +108,9 @@ def link_rel(
 
         title:
             (Optional) A pretty printed string for UIs to render.
+
+        body_params:
+            (Optional) A dict of values which shall be sent as body paramaters.
 
         parameters:
             (Optional) Parameters for the rel-value. e.g. rel='foo', parameters={'baz': 'bar'}
@@ -142,6 +146,8 @@ def link_rel(
         'type': expand_rel(content_type, content_type_params),
         'domainType': 'link',
     }
+    if body_params is not None:
+        link_obj['body_params'] = body_params
     if title is not None:
         link_obj['title'] = title
     return link_obj

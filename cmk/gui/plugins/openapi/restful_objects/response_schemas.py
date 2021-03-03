@@ -75,7 +75,7 @@ class LinkSchema(BaseSchema):
         example="GET",
     )
     type = fields.String(
-        description="The media type that the linked resource will return",
+        description="The content-type that the linked resource will return",
         required=True,
         example="application/json",
     )
@@ -85,10 +85,10 @@ class LinkSchema(BaseSchema):
         allow_none=True,
         example="The object itself",
     )
-    arguments = fields.Dict(
-        description=("map that may be used as the basis for any data (arguments or properties) "
-                     "required to follow the link."),
-        allow_none=True,
+    body_params = fields.Dict(
+        description=("A map of values that shall be sent in the request body. If this is present,"
+                     "the request has to be sent with a content-type of 'application/json'."),
+        required=False,
     )
 
 

@@ -1,0 +1,17 @@
+Title: Activate changes: Failed to report "locked site" state
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614758027
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b8
+
+The activate changes site failed to report the state of the activation when
+another activation is currently running on a site while another activation was
+started.
+
+In this case the activation background job failed with an error like "raise
+Exception("start time not set")". Instead of this message the error is now
+shown to the user as activation details message.

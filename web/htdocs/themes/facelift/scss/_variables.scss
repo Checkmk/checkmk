@@ -24,21 +24,31 @@ $grey-6: rgb(40, 40, 40);
 $grey-7: rgb(33, 33, 33);
 $shadow: rgba(33, 33, 33, 0.35);
 $darkgrey: rgb(131, 131, 131); // dark grey
-$yellow: rgb(255, 215, 3); // yellow
+$yellow: rgb(255, 208, 0); // yellow
 
 $lightgrey: $grey-1; // light grey
 
+// NOTE: These helper variables are only used in the light theme
+// right now. We should use the same approach in the dark theme and
+// nuke all colors like $navbar-color that use these helper variables.
+$ux-theme-0: rgb(249, 249, 255); // v = 100
+$ux-theme-1: rgb(245, 245, 251); // v = 98.54
+$ux-theme-2: rgb(239, 239, 245); // v = 96
+$ux-theme-3: rgb(235, 235, 241); // v = 94.5
+$ux-theme-4: rgb(232, 232, 238); // v = 93.3
+$ux-theme-5: rgb(224, 224, 228); // v = 90.1
+
 // UX colors
-$navbar-color: rgb(240, 241, 243);
-$bg-color: rgb(252, 252, 254);
-$base-color: rgb(244, 244, 248);
-$headline-color: rgb(232, 232, 238);
-$table-highlight-color: rgb(227, 229, 231);
-$img-color: rgb(80, 88, 98);
-$inpage-highlight-color: rgb(224, 230, 235);
+$navbar-color: $ux-theme-2;
+$bg-color: $ux-theme-0;
+$base-color: $ux-theme-1;
+$headline-color: $ux-theme-4;
+$table-highlight-color: $ux-theme-5;
+$inpage-highlight-color: $ux-theme-5;
 
 $font-color: $grey-4;
-$font-color-light: rgb(230, 230, 230); // light grey
+$font-color-disabled: rgb(124, 124, 128);
+$font-color-light: $ux-theme-4;
 $font-color-sidebar: $font-color;
 $color-background: $bg-color;
 
@@ -190,10 +200,9 @@ $toggle-switch-width: 30px;
 $toggle-switch-font-weight: 700;
 
 $toggle-button-off-border: null;
-$toggle-button-down-bg-color: $font-color-light;
+$toggle-button-down-bg-color: $ux-theme-4;
 $toggle-button-down-border-color: $button-border;
 $toggle-button-down-hover-bg-color: $button-border;
-$toggle-button-down-hover-border-color: rgb(204, 204, 204);
 $toggle-button-search-img-filter: null;
 
 $success-bg-color: rgb(157, 190, 205);
@@ -205,18 +214,18 @@ $success-alert-border-color: $color-state-success-border;
 
 $data-container-bg-color: null;
 
-$input-button-bg-color: $headline-color;
+$input-button-bg-color: $ux-theme-5;
 $input-button-hover-bg-color: $inpage-highlight-color;
 $input-button-color: $grey-5;
 
-$odd-tr-bg-color: rgb(235, 235, 240);
-$even-tr-bg-color: rgb(245, 246, 249);
+$odd-tr-bg-color: $ux-theme-3;
+$even-tr-bg-color: $ux-theme-1;
 
 $tr-data-border-bottom: null;
 
 $floatfilter-bg-color: rgba($white, 0.2);
 
-$select2-search-field-color: rgb(198, 199, 200);
+$select2-search-field-color: $ux-theme-3;
 $select2-border-color: $button-border;
 $select2-rendered-color: none;
 $select2-search-field-border: none;
@@ -259,7 +268,7 @@ $wato-a-border: null;
 $wato-subtitle-color: $darkgrey;
 
 $footnote-link-color: rgba($font-color, 0.8);
-$footnote-bg-color: rgb(224, 230, 235);
+$footnote-bg-color: $ux-theme-5;
 
 $host-diag-success-bg-color: rgb(238, 255, 238);
 $host-diag-failed-bg-color: rgb(255, 238, 238);
@@ -269,7 +278,7 @@ $wato-inherited-color: rgb(68, 68, 68);
 $hot-bg-color: rgb(255, 160, 66);
 $hot-font-color: $grey-5;
 
-$input-hover-bg-color: rgb(237, 236, 235);
+$input-hover-bg-color: $ux-theme-4;
 
 $data-th-sort-hover-bg-color: inherit;
 
@@ -407,7 +416,7 @@ $globalvars-modified-border-color: rgb(204, 221, 255);
 $globalvars-modified-box-shadow: 3px 3px 5px rgb(238, 238, 238) inset;
 $globalvars-modified-globally-box-shadow: 3px 3px 5px rgb(139, 199, 229) inset;
 
-$dashlet-inner-bg-color: rgb(245, 246, 249);
+$dashlet-inner-bg-color: $ux-theme-1;
 
 $states-font-color: null;
 $statep-font-color: $white;
@@ -429,11 +438,10 @@ $scatterdot-hilite-color: rgb(0, 185, 255);
 $page-header-height: 58px;
 $popup-shadow-color: rgba(255, 255, 255, 0.2);
 $button-font-color-default: $font-color;
-$button-inactive-filter: grayscale(100%) brightness(140%);
 $button-bg-color-default: $inpage-highlight-color;
-$button-bg-color-suggestions: rgb(232, 232, 238);
+$button-bg-color-suggestions: $ux-theme-4;
 $navigation-bg-color: $navbar-color;
-$page-menu-bg-color: rgb(232, 232, 238);
+$page-menu-bg-color: $ux-theme-4;
 $snapin-bg-color: $navbar-color;
 $sidebar-border-color: rgba(51, 51, 51, 0.2);
 $form-font-color: $font-color;
@@ -441,7 +449,7 @@ $filter-group-title-font-color: $black;
 $popup-filters-border-radius: 2px;
 $popup-trigger-active-bg-color: null;
 $tactical-overview-th-font-color: rgba($font-color, 0.8);
-$tactical-overview-td-bg-color: rgb(224, 230, 235);
+$tactical-overview-td-bg-color: $ux-theme-5;
 $server-time-div-bg-color: $sidebar-border-color;
 $snapin-heading-border-color: rgba($font-color-sidebar, 0.2);
 $snapin-description-font-color: $font-color;
@@ -455,7 +463,7 @@ $wato-h3-font-color: $font-color;
 $megamenu-navbar-height: 60px;
 $megamenu-spacing-bottom: 20px;
 $log-output-color: $bg-color;
-$sidebar-input-field-bg-color: rgb(224, 230, 235);
+$sidebar-input-field-bg-color: $ux-theme-5;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
 $dashlet-anchor-size-slim: 20px;
@@ -467,12 +475,12 @@ $dashlet-resize-handle-width: 32px;
 $dashlet-resize-handle-height: 16px;
 $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
-$hexagon-critical-color: rgb(255, 50, 50);
+$hexagon-critical-color: $danger;
 $hexagon-unknown-color: rgb(255, 136, 0);
-$hexagon-warning-color: rgb(255, 254, 68);
+$hexagon-warning-color: $color-state-1-background;
 $hexagon-downtime-color: rgb(60, 194, 255);
 $hexagon-host-down-color: rgb(16, 99, 176);
-$hexagon-ok-color: rgb(232, 232, 238);
+$hexagon-ok-color: $ux-theme-4;
 $hexagon-ok-fill-opacity: 0.4;
 $hexagon-ok-stroke-color: rgb(210, 212, 214);
 $hexagon-ok-stroke-opacity: 1;

@@ -73,6 +73,7 @@ export class HostStats extends cmk_figures.FigureBase {
 
         let a = rows.selectAll("td a").data(d => [
             {text: d.count, url: d.url, css_class: "count " + d.css_class},
+            {css_class: "box " + d.css_class, url: d.url},
             {text: d.title, url: d.url, css_class: "text"},
         ]);
         a.join(enter => enter.append("td").append("a"))

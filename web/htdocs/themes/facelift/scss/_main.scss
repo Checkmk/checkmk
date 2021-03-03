@@ -176,6 +176,7 @@ input.button:not([type="password"]) {
     &,
     &:hover,
     &:active {
+      color: $font-color-disabled;
       cursor: initial;
       background-color: $input-button-hover-bg-color;
       filter: grayscale(80%);
@@ -274,8 +275,7 @@ input.button.hot {
 .dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgba($font-color, 0.2);
-  font-weight: $font-weight-default;
+  color: rgba($font-color, 0.4);
 
   &.required::before {
     color: $success;

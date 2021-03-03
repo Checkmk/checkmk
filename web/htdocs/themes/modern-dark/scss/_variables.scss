@@ -34,10 +34,10 @@ $bg-color: rgb(28, 34, 40);
 $base-color: rgb(32, 39, 46);
 $headline-color: rgb(38, 47, 56);
 $table-highlight-color: rgb(38, 45, 52);
-$img-color: $white;
 $inpage-highlight-color: rgb(48, 57, 70);
 
 $font-color: $white;
+$font-color-disabled: rgb(124, 124, 128);
 $font-color-light: $lightgrey; // light grey
 $font-color-sidebar: $white;
 $color-background: $bg-color;
@@ -193,7 +193,6 @@ $toggle-button-off-border: 1px solid $grey-7;
 $toggle-button-down-bg-color: $grey-3;
 $toggle-button-down-border-color: null;
 $toggle-button-down-hover-bg-color: lighten($grey-3, 10%);
-$toggle-button-down-hover-border-color: null;
 $toggle-button-search-img-filter: invert(20%);
 
 $success-bg-color: $bg-color;
@@ -428,7 +427,6 @@ $scatterdot-hilite-color: $yellow;
 $page-header-height: 58px;
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
-$button-inactive-filter: grayscale(80%);
 $button-bg-color-default: $input-button-hover-bg-color;
 $button-bg-color-suggestions: $navbar-color;
 $navigation-bg-color: $navbar-color;

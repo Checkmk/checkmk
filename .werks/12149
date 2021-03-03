@@ -24,7 +24,7 @@ This is realized by the following mechanism:
 <li>For all builtin Python 3 agent plugins, an additional Python 2 plugin is available,
 that ends with <tt>_2.py</tt>. E.g., you will find a Python 2 agent plugin named
 <tt>apache_status_2.py</tt> right next to it's Python 3 counterpart
-<tt>apache_status.py</tt></li>.
+<tt>apache_status.py</tt>.</li>
 <li>When deploying the agent plugin via agent bakery, both files will be deployed
 via the agent package. The UNIX agent will then automatically decide which file
 will be executed. If there is a Python installation >= 3.4 available on the system,
@@ -47,7 +47,7 @@ host's Python installation differs from one of the above mentioned commands.
 
 <h3>New error communication</h3>
 If the Python based plugins can't be executed on a host system, either because there is no
-suitable Python installation available, or the manually configured command doesn't
+suitable Python installation available, or the configured command doesn't
 exist, you will be noticed via the Check_MK service of the host, that will show
 a suitable error message and yield a <tt>WARN</tt> state.
 This also means that the Checkmk agent package installation will no longer fail
@@ -66,7 +66,7 @@ will silently be executed with a different interpreter as before. If you still w
 configure the above mentioned rule (if deploying via agent bakery), or explicitly deploy the
 <tt>_2.py</tt> version.</li>
 <li>When deploying your own Python based agent plugins, you have to keep in mind that a Python 3
-plugin has to end with <tt>.py</tt> and a Python 2 plugin has to end with <tt>_.py</tt>.
+plugin has to end with <tt>.py</tt> and a Python 2 plugin has to end with <tt>_2.py</tt>.
 In particular, the shebang (if any) will be ignored. If you explicitly wish to disable this
 mechanism, you can still write your Python based plugins as an executable script without a
 <tt>.py</tt> suffix (Of course, the shebang will be used, then).</li>

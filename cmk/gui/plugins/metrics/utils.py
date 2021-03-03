@@ -1048,7 +1048,9 @@ def _mix_colors(a, b):
 
 
 def render_color_icon(color):
-    return html.render_div('', class_="color", style="background-color: %s" % color)
+    return html.render_div('',
+                           class_="color",
+                           style="background-color: %s4c; border-color: %s;" % (color, color))
 
 
 @MemoizeCache

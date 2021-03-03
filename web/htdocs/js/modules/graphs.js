@@ -605,12 +605,6 @@ function update_graph_styling(graph, container) {
                 "border-right": "1px dotted " + graph.render_options.foreground_color,
             },
         },
-        {
-            selector: "div.color",
-            attrs: {
-                border: "1px solid " + graph.render_options.foreground_color,
-            },
-        },
     ];
 
     var css_text = "";
@@ -1244,27 +1238,24 @@ function render_graph_hover_popup(graph, event, popup_data) {
     time.innerText = popup_data.rendered_hover_time;
     popup_container.appendChild(time);
 
-    var entries = document.createElement("div");
+    var entries = document.createElement("table");
     utils.add_class(entries, "entries");
     popup_container.appendChild(entries);
 
-    for (var i = 0, curve = null; i < popup_data.curve_values.length; i++) {
-        curve = popup_data.curve_values[i];
-
-        var entry = document.createElement("div");
-
-        var color = document.createElement("div");
+    popup_data.curve_values.forEach(curve => {
+        let row = entries.insertRow();
+        let title = row.insertCell(0);
+        let color = document.createElement("div");
         utils.add_class(color, "color");
-        color.style.backgroundColor = curve.color;
-        entry.appendChild(color);
+        color.style.backgroundColor = curve.color + "4c";
+        color.style.borderColor = curve.color;
+        title.appendChild(color);
+        title.appendChild(document.createTextNode(curve.title + ": "));
 
-        var value = document.createElement("span");
+        let value = row.insertCell(1);
         utils.add_class(value, "value");
         value.innerText = curve.rendered_value[1];
-        entry.appendChild(value);
-
-        entries.appendChild(entry);
-    }
+    });
 
     hover.update_content(wrapper.innerHTML, event);
 }

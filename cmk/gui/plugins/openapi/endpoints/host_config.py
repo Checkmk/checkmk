@@ -145,7 +145,12 @@ def host_collection(hosts) -> Response:
 @Endpoint(constructors.object_property_href('host_config', '{host_name}', 'nodes'),
           '.../property',
           method='put',
-          path_params=[HOST_NAME],
+          path_params=[{
+              'host_name': fields.HostField(
+                  description="A cluster host.",
+                  should_be_cluster=True,
+              ),
+          }],
           etag='both',
           request_schema=request_schemas.UpdateNodes,
           response_schema=response_schemas.ObjectProperty)
@@ -154,15 +159,7 @@ def update_nodes(params):
     host_name = params['host_name']
     body = params['body']
     nodes = body['nodes']
-    check_hostname(host_name, should_exist=True)
-    for node in nodes:
-        check_hostname(node, should_exist=True)
-
     host: watolib.CREHost = watolib.Host.host(host_name)
-    if not host.is_cluster():
-        return problem(status=400,
-                       title="Trying to change nodes of a regular host.",
-                       detail="nodes can only be changed on cluster hosts.")
     constructors.require_etag(constructors.etag_of_obj(host))
     host.edit(host.attributes(), nodes)
 

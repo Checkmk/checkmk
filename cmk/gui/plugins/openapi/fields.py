@@ -829,6 +829,8 @@ class HostField(String):
                                'Activate the configuration?',
         'should_not_be_monitored': 'Host {host_name!r} exists, but should not be monitored. '
                                    'Activate the configuration?',
+        'should_be_cluster': 'Host {host_name!r} is not a cluster host, but needs to be.',
+        'should_not_be_cluster': "Host {host_name!r} may not be a cluster host, but is.",
         'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
     }
 
@@ -840,10 +842,15 @@ class HostField(String):
         validate=None,
         should_exist: Optional[bool] = True,
         should_be_monitored: Optional[bool] = None,
+        should_be_cluster: Optional[bool] = None,
         **kwargs,
     ):
+        if not should_exist and should_be_cluster is not None:
+            raise ValueError("Can't be missing and checking for cluster status!")
+
         self._should_exist = should_exist
         self._should_be_monitored = should_be_monitored
+        self._should_be_cluster = should_be_cluster
         super().__init__(
             example=example,
             pattern=pattern,
@@ -867,6 +874,14 @@ class HostField(String):
 
             if not self._should_exist and host:
                 raise self.make_error("should_not_exist", host_name=value)
+
+        if self._should_be_cluster is not None:
+            host = watolib.Host.host(value)
+            if self._should_be_cluster and not host.is_cluster():
+                raise self.make_error("should_be_cluster", host_name=value)
+
+            if not self._should_be_cluster and host.is_cluster():
+                raise self.make_error("should_not_be_cluster", host_name=value)
 
         if self._should_be_monitored is not None:
             monitored = host_is_monitored(value)

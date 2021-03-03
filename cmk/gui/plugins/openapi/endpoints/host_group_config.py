@@ -92,8 +92,6 @@ def list_groups(params):
 def delete(params):
     """Delete a host group"""
     name = params['name']
-    group = fetch_group(name, "host")
-    constructors.require_etag(constructors.etag_of_dict(group))
     watolib.delete_group(name, 'host')
     return Response(status=204)
 
@@ -105,7 +103,6 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete host groups"""
-    # TODO: etag implementation
     body = params['body']
     entries = body['entries']
     for group_name in entries:
@@ -115,7 +112,7 @@ def bulk_delete(params):
             "host",
             status=400,
             message=message,
-        )  # TODO: etag check should be done here
+        )
 
     for group_name in entries:
         watolib.delete_group(group_name, 'host')

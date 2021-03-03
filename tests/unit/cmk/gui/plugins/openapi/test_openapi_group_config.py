@@ -68,7 +68,6 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     wsgi_app.follow_link(
         resp,
         '.../delete',
-        headers={'If-Match': resp.headers['ETag']},
         status=204,
         content_type='application/json',
     )

@@ -825,7 +825,10 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
 
 
 def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
-    linked_dashboards = ("main", "problems", "checkmk")
+    if cmk_version.is_raw_edition():
+        linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
+    else:
+        linked_dashboards = ["main", "problems", "checkmk"]
 
     yield PageMenuTopic(
         title=_("Related Dashboards"),
@@ -930,7 +933,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
 
 def _dashboard_other_entries(
     name: str,
-    linked_dashboards: Tuple[str, str, str],
+    linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
     for dashboard_name, dashboard in get_permitted_dashboards().items():
         if name in linked_dashboards and dashboard_name in linked_dashboards:
@@ -952,15 +955,13 @@ def _dashboard_other_entries(
 
 def _dashboard_related_entries(
     name: str,
-    linked_dashboards: Tuple[str, str, str],
+    linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
     if name not in linked_dashboards:
         return  # only the three main dashboards are related
 
     dashboards = get_permitted_dashboards()
     for entry_name in linked_dashboards:
-        if entry_name == name:
-            continue
         if entry_name not in dashboards:
             continue
         dashboard = dashboards[entry_name]
@@ -975,6 +976,7 @@ def _dashboard_related_entries(
                 )),
             is_shortcut=True,
             is_suggested=False,
+            is_enabled=name != entry_name,
         )
 
 

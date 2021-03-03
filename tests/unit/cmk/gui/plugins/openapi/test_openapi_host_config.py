@@ -121,7 +121,6 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         resp,
         '.../delete',
         status=204,
-        headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
     )
 

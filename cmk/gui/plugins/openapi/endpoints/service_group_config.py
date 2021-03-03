@@ -112,8 +112,6 @@ def show_group(params):
 def delete(params):
     """Delete a service group"""
     name = params['name']
-    group = fetch_group(name, "service")
-    constructors.require_etag(constructors.etag_of_dict(group))
     watolib.delete_group(name, group_type='service')
     return Response(status=204)
 

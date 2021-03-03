@@ -317,7 +317,6 @@ def delete(params):
     # Parameters can't be validated through marshmallow yet.
     check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(constructors.etag_of_obj(host))
     host.folder().delete_hosts([host.name()])
     return Response(status=204)
 
@@ -329,7 +328,6 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete hosts"""
-    # TODO: require etag checking (409 Response)
     body = params['body']
     for host_name in body['entries']:
         host = watolib.Host.host(host_name)

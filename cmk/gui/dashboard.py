@@ -277,11 +277,21 @@ def load_plugins(force: bool) -> None:
 
     # Declare permissions for all dashboards
     for name, board in builtin_dashboards.items():
+        # Special hack for the "main" dashboard: It contains graphs that are only correct in case
+        # you are permitted on all hosts and services. All elements on the dashboard are filtered by
+        # the individual user permissions. Only the problem graphs are not able to respect these
+        # permissions. To not confuse the users we make the "main" dashboard in the enterprise
+        # editions only visible to the roles that have the "general.see_all" permission.
+        if name == "main" and not cmk_version.is_raw_edition():
+            default_permissions = config.base_roles_with_permission("general.see_all")
+        else:
+            default_permissions = config.builtin_role_ids
+
         declare_permission(
             "dashboard.%s" % name,
             board["title"],
             board.get("description", ""),
-            config.builtin_role_ids,
+            default_permissions,
         )
 
     # Make sure that custom views also have permissions
@@ -950,6 +960,8 @@ def _dashboard_related_entries(
     dashboards = get_permitted_dashboards()
     for entry_name in linked_dashboards:
         if entry_name == name:
+            continue
+        if entry_name not in dashboards:
             continue
         dashboard = dashboards[entry_name]
         yield PageMenuEntry(

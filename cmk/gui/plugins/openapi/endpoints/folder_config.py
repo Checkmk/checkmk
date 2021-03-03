@@ -192,6 +192,11 @@ def move(params):
     '.../collection',
     method='get',
     query_params=[{
+        'parent': fields.FolderField(
+            description="Show all sub-folders of this folder. The default is the root-folder.",
+            example='/servers',
+            missing=watolib.Folder.root_folder,  # because we can't load it too early.
+        ),
         'show_hosts': fields.Boolean(
             description=("When set, all hosts that are stored in each folder will also be shown. "
                          "On large setups this may come at a performance cost, so by default this "
@@ -203,7 +208,7 @@ def move(params):
     response_schema=response_schemas.FolderCollection)
 def list_folders(params):
     """Show all folders"""
-    folders = watolib.Folder.root_folder().subfolders()
+    folders = params['parent'].subfolders()
     return constructors.serve_json(_folders_collection(folders, params['show_hosts']))
 
 

@@ -13,7 +13,7 @@ import threading
 import urllib.parse
 from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Any, NamedTuple, Literal
+from typing import Any, NamedTuple, Literal, Optional, Dict
 from functools import lru_cache
 
 import pytest  # type: ignore[import]
@@ -245,7 +245,7 @@ def with_automation_user(register_builtin_html, load_config):
         yield user
 
 
-def get_link(resp, rel):
+def get_link(resp, rel: str):
     for link in resp.get('links', []):
         if link['rel'].startswith(rel):
             return link
@@ -281,6 +281,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self.password = password
 
     def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
+        print(method, url, args, kw)
         return getattr(self, method.lower())(url, *args, **kw)
 
     def has_link(self, resp: webtest.TestResponse, rel) -> bool:
@@ -292,12 +293,23 @@ class WebTestAppForCMK(webtest.TestApp):
         except KeyError:
             return False
 
-    def follow_link(self, resp: webtest.TestResponse, rel, **kw) -> webtest.TestResponse:
+    def follow_link(
+        self,
+        resp: webtest.TestResponse,
+        rel,
+        json_data: Optional[Dict[str, Any]] = None,
+        **kw,
+    ) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
-        rel = _expand_rel(rel)
+        params = dict(kw)
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
-            link = get_link(resp.json, rel)
-            resp = self.call_method(link.get('method', 'GET').lower(), link['href'], **kw)
+            if json_data is None:
+                json_data = resp.json
+            link = get_link(json_data, _expand_rel(rel))
+            if 'body_params' in link and link['body_params']:
+                params['params'] = json.dumps(link['body_params'])
+                params['content_type'] = 'application/json'
+            resp = self.call_method(link['method'], link['href'], **params)
         return resp
 
     def api_request(self, action, request, output_format='json', **kw):

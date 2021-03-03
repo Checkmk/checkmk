@@ -232,11 +232,20 @@ div#service_container {
     li {
       display: inline-block;
       padding: 0 10px;
-      border-right: 1px solid $white;
+      border-right: 1px solid $font-color;
     }
 
     li:last-child {
       border-right: none;
+    }
+
+    span {
+      padding: 2px;
+    }
+
+    span.changed {
+      color: $success;
+      font-weight: $font-weight-bold;
     }
 
     input.button {

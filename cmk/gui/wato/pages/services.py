@@ -605,21 +605,27 @@ class DiscoveryPageRenderer:
         html.icon("fixall", _("Services/Host labels to fix"))
 
         html.open_ul()
-        html.li(
-            ungettext("Undecided service: %d", "Undecided services: %d", undecided_services) %
-            undecided_services)
-        html.li(
-            ungettext("Vanished service: %d", "Vanished services: %d", vanished_services) %
-            vanished_services)
-        html.li(
-            ungettext("New host label: %d", "New host labels: %d", new_host_labels) %
-            new_host_labels)
-        html.li(
-            ungettext("Vanished host label: %d", "Vanished host labels: %d", vanished_host_labels) %
-            vanished_host_labels)
-        html.li(
-            ungettext("Changed host label: %d", "Changed host labels: %d", changed_host_labels) %
-            changed_host_labels)
+        html.open_li()
+        html.span(ungettext("Undecided service: ", "Undecided services: ", undecided_services))
+        html.span(str(undecided_services), class_="changed" if undecided_services else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Vanished service: ", "Vanished services: ", vanished_services))
+        html.span(str(vanished_services), class_="changed" if vanished_services else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("New host label: ", "New host labels: ", new_host_labels))
+        html.span(str(new_host_labels), class_="changed" if new_host_labels else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Vanished host label: ", "Vanished host labels: ",
+                            vanished_host_labels))
+        html.span(str(vanished_host_labels), class_="changed" if vanished_host_labels else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Changed host label: ", "Changed host labels: ", changed_host_labels))
+        html.span(str(changed_host_labels), class_="changed" if changed_host_labels else "")
+        html.close_li()
         html.close_ul()
 
         html.jsbutton("_fixall",

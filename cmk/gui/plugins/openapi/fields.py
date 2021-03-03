@@ -472,12 +472,11 @@ class FolderField(String):
         **kwargs,
     ):
         if 'description' not in kwargs:
-            kwargs['description'] = (
-                "The folder identifier. This can be a path name or the folder-specific 128 bit "
-                "identifier. This identifier is unique to the folder and stays the same, even if "
-                "the folder has been moved. When identifying a folder by it's path, delimiters can "
-                "be either `~`, `/` or `\\`. Please use the one most appropriate for your "
-                "quoting/escaping needs. A good default choice is `~`.")
+            kwargs['description'] = "The path name of the folder."
+
+        kwargs['description'] += (
+            "\n\nPath delimiters can be either `~`, `/` or `\\`. Please use the one most "
+            "appropriate for your quoting/escaping needs. A good default choice is `~`.")
         super().__init__(pattern=FOLDER_PATTERN, **kwargs)
 
     @classmethod

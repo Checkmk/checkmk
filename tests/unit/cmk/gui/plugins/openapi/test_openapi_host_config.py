@@ -6,7 +6,7 @@
 import json
 
 
-def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls):
+def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automation_calls, with_host):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
@@ -43,7 +43,25 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
     wsgi_app.call_method(
         'put',
         base + "/objects/host_config/bazfoo/properties/nodes",
-        params='{"nodes": []}',
+        params='{"nodes": ["not_existing"]}',
+        status=400,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/bazfoo/properties/nodes",
+        params='{"nodes": ["example.com", "bazfoo"]}',
+        status=400,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'put',
+        base + "/objects/host_config/bazfoo/properties/nodes",
+        params='{"nodes": ["example.com"]}',
         status=200,
         headers={'If-Match': resp.headers['ETag']},
         content_type='application/json',
@@ -54,7 +72,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         base + "/objects/host_config/bazfoo",
         status=200,
     )
-    assert resp.json['extensions']['cluster_nodes'] == []
+    assert resp.json['extensions']['cluster_nodes'] == ['example.com']
 
 
 def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls):

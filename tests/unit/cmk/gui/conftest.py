@@ -391,7 +391,7 @@ def logged_in_wsgi_app(wsgi_app, with_user):
 def with_host(module_wide_request_context, with_user_login, suppress_automation_calls):
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts([
-        (hostname, {}, []) for hostname in hostnames
+        (hostname, {}, None) for hostname in hostnames
     ])
     yield hostnames
     hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
@@ -400,4 +400,3 @@ def with_host(module_wide_request_context, with_user_login, suppress_automation_
 @pytest.fixture(autouse=True)
 def mock__add_extensions_for_license_usage(monkeypatch):
     monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)
-

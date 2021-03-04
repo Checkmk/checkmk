@@ -37,7 +37,7 @@ def mobile_view(d):
         'hidebutton': False,
         'icon': None,
         'public': True,
-        'topic': _('Mobile'),
+        'topic': 'overview',
         'user_sortable': False,
         'play_sounds': False,
         'show_checkboxes': False,
@@ -110,7 +110,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('Search'),
-        'topic': _('Services')
+        'topic': 'overview',
     }),
 
     # View of all current service problems
@@ -154,7 +154,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('Problems (all)'),
-        'topic': _('Services'),
+        'topic': 'problems',
     }),
 
     # View of unhandled service problems
@@ -204,7 +204,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('Problems (unhandled)'),
-        'topic': _('Services'),
+        'topic': 'problems',
     }),
 
     # Service details
@@ -356,7 +356,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Search'),
-        'topic': _('Hosts'),
+        'topic': 'overview',
     }),
 
     #List all host problems
@@ -395,7 +395,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Problems (all)'),
-        'topic': _('Hosts')
+        'topic': 'problems'
     }),
 
     #List unhandled host problems
@@ -433,7 +433,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Problems (unhandled)'),
-        'topic': _('Hosts')
+        'topic': 'problems'
     }),
 
     # All Nagios Events at all
@@ -461,7 +461,7 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': 'Events',
-        'topic': _('Events')
+        'topic': 'history'
     }),
 
     # All Notifications at all
@@ -507,7 +507,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications'),
-        'topic': _('Events')
+        'topic': 'history'
     }),
 
     # All events of a Host
@@ -606,7 +606,7 @@ multisite_builtin_views.update({
         'show_filters': ['host', 'serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of contact'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of Host
@@ -646,7 +646,7 @@ multisite_builtin_views.update({
         'show_filters': ['serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of host & services'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of a service
@@ -685,7 +685,7 @@ multisite_builtin_views.update({
         'show_filters': ['log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Service Notifications'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 })
 

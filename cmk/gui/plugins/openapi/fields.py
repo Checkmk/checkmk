@@ -252,7 +252,7 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
                          if not partial or key in partial)
 
     if isinstance(obj, list):
-        return tuple([_freeze(entry) for entry in obj])
+        return tuple(_freeze(entry) for entry in obj)
 
     return obj
 
@@ -272,7 +272,7 @@ class UniqueFields:
     }
 
     def _verify_unique_schema_entries(self, value, fields):
-        required_fields = tuple([name for name, field in fields.items() if field.required])
+        required_fields = tuple(name for name, field in fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
             # If some fields are required, we only freeze the required fields. This has the effect

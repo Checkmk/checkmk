@@ -1027,7 +1027,7 @@ def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
 
-    return tuple([darken(x, v) for x in rgb])
+    return tuple(darken(x, v) for x in rgb)
 
 
 def lighten_color(rgb, v):
@@ -1035,7 +1035,7 @@ def lighten_color(rgb, v):
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 
-    return tuple([lighten(x, v) for x in rgb])
+    return tuple(lighten(x, v) for x in rgb)
 
 
 def _rgb_to_gray(rgb):
@@ -1044,7 +1044,7 @@ def _rgb_to_gray(rgb):
 
 
 def _mix_colors(a, b):
-    return tuple([(ca + cb) / 2.0 for (ca, cb) in zip(a, b)])
+    return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
 
 
 def render_color_icon(color):

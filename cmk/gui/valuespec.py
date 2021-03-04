@@ -4535,10 +4535,10 @@ class Tuple(ValueSpec):
         return all(vs.allow_empty() for vs in self._elements)
 
     def canonical_value(self):
-        return tuple([x.canonical_value() for x in self._elements])
+        return tuple(x.canonical_value() for x in self._elements)
 
     def default_value(self):
-        return tuple([x.default_value() for x in self._elements])
+        return tuple(x.default_value() for x in self._elements)
 
     def render_input(self, varprefix, value):
         if self._orientation != "float":

@@ -310,7 +310,7 @@ def _create_dict_key(value: Any) -> Hashable:
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     if isinstance(value, dict):
-        return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
+        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
     return value
 
 

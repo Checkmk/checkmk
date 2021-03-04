@@ -86,7 +86,7 @@ def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
 
-    return tuple([darken(x, v) for x in rgb])
+    return tuple(darken(x, v) for x in rgb)
 
 
 # Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
@@ -94,7 +94,7 @@ def lighten_color(rgb, v):
     def lighten(x, v):
         return 1.0 - ((1.0 - x) * (1.0 - v))
 
-    return tuple([lighten(x, v) for x in rgb])
+    return tuple(lighten(x, v) for x in rgb)
 
 
 # All dimensions that the user (caller) uses are in mm. All our internal

@@ -72,7 +72,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
 
 def to_celsius(reading, unit, relative=False):
     if isinstance(reading, tuple):
-        return tuple([to_celsius(x, unit, relative) for x in reading])
+        return tuple(to_celsius(x, unit, relative) for x in reading)
     if unit == "f":
         return fahrenheit_to_celsius(reading, relative)
     if unit == "k":

@@ -146,7 +146,7 @@ def check_aws_s3_latency(item, params, metrics):
         else:
             levels = params.get("levels_seconds")
             if levels is not None:
-                levels = tuple([level * 1e-3 for level in levels])
+                levels = tuple(level * 1e-3 for level in levels)
 
         metric_infos.append({
             'metric_val': metric_val,

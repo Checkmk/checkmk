@@ -899,8 +899,7 @@ class Measurement:
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
-                    averaged = tuple([sum(y) / len(y) for y in zip(*values)
-                                     ])  # fixed: true-division
+                    averaged = tuple(sum(y) / len(y) for y in zip(*values))  # fixed: true-division
                 else:
                     # averages of dict items
                     averaged = {}

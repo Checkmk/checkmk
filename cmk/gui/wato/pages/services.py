@@ -956,6 +956,9 @@ class DiscoveryPageRenderer:
             ]), _("View and edit the parameters for this service"), "rulesets")
 
     def _check_parameters_button(self, table_source, check_type, checkgroup, item, descr):
+        if not checkgroup:
+            return
+
         if table_source == DiscoveryState.MANUAL:
             url = watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),

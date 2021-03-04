@@ -1170,6 +1170,10 @@ table.data tr.data.dcd_log_entries {
   }
 }
 
+.wato div.error pre {
+  white-space: pre-wrap;
+}
+
 /* TODO: Reproduce this html element */
 .wato div.error div.err {
   position: relative;

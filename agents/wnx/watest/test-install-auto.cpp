@@ -75,10 +75,10 @@ public:
         eu_->prepare(L"msi exec", L"x x x", false);
         msi_log_file_ = eu_->getLogFileName();
         temp_script_file_ = eu_->getTempScriptFile();
-        expected_cmd_line_ =
-            fmt::format(LR"("{}" "msi exec" "/i x x x /qn /L*V {}" "{}")",
-                        temp_script_file_.wstring(), msi_log_file_,
-                        script_log_file_.wstring());
+        expected_cmd_line_ = fmt::format(
+            LR"("{}" "msi exec" "/i x x x /qn REBOOT=ReallySuppress /L*V {}" "{}")",
+            temp_script_file_.wstring(), msi_log_file_,
+            script_log_file_.wstring());
     }
 
     // ***************************************************
@@ -165,8 +165,10 @@ TEST(InstallAuto, PrepareExecutionLegacy) {
 
     ExecuteUpdate eu;
     eu.prepare(L"msi-exec", L"xx.msi", false);
-    EXPECT_EQ(eu.getCommand(), fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})",
-                                           eu.getLogFileName()));
+    EXPECT_EQ(
+        eu.getCommand(),
+        fmt::format(LR"(msi-exec /i xx.msi /qn REBOOT=ReallySuppress /L*V {})",
+                    eu.getLogFileName()));
 
     EXPECT_EQ(fs::path(eu.getLogFileName()).filename(),
               fs::path(kMsiLogFileName));
@@ -181,8 +183,10 @@ TEST(InstallAuto, PrepareExecutionFallback) {
     eu.prepare(L"msi-exec", L"xx.msi", true);
     auto msi_log_file = eu.getLogFileName();
     auto command = eu.getCommand();
-    EXPECT_EQ(command,
-              fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})", msi_log_file));
+    EXPECT_EQ(
+        command,
+        fmt::format(LR"(msi-exec /i xx.msi /qn REBOOT=ReallySuppress /L*V {})",
+                    msi_log_file));
 
     EXPECT_EQ(fs::path(msi_log_file).filename().u8string(), kMsiLogFileName);
 }

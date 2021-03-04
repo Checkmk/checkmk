@@ -6068,6 +6068,9 @@ msgstr ""
 msgid "Backend connection errors"
 msgstr "Conexiune Noua"
 
+msgid "Backgroud in status color"
+msgstr ""
+
 msgid "Background Job"
 msgstr ""
 
@@ -9177,12 +9180,6 @@ msgstr ""
 msgid "Color A4"
 msgstr ""
 
-msgid "Color background after SERVICE state"
-msgstr ""
-
-msgid "Color background following it's METRIC THRESHOLDS if available"
-msgstr ""
-
 msgid "Color gradient"
 msgstr ""
 
@@ -9197,17 +9194,14 @@ msgstr ""
 msgid "Color of the scattered dots"
 msgstr "Numarul maxim de mesaje"
 
-msgid "Color value after SERVICE state"
-msgstr ""
-
-msgid "Color value following it's METRIC THRESHOLDS if available"
-msgstr ""
-
 #, fuzzy
 msgid "Colored background"
 msgstr "Sterge Elementul"
 
 msgid "Coloring"
+msgstr ""
+
+msgid "Colorize"
 msgstr ""
 
 msgid "Colorize background if host is down"
@@ -14393,10 +14387,6 @@ msgid "Do not show a summary line"
 msgstr ""
 
 #, fuzzy
-msgid "Do not show any status border"
-msgstr "Atribute personalizate"
-
-#, fuzzy
 msgid "Do not show title"
 msgstr "Atribute personalizate"
 
@@ -14921,12 +14911,6 @@ msgid "Downtimes of host"
 msgstr ""
 
 msgid "Downtimes of service"
-msgstr ""
-
-msgid "Draw a status border when METRICS THRESHOLDS are crossed"
-msgstr ""
-
-msgid "Draw a status border when SERVICE is not OK"
 msgstr ""
 
 msgid "Driver"
@@ -17777,10 +17761,6 @@ msgstr ""
 msgid "Filesystems usage"
 msgstr "Spațiu liber exact"
 
-#, fuzzy
-msgid "Fill color"
-msgstr "sesiuni"
-
 msgid "Filter"
 msgstr ""
 
@@ -17832,6 +17812,10 @@ msgstr ""
 #, fuzzy
 msgid "Filter group (see help)"
 msgstr "Reguli"
+
+#, fuzzy
+msgid "Filter namespaces"
+msgstr "Nume nou"
 
 msgid "Filter pattern (RegExp)"
 msgstr ""
@@ -18090,9 +18074,6 @@ msgid "Folio"
 msgstr ""
 
 msgid "Follow the redirection"
-msgstr ""
-
-msgid "Follow theme default"
 msgstr ""
 
 msgid "Follow, but stay to same IP address"
@@ -19556,6 +19537,14 @@ msgstr ""
 msgid ""
 "Here a maximum severity of the node state can be set. This severity is not "
 "exceeded, even if some of the childs have more severe states."
+msgstr ""
+
+msgid ""
+"Here we will show you a timeseries graph showing you the historical "
+"development of your license usage. To be able to see this graph, you first "
+"have to configure the subscription start, end and sizing in the subscription "
+"settings. Secondly you will have to wait for at least two days after "
+"creating a site or updating to 2.0."
 msgstr ""
 
 msgid ""
@@ -22381,6 +22370,13 @@ msgid ""
 "If you're running local checks on clusters via clustered services rule you "
 "can influence the check result with this rule. You can choose between best "
 "or worst state. Default setting is worst state."
+msgstr ""
+
+msgid ""
+"If your cluster has multiple namespaces, you can specify a list of regex "
+"patterns. Only matching namespaces will be monitored. Note that this "
+"concerns everything which is part of the matching namespaces such as pods "
+"for example."
 msgstr ""
 
 #, fuzzy
@@ -28177,10 +28173,6 @@ msgid ""
 "Editions"
 msgstr ""
 
-#, fuzzy
-msgid "Metric: "
-msgstr "serviciu"
-
 msgid "Metrics"
 msgstr ""
 
@@ -29959,6 +29951,9 @@ msgid ""
 msgstr ""
 
 msgid "No hosts/services found."
+msgstr ""
+
+msgid "No influence on element display"
 msgstr ""
 
 msgid "No information available"
@@ -32273,6 +32268,10 @@ msgid "Other"
 msgstr ""
 
 #, fuzzy
+msgid "Other Dashboards"
+msgstr "rapoarte"
+
+#, fuzzy
 msgid "Other Services"
 msgstr "servicii"
 
@@ -33336,8 +33335,16 @@ msgstr "trei nivele"
 msgid "Percentage of queue length"
 msgstr ""
 
+#, fuzzy
+msgid "Percentage of service problems"
+msgstr "(fără Nivel de serviciu)"
+
 msgid "Percentage of total RAM"
 msgstr ""
+
+#, fuzzy
+msgid "Percentage of total service problems"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Percentage used"
@@ -36015,6 +36022,10 @@ msgstr "sesiuni"
 #, fuzzy
 msgid "Related"
 msgstr "spatiu utilizat"
+
+#, fuzzy
+msgid "Related Dashboards"
+msgstr "rapoarte"
 
 msgid "Related Views"
 msgstr ""
@@ -39776,6 +39787,10 @@ msgstr ""
 msgid "Show separate result for each SLA period"
 msgstr ""
 
+#, fuzzy
+msgid "Show service status"
+msgstr "Statusul Serverului"
+
 #, fuzzy, python-format
 msgid "Show services of host %s"
 msgstr " pentru hostul %s"
@@ -39901,6 +39916,12 @@ msgid "Shows number of alerts grouped for each service."
 msgstr ""
 
 msgid "Shows the Checkmk logo."
+msgstr ""
+
+msgid ""
+"Shows the percantage of services that are not OK in relation to the total "
+"number of services. This dashlet is not respecting the full fillter context "
+"of the dashboard, only the 'site' filter."
 msgstr ""
 
 msgid ""
@@ -41902,10 +41923,6 @@ msgid "Status active checks"
 msgstr "Verificări active"
 
 #, fuzzy
-msgid "Status border"
-msgstr "Întreruperi adhoc"
-
-#, fuzzy
 msgid "Status comments"
 msgstr "Adaugă comentarii"
 
@@ -43200,16 +43217,16 @@ msgstr "testare"
 msgid "Text"
 msgstr ""
 
-#, fuzzy
-msgid "Text color"
-msgstr " pe siteul de monitorizare: "
-
 #, python-format
 msgid "Text from URL %s"
 msgstr ""
 
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr ""
+
+#, fuzzy
+msgid "Text in status color"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Text logfiles (Linux, Windows)"
 msgstr ""
@@ -50981,6 +50998,10 @@ msgid "Unhandled host problems"
 msgstr "Probleme"
 
 #, fuzzy
+msgid "Unhandled problems"
+msgstr "Probleme"
+
+#, fuzzy
 msgid "Unhandled service problems"
 msgstr "Adaugă Excepție"
 
@@ -56424,6 +56445,10 @@ msgstr " pentru hostul %s"
 msgid "all logfiles on all hosts"
 msgstr ""
 
+#, fuzzy
+msgid "all states"
+msgstr "RAID: starea sistemului"
+
 msgid "all users"
 msgstr ""
 
@@ -57497,6 +57522,10 @@ msgid "not"
 msgstr ""
 
 #, fuzzy
+msgid "not OK states"
+msgstr "Conexiuni Active"
+
+#, fuzzy
 msgid "not a contact"
 msgstr "<i>nu este un contact</i>"
 
@@ -58270,6 +58299,22 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Do not show any status border"
+#~ msgstr "Atribute personalizate"
+
+#, fuzzy
+#~ msgid "Fill color"
+#~ msgstr "sesiuni"
+
+#, fuzzy
+#~ msgid "Metric: "
+#~ msgstr "serviciu"
+
+#, fuzzy
+#~ msgid "Status border"
+#~ msgstr "Întreruperi adhoc"
 
 #, fuzzy
 #~ msgid "Could query available interfaces for host %s and user %s."
@@ -59270,10 +59315,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Filesystem structure"
 #~ msgstr "Spațiu liber exact"
-
-#, fuzzy
-#~ msgid "Filter by name"
-#~ msgstr "Nume nou"
 
 #, fuzzy
 #~ msgid "Filter by source host"

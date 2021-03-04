@@ -259,6 +259,44 @@ from cmk.gui.plugins.wato.check_parameters.interfaces import (
             ),
         },
     ),
+    (
+        {
+            "grouping": (
+                True,
+                {
+                    'group_items': [{
+                        'group_name': 'wlp_group',
+                        'member_appearance': 'index',
+                    }],
+                    'labels': {
+                        'group': 'wlp'
+                    },
+                },
+            ),
+            'matching_conditions': (
+                True,
+                {},
+            ),
+        },
+        {
+            "grouping": (
+                True,
+                {
+                    'group_items': [{
+                        'group_name': 'wlp_group',
+                        'member_appearance': 'index',
+                    }],
+                    'labels': {
+                        'group': 'wlp'
+                    },
+                },
+            ),
+            'matching_conditions': (
+                True,
+                {},
+            ),
+        },
+    ),
 ])
 def test_transform_discovery_if_rules(params, result):
     assert _transform_discovery_if_rules(params) == result

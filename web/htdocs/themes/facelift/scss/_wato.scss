@@ -219,7 +219,7 @@ div#service_container {
 
     img {
       float: left;
-      margin: 12px 0 0 12px;
+      margin: 10px 0 0 10px;
     }
 
     ul {
@@ -249,7 +249,8 @@ div#service_container {
     }
 
     input.button {
-      padding: 7px 10px;
+      height: 25px;
+      padding: 5px 10px;
       margin-left: 10px;
       background-color: $success;
       color: $black;

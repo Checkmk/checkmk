@@ -452,7 +452,7 @@ class CAdvisorExporter:
         pods_complete = {}
         pods_missing_limit = {}
         for pod_name, pod_info in pods_memory.items():
-            if not all([stat in pod_info for stat in required_stats]):
+            if not all(stat in pod_info for stat in required_stats):
                 continue
             if self._verify_valid_memory_limit(pod_info):
                 pods_complete[pod_name] = pod_info

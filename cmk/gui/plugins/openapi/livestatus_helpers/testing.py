@@ -1044,7 +1044,7 @@ def and_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
 
     """
     def _and_impl(entry: Dict[str, Any]) -> bool:
-        return all([filt(entry) for filt in filters])
+        return all(filt(entry) for filt in filters)
 
     return _and_impl
 
@@ -1069,7 +1069,7 @@ def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
 
     """
     def _or_impl(entry: Dict[str, Any]) -> bool:
-        return any([filt(entry) for filt in filters])
+        return any(filt(entry) for filt in filters)
 
     return _or_impl
 

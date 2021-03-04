@@ -3877,7 +3877,7 @@ class AWSSections(abc.ABC):
                     int(section_interval + 60),
                 )
 
-            if any([r.content for r in result]):
+            if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):

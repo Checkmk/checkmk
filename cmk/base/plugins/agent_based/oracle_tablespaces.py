@@ -147,7 +147,7 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
 
     for v in tablespaces.values():
         v["amount_missing_filenames"] = len([df for df in v['datafiles'] if df['name'] == ''])
-        v["autoextensible"] = any([df['autoextensible'] for df in v['datafiles']])
+        v["autoextensible"] = any(df['autoextensible'] for df in v['datafiles'])
 
     return {"error_sids": error_sids, "tablespaces": tablespaces}
 

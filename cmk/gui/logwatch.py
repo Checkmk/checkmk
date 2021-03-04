@@ -83,7 +83,7 @@ def show_log_list():
         if not logs:
             continue
 
-        all_logs_empty = not any([parse_file(site, host_name, file_name) for file_name in logs])
+        all_logs_empty = not any(parse_file(site, host_name, file_name) for file_name in logs)
 
         if all_logs_empty:
             continue  # Logfile vanished

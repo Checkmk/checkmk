@@ -944,7 +944,7 @@ class FilterServiceState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return any([html.request.has_var(v) for v in self.htmlvars])
+        return any(html.request.has_var(v) for v in self.htmlvars)
 
     def filter(self, infoname):
         headers = []
@@ -1018,7 +1018,7 @@ class FilterHostState(Filter):
         html.end_checkbox_group()
 
     def _filter_used(self):
-        return any([html.request.has_var(v) for v in self.htmlvars])
+        return any(html.request.has_var(v) for v in self.htmlvars)
 
     def filter(self, infoname):
         headers = []
@@ -1644,7 +1644,7 @@ class FilterLogClass(Filter):
         html.close_table()
 
     def _filter_used(self):
-        return any([html.request.has_var(v) for v in self.htmlvars])
+        return any(html.request.has_var(v) for v in self.htmlvars)
 
     def filter(self, infoname):
         if not self._filter_used():
@@ -1762,7 +1762,7 @@ class FilterLogState(Filter):
         )
 
     def _filter_used(self):
-        return any([html.request.has_var(v) for v in self.htmlvars])
+        return any(html.request.has_var(v) for v in self.htmlvars)
 
     def display(self) -> None:
         html.hidden_field("log_state_filled", "1", add_var=True)

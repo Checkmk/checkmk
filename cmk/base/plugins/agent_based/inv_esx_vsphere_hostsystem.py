@@ -91,7 +91,7 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
 
         # Handle some corner cases for hw and sys
         if name == "hw":
-            if all([k in data for k in ["cpus", "cores", "threads"]]):
+            if all(k in data for k in ["cpus", "cores", "threads"]):
                 for inv_key, metric in (("cores_per_cpu", "cores"), ("threads_per_cpu", "threads")):
                     data[inv_key] = int(data[metric]) / int(data["cpus"])  # type: ignore[arg-type]
         if name == "sys":

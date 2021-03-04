@@ -413,10 +413,10 @@ class ActivateChanges:
         if config.site_is_local(site_id):
             return False
 
-        return any([c["need_sync"] for c in self._changes_of_site(site_id)])
+        return any(c["need_sync"] for c in self._changes_of_site(site_id))
 
     def _is_activate_needed(self, site_id):
-        return any([c["need_restart"] for c in self._changes_of_site(site_id)])
+        return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
     # This function returns the last known persisted activation state
     def _last_activation_state(self, site_id):

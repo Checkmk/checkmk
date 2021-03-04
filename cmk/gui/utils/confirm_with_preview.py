@@ -31,7 +31,7 @@ def confirm_with_preview(msg: Union[str, HTML],
         html.check_transaction()
         return None  # None --> "Cancel"
 
-    if not any([html.request.has_var(varname) for _title, varname in confirm_options]):
+    if not any(html.request.has_var(varname) for _title, varname in confirm_options):
         if html.mobile:
             html.open_center()
         html.open_div(class_="really")

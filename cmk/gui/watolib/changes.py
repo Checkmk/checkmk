@@ -314,10 +314,10 @@ class ActivateChangesWriter:
                             domains: List[Type[ABCConfigDomain]]) -> None:
         # Individual changes may override the domain restart default value
         if need_restart is None:
-            need_restart = any([d.needs_activation for d in domains])
+            need_restart = any(d.needs_activation for d in domains)
 
         if need_sync is None:
-            need_sync = any([d.needs_sync for d in domains])
+            need_sync = any(d.needs_sync for d in domains)
 
         # Using attrencode here is against our regular rule to do the escaping
         # at the last possible time: When rendering. But this here is the last

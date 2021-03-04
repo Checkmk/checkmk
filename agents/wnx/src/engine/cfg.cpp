@@ -132,7 +132,7 @@ static std::vector<T> OverrideTargetIfEmpty(YAML::Node target,
 }
 
 void LogNodeAsBad(const YAML::Node& node, std::string_view comment) {
-    XLOG::d.t("{}.  Type {}", comment, node.Type());
+    XLOG::t("{}:  Type {}", comment, node.Type());
 }
 
 // merge source's content into the target if the content is absent in the target
@@ -1427,16 +1427,19 @@ constexpr Combine GetCombineMode(std::string_view name) {
 
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node& source_value, Combine combine) {
+    if (!source_value.IsDefined() || source_value.IsNull()) {
+        XLOG::t(XLOG_FUNC + " skipping empty section '{}'", name);
+        return;
+    }
+
     if (source_value.IsScalar()) {
-        XLOG::d.t("Overriding seq named '{}' with scalar, this is allowed",
-                  name);  // may happen when with empty sequence sections
+        XLOG::d.t("Overriding seq named '{}' with scalar. OK.", name);
         target_value = source_value;
         return;
     }
 
     if (!IsYamlSeq(source_value)) {
-        XLOG::l.t(XLOG_FLINE + " skipping section '{}' as different type",
-                  name);  // may happen when with empty sequence sections
+        XLOG::l(XLOG_FLINE + " skipping '{}' : wrong type ", name);
         return;
     }
 

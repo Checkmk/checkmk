@@ -48,7 +48,7 @@ ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
-class PersistedSections(
+class PersistedSections(  # pylint: disable=too-many-ancestors
         Generic[TRawDataSection],
         MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
 ):

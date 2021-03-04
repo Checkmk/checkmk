@@ -73,19 +73,19 @@ body.login {
   }
 
   #label_user {
-    top: 84px;
-  }
-
-  #input_user {
     top: 80px;
   }
 
+  #input_user {
+    top: 76px;
+  }
+
   #label_pass {
-    top: 124px;
+    top: 120px;
   }
 
   #input_pass {
-    top: 120px;
+    top: 116px;
   }
 
   #input_user,
@@ -102,7 +102,7 @@ body.login {
   #_login {
     position: absolute;
     right: 15px;
-    bottom: 32px;
+    bottom: 40px;
     left: 40px;
     width: calc(100% - 80px);
     height: 29px;

@@ -676,9 +676,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def show(self):
         id_ = "mk_side_search_field"
-        html.open_div(id_="mk_side_search",
-                      class_="content_center",
-                      onclick="cmk.quicksearch.close_popup();")
+        html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button("#",
                          _("Search"),
@@ -1393,10 +1391,7 @@ class MenuSearchResultsRenderer:
 class MonitoringSearch(ABCMegaMenuSearch):
     """Search field in the monitoring menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_monitoring",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_monitoring")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
         html.input(id_=f"mk_side_search_field_{self.name}",
@@ -1425,10 +1420,7 @@ class PageSearchMonitoring(AjaxPage):
 class SetupSearch(ABCMegaMenuSearch):
     """Search field in the setup menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_setup",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
         html.input(id_=f"mk_side_search_field_{self.name}",

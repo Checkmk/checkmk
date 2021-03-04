@@ -153,10 +153,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.center(_("No data from any site"))
             return
 
-        html.open_table(class_=["content_center", "tacticaloverview"],
-                        cellspacing="2",
-                        cellpadding="0",
-                        border="0")
+        html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
 
         show_stales = self.parameters()["show_stale"] and config.user.may(
             "general.see_stales_in_tactical_overview")

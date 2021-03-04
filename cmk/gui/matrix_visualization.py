@@ -95,7 +95,7 @@ class HostMatrixVisualization(MatrixVisualization):
         cell_size = int((width - cell_spacing * (n + 1)) / n)
         style = 'width:%spx' % width
 
-        html.open_table(class_=["content_center", "hostmatrix"], style=[style])
+        html.open_table(class_=["hostmatrix"], style=[style])
         col = 1
         row = 1
         for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):

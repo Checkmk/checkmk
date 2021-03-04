@@ -25,11 +25,11 @@ def make_node_notice_results(
 ) -> Iterable[Result]:
     """Prepare results of a node for output in a cluster check function
 
-    This function consumes everything from a check function (that is, a :class:`Result`,
-    a :class:`Metric` or an :class:`IgnoreResults`) and returns an iterable of :class:`Result`s.
+    This function consumes everything from a check function (that is, a :class:`.Result`,
+    a :class:`.Metric` or an :class:`.IgnoreResults`) and returns an iterable of :class:`.Result`\\ s.
 
     The text is prepended with `'[node]: '`, and the text type is changed from `summary` to `notice`
-    (see :class:`Result` for more details).
+    (see :class:`.Result` for more details).
 
     Usage example:
         >>> def cluster_check_myplugin(item, section):

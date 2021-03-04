@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import base64
+import binascii
 import functools
 import http.client
 import json
@@ -11,7 +13,6 @@ import mimetypes
 import os
 import re
 import urllib.parse
-from base64 import b64decode
 from typing import Any, Callable, Dict, Optional, Tuple, Type, List, Literal
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
@@ -107,6 +108,17 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
         >>> user_from_basic_header("Basic Zm9vYmF6YmFyOmZvb2JhemJhcg==")
         ('foobazbar', 'foobazbar')
 
+        >>> import pytest
+
+        >>> with pytest.raises(MKAuthException):
+        ...     user_from_basic_header("Basic SGFsbG8gV2VsdCE=")  # 'Hallo Welt!'
+
+        >>> with pytest.raises(MKAuthException):
+        ...     user_from_basic_header("Basic foobazbar")
+
+        >>> with pytest.raises(MKAuthException):
+        ...      user_from_basic_header("Basic     ")
+
     Args:
         auth_header:
 
@@ -115,11 +127,22 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
     """
     try:
         _, token = auth_header.split("Basic ", 1)
-    except ValueError:
-        raise MKAuthException(f"Not a valid Basic token: {auth_header}")
+    except ValueError as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
 
-    user_entry = b64decode(token.strip()).decode('latin1')
-    user_id, secret = user_entry.split(":")
+    if not token.strip():
+        raise MKAuthException("Not a valid Basic token.")
+
+    try:
+        user_entry = base64.b64decode(token.strip()).decode('latin1')
+    except binascii.Error as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
+
+    try:
+        user_id, secret = user_entry.split(":")
+    except ValueError as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
+
     return UserId(user_id), secret
 
 

@@ -169,7 +169,8 @@ function tickStep(range, ticks, increments) {
 }
 
 export function partitionableDomain(domain, ticks, increments) {
-    let [start, end] = domain.sort((a, b) => a - b);
+    let [start, end] = domain.map(x => x || 0).sort((a, b) => a - b);
+    if (start === end) end += 1;
     let step = tickStep(end - start, ticks, increments);
 
     start = Math.floor(start / step) * step;
@@ -183,3 +184,4 @@ export function partitionableDomain(domain, ticks, increments) {
 //}
 //console.assert(comp_array(partitionableDomain([18, 2], 4, domainIntervals()), [0, 20, 5]));
 //console.assert(comp_array(partitionableDomain([25, 2], 5, domainIntervals("binary")), [0, 32, 8]));
+//console.assert(comp_array(partitionableDomain([NaN, 2], 2, domainIntervals("binary")), [0, 2, 2]));

@@ -143,6 +143,7 @@ class PageMenuEntry:
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
     disabled_tooltip: Optional[str] = None
+    sort_index: int = 1
 
 
 @dataclass
@@ -239,7 +240,7 @@ class PageMenu:
                 is_suggested=False,
             )
 
-        yield from shortcuts
+        yield from sorted(shortcuts, key=lambda e: e.sort_index)
 
     @property
     def suggestions(self) -> Iterator[PageMenuEntry]:

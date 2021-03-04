@@ -914,6 +914,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         is_shortcut=True,
         is_suggested=False,
         name="toggle_edit",
+        sort_index=99,
     )
 
     yield PageMenuEntry(

@@ -1394,9 +1394,19 @@ class MonitoringSearch(ABCMegaMenuSearch):
         html.open_div(id_="mk_side_search_monitoring")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, hosts, services or host- and servicegroups.\n"
+                    "You can use the following filters:\n"
+                    "h: Host\n"
+                    "s: Service\n"
+                    "hg: Hostgroup\n"
+                    "sg: Servicegroup\n"
+                    "ad: Address\n"
+                    "al: Alias\n"
+                    "tg: Hosttag")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Monitoring"),
                    onkeydown="cmk.search.on_key_down('monitoring')",
@@ -1423,9 +1433,11 @@ class SetupSearch(ABCMegaMenuSearch):
         html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Setup"),
                    onkeydown="cmk.search.on_key_down('setup')",

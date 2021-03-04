@@ -11,10 +11,23 @@ powershell Write-Host "Copy %the_msi% into %the_dir% ..." -foreground cyan
 copy /Y %the_msi% %the_dir% || powershell Write-Host "Copy failed" -foreground red && exit /b 3
 powershell Write-Host "Waiting for install start" -nonewline  -foreground cyan
 for /l %%x in (1, 1, 10 ) do (
-  if not exist %the_disappear% powershell Write-Host "`nInstallation looks good" -foreground green && exit /b 0
+  if not exist %the_disappear% powershell Write-Host "`nInstallation looks good" -foreground green && goto waiting
   powershell Start-Sleep 1
   powershell Write-Host "." -nonewline -foreground cyan
 )
+
+powershell Write-Host "`nInstallation start failed" -foreground red
+exit /b 5
+
+:waiting
+powershell Write-Host "Waiting for install end" -nonewline  -foreground cyan
+for /l %%x in (1, 1, 30 ) do (
+  fc /b ..\..\artefacts\check_mk_agent-64.exe "%ProgramFiles(x86)%\checkmk\service\check_mk_agent.exe" >nul && powershell Write-Host "`nInstallation finished good" -foreground green && exit /b 0
+  powershell Write-Host "." -nonewline -foreground cyan
+  powershell Start-Sleep 1
+)
+
+
 
 powershell Write-Host "`nInstallation failed" -foreground red
 exit /b 4

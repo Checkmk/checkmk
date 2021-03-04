@@ -336,7 +336,9 @@ def _transform_discovery_if_rules(params):
         "pad_portnumbers": True,
         **{key: params.pop(key) for key in ["item_appearance", "pad_portnumbers"] if key in params},
     }
-    if 'discovery_single' not in params:
+    # 'matching_conditions' not in params --> check if this is a pre-v2.0 rule, if it is not, it is
+    # ok for this key to be missing
+    if 'discovery_single' not in params and 'matching_conditions' not in params:
         params['discovery_single'] = (True, single_interface_discovery_settings)
 
     if 'matching_conditions' not in params:

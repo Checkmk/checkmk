@@ -50,7 +50,7 @@ an "optimistic lock" and allows read access even when writes are happening. It w
    the object to be modified. If any modifications by someone else were to happen between the
    request (1) and the update (3) these values would not match and the update would fail.
 
-This scheme es used for most `PUT` requests throughout the REST API and always works the same way.
+This scheme is used for most `PUT` requests throughout the REST API and always works the same way.
 Detailed documentation of the various involved fields as well as the possible error messages can
 be found on the documentation of each affected endpoint.
 

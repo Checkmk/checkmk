@@ -34,44 +34,17 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 5px 2px;
-  margin-left: -5px;
+  border-collapse: collapse;
+  table-layout: fixed;
 
-  tr {
+  tr,
+  td {
     padding: 0;
   }
 
   a {
     display: block;
-    width: 100%;
-    height: 100%;
-    line-height: 100%;
-  }
-
-  td {
-    border-radius: 4px;
-
-    &.state0 {
-      background-color: $color-state-success-background;
-      border-color: $color-state-success-border;
-    }
-
-    &.state1 {
-      border-color: $color-state-1-border;
-    }
-
-    &.state2 {
-      border-color: $color-state-2-border;
-    }
-
-    &.state3 {
-      border-color: $color-state-3-border;
-    }
-
-    &.statep,
-    &.stated {
-      border-color: $color-state-4-border;
-    }
+    border-radius: 1px;
   }
 }
 

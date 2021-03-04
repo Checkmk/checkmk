@@ -13,6 +13,15 @@ die() { log "$@"; exit 1; }
 docker_push () {
     REGISTRY=$1
     FOLDER=$2
+
+    # During build the .demo suffix is a VERSION suffix. We don't want this to
+    # be part of the version in the registries. Make it part of the image name
+    # with the following commands. This will be cleaned up with 2.1 (CFE)
+    # renaming.
+    if [ -n "$DEMO" ]; then
+        docker tag "checkmk/check-mk-${EDITION}:${VERSION}${DEMO}" "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}"
+    fi
+
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "checkmk/check-mk-${EDITION}${DEMO}:${VERSION}" "$REGISTRY$FOLDER/check-mk-${EDITION}${DEMO}:${VERSION}"
 

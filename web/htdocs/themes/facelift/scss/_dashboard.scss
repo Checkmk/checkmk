@@ -930,6 +930,10 @@ div.servicestats {
       border-collapse: collapse;
     }
 
+    td {
+      padding: 3px;
+    }
+
     td:last-child {
       width: 115px; // aligns the host and service stats tables
     }

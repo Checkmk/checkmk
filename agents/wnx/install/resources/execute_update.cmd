@@ -17,7 +17,6 @@ if not exist %msi_exec% echo "File %msi_exec% doesnt exists" >> %log_file% && ex
 
 rem --- PREPARATION: wait 5 seconds and stop service ---
 powershell Start-Sleep 5
-net stop checkmkservice>>%log_file%
 
 rem --- 1st run ---
 echo 1. [%time%] starting "%msi_exec% %cmd_line%" >> %log_file%

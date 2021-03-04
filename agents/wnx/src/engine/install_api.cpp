@@ -243,7 +243,7 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
         command += L" REINSTALL = ALL REINSTALLMODE = amus";
     }
 
-    command += L" /L*V ";  // quoting too!
+    command += L" REBOOT=ReallySuppress /L*V ";  // quoting too!
     command += log_file_name;
     command += L"";
 
@@ -258,8 +258,7 @@ void ExecuteUpdate::backupLog() const {
 
     if (!fs::exists(log_file_name, ec)) return;
 
-    XLOG::l.i("File '{0}' exists, backing up to '{0}.bak'",
-              log_file_name.u8string());
+    XLOG::l.i("Log file '{0}' exists, backing up to '{0}.bak'", log_file_name);
 
     auto log_bak_file_name = log_file_name;
     log_bak_file_name.replace_extension(".log.bak");
@@ -404,7 +403,7 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
         }
 
         auto command = eu.getCommand();
-        return {command, tools::RunStdCommand(command, false, TRUE) != 0};
+        return {command, tools::RunStdCommand(command, false) != 0};
     } catch (const std::exception& e) {
         XLOG::l("Unexpected exception '{}' during attempt to exec update ",
                 e.what());

@@ -74,7 +74,14 @@ protected:
         return {path, pid};
     }
 
-    void SetUp() override { RunMeAgain(1); }
+    void SetUp() override {
+        auto killed =
+            KillProcessesByDir(std::filesystem::path{GetCurrentProcessPath()}
+                                   .parent_path()
+                                   .parent_path());
+        XLOG::l("Killed {}", killed);
+        RunMeAgain(1);
+    }
 
     void TearDown() override { KillTmpProcesses(); }
 };

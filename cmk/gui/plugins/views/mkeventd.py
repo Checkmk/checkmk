@@ -1752,7 +1752,7 @@ multisite_builtin_views['ec_event_mobile'] = {
     'single_infos': ['event'],
     'sorters': [],
     'title': u'Event Details',
-    'topic': u'Event Console',
+    'topic': 'events',
     'user_sortable': True
 }
 
@@ -1856,6 +1856,6 @@ multisite_builtin_views['ec_events_mobile'] = {
     'single_infos': [],
     'sorters': [('event_last', False)],
     'title': u'Events',
-    'topic': u'Event Console',
+    'topic': 'events',
     'user_sortable': True,
 }

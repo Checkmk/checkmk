@@ -12,6 +12,7 @@ from typing import (
     NamedTuple,
     Optional,
     Union,
+    Tuple,
 )
 from collections import Counter
 from datetime import datetime
@@ -27,6 +28,8 @@ RawSubscriptionDetails = NamedTuple(
 )
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
 RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
+DailyServices = Dict[datetime, Counter]
+SortedDailyServices = List[Tuple[datetime, Counter]]
 
 
 class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
@@ -41,7 +44,7 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
         self._username = username
         self._subscription_details = subscription_details
         self._short_samples = short_samples
-        self._daily_services: Dict[datetime, Counter] = {}
+        self._daily_services: SortedDailyServices = []
         self._monthly_service_averages: RawMonthlyServiceAverages = []
 
     @property
@@ -67,21 +70,24 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
         return [{
             "sample_time": daily_service_date.timestamp(),
             "num_services": counter["num_services"],
-        } for daily_service_date, counter in self._daily_services.items()]
+        } for daily_service_date, counter in self._daily_services]
 
     @abc.abstractmethod
-    def _calculate_daily_services(self) -> None:
+    def _calculate_daily_services(self) -> DailyServices:
         raise NotImplementedError()
 
     def calculate_averages(self) -> None:
         if not self._short_samples:
             return
 
-        self._calculate_daily_services()
+        # Get max. 400 days, because the license usage history per site - recorded in
+        # Checkmk - is max. 400 long.
+        self._daily_services = sorted(self._calculate_daily_services().items())[-400:]
 
-        if self.subscription_start is None:
-            # It does not make sense to calculate monthly averages if we do not
-            # know where to start.
+        if self.subscription_start is None or self.subscription_end is None:
+            # It does not make sense to calculate monthly averages
+            # if we do not know where to start or end:
+            # Subscription must not start at the beginning of a month.
             return
 
         monthly_services: Dict[datetime, Counter] = {}
@@ -92,14 +98,20 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
             microsecond=0,
         )
         month_end = month_start + relativedelta(months=+1)
+        subscription_end_date = datetime.fromtimestamp(self.subscription_end).replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
 
-        for daily_service_date, counter in sorted(self._daily_services.items()):
+        for daily_service_date, counter in self._daily_services:
             if daily_service_date >= month_end:
                 month_start = month_end
                 month_end = month_start + relativedelta(months=+1)
 
-            if month_end >= ABCMonthlyServiceAverages.today:
-                # Skip last, incomplete month
+            if month_end >= ABCMonthlyServiceAverages.today or month_end > subscription_end_date:
+                # Skip last, incomplete month (subscription_end_date excl.)
                 break
 
             if month_start <= daily_service_date < month_end:
@@ -150,13 +162,15 @@ class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
 
 
 class MonthlyServiceAverages(ABCMonthlyServiceAverages):
-    def _calculate_daily_services(self) -> None:
+    def _calculate_daily_services(self) -> DailyServices:
+        daily_services: DailyServices = {}
         for sample_time, num_services in self._short_samples:
             sample_date = datetime.fromtimestamp(sample_time)
-            self._daily_services.setdefault(
+            daily_services.setdefault(
                 datetime(sample_date.year, sample_date.month, sample_date.day),
                 Counter(),
             ).update(num_services=num_services)
+        return daily_services
 
 
 class MonthlyServiceAveragesOfCustomer(MonthlyServiceAverages):
@@ -194,34 +208,18 @@ class MonthlyServiceAveragesOfCmkUser(ABCMonthlyServiceAverages):
     def last_daily_services(self) -> Dict:
         return self._last_daily_services
 
-    def _calculate_daily_services(self) -> None:
-        max_date = self._get_max_date()
-
+    def _calculate_daily_services(self) -> DailyServices:
+        daily_services: DailyServices = {}
         for site_id, history in self._short_samples:
-            self._last_daily_services.setdefault(site_id, None)
+            self._last_daily_services.setdefault(site_id, history[-1] if history else None)
 
             for sample in history:
                 sample_date = datetime.fromtimestamp(sample.sample_time)
-                self._daily_services.setdefault(
+                daily_services.setdefault(
                     datetime(sample_date.year, sample_date.month, sample_date.day),
                     Counter(),
                 ).update(num_services=sample.num_services)
-
-                if max_date is None:
-                    continue
-
-                if ((sample_date.year, sample_date.month, sample_date.day) >=
-                    (max_date.year, max_date.month, max_date.day)):
-                    self._last_daily_services[site_id] = sample
-
-    def _get_max_date(self) -> Optional[datetime]:
-        try:
-            max_sample_time = max(sample.sample_time
-                                  for _site_id, history in self._short_samples
-                                  for sample in history)
-            return datetime.fromtimestamp(max_sample_time)
-        except ValueError:
-            return None
+        return daily_services
 
     def get_aggregation(self) -> Dict:
         aggregation = super().get_aggregation()

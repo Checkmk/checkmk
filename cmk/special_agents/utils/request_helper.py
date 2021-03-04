@@ -61,10 +61,15 @@ class HTTPSConfigurableConnection(HTTPSConnection):
             HTTPSConnection.connect(self)
         else:
             HTTPConnection.connect(self)
+            # TODO: Use SSLContext.wrap_socket() instead of the deprecated ssl.wrap_socket()!
+            # See https://docs.python.org/3/library/ssl.html#socket-creation
             if self.__ca_file == HTTPSConfigurableConnection.IGNORE:
-                self.sock = ssl.wrap_socket(self.sock, cert_reqs=ssl.CERT_NONE)
+                self.sock = ssl.wrap_socket(  # pylint: disable=deprecated-method
+                    self.sock,
+                    cert_reqs=ssl.CERT_NONE,
+                )
             else:
-                self.sock = ssl.wrap_socket(
+                self.sock = ssl.wrap_socket(  # pylint: disable=deprecated-method
                     self.sock,
                     ca_certs=self.__ca_file,
                     cert_reqs=ssl.CERT_REQUIRED,

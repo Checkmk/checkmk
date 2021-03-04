@@ -153,7 +153,6 @@ disable=
     R0801,
     #---------------------------------------------------------------------------
     # New checks in 2.7.2, need some tiny code tweaks (later)
-    simplifiable-condition,
     too-many-ancestors,
     use-a-generator,
 

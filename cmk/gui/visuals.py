@@ -13,7 +13,9 @@ from contextlib import contextmanager
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
+    Iterable,
     Iterator,
     List,
     Literal,
@@ -1406,7 +1408,7 @@ def get_filter_headers(table, infos, context):
             else:
                 html.request.set_var(filter_name, filter_vars)
 
-        filter_headers = "".join(collect_filter_headers(infos, table))
+        filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
 
@@ -1456,11 +1458,14 @@ def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]
     return None
 
 
-def collect_filter_headers(info_keys, table):
-    # Collect all available filters for these infos
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
     for filter_obj in filter_registry.values():
         if filter_obj.info in info_keys and filter_obj.available():
-            yield filter_obj.filter(table)
+            yield filter_obj
+
+
+def collect_filter_headers(filters: Iterable[Filter],) -> Iterable[str]:
+    yield from (filter.filter(None) for filter in filters)
 
 
 #.

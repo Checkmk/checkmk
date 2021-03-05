@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}

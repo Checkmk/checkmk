@@ -1057,7 +1057,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-            assert filt.filter_table(test.rows) == test.expected_rows
+            assert filt.filter_table({}, test.rows) == test.expected_rows
 
 
 # Filter form is not really checked. Only checking that no exception occurs

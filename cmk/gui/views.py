@@ -1945,7 +1945,7 @@ def _get_view_rows(view: View,
 
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:
-        rows = filter_.filter_table(rows)
+        rows = filter_.filter_table(view.context, rows)
 
     return unfiltered_amount_of_rows, rows
 

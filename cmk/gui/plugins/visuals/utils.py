@@ -21,7 +21,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName, Row, Rows, VisualContext
 from cmk.gui.htmllib import Choices
 from cmk.gui.page_menu import PageMenuEntry
 
@@ -269,7 +269,7 @@ class Filter(metaclass=abc.ABCMeta):
     def validate_value(self, value: Dict) -> None:
         return
 
-    def filter_table(self, rows: List[dict]) -> List[dict]:
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 

@@ -19,7 +19,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.type_defs import Choices, Row
+from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.valuespec import (
@@ -1850,7 +1850,8 @@ class FilterAggrServiceUsed(FilterTristate):
     def filter(self, infoname):
         return ""
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = self.tristate_value()
         if current == -1:
             return rows
@@ -2354,7 +2355,8 @@ class FilterDiscoveryState(Filter):
     def filter(self, infoname):
         return ""
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         new_rows = []
         filter_options = self.value()
         for row in rows:
@@ -2386,7 +2388,8 @@ class FilterAggrGroup(Filter):
     def selected_group(self):
         return html.request.get_unicode_input(self.htmlvars[0])
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         group = self.selected_group()
         if not group:
             return rows
@@ -2485,7 +2488,8 @@ class BITextFilter(Filter):
     def heading_info(self):
         return html.request.get_unicode_input(self.htmlvars[0])
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         val = html.request.get_unicode_input(self.htmlvars[0])
         if not val:
             return rows
@@ -2560,7 +2564,8 @@ class FilterAggrHosts(Filter):
             "aggr_host_site": row["site"],
         }
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         val = html.request.var(self.htmlvars[1])
         if not val:
             return rows
@@ -2651,7 +2656,8 @@ class BIStatusFilter(Filter):
             var = self.prefix + varend
             html.checkbox(var, defval=str(not self._filter_used()), label=text)
 
-    def filter_table(self, rows):
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         if not self._filter_used():
             return rows
 

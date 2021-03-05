@@ -26,7 +26,7 @@ from typing import (
     Union,
 )
 
-from livestatus import SiteId, LivestatusTestingError
+from livestatus import LivestatusTestingError
 
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
@@ -98,6 +98,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
     filter_registry,
+    get_only_sites_from_context,
 )
 
 from cmk.gui.utils import unique_default_name_suggestion
@@ -1410,52 +1411,6 @@ def get_filter_headers(table, infos, context):
 
         filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
-
-
-def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
-    """Gather possible existing "only sites" information from context
-
-      We need to deal with
-
-      a) all possible site filters (sites, site and siteopt).
-      b) with single and multiple contexts
-
-      Single contexts are structured like this:
-
-      {"site": "sitename"}
-      {"sites": "sitename|second"}
-
-      Multiple contexts are structured like this:
-
-      {"site": {"site": "sitename"}}
-      {"sites": {"sites": "sitename|second"}}
-
-      The difference is no fault or "old" data structure. We can have both kind of structures.
-      These are the data structure the visuals work with.
-
-      "site" and "sites" are conflicting filters. The new optional filter
-      "sites" for many sites filter is only used if the view is configured
-      to only this filter.
-      """
-
-    if "sites" in context and "site" not in context:
-        only_sites = context["sites"]
-        if isinstance(only_sites, dict):
-            only_sites = only_sites["sites"]
-        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
-        return only_sites_list if only_sites_list else None
-
-    for var in ["site", "siteopt"]:
-        if var in context:
-            value = context[var]
-            if isinstance(value, dict):
-                site_name = value.get("site")
-                if site_name:
-                    return [SiteId(site_name)]
-                return None
-            return [SiteId(value)]
-
-    return None
 
 
 def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:

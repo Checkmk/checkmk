@@ -12,6 +12,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     curl \
     cyrus-sasl-devel \
     enchant-devel \
+    gcc-c++ \
     git \
     krb5-devel \
     libmysqlclient-devel \
@@ -19,6 +20,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     nodejs10 \
     npm10 \
     openldap2-devel \
+    postfix \
     python \
     python-devel \
     python-pyOpenSSL \

@@ -96,7 +96,7 @@ static void LogExecuteExtensions(std::string_view title,
 void PluginsProvider::updateCommandLine() {
     try {
         if (getHostSp() == nullptr && !local_)
-            XLOG::l.bp("Plugins must have correctly set owner to use modules");
+            XLOG::l("Plugins must have correctly set owner to use modules");
 
         UpdatePluginMapCmdLine(pm_, getHostSp());
     } catch (const std::exception& e) {
@@ -181,6 +181,7 @@ void PluginsProvider::loadConfig() {
     }
 
     cma::FilterPathByExtension(files, exts);
+    RemoveForbiddenNames(files);
 
     XLOG::d.t("Left [{}] files to execute", files.size());
 

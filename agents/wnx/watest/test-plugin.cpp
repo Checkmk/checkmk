@@ -2220,6 +2220,54 @@ TEST(PluginTest, EmptyPlugins) {
     }
 }
 
+class PluginCmkUpdateAgentIgnoreFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+        fs::create_directory(temp_fs.data() / "plugins");
+
+        ASSERT_TRUE(
+            temp_fs.createDataFile(fs::path{"plugins"} / "1.cmd", "@echo 1"));
+        ASSERT_TRUE(
+            temp_fs.createDataFile(fs::path{"plugins"} / "2.cmd", "@echo 2"));
+        fs::copy_file(
+            fs::path{"c:\\Windows\\system32\\whoami.exe"},
+            fs::path{cfg::GetUserPluginsDir()} / "cmk-update-agent.exe");
+    }
+
+    std::string runPlugins() {
+        provider::PluginsProvider plugins;
+
+        plugins.loadConfig();
+        plugins.updateSectionStatus();
+        return plugins.generateContent(section::kPlugins);
+    }
+
+    tst::TempCfgFs temp_fs;
+};
+
+TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
+    // check soft prevention(as is)
+    EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
+
+    // check hard prevention:
+    // User allows execution of the cmk-update-agent.exe. But we prevent it!
+    ASSERT_TRUE(temp_fs.loadContent(
+        "global:\n"
+        "  enabled: yes\n"
+        "  install: yes\n"
+        "  execute: [exe, bat, vbs, cmd, ps1]\n"
+        "plugins:\n"
+        "  enabled: yes\n"
+        "  folders: ['$CUSTOM_PLUGINS_PATH$', '$BUILTIN_PLUGINS_PATH$' ]\n"
+        "  execution:\n"
+        "    - pattern : '*'\n"
+        "    - run     : yes\n")
+
+    );
+    EXPECT_EQ(runPlugins(), "<<<>>>\n1\r\n2\r\n<<<>>>\n");
+}
+
 TEST(PluginTest, SyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;

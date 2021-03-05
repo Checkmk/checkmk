@@ -346,7 +346,6 @@ private:
     void detachedPluginsStart();
 
 private:
-    void preLoadConfig();
     TheMiniProcess ohm_process_;
     void updateMaxWaitTime(int timeout_seconds) noexcept;
     void checkMaxWaitTime() noexcept;

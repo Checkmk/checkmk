@@ -25,7 +25,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.plugins.openapi.utils import ProblemException, problem
 from cmk.gui.watolib import CREFolder
 
 # TODO: Remove all hard-coded response creation in favour of a generic one
@@ -107,31 +107,46 @@ def update(params):
     if update_attributes:
         attributes.update(update_attributes)
 
+    faulty_attributes = []
     for attribute in remove_attributes:
-        folder.remove_attribute(attribute)
+        try:
+            folder.remove_attribute(attribute)
+        except KeyError:
+            faulty_attributes.append(attribute)
+
+    if faulty_attributes:
+        return problem(status=400,
+                       title="The folder was not updated",
+                       detail=f"The following attributes did not exist and could therefore"
+                       f"not be removed: {', '.join(faulty_attributes)}")
 
     folder.edit(title, attributes)
 
     return _serve_folder(folder)
 
 
-@Endpoint(constructors.domain_type_action_href('folder_config', 'bulk-update'),
-          'cmk/bulk_update',
-          method='put',
-          response_schema=response_schemas.FolderCollection,
-          request_schema=request_schemas.BulkUpdateFolder)
+@Endpoint(
+    constructors.domain_type_action_href('folder_config', 'bulk-update'),
+    'cmk/bulk_update',
+    method='put',
+    response_schema=response_schemas.FolderCollection,
+    request_schema=request_schemas.BulkUpdateFolder,
+)
 def bulk_update(params):
     """Bulk update folders"""
     body = params['body']
     entries = body['entries']
     folders = []
 
+    faulty_folders = []
+
     for update_details in entries:
         folder = update_details['folder']
-        title = update_details['title']
+        current_title = folder.title()
+        title = update_details.get("title", current_title)
         replace_attributes = update_details['attributes']
         update_attributes = update_details['update_attributes']
-        remove_attributes = update_attributes['remove_attributes']
+        remove_attributes = update_details['remove_attributes']
         attributes = folder.attributes().copy()
 
         if replace_attributes:
@@ -140,11 +155,28 @@ def bulk_update(params):
         if update_attributes:
             attributes.update(update_attributes)
 
+        faulty_attempt = False
         for attribute in remove_attributes:
-            folder.remove_attribute(attribute)
+            try:
+                folder.remove_attribute(attribute)
+            except KeyError:
+                faulty_attempt = True
+                break
+
+        if faulty_attempt:
+            faulty_folders.append(current_title)
+            continue
 
         folder.edit(title, attributes)
         folders.append(folder)
+
+    if faulty_folders:
+        return problem(
+            status=400,
+            title="Some folders were not updated",
+            detail=
+            f"The following folders were not updated since some of the provided remove attributes did not exist: {', '.join(faulty_folders)}",
+        )
 
     return constructors.serve_json(_folders_collection(folders, False))
 

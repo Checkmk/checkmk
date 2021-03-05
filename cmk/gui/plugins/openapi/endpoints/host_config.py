@@ -83,7 +83,6 @@ def create_cluster_host(params):
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_create_hosts(params):
     """Bulk create hosts"""
-    # TODO: addition of etag mechanism
     body = params['body']
     entries = body['entries']
 
@@ -196,8 +195,20 @@ def update_host(params):
     if update_attributes:
         host.update_attributes(update_attributes)
 
+    faulty_attributes = []
     for attribute in remove_attributes:
-        host.remove_attribute(attribute)
+        try:
+            host.remove_attribute(attribute)
+        except KeyError:
+            faulty_attributes.append(attribute)
+
+    if faulty_attributes:
+        return problem(
+            status=400,
+            title="Some attributes were not removed",
+            detail=
+            f"The following attributes were not removed since they didn't exist: {', '.join(faulty_attributes)}",
+        )
 
     return _serve_host(host, False)
 
@@ -213,6 +224,7 @@ def bulk_update_hosts(params):
     entries = body['entries']
 
     hosts = []
+    faulty_hosts = []
     for update_detail in entries:
         host_name = update_detail['host_name']
         new_attributes = update_detail['attributes']
@@ -226,10 +238,26 @@ def bulk_update_hosts(params):
         if update_attributes:
             host.update_attributes(update_attributes)
 
+        faulty_attributes = []
         for attribute in remove_attributes:
-            host.remove_attribute(attribute)
+            try:
+                host.remove_attribute(attribute)
+            except KeyError:
+                faulty_attributes.append(attribute)
+
+        if faulty_attributes:
+            faulty_hosts.append(f"{host_name} ({', '.join(faulty_attributes)})")
+            continue
 
         hosts.append(host)
+
+    if faulty_hosts:
+        return problem(
+            status=400,
+            title="Some attributes could not be removed",
+            detail=
+            f"The attributes of the following hosts could not be removed: {', '.join(faulty_hosts)}",
+        )
 
     return host_collection(hosts)
 

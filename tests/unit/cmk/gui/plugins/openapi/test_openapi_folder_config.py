@@ -311,3 +311,55 @@ def test_openapi_missing_folder(wsgi_app, with_automation_user):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder_config/asdf" + uuid.uuid4().hex,
                         status=404)
     assert 'title' in resp.json
+
+
+def test_openapi_update_with_invalid_attribute_folder(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    resp = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../update',
+        status=400,
+        params=json.dumps({
+            'title': 'foo',
+            'remove_attributes': ['tag_foobar']
+        }),
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+
+def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    _resp = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    _resp = wsgi_app.call_method(
+        'put',
+        base + "/domain-types/folder_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            "entries": [{
+                "folder": "~new_folder",
+                "remove_attributes": ["tag_foobar"]
+            }],
+        }),
+        status=400,
+        content_type='application/json',
+    )

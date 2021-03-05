@@ -1257,12 +1257,12 @@ class IdleOption(BaseSchema):
 
 
 class UserContactOption(BaseSchema):
-    email_address = fields.String(
+    email = fields.String(
         required=True,
         description="The mail address of the user. Required if the user is a monitoring"
         "contact and receives notifications via mail.",
         example="user@example.com",
-        attribute="email")
+    )
     # User cannot enable fallback contact if no email is specified
     fallback_contact = fields.Bool(
         description="In case none of your notification rules handles a certain event a notification "
@@ -1329,7 +1329,7 @@ class CreateUser(BaseSchema):
         IdleOption,
         required=False,
         description="Idle timeout for the user. Per default, the global configuration is used.",
-        example={},
+        example={"option": "global"},
     )
     roles = fields.List(
         fields.String(
@@ -1363,7 +1363,7 @@ class CreateUser(BaseSchema):
         DisabledNotifications,
         required=False,
         missing=dict,
-        example={"disabled": False},
+        example={"disable": False},
     )
     # default language is not setting a key in dict
     language = fields.String(

@@ -177,7 +177,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.th(_("Problems"), class_="show_more_mode")
             html.th(
                 html.render_span(_("Unhandled"), class_="more") +
-                html.render_span(_("Unhandled problems"), class_="less"))
+                html.render_span(_("Unhandled p."), class_="less"))
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
             html.close_tr()

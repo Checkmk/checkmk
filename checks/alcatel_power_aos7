@@ -39,7 +39,10 @@ def parse_alcatel_power_aos7(info):
     return {
         item: PowerSupplyEntry(
             alcatel_power_aos7_operability_to_status_mapping[operability_status],
-            alcatel_power_aos7_power_type_mapping[power_supply_type],
+            alcatel_power_aos7_power_type_mapping.get(
+                power_supply_type,
+                alcatel_power_aos7_no_power_supply,
+            ),
         ) for (item, operability_status, power_supply_type) in info
     }
 

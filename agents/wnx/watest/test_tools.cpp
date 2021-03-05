@@ -104,6 +104,7 @@ const std::filesystem::path G_TestPath =
 constexpr std::wstring_view kSolutionTestFilesFolderName(L"test_files");
 constexpr std::wstring_view kSolutionUnitTestsFolderName(L"unit_test");
 constexpr std::wstring_view kSolutionConfigTestFilesFolderName(L"config");
+constexpr std::wstring_view kSolutionCapTestFilesFolderName(L"cap");
 
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root) {
     std::filesystem::path r{root};
@@ -114,6 +115,12 @@ std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root) {
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root) {
     std::filesystem::path r{root};
     r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
+    return r.lexically_normal();
+}
+
+std::filesystem::path MakePathToCapTestFiles(const std::wstring& root) {
+    std::filesystem::path r{root};
+    r = r / kSolutionTestFilesFolderName / kSolutionCapTestFilesFolderName;
     return r.lexically_normal();
 }
 

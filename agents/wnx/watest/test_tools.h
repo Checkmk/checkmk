@@ -26,6 +26,7 @@ namespace tst {
 
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
 
 ///  from the TestEnvironment
 [[nodiscard]] std::filesystem::path GetTempDir();

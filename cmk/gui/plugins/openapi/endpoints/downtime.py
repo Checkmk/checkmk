@@ -298,11 +298,18 @@ def _serialize_downtimes(downtimes):
                 links=[
                     constructors.link_rel(
                         rel='.../delete',
-                        href=f'/objects/host/{downtime["host_name"]}/objects/downtime/{downtime_id}',
+                        href='/domain-types/downtime/actions/delete/invoke',
                         method='post',
                         title='Delete the downtime',
+                        body_params={
+                            'delete_type': 'by_id',
+                            'downtime_id': downtime_id
+                        },
                     ),
-                ]))
+                ],
+                editable=False,
+                deletable=False,
+            ))
 
     return constructors.object_collection(
         name='all',

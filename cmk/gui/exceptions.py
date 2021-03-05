@@ -60,3 +60,7 @@ class MKUserError(MKException):
 
 class MKInternalError(MKException):
     pass
+
+
+class MKMissingDataError(MKException):
+    pass

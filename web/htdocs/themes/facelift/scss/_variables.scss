@@ -189,12 +189,9 @@ $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: rgb(221, 221, 221);
 
 $toggle-switch-on-bg-color: rgb(19, 211, 137);
-$toggle-switch-on-border: null;
-$toggle-switch-off-bg-color-sidebar: rgb(66, 77, 88);
 $toggle-switch-off-bg-color: rgba(173, 178, 183, 0.5);
-$toggle-switch-off-border: null;
 $toggle-switch-font-color-on: $black;
-$toggle-switch-font-color-off: rgba(130, 130, 130, 0.9);
+$toggle-switch-font-color-off: rgba($font-color, 0.8);
 $toggle-switch-height: 13px;
 $toggle-switch-width: 30px;
 $toggle-switch-font-weight: 700;
@@ -268,7 +265,6 @@ $wato-a-border: null;
 $wato-subtitle-color: $darkgrey;
 
 $footnote-link-color: rgba($font-color, 0.8);
-$footnote-bg-color: $ux-theme-5;
 
 $host-diag-success-bg-color: rgb(238, 255, 238);
 $host-diag-failed-bg-color: rgb(255, 238, 238);

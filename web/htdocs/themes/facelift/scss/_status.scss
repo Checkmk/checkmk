@@ -167,7 +167,7 @@ img.pluginurl {
   padding: 2px;
   font-size: $font-size-small;
   line-height: 12px;
-  color: rgb(255, 255, 255);
+  color: $white;
   text-align: center;
   cursor: default;
   border-radius: 8px;
@@ -185,8 +185,8 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: rgb(178, 178, 178);
-    background-color: rgb(120, 120, 120);
+    color: $footnote-link-color;
+    background-color: $inpage-highlight-color;
   }
 
   &.dead {
@@ -198,7 +198,6 @@ img.pluginurl {
   }
 
   &.online {
-    font-weight: 500;
     color: $hot-font-color !important;
     background-color: $color-state-success-background;
   }

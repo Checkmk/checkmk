@@ -4585,6 +4585,9 @@ msgstr ""
 msgid "Allows to edit %s created by other users."
 msgstr ""
 
+msgid "Allows you to use a sidebar element in the dashboard."
+msgstr ""
+
 msgid ""
 "Almost all available filters, used for searching services and maybe doing "
 "actions"
@@ -7934,9 +7937,9 @@ msgstr ""
 msgid "Changed global configuration variable %s to %s."
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Changed host label: %d"
-msgid_plural "Changed host labels: %d"
+#, fuzzy
+msgid "Changed host label: "
+msgid_plural "Changed host labels: "
 msgstr[0] "Numarul maxim de conexiuni"
 msgstr[1] "Numarul maxim de conexiuni"
 msgstr[2] "Numarul maxim de conexiuni"
@@ -8687,6 +8690,9 @@ msgid ""
 "Choose the monitoring core to run for monitoring. You can also decide to run "
 "no monitoring core in this site. This can be useful for instances running "
 "only a GUI for connecting to other monitoring sites."
+msgstr ""
+
+msgid "Choose the sidebar element you would like to show."
 msgstr ""
 
 msgid "Choose the type of action to perform"
@@ -13929,10 +13935,6 @@ msgstr ""
 msgid ""
 "Displays a scatterplot and average lines for for a selected type of service."
 msgstr ""
-
-#, fuzzy
-msgid "Displays a sidebar element."
-msgstr "Nivelurile maxime pentru voltaj"
 
 msgid "Displays a single metric of a specific host and service."
 msgstr ""
@@ -20423,9 +20425,6 @@ msgstr ""
 msgid "Host Properties"
 msgstr ""
 
-msgid "Host Statistics"
-msgstr ""
-
 msgid "Host Status Grouping"
 msgstr ""
 
@@ -20783,6 +20782,10 @@ msgstr ""
 #, fuzzy
 msgid "Host state translation"
 msgstr "%d traduceri"
+
+#, fuzzy
+msgid "Host statistics"
+msgstr " Se potriveste grupurilor: %s"
 
 msgid "Host status"
 msgstr ""
@@ -29716,9 +29719,9 @@ msgstr "Grup nou"
 msgid "New graph"
 msgstr "Cautare noua"
 
-#, fuzzy, python-format
-msgid "New host label: %d"
-msgid_plural "New host labels: %d"
+#, fuzzy
+msgid "New host label: "
+msgid_plural "New host labels: "
 msgstr[0] "Verificări active"
 msgstr[1] "Verificări active"
 msgstr[2] "Verificări active"
@@ -38612,9 +38615,6 @@ msgstr ""
 msgid "Service Speed-O-Meter"
 msgstr ""
 
-msgid "Service Statistics"
-msgstr ""
-
 #, fuzzy
 msgid "Service Status Grouping"
 msgstr "Statusul Serverului"
@@ -38888,6 +38888,10 @@ msgstr ""
 #, fuzzy
 msgid "Service state translation"
 msgstr "%d traduceri"
+
+#, fuzzy
+msgid "Service statistics"
+msgstr "Statusul Serverului"
 
 #, fuzzy
 msgid "Service status"
@@ -50949,9 +50953,9 @@ msgstr ""
 msgid "Undecided clustered services"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Undecided service: %d"
-msgid_plural "Undecided services: %d"
+#, fuzzy
+msgid "Undecided service: "
+msgid_plural "Undecided services: "
 msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
@@ -53005,16 +53009,16 @@ msgstr ""
 msgid "Vanished clustered services (located on cluster host)"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Vanished host label: %d"
-msgid_plural "Vanished host labels: %d"
+#, fuzzy
+msgid "Vanished host label: "
+msgid_plural "Vanished host labels: "
 msgstr[0] "Optiuni tabel"
 msgstr[1] "Optiuni tabel"
 msgstr[2] "Optiuni tabel"
 
-#, fuzzy, python-format
-msgid "Vanished service: %d"
-msgid_plural "Vanished services: %d"
+#, fuzzy
+msgid "Vanished service: "
+msgid_plural "Vanished services: "
 msgstr[0] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[1] "Vizibilitatea Elementelor/Serviciilor"
 msgstr[2] "Vizibilitatea Elementelor/Serviciilor"
@@ -58299,6 +58303,10 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Displays a sidebar element."
+#~ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 #~ msgid "Do not show any status border"

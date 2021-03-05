@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-03-04 15:53+0000\n"
 "Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
@@ -4797,6 +4797,9 @@ msgstr "Erlaubt, eigene %s zu löschen."
 msgid "Allows to edit %s created by other users."
 msgstr "Erlaubt, von anderen Benutzern erstellte %s zu bearbeiten."
 
+msgid "Allows you to use a sidebar element in the dashboard."
+msgstr ""
+
 msgid ""
 "Almost all available filters, used for searching services and maybe doing "
 "actions"
@@ -8377,9 +8380,9 @@ msgstr "Alerthandlerregel %d geändert"
 msgid "Changed global configuration variable %s to %s."
 msgstr "Globale Konfigurationsvariable %s nach %s geändert."
 
-#, python-format
-msgid "Changed host label: %d"
-msgid_plural "Changed host labels: %d"
+#, fuzzy
+msgid "Changed host label: "
+msgid_plural "Changed host labels: "
 msgstr[0] "Geänderte Hostlabel: %d"
 msgstr[1] "Geändertes Hostlabel: %d"
 
@@ -9168,6 +9171,10 @@ msgstr ""
 "Wählen Sie den Monitoring-Kern, den Sie nutzen wollen. Sie können die "
 "Instanz auch ohne Monitoring-Kern betreiben. Dies könnte bei Instanzen "
 "nützlich sein, die nur eine Weboberfläche zur Verfügung stellen sollen."
+
+#, fuzzy
+msgid "Choose the sidebar element you would like to show."
+msgstr "Wählen Sie das Element, das Sie anzeigen wollen."
 
 msgid "Choose the type of action to perform"
 msgstr "Wählen Sie den auszuführenden Aktionstyp"
@@ -14347,9 +14354,6 @@ msgid ""
 msgstr ""
 "Zeige ein Streudiagramm und Durchschnittslinien für einen ausgewählten "
 "Service-Typ an."
-
-msgid "Displays a sidebar element."
-msgstr "Zeigt ein Seitenleistenelement an"
 
 msgid "Displays a single metric of a specific host and service."
 msgstr "Zeigt eine einzelne Metrik eines bestimmten Hosts und Services an."
@@ -21126,9 +21130,6 @@ msgstr "Hostprobleme (unbehandelt)"
 msgid "Host Properties"
 msgstr "Hosteigenschaften"
 
-msgid "Host Statistics"
-msgstr "Hoststatistik"
-
 msgid "Host Status Grouping"
 msgstr "Hoststatus-Gruppierung"
 
@@ -21460,6 +21461,10 @@ msgstr "Hoststatus (1. Zeichen)"
 
 msgid "Host state translation"
 msgstr "Umschreiben von Host-Zuständen"
+
+#, fuzzy
+msgid "Host statistics"
+msgstr "Hoststatistik"
 
 msgid "Host status"
 msgstr "Hoststatus"
@@ -30731,9 +30736,9 @@ msgstr "Neuer Vorhersagegraph..."
 msgid "New graph"
 msgstr "Neuer Graph"
 
-#, python-format
-msgid "New host label: %d"
-msgid_plural "New host labels: %d"
+#, fuzzy
+msgid "New host label: "
+msgid_plural "New host labels: "
 msgstr[0] "Neues Host-Label: %d"
 msgstr[1] "Neue Host-Labels: %d"
 
@@ -33229,7 +33234,8 @@ msgid "Organization Name"
 msgstr "Name der Organisation"
 
 msgid "Organize your hosts in groups independent of the tree structure."
-msgstr "Organisieren Sie Ihre Hosts unabhängig von der Baumstruktur in Gruppen."
+msgstr ""
+"Organisieren Sie Ihre Hosts unabhängig von der Baumstruktur in Gruppen."
 
 msgid "Organize your services in groups"
 msgstr "Organisieren Sie Ihre Services in Gruppen"
@@ -37382,7 +37388,8 @@ msgid "Render in iframe"
 msgstr "In iframe anzeigen"
 
 msgid "Render the titlebar including title and link above the element."
-msgstr "Rendert die Titelleiste inklusive Titel und Link oberhalb des Elements."
+msgstr ""
+"Rendert die Titelleiste inklusive Titel und Link oberhalb des Elements."
 
 msgid "Render vertical rules between columns"
 msgstr "Vertikale Linien zwischen den Spalten zeichnen"
@@ -39566,9 +39573,6 @@ msgstr "Regulärer Ausdruck für Services:"
 msgid "Service Speed-O-Meter"
 msgstr "Service Speed-O-Meter"
 
-msgid "Service Statistics"
-msgstr "Servicestatistiken"
-
 msgid "Service Status Grouping"
 msgstr "Servicestatus-Gruppierung"
 
@@ -39821,6 +39825,10 @@ msgstr "Anzeigeoptionen für Service Status Prozentwert"
 
 msgid "Service state translation"
 msgstr "Übersetzen von Service-Zuständen"
+
+#, fuzzy
+msgid "Service statistics"
+msgstr "Servicestatistiken"
 
 msgid "Service status"
 msgstr "Servicestatus"
@@ -54520,9 +54528,9 @@ msgstr "Nicht korrigierbare Schlüsselwörter"
 msgid "Undecided clustered services"
 msgstr "Unentschiedene geclusterte Services"
 
-#, python-format
-msgid "Undecided service: %d"
-msgid_plural "Undecided services: %d"
+#, fuzzy
+msgid "Undecided service: "
+msgid_plural "Undecided services: "
 msgstr[0] "Unentschiedener Service: %d"
 msgstr[1] "Unentschiedene Services: %d"
 
@@ -56689,15 +56697,15 @@ msgstr "Verschwunden"
 msgid "Vanished clustered services (located on cluster host)"
 msgstr "Verschwundene geclusterte Dienste (auf dem Cluster-Host)"
 
-#, python-format
-msgid "Vanished host label: %d"
-msgid_plural "Vanished host labels: %d"
+#, fuzzy
+msgid "Vanished host label: "
+msgid_plural "Vanished host labels: "
 msgstr[0] "Verschwundenes Host-Label: %d"
 msgstr[1] "Verschwundene Host-Labels: %d"
 
-#, python-format
-msgid "Vanished service: %d"
-msgid_plural "Vanished services: %d"
+#, fuzzy
+msgid "Vanished service: "
+msgid_plural "Vanished services: "
 msgstr[0] "Verschwundener Service: %d"
 msgstr[1] "Verschwundene Services: %d"
 
@@ -62915,6 +62923,9 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Displays a sidebar element."
+#~ msgstr "Zeigt ein Seitenleistenelement an"
+
 #~ msgid "Color background after SERVICE state"
 #~ msgstr "Farbwert des Hintergrunds nach SERVICE Status"
 
@@ -62971,9 +62982,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Checkmk: Snapins"
 #~ msgstr "Checkmk: Seitenleistenelemente"
-
-#~ msgid "Choose the snapin you would like to show."
-#~ msgstr "Wählen Sie das Element, das Sie anzeigen wollen."
 
 #~ msgid "Clone snapin"
 #~ msgstr "Element Klonen"

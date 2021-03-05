@@ -10,6 +10,7 @@ import socket
 import time
 from enum import Enum
 from typing import (
+    Container,
     Counter,
     Dict,
     Iterable,
@@ -37,6 +38,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
     DiscoveryResult,
+    EVERYTHING,
     HostAddress,
     HostName,
     HostState,
@@ -165,7 +167,7 @@ def do_discovery(
     arg_hostnames: Set[HostName],
     *,
     selected_sections: SectionNameCollection,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
     only_host_labels: bool = False,
 ) -> None:
@@ -205,7 +207,7 @@ def do_discovery(
                 host_name,
                 ipaddress,
                 parsed_sections_broker,
-                run_only_plugin_names,
+                run_plugin_names,
                 arg_only_new,
                 discovery_parameters,
             )
@@ -253,7 +255,7 @@ def _do_discovery_for(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
     only_new: bool,
     discovery_parameters: DiscoveryParameters,
 ) -> None:
@@ -270,7 +272,7 @@ def _do_discovery_for(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
-        run_only_plugin_names=run_only_plugin_names,
+        run_plugin_names=run_plugin_names,
         only_new=only_new,
     )
 
@@ -928,7 +930,7 @@ def _get_node_services(
         ipaddress=ipaddress,
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
         only_new=True,
     )
 
@@ -1061,7 +1063,7 @@ def _get_cluster_services(
             ipaddress=node_ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             discovery_parameters=discovery_parameters,
-            run_only_plugin_names=None,
+            run_plugin_names=EVERYTHING,
             only_new=True,
         )
 

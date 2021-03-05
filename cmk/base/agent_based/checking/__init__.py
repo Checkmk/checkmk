@@ -10,6 +10,7 @@ from collections import defaultdict
 from typing import (
     Any,
     Callable,
+    Container,
     DefaultDict,
     Dict,
     List,
@@ -29,6 +30,7 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
     CheckPluginName,
+    EVERYTHING,
     ExitSpec,
     HostAddress,
     HostName,
@@ -93,7 +95,7 @@ def do_check(
     # The following arguments *must* remain optional for Nagios and the `DiscoCheckExecutor`.
     #   See Also: `cmk.base.discovery.check_discovery()`
     fetcher_messages: Sequence[FetcherMessage] = (),
-    run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
+    run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
@@ -123,7 +125,7 @@ def do_check(
         services_to_check = _get_services_to_check(
             config_cache=config_cache,
             host_name=hostname,
-            run_only_plugin_names=run_only_plugin_names,
+            run_plugin_names=run_plugin_names,
         )
 
         with CPUTracker() as tracker:
@@ -150,7 +152,7 @@ def do_check(
                 show_perfdata=show_perfdata,
             )
 
-            if run_only_plugin_names is None:
+            if run_plugin_names is EVERYTHING:
                 inventory.do_inventory_actions_during_checking_for(
                     config_cache,
                     host_config,
@@ -284,7 +286,7 @@ def _get_services_to_check(
     *,
     config_cache: config.ConfigCache,
     host_name: HostName,
-    run_only_plugin_names: Optional[Set[CheckPluginName]] = None,
+    run_plugin_names: Container[CheckPluginName],
 ) -> List[Service]:
     """Gather list of services to check"""
     services = config.resolve_service_dependencies(
@@ -295,7 +297,7 @@ def _get_services_to_check(
         ),
     )
 
-    if run_only_plugin_names is None:
+    if run_plugin_names is EVERYTHING:
         return [
             service for service in services
             if not service_outside_check_period(config_cache, host_name, service.description)
@@ -303,7 +305,7 @@ def _get_services_to_check(
 
     # If check types are specified via command line, drop all others
     return [
-        service for service in services if service.check_plugin_name in run_only_plugin_names and
+        service for service in services if service.check_plugin_name in run_plugin_names and
         not service_outside_check_period(config_cache, host_name, service.description)
     ]
 

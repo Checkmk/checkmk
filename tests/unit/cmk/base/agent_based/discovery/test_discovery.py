@@ -13,7 +13,14 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario  # type: ignore[import]
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName, HostKey, SectionName, SourceType, DiscoveryResult
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    DiscoveryResult,
+    EVERYTHING,
+    HostKey,
+    SectionName,
+    SourceType,
+)
 from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -552,7 +559,7 @@ def test__find_candidates():
 
     assert discovery._discovered_services._find_candidates(
         broker,
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
     ) == {
         CheckPluginName('docker_container_status_uptime'),
         CheckPluginName("kernel"),
@@ -649,7 +656,7 @@ def test_do_discovery(monkeypatch):
         discovery.do_discovery(
             arg_hostnames={"test-host"},
             selected_sections=NO_SELECTION,
-            run_only_plugin_names=None,
+            run_plugin_names=EVERYTHING,
             arg_only_new=False,
         )
 
@@ -1220,7 +1227,7 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
                                    ipaddress=scenario.ipaddress,
                                    parsed_sections_broker=scenario.parsed_sections_broker,
                                    discovery_parameters=discovery_parameters,
-                                   run_only_plugin_names=None,
+                                   run_plugin_names=EVERYTHING,
                                ))
 
     services = {(s.check_plugin_name, s.item) for s in discovered_services}

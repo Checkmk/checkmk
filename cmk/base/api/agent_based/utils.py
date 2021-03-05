@@ -426,7 +426,9 @@ def check_levels_predictive(
 
 
 class GetRateError(IgnoreResultsError):
-    pass
+    """The exception raised by :func:`.get_rate`.
+    If unhandled, this exception will make the service go stale.
+    """
 
 
 def get_rate(
@@ -461,8 +463,8 @@ def get_rate(
         * the rate is negative and `raise_overflow` is set to True (usefull
           for instance when dealing with counters)
 
-    In general there is no need to catch a :class:`GetRateError`, as it
-    inherits :class:`IgnoreReultsError`.
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
 
     Example:
 

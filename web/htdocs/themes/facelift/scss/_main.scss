@@ -219,7 +219,6 @@ input.button.hot {
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
-    text-transform: uppercase;
     border: none;
     border-radius: 8px;
     box-shadow: none;
@@ -239,9 +238,8 @@ input.button.hot {
     a,
     .wato div.globalvars & a {
       float: left;
-      background-color: $toggle-switch-on-bg-color;
-      border: $toggle-switch-on-border;
       color: $toggle-switch-font-color-on;
+      background-color: $success;
     }
   }
 
@@ -249,9 +247,8 @@ input.button.hot {
     a,
     .wato div.globalvars & a {
       float: left;
-      background-color: $toggle-switch-off-bg-color;
-      border: $toggle-switch-off-border;
       color: $toggle-switch-font-color-off;
+      background-color: $inpage-highlight-color;
     }
   }
 

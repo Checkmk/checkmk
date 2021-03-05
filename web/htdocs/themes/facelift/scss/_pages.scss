@@ -690,14 +690,15 @@ textarea,
 div.snapin textarea,
 #mk_side_search_field,
 .tagify__input {
-  height: $input-field-height;
-  padding: 3px 6px;
+  $padding: 3px;
+
+  height: ($input-field-height - 2 * $padding);
+  padding: $padding 6px;
   color: $font-color;
   background-color: $inpage-highlight-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
-  box-sizing: border-box;
 }
 
 span.select2 .select2-selection {

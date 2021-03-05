@@ -486,7 +486,6 @@ div.spacertop {
     margin-bottom: 10px;
     clear: both;
     box-sizing: border-box;
-    background-image: url(images/select_arrow.png);
   }
   ul {
     list-style-type: none;
@@ -687,8 +686,11 @@ table.cmc_stats {
     float: left;
     margin-top: 3px;
     margin-bottom: 5px;
-    background-image: url(images/select_arrow.png);
   }
+}
+
+div.snapin select {
+  background-image: url(images/select_arrow.png);
 }
 
 /*

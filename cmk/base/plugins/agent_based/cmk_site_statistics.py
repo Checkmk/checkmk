@@ -4,28 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import (
-    dataclass,
-    fields,
-)
-from typing import (
-    Dict,
-    Mapping,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-    register,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from dataclasses import dataclass, fields
+from typing import Dict, Mapping, Optional, Tuple, Union
+
+from .agent_based_api.v1 import Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.livestatus_status import LivestatusSection
 
 
 @dataclass
@@ -46,10 +30,10 @@ class ServiceStatistics:
     critical: int
 
 
-Section = Mapping[str, Tuple[HostStatistics, ServiceStatistics]]
+CMKSiteStatisticsSection = Mapping[str, Tuple[HostStatistics, ServiceStatistics]]
 
 
-def parse_cmk_site_statistics(string_table: StringTable) -> Section:
+def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSection:
     """
     >>> from pprint import pprint
     >>> pprint(parse_cmk_site_statistics([
@@ -80,8 +64,12 @@ register.agent_section(
 )
 
 
-def discover_cmk_site_statistics(section: Section) -> DiscoveryResult:
-    yield from (Service(item=site_name) for site_name in section)
+def discover_cmk_site_statistics(
+    section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
+    section_livestatus_status: Optional[LivestatusSection],
+) -> DiscoveryResult:
+    if section_cmk_site_statistics:
+        yield from (Service(item=site_name) for site_name in section_cmk_site_statistics)
 
 
 def _host_results(host_stats: HostStatistics) -> CheckResult:
@@ -136,18 +124,32 @@ def _metrics_from_stats(
         )
 
 
-def check_cmk_site_statistics(item: str, section: Section) -> CheckResult:
-    if item not in section:
+def check_cmk_site_statistics(
+    item: str,
+    section_cmk_site_statistics: Optional[CMKSiteStatisticsSection],
+    section_livestatus_status: Optional[LivestatusSection],
+) -> CheckResult:
+    if not section_cmk_site_statistics or item not in section_cmk_site_statistics:
         return
-    host_stats, service_stats = section[item]
+    host_stats, service_stats = section_cmk_site_statistics[item]
     yield from _host_results(host_stats)
     yield from _service_results(service_stats)
     yield from _metrics_from_stats(host_stats, "cmk_hosts")
     yield from _metrics_from_stats(service_stats, "cmk_services")
 
+    # This part is needed for the timeseries graphs which show host and service problems in the
+    # main dashboard (to as far as possible uniquely cross-match sites in this agent output with
+    # sites to which are remotely connected)
+    if section_livestatus_status and item in section_livestatus_status:
+        yield Result(
+            state=State.OK,
+            notice=f"Core PID: {section_livestatus_status[item]['core_pid']}",
+        )
+
 
 register.check_plugin(
     name="cmk_site_statistics",
+    sections=["cmk_site_statistics", "livestatus_status"],
     service_name="Site %s statistics",
     discovery_function=discover_cmk_site_statistics,
     check_function=check_cmk_site_statistics,

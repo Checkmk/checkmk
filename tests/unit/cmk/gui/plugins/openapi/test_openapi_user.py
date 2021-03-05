@@ -456,5 +456,72 @@ def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
     assert user_endpoint_attrs["customer"] == "global"
 
 
+@managedtest
+def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
+    # this test uses the internal mechanics of the user endpoint
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr(
+        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        lambda x: '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C')
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    user_detail = {
+        'username': 'cmkuser',
+        'fullname': 'Mathias Kettner',
+        'customer': 'global',
+        'auth_option': {
+            'auth_type': 'password',
+            'password': 'password'
+        },
+        'disable_login': False,
+        'contact_options': {
+            'email': 'user@example.com'
+        },
+        'pager_address': '',
+        'idle_timeout': {
+            "option": "global"
+        },
+        'roles': ['user'],
+        'disable_notifications': {
+            'disable': False
+        },
+        'language': 'en'
+    }
+
+    base = "/NO_SITE/check_mk/api/v0"
+    with freeze_time("2010-02-01 08:00:00"):
+        _resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            status=200,
+            content_type='application/json',
+        )
+
+    resp = wsgi_app.call_method('get', base + f"/objects/user_config/cmkuser", status=200)
+
+    assert resp.json_body["extensions"]["attributes"] == {
+        'enforce_pw_change': True,
+        'alias': 'Mathias Kettner',
+        'locked': False,
+        'pager': '',
+        'num_failed_logins': 0,  # this is added afterward internally
+        'roles': ['user'],
+        'contactgroups': [],
+        'language': 'en',
+        'customer': 'global',
+        'email': 'user@example.com',
+        'fallback_contact': False,
+        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+        'last_pw_change': 1265011200,
+        'serial': 1,
+        'disable_notifications': {},
+        'user_scheme_serial': 0,
+    }
+
+
 def _random_string(size):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))

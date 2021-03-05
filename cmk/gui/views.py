@@ -2001,7 +2001,7 @@ def _get_view_rows(view: View,
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
         for filter_ in all_active_filters:
-            rows = filter_.filter_table(rows)
+            rows = filter_.filter_table(view.context, rows)
 
     view.process_tracking.amount_unfiltered_rows = unfiltered_amount_of_rows
     view.process_tracking.amount_filtered_rows = len(rows)

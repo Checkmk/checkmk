@@ -58,7 +58,7 @@ div.tile {
     span {
       display: flex;
       align-items: center;
-      height: 95%;
+      height: calc(100% - 3px);
       border-radius: 2px;
     }
   }

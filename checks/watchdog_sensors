@@ -33,17 +33,35 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.4.1.21239.5.1.2.1.7.1 56
 
 
-def parse_watchdog_sensors(info):
-    translate_unit = {
-        '1': 'C',
-        '0': 'F',
-    }
-
-    translate_availability = {
+def _translate_availability(availability):
+    return {
         '0': (2, 'unavailable'),
         '1': (0, 'available'),
         '2': (1, 'partially unavailable'),
+    }[availability]
+
+
+def _parse_legacy_line(line, temp_unit):
+    return {
+        'descr': line[1],
+        'availability': _translate_availability(line[3]),
+        'temp': (line[4], temp_unit),
+        'humidity': line[5],
+        'dew': (line[6], temp_unit),
     }
+
+
+def _parse_line(line, temp_unit):
+    return {
+        'descr': line[1],
+        'availability': _translate_availability(line[2]),
+        'temp': (line[3], temp_unit),
+        'humidity': line[4],
+        'dew': (line[5], temp_unit),
+    }
+
+
+def parse_watchdog_sensors(info):
 
     parsed = {}
 
@@ -51,35 +69,21 @@ def parse_watchdog_sensors(info):
     if not general:
         return parsed
 
-    # sometimes there is an empty string in
-    # the output. We need to handle this...
-    if not general[0][1] == "":
-        unit = translate_unit[general[0][1]]
-    else:
-        unit = "C"
+    temp_unit = {
+        '1': 'C',
+        '0': 'F',
+        '': 'C',
+    }[general[0][1]]
 
     version = int(general[0][0].replace('.', ''))
 
     if version <= 300:
-        for line in data:
-            item = line[0]
-
-            parsed[item] = {}
-            parsed[item]['descr'] = line[1]
-            parsed[item]['availability'] = translate_availability[line[3]]
-            parsed[item]['temp'] = (line[4], unit)
-            parsed[item]['humidity'] = line[5]
-            parsed[item]['dew'] = (line[6], unit)
+        line_parser = _parse_legacy_line
     else:
-        for line in data:
-            item = line[0]
+        line_parser = _parse_line
 
-            parsed[item] = {}
-            parsed[item]['descr'] = line[1]
-            parsed[item]['availability'] = translate_availability[line[2]]
-            parsed[item]['temp'] = (line[3], unit)
-            parsed[item]['humidity'] = line[4]
-            parsed[item]['dew'] = (line[5], unit)
+    for line in data:
+        parsed[line[0]] = line_parser(line, temp_unit)
 
     return parsed
 

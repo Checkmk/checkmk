@@ -193,8 +193,12 @@ div#service_container {
 
   table.data {
     tr.data > td {
-      height: auto;
       padding: 3px 7px;
+
+      &.state {
+        height: 100%;
+        padding: 0 1px;
+      }
 
       &.service {
         width: 250px;

@@ -627,7 +627,7 @@ td.dictleft div.dictelement {
   &.indent {
     padding-left: 10px;
     margin-left: 6px;
-    border-left: 2px dotted rgba($font-color, 0.5);
+    border-left: 2px solid $inpage-highlight-color;
 
     ul {
       margin-top: 1px;

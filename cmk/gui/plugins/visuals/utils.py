@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union, Type, Iterator
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
@@ -268,6 +268,10 @@ class Filter(metaclass=abc.ABCMeta):
 
     def validate_value(self, value: Dict) -> None:
         return
+
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+        """Columns needed to perform post-Livestatus filtering"""
+        return []
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""

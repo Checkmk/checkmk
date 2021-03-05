@@ -6,6 +6,7 @@
 
 # yapf: disable
 
+from cmk.gui.plugins.visuals.utils import Filter
 import copy
 from typing import Any, Dict
 
@@ -5701,8 +5702,26 @@ def test_register_sorter(monkeypatch):
 
 
 def test_get_needed_regular_columns(view):
+    class SomeFilter(Filter):
+        def display(self):
+            return
 
-    columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
+        def columns_for_filter_table(self, context):
+            return ["some_column"]
+
+    columns = cmk.gui.views._get_needed_regular_columns(
+        [
+            SomeFilter(
+                ident="some_filter",
+                title="Some filter",
+                sort_index=1,
+                info="info",
+                htmlvars=[],
+                link_columns=[],
+            )
+        ],
+        view,
+    )
     assert sorted(columns) == sorted([
         'host_accept_passive_checks',
         'host_acknowledged',
@@ -5737,6 +5756,7 @@ def test_get_needed_regular_columns(view):
         'host_scheduled_downtime_depth',
         'host_staleness',
         'host_state',
+        'some_column',
     ])
 
 

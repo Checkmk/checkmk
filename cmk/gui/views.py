@@ -13,7 +13,8 @@ import pprint
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Sequence, Set
+from itertools import chain
+from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -2027,8 +2028,10 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
-                                              view.datasource)
+        columns = _get_needed_regular_columns(
+            all_active_filters,
+            view,
+        )
 
         rows: Rows = view.datasource.table.query(view, columns, headers, view.only_sites,
                                                  view.row_limit, all_active_filters)
@@ -2124,8 +2127,10 @@ def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:
             "host" in view_spec["single_infos"] and view_spec.get("name") != "ec_events_of_monhost")
 
 
-def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
-                                datasource: ABCDataSource) -> List[ColumnName]:
+def _get_needed_regular_columns(
+    all_active_filters: Iterable[Filter],
+    view: View,
+) -> List[ColumnName]:
     """Compute the list of all columns we need to query via Livestatus
 
     Those are: (1) columns used by the sorters in use, (2) columns use by column- and group-painters
@@ -2134,21 +2139,26 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     """
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
-    if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
+    if html.request.var("mode") == "availability" and "aggr" in view.datasource.infos:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
-    columns = columns_of_cells(cells)
+    columns = columns_of_cells(view.group_cells + view.row_cells)
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()
-    for entry in sorters:
+    for entry in view.sorters:
         columns.update(entry.sorter.columns)
 
     # Add key columns, needed for executing commands
-    columns.update(datasource.keys)
+    columns.update(view.datasource.keys)
 
     # Add idkey columns, needed for identifying the row
-    columns.update(datasource.id_keys)
+    columns.update(view.datasource.id_keys)
+
+    # Add columns requested by filters for post-livestatus filtering
+    columns.update(
+        chain.from_iterable(
+            filter.columns_for_filter_table(view.context) for filter in all_active_filters))
 
     # Remove (implicit) site column
     try:
@@ -2162,7 +2172,7 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     # E.g. on a "single host" page the host labels are needed for the decision.
     # This is currently realized explicitly until we need a more flexible mechanism.
     if display_options.enabled(display_options.B) \
-            and "host" in datasource.infos:
+            and "host" in view.datasource.infos:
         columns.add("host_labels")
 
     return list(columns)

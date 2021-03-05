@@ -161,10 +161,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
             "GET status\n"
             "Cache: reload\n"
-            "Columns: livestatus_version program_version program_start num_hosts num_services"):
+            "Columns: livestatus_version program_version program_start num_hosts num_services "
+            "core_pid"):
 
         try:
-            site_id, v1, v2, ps, num_hosts, num_services = response
+            site_id, v1, v2, ps, num_hosts, num_services, pid = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -184,6 +185,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             "num_hosts": num_hosts,
             "num_services": num_services,
             "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+            "core_pid": pid,
         })
     g.live.set_prepend_site(False)
 

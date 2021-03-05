@@ -238,6 +238,55 @@ def show_downtimes(param):
     return _serve_downtimes(gen_downtimes)
 
 
+@Endpoint(
+    constructors.object_href('downtime', '{downtime_id}'),
+    'cmk/show',
+    method='get',
+    path_params=[{
+        'downtime_id': fields.Integer(
+            description="The id of the downtime",
+            example="1",
+        )
+    }],
+    response_schema=response_schemas.DomainObject,
+)
+def show_downtime(params):
+    """Show downtime"""
+    live = sites.live()
+    downtime_id = params["downtime_id"]
+    q = Query(
+        columns=[
+            Downtimes.id,
+            Downtimes.host_name,
+            Downtimes.service_description,
+            Downtimes.is_service,
+            Downtimes.author,
+            Downtimes.start_time,
+            Downtimes.end_time,
+            Downtimes.recurring,
+            Downtimes.comment,
+        ],
+        filter_expr=Downtimes.id.op("=", downtime_id),
+    )
+
+    try:
+        downtime = q.fetchone(live)
+    except ValueError:
+        return problem(
+            status=404,
+            title="The requested downtime was not found",
+            detail=f"The downtime id {downtime_id} did not match any downtime",
+        )
+    return _serve_downtime(downtime)
+
+
+def _serve_downtime(downtime_details):
+    response = Response()
+    response.set_data(json.dumps(_serialize_single_downtime(downtime_details)))
+    response.set_content_type('application/json')
+    return response
+
+
 @Endpoint(constructors.domain_type_action_href('downtime', 'delete'),
           '.../delete',
           method='post',
@@ -283,39 +332,42 @@ def _serve_downtimes(downtimes):
 def _serialize_downtimes(downtimes):
     entries = []
     for downtime in downtimes:
-        if downtime["is_service"]:
-            downtime_detail = "service: %s" % downtime["service_description"]
-        else:
-            downtime_detail = "host: %s" % downtime["host_name"]
-
-        downtime_id = downtime['id']
-        entries.append(
-            constructors.domain_object(
-                domain_type='downtime',
-                identifier=downtime_id,
-                title='Downtime for %s' % downtime_detail,
-                extensions=_downtime_properties(downtime),
-                links=[
-                    constructors.link_rel(
-                        rel='.../delete',
-                        href='/domain-types/downtime/actions/delete/invoke',
-                        method='post',
-                        title='Delete the downtime',
-                        body_params={
-                            'delete_type': 'by_id',
-                            'downtime_id': downtime_id
-                        },
-                    ),
-                ],
-                editable=False,
-                deletable=False,
-            ))
+        entries.append(_serialize_single_downtime(downtime))
 
     return constructors.object_collection(
         name='all',
         domain_type='downtime',
         entries=entries,
         base='',
+    )
+
+
+def _serialize_single_downtime(downtime):
+    if downtime["is_service"]:
+        downtime_detail = "service: %s" % downtime["service_description"]
+    else:
+        downtime_detail = "host: %s" % downtime["host_name"]
+
+    downtime_id = downtime['id']
+    return constructors.domain_object(
+        domain_type='downtime',
+        identifier=downtime_id,
+        title='Downtime for %s' % downtime_detail,
+        extensions=_downtime_properties(downtime),
+        links=[
+            constructors.link_rel(
+                rel='.../delete',
+                href='/domain-types/downtime/actions/delete/invoke',
+                method='post',
+                title='Delete the downtime',
+                body_params={
+                    'delete_type': 'by_id',
+                    'downtime_id': downtime_id
+                },
+            ),
+        ],
+        editable=False,
+        deletable=False,
     )
 
 

@@ -708,3 +708,76 @@ def test_openapi_downtime_non_existing_groups(
         }),
         status=400,
     )
+
+
+def test_openapi_downtime_get_single(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.add_table('downtimes', [{
+        'id': 123,
+        'host_name': 'heute',
+        'service_description': 'CPU load',
+        'is_service': 1,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'literally nothing'
+    }, {
+        'id': 124,
+        'host_name': 'heute',
+        'service_description': 'Memory',
+        'is_service': 1,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'some service downtime'
+    }])
+
+    live.expect_query([
+        'GET downtimes',
+        'Columns: id host_name service_description is_service author start_time end_time recurring comment',
+        'Filter: id = 123',
+    ])
+
+    with live:
+        resp = wsgi_app.call_method(
+            'get',
+            base + "/objects/downtime/123",
+            status=200,
+        )
+        assert resp.json_body["title"] == "Downtime for service: CPU load"
+
+
+def test_openapi_downtime_invalid_single(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/v0'
+
+    live.expect_query([
+        'GET downtimes',
+        'Columns: id host_name service_description is_service author start_time end_time recurring comment',
+        'Filter: id = 123',
+    ])
+
+    with live:
+        _ = wsgi_app.call_method(
+            'get',
+            base + "/objects/downtime/123",
+            status=404,
+        )

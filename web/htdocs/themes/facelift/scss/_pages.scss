@@ -731,7 +731,6 @@ input[type="checkbox"] {
 @mixin button-mixin {
   display: inline-block;
   width: auto;
-  height: $input-field-height;
   margin-top: 8px;
   margin-right: 8px;
   margin-bottom: 8px;
@@ -741,7 +740,6 @@ input[type="checkbox"] {
   color: $input-button-color;
   background-color: $input-button-bg-color;
   box-shadow: none;
-  box-sizing: border-box;
 
   &:hover,
   &:active {

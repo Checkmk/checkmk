@@ -16,7 +16,7 @@ from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.metrics import (
@@ -249,11 +249,14 @@ class GraphDashlet(Dashlet):
             self._dashlet_spec["context"])
         self._dashlet_spec["_graph_identification"] = self.graph_identification(context)
 
-        graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
-        if isinstance(graph_recipes, list) and graph_recipes:
-            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
-        else:
+        try:
+            graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
+        except MKMissingDataError:
+            raise
+        except:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
+
+        self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
     def _resolve_site(host):

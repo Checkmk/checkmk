@@ -41,7 +41,13 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.exceptions import (
+    HTTPRedirect,
+    MKAuthException,
+    MKGeneralException,
+    MKMissingDataError,
+    MKUserError,
+)
 from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -63,7 +69,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.utils.html import HTML
+from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -659,8 +665,8 @@ def dashlet_container_end() -> None:
 
 
 def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
-                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], str]:
-    content = ""
+                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], HTMLInput]:
+    content: HTMLInput = ""
     title: Union[str, HTML] = ""
     try:
         missing_single_infos = dashlet.missing_single_infos()
@@ -715,7 +721,9 @@ def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
         return html.drain()
 
 
-def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
+    if isinstance(e, MKMissingDataError):
+        return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):
         # Do not write regular error messages related to normal user interaction and validation to
@@ -1347,7 +1355,7 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
         raise MKGeneralException(_('The dashboard element does not exist.'))
 
 
-def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> None:
+def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: Union[str, HTML]) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -1421,7 +1429,7 @@ def ajax_dashlet() -> None:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, board, ident, dashlet_spec)
 
-        content = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
+        content: HTMLInput = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, board, dashlet_spec, ident)

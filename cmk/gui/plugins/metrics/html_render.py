@@ -554,9 +554,21 @@ def forget_manual_vertical_zoom():
 
 
 def resolve_graph_recipe(graph_identification: GraphIdentifier, destination=None):
+    return graph_identification_types.create_graph_recipes(
+        graph_identification,
+        destination=None,
+    )
+
+
+def resolve_graph_recipe_with_error_handling(
+    graph_identification: GraphIdentifier,
+    destination=None,
+):
     try:
-        return graph_identification_types.create_graph_recipes(graph_identification,
-                                                               destination=None)
+        return resolve_graph_recipe(
+            graph_identification,
+            destination=destination,
+        )
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r" % (_("Cannot fetch data via Livestatus"),
@@ -573,7 +585,7 @@ def render_graphs_from_specification_html(
     render_async=True,
 ):
 
-    graph_recipes = resolve_graph_recipe(graph_identification)
+    graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
     if not isinstance(graph_recipes, list):
         return graph_recipes  # This is to html.write the exception
 
@@ -876,8 +888,10 @@ def host_service_graph_dashlet_cmk(
     graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
                                                             graph_render_options)
 
-    graph_recipes = resolve_graph_recipe(graph_identification,
-                                         destination=GraphDestinations.dashlet)
+    graph_recipes = resolve_graph_recipe_with_error_handling(
+        graph_identification,
+        destination=GraphDestinations.dashlet,
+    )
     if not isinstance(graph_recipes, list):
         return graph_recipes  # This is to html.write the exception
     if graph_recipes:

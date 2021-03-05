@@ -511,12 +511,6 @@ class MoveFolder(BaseSchema):
 
 
 class CreateDowntimeBase(BaseSchema):
-    downtime_type = fields.String(
-        required=True,
-        description="The type of downtime to create.",
-        enum=['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query', 'service_by_query'],
-        example="host",
-    )
     start_time = fields.DateTime(
         format="iso8601",
         required=True,
@@ -548,6 +542,24 @@ class CreateDowntimeBase(BaseSchema):
         missing=0,
     )
     comment = fields.String(required=False, example="Security updates")
+
+
+class CreateHostDowntimeBase(CreateDowntimeBase):
+    downtime_type = fields.String(
+        required=True,
+        description="The type of downtime to create.",
+        enum=['host', 'hostgroup', 'host_by_query'],
+        example="host",
+    )
+
+
+class CreateServiceDowntimeBase(CreateDowntimeBase):
+    downtime_type = fields.String(
+        required=True,
+        description="The type of downtime to create.",
+        enum=['service', 'servicegroup', 'service_by_query'],
+        example="service",
+    )
 
 
 class TimePeriodName(fields.String):
@@ -766,12 +778,12 @@ INCLUDE_ALL_SERVICES = fields.Bool(
 )
 
 
-class CreateHostDowntime(CreateDowntimeBase):
+class CreateHostDowntime(CreateHostDowntimeBase):
     host_name = MONITORED_HOST
     duration = HOST_DURATION
 
 
-class CreateServiceDowntime(CreateDowntimeBase):
+class CreateServiceDowntime(CreateServiceDowntimeBase):
     host_name = MONITORED_HOST
     service_descriptions = fields.List(
         fields.String(),
@@ -788,7 +800,7 @@ class CreateServiceDowntime(CreateDowntimeBase):
     )
 
 
-class CreateServiceGroupDowntime(CreateDowntimeBase):
+class CreateServiceGroupDowntime(CreateServiceDowntimeBase):
     servicegroup_name = Group(
         group_type="service",
         example="windows",
@@ -800,7 +812,7 @@ class CreateServiceGroupDowntime(CreateDowntimeBase):
     duration = HOST_DURATION
 
 
-class CreateHostGroupDowntime(CreateDowntimeBase):
+class CreateHostGroupDowntime(CreateHostDowntimeBase):
     hostgroup_name = Group(
         group_type="host",
         example="windows",
@@ -811,12 +823,12 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
     duration = HOST_DURATION
 
 
-class CreateHostQueryDowntime(CreateDowntimeBase):
+class CreateHostQueryDowntime(CreateHostDowntimeBase):
     query = query_field(tables.Hosts, required=True)
     duration = HOST_DURATION
 
 
-class CreateServiceQueryDowntime(CreateDowntimeBase):
+class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
     query = query_field(tables.Services, required=True)
     duration = SERVICE_DURATION
 

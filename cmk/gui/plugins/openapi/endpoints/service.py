@@ -29,7 +29,11 @@ PARAMETERS = [{
         description="Restrict the query to this particular site.",
         missing=list,
     ),
-    'query': fields.query_field(Services, required=False),
+    'query': fields.query_field(
+        Services,
+        required=False,
+        example='{"op": "=", "left": "host_name", "right": "example.com"}',
+    ),
     'columns': fields.column_field(
         Services,
         mandatory=[

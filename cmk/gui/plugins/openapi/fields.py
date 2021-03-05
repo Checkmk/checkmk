@@ -670,7 +670,7 @@ class _ExprNested(Nested):
         return tree_to_expr(_data, table=self.metadata['table'])
 
 
-def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
+def query_field(table: typing.Type[Table], required: bool = False, example=None) -> Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
 
     Args:
@@ -678,20 +678,16 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
             A Livestatus Table class.
         required:
             Whether the field shall be required.
+        example:
+            optional query example
 
     Returns:
         A marshmallow Nested field.
 
     """
-    return _ExprNested(
-        ExprSchema(context={'table': table}),
-        table=table,
-        description=(
-            f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
-            "dictionary form. If you want to use multiple expressions, nest them with the "
-            "AND/OR operators."),
-        many=False,
-        example=json.dumps({
+
+    if example is None:
+        example = json.dumps({
             'op': 'and',
             'expr': [{
                 'op': '=',
@@ -702,7 +698,17 @@ def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
                 'left': 'state',
                 'right': '0'
             }],
-        }),
+        })
+
+    return _ExprNested(
+        ExprSchema(context={'table': table}),
+        table=table,
+        description=(
+            f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
+            "dictionary form. If you want to use multiple expressions, nest them with the "
+            "AND/OR operators."),
+        many=False,
+        example=example,
         required=required,
     )
 

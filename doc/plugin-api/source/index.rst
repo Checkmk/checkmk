@@ -12,17 +12,14 @@ a look at the articles about extending Checkmk in our `official guide <https://c
 
 .. toctree::
    :caption: Base
-   :maxdepth: 1
-   :glob:
 
-   apidoc/cmk/cmk.base*_api.v*
+   apidoc/cmk/cmk.base.plugins.agent_based.agent_based_api
+   apidoc/cmk/cmk.base.cee.plugins.bakery.bakery_api
 
 .. toctree::
    :caption: Dynamic configuration
-   :maxdepth: 1
-   :glob:
 
-   apidoc/cmk/cmk.cee.dcd.*_api.v*
+   apidoc/cmk/cmk.cee.dcd.plugins.connectors.connectors_api
 
 Indices and tables
 ==================

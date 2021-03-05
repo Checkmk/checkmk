@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-.. rubric:: render
+=========================
+agent_based_api.v1.render
+=========================
 
 The "render" namespace adds functions to render values in a human readable way.
 

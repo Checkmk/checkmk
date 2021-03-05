@@ -6,7 +6,7 @@
 
 import re
 import json
-from typing import Any, Dict, List, Optional, Union, Callable, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Union, Callable, Tuple
 
 import livestatus
 
@@ -19,6 +19,7 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
+from cmk.gui.exceptions import MKMissingDataError
 from cmk.gui.type_defs import Choices, Row, Rows, VisualContext
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
@@ -42,6 +43,7 @@ from cmk.gui.plugins.visuals import (
 from cmk.gui.plugins.visuals.utils import (
     filter_cre_choices,
     filter_cre_heading_info,
+    get_only_sites_from_context,
 )
 
 
@@ -3082,3 +3084,86 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {}
+
+
+class FilterCMKSiteStatisticsByCorePIDs(Filter):
+    ID = "service_cmk_site_statistics_core_pid"
+
+    def display(self) -> None:
+        return html.write_text(
+            _("Used in the host and service problems graphs of the main dashboard. Not intended "
+              "for any other purposes."))
+
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+        if self.ID in context:
+            yield "service_description"
+            yield "long_plugin_output"
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        if self.ID not in context:
+            return rows
+
+        # ids and core pids of connected sites, i.e., what we hope to find the service output
+        pids_of_connected_sites = {
+            site_id: site_status["core_pid"] for site_id, site_status in sites.states().items()
+        }
+        # apply potential filters on sites
+        if only_sites := get_only_sites_from_context(context):
+            pids_of_connected_sites = {
+                site_id: core_pid
+                for site_id, core_pid in pids_of_connected_sites.items()
+                if site_id in only_sites
+            }
+
+        connected_sites = set(pids_of_connected_sites)
+
+        # ids and core pids from the service output
+        sites_and_pids_from_services = []
+        rows_right_service = []
+        for row in rows:
+            if not re.match("Site [^ ]* statistics$", row["service_description"]):
+                continue
+            rows_right_service.append(row)
+            site = row["service_description"].split(" ")[1]
+            re_matches_pid = re.findall("Core PID: ([0-9][0-9]*)", row["long_plugin_output"])
+            if re_matches_pid:
+                pid: Optional[int] = int(re_matches_pid[0])
+            else:
+                pid = None
+            sites_and_pids_from_services.append((site, pid))
+
+        unique_sites_from_services = set(site for (site, _pid) in sites_and_pids_from_services)
+
+        # sites from service outputs are unique and all expected sites are present --> no need to
+        # filter by PIDs
+        if (unique_sites_from_services == connected_sites and
+                len(unique_sites_from_services) == len(sites_and_pids_from_services)):
+            return rows_right_service
+
+        # check if sites are missing
+        if not unique_sites_from_services.issuperset(connected_sites):
+            raise MKMissingDataError(
+                _("Missing 'Site [SITE] statistics' service of the following sites: %s. Either the "
+                  "corresponding Checkmk servers are not monitored at all, or you filtered them "
+                  "out by applying site filters. Until this is fixed, we are unable to render.") %
+                ", ".join(connected_sites - unique_sites_from_services))
+
+        # there are duplicate sites --> filter by PID
+        rows_filtered = []
+        for row, (site, pid) in zip(rows_right_service, sites_and_pids_from_services):
+            if site in pids_of_connected_sites and pid == pids_of_connected_sites[site]:
+                rows_filtered.append(row)
+                del pids_of_connected_sites[site]
+
+        return rows_filtered
+
+
+filter_registry.register(
+    FilterCMKSiteStatisticsByCorePIDs(
+        ident=FilterCMKSiteStatisticsByCorePIDs.ID,
+        title=_l("cmk_site_statistics (core PIDs)"),
+        sort_index=900,
+        info="service",
+        htmlvars=[FilterCMKSiteStatisticsByCorePIDs.ID],
+        link_columns=[],
+    ))

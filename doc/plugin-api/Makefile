@@ -39,6 +39,7 @@ apidoc-clean:
 #             package will be missing otherwise, because we don't iterate
 #             over them in the package.rst_t template
 apidoc:
+	SPHINX_APIDOC_OPTIONS=members,show-inheritance \
 	$(SPHINXAPIDOC) \
 	    --follow-links \
 	    --implicit-namespaces \

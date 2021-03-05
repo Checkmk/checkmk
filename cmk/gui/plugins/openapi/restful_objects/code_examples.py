@@ -205,6 +205,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
 # Beware, correct whitespace handling in this template is a bit tricky.
 CODE_TEMPLATE_REQUESTS = """
 #!/usr/bin/env python3
+import pprint
 import requests
 
 HOST_NAME = "{{ hostname }}"
@@ -235,11 +236,11 @@ resp = session.{{ method }}(
     {%- endif %}
 )
 if resp.status_code == 200:
-    print(resp.json())
+    pprint.pprint(resp.json())
 elif resp.status_code == 204:
     print("Done")
 else:
-    raise RuntimeError(repr(resp.json()))
+    raise RuntimeError(pprint.pformat(resp.json()))
 """
 
 CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])

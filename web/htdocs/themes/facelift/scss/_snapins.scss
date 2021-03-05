@@ -553,11 +553,10 @@ div.spacertop {
 
   input {
     width: 100%;
-    padding: 6px 0 6px $spacing;
+    height: $input-field-height;
     color: $font-color-sidebar;
-    background-color: $sidebar-input-field-bg-color;
     background-image: url("images/icon_quicksearch.png");
-    background-position: right $spacing bottom 6px;
+    background-position: right $spacing bottom 4px;
     background-size: 15px;
   }
 
@@ -584,7 +583,7 @@ div.spacertop {
   padding: 8px;
   margin-top: 2px;
   color: $font-color-sidebar;
-  background-color: $sidebar-input-field-bg-color;
+  background-color: $inpage-highlight-color;
 
   a {
     display: block;

@@ -271,8 +271,8 @@ div#snapin_tactical_overview {
   width: 100%;
 }
 
-#snapin_container_tactical_overview.more th span.more,
-#snapin_container_tactical_overview.less th span.less {
+div.snapin.more table.tacticaloverview th span.more,
+div.snapin.less table.tacticaloverview th span.less {
   display: inline;
 }
 

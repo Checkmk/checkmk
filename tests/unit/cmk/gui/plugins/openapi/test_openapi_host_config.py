@@ -219,6 +219,26 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
                                  content_type='application/json')
 
 
+def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/actions/bulk-create/invoke",
+        params=json.dumps(
+            {'entries': [{
+                'host_name': 'example.com',
+                'folder': '/',
+                'attributes': {}
+            }]}),
+        status=200,
+        content_type='application/json',
+    )
+
+
 def test_openapi_host_rename(
     wsgi_app,
     with_automation_user,
@@ -455,4 +475,40 @@ def test_openapi_host_move_of_non_existing_host(
         params='{"target_folder": "/"}',
         content_type='application/json',
         status=404,
+    )
+
+
+def test_openapi_host_update_invalid(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params='{"host_name": "example.com", "folder": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        resp,
+        '.../update',
+        status=400,
+        params=json.dumps({
+            'attributes': {
+                'ipaddress': '192.168.0.123'
+            },
+            'update_attributes': {
+                'ipaddress': '192.168.0.123'
+            },
+            'remove_attributes': ['tag_foobar']
+        }),
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
     )

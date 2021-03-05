@@ -46,8 +46,6 @@ MONITORED_HOST = fields.HostField(
 )
 
 EXISTING_FOLDER = fields.FolderField(
-    description=("The folder-id of the folder under which this folder shall be created. May be "
-                 "'root' for the root-folder."),
     example="/",
     required=True,
 )
@@ -114,7 +112,7 @@ class BulkCreateHost(BaseSchema):
         fields.Nested(CreateHost),
         example=[{
             "host_name": "example.com",
-            "folder": "root",
+            "folder": "/",
             "attributes": {},
         }],
         uniqueItems=True,
@@ -439,7 +437,7 @@ class UpdateFolder(BaseSchema):
     """Updating a folder"""
     title = fields.String(
         example="Virtual Servers.",
-        required=True,
+        required=False,
     )
     attributes = AttributesField(
         description=("Replace all attributes with the ones given in this field. Already set"
@@ -466,39 +464,13 @@ class UpdateFolder(BaseSchema):
 
 class UpdateFolderEntry(UpdateFolder):
     folder = EXISTING_FOLDER
-    title = fields.String(required=True, example="Virtual Servers")
-    attributes = AttributesField(
-        description=("Replace all attributes with the ones given in this field. Already set"
-                     "attributes, not given here, will be removed."),
-        example={},
-        missing=dict,
-        required=False,
-    )
-    update_attributes = AttributesField(
-        description=("Only set the attributes which are given in this field. Already set "
-                     "attributes will not be touched."),
-        example={},
-        missing=dict,
-        required=False,
-    )
-    remove_attributes = fields.List(
-        fields.String(),
-        description="A list of attributes which should be removed.",
-        example=["tag_foobar"],
-        missing=list,
-        required=False,
-    )
 
 
 class BulkUpdateFolder(BaseSchema):
     entries = fields.Nested(UpdateFolderEntry,
                             many=True,
                             example=[{
-                                'folder': 'root',
-                                'title': 'Virtual Servers',
-                                'attributes': {
-                                    'key': 'foo'
-                                }
+                                'remove_attributes': ['tag_foobar'],
                             }])
 
 

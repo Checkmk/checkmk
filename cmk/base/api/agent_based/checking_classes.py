@@ -401,10 +401,41 @@ def _create_result_fields(
 
 
 class IgnoreResultsError(RuntimeError):
-    pass
+    """Raising an `IgnoreResultsError` from within a check function makes the service go stale.
+
+    Example:
+
+        >>> def check_db_table(item, section):
+        ...     if item not in section:
+        ...         # avoid a lot of UNKNOWN services:
+        ...         raise IgnoreResultsError("Login to database failed")
+        ...     # do your work here
+        >>>
+
+    """
 
 
 class IgnoreResults:
+    """A result to make the service go stale, but carry on with the check function
+
+    Yielding a result of type `IgnoreResults` will have a similar effect as raising
+    an :class:`.IgnoreResultsError`, with the difference that the execution of the
+    check funtion will not be interrupted.
+
+    .. code-block:: python
+
+        yield IgnoreResults("Good luck next time!")
+        return
+
+    is equivalent to
+
+    .. code-block:: python
+
+        raise IgnoreResultsError("Good luck next time!")
+
+    This is useful for instance if you want to initialize all counters, before
+    returning.
+    """
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 

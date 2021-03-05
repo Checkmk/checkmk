@@ -31,7 +31,7 @@ def mobile_view(d):
     x = {
         'mobile': True,
         'browser_reload': 0,
-        'column_headers': 'perpage',
+        'column_headers': 'pergroup',
         'description': 'This view is used by the mobile GUI',
         'hidden': False,
         'hidebutton': False,

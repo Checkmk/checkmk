@@ -9,7 +9,7 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Tuple, Union, Type, Iterator
+from typing import Any, Dict, List, Optional, Tuple, Union, Type, Iterator
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
@@ -257,7 +257,9 @@ class Filter(metaclass=abc.ABCMeta):
     def display(self) -> None:
         raise NotImplementedError()
 
-    def filter(self, infoname: str) -> str:
+    # The reason for infoname: Any is that no subclass uses this argument and it will be removed
+    # in the future.
+    def filter(self, infoname: Any) -> str:
         return ""
 
     def need_inventory(self) -> bool:

@@ -644,7 +644,10 @@ img.icon.reloading {
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 table.data.headerleft tr {
   th {
-    background-color: inherit; // use odd/even instead of th color
+    // Override generic th styling in a single header row
+    font-weight: $font-weight-bold;
+    color: $font-color;
+    background-color: inherit;
   }
 
   th,

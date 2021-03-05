@@ -256,30 +256,6 @@ void ServiceProcessor::checkMaxWaitTime() noexcept {
         XLOG::t.i("Max Wait Time for Answer is [{}]", max_wait_time_);
 }
 
-// Global config reloaded here
-// our list of plugins is GLOBAl
-// so process it as global one
-void ServiceProcessor::preLoadConfig() {
-    using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
-    PathVector pv;
-    for (auto& folder : groups::plugins.folders()) {
-        pv.emplace_back(folder);
-    }
-    auto files = cma::GatherAllFiles(pv);
-
-    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-
-    cma::FilterPathByExtension(files, execute);
-    cma::RemoveDuplicatedNames(files);
-    cma::RemoveForbiddenNames(files);
-
-    auto yaml_units = GetArray<YAML::Node>(cma::cfg::groups::kPlugins,
-                                           cma::cfg::vars::kPluginsExecution);
-    std::vector<Plugins::ExeUnit> exe_units;
-    cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-}
-
 void ServiceProcessor::preStartBinaries() {
     XLOG::l.i("Pre Start actions");
 
@@ -394,8 +370,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, const std::string& Ip) {
 
     vf_.clear();
     max_wait_time_ = 0;
-
-    preLoadConfig();
 
     // call of sensible to CPU-load sections
     bool started_sync = tryToDirectCall(wmi_cpuload_provider_, Tp, Ip);

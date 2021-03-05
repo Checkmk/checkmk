@@ -18,7 +18,6 @@ from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, T
 from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
 from cmk.gui.utils.urls import makeuri_contextless
 from typing import List, Dict, Tuple
-from functools import reduce
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -34,14 +33,6 @@ def get_context_url_variables(context):
     for filter_vars in context.values():
         add_vars.update(filter_vars)
     return list(add_vars.items())
-
-
-def map_site_state(state: str) -> str:
-    if state in ('online', 'waiting'):
-        return 'ok'
-    if state == 'disabled':
-        return 'disabled'
-    return 'error'
 
 
 def group_by_state(
@@ -461,23 +452,15 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if not self.parameters().get("show_sites_not_connected"):
             return
 
-        site_states: Dict[str, List[str]] = reduce(
-            group_by_state,
-            [(id_, map_site_state(info["state"])) for id_, info in sites.states().items()],
-            {
-                'ok': [],
-                'disabled': [],
-                'error': []
-            },
-        )
+        site_states = sites.get_grouped_site_states()
 
-        if site_states["disabled"]:
-            self._create_status_box(site_states["disabled"], "tacticalinfo", _("disabled"))
+        disabled = site_states["disabled"]
+        if disabled.site_ids:
+            self._create_status_box(disabled.site_ids, "tacticalinfo", disabled.readable)
 
-        if not site_states["error"]:
-            return
-
-        self._create_status_box(site_states["error"], "tacticalalert", _("disconnected"))
+        error = site_states["error"]
+        if error.site_ids:
+            self._create_status_box(error.site_ids, "tacticalalert", error.readable)
 
     def _create_status_box(
         self,

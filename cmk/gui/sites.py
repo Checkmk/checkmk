@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union
+from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple
 
 from livestatus import (
     MultiSiteConnection,
@@ -384,3 +384,37 @@ def set_limit(limit: Optional[int]) -> Iterator[None]:
         yield
     finally:
         live().set_limit()  # removes limit
+
+
+GroupedSiteState = NamedTuple("GroupedSiteState", [
+    ("readable", str),
+    ("site_ids", List[SiteId]),
+])
+
+
+def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
+    grouped_states = {
+        'ok': GroupedSiteState(
+            readable=_("OK"),
+            site_ids=[],
+        ),
+        'disabled': GroupedSiteState(
+            readable=_("disabled"),
+            site_ids=[],
+        ),
+        'error': GroupedSiteState(
+            readable=_("disconnected"),
+            site_ids=[],
+        ),
+    }
+    for site_id, info in states().items():
+        grouped_states[_map_site_state(info["state"])].site_ids.append(site_id)
+    return grouped_states
+
+
+def _map_site_state(state: str) -> str:
+    if state in ('online', 'waiting'):
+        return 'ok'
+    if state == 'disabled':
+        return 'disabled'
+    return 'error'

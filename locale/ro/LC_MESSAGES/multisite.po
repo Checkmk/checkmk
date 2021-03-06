@@ -28349,6 +28349,14 @@ msgstr ""
 msgid "Miscellaneous"
 msgstr ""
 
+#, python-format
+msgid ""
+"Missing 'Site [SITE] statistics' service of the following sites: %s. Either "
+"the corresponding Checkmk servers are not monitored at all, or you filtered "
+"them out by applying site filters. Until this is fixed, we are unable to "
+"render."
+msgstr ""
+
 msgid "Missing Prerequisite"
 msgstr ""
 
@@ -37975,6 +37983,22 @@ msgstr " pentru elementul %s"
 
 msgid "Search for ineffective rules (not matching any host or service)"
 msgstr ""
+
+msgid ""
+"Search for menu entries, hosts, services or host- and servicegroups.\n"
+"You can use the following filters:\n"
+"h: Host\n"
+"s: Service\n"
+"hg: Hostgroup\n"
+"sg: Servicegroup\n"
+"ad: Address\n"
+"al: Alias\n"
+"tg: Hosttag"
+msgstr ""
+
+#, fuzzy
+msgid "Search for menu entries, settings, hosts and rulesets."
+msgstr "Arata regulile de utilizator"
 
 msgid "Search for not deprecated rulesets"
 msgstr ""
@@ -49916,6 +49940,10 @@ msgid "Total hitratio"
 msgstr ""
 
 #, fuzzy
+msgid "Total host problems"
+msgstr "Probleme"
+
+#, fuzzy
 msgid "Total index failure count upper levels"
 msgstr "Numarul maxim de mesaje"
 
@@ -50178,6 +50206,10 @@ msgstr ""
 
 msgid "Total running On-Demand Instances"
 msgstr ""
+
+#, fuzzy
+msgid "Total service problems"
+msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Total sessions"
@@ -51002,7 +51034,7 @@ msgid "Unhandled host problems"
 msgstr "Probleme"
 
 #, fuzzy
-msgid "Unhandled problems"
+msgid "Unhandled p."
 msgstr "Probleme"
 
 #, fuzzy
@@ -52558,6 +52590,11 @@ msgstr ""
 #, fuzzy
 msgid "Used in rulesets"
 msgstr "licente nefolosite"
+
+msgid ""
+"Used in the host and service problems graphs of the main dashboard. Not "
+"intended for any other purposes."
+msgstr ""
 
 #, fuzzy
 msgid "Used inodes"

@@ -135,6 +135,9 @@ if (process.env.WEBPACK_MODE === "quick") {
             path.resolve(__dirname, "node_modules/d3-flextree"),
             path.resolve(__dirname, "node_modules/d3-sankey"),
             path.resolve(__dirname, "node_modules/crossfilter2"),
+            // Additional packages needed for D3js v6:
+            path.resolve(__dirname, "node_modules/internmap"),
+            path.resolve(__dirname, "node_modules/delaunator"),
         ],
         use: {
             loader: "babel-loader",

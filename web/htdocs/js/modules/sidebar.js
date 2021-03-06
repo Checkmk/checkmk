@@ -1120,7 +1120,7 @@ function create_initial_ids(menu, what, start_url) {
     const a = document.createElement("a");
     a.href = "index.py?start_url=" + start_url;
     a.setAttribute("id", what + "_link_to");
-    span.append(a);
+    span.appendChild(a);
     info_line_span.insertAdjacentElement("beforebegin", span);
 }
 

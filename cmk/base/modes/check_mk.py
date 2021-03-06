@@ -7,7 +7,7 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Type, TypedDict, TypeVar, Union
+from typing import Dict, List, Optional, overload, Set, Tuple, Type, TypedDict, TypeVar, Union
 
 from six import ensure_str
 
@@ -1458,10 +1458,26 @@ _option_detect_plugins = Option(
 )
 
 
+@overload
+def _extract_plugin_selection(
+    options: Union["_CheckingOptions", "_DiscoveryOptions"],
+    type_: Type[CheckPluginName],
+) -> Tuple[SectionNameCollection, Optional[Set[CheckPluginName]]]:
+    pass
+
+
+@overload
+def _extract_plugin_selection(
+    options: "_InventoryOptions",
+    type_: Type[InventoryPluginName],
+) -> Tuple[SectionNameCollection, Optional[Set[InventoryPluginName]]]:
+    pass
+
+
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
-    type_: Type[_TName],
-) -> Tuple[SectionNameCollection, _OptionalNameSet]:
+    type_: Type,
+) -> Tuple[SectionNameCollection, Optional[Set]]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
         selected_sections = options.get("detect-sections", NO_SELECTION)
@@ -1714,7 +1730,8 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     if "force" in options:
         sources.agent.AgentSource.use_outdated_persisted_sections = True
 
-    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_only_plugin_names = _extract_plugin_selection(
+        options, InventoryPluginName)
     inventory.do_inv(
         hostnames,
         selected_sections=selected_sections,

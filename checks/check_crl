@@ -3,9 +3,7 @@
 
 
 def check_crl_arguments(params):
-    return "-u {} -w {} -c {}".format(params.get("url"),
-                                      params.get("hours")[0],
-                                      params.get("hours")[1])
+    return "-u {} -w {} -c {}".format(params.get("url"), params.get("minutes")[0], params.get("minutes")[1])
 
 
 def check_crl_description(params):
@@ -18,3 +16,4 @@ active_check_info["check_crl"] = {
     "service_description": check_crl_description,
     "has_perfdata": False,
 }
+

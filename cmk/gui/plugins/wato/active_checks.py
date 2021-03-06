@@ -2497,13 +2497,13 @@ def _valuespec_active_checks_crl():
         help=_("Checks if a Certificate Revocation List is still valid"),
         optional_keys=[],
         elements=[
-        ("hours",
-        Tuple(title=_("Hours left"),
+        ("minutes",
+        Tuple(title=_("Minutes left"),
               help=_("These levels make the check go warning or critical whenever the "
                      "remaining validity of the monitored CRL is too low."),
               elements=[
-                  Integer(title=_("warning at"), unit=u"Hours", default_value=48),
-                  Integer(title=_("critical at"), unit=u"Hours", default_value=24),
+                  Integer(title=_("warning at"), unit=u"Minutes", default_value=2880),
+                  Integer(title=_("critical at"), unit=u"Minutes", default_value=1440),
               ])),
         ("url",
         TextAscii(title=_('Certificate Revocation List URL'),

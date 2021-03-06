@@ -209,6 +209,9 @@ public:
     // our callbacks withing processor:
     void stopService();
 
+    // Called only from the service
+    void cleanupOnStop() override;
+
     // true will generate one call without external port usage
     void startService();
     void startServiceAsLegacyTest();

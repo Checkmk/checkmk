@@ -17,6 +17,7 @@
 #include "common/wtools_service.h"
 #include "common/yaml.h"
 #include "external_port.h"
+#include "firewall.h"
 #include "install_api.h"
 #include "providers/perf_counters_cl.h"
 #include "realtime.h"
@@ -57,6 +58,41 @@ void ServiceProcessor::startServiceAsLegacyTest() {
     XLOG::t("Successful legacy start of thread");
 }
 
+namespace {
+void KillProcessesInUserFolder() {
+    std::filesystem::path user_dir{cfg::GetUserDir()};
+    std::error_code ec;
+    if (user_dir.empty() ||
+        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
+        auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
+        XLOG::l.i("Killed [{}] processes from the user folder",
+                  killed_processes_count);
+    } else {
+        XLOG::l.i("Kill isn't possible, the path '{}' looks as bad", user_dir);
+    }
+}
+
+void TryCleanOnExit() {
+    namespace details = cfg::details;
+
+    KillProcessesInUserFolder();
+
+    if (!cma::g_uninstall_alert.isSet()) {
+        XLOG::l.i("Clean on exit was not requested, not uninstall sequence");
+
+        return;
+    }
+
+    fw::RemoveRule(srv::kSrvFirewallRuleName);
+
+    auto mode = details::GetCleanDataFolderMode();  // read config
+    XLOG::l.i(
+        "Clean on exit was requested, trying to remove what we have, mode is [{}]",
+        static_cast<int>(mode));
+    details::CleanDataFolder(mode);  // normal
+}
+}  // namespace
+
 void ServiceProcessor::stopService() {
     XLOG::l.i("Stop Service called");
     cma::srv::g_global_stop_signaled = true;
@@ -69,6 +105,17 @@ void ServiceProcessor::stopService() {
     if (thread_.joinable()) thread_.join();
     if (process_thread_.joinable()) thread_.join();
     if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
+}
+
+void ServiceProcessor::cleanupOnStop() {
+    XLOG::l.i("Cleanup called by service");
+
+    if (!cma::IsService()) {
+        XLOG::l("Invalid call!");
+    }
+    cma::KillAllInternalUsers();
+
+    TryCleanOnExit();
 }
 
 // #TODO - implement

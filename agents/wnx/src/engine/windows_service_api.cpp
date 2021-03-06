@@ -1134,41 +1134,6 @@ bool ProcessServiceConfiguration(std::wstring_view service_name) {
     return true;
 }
 
-namespace {
-void KillProcessesInUserFolder() {
-    std::filesystem::path user_dir{cfg::GetUserDir()};
-    std::error_code ec;
-    if (user_dir.empty() ||
-        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
-        auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
-        XLOG::l.i("Killed [{}] processes from the user folder",
-                  killed_processes_count);
-    } else {
-        XLOG::l.i("Kill isn't possible, the path '{}' looks as bad", user_dir);
-    }
-}
-
-void TryCleanOnExit() {
-    namespace details = cfg::details;
-
-    KillProcessesInUserFolder();
-
-    if (!cma::g_uninstall_alert.isSet()) {
-        XLOG::l.i("Clean on exit was not requested, not uninstall sequence");
-
-        return;
-    }
-
-    fw::RemoveRule(srv::kSrvFirewallRuleName);
-
-    auto mode = details::GetCleanDataFolderMode();  // read config
-    XLOG::l.i(
-        "Clean on exit was requested, trying to remove what we have, mode is [{}]",
-        static_cast<int>(mode));
-    details::CleanDataFolder(mode);  // normal
-}
-}  // namespace
-
 // entry point in service mode
 // normally this is "BLOCKING FOR EVER"
 // called by Windows Service Manager
@@ -1201,11 +1166,9 @@ int ServiceAsService(
             switch (ret) {
                 case wtools::ServiceController::StopType::normal:
                     XLOG::l.i("Service is stopped normally");
-                    TryCleanOnExit();
                     return 0;
                 case wtools::ServiceController::StopType::fail:
                     XLOG::l.i("Service is stopped due to abnormal situation");
-                    TryCleanOnExit();
                     return -1;
                 case wtools::ServiceController::StopType::no_connect:
                     // may happen when service manager is not available

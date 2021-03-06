@@ -3105,7 +3105,9 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
 
         # ids and core pids of connected sites, i.e., what we hope to find the service output
         pids_of_connected_sites = {
-            site_id: site_status["core_pid"] for site_id, site_status in sites.states().items()
+            site_id: site_status["core_pid"]
+            for site_id, site_status in sites.states().items()
+            if site_status["state"] == "online"
         }
         # apply potential filters on sites
         if only_sites := get_only_sites_from_context(context):

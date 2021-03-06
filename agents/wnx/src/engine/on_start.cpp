@@ -177,7 +177,6 @@ bool OnStart(AppType proposed_type, const std::wstring& config_file) {
 }
 
 void OnExit() {
-    cma::KillAllInternalUsers();
     if (wtools::IsWindowsComInitialized()) wtools::CloseWindowsCom();
 }
 }  // namespace cma

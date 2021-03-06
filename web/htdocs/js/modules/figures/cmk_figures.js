@@ -745,7 +745,7 @@ export function getIn(object, ...args) {
     return args.reduce((obj, level) => obj && obj[level], object);
 }
 export function get_function(render_string) {
-    return Function(`"use strict"; return ${render_string}`)();
+    return new Function(`"use strict"; return ${render_string}`)();
 }
 export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");

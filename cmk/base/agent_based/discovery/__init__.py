@@ -1208,12 +1208,8 @@ def get_check_preview(
             ))
 
     return table, DiscoveredHostLabels(
-        *{
-            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-            # Im not sure this is desired. If it is, it should be explained.
-            **{l.name: l for l in host_label_result.vanished},
-            **{l.name: l for l in host_label_result.present},
-        }.values())
+        # this dict deduplicates label names!
+        *{l.name: l for l in host_label_result.present}.values())
 
 
 def _preview_check_source(

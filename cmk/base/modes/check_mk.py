@@ -1401,10 +1401,8 @@ modes.register(
 
 _TName = TypeVar('_TName', str, CheckPluginName, InventoryPluginName, SectionName)
 
-_OptionalNameSet = Optional[Set[_TName]]
 
-
-def _convert_sections_argument(arg: str) -> _OptionalNameSet[SectionName]:
+def _convert_sections_argument(arg: str) -> Set[SectionName]:
     try:
         # kindly forgive empty strings
         return {SectionName(n) for n in arg.split(",") if n}
@@ -1423,7 +1421,7 @@ _option_sections = Option(
 
 
 def _get_plugins_option(type_: Type[_TName]) -> Option:
-    def _convert_plugins_argument(arg: str) -> _OptionalNameSet:
+    def _convert_plugins_argument(arg: str) -> Set[_TName]:
         try:
             # kindly forgive empty strings
             return {type_(n) for n in arg.split(",") if n}
@@ -1439,7 +1437,7 @@ def _get_plugins_option(type_: Type[_TName]) -> Option:
     )
 
 
-def _convert_detect_plugins_argument(arg: str) -> _OptionalNameSet[str]:
+def _convert_detect_plugins_argument(arg: str) -> Set[str]:
     try:
         # kindly forgive empty strings
         # also maincheckify, as we may be dealing with old "--checks" input including dots.
@@ -1480,9 +1478,10 @@ def _extract_plugin_selection(
 ) -> Tuple[SectionNameCollection, Optional[Set]]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
-        selected_sections = options.get("detect-sections", NO_SELECTION)
-        assert selected_sections is not None  # for mypy false positive
-        return selected_sections, options.get("plugins")
+        return (
+            options.get("detect-sections", NO_SELECTION),
+            options.get("plugins"),
+        )
 
     conflicting_options = {'detect-sections', 'plugins'}
     if conflicting_options.intersection(options):
@@ -1517,9 +1516,9 @@ def _extract_plugin_selection(
 _DiscoveryOptions = TypedDict(
     '_DiscoveryOptions',
     {
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[CheckPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'discover': int,
         'only-host-labels': bool,
     },
@@ -1599,9 +1598,9 @@ _CheckingOptions = TypedDict(
     {
         'no-submit': bool,
         'perfdata': bool,
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[CheckPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'keepalive': bool,
         'keepalive-fd': int,
     },
@@ -1707,9 +1706,9 @@ _InventoryOptions = TypedDict(
     '_InventoryOptions',
     {
         'force': bool,
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[InventoryPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[InventoryPluginName],
+        'detect-plugins': Set[str],
     },
     total=False,
 )

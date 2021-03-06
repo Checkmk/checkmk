@@ -802,7 +802,7 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                         entries=[
                             PageMenuEntry(
                                 title=_("Set as start URL"),
-                                icon_name="",
+                                icon_name="home",
                                 item=make_javascript_link('cmk.dashboard.set_start_url(%s)' %
                                                           json.dumps(name)),
                             )

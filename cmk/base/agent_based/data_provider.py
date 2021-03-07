@@ -43,6 +43,8 @@ if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import Mode, SectionNameCollection
 
+CacheInfo = Optional[Tuple[int, int]]
+
 ParsedSectionContent = Any
 
 
@@ -84,7 +86,7 @@ class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
         self,
         host_key: HostKey,
         parsed_section_names: List[ParsedSectionName],
-    ) -> Dict[str, Any]:
+    ) -> Dict[str, ParsedSectionContent]:
         """Prepares section keyword arguments for a non-cluster host
 
         It returns a dictionary containing one entry (may be None) for each
@@ -108,7 +110,7 @@ class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
         self,
         node_keys: List[HostKey],
         parsed_section_names: List[ParsedSectionName],
-    ) -> Dict[str, Dict[str, Any]]:
+    ) -> Dict[str, Dict[str, ParsedSectionContent]]:
         """Prepares section keyword arguments for a cluster host
 
         It returns a dictionary containing one optional dictionary[Host, ParsedSection]
@@ -128,7 +130,7 @@ class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
     def get_cache_info(
         self,
         parsed_section_names: List[ParsedSectionName],
-    ) -> Optional[Tuple[int, int]]:
+    ) -> CacheInfo:
         """Aggregate information about the age of the data in the agent sections
 
         In order to determine the caching info for a parsed section we must in fact
@@ -161,7 +163,7 @@ class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
         self,
         host_key: HostKey,
         parsed_section_name: ParsedSectionName,
-    ) -> Tuple[Optional[ParsedSectionContent], Optional[Tuple[int, int]]]:
+    ) -> Tuple[Optional[ParsedSectionContent], CacheInfo]:
         cache_key = host_key + (parsed_section_name,)
         if cache_key in self._memoized_parsed_sections:
             return self._memoized_parsed_sections[cache_key]
@@ -223,7 +225,7 @@ class ParsedSectionsBroker(Mapping[HostKey, HostSections]):
         self,
         host_key: HostKey,
         section: SectionPlugin,
-    ) -> Any:
+    ) -> ParsedSectionContent:
         # lookup the parsing result in the cache, it might have been computed
         # during resolving of the supersedings (or set to None b/c the section
         # *is* superseded)

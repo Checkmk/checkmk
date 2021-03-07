@@ -220,7 +220,7 @@ def _discover_host_labels_for_source_type(
 ) -> Mapping[str, HostLabel]:
 
     try:
-        host_data = parsed_sections_broker[host_key]
+        sections_parser = parsed_sections_broker[host_key]
     except KeyError:
         return {}
 
@@ -230,7 +230,7 @@ def _discover_host_labels_for_source_type(
         # sections would result from them, and then process those.
         parse_sections = {
             agent_based_register.get_section_plugin(rs).parsed_section_name
-            for rs in host_data.sections
+            for rs in sections_parser.sections
         }
         applicable_sections = parsed_sections_broker.determine_applicable_sections(
             parse_sections,

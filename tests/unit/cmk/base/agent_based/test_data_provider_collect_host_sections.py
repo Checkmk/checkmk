@@ -134,8 +134,6 @@ class TestMakeHostSectionsHosts:
 
         # Public attributes from HostSections:
         assert not section.sections
-        assert not section.cache_info
-        assert not section.piggybacked_raw_data
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
         host_sections = _collect_host_sections(

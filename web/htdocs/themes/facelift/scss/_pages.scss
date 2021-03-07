@@ -687,7 +687,7 @@ input[type="text"],
 input[type="password"],
 select,
 textarea,
-div.snapin textarea,
+div.snapin textarea,  // TODO: reproduce this element
 #mk_side_search_field,
 .tagify__input {
   $padding: 3px;
@@ -712,6 +712,11 @@ span.select2 .select2-selection {
 input[type="text"],
 textarea {
   position: relative;
+}
+
+textarea {
+  // textareas like e.g. comment fields should not have a fixed height
+  height: auto;
 }
 
 input[type="text"],

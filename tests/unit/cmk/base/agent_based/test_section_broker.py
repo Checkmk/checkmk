@@ -474,27 +474,26 @@ class TestMakeHostSectionsHosts:
         return ts.apply(monkeypatch)
 
     def test_no_sources(self, hostname, ipaddress, mode, config_cache, host_config):
-        broker = ParsedSectionsBroker(
-            _collect_host_sections(
-                nodes=make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    mode=mode,
-                    sources=(),
-                ),
-                file_cache_max_age=0,
-                fetcher_messages=(),
-                selected_sections=NO_SELECTION,
-            )[0])
+        host_sections = _collect_host_sections(
+            nodes=make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=(),
+            ),
+            file_cache_max_age=0,
+            fetcher_messages=(),
+            selected_sections=NO_SELECTION,
+        )[0]
         # The length is not zero because the function always sets,
         # at least, a piggy back section.
-        assert len(broker) == 1
+        assert len(host_sections) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in broker
+        assert key in host_sections
 
-        section = broker[key]
+        section = host_sections[key]
 
         # Public attributes from HostSections:
         assert not section.sections
@@ -502,40 +501,39 @@ class TestMakeHostSectionsHosts:
         assert not section.piggybacked_raw_data
 
     def test_one_snmp_source(self, hostname, ipaddress, mode, config_cache, host_config):
-        broker = ParsedSectionsBroker(
-            _collect_host_sections(
-                nodes=make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    mode=mode,
-                    sources=[
-                        SNMPSource.snmp(
-                            hostname,
-                            ipaddress,
-                            mode=mode,
-                            selected_sections=NO_SELECTION,
-                            force_cache_refresh=False,
-                            on_scan_error="raise",
-                        ),
-                    ],
-                ),
-                file_cache_max_age=0,
-                fetcher_messages=[
-                    FetcherMessage.from_raw_data(
-                        result.OK({}),
-                        Snapshot.null(),
-                        FetcherType.SNMP,
+        host_sections = _collect_host_sections(
+            nodes=make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=[
+                    SNMPSource.snmp(
+                        hostname,
+                        ipaddress,
+                        mode=mode,
+                        selected_sections=NO_SELECTION,
+                        force_cache_refresh=False,
+                        on_scan_error="raise",
                     ),
                 ],
-                selected_sections=NO_SELECTION,
-            )[0])
-        assert len(broker) == 1
+            ),
+            file_cache_max_age=0,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK({}),
+                    Snapshot.null(),
+                    FetcherType.SNMP,
+                ),
+            ],
+            selected_sections=NO_SELECTION,
+        )[0]
+        assert len(host_sections) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in broker
+        assert key in host_sections
 
-        section = broker[key]
+        section = host_sections[key]
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -565,31 +563,30 @@ class TestMakeHostSectionsHosts:
         source = source(hostname, ipaddress, mode=mode)
         assert source.source_type is SourceType.HOST
 
-        broker = ParsedSectionsBroker(
-            _collect_host_sections(
-                nodes=make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    mode=mode,
-                    sources=[source],
+        host_sections = _collect_host_sections(
+            nodes=make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=[source],
+            ),
+            file_cache_max_age=0,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    Snapshot.null(),
+                    source.fetcher_type,
                 ),
-                file_cache_max_age=0,
-                fetcher_messages=[
-                    FetcherMessage.from_raw_data(
-                        result.OK(source.default_raw_data),
-                        Snapshot.null(),
-                        source.fetcher_type,
-                    ),
-                ],
-                selected_sections=NO_SELECTION,
-            )[0])
-        assert len(broker) == 1
+            ],
+            selected_sections=NO_SELECTION,
+        )[0]
+        assert len(host_sections) == 1
 
         key = HostKey(hostname, ipaddress, source.source_type)
-        assert key in broker
+        assert key in host_sections
 
-        section = broker[key]
+        section = host_sections[key]
 
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
@@ -616,31 +613,30 @@ class TestMakeHostSectionsHosts:
             ),
         ]
 
-        broker = ParsedSectionsBroker(
-            _collect_host_sections(
-                nodes=make_nodes(
-                    config_cache,
-                    host_config,
-                    ipaddress,
-                    mode=mode,
-                    sources=sources,
-                ),
-                file_cache_max_age=0,
-                fetcher_messages=[
-                    FetcherMessage.from_raw_data(
-                        result.OK(source.default_raw_data),
-                        Snapshot.null(),
-                        source.fetcher_type,
-                    ) for source in sources
-                ],
-                selected_sections=NO_SELECTION,
-            )[0])
-        assert len(broker) == 1
+        host_sections = _collect_host_sections(
+            nodes=make_nodes(
+                config_cache,
+                host_config,
+                ipaddress,
+                mode=mode,
+                sources=sources,
+            ),
+            file_cache_max_age=0,
+            fetcher_messages=[
+                FetcherMessage.from_raw_data(
+                    result.OK(source.default_raw_data),
+                    Snapshot.null(),
+                    source.fetcher_type,
+                ) for source in sources
+            ],
+            selected_sections=NO_SELECTION,
+        )[0]
+        assert len(host_sections) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in broker
+        assert key in host_sections
 
-        section = broker[key]
+        section = host_sections[key]
 
         assert len(section.sections) == 1
         # yapf: disable
@@ -663,7 +659,7 @@ class TestMakeHostSectionsHosts:
             sources=sources,
         )
 
-        broker = ParsedSectionsBroker(_collect_host_sections(
+        host_sections = _collect_host_sections(
             nodes=nodes,
             file_cache_max_age=0,
             fetcher_messages=[
@@ -675,13 +671,13 @@ class TestMakeHostSectionsHosts:
                 for _h, _i, sources in nodes for source in sources
             ],
             selected_sections=NO_SELECTION,
-        )[0])
-        assert len(broker) == 1
+        )[0]
+        assert len(host_sections) == 1
 
         key = HostKey(hostname, ipaddress, SourceType.HOST)
-        assert key in broker
+        assert key in host_sections
 
-        section = broker[key]
+        section = host_sections[key]
 
         assert len(section.sections) == len(sources)
         for source in sources:
@@ -761,7 +757,7 @@ class TestMakeHostSectionsClusters:
             sources=(),
         )
 
-        broker = ParsedSectionsBroker(_collect_host_sections(
+        host_sections = _collect_host_sections(
             nodes=made_nodes,
             file_cache_max_age=0,
             fetcher_messages=[
@@ -773,17 +769,17 @@ class TestMakeHostSectionsClusters:
                 ) for _n in made_nodes
             ],
             selected_sections=NO_SELECTION,
-        )[0])
-        assert len(broker) == len(nodes)
+        )[0]
+        assert len(host_sections) == len(nodes)
 
         key_clu = HostKey(cluster, None, SourceType.HOST)
-        assert key_clu not in broker
+        assert key_clu not in host_sections
 
         for hostname, addr in nodes.items():
             key = HostKey(hostname, addr, SourceType.HOST)
-            assert key in broker
+            assert key in host_sections
 
-            section = broker[key]
+            section = host_sections[key]
             # yapf: disable
             assert (section.sections[SectionName("section_name_%s" % hostname)]
                     == [["section_content_%s" % hostname]])
@@ -842,7 +838,7 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         sources=make_sources(host_config, address, mode=mode)
     )
 
-    broker = ParsedSectionsBroker(_collect_host_sections(
+    host_sections = _collect_host_sections(
         nodes=nodes,
         file_cache_max_age=host_config.max_cachefile_age,
         fetcher_messages=[
@@ -854,8 +850,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
                 for _h, _i, sources in nodes for source in sources
             ],
         selected_sections=NO_SELECTION,
-    )[0])
-    assert len(broker) == len(hosts) == 3
+    )[0]
+    assert len(host_sections) == len(hosts) == 3
     cmk.utils.piggyback._store_status_file_of.assert_not_called()  # type: ignore[attr-defined]
     assert cmk.utils.piggyback.remove_source_status_file.call_count == 3  # type: ignore[attr-defined]
 
@@ -863,8 +859,8 @@ def test_get_host_sections_cluster(mode, monkeypatch, mocker):
         remove_source_status_file = cmk.utils.piggyback.remove_source_status_file
         remove_source_status_file.assert_any_call(host)  # type: ignore[attr-defined]
         key = HostKey(host, addr, SourceType.HOST)
-        assert key in broker
-        section = broker[key]
+        assert key in host_sections
+        section = host_sections[key]
         assert len(section.sections) == 1
         assert next(iter(section.sections)) == section_name
         assert not section.cache_info

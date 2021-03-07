@@ -626,7 +626,13 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
                 )
             )
         );
-        centered_controls.prepend(edits);
+
+        const first_control = centered_controls.firstChild;
+        if (first_control) {
+            centered_controls.insertBefore(edits, first_control);
+        } else {
+            centered_controls.appendChild(edits);
+        }
     } else {
         // make the inner parts visible again
         utils.remove_class(dashlet_obj, "edit");

@@ -106,8 +106,7 @@ div.floatfilter {
     }
 
     input[type="text"] {
-      width: 100%;
-      box-sizing: border-box;
+      width: calc(100% - 12px); // subtract padding
 
       &.number {
         text-align: center;

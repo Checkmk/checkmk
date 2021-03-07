@@ -2895,6 +2895,14 @@ msgstr ""
 msgid "Add all metrics of this graph to"
 msgstr "Adaugă acesta vedere la..."
 
+#, python-format
+msgid ""
+"Add all your Checkmk servers as monitored hosts to Checkmk to render this "
+"graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
+"the following sites: %s. Either the corresponding Checkmk servers are not "
+"monitored at all, or you filtered them out by applying site filters."
+msgstr ""
+
 #, fuzzy
 msgid "Add attribute"
 msgstr "Adaugă model/tipar"
@@ -11525,6 +11533,10 @@ msgstr "Proprietatile Folderului"
 msgid "Customer report layout"
 msgstr "Proprietatile Folderului"
 
+#, fuzzy
+msgid "Customer shortcut"
+msgstr "Proprietatile Folderului"
+
 msgid "Customer specific report layout"
 msgstr ""
 
@@ -15996,10 +16008,6 @@ msgstr ""
 msgid "End"
 msgstr ""
 
-#, fuzzy
-msgid "End date"
-msgstr "Parola"
-
 msgid "End-Time"
 msgstr ""
 
@@ -19539,14 +19547,6 @@ msgstr ""
 msgid ""
 "Here a maximum severity of the node state can be set. This severity is not "
 "exceeded, even if some of the childs have more severe states."
-msgstr ""
-
-msgid ""
-"Here we will show you a timeseries graph showing you the historical "
-"development of your license usage. To be able to see this graph, you first "
-"have to configure the subscription start, end and sizing in the subscription "
-"settings. Secondly you will have to wait for at least two days after "
-"creating a site or updating to 2.0."
 msgstr ""
 
 msgid ""
@@ -24629,6 +24629,10 @@ msgstr "Numele Elementului"
 msgid "Last result"
 msgstr ""
 
+#, fuzzy
+msgid "Last samples"
+msgstr "Setari"
+
 msgid "Last seen"
 msgstr ""
 
@@ -28347,14 +28351,6 @@ msgid "Mirrored Stacked"
 msgstr ""
 
 msgid "Miscellaneous"
-msgstr ""
-
-#, python-format
-msgid ""
-"Missing 'Site [SITE] statistics' service of the following sites: %s. Either "
-"the corresponding Checkmk servers are not monitored at all, or you filtered "
-"them out by applying site filters. Until this is fixed, we are unable to "
-"render."
 msgstr ""
 
 msgid "Missing Prerequisite"
@@ -33522,8 +33518,16 @@ msgstr ""
 msgid "Period"
 msgstr ""
 
+#, fuzzy
+msgid "Period end date"
+msgstr "foloseste descrierea"
+
 msgid "Period for outdated piggybacked host data"
 msgstr ""
+
+#, fuzzy
+msgid "Period start date"
+msgstr "Numele Elementului"
 
 #, fuzzy
 msgid "Periodic notification"
@@ -41255,10 +41259,6 @@ msgstr ""
 msgid "Start URL to display in main frame"
 msgstr ""
 
-#, fuzzy
-msgid "Start date"
-msgstr "Numele Elementului"
-
 msgid "Start during system boot"
 msgstr ""
 
@@ -46043,15 +46043,15 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The subscription details including start date, end date and sizing and the "
-"customer portal credentials are part of the subscription and can be found in "
-"your contract. The credentials are also used for downloading <a href="
-"\"https://checkmk.de/download\">Checkmk<a>."
+"The subscription details include period start date, end date and sizing. The "
+"customer portal credentials can be found in your subscription contract."
 msgstr ""
 
 msgid ""
-"The subscription details including start date, end date and sizing are part "
-"of the subscription and can be found in your contract."
+"The subscription details include period start date, end date and sizing. The "
+"customer portal credentials can be found in your subscription contract. "
+"These are the same credentials also used for downloading <a href=\"https://"
+"checkmk.de/download\">Checkmk<a>."
 msgstr ""
 
 msgid "The syslog facility does not match"
@@ -47248,6 +47248,14 @@ msgid ""
 msgstr ""
 
 msgid "This is a front matter Template"
+msgstr ""
+
+msgid ""
+"This is a placeholder for a timeseries graph displaying the historical "
+"development of your license usage. To be able to see this graph, you first "
+"have to configure the subscription start, end and sizing in the subscription "
+"settings. Secondly you will have to wait for at least two days after "
+"creating a site or updating to 2.0"
 msgstr ""
 
 msgid "This is a regular expression for matching the event's comment."
@@ -58342,6 +58350,14 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "End date"
+#~ msgstr "Parola"
+
+#, fuzzy
+#~ msgid "Start date"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
 #~ msgid "Displays a sidebar element."
 #~ msgstr "Nivelurile maxime pentru voltaj"
 
@@ -58416,10 +58432,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Add subscription details"
-#~ msgstr "foloseste descrierea"
-
-#, fuzzy
-#~ msgid "Subscription end date"
 #~ msgstr "foloseste descrierea"
 
 #, fuzzy
@@ -58513,10 +58525,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Display range"
 #~ msgstr "% / gamă"
-
-#, fuzzy
-#~ msgid "Last state"
-#~ msgstr "Setari"
 
 #, fuzzy
 #~ msgid "Metric Status"

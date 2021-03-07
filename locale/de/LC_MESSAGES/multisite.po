@@ -3133,6 +3133,14 @@ msgstr ""
 msgid "Add all metrics of this graph to"
 msgstr "Alle Metriken dieses Graphen hinzufügen zu"
 
+#, python-format
+msgid ""
+"Add all your Checkmk servers as monitored hosts to Checkmk to render this "
+"graph. Specifically, we are missing the 'Site [SITE] statistics' services of "
+"the following sites: %s. Either the corresponding Checkmk servers are not "
+"monitored at all, or you filtered them out by applying site filters."
+msgstr ""
+
 msgid "Add attribute"
 msgstr "Attribut hinzufügen"
 
@@ -11979,6 +11987,10 @@ msgstr "Kundeneigenschaften"
 msgid "Customer report layout"
 msgstr "Layout des Kundenberichts"
 
+#, fuzzy
+msgid "Customer shortcut"
+msgstr "Layout des Kundenberichts"
+
 msgid "Customer specific report layout"
 msgstr "Kundenspezifisches Report-Layout"
 
@@ -16434,9 +16446,6 @@ msgstr "Verschlüsselungsgeheimnis"
 msgid "End"
 msgstr "Ende"
 
-msgid "End date"
-msgstr "Enddatum"
-
 msgid "End-Time"
 msgstr "End-Zeit"
 
@@ -19995,20 +20004,6 @@ msgid ""
 msgstr ""
 "Maximaler Schweregrad des Node-Zustands. Dieser wird nicht überschritten "
 "selbst wenn einzelne Child-Nodes schlechtere Werte haben."
-
-msgid ""
-"Here we will show you a timeseries graph showing you the historical "
-"development of your license usage. To be able to see this graph, you first "
-"have to configure the subscription start, end and sizing in the subscription "
-"settings. Secondly you will have to wait for at least two days after "
-"creating a site or updating to 2.0."
-msgstr ""
-"Hier wird ein zeitlicher Verlauf der vergangenen Entwicklung der "
-"Lizenznutzung angezeigt. Um diesen Graphen zu sehen muss zuerst der "
-"Subskriptionsanfang, das Subkriptionsende und die Größe in den "
-"Subkriptionseinstellungen festgelegt werden. Zusätzlich müssen mindestens "
-"zwei Tage gewartet werden nachdem eine Instanz erstellt oder zur 2.0 "
-"upgedatet wurde."
 
 msgid ""
 "Here you are able to substitute the RWVDMS name. Either you determine an "
@@ -25934,6 +25929,10 @@ msgstr "Zuletzt gesetztes Alter"
 msgid "Last result"
 msgstr "Letztes Ergebnis"
 
+#, fuzzy
+msgid "Last samples"
+msgstr "Bester Status"
+
 msgid "Last seen"
 msgstr "Zuletzt gesehen"
 
@@ -29443,14 +29442,6 @@ msgstr "gespiegelt gestapelt"
 
 msgid "Miscellaneous"
 msgstr "Sonstiges"
-
-#, python-format
-msgid ""
-"Missing 'Site [SITE] statistics' service of the following sites: %s. Either "
-"the corresponding Checkmk servers are not monitored at all, or you filtered "
-"them out by applying site filters. Until this is fixed, we are unable to "
-"render."
-msgstr ""
 
 msgid "Missing Prerequisite"
 msgstr "Fehlende Voraussetzung"
@@ -34515,8 +34506,16 @@ msgstr "Performance-Einstellungen"
 msgid "Period"
 msgstr "Periode"
 
+#, fuzzy
+msgid "Period end date"
+msgstr "Subskription"
+
 msgid "Period for outdated piggybacked host data"
 msgstr "Zeitraum für veraltete Huckepack-Hostdaten"
+
+#, fuzzy
+msgid "Period start date"
+msgstr "Service-Start-Typ"
 
 msgid "Periodic notification"
 msgstr "Periodische Alarmierung"
@@ -42382,9 +42381,6 @@ msgstr "Livestatus-Proxy starten"
 msgid "Start URL to display in main frame"
 msgstr "Start-URL für den Haupt-Frame"
 
-msgid "Start date"
-msgstr "Startdatum"
-
 msgid "Start during system boot"
 msgstr "Mit dem Betriebssystem starten"
 
@@ -48028,22 +48024,22 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The subscription details including start date, end date and sizing and the "
-"customer portal credentials are part of the subscription and can be found in "
-"your contract. The credentials are also used for downloading <a href="
-"\"https://checkmk.de/download\">Checkmk<a>."
+"The subscription details include period start date, end date and sizing. The "
+"customer portal credentials can be found in your subscription contract."
+msgstr ""
+"Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
+"Subskription und können im Vertrag gefunden werden."
+
+#, fuzzy
+msgid ""
+"The subscription details include period start date, end date and sizing. The "
+"customer portal credentials can be found in your subscription contract. "
+"These are the same credentials also used for downloading <a href=\"https://"
+"checkmk.de/download\">Checkmk<a>."
 msgstr ""
 "Die Anmeldedaten sind Teil der Subskription und können im Vertrag gefunden "
 "werden. Diese Anmeldedaten werden auch verwendet um <a href=\"https://"
 "checkmk.de/download\">Checkmk<a> herunterzuladen."
-
-#, fuzzy
-msgid ""
-"The subscription details including start date, end date and sizing are part "
-"of the subscription and can be found in your contract."
-msgstr ""
-"Die Details wie Startdatum, Enddatum und Größenbestimmung sind Teil der "
-"Subskription und können im Vertrag gefunden werden."
 
 msgid "The syslog facility does not match"
 msgstr "Das Syslog-Modul passt nicht"
@@ -49615,6 +49611,21 @@ msgstr ""
 
 msgid "This is a front matter Template"
 msgstr "Das ist eine Titelei Vorlage"
+
+#, fuzzy
+msgid ""
+"This is a placeholder for a timeseries graph displaying the historical "
+"development of your license usage. To be able to see this graph, you first "
+"have to configure the subscription start, end and sizing in the subscription "
+"settings. Secondly you will have to wait for at least two days after "
+"creating a site or updating to 2.0"
+msgstr ""
+"Hier wird ein zeitlicher Verlauf der vergangenen Entwicklung der "
+"Lizenznutzung angezeigt. Um diesen Graphen zu sehen muss zuerst der "
+"Subskriptionsanfang, das Subkriptionsende und die Größe in den "
+"Subkriptionseinstellungen festgelegt werden. Zusätzlich müssen mindestens "
+"zwei Tage gewartet werden nachdem eine Instanz erstellt oder zur 2.0 "
+"upgedatet wurde."
 
 msgid "This is a regular expression for matching the event's comment."
 msgstr ""
@@ -62769,6 +62780,12 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "End date"
+#~ msgstr "Enddatum"
+
+#~ msgid "Start date"
+#~ msgstr "Startdatum"
+
 #, fuzzy
 #~| msgid "Unhandled host problems"
 #~ msgid "Unhandled problems"
@@ -62994,11 +63011,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ "'%s' zu senden."
 
 #, fuzzy
-#~| msgid "Subscription"
-#~ msgid "Subscription end date"
-#~ msgstr "Subskription"
-
-#, fuzzy
 #~| msgid "Host problems"
 #~ msgid "Host problem history"
 #~ msgstr "Hostprobleme"
@@ -63123,11 +63135,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~| msgid "Display average"
 #~ msgid "Display range"
 #~ msgstr "Durchschnitt anzeigen"
-
-#, fuzzy
-#~| msgid "Best state"
-#~ msgid "Last state"
-#~ msgstr "Bester Status"
 
 #, fuzzy
 #~| msgid "Manage tags"

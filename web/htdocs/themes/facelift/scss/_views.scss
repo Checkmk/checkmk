@@ -168,12 +168,12 @@ div.floatfilter {
   &.service_custom_variable,
   &.host_custom_variable {
     .select2-container {
-      max-width: 55%;
+      max-width: 52%;
     }
 
     input[type="text"] {
       display: inline-block;
-      width: 43%;
+      width: 40%;
       margin-left: 4px;
     }
   }

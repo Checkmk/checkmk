@@ -58,9 +58,26 @@ def states(user: Optional[LoggedInUser] = None,
     return g.site_status
 
 
+@contextmanager
+def cleanup_connections() -> Iterator[None]:
+    """Context-manager to cleanup livestatus connections"""
+    try:
+        yield
+    finally:
+        try:
+            disconnect()
+        except Exception:
+            logger.exception("Error during livestatus cleanup")
+            raise
+
+
+# TODO: This is not really shutting down or closing connections. It only removes references to
+# sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
     logger.debug("Disconnecing site connections")
+    if "live" in g:
+        g.live.disconnect()
     g.pop('live', None)
     g.pop('site_status', None)
 

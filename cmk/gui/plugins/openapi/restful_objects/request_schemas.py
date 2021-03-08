@@ -1350,7 +1350,7 @@ class CreateUser(BaseSchema):
         description="Configure the language to be used by the user in the user interface. Omitting "
         "this will configure the default language.",
         example="en",
-        enum=["de", "en", "rm"],
+        enum=["de", "en", "ro"],
     )
 
 
@@ -1440,7 +1440,7 @@ class UpdateUser(BaseSchema):
         description="Configure the language to be used by the user in the user interface. Omitting "
         "this will configure the default language",
         example="en",
-        enum=["de", "en", "rm"],
+        enum=["de", "en", "ro"],
     )
 
 

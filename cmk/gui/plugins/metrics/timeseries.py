@@ -132,11 +132,10 @@ def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVE
     # Test for correct arity on FOUND[evaluated] data
     if any((
             operator_id in ["-", "/"] and len(operands_evaluated) != 2,
-            # No neutrals! require pairs. Otherwise messes up formulas in combinations with scalars
-            operator_id in ["+", "*"] and len(operands_evaluated) < 2,
             len(operands_evaluated) < 1,
     )):
         raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+
     _op_title, op_func = operators[operator_id]
     twindow = operands_evaluated[0].twindow
 

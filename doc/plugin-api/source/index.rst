@@ -13,13 +13,13 @@ a look at the articles about extending Checkmk in our `official guide <https://c
 .. toctree::
    :caption: Base
 
-   apidoc/cmk/cmk.base.plugins.agent_based.agent_based_api
-   apidoc/cmk/cmk.base.cee.plugins.bakery.bakery_api
+   cmk.base.plugins.agent_based.agent_based_api/index
+   cmk.base.cee.plugins.bakery.bakery_api/index
 
 .. toctree::
    :caption: Dynamic configuration
 
-   apidoc/cmk/cmk.cee.dcd.plugins.connectors.connectors_api
+   cmk.cee.dcd.plugins.connectors.connectors_api/index
 
 Indices and tables
 ==================

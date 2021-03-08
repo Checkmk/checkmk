@@ -1108,8 +1108,7 @@ class DisabledNotifications(BaseSchema):
     disable = fields.Bool(
         required=False,
         description="Option if all notifications should be temporarily disabled",
-        missing=False,
-        example="False",
+        example=False,
     )
     timerange = fields.Nested(
         CustomTimeRange,
@@ -1223,6 +1222,21 @@ class UserContactOption(BaseSchema):
         "will be sent to the specified email",
         required=False,
         missing=False,
+        example=False,
+    )
+
+
+class UserContactUpdateOption(BaseSchema):
+    email = fields.String(
+        required=False,
+        description="The mail address of the user. Required if the user is a monitoring"
+        "contact and receives notifications via mail.",
+        example="user@example.com",
+    )
+    fallback_contact = fields.Bool(
+        description="In case none of your notification rules handles a certain event a notification "
+        "will be sent to the specified email",
+        required=False,
         example=False,
     )
 

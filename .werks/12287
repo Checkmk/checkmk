@@ -1,0 +1,13 @@
+Title: Raw edition: Remove useless rule pack packaging buttons
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1615213012
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+The buttons for assigning rule packs to extension packages is a
+Enterprise Edition specific feature. The buttons have now been
+removed from the Raw Edition EC rule pack dialog.

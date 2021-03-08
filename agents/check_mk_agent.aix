@@ -181,7 +181,7 @@ function run_agent_plugin {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0"
+echo "Version: 2.0.0p1"
 echo "AgentOS: aix"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

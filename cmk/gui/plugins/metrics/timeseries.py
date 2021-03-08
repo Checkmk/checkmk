@@ -6,7 +6,7 @@
 
 import operator
 import functools
-from typing import List, Literal
+from typing import List, Literal, Optional
 from itertools import chain
 
 from cmk.utils.prediction import TimeSeries
@@ -93,7 +93,9 @@ def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
         operator_id, operands = expression[1:]
         operands_evaluated = list(
             chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands))
-        return [time_series_math(operator_id, operands_evaluated)]
+        if result := time_series_math(operator_id, operands_evaluated):
+            return [result]
+        return []
 
     if expression[0] == "transformation":
         (transform, conf), operands = expression[1:]
@@ -123,7 +125,7 @@ def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
 
 
 def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
-                     operands_evaluated: List[TimeSeries]) -> TimeSeries:
+                     operands_evaluated: List[TimeSeries]) -> Optional[TimeSeries]:
     operators = time_series_operators()
     if operator_id not in operators:
         raise MKGeneralException(
@@ -134,7 +136,9 @@ def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVE
             operator_id in ["-", "/"] and len(operands_evaluated) != 2,
             len(operands_evaluated) < 1,
     )):
-        raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+        #raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+        # Silently return so to get an empty graph slot
+        return None
 
     _op_title, op_func = operators[operator_id]
     twindow = operands_evaluated[0].twindow

@@ -90,7 +90,7 @@ $single-column-mega-menu: 340px;
 // -----------------------------------------------------------------------------
 // States
 // -----------------------------------------------------------------------------
-$color-state-1-background: $warning;
+$color-state-1-background: $yellow;
 $color-state-1-border: $warning;
 
 $color-state-2-background: $danger;
@@ -459,7 +459,7 @@ $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
 $hexagon-critical-color: rgb(255, 50, 50);
 $hexagon-unknown-color: rgb(255, 136, 0);
-$hexagon-warning-color: rgb(255, 254, 68);
+$hexagon-warning-color: $color-state-1-background;
 $hexagon-downtime-color: rgb(60, 194, 255);
 $hexagon-host-down-color: rgb(16, 99, 176);
 $hexagon-ok-color: $white;

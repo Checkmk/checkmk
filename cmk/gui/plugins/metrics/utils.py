@@ -910,7 +910,7 @@ def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
 MONITORING_STATUS_COLORS = {
     "critical/down": rgb_color_to_hex_color(255, 50, 50),
     "unknown/unreachable": rgb_color_to_hex_color(255, 136, 0),
-    "warning": rgb_color_to_hex_color(255, 254, 68),
+    "warning": rgb_color_to_hex_color(255, 208, 0),
     "in_downtime": rgb_color_to_hex_color(60, 194, 255),
     "on_down_host": rgb_color_to_hex_color(16, 99, 176),
     "ok/up": rgb_color_to_hex_color(19, 211, 137),

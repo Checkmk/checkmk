@@ -224,12 +224,10 @@ def _find_host_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = {
-        s.parsed_section_name for s in broker.determine_applicable_sections(
-            parsed_sections_of_interest,
-            SourceType.HOST,
-        )
-    }
+    available_parsed_sections = broker.filter_available(
+        parsed_sections_of_interest,
+        SourceType.HOST,
+    )
 
     return {
         plugin.name
@@ -246,12 +244,10 @@ def _find_mgmt_candidates(
     parsed_sections_of_interest: Set[ParsedSectionName],
 ) -> Set[CheckPluginName]:
 
-    available_parsed_sections = {
-        s.parsed_section_name for s in broker.determine_applicable_sections(
-            parsed_sections_of_interest,
-            SourceType.MANAGEMENT,
-        )
-    }
+    available_parsed_sections = broker.filter_available(
+        parsed_sections_of_interest,
+        SourceType.MANAGEMENT,
+    )
 
     return {
         # *create* all management only names of the plugins

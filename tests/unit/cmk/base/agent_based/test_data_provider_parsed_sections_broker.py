@@ -14,12 +14,15 @@ from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceT
 
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker, SectionsParser
 from cmk.base.check_utils import HOST_ONLY, HOST_PRECEDENCE, MGMT_ONLY
 from cmk.base.sources.agent import AgentHostSections
+from cmk.base.agent_based.data_provider import (
+    ParsedSectionsBroker,
+    ParsedSectionsResolver,
+    SectionsParser,
+)
 
 
 def _test_section(
@@ -76,13 +79,6 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-MOCK_SECTIONS = {
-    SECTION_ONE.name: SECTION_ONE,
-    SECTION_TWO.name: SECTION_TWO,
-    SECTION_THREE.name: SECTION_THREE,
-    SECTION_FOUR.name: SECTION_FOUR,
-}
-
 NODE_1: AgentRawDataSection = [
     ["node1", "data 1"],
     ["node1", "data 2"],
@@ -92,12 +88,6 @@ NODE_2: AgentRawDataSection = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
-
-
-@pytest.fixture(name="patch_register")
-def _fixture_patch_register(monkeypatch):
-    monkeypatch.setattr(agent_based_register._config, "get_section_plugin",
-                        MOCK_SECTIONS.__getitem__)
 
 
 @pytest.mark.parametrize("node_sections,expected_result", [
@@ -118,10 +108,13 @@ def _fixture_patch_register(monkeypatch):
         "node": "node1",
     }),
 ])
-def test_get_parsed_section(patch_register, node_sections, expected_result):
+def test_get_parsed_section(node_sections, expected_result):
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node_sections)
+        HostKey("node1", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
+            sections_parser=SectionsParser(host_sections=node_sections),
+            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        ),
     })
 
     content = parsed_sections_broker.get_parsed_section(
@@ -158,7 +151,7 @@ def test_get_parsed_section(patch_register, node_sections, expected_result):
         }
     }),
 ])
-def test_get_section_kwargs(patch_register, required_sections, expected_result):
+def test_get_section_kwargs(required_sections, expected_result):
 
     node_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
@@ -169,7 +162,9 @@ def test_get_section_kwargs(patch_register, required_sections, expected_result):
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
     parsed_sections_broker = ParsedSectionsBroker({
-        host_key: SectionsParser(host_sections=node_sections),
+        host_key: ParsedSectionsResolver(
+            sections_parser=SectionsParser(host_sections=node_sections),
+            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR]),
     })
 
     kwargs = parsed_sections_broker.get_section_kwargs(
@@ -233,7 +228,7 @@ def test_get_section_kwargs(patch_register, required_sections, expected_result):
         }
     }),
 ])
-def test_get_section_cluster_kwargs(patch_register, required_sections, expected_result):
+def test_get_section_cluster_kwargs(required_sections, expected_result):
 
     node1_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
@@ -247,10 +242,14 @@ def test_get_section_cluster_kwargs(patch_register, required_sections, expected_
     })
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node1_sections
-                                                                      ),
-        HostKey("node2", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node2_sections
-                                                                      ),
+        HostKey("node1", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
+            sections_parser=SectionsParser(host_sections=node1_sections),
+            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        ),
+        HostKey("node2", "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
+            sections_parser=SectionsParser(host_sections=node2_sections),
+            section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+        ),
     })
 
     kwargs = parsed_sections_broker.get_section_cluster_kwargs(
@@ -265,55 +264,28 @@ def test_get_section_cluster_kwargs(patch_register, required_sections, expected_
            "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
 
 
-def _get_host_section_for_parse_sections_test():
-    node_sections = AgentHostSections(sections={
-        SectionName("one"): NODE_1,
-        SectionName("four"): NODE_1,
-    })
-
-    host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
-
-    broker = ParsedSectionsBroker({host_key: SectionsParser(host_sections=node_sections)})
-
-    return host_key, broker
+def _get_parser():
+    return SectionsParser(
+        AgentHostSections(sections={
+            SectionName("one"): NODE_1,
+            SectionName("four"): NODE_1,
+        }),)
 
 
 def test_parse_sections_unsuperseded(monkeypatch):
 
-    host_key, broker = _get_host_section_for_parse_sections_test()
-
-    monkeypatch.setattr(
-        agent_based_register._config,
-        "get_section_plugin",
-        MOCK_SECTIONS.get,
-    )
-
-    assert broker.determine_applicable_sections(
-        {ParsedSectionName("parsed")},
-        host_key.source_type,
-    ) == [
-        SECTION_ONE,
-    ]
-    assert broker.get_parsed_section(host_key, ParsedSectionName("parsed")) is not None
+    assert ParsedSectionsResolver(
+        sections_parser=_get_parser(),
+        section_plugins=(SECTION_ONE, SECTION_THREE),
+    ).resolve(ParsedSectionName("parsed")) is not None
 
 
 def test_parse_sections_superseded(monkeypatch):
 
-    host_key, broker = _get_host_section_for_parse_sections_test()
-
-    monkeypatch.setattr(
-        agent_based_register._config,
-        "get_section_plugin",
-        MOCK_SECTIONS.get,
-    )
-
-    assert broker.determine_applicable_sections(
-        {ParsedSectionName("parsed"), ParsedSectionName("parsed_four")},
-        host_key.source_type,
-    ) == [
-        SECTION_FOUR,
-    ]
-    assert broker.get_parsed_section(host_key, ParsedSectionName("parsed")) is None
+    assert ParsedSectionsResolver(
+        sections_parser=_get_parser(),
+        section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),
+    ).resolve(ParsedSectionName("parsed")) is None
 
 
 @pytest.mark.parametrize(
@@ -344,10 +316,13 @@ def test_parse_sections_superseded(monkeypatch):
 def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey(nodename, "127.0.0.1",
-                SourceType.HOST): SectionsParser(host_sections=AgentHostSections(
-                    sections={SectionName("section_plugin_name"): node_section_content}))
-        for nodename, node_section_content in host_entries
+        HostKey(nodename, "127.0.0.1", SourceType.HOST): ParsedSectionsResolver(
+            sections_parser=SectionsParser(host_sections=AgentHostSections(
+                sections={SectionName("section_plugin_name"): node_section_content})),
+            # NOTE: this tests the legacy functionality. The "proper" ParsedSectionsBroker
+            # methods are bypassed, so these will not matter at all:
+            section_plugins=[],
+        ) for nodename, node_section_content in host_entries
     })
 
     mhs = _MultiHostSections(parsed_sections_broker)

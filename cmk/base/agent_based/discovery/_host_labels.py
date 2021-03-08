@@ -27,7 +27,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 from cmk.base.discovered_labels import HostLabel
 
@@ -237,31 +236,19 @@ def _discover_host_labels_for_source_type(
 ) -> Mapping[str, HostLabel]:
 
     try:
-        sections_parser = parsed_sections_broker[host_key]
+        resolver = parsed_sections_broker[host_key]
     except KeyError:
         return {}
 
     host_labels = {}
     try:
-        # We do *not* process all available raw sections. Instead we see which *parsed*
-        # sections would result from them, and then process those.
-        parse_sections = {
-            agent_based_register.get_section_plugin(rs).parsed_section_name
-            for rs in sections_parser.sections
-        }
-        applicable_sections = parsed_sections_broker.determine_applicable_sections(
-            parse_sections,
-            host_key.source_type,
-        )
+        parsed_results = sorted(resolver, key=lambda r: r.section.name)
 
         console.vverbose("Trying host label discovery with: %s\n" %
-                         ", ".join(str(s.name) for s in applicable_sections))
-        for section_plugin in _sort_sections_by_label_priority(applicable_sections):
+                         ", ".join(str(r.section.name) for r in parsed_results))
+        for (section_data, _cache_info), section_plugin in parsed_results:
 
-            kwargs = {
-                'section': parsed_sections_broker.get_parsed_section(
-                    host_key, section_plugin.parsed_section_name),
-            }
+            kwargs = {'section': section_data}
 
             host_label_params = config.get_host_label_parameters(host_key.hostname, section_plugin)
             if host_label_params is not None:

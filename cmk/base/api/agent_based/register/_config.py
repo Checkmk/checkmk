@@ -24,10 +24,7 @@ from cmk.base.api.agent_based.type_defs import (
 )
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-from cmk.base.api.agent_based.register.utils import (
-    rank_sections_by_supersedes,
-    validate_check_ruleset_item_consistency,
-)
+from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
@@ -108,19 +105,6 @@ def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[Inventory
     """Returns the registered inventory plugin
     """
     return registered_inventory_plugins.get(plugin_name)
-
-
-def get_ranked_sections(
-    available_raw_sections: Iterable[SectionName],
-    filter_parsed_section: Optional[Set[ParsedSectionName]],
-) -> List[SectionPlugin]:
-    """
-    Get the raw sections [that will be parsed into the required section] ordered by supersedings
-    """
-    return rank_sections_by_supersedes(
-        ((name, get_section_plugin(name)) for name in available_raw_sections),
-        filter_parsed_section,
-    )
 
 
 def get_relevant_raw_sections(

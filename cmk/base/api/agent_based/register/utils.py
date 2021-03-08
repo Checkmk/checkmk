@@ -12,13 +12,10 @@ from typing import (
     Callable,
     Dict,
     get_args,
-    Iterable,
     List,
     Literal,
     Mapping,
     Optional,
-    Set,
-    Tuple,
     Union,
 )
 
@@ -27,12 +24,10 @@ from cmk.utils.type_defs import (
     InventoryPluginName,
     ParsedSectionName,
     RuleSetName,
-    SectionName,
 )
 from cmk.utils.paths import agent_based_plugins_dir
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import SectionPlugin
 
 ITEM_VARIABLE = "%s"
 
@@ -51,34 +46,6 @@ def get_validated_plugin_module_name() -> Optional[str]:
         raise ImportError("do not register from %r" % path)
 
     return path.stem
-
-
-def rank_sections_by_supersedes(
-    available_raw_section_definitions: Iterable[Tuple[SectionName, SectionPlugin]],
-    filter_parsed_sections: Optional[Set[ParsedSectionName]],
-) -> List[SectionPlugin]:
-    """Get the raw sections that will be parsed into the required section
-
-    Raw sections may get renamed once they are parsed, if they declare it. This function
-    deals with the task of determining which sections we need to parse, in order to end
-    up with the desired parsed section.
-
-    They are ranked according to their supersedings.
-    """
-    candidates = dict(available_raw_section_definitions) if filter_parsed_sections is None else {
-        name: section
-        for name, section in available_raw_section_definitions
-        if section.parsed_section_name in filter_parsed_sections
-    }
-
-    # Validation has enforced that we have no implizit (recursive) supersedings.
-    # This has the advantage, that we can just sort by number of relevant supersedings.
-    candidate_names = set(candidates)
-
-    def _count_relevant_supersedings(section: SectionPlugin):
-        return -len(section.supersedes & candidate_names), section.name
-
-    return sorted(candidates.values(), key=_count_relevant_supersedings)
 
 
 def create_subscribed_sections(

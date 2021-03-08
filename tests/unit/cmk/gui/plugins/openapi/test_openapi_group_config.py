@@ -24,7 +24,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
 
     group = {'name': name, 'alias': alias, 'customer': 'provider'}
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/%s_group_config/collections/all" % (group_type,),
@@ -85,7 +85,7 @@ def test_openapi_bulk_groups(group_type, wsgi_app, with_automation_user):
         'customer': 'provider'
     } for _i in range(2)]
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/%s_group_config/actions/bulk-create/invoke" % (group_type,),
@@ -175,7 +175,7 @@ def test_openapi_groups_with_customer(group_type, wsgi_app, with_automation_user
 
     group = {'name': name, 'alias': alias, 'customer': 'global'}
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     _resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/%s_group_config/collections/all" % (group_type,),

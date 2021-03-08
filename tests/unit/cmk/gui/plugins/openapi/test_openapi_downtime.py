@@ -18,7 +18,7 @@ def test_openapi_list_all_downtimes(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query([
         'GET downtimes',
@@ -43,7 +43,7 @@ def test_openapi_schedule_hostgroup_downtime(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET hostgroups\nColumns: members\nFilter: name = example',)
     live.expect_query(
@@ -77,7 +77,7 @@ def test_openapi_schedule_host_downtime(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
@@ -109,7 +109,7 @@ def test_openapi_schedule_servicegroup_downtime(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET servicegroups\nColumns: members\nFilter: name = example',)
     live.expect_query(
@@ -147,7 +147,7 @@ def test_openapi_schedule_service_downtime(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET hosts\nColumns: name\nFilter: name = example.com')
     live.expect_query(
@@ -181,7 +181,7 @@ def test_openapi_schedule_service_downtime_with_non_matching_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET services\nColumns: description host_name\nFilter: host_name = nothing')
 
@@ -211,7 +211,7 @@ def test_openapi_schedule_host_downtime_with_non_matching_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query('GET hosts\nColumns: name\nFilter: name = nothing')
 
@@ -242,7 +242,7 @@ def test_openapi_show_downtimes_with_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -289,7 +289,7 @@ def test_openapi_show_downtime_with_params(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -336,7 +336,7 @@ def test_openapi_show_downtime_of_non_existing_host(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -382,7 +382,7 @@ def test_openapi_create_host_downtime_with_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -455,7 +455,7 @@ def test_openapi_create_service_downtime_with_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table(
         'services',
@@ -515,7 +515,7 @@ def test_openapi_create_service_downtime_with_non_matching_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table(
         'services',
@@ -562,7 +562,7 @@ def test_openapi_delete_downtime_with_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -617,7 +617,7 @@ def test_openapi_delete_downtime_with_params(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -673,7 +673,7 @@ def test_openapi_downtime_non_existing_instance(
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.post(
         base + '/domain-types/downtime/collections/host',
@@ -695,7 +695,7 @@ def test_openapi_downtime_non_existing_groups(
 ):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.post(
         base + '/domain-types/downtime/collections/host',
@@ -719,7 +719,7 @@ def test_openapi_downtime_get_single(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('downtimes', [{
         'id': 123,
@@ -767,7 +767,7 @@ def test_openapi_downtime_invalid_single(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.expect_query([
         'GET downtimes',

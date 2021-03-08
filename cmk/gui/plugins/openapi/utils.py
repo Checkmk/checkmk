@@ -157,7 +157,7 @@ def create_url(site: SiteId, query: Query) -> str:
 
         >>> create_url('heute',
         ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
-        '/heute/check_mk/api/v0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
+        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
 
     Args:
         site:
@@ -181,7 +181,7 @@ def create_url(site: SiteId, query: Query) -> str:
         }[table]
     except KeyError:
         raise ValueError(f"Could not find a domain-type for table {table}.")
-    url = f"/{site}/check_mk/api/v0/domain-types/{domain_type}/collections/all"
+    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
     query_dict = query.dict_repr()
     if query_dict:
         query_string_value = quote_plus(json.dumps(query_dict))

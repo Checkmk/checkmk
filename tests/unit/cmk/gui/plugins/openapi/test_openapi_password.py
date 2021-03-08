@@ -13,7 +13,7 @@ def test_openapi_password(wsgi_app, with_automation_user, suppress_automation_ca
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -74,7 +74,7 @@ def test_openapi_password_admin(wsgi_app, with_automation_user, suppress_automat
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method(
         'post',
@@ -103,7 +103,7 @@ def test_openapi_password_customer(wsgi_app, with_automation_user, suppress_auto
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -141,7 +141,7 @@ def test_openapi_password_delete(wsgi_app, with_automation_user, suppress_automa
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method(
         'post',

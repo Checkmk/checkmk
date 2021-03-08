@@ -32,7 +32,7 @@ def test_openapi_acknowledge_all_services(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('services', [
         {
@@ -99,7 +99,7 @@ def test_openapi_acknowledge_specific_service(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('services', [
         {
@@ -180,7 +180,7 @@ def test_openapi_acknowledge_host(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('hosts', [
         {
@@ -226,7 +226,7 @@ def test_openapi_bulk_acknowledge(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('services', [{
         'host_name': 'heute',
@@ -289,7 +289,7 @@ def test_openapi_acknowledge_servicegroup(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('servicegroups', [
         {
@@ -331,7 +331,7 @@ def test_openapi_acknowledge_hostgroup(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('hostgroups', [
         {
@@ -390,7 +390,7 @@ def test_openapi_acknowledge_host_with_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('hosts', [
         {
@@ -433,7 +433,7 @@ def test_openapi_acknowledge_host_with_non_matching_query(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('hosts', [
         {

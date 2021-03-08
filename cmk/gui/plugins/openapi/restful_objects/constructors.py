@@ -32,8 +32,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
 
-API_VERSION = "v0"
-
 
 @contextlib.contextmanager
 def _request_context(secure=True):
@@ -60,11 +58,11 @@ def absolute_url(href):
 
         >>> with _request_context(secure=False):
         ...     absolute_url("objects/host_config/example.com")
-        'http://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+        'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
 
         >>> with _request_context(secure=True):
         ...     absolute_url("objects/host_config/example.com")
-        'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+        'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com'
 
     Args:
         href:
@@ -75,7 +73,7 @@ def absolute_url(href):
     if href.startswith("/"):
         href = href.lstrip("/")
 
-    return f"{request.host_url}{config.omd_site()}/check_mk/api/{API_VERSION}/{href}"
+    return f"{request.host_url}{config.omd_site()}/check_mk/api/1.0/{href}"
 
 
 def link_rel(
@@ -124,7 +122,7 @@ def link_rel(
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/update',
         ...     'title': 'Update the object',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/foo/update'
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/foo/update'
         ... }
         >>> with _request_context():
         ...     link = link_rel('.../update', '/objects/foo/update',
@@ -277,7 +275,7 @@ def object_collection(
         ...     'links': [
         ...         {
         ...             'rel': 'self',
-        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/domain-types/host/collections/all',
+        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/domain-types/host/collections/all',
         ...             'method': 'GET',
         ...             'type': 'application/json',
         ...             'domainType': 'link',
@@ -410,7 +408,7 @@ def collection_property(
         ...     collection_property('hosts', _hosts, _base)
         {'id': 'hosts', 'memberType': 'property', 'value': [{'name': 'host1'}, {'name': 'host2'}], \
 'links': [{'rel': 'self', \
-'href': 'http://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com/collections/hosts', \
+'href': 'http://localhost:5000/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/collections/hosts', \
 'method': 'GET', 'type': 'application/json', 'domainType': 'link'}]}
 
     Returns:
@@ -809,7 +807,7 @@ def collection_item(
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/folder_config/3',
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/1.0/objects/folder_config/3',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',

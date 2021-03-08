@@ -80,7 +80,7 @@ import urllib.request
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -119,7 +119,7 @@ CODE_TEMPLATE_CURL = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -173,7 +173,7 @@ CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -210,7 +210,7 @@ import requests
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"

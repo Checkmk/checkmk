@@ -48,7 +48,7 @@ def test_openapi_livestatus_service(
     ],)
 
     with live:
-        base = '/NO_SITE/check_mk/api/v0'
+        base = '/NO_SITE/check_mk/api/1.0'
 
         resp = wsgi_app.call_method(
             'get',

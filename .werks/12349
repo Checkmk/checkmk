@@ -6,7 +6,7 @@ Date: 1614946546
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b9
+Version: 2.0.0
 
 This werk introduces some changes to the downtime endpoint family.
 It makes some examples more beginner friendly and fixes the linking

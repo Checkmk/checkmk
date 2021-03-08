@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0b9
+Version: 2.0.0
 
 If you used the "Export for API" option in rules, the error 'The parameter
 "rule_id"is missing." occurred.

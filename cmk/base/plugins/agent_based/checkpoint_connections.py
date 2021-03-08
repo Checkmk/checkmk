@@ -18,8 +18,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils import checkpoint
 
-check_default_parameters = {"levels": (40000, 50000)}
-
 
 class Section(NamedTuple):
     current: int
@@ -58,7 +56,7 @@ def check_checkpoint_connections(
         levels_upper=params['levels'],
         metric_name="connections",
         label="Current connections",
-        render_func=lambda v: str(int(v)),
+        render_func=str,
     )
 
 
@@ -67,6 +65,6 @@ register.check_plugin(
     service_name="Connections",
     discovery_function=discover_checkpoint_connections,
     check_function=check_checkpoint_connections,
-    check_default_parameters=check_default_parameters,
+    check_default_parameters={"levels": (40000, 50000)},
     check_ruleset_name="checkpoint_connections",
 )

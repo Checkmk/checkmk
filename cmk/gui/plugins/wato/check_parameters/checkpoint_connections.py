@@ -22,10 +22,11 @@ def _parameter_valuespec_checkpoint_connections():
                              "a Checkpoint firewall."),
                       title=_("Maximum number of firewall connections"),
                       elements=[
-                          Integer(title=_("Warning at"), minvalue=0.0),
+                          Integer(title=_("Warning at"), minvalue=0, default_value=40000),
                           Integer(
                               title=_("Critical at"),
                               minvalue=0,
+                              default_value=50000,
                           ),
                       ]),
             ),

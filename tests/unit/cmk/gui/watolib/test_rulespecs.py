@@ -1444,6 +1444,9 @@ def test_rulespec_get_all_groups():
 def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
+        'checkparams',
+        'checkparams/discovery',
+        'checkparams/inventory_and_check_mk_settings',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',

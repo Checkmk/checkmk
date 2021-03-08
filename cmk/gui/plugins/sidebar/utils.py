@@ -12,7 +12,7 @@ from typing import Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.sites import SiteId
+from cmk.gui.sites import SiteId, filter_available_site_choices
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
@@ -303,19 +303,20 @@ def nagioscgilink(text, target):
 
 def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = config.user.load_file("sidebar_sites", {})
+    available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")
     if site == "":
         only_sites = None
     else:
         only_sites = [site]
 
-    if len(choices) <= 1:
+    if len(available_site_choices) <= 1:
         return None
 
     dropdown_choices: Choices = [
         ("", _("All sites")),
     ]
-    dropdown_choices += choices
+    dropdown_choices += available_site_choices
 
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
     html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)

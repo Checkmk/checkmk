@@ -1,0 +1,11 @@
+Title: HW/SW Inventory: Fix sorting inventory tables, eg. 'Network interfaces'
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615220668
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+

@@ -229,6 +229,7 @@ def _declare_inv_column(invpath, datatype, title, short=None, is_show_more: bool
 
 def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
                         invpath: str) -> int:
+    # TODO merge with _decorate_sort_func
     # Returns
     # (1)  1 if val_a > val_b
     # (2)  0 if val_a == val_b
@@ -753,6 +754,19 @@ def _inv_find_subtable_columns(invpath):
     return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
+def _decorate_sort_func(f):
+    def wrapper(val_a, val_b):
+        if val_a is None:
+            return 0 if val_b is None else -1
+
+        if val_b is None:
+            return 0 if val_a is None else 1
+
+        return f(val_a, val_b)
+
+    return wrapper
+
+
 def _declare_invtable_column(infoname, invpath, topic, name, column):
     sub_invpath = invpath + "*." + name
     hint = inventory_displayhints.get(sub_invpath, {})
@@ -798,7 +812,7 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
         column, {
             "title": _("Inventory") + ": " + title,
             "columns": [column],
-            "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: _decorate_sort_func(sortfunc)(a.get(column), b.get(column)),
         })
 
 

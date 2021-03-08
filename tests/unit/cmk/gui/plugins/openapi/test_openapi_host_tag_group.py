@@ -12,7 +12,7 @@ def test_openapi_host_tag_group_update(wsgi_app, with_automation_user, suppress_
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -62,7 +62,7 @@ def test_openapi_host_tag_group_get_collection(wsgi_app, with_automation_user,
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     builtin_groups_count = len(BuiltinTagConfig().tag_groups)
 
@@ -78,7 +78,7 @@ def test_openapi_host_tag_group_delete(wsgi_app, with_automation_user, suppress_
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -117,7 +117,7 @@ def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user,
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
     _resp = wsgi_app.call_method(
         'post',
         base + "/domain-types/host_tag_group/collections/all",
@@ -140,7 +140,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user, suppres
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'get',

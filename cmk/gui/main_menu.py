@@ -114,7 +114,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="rest_api_swagger_ui",
                     title=_("REST API interactive GUI"),
-                    url="api/v0/ui/",
+                    url="api/1.0/ui/",
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

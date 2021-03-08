@@ -28,7 +28,7 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
         'customer': 'global',
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         resp = wsgi_app.call_method(
             'post',
@@ -70,7 +70,7 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
 
     user_detail = {'username': 'user', 'fullname': 'User Name', 'customer': 'provider'}
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         resp = wsgi_app.call_method(
             'post',
@@ -114,7 +114,7 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
         }
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         resp = wsgi_app.call_method(
             'post',
@@ -209,7 +209,7 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         }
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:30:00"):
         _resp = wsgi_app.call_method(
             'post',
@@ -289,7 +289,7 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         },
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         resp = wsgi_app.call_method(
             'post',
@@ -396,7 +396,7 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
         'customer': 'global',
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         resp = wsgi_app.call_method(
             'post',
@@ -491,7 +491,7 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
         'language': 'en'
     }
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
     with freeze_time("2010-02-01 08:00:00"):
         _resp = wsgi_app.call_method(
             'post',

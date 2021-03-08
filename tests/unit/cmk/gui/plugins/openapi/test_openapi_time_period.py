@@ -10,7 +10,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method(
         'post',
@@ -83,7 +83,7 @@ def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -137,7 +137,7 @@ def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user, suppress_aut
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method('get', base + "/objects/time_period/24X7", status=200)
 

@@ -300,7 +300,7 @@ def main():
 
 
 def _get_api_settings(username, secret, url) -> ApiSettings:
-    api_url = f"{url}/api/v0"
+    api_url = f"{url}/api/1.0"
     return ApiSettings(
         API_URL=api_url,
         USERNAME=username,

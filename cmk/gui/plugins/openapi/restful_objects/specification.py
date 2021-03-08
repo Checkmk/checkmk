@@ -121,16 +121,14 @@ For backwards compatibility reasons we only keep the fields that have already be
 versions. You can consult the documentation to see what changed in each API revision.
 
 """
-from typing import List, Literal, Dict, TypedDict
+from typing import Dict, List, Literal, TypedDict
 
-import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
+import apispec.utils  # type: ignore[import]
 import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.plugins.openapi import plugins
-from cmk.gui.plugins.openapi.restful_objects.parameters import (
-    ACCEPT_HEADER,)
-
+from cmk.gui.plugins.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 
 SECURITY_SCHEMES = {
@@ -231,7 +229,7 @@ OPTIONS: ReDocSpec = {
     } for sec_scheme_name in SECURITY_SCHEMES]
 }
 
-__version__ = "0.3.2"
+__version__ = "1.0"
 
 
 def make_spec(options: ReDocSpec):

@@ -33,25 +33,25 @@ def test_profiling(wsgi_app, mocker):
 
 def test_webserver_auth(wsgi_app, with_user):
     username, _ = with_user
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=401)
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
                  status=401,
                  extra_environ={'REMOTE_USER': 'unknown_random_dude'})
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
                  status=200,
                  extra_environ={'REMOTE_USER': username})
 
     wsgi_app.set_authorization(('Basic', ("unknown_random_dude", "foobazbar")))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version",
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
                  status=401,
                  extra_environ={'REMOTE_USER': username})
 
 
 def test_normal_auth(wsgi_app, with_user):
     username, password = with_user
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=401)
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=401)
 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(('Basic', ("foobazbar", "foobazbar")))
@@ -63,13 +63,13 @@ def test_normal_auth(wsgi_app, with_user):
 
     assert "Invalid credentials." not in resp.text
 
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=200)
 
 
 def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version", status=200)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=200)
     assert resp.json['site'] == cmk_version.omd_site()
 
 
@@ -77,7 +77,7 @@ def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/version?fail=1", status=500)
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/version?fail=1", status=500)
     assert 'detail' in resp.json
     assert 'title' in resp.json
     assert 'crash_report' in resp.json

@@ -657,7 +657,7 @@ def test_openapi_discovery(
     suppress_automation_calls.automation.return_value = mock_discovery_result
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method(
         'post',

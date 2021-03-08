@@ -16,7 +16,7 @@ def test_openapi_show_activations(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
 
     wsgi_app.call_method(
         'get',
@@ -34,7 +34,7 @@ def test_openapi_activate_changes(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = "/NO_SITE/check_mk/api/v0"
+    base = "/NO_SITE/check_mk/api/1.0"
 
     # We create a host
     live = mock_livestatus

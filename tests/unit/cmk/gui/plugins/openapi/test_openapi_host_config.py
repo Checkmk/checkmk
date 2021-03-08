@@ -10,7 +10,7 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -79,7 +79,7 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -147,7 +147,7 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -223,7 +223,7 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',
@@ -249,7 +249,7 @@ def test_openapi_host_rename(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -291,7 +291,7 @@ def test_openapi_host_rename_error_on_not_existing_host(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -327,7 +327,7 @@ def test_openapi_host_rename_on_invalid_hostname(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -361,7 +361,7 @@ def test_openapi_host_rename_with_pending_activate_changes(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -395,7 +395,7 @@ def test_openapi_host_move(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -431,7 +431,7 @@ def test_openapi_host_move_to_non_valid_folder(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     wsgi_app.call_method(
         'post',
@@ -467,7 +467,7 @@ def test_openapi_host_move_of_non_existing_host(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     _resp = wsgi_app.call_method(
         'post',
@@ -486,7 +486,7 @@ def test_openapi_host_update_invalid(
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'post',

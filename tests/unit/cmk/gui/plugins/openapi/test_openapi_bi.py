@@ -10,7 +10,7 @@ import json
 def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     response = wsgi_app.get(base + '/domain-types/bi_pack/collections/all')
     packs = json.loads(response.text)
@@ -22,7 +22,7 @@ def test_openapi_get_bi_packs(wsgi_app, with_automation_user):
 def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     pack_id = "default"
     response = wsgi_app.get(base + '/objects/bi_pack/%s' % pack_id, status=200)
@@ -35,7 +35,7 @@ def test_openapi_get_bi_pack(wsgi_app, with_automation_user):
 def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     aggr_id = "default_aggregation"
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
@@ -56,7 +56,7 @@ def test_openapi_get_bi_aggregation(wsgi_app, with_automation_user):
 def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     rule_id = "applications"
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % rule_id, status=200)
@@ -77,7 +77,7 @@ def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
 def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     aggr_id = "default_aggregation"
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
@@ -103,7 +103,7 @@ def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
 def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     rule_id = "applications"
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % rule_id, status=200)
@@ -125,7 +125,7 @@ def test_openapi_modify_bi_rule(wsgi_app, with_automation_user):
 def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     aggr_id = "default_aggregation"
     response = wsgi_app.get(base + '/objects/bi_aggregation/%s' % aggr_id, status=200)
@@ -165,7 +165,7 @@ def test_openapi_clone_bi_aggregation(wsgi_app, with_automation_user):
 def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     rule_id = "applications"
     response = wsgi_app.get(base + '/objects/bi_rule/%s' % rule_id, status=200)
@@ -205,7 +205,7 @@ def test_openapi_clone_bi_rule(wsgi_app, with_automation_user):
 def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     pack_id = "default"
     response = wsgi_app.get(base + '/objects/bi_pack/%s' % pack_id, status=200)
@@ -260,7 +260,7 @@ def test_openapi_clone_bi_pack(wsgi_app, with_automation_user):
 def test_openapi_delete_pack(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     pack_data = {
         "title": "Test pack",
@@ -289,7 +289,7 @@ def test_openapi_delete_pack(wsgi_app, with_automation_user):
 def test_openapi_delete_pack_forbidden(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     # Check invalid POST request on existing id
     wsgi_app.delete(base + '/objects/bi_pack/default', content_type='application/json', status=404)

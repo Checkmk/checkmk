@@ -22,7 +22,7 @@ def etags_off_fixture():
 def test_openapi_etag_disabled(etags_off, wsgi_app, with_automation_user, with_host):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'get',
@@ -42,7 +42,7 @@ def test_openapi_etag_disabled(etags_off, wsgi_app, with_automation_user, with_h
 def test_openapi_etag_enabled(wsgi_app, with_automation_user, with_host):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     resp = wsgi_app.call_method(
         'get',

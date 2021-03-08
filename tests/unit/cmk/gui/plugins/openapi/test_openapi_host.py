@@ -16,7 +16,7 @@ def test_openapi_livestatus_hosts_generic_filter(
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/v0'
+    base = '/NO_SITE/check_mk/api/1.0'
 
     live.add_table('hosts', [
         {

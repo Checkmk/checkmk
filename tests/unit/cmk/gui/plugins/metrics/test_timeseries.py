@@ -14,8 +14,6 @@ from cmk.utils.exceptions import MKGeneralException
     pytest.param(('%', []), id="Unknown symbol"),
     pytest.param(('MAX', []), id="MAX requires at least a timeseries"),
     pytest.param(
-        ('+', [ts.TimeSeries([0, 180, 60, 5, 5, 10])]), id="Don't assume additive neutral"),
-    pytest.param(
         ('/', [ts.TimeSeries([0, 180, 60, 5, 5, 10])]), id="Division exclusive on pairs #1"),
     pytest.param(
         ('/', [ts.TimeSeries([0, 180, 60, 5, 5, 10])] * 3), id="Division exclusive on pairs #2"),
@@ -25,7 +23,7 @@ def test_time_series_math_exc(args):
         ts.time_series_math(*args)
 
 
-@pytest.mark.parametrize("operator", ["MAX", "MIN", "AVERAGE", "MERGE"])
+@pytest.mark.parametrize("operator", ["+", "*", "MAX", "MIN", "AVERAGE", "MERGE"])
 def test_time_series_math_stable_singles(operator):
     test_ts = ts.TimeSeries([0, 180, 60, 6, 5, 10, None, -2, -3.14])
     assert ts.time_series_math(operator, [test_ts]) == test_ts

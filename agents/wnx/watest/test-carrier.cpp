@@ -9,10 +9,9 @@
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "logger.h"
-#include "read_file.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 
 using namespace std::chrono_literals;
 
@@ -148,49 +147,57 @@ TEST_F(CarrierTestFixture, MailSlotIntegration) {
 }
 
 namespace {
+// Simple callback for the mailslot. Must be thread safe.
+std::mutex g_lock_command;
 std::string g_last_command;
-
+std::string GetRunCommand() {
+    std::scoped_lock l(g_lock_command);
+    return g_last_command;
+}
 bool TestRunCommand(std::string_view peer, std::string_view cmd) {
+    std::scoped_lock l(g_lock_command);
     g_last_command = cmd;
     return true;
 }
-}  // namespace
+};  // namespace
 
-// check that inform port works ok
-TEST(CarrierTest, InformByMailSlot) {
-    auto name_used = "WinAgentTestLocal";
-    MailSlot mailbox_client(name_used, 0);
-    MailSlot mailbox_server(name_used, 0);
+class CarrierTestInformFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        mailbox_server.ConstructThread(
+            srv::SystemMailboxCallback, 20, &processor,
+            wtools::SecurityLevel::standard);  // standard may be ok
+        ASSERT_TRUE(cc.establishCommunication(internal_port));
+        save_rcp = commander::ObtainRunCommandProcessor();
 
-    auto internal_port = BuildPortName(kCarrierMailslotName,
-                                       mailbox_server.GetName());  // port here
-    srv::ServiceProcessor processor;
-    mailbox_server.ConstructThread(
-        srv::SystemMailboxCallback, 20, &processor,
-        wtools::SecurityLevel::standard);  // standard may be ok
-    ON_OUT_OF_SCOPE(mailbox_server.DismantleThread());
-    tools::sleep(100ms);
-
-    {
-        carrier::CoreCarrier cc;
-        // "mail"
-        auto ret = cc.establishCommunication(internal_port);
-        ASSERT_TRUE(ret);
-        ON_OUT_OF_SCOPE(cc.shutdownCommunication());
-
-        tools::sleep(100ms);
-
-        auto save_rcp = commander::ObtainRunCommandProcessor();
-        ON_OUT_OF_SCOPE(commander::ChangeRunCommandProcessor(save_rcp));
         commander::ChangeRunCommandProcessor(TestRunCommand);
+    }
+    void TearDown() override {
+        commander::ChangeRunCommandProcessor(save_rcp);
+        cc.shutdownCommunication();
 
-        InformByMailSlot(mailbox_client.GetName(), "xxx");
-        tools::sleep(100ms);
-        EXPECT_EQ(g_last_command, "xxx");
+        mailbox_server.DismantleThread();
+    }
+    const char* name_used{"WinAgentTestLocal"};
+    MailSlot mailbox_client{name_used, 0};
 
-        InformByMailSlot(mailbox_client.GetName(), "zzz");
-        tools::sleep(100ms);
-        EXPECT_EQ(g_last_command, "zzz");
+private:
+    MailSlot mailbox_server{name_used, 0};
+
+    std::string internal_port{BuildPortName(
+        kCarrierMailslotName, mailbox_server.GetName())};  // port here
+    srv::ServiceProcessor processor;
+    carrier::CoreCarrier cc;
+    cma::commander::RunCommandProcessor save_rcp;
+};
+
+TEST_F(CarrierTestInformFixture, InformByMailSlot) {
+    using namespace std::string_literals;
+    for (const auto cmd : {"xxx"s, "zzz"s}) {
+        InformByMailSlot(mailbox_client.GetName(), cmd);
+        EXPECT_TRUE(tst::WaitForSuccessSilent(
+            100ms, [cmd]() { return GetRunCommand() == cmd; }))
+            << "FAILED= " << cmd;
     }
 }
 

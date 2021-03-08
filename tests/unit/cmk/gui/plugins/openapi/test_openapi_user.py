@@ -9,7 +9,7 @@ import random
 import string
 from freezegun import freeze_time
 
-from cmk.gui.plugins.openapi.endpoints.user_config import user_config_attributes
+from cmk.gui.plugins.openapi.endpoints.user_config import _internal_to_api_format, _load_user, _api_to_internal_format
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.watolib.users import edit_users
 from tests.unit.cmk.gui.plugins.openapi.test_version import managedtest  # type: ignore[import]
@@ -38,17 +38,21 @@ def test_openapi_customer(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'User Name',
+        'fullname': 'User Name',
         'customer': 'global',
         'contactgroups': [],
         'disable_notifications': {},
-        'email': '',
-        'enforce_pw_change': False,
-        'fallback_contact': False,
-        'locked': False,
-        'pager': '',
+        'auth_option': {},
+        'contact_options': {
+            "email": '',
+            "fallback_contact": False
+        },
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'disable_login': False,
+        'pager_address': '',
         'roles': [],
-        'user_scheme_serial': 0
     }
 
     resp = wsgi_app.call_method(
@@ -68,18 +72,33 @@ def test_openapi_user_minimal_settings(wsgi_app, with_automation_user, monkeypat
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
-    user_detail = {'username': 'user', 'fullname': 'User Name', 'customer': 'provider'}
+    edit_users({
+        "user": {
+            "attributes": {
+                'ui_theme': None,
+                'ui_sidebar_position': None,
+                'nav_hide_icons_title': None,
+                'icons_per_item': None,
+                'show_mode': None,
+                'start_url': None,
+                'force_authuser': False,
+                'enforce_pw_change': False,
+                'alias': 'User Name',
+                'locked': False,
+                'pager': '',
+                'roles': [],
+                'contactgroups': [],
+                'email': '',
+                'fallback_contact': False,
+                'disable_notifications': {},
+            },
+            "is_new_user": True,
+        }
+    })
 
-    base = "/NO_SITE/check_mk/api/1.0"
-    with freeze_time("2010-02-01 08:00:00"):
-        resp = wsgi_app.call_method(
-            'post',
-            base + "/domain-types/user_config/collections/all",
-            params=json.dumps(user_detail),
-            status=200,
-            content_type='application/json',
-        )
-    assert resp.json_body["extensions"]["attributes"] == {
+    user_attributes = _load_internal_attributes("user")
+
+    assert user_attributes == {
         'alias': 'User Name',
         'customer': 'provider',
         'contactgroups': [],
@@ -124,20 +143,24 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'User Name',
+        'fullname': 'User Name',
         'customer': 'provider',
-        'email': '',
-        'pager': '',
+        'pager_address': '',
         'contactgroups': [],
-        'fallback_contact': False,
+        'idle_timeout': {
+            'option': 'global'
+        },
+        "auth_option": {
+            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+            'auth_type': 'password',
+        },
+        "contact_options": {
+            "email": "",
+            "fallback_contact": False,
+        },
         'disable_notifications': {},
-        'user_scheme_serial': 0,
-        'locked': False,
+        'disable_login': False,
         'roles': [],
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'serial': 1,
-        'last_pw_change': 1265011200,
-        'enforce_pw_change': True
     }
 
     edit_details = {
@@ -160,23 +183,24 @@ def test_openapi_user_minimal_password_settings(wsgi_app, with_automation_user, 
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'User Name',
+        'fullname': 'User Name',
         'customer': 'provider',
-        'email': '',
-        'pager': '',
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False,
+        },
+        'auth_option': {
+            'auth_type': 'automation',
+            'secret': 'SOMEAUTOMATION',
+        },
+        'idle_timeout': {
+            'option': 'disable',
+        },
+        'pager_address': '',
+        'disable_login': False,
         'contactgroups': [],
-        'fallback_contact': False,
         'disable_notifications': {},
-        'user_scheme_serial': 0,
-        'locked': False,
         'roles': ['user'],
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'serial': 2,
-        'num_failed_logins': 0,
-        'last_pw_change': 1265011200,
-        'enforce_pw_change': True,
-        'automation_secret': 'SOMEAUTOMATION',
-        'idle_timeout': False,
     }
 
 
@@ -222,23 +246,29 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
     resp = wsgi_app.call_method('get', base + f"/objects/user_config/{name}", status=200)
 
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'KPECYCq79E',
-        'customer': 'provider',
-        'pager': '',
-        'contactgroups': [],
-        'email': '',
-        'fallback_contact': False,
-        'disable_notifications': {
-            'timerange': [1577836800.0, 1577923200.0]
+        'auth_option': {
+            'auth_type': 'password',
+            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
         },
-        'user_scheme_serial': 0,
-        'locked': False,
-        'roles': [],
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'serial': 1,
-        'num_failed_logins': 0,
-        'last_pw_change': 1265013000,
-        'enforce_pw_change': True
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'KPECYCq79E',
+        'pager_address': '',
+        'contactgroups': [],
+        'customer': 'provider',
+        'disable_notifications': {
+            'timerange': {
+                'end_time': '2020-01-02T00:00:00Z',
+                'start_time': '2020-01-01T00:00:00Z'
+            }
+        },
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'roles': []
     }
 
     collection_resp = wsgi_app.call_method(
@@ -263,6 +293,67 @@ def test_openapi_user_config(wsgi_app, with_automation_user, monkeypatch):
         status=200,
     )
     assert len(resp.json_body["value"]) == 1
+
+
+@managedtest
+def test_openapi_user_internal_with_notifications(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr(
+        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        lambda x: '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C')
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    name = _random_string(10)
+
+    edit_users({
+        name: {
+            "attributes": {
+                'ui_theme': None,
+                'ui_sidebar_position': None,
+                'nav_hide_icons_title': None,
+                'icons_per_item': None,
+                'show_mode': None,
+                'start_url': None,
+                'force_authuser': False,
+                'enforce_pw_change': True,
+                'alias': 'KPECYCq79E',
+                'locked': False,
+                'pager': '',
+                'roles': [],
+                'contactgroups': [],
+                'email': '',
+                'fallback_contact': False,
+                'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+                'last_pw_change': 1265013000,
+                'serial': 1,
+                'disable_notifications': {
+                    'timerange': (1577836800.0, 1577923200.0)
+                }
+            },
+            "is_new_user": True,
+        }
+    })
+
+    assert _load_internal_attributes(name) == {
+        'alias': 'KPECYCq79E',
+        'customer': 'provider',
+        'pager': '',
+        'contactgroups': [],
+        'email': '',
+        'fallback_contact': False,
+        'disable_notifications': {
+            'timerange': (1577836800.0, 1577923200.0)
+        },
+        'user_scheme_serial': 0,
+        'locked': False,
+        'roles': [],
+        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+        'serial': 1,
+        'last_pw_change': 1265013000,
+        'enforce_pw_change': True
+    }
 
 
 @managedtest
@@ -299,20 +390,24 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'Foo Bar',
+        'auth_option': {
+            'auth_type': 'password',
+            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
+        },
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Foo Bar',
+        'pager_address': '',
         'customer': 'provider',
-        'email': '',
-        'pager': '',
         'contactgroups': [],
-        'fallback_contact': False,
         'disable_notifications': {},
-        'user_scheme_serial': 0,
-        'locked': False,
+        'idle_timeout': {
+            'option': 'global'
+        },
         'roles': ['user'],
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'serial': 1,
-        'last_pw_change': 1265011200,
-        'enforce_pw_change': True,
     }
 
     edit_details = {
@@ -332,22 +427,24 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'Foo Bar',
+        'auth_option': {
+            'auth_type': 'automation',
+            'secret': 'QWXWBFUCSUOXNCPJUMS@',
+        },
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Foo Bar',
+        'pager_address': '',
         'customer': 'provider',
-        'email': '',
-        'pager': '',
         'contactgroups': [],
-        'fallback_contact': False,
         'disable_notifications': {},
-        'user_scheme_serial': 0,
-        'locked': False,
+        'idle_timeout': {
+            'option': 'global'
+        },
         'roles': ['user'],
-        'automation_secret': 'QWXWBFUCSUOXNCPJUMS@',
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'serial': 2,
-        'num_failed_logins': 0,
-        'last_pw_change': 1265011200,
-        'enforce_pw_change': True
     }
 
     remove_details = {
@@ -365,6 +462,62 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
+        'auth_option': {},
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Foo Bar',
+        'pager_address': '',
+        'customer': 'provider',
+        'contactgroups': [],
+        'disable_notifications': {},
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'roles': ['user'],
+    }
+
+
+def test_openapi_user_internal_auth_handling(wsgi_app, with_automation_user, monkeypatch):
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr(
+        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        lambda x: '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C')
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    name = "foo"
+
+    edit_users({
+        name: {
+            "attributes": {
+                'ui_theme': None,
+                'ui_sidebar_position': None,
+                'nav_hide_icons_title': None,
+                'icons_per_item': None,
+                'show_mode': None,
+                'start_url': None,
+                'force_authuser': False,
+                'enforce_pw_change': True,
+                'alias': 'Foo Bar',
+                'locked': False,
+                'pager': '',
+                'roles': ['user'],
+                'contactgroups': [],
+                'email': '',
+                'fallback_contact': False,
+                'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+                'last_pw_change': 1265011200,
+                'serial': 1,
+                'disable_notifications': {}
+            },
+            "is_new_user": True
+        }
+    })
+    assert _load_internal_attributes(name) == {
         'alias': 'Foo Bar',
         'customer': 'provider',
         'email': '',
@@ -375,8 +528,63 @@ def test_openapi_user_edit_auth(wsgi_app, with_automation_user, monkeypatch):
         'user_scheme_serial': 0,
         'locked': False,
         'roles': ['user'],
-        'serial': 2,
-        'num_failed_logins': 0,
+        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+        'serial': 1,
+        'last_pw_change': 1265011200,
+        'enforce_pw_change': True,
+    }
+
+    with freeze_time("2010-02-01 08:30:00"):
+        updated_internal_attributes = _api_to_internal_format(
+            _load_user(name),
+            {'auth_option': {
+                'secret': 'QWXWBFUCSUOXNCPJUMS@',
+                'auth_type': 'automation'
+            }})
+        edit_users({name: {
+            "attributes": updated_internal_attributes,
+            "is_new_user": False,
+        }})
+
+    assert _load_internal_attributes(name) == {
+        'alias': 'Foo Bar',
+        'customer': 'provider',
+        'email': '',
+        'pager': '',
+        'contactgroups': [],
+        'fallback_contact': False,
+        'disable_notifications': {},
+        'user_scheme_serial': 0,
+        'locked': False,
+        'roles': ['user'],
+        'automation_secret': 'QWXWBFUCSUOXNCPJUMS@',
+        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
+        'serial': 1,  # this is 2 internally but the function is not invoked here
+        'last_pw_change': 1265011200,
+        'enforce_pw_change': True
+    }
+
+    with freeze_time("2010-02-01 09:00:00"):
+        updated_internal_attributes = _api_to_internal_format(
+            _load_user(name), {'auth_option': {
+                'auth_type': 'remove'
+            }})
+        edit_users({name: {
+            "attributes": updated_internal_attributes,
+            "is_new_user": False,
+        }})
+    assert _load_internal_attributes(name) == {
+        'alias': 'Foo Bar',
+        'customer': 'provider',
+        'email': '',
+        'pager': '',
+        'contactgroups': [],
+        'fallback_contact': False,
+        'disable_notifications': {},
+        'user_scheme_serial': 0,
+        'locked': False,
+        'roles': ['user'],
+        'serial': 1,
         'last_pw_change': 1265011200,  # no change in time from previous edit
         'enforce_pw_change': True
     }
@@ -406,17 +614,21 @@ def test_openapi_managed_global_edition(wsgi_app, with_automation_user, monkeypa
             content_type='application/json',
         )
     assert resp.json_body["extensions"]["attributes"] == {
-        'alias': 'User Name',
+        'auth_option': {},
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'User Name',
+        'pager_address': '',
         'customer': 'global',
         'contactgroups': [],
         'disable_notifications': {},
-        'email': '',
-        'enforce_pw_change': False,
-        'fallback_contact': False,
-        'locked': False,
-        'pager': '',
+        'idle_timeout': {
+            'option': 'global'
+        },
         'roles': [],
-        'user_scheme_serial': 0
     }
 
 
@@ -452,11 +664,11 @@ def test_managed_global_internal(wsgi_app, with_automation_user, monkeypatch):
             'is_new_user': True
         }
     })
-    user_endpoint_attrs = complement_customer(user_config_attributes("user"))
+    user_internal = _load_user("user")
+    user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
 
 
-@managedtest
 def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
@@ -501,27 +713,240 @@ def test_global_full_configuration(wsgi_app, with_automation_user, monkeypatch):
             content_type='application/json',
         )
 
-    resp = wsgi_app.call_method('get', base + f"/objects/user_config/cmkuser", status=200)
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
 
     assert resp.json_body["extensions"]["attributes"] == {
-        'enforce_pw_change': True,
-        'alias': 'Mathias Kettner',
-        'locked': False,
-        'pager': '',
-        'num_failed_logins': 0,  # this is added afterward internally
+        'auth_option': {
+            'auth_type': 'password',
+            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
+        },
+        'contact_options': {
+            'email': 'user@example.com',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Mathias Kettner',
+        'pager_address': '',
         'roles': ['user'],
         'contactgroups': [],
         'language': 'en',
         'customer': 'global',
-        'email': 'user@example.com',
-        'fallback_contact': False,
-        'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C',
-        'last_pw_change': 1265011200,
-        'serial': 1,
+        'idle_timeout': {
+            'option': 'global'
+        },
         'disable_notifications': {},
-        'user_scheme_serial': 0,
+    }
+
+
+def test_managed_idle_internal(wsgi_app, with_automation_user, monkeypatch):
+    # this test uses the internal mechanics of the user endpoint
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    edit_users({
+        'user': {
+            'attributes': {
+                'ui_theme': None,
+                'ui_sidebar_position': None,
+                'nav_hide_icons_title': None,
+                'icons_per_item': None,
+                'show_mode': None,
+                'start_url': None,
+                'force_authuser': False,
+                'enforce_pw_change': False,
+                'alias': 'User Name',
+                'locked': False,
+                'pager': '',
+                'roles': [],
+                'contactgroups': [],
+                'customer': None,  # None represents global internally
+                'email': '',
+                'fallback_contact': False,
+                'disable_notifications': {}
+            },
+            'is_new_user': True
+        }
+    })
+    user_internal = _load_user("user")
+    user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
+    assert "idle_timeout" not in _load_user(username)
+    assert user_endpoint_attrs["idle_timeout"] == {"option": "global"}
+
+
+def test_openapi_user_update_contact_options(wsgi_app, with_automation_user, monkeypatch):
+    # this test uses the internal mechanics of the user endpoint
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr(
+        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        lambda x: '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C')
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    user_detail = {
+        'username': 'cmkuser',
+        'fullname': 'Mathias Kettner',
+        'customer': 'global',
+        'auth_option': {
+            'auth_type': 'password',
+            'password': 'password'
+        },
+        'disable_login': False,
+        'pager_address': '',
+        'idle_timeout': {
+            "option": "global"
+        },
+        'roles': ['user'],
+        'disable_notifications': {
+            'disable': False
+        },
+        'language': 'en'
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    with freeze_time("2010-02-01 08:00:00"):
+        resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            status=200,
+            content_type='application/json',
+        )
+
+    _ = wsgi_app.call_method(
+        'put',
+        base + "/objects/user_config/cmkuser",
+        params=json.dumps({"contact_options": {
+            "fallback_contact": True
+        }}),
+        status=400,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
+    assert resp.json_body["extensions"]["attributes"] == {
+        'auth_option': {
+            'auth_type': 'password',
+            'password': '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C'
+        },
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Mathias Kettner',
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'pager_address': '',
+        'roles': ['user'],
+        'contactgroups': [],
+        'language': 'en',
+        'customer': 'global',
+        'disable_notifications': {},
+    }
+
+
+def test_openapi_user_disable_notifications(wsgi_app, with_automation_user, monkeypatch):
+    # this test uses the internal mechanics of the user endpoint
+    monkeypatch.setattr("cmk.gui.watolib.global_settings.rulebased_notifications_enabled",
+                        lambda: True)
+    monkeypatch.setattr(
+        "cmk.gui.plugins.userdb.htpasswd.hash_password",
+        lambda x: '$5$rounds=535000$eUtToQgKz6n7Qyqk$hh5tq.snoP4J95gVoswOep4LbUxycNG1QF1HI7B4d8C')
+
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    user_detail = {
+        'username': 'cmkuser',
+        'fullname': 'Mathias Kettner',
+        'customer': 'global',
+        'disable_notifications': {
+            'disable': True
+        },
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    with freeze_time("2010-02-01 08:00:00"):
+        _resp = wsgi_app.call_method(
+            'post',
+            base + "/domain-types/user_config/collections/all",
+            params=json.dumps(user_detail),
+            status=200,
+            content_type='application/json',
+        )
+    resp = wsgi_app.call_method('get', base + "/objects/user_config/cmkuser", status=200)
+    assert resp.json_body["extensions"]["attributes"] == {
+        'auth_option': {},
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Mathias Kettner',
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'pager_address': '',
+        'roles': [],
+        'contactgroups': [],
+        'customer': 'global',
+        'disable_notifications': {
+            "disable": True,
+        },
+    }
+
+    resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/user_config/cmkuser",
+        params=json.dumps({"disable_notifications": {
+            "disable": False
+        }}),
+        status=200,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    assert resp.json_body["extensions"]["attributes"] == {
+        'auth_option': {},
+        'contact_options': {
+            'email': '',
+            'fallback_contact': False
+        },
+        'disable_login': False,
+        'fullname': 'Mathias Kettner',
+        'idle_timeout': {
+            'option': 'global'
+        },
+        'pager_address': '',
+        'roles': [],
+        'contactgroups': [],
+        'customer': 'global',
+        'disable_notifications': {},
     }
 
 
 def _random_string(size):
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
+
+
+def _load_internal_attributes(username):
+    return complement_customer(_internal_attributes(_load_user(username)))
+
+
+def _internal_attributes(user_attributes):
+    return {
+        k: v for k, v in user_attributes.items() if k not in (
+            "nav_hide_icons_title",
+            "icons_per_item",
+            "show_mode",
+            "ui_theme",
+            "ui_sidebar_position",
+            "start_url",
+            "force_authuser",
+        )
+    }

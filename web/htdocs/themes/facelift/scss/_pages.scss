@@ -699,6 +699,7 @@ div.snapin textarea,  // TODO: reproduce this element
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
+  box-sizing: content-box;
 }
 
 span.select2 .select2-selection {

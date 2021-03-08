@@ -1524,33 +1524,35 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url = makeuri_contextless(request, rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
-                if type_ == ec.RulePackType.internal:
-                    export_url = make_action_link([("mode", "mkeventd_rule_packs"),
-                                                   ("_export", nr)])
-                    html.icon_button(
-                        export_url,
-                        _("Make this rule pack available in the Extension Packages module"), {
-                            'icon': 'mkps',
-                            'emblem': 'add',
-                        })
+                if not cmk_version.is_raw_edition():
+                    # Icons for mkp export (CEE/CME only)
+                    if type_ == ec.RulePackType.internal:
+                        export_url = make_action_link([("mode", "mkeventd_rule_packs"),
+                                                       ("_export", nr)])
+                        html.icon_button(
+                            export_url,
+                            _("Make this rule pack available in the Extension Packages module"), {
+                                'icon': 'mkps',
+                                'emblem': 'add',
+                            })
 
-                # Icons for mkp export and disabling
-                table.cell("", css="buttons")
-                if type_ == ec.RulePackType.unmodified_mkp:
-                    html.icon("mkps",
-                              _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
-                elif type_ == ec.RulePackType.exported:
-                    html.icon(
-                        "mkps",
-                        _("This is rule pack can be packaged with the Extension Packages module."))
-                elif type_ == ec.RulePackType.modified_mkp:
-                    html.icon(
-                        {
-                            'icon': 'mkps',
-                            'emblem': 'warning',
-                        },
-                        _("This rule pack is modified. Originally it was provided via the MKP %s.")
-                        % id_to_mkp[id_])
+                    table.cell("", css="buttons")
+                    if type_ == ec.RulePackType.unmodified_mkp:
+                        html.icon("mkps",
+                                  _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
+                    elif type_ == ec.RulePackType.exported:
+                        html.icon(
+                            "mkps",
+                            _("This is rule pack can be packaged with the Extension Packages module."
+                             ))
+                    elif type_ == ec.RulePackType.modified_mkp:
+                        html.icon(
+                            {
+                                'icon': 'mkps',
+                                'emblem': 'warning',
+                            },
+                            _("This rule pack is modified. Originally it was provided via the MKP %s."
+                             ) % id_to_mkp[id_])
 
                 if rule_pack["disabled"]:
                     html.icon(

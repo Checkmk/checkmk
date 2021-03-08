@@ -261,15 +261,6 @@ body.main.dashlet {
     div#dashlet_content_wrapper[data-simplebar="init"] {
       height: 100%;
       overflow: auto;
-
-      div.simplebar-track {
-        background-color: $dashlet-body-bg-color;
-      }
-
-      div.simplebar-content {
-        /* Do not overlap right border of rightmost column */
-        margin-right: 11px;
-      }
     }
   }
 }

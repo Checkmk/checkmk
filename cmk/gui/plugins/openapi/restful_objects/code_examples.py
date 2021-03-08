@@ -112,11 +112,19 @@ request = urllib.request.Request(
     {%- endif %}
 )
 response = urllib.request.urlopen(request)
-data = json.loads(response.read())
+if response.status == 200:
+    pprint.pprint(json.loads(response.read()))
+elif response.status == 204:
+    print("Done")
+else:
+    raise RuntimeError(response.read())
 """
 
 CODE_TEMPLATE_CURL = """
 #!/bin/bash
+
+# NOTE: We recommend all shell users to use the "httpie" examples instead.
+
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
 API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
@@ -249,8 +257,8 @@ CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('templa
 CODE_EXAMPLES: List[CodeExample] = [
     CodeExample(lang='python', label='requests', template=CODE_TEMPLATE_REQUESTS),
     CodeExample(lang='python', label='urllib', template=CODE_TEMPLATE_URLLIB),
-    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
     CodeExample(lang='bash', label='httpie', template=CODE_TEMPLATE_HTTPIE),
+    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
 ]
 
 # The examples will appear in the order they are put in above, as starting from Python 3.7, dicts

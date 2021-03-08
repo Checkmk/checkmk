@@ -13,8 +13,8 @@ import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks
 
 
-@pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.fixture(name="setup_test", scope="module")
+def _fixture_setup_test(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
@@ -39,7 +39,19 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
         web.activate_changes()
 
 
-def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.fixture(name="clear_cache")
+def _fixture_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-name
+
+    cache_file = "tmp/check_mk/cache/modes-test-host"
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
+    yield
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
+
+
+@pytest.mark.usefixtures("clear_cache", "setup_test")
+def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
 
@@ -113,7 +125,8 @@ register.check_plugin(
         assert False, '"test_check_1" not discovered'
 
 
-def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.mark.usefixtures("clear_cache", "setup_test")
+def test_test_check_1_all_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_2.py"
 

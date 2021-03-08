@@ -75,7 +75,14 @@ protected:
         return {path, pid};
     }
 
-    void SetUp() override { RunMeAgain(1); }
+    void SetUp() override {
+        auto killed =
+            KillProcessesByDir(std::filesystem::path{GetCurrentProcessPath()}
+                                   .parent_path()
+                                   .parent_path());
+        XLOG::l("Killed {}", killed);
+        RunMeAgain(1);
+    }
 
     void TearDown() override { KillTmpProcesses(); }
 };
@@ -104,7 +111,7 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
-    EXPECT_TRUE(pid == 0);
+    EXPECT_EQ(pid, 0);
 
     killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
     EXPECT_EQ(killed, 0);
@@ -631,6 +638,70 @@ TEST(PlayerTest, Pipe) {
     p->create();
     EXPECT_NE(p->getRead(), nullptr);
     EXPECT_NE(p->getWrite(), nullptr);
+}
+
+TEST(Wtools, HandleDeleter) {
+    auto pid = ::GetCurrentProcessId();
+    UniqueHandle mount;
+    ASSERT_EQ(mount.get(), nullptr);
+    mount.reset(::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid));
+    ASSERT_TRUE(mount.get() != nullptr);
+    mount.reset();
+    ASSERT_TRUE(mount.get() == nullptr);
+}
+
+TEST(Wtools, HandleDeleterInvalidAndNull) {
+    const std::array<HANDLE, 2> handles{wtools::InvalidHandle(), nullptr};
+    for (auto h : handles) {
+        UniqueHandle unique_handle(h);
+        ASSERT_EQ(unique_handle.get(), h);
+        unique_handle.reset();  // check for no crash and no throw
+        ASSERT_TRUE(unique_handle.get() == nullptr) << "Current handle " << h;
+    }
+}
+
+TEST(Wtools, GetMultiSz) {
+    std::array<wchar_t, 12> data{L"abcde\0fgh\0\0"};
+    wchar_t* pos = data.data();
+    wchar_t* end = pos + 11;
+    pos = nullptr;
+    EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
+    pos = data.data();
+    EXPECT_EQ(GetMultiSzEntry(pos, nullptr), nullptr);
+    EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"abcde");
+    EXPECT_EQ(std::wstring{GetMultiSzEntry(pos, end)}, L"fgh");
+    EXPECT_EQ(GetMultiSzEntry(pos, end), nullptr);
+}
+
+TEST(Wtools, ExecuteCommandsAsync) {
+    namespace fs = std::filesystem;
+    using namespace std::chrono_literals;
+
+    auto output_file = fmt::format(L"{}cmk_test_{}.output",
+                                   fs::temp_directory_path().wstring(),
+                                   ::GetCurrentProcessId());
+    std::vector<std::wstring> commands{L"echo x>" + output_file,
+                                       L"@echo powershell Start-Sleep 1"};
+    auto result = ExecuteCommandsAsync(L"test", commands);
+    std::error_code ec;
+    ON_OUT_OF_SCOPE({
+        if (!result.empty()) {
+            std::filesystem::remove(result, ec);
+        }
+        std::filesystem::remove(output_file, ec);
+    });
+    EXPECT_FALSE(result.empty());
+    EXPECT_TRUE(std::filesystem::exists(result));
+    auto table = tst::ReadFileAsTable(result);
+    EXPECT_EQ(table[0], ToUtf8(commands[0]));
+    EXPECT_EQ(table[1], ToUtf8(commands[1]));
+
+    tst::WaitForSuccessSilent(5000ms, [output_file]() {
+        std::error_code ec;
+        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+    });
+    auto output = tst::ReadFileAsTable(output_file);
+    EXPECT_EQ(output[0], "x");
 }
 
 }  // namespace wtools

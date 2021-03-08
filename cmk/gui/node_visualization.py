@@ -283,6 +283,7 @@ class AjaxFetchAggregationData(AjaxPage):
                 hierarchy = visual_mapper.consume(node_result_bundle)
 
                 data: Dict[str, Any] = {}
+                data["type"] = "bi"
                 data["hierarchy"] = hierarchy
                 data["groups"] = bi_compiled_aggregation.groups.names
                 data["data_timestamp"] = int(time.time())
@@ -551,6 +552,7 @@ class AjaxFetchTopology(AjaxPage):
                         }
                     }
                 },
+                "type": "topology",
                 "hierarchy": mesh_info,
                 "links": list(mesh_links)
             }
@@ -918,6 +920,11 @@ class ParentChildNetworkTopology(Topology):
         info = super(ParentChildNetworkTopology, self).get_info_for_host(hostname, mesh)
         host_info = self._known_hosts[hostname]
         info.update(host_info)
+        for key in ["childs", "parents"]:
+            try:
+                del info[key]
+            except KeyError:
+                pass
 
         if "node_type" not in info:
             info["node_type"] = "topology"

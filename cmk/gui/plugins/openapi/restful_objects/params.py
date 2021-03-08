@@ -100,7 +100,7 @@ def to_openapi(
         raise ValueError("Needs to be a sequence of parameters.")
 
     def _is_field_param(dict_):
-        return all([isinstance(value, fields.Field) for value in dict_.values()])
+        return all(isinstance(value, fields.Field) for value in dict_.values())
 
     def _is_schema_class(klass):
         try:

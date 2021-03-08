@@ -133,6 +133,9 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
+            if config.wato_use_git:
+                do_git_commit()
+
             # Handle two cases:
             # a) Don't render the page content after action
             #    (a confirm dialog is displayed by the action, or a non-HTML content was sent)
@@ -172,9 +175,6 @@ def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[Permis
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()
-
-    if config.wato_use_git and html.is_transaction():
-        do_git_commit()
 
     wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 

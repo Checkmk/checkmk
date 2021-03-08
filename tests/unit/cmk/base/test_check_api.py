@@ -12,9 +12,12 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario
 
+from cmk.utils.type_defs import CheckPluginName
+
 from cmk.base import check_api
 import cmk.base.config as config
-import cmk.base.check_api_utils as check_api_utils
+from cmk.base.check_utils import Service
+import cmk.base.plugin_contexts as plugin_contexts
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
@@ -283,14 +286,22 @@ def test_get_effective_service_level(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    check_api_utils.set_service("cpu.loads", "CPU load")
+    with plugin_contexts.current_service(
+            Service(
+                item=None,
+                check_plugin_name=CheckPluginName("cpu_loads"),
+                description="CPU load",
+                parameters={},
+            )):
 
-    check_api_utils.set_hostname("testhost1")
-    assert check_api.get_effective_service_level() == 33
-    check_api_utils.set_hostname("testhost2")
-    assert check_api.get_effective_service_level() == 10
-    check_api_utils.set_hostname("testhost3")
-    assert check_api.get_effective_service_level() == 0
+        with plugin_contexts.current_host("testhost1", write_state=False):
+            assert check_api.get_effective_service_level() == 33
+
+        with plugin_contexts.current_host("testhost2", write_state=False):
+            assert check_api.get_effective_service_level() == 10
+
+        with plugin_contexts.current_host("testhost3", write_state=False):
+            assert check_api.get_effective_service_level() == 0
 
 
 def test_as_float():

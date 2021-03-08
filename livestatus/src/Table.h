@@ -56,7 +56,7 @@ public:
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {
-        for (auto &c : _columns) {
+        for (const auto &c : _columns) {
             if (pred(c.second)) {
                 return true;
             }

@@ -3,6 +3,9 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+// Note: Some of the colors defined here are also used in cmk/gui/plugins/metrics/utils.py, do not
+// change one without the other.
+
 // -----------------------------------------------------------------------------
 // Colors
 // -----------------------------------------------------------------------------
@@ -31,10 +34,10 @@ $bg-color: rgb(28, 34, 40);
 $base-color: rgb(32, 39, 46);
 $headline-color: rgb(38, 47, 56);
 $table-highlight-color: rgb(38, 45, 52);
-$img-color: $white;
 $inpage-highlight-color: rgb(48, 57, 70);
 
 $font-color: $white;
+$font-color-disabled: rgb(124, 124, 128);
 $font-color-light: $lightgrey; // light grey
 $font-color-sidebar: $white;
 $color-background: $bg-color;
@@ -47,9 +50,9 @@ $font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mon
   monospace;
 $font-family-default: $font-family-sans-serif;
 
-$font-size__base: 1rem; // Assumes the browser default, typically `16px`
-$font-size-global: 12px;
-$font-size-default: 11px;
+$font-size-page-title: 18px;
+$font-size-large: 14px;
+$font-size-normal: 12px;
 $font-size-small: 10px;
 
 $font-weight-default: 400;
@@ -79,6 +82,8 @@ $button-height: 28px;
 // -----------------------------------------------------------------------------
 $theme-border-radius: 4px;
 $spacing: 10px;
+$spacing-half: (0.5 * $spacing);
+$spacing-quarter: (0.25 * $spacing);
 $menu-item-spacing: (2.2 * $spacing);
 $single-column-mega-menu: 340px;
 
@@ -152,20 +157,6 @@ $color-nuance-16: rgb(255, 150, 68); // orange
 $color-nuance-17: rgb(161, 230, 248); // light blue
 
 // -----------------------------------------------------------------------------
-// Tags
-// -----------------------------------------------------------------------------
-$tag-margin: 0 5px 2px 0;
-$tag-padding: 0.1em 0.3em;
-$tag-font-color: rgb(240, 240, 240);
-$tag-opacity: 0.6;
-$tag-discovered-opacity: 0.7;
-$tag-hover-opacity: 0.8;
-
-$tag-input-bg-color: $inpage-highlight-color;
-$tag-dropdown-active-bg-color: $inpage-highlight-color;
-$tag-dropdown-active-border: none;
-
-// -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
@@ -174,7 +165,6 @@ $table-secondary-font-color: rgba($font-color, 0.4);
 $secondary-link-color: $grey-2;
 
 $primary-border: 1px solid $grey-7;
-$secondary-table-border: 1.8px solid $grey-7;
 
 $primary-th-bg-color: $grey-7;
 $primary-td-bg-color: $grey-6;
@@ -189,13 +179,10 @@ $checkbox-checked-color: $primary-font-color;
 $checkbox-checked-bg-color: $grey-3;
 
 $toggle-switch-on-bg-color: rgb(19, 211, 137);
-$toggle-switch-on-border: null;
 $toggle-switch-off-bg-color: rgb(38, 47, 56);
-$toggle-switch-off-bg-color-sidebar: $toggle-switch-off-bg-color;
-$toggle-switch-off-border: null;
 $toggle-switch-font-color-on: $black;
-$toggle-switch-font-color-off: rgba($white, 0.4);
-$toggle-switch-height: 14px;
+$toggle-switch-font-color-off: rgba($font-color, 0.8);
+$toggle-switch-height: 13px;
 $toggle-switch-width: 30px;
 $toggle-switch-font-weight: 400;
 
@@ -203,13 +190,9 @@ $toggle-button-off-border: 1px solid $grey-7;
 $toggle-button-down-bg-color: $grey-3;
 $toggle-button-down-border-color: null;
 $toggle-button-down-hover-bg-color: lighten($grey-3, 10%);
-$toggle-button-down-hover-border-color: null;
 $toggle-button-search-img-filter: invert(20%);
 
 $success-bg-color: $bg-color;
-
-$treeangle-img-filter: invert(20%);
-$treeangle-img-filter-sidebar: $treeangle-img-filter;
 
 $color-div-border-color: $grey-7;
 
@@ -234,7 +217,6 @@ $select2-border-color: $input-button-hover-bg-color;
 $select2-rendered-color: $font-color;
 $select2-search-field-border: none;
 
-$td-single-bg-color: null;
 $wato-a-hover-bg-color: mix($white, $grey-6, 10%);
 
 $td-unused-color: $grey-2;
@@ -256,26 +238,23 @@ $td-text-overflow: ellipsis;
 
 $span-dots-color: $grey-1;
 
-$graph-bg-color: $bg-color-secondary !important;
+$graph-bg-color: null;
 $graph-legend-th-border-bottom: 1px solid $grey-1;
 $graph-time-color: $font-color;
 
 $dashlet-stats-border-top-color: $grey-6;
-$dashlet-title-border-radius: 0;
 
 $snapin-border: 1px solid $grey-7;
 $snapin-border-top: null;
 $snapin-border-bottom: null;
 
+$overview-info-bg: rgb(56, 59, 81);
+
 $wato-a-border: 1px solid rgb(33, 33, 33);
 
 $wato-subtitle-color: $grey-2;
 
-$footnote-link-color: rgba($white, 0.4);
-$footnote-bg-color: rgb(38, 47, 56);
-
-$table-data-single-padding: 2px 0;
-$td-single-left-padding: 2px 36px 2px 16px;
+$footnote-link-color: rgba($font-color, 0.8);
 
 $host-diag-success-bg-color: rgb(50, 80, 50);
 $host-diag-failed-bg-color: $color-nuance-15;
@@ -289,7 +268,7 @@ $input-hover-bg-color: null;
 
 $data-th-sort-hover-bg-color: null;
 
-$wato-h3-margin-bottom: 4px;
+$h3-margin-bottom: 0;
 
 $wato-info-margin: 0;
 $wato-info-padding: 10px 0 10px 10px;
@@ -297,8 +276,6 @@ $wato-info-padding: 10px 0 10px 10px;
 $ac-test-details-td-padding: 4px 5px;
 
 $groupheader-first-padding-top: 0;
-
-$boxlayout-tr-bg-color: null;
 
 $mk-search-results-bg-color: $grey-3;
 $mk-search-results-hover-bg-color: rgb(93, 93, 93);
@@ -347,6 +324,23 @@ $snapin-cmc-table-width: 100%;
 $snapin-list-color: $font-color-sidebar;
 
 $performance-table-shared-padding: 8px 0;
+$logwatch-text-color: rgb(11, 5, 5);
+$logwatch-text-color-2: $white;
+
+// -----------------------------------------------------------------------------
+// Tags
+// -----------------------------------------------------------------------------
+$tag-padding: 0.1em 0.3em;
+$tag-font-color: $font-color;
+$tag-opacity: 0.6;
+$tag-discovered-opacity: 0.7;
+$tag-hover-opacity: 0.8;
+
+$tag-input-bg-color: $inpage-highlight-color;
+$tag-dropdown-bg-color: $inpage-highlight-color;
+$tag-dropdown-hover-bg-color: $inpage-highlight-color;
+$tag-dropdown-hover-border-color: $select2-border-color;
+$tag-dropdown-hover-font-color: $success;
 
 // -----------------------------------------------------------------------------
 // Node visualization
@@ -398,7 +392,7 @@ $timetable-hilite-bg-color: lighten($bg-color, 15%);
 
 $pnp-graph-img-border-color: rgb(240, 240, 240);
 $graph-hover-popup-font-color: $font-color;
-$graph-hover-popup-bg-color: $grey-6;
+$graph-hover-popup-bg-color: $base-color;
 $graph-hover-popup-border: 1px solid $grey-3;
 $graph-hover-popup-box-shadow: none;
 
@@ -427,7 +421,6 @@ $scatterdot-hilite-color: $yellow;
 $page-header-height: 58px;
 $popup-shadow-color: rgba(0, 0, 0, 0.1);
 $button-font-color-default: $white;
-$button-inactive-filter: grayscale(80%);
 $button-bg-color-default: $input-button-hover-bg-color;
 $button-bg-color-suggestions: $navbar-color;
 $navigation-bg-color: $navbar-color;
@@ -453,8 +446,6 @@ $wato-h3-font-color: rgb(170, 170, 170);
 $megamenu-navbar-height: 60px;
 $megamenu-spacing-bottom: 20px;
 $log-output-color: $navbar-color;
-$inpage-close-button-filter: none;
-$sidebar-input-field-bg-color: $bg-color;
 $dashlet-anchor-size: 26px;
 $dashlet-anchor-on-size: 40px;
 $dashlet-anchor-size-slim: 20px;
@@ -466,3 +457,15 @@ $dashlet-resize-handle-width: 32px;
 $dashlet-resize-handle-height: 16px;
 $dashlet-resize-handle-width-slim: 12px;
 $dashlet-resize-handle-height-slim: 6px;
+$hexagon-critical-color: rgb(255, 50, 50);
+$hexagon-unknown-color: rgb(255, 136, 0);
+$hexagon-warning-color: rgb(255, 254, 68);
+$hexagon-downtime-color: rgb(60, 194, 255);
+$hexagon-host-down-color: rgb(16, 99, 176);
+$hexagon-ok-color: $white;
+$hexagon-ok-fill-opacity: 0.03;
+$hexagon-ok-stroke-color: $white;
+$hexagon-ok-stroke-opacity: 0.1;
+$host-hexagon-ok-stroke-color: rgb(58, 69, 80);
+$input-field-height: 21px; // also for tactical overview
+$input-field-margin: 0 $spacing-half $spacing-half 0;

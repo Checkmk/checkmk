@@ -108,8 +108,9 @@ local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 
-_local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
-local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"
+local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
+
+license_usage_dir = Path(var_dir, "license_usage")
 
 
 def make_helper_config_path(serial: OptionalConfigSerial) -> Path:

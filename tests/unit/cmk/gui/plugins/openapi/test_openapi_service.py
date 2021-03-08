@@ -12,6 +12,7 @@ def test_openapi_livestatus_service(
     with_automation_user,
     suppress_automation_calls,
     mock_livestatus,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user

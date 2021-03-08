@@ -46,7 +46,7 @@ class Performance(SidebarSnapin):
             html.td(html.render_strong(right), class_="right")
             html.close_tr()
 
-        html.open_table(class_=["content_center", "performance"])
+        html.open_table(class_=["performance"])
 
         try:
             sites.live().set_only_sites(only_sites)

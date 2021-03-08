@@ -45,6 +45,7 @@ import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 import cmk.utils.render as render
+import cmk.utils.license_usage.samples as license_usage_samples
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -135,6 +136,14 @@ ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
 ConfigWarnings = Dict[ConfigDomainName, List[str]]
 ActivationId = str
 ActivationState = Dict[str, Dict[str, Any]]
+
+
+def get_trial_expired_message() -> str:
+    return _(
+        "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
+        "The Checkmk Free Edition does not allow distributed setups after the 30-day trial period. "
+        "In case you want to test distributed setups, please "
+        "<a href=\"https://checkmk.com/contact.php?\" target=\"_blank\">contact us</a>.")
 
 
 def add_replication_paths(paths: List[ReplicationPathCompat]) -> None:
@@ -404,10 +413,10 @@ class ActivateChanges:
         if config.site_is_local(site_id):
             return False
 
-        return any([c["need_sync"] for c in self._changes_of_site(site_id)])
+        return any(c["need_sync"] for c in self._changes_of_site(site_id))
 
     def _is_activate_needed(self, site_id):
-        return any([c["need_restart"] for c in self._changes_of_site(site_id)])
+        return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
     # This function returns the last known persisted activation state
     def _last_activation_state(self, site_id):
@@ -1349,6 +1358,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             log_audit("activate-changes", _("Started activation of site %s") % self._site_id)
 
+            if cmk_version.is_expired_trial() and self._site_id != config.omd_site():
+                raise MKGeneralException(get_trial_expired_message())
+
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
 
@@ -1364,7 +1376,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._set_done_result(configuration_warnings)
         except Exception as e:
             self._logger.exception("error activating changes")
-            self._set_result(PHASE_DONE, _("Failed"), _("Failed: %s") % e, state=STATE_ERROR)
+            self._set_result(PHASE_DONE, _("Failed"), str(e), state=STATE_ERROR)
 
         finally:
             self._unlock_activation()
@@ -1674,6 +1686,16 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             site_changes.write(changes)
 
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
+        """Stores the current state for displaying in the GUI
+
+        Args:
+            phase: Identity of the current phase
+            status_text: Short label. Is used as text on the progress bar.
+            status_details: HTML code that is rendered into the Details cell.
+            state: String identifying the state of the activation. Is used as part of the
+                progress bar CSS class ("state_[state]").
+        """
+
         self._phase = phase
         self._status_text = status_text
 
@@ -1688,13 +1710,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._save_state()
 
     def _set_status_details(self, phase, status_details):
-        # As long as the site is lying in queue, there is no time started
+        # As long as the site is in queue, there is no time started
         if phase == PHASE_QUEUED:
             self._status_details = _("Queued for update")
-        else:
-            if self._time_started is None:
-                raise Exception("start time not set")
+        elif self._time_started is not None:
             self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
+        else:
+            self._status_details = _("Not started.")
 
         if phase == PHASE_DONE:
             self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
@@ -1756,7 +1778,19 @@ def execute_activate_changes(domains: List[ConfigDomainName]) -> ConfigWarnings:
         warnings = domain_class().activate()
         results[domain] = warnings or []
 
+    _add_extensions_for_license_usage()
+
     return results
+
+
+def _add_extensions_for_license_usage():
+    license_usage_dir = cmk.utils.paths.license_usage_dir
+    license_usage_dir.mkdir(parents=True, exist_ok=True)
+    extensions_filepath = license_usage_dir.joinpath("extensions.json")
+
+    with store.locked(extensions_filepath):
+        extensions = license_usage_samples.LicenseUsageExtensions(ntop=config.is_ntop_configured(),)
+        store.save_bytes_to_file(extensions_filepath, extensions.serialize())
 
 
 def confirm_all_local_changes() -> None:
@@ -1867,10 +1901,10 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     if cmk_version.is_raw_edition():
         return
 
-    with base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk").open(mode="w",
-                                                                          encoding="utf-8") as f:
-        f.write(ensure_str(wato_fileheader()))
-        f.write("dcd_is_wato_remote_site = %r\n" % is_remote)
+    output = wato_fileheader()
+    output += "dcd_is_wato_remote_site = %r\n" % is_remote
+
+    store.save_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
 
 
 def create_site_globals_file(site_id: SiteId, tmp_dir: str,
@@ -2255,6 +2289,7 @@ def activate_changes_start(
             logged in user.
 
     Returns:
+        An activation id.
 
     """
     changes = ActivateChanges()

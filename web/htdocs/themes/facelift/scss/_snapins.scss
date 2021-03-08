@@ -34,44 +34,17 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 5px 2px;
-  margin-left: -5px;
+  border-collapse: collapse;
+  table-layout: fixed;
 
-  tr {
+  tr,
+  td {
     padding: 0;
   }
 
   a {
     display: block;
-    width: 100%;
-    height: 100%;
-    line-height: 100%;
-  }
-
-  td {
-    border-radius: 4px;
-
-    &.state0 {
-      background-color: $color-state-success-background;
-      border-color: $color-state-success-border;
-    }
-
-    &.state1 {
-      border-color: $color-state-1-border;
-    }
-
-    &.state2 {
-      border-color: $color-state-2-border;
-    }
-
-    &.state3 {
-      border-color: $color-state-3-border;
-    }
-
-    &.statep,
-    &.stated {
-      border-color: $color-state-4-border;
-    }
+    border-radius: 1px;
   }
 }
 
@@ -94,7 +67,7 @@ table.hostmatrix {
 /*
  * Master control snapin
  */
-div.snapin table.master_control {
+table.master_control {
   width: 100%;
   margin: 0;
   border-spacing: 0;
@@ -102,45 +75,29 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
+
       a {
         font-weight: $font-weight-bold;
         text-transform: lowercase;
-      }
-
-      &.on a {
-        background-color: $toggle-switch-on-bg-color;
-        border: $toggle-switch-on-border;
-        color: $toggle-switch-font-color-on;
-      }
-
-      &.off a {
-        background-color: $toggle-switch-off-bg-color-sidebar;
-        border: $toggle-switch-off-border;
-        color: $toggle-switch-font-color-off;
       }
     }
 
     &.left {
       display: inline-block;
-      font-size: $font-size-default;
       font-weight: $font-weight-default;
-      line-height: 22px;
       letter-spacing: $letter-spacing-table;
       text-align: left;
 
       a {
-        font-size: 11px;
         font-weight: normal;
         text-align: left;
       }
     }
-
-    /* TODO: Reproduce this html element */
-    img.iconbutton {
-      width: 60px;
-      height: 16px;
-    }
   }
+}
+
+div#snapin_master_control div.foldable:not(:last-child) {
+  margin-bottom: 4px;
 }
 
 /* Styles shared/inherited by different performance tables */
@@ -164,7 +121,6 @@ table.mkeventd_performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &:nth-of-type(2) {
       padding: 0;
@@ -212,7 +168,6 @@ table.performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &.right {
       padding: 0;
@@ -266,7 +221,7 @@ table.sitestate {
 
     &.state {
       width: 60px;
-      font-size: 9px;
+      font-size: $font-size-small;
     }
   }
 }
@@ -305,24 +260,34 @@ div#snapin_tactical_overview {
   width: 100%;
 }
 
+div.snapin.more table.tacticaloverview th span.more,
+div.snapin.less table.tacticaloverview th span.less {
+  display: inline;
+}
+
 table.tacticaloverview {
   /* remove the border-spacing of the first and last element */
   width: calc(100% + 2 * #{$spacing});
   margin: 0 (-$spacing);
   border-collapse: separate;
   border-spacing: $spacing 0;
+  table-layout: fixed;
 
   th {
-    font-size: 9px;
+    font-size: $font-size-small;
     font-weight: normal;
     line-height: 1.6;
     letter-spacing: 0;
     color: $tactical-overview-th-font-color;
     text-align: left;
+
+    span {
+      display: none;
+    }
   }
 
   td {
-    height: 24px;
+    height: $input-field-height;
     text-align: right;
     background: $tactical-overview-td-bg-color;
     border-radius: $popup-filters-border-radius;
@@ -359,21 +324,27 @@ table.tacticaloverview td span,
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
-  font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
   color: $font-color-sidebar;
 }
 
-div.tacticalalert {
+div.tacticalalert,
+div.tacticalinfo {
   height: 25px;
   margin-top: 8px;
-  font-size: 12px;
   line-height: 25px;
   text-align: center;
-  background-color: $color-state-2-background;
   border-radius: $theme-border-radius;
   box-shadow: none;
+}
+
+div.tacticalalert {
+  background-color: $color-state-2-background;
+}
+
+div.tacticalinfo {
+  background-color: $overview-info-bg;
 }
 
 div.spacertop {
@@ -399,7 +370,6 @@ div.spacertop {
     float: right;
     margin-top: -2px;
     margin-bottom: 2px;
-    font-size: 11px;
     border: $primary-border;
   }
 
@@ -413,7 +383,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $font-size-default;
   }
 
   div.statebullet {
@@ -506,7 +475,6 @@ div.spacertop {
     margin-bottom: 10px;
     clear: both;
     box-sizing: border-box;
-    background-image: url(images/select_arrow.png);
   }
   ul {
     list-style-type: none;
@@ -525,7 +493,6 @@ div.spacertop {
 
   input {
     margin: 0;
-    font-size: 11px;
     background-repeat: no-repeat;
   }
 
@@ -575,25 +542,26 @@ div.spacertop {
 
   input {
     width: 100%;
-    padding: 6px 0 6px $spacing;
-    font-size: 14px;
+    height: $input-field-height;
     color: $font-color-sidebar;
-    background-color: $sidebar-input-field-bg-color;
     background-image: url("images/icon_quicksearch.png");
-    background-position: right $spacing bottom 6px;
+    background-position: right $spacing bottom 4px;
     background-size: 15px;
   }
 
   input::placeholder {
-    font-size: $font-size-global;
     line-height: 16px;
     letter-spacing: 0;
     color: $font-color;
   }
 
   div.topic {
-    margin: 3px 0 3px 2px;
-    font-size: 125%;
+    margin: 0 0 4px 4px;
+    font-size: $font-size-large;
+
+    &:not(:first-child) {
+      margin-top: $spacing;
+    }
   }
 }
 
@@ -603,15 +571,13 @@ div.spacertop {
   width: 223px;
   padding: 8px;
   margin-top: 2px;
-  font-size: 80%;
   color: $font-color-sidebar;
-  background-color: $sidebar-input-field-bg-color;
+  background-color: $inpage-highlight-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    margin-bottom: 5px;
     color: $font-color-sidebar;
     text-align: left;
     text-decoration: none;
@@ -625,7 +591,6 @@ div.spacertop {
   div.error,
   div.warning {
     padding: 2px;
-    font-size: 12px;
   }
 }
 
@@ -651,7 +616,6 @@ table.cmc_stats {
 
   td {
     padding: 0;
-    font-size: 11px;
     font-weight: $font-weight-default;
     letter-spacing: $letter-spacing-table;
 
@@ -674,7 +638,7 @@ table.cmc_stats {
 
   input {
     padding: 3px 4px;
-    font-size: 9px;
+    font-size: $font-size-small;
     text-align: center;
   }
 
@@ -691,8 +655,6 @@ table.cmc_stats {
       display: inline-block;
 
       td {
-        font-size: 11px;
-
         &.tuple_td:nth-of-type(2) {
           padding-left: 8px;
         }
@@ -712,8 +674,11 @@ table.cmc_stats {
     float: left;
     margin-top: 3px;
     margin-bottom: 5px;
-    background-image: url(images/select_arrow.png);
   }
+}
+
+div.snapin select {
+  background-image: url(images/select_arrow.png);
 }
 
 /*

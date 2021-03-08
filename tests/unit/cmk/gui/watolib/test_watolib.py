@@ -109,7 +109,6 @@ def test_registered_configvars():
         'housekeeping_interval',
         'http_proxies',
         'inventory_check_autotrigger',
-        'inventory_check_do_scan',
         'inventory_check_interval',
         'inventory_check_severity',
         'lock_on_logon_failures',
@@ -147,6 +146,7 @@ def test_registered_configvars():
         'selection_livetime',
         'service_view_grouping',
         'show_livestatus_errors',
+        'show_mode',
         'sidebar_notify_interval',
         'sidebar_update_interval',
         'simulation_mode',
@@ -299,7 +299,7 @@ def test_registered_configvar_groups():
             u'Livestatus Proxy',
             u'Reporting',
             u'Monitoring Core',
-            u'Ntopng',
+            u'Ntopng (chargeable add-on)',
         ]
 
     registered = sorted(config_variable_group_registry.keys())

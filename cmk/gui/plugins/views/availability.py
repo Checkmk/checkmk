@@ -6,6 +6,7 @@
 
 import time
 import itertools
+import json
 from typing import List, TYPE_CHECKING, Set, Tuple, Iterator
 
 import cmk.utils.version as cmk_version
@@ -109,7 +110,14 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     # trick will merge their options with our default options.
     avoptions.update(config.user.load_file("avoptions", {}))
 
-    avoption_entries = availability.get_av_display_options(what)
+    form_name = html.request.get_ascii_input("filled_in")
+    if form_name == "avoptions_display":
+        avoption_entries = availability.get_av_display_options(what)
+    elif form_name == "avoptions_computation":
+        avoption_entries = availability.get_av_computation_options()
+    else:
+        avoption_entries = []
+
     if html.request.var("avoptions") == "set":
         for name, _height, _show_in_reporting, vs in avoption_entries:
             try:
@@ -143,14 +151,15 @@ def _handle_availability_option_reset() -> None:
 
 def _show_availability_options(option_type: str, what: AVObjectType, avoptions: AVOptions,
                                valuespecs: AVOptionValueSpecs) -> None:
-    html.begin_form("avoptions")
+    form_name = "avoptions_%s" % option_type
+    html.begin_form(form_name)
     html.hidden_field("avoptions", "set")
 
     _show_availability_options_controls()
 
     container_id = "av_options_%s" % option_type
     html.open_div(id_=container_id, class_="side_popup_content")
-    if html.has_user_errors():
+    if html.has_user_errors() and html.form_submitted(form_name):
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:
@@ -307,7 +316,10 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                          if display_options.enabled(display_options.B) else None)
 
     if html.has_user_errors():
-        html.final_javascript("cmk.page_menu.open_popup('avoptions');")
+        form_name = html.request.get_ascii_input_mandatory("filled_in")
+        if form_name in ("avoptions_display", "avoptions_computation"):
+            html.final_javascript("cmk.page_menu.open_popup(%s);" %
+                                  json.dumps("popup_" + form_name))
 
     missing_single_infos = view.missing_single_infos
     if missing_single_infos:
@@ -1146,7 +1158,10 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
 
 
 def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb, form_name="editanno", button_name="save")
+    return make_simple_form_page_menu(_("Annotation"),
+                                      breadcrumb,
+                                      form_name="editanno",
+                                      button_name="save")
 
 
 def _validate_reclassify_of_states(value, varprefix):

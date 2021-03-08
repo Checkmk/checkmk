@@ -29,7 +29,7 @@ def test_attribute_defaults(mode, monkeypatch):
     Scenario().add_host(hostname).apply(monkeypatch)
 
     host_config = config.get_config_cache().get_host_config(hostname)
-    ipaddress = ip_lookup.lookup_mgmt_board_ip_address(host_config)
+    ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
     source = IPMISource(hostname, ipaddress, mode=mode)
     assert source.hostname == hostname
@@ -37,7 +37,7 @@ def test_attribute_defaults(mode, monkeypatch):
     assert source.mode is mode
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown", [])
+    assert source.summarize(result.OK(AgentHostSections())) == (0, "Version: unknown")
     assert source.id == "mgmt_ipmi"
 
 

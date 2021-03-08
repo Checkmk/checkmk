@@ -209,7 +209,7 @@ def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> 
     used_names_set = set(used_names)
     nr = 1
     while True:
-        suggestion = f"{template}_{nr}"
+        suggestion = "%s_%d" % (template.replace(" ", "_"), nr)
         if suggestion not in used_names_set:
             return suggestion
         nr += 1

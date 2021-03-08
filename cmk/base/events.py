@@ -16,8 +16,6 @@ import time
 from urllib.parse import quote
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 
-from six import ensure_str
-
 import livestatus
 import cmk.utils.version as cmk_version
 from cmk.utils.regex import regex
@@ -111,7 +109,7 @@ def event_keepalive(event_function: Callable,
                     data += new_data
 
                 try:
-                    context = raw_context_from_string(data.rstrip(b'\n'))
+                    context = raw_context_from_string(data.rstrip(b'\n').decode('utf-8'))
                     event_function(context)
                 except Exception:
                     if cmk.utils.debug.enabled():
@@ -178,12 +176,12 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
         raw_context['LONGSERVICEOUTPUT'] = _remove_pipe_encoding(long_output)
 
 
-def raw_context_from_string(data: bytes) -> EventContext:
+def raw_context_from_string(data: str) -> EventContext:
     # Context is line-by-line in g_notify_readahead_buffer
     context: EventContext = {}
     try:
-        for line in data.split(b'\n'):
-            varname, value = ensure_str(line.strip()).split("=", 1)
+        for line in data.split('\n'):
+            varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
@@ -369,6 +367,16 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
         if raw_context["WHAT"] == "SERVICE":
             raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
         raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
+
+        config_cache = config.get_config_cache()
+        labels = config_cache.labels
+        ruleset_matcher = config_cache.ruleset_matcher
+        for k, v in labels.labels_of_host(ruleset_matcher, raw_context['HOSTNAME']).items():
+            raw_context['HOSTLABEL_' + k] = v
+        if raw_context['WHAT'] == 'SERVICE':
+            for k, v in labels.labels_of_service(ruleset_matcher, raw_context['HOSTNAME'],
+                                                 raw_context['SERVICEDESC']).items():
+                raw_context['SERVICELABEL_' + k] = v
 
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)

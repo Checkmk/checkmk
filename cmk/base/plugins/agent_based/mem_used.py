@@ -62,7 +62,7 @@ def _get_total_usage(
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckResult:
+def check_mem_used(params: Mapping, section: Mapping[str, int]) -> CheckResult:
     # we have used a parse function that creates bytes, but this function
     # still expects kB:
     meminfo = {k: v / 1024.0 for k, v in section.items()}
@@ -201,5 +201,15 @@ register.check_plugin(
     check_default_parameters={
         "levels": (150.0, 200.0),
     },
+    check_ruleset_name="memory",
+)
+
+# Different default parameters!
+register.check_plugin(
+    name="fortisandbox_mem_usage",
+    service_name="Memory",
+    discovery_function=discover_mem_used,
+    check_function=check_mem_used,
+    check_default_parameters={"levels": (80.0, 90.0)},
     check_ruleset_name="memory",
 )

@@ -183,8 +183,3 @@ LogManager LogManager::global_log_manager;
 std::ostream &operator<<(std::ostream &os, const generic_error &ge) {
     return os << ge.what();
 }
-
-std::ostream &operator<<(std::ostream &os,
-                         const std::chrono::system_clock::time_point &tp) {
-    return os << FormattedTimePoint(tp);
-}

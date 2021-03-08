@@ -14,19 +14,15 @@
 #include <string>
 #include <vector>
 
+#include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "StringColumn.h"
 #include "Table.h"
+#include "TimeColumn.h"
 #include "nagios.h"
 class ColumnOffsets;
-template <class T>
-class DoubleColumn;
-template <class T>
-class ListLambdaColumn;
-template <class T>
-class StringLambdaColumn;
-template <class T>
-class TimeLambdaColumn;
 class Query;
 class Row;
 
@@ -39,19 +35,19 @@ public:
     ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
           const std::vector<std::string> &columns);
 
-    static std::unique_ptr<StringLambdaColumn<ECRow>> makeStringColumn(
+    static std::unique_ptr<StringColumn::Callback<ECRow>> makeStringColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<IntLambdaColumn<ECRow>> makeIntColumn(
+    static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<DoubleColumn<ECRow>> makeDoubleColumn(
+    static std::unique_ptr<DoubleColumn::Callback<ECRow>> makeDoubleColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<TimeLambdaColumn<ECRow>> makeTimeColumn(
+    static std::unique_ptr<TimeColumn::Callback<ECRow>> makeTimeColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
-    static std::unique_ptr<ListLambdaColumn<ECRow>> makeListColumn(
+    static std::unique_ptr<ListColumn::Callback<ECRow>> makeListColumn(
         const std::string &name, const std::string &description,
         const ColumnOffsets &offsets);
 

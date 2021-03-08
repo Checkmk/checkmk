@@ -6,15 +6,13 @@
 
 import abc
 import re
-import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from six import ensure_str
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
@@ -29,22 +27,6 @@ from cmk.gui.plugins.views import (
     EmptyCell,
     output_csv_headers,
 )
-
-
-def init_rowselect(view):
-    # Don't make rows selectable when no commands can be fired
-    # Ignore "C" display option here. Otherwise the rows will not be selectable
-    # after view reload.
-    if not config.user.may("general.act"):
-        return
-
-    selected = config.user.get_rowselection(weblib.selection_id(), 'view-' + view['name'])
-    selection_properties = {
-        "page_id": "view-%s" % view['name'],
-        "selection_id": weblib.selection_id(),
-        "selected_rows": selected,
-    }
-    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
 
 
 def render_checkbox(view, row, num_tds):
@@ -235,7 +217,13 @@ class GroupedBoxesLayout(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        # Don't make rows selectable when no commands can be fired
+        # Ignore "C" display option here. Otherwise the rows will not be selectable
+        # after view reload.
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
     def _show_group_header_table(self, group_cells, first_row):
         html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
@@ -284,7 +272,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_closed.png"),
+    html.img(html.theme_url("images/tree_closed.svg"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
@@ -531,7 +519,10 @@ class LayoutTiled(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
 
 @layout_registry.register
@@ -615,6 +606,7 @@ class LayoutTable(Layout):
                         html.close_table()
                         html.close_td()
                         html.close_tr()
+                        odd = "odd"
 
                     # Table headers
                     if view.get("column_headers") != "off":
@@ -692,7 +684,10 @@ class LayoutTable(Layout):
                 html.td('', class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
-        init_rowselect(view)
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
     def _show_header_line(self, cells, num_columns, show_checkboxes):
         html.open_tr()
@@ -710,6 +705,10 @@ class LayoutTable(Layout):
                 html.td('', class_="gap")
 
         html.close_tr()
+
+
+def _get_view_name(view) -> str:
+    return "view-%s" % view["name"]
 
 
 @layout_registry.register

@@ -270,7 +270,9 @@ export function toggle_all_rows(obj, name_select, name_deselect) {
     }
 
     // Toggle the state
-    const span = document.getElementById("menu_entry_checkbox_selection").childNodes[0].lastChild;
+    if (name_select || name_deselect) {
+        var span = document.getElementById("menu_entry_checkbox_selection").childNodes[0].lastChild;
+    }
     if (all_selected) {
         remove_selected_rows(checkboxes);
         if (name_select) {

@@ -13,7 +13,9 @@ from contextlib import contextmanager
 from typing import (
     Any,
     Callable,
+    Container,
     Dict,
+    Iterable,
     Iterator,
     List,
     Literal,
@@ -24,7 +26,7 @@ from typing import (
     Union,
 )
 
-from livestatus import SiteId, LivestatusTestingError
+from livestatus import LivestatusTestingError
 
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
@@ -96,9 +98,11 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
     filter_registry,
+    get_only_sites_from_context,
 )
 
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
@@ -475,12 +479,13 @@ def page_list(what,
     breadcrumb = visual_page_breadcrumb(what, title, "list")
 
     visual_type = visual_type_registry[what]()
+    visual_plural_title = visual_type.plural_title.title()
     current_type_dropdown = PageMenuDropdown(
         name=what,
-        title=visual_type.plural_title.title(),
+        title=visual_plural_title,
         topics=[
             PageMenuTopic(
-                title=visual_type.plural_title.title(),
+                title=visual_plural_title,
                 entries=[
                     PageMenuEntry(
                         title=_('Add %s') % visual_type.title,
@@ -494,7 +499,11 @@ def page_list(what,
         ],
     )
 
-    page_menu = pagetypes.customize_page_menu(breadcrumb, current_type_dropdown, what)
+    page_menu = pagetypes.customize_page_menu(
+        breadcrumb,
+        current_type_dropdown,
+        what,
+    )
     html.header(title, breadcrumb, page_menu)
 
     for message in get_flashed_messages():
@@ -650,7 +659,8 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = _('Create %s') % visual_type_registry[what]().title
+    visual_name = visual_type_registry[what]().title
+    title = _('Create %s') % visual_name
     what_s = what[:-1]
 
     vs_infos = SingleInfoSelection(info_keys)
@@ -658,7 +668,8 @@ def page_create_visual(what, info_keys, next_url=None):
     breadcrumb = visual_page_breadcrumb(what, title, "create")
     html.header(
         title, breadcrumb,
-        make_simple_form_page_menu(breadcrumb,
+        make_simple_form_page_menu(visual_name.capitalize(),
+                                   breadcrumb,
                                    form_name="create_visual",
                                    button_name="save",
                                    save_title=_("Continue")))
@@ -771,13 +782,21 @@ def process_context_specs(context_specs):
     return context
 
 
-def render_context_specs(visual, context_specs):
+def render_context_specs(
+    visual,
+    context_specs,
+    isopen: bool = True,
+    help_text: Union[str, HTML, None] = None,
+):
     if not context_specs:
         return
 
-    forms.header(_("Context / Search Filters"),
-                 show_more_toggle=any(
-                     vs.has_show_more() for _title, vs in context_specs if vs is not None))
+    forms.header(
+        _("Context / Search Filters"),
+        isopen=isopen,
+        show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),
+        help_text=help_text,
+    )
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
@@ -791,13 +810,16 @@ def render_context_specs(visual, context_specs):
         spec.render_input(ident, value)
 
 
-def page_edit_visual(what: Literal["dashboards", "views", "reports"],
-                     all_visuals: Dict[Any, Dict[str, Any]],
-                     custom_field_handler=None,
-                     create_handler=None,
-                     load_handler=None,
-                     info_handler=None,
-                     sub_pages: pagetypes.SubPagesSpec = None):
+def page_edit_visual(
+    what: Literal["dashboards", "views", "reports"],
+    all_visuals: Dict[Any, Dict[str, Any]],
+    custom_field_handler=None,
+    create_handler=None,
+    load_handler=None,
+    info_handler=None,
+    sub_pages: pagetypes.SubPagesSpec = None,
+    help_text_context: Union[str, HTML, None] = None,
+):
     if sub_pages is None:
         sub_pages = []
 
@@ -880,6 +902,7 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
         dropdown_name=what[:-1],
         mode=mode,
         type_title=visual_type.title,
+        type_title_plural=visual_type.plural_title,
         ident_attr_name=visual_type.ident_attr,
         sub_pages=sub_pages,
         form_name="visual",
@@ -951,10 +974,17 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
-            ('topic', DropdownChoice(
-                title=_('Topic'),
-                choices=pagetypes.PagetypeTopics.choices(),
-            )),
+            ('topic',
+             DropdownChoice(
+                 title=_("Topic in ’Monitor' menu"),
+                 default_value="my_workplace",
+                 help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
+                        "With this option, you can select in which section of the menu this "
+                        "dashboard should be accessible. If you want to define a new "
+                        "topic name you can do this here <a href='%s'>here</a>.") %
+                 "pagetype_topics.py",
+                 choices=pagetypes.PagetypeTopics.choices(),
+             )),
             ("sort_index",
              Integer(
                  title=_("Sort index"),
@@ -968,13 +998,22 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
              Checkbox(
                  title=_("Show more"),
                  label=_("Only show the %s if show more is active" % visual_type.title),
-                 default_value=99,
                  help=_("The navigation allows to hide items based on a show "
                         "less / show more toggle. You can specify here whether or "
                         "not this %s should only be shown with show more %s.") %
                  (visual_type.title, visual_type.title),
              )),
-            ('icon', IconSelector(title=_('Icon'))),
+            ('icon',
+             IconSelector(
+                 title=_('Icon'),
+                 help=_("This selection is only relevant if under 'User' "
+                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
+                        "the options 'Per Entry'. If this is the case, you "
+                        "select here the icon that will be placed next to your "
+                        "Dashboard’s name in the Monitoring menu. You can only "
+                        "select one icon (the colored icon) or one icon that is "
+                        "complemented with an additional symbol."),
+             )),
             ('visibility', Dictionary(
                 title=_('Visibility'),
                 elements=visibility_elements,
@@ -1090,7 +1129,12 @@ def page_edit_visual(what: Literal["dashboards", "views", "reports"],
     if custom_field_handler and custom_field_handler.__name__ != 'dashboard_fields_handler':
         custom_field_handler(visual)
 
-    render_context_specs(visual, context_specs)
+    render_context_specs(
+        visual,
+        context_specs,
+        isopen=what != "dashboards",
+        help_text=help_text_context,
+    )
 
     if custom_field_handler and custom_field_handler.__name__ == 'dashboard_fields_handler':
         custom_field_handler(visual)
@@ -1365,61 +1409,18 @@ def get_filter_headers(table, infos, context):
             else:
                 html.request.set_var(filter_name, filter_vars)
 
-        filter_headers = "".join(collect_filter_headers(infos, table))
+        filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
 
-def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
-    """Gather possible existing "only sites" information from context
-
-      We need to deal with
-
-      a) all possible site filters (sites, site and siteopt).
-      b) with single and multiple contexts
-
-      Single contexts are structured like this:
-
-      {"site": "sitename"}
-      {"sites": "sitename|second"}
-
-      Multiple contexts are structured like this:
-
-      {"site": {"site": "sitename"}}
-      {"sites": {"sites": "sitename|second"}}
-
-      The difference is no fault or "old" data structure. We can have both kind of structures.
-      These are the data structure the visuals work with.
-
-      "site" and "sites" are conflicting filters. The new optional filter
-      "sites" for many sites filter is only used if the view is configured
-      to only this filter.
-      """
-
-    if "sites" in context and "site" not in context:
-        only_sites = context["sites"]
-        if isinstance(only_sites, dict):
-            only_sites = only_sites["sites"]
-        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
-        return only_sites_list if only_sites_list else None
-
-    for var in ["site", "siteopt"]:
-        if var in context:
-            value = context[var]
-            if isinstance(value, dict):
-                site_name = value.get("site")
-                if site_name:
-                    return [SiteId(site_name)]
-                return None
-            return [SiteId(value)]
-
-    return None
-
-
-def collect_filter_headers(info_keys, table):
-    # Collect all available filters for these infos
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
     for filter_obj in filter_registry.values():
         if filter_obj.info in info_keys and filter_obj.available():
-            yield filter_obj.filter(table)
+            yield filter_obj
+
+
+def collect_filter_headers(filters: Iterable[Filter],) -> Iterable[str]:
+    yield from (filter.filter(None) for filter in filters)
 
 
 #.
@@ -1847,7 +1848,10 @@ def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) 
     return set(single_info_keys).difference(context)
 
 
-def visual_title(what: VisualTypeName, visual: Visual, context: VisualContext) -> str:
+def visual_title(what: VisualTypeName,
+                 visual: Visual,
+                 context: VisualContext,
+                 skip_title_context: bool = False) -> str:
     title = _u(visual["title"])
 
     # In case we have a site context given replace the $SITE$ macro in the titles.
@@ -1855,7 +1859,7 @@ def visual_title(what: VisualTypeName, visual: Visual, context: VisualContext) -
     assert isinstance(site_filter_vars, dict)
     title = title.replace("$SITE$", site_filter_vars.get("site", ""))
 
-    if visual["add_context_to_title"]:
+    if visual["add_context_to_title"] and not skip_title_context:
         title = _add_context_title(visual, title)
 
     # Execute title plugin functions which might be added by the user to

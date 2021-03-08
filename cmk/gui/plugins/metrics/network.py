@@ -1529,6 +1529,18 @@ metric_info["fortiauthenticator_fails_5min"] = {
     "color": "42/a",
 }
 
+metric_info["fortigate_detection_rate"] = {
+    "title": _("Detection rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["fortigate_blocking_rate"] = {
+    "title": _("Blocking rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -2014,6 +2026,7 @@ graph_info["nodes_by_type"] = {
     ],
 }
 graph_info["channel_utilization_24ghz"] = {
+    "title": _("Channel utilization for 2,4GHz Band"),
     "metrics": [("channel_utilization_24ghz", "area"),],
     "scalars": [
         "channel_utilization_24ghz:warn",
@@ -2023,6 +2036,7 @@ graph_info["channel_utilization_24ghz"] = {
 }
 
 graph_info["channel_utilization_5ghz"] = {
+    "title": _("Channel utilization for 5GHz Band"),
     "metrics": [("channel_utilization_5ghz", "area"),],
     "scalars": [
         "channel_utilization_5ghz:warn",
@@ -2032,6 +2046,7 @@ graph_info["channel_utilization_5ghz"] = {
 }
 
 graph_info["active_sessions_with_peak_value"] = {
+    "title": _("Active sessions"),
     "metrics": [
         ("active_sessions", "area"),
         ("active_sessions_peak", "line"),

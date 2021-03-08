@@ -156,7 +156,14 @@ def test_update_dns_cache(monkeypatch, _cache_file):
     ts.add_host("dual", tags={"address_family": "ip-v4v6"})
     ts.apply(monkeypatch)
 
-    assert ip_lookup.update_dns_cache() == (3, ["dual"])
+    config_cache = config.get_config_cache()
+    assert ip_lookup.update_dns_cache(
+        host_configs=(config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+        configured_ipv4_addresses={},
+        configured_ipv6_addresses={},
+        simulation_mode=False,
+        override_dns=None,
+    ) == (3, ["dual"])
 
     # Check persisted data
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
@@ -196,7 +203,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, res
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.skipif(
@@ -213,7 +220,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("hostname, result_address", [
@@ -227,7 +234,7 @@ def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("tags, family", [
@@ -248,4 +255,4 @@ def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
+    assert config.lookup_mgmt_board_ip_address(host_config) is None

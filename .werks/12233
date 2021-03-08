@@ -1,0 +1,19 @@
+Title: Monitoring of Fortinet FortiMail Servers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1613987157
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This werk introduces new check plugins which monitor Fortinet FortiMail
+servers:
+<ul>
+<li><tt>fortimail_cpu_load</tt>: Monitors the CPU load.</li>
+<li><tt>fortimail_disk_usage</tt>: Monitors the disk usage.</li>
+<li><tt>fortimail_queue</tt>: Monitors mail queue lengths.</li>
+</ul>
+Furthermore, the new inventory plugin <tt>fortimail_system</tt> inventorizes
+the model and the serial number as well as the OS version of the server.

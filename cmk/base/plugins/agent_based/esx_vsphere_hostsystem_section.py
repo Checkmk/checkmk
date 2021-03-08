@@ -3,12 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections import OrderedDict
 
 from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register
-
-Section = OrderedDict
+from .utils.esx_vsphere import Section
 
 
 def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
@@ -28,7 +26,7 @@ def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
                      ('summary.quickStats.overallCpuUsage', ['7539'])])
 
     """
-    section = OrderedDict()
+    section = Section()
     # From what is being done in checks/esx_vsphere_hostsystem.cpu_util_cluster
     # it seems that the order of the keys must not be changed, or data will be lost
     # and/or scrambled up.

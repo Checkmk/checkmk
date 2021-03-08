@@ -109,7 +109,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return HostAddress(
-            title=_("IPv4 Address"),
+            title=_("IPv4 address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
@@ -762,7 +762,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return "site"
 
     def is_show_more(self) -> bool:
-        return True
+        return not (cmk.gui.config.has_wato_slave_sites() or cmk.gui.config.is_wato_slave_site())
 
     def topic(self):
         return HostAttributeTopicBasicSettings
@@ -790,6 +790,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def get_tag_groups(self, value):
+        # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
+        # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
             return {"site": ""}
 

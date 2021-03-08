@@ -47,10 +47,8 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
     """
 
     allowed_oids = {
-        ".1.3.6.1.2.1.1.1",  # system description
-        ".1.3.6.1.2.1.1.1.0",
-        ".1.3.6.1.2.1.1.2",  # system object ID
-        ".1.3.6.1.2.1.1.2.0",
+        ".1.3.6.1.2.1.1.1.0",  # system description
+        ".1.3.6.1.2.1.1.2.0",  # system object ID
     }
 
     known_exceptions = {
@@ -255,8 +253,6 @@ def test_section_parse_function_does_something(fix_register):
         'winperf_ts_sessions',
         'wmic_process',
         'zerto_vpg_rpo',
-        'zpool_status',
-        'zypper',
         'dmraid',
         'emcvnx_raidgroups',
         'hpux_tunables',

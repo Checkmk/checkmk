@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=consider-using-in
 
 # pylint: disable=no-else-continue
@@ -403,11 +403,10 @@ def diskstat_select_disk(disks, item):
                 if device.startswith("LVM "):
                     continue  # skip LVM devices for summary
 
-                if True or disk["read_throughput"] + disk["write_throughput"] > 0:  # skip idle disks
-                    num_averaged += 1
-                    for key, value in disk.items():
-                        if key != "node":
-                            summarized[key] += value
+                num_averaged += 1
+                for key, value in disk.items():
+                    if key != "node":
+                        summarized[key] += value
 
             if num_averaged:
                 for key, value in summarized.items():

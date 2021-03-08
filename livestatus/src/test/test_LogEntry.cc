@@ -18,20 +18,20 @@ namespace {
 template <class T>
 using table = std::vector<std::tuple<std::string, T>>;
 
-table<HostState> host_states{{"UP", HostState::up},
-                             {"DOWN", HostState::down},
-                             {"UNREACHABLE", HostState::unreachable}};
+const table<HostState> host_states{{"UP", HostState::up},
+                                   {"DOWN", HostState::down},
+                                   {"UNREACHABLE", HostState::unreachable}};
 
-table<ServiceState> service_states{{"OK", ServiceState::ok},
-                                   {"WARNING", ServiceState::warning},
-                                   {"CRITICAL", ServiceState::critical},
-                                   {"UNKNOWN", ServiceState::unknown}};
+const table<ServiceState> service_states{{"OK", ServiceState::ok},
+                                         {"WARNING", ServiceState::warning},
+                                         {"CRITICAL", ServiceState::critical},
+                                         {"UNKNOWN", ServiceState::unknown}};
 
 using info_table = std::vector<std::tuple<std::string, int, std::string>>;
 
 // NOTE: A few LogEntry types abuse a service state when actually the exit code
 // of a process is meant.
-info_table exit_codes{
+const info_table exit_codes{
     {"OK", static_cast<int>(ServiceState::ok), "SUCCESS"},
     {"WARNING", static_cast<int>(ServiceState::warning), "TEMPORARY_FAILURE"},
     {"CRITICAL", static_cast<int>(ServiceState::critical), "PERMANENT_FAILURE"},
@@ -39,15 +39,15 @@ info_table exit_codes{
 
 using strings = std::vector<std::string>;
 
-strings host_service_state_types{"HARD", "SOFT"};
+const strings host_service_state_types{"HARD", "SOFT"};
 
-strings downtime_flapping_state_types{"STARTED", "STOPPED"};
+const strings downtime_flapping_state_types{"STARTED", "STOPPED"};
 
-strings acknowledge_state_types{"STARTED", "EXPIRED", "CANCELLED", "END"};
+const strings acknowledge_state_types{"STARTED", "EXPIRED", "CANCELLED", "END"};
 
-strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
-                "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
-                "FLAPPINGSTOP"};
+const strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
+                      "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
+                      "FLAPPINGSTOP"};
 
 std::string parens(const std::string& f, const std::string& arg) {
     return f + " (" + arg + ")";

@@ -1,0 +1,14 @@
+Title: Network interface and switch port discovery parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614892941
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+There was a bug in the ruleset "Network interface and switch port
+discovery" which prevented users from saving rules without configuring
+the discovery of single interfaces (i.e. rules which only change the
+grouping behaviour). This has been fixed.

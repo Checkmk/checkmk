@@ -11,12 +11,9 @@ You can find an introduction to basic monitoring principles including host statu
 [Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
 """
 
-import json
-
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -41,25 +38,11 @@ class HostParameters(BaseSchema):
 
     """
     sites = fields.List(
-        fields.String(),
+        fields.SiteField(),
         description="Restrict the query to this particular site.",
         missing=[],
     )
-    query = fields.Nested(
-        fields.ExprSchema,
-        description=("An query expression in nested dictionary form. If you want to "
-                     "use multiple expressions, nest them with the AND/OR operators."),
-        many=False,
-        example=json.dumps({
-            'op': 'not',
-            'expr': {
-                'op': '=',
-                'left': 'name',
-                'right': 'example.com'
-            }
-        }),
-        required=False,
-    )
+    query = fields.query_field(Hosts, required=False)
     columns = fields.List(
         fields.LiveStatusColumn(
             table=Hosts,
@@ -91,10 +74,9 @@ def list_hosts(param):
     q = Query(columns)
 
     # TODO: add sites parameter
-    filter_tree = param.get('query')
-    if filter_tree:
-        expr = tree_to_expr(filter_tree, Hosts.__tablename__)
-        q = q.filter(expr)
+    query_expr = param.get('query')
+    if query_expr:
+        q = q.filter(query_expr)
 
     result = q.iterate(live)
 

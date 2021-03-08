@@ -151,9 +151,8 @@ class RuleConditions:
         if self.service_description is None:
             return
 
-        return all([
-            not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description
-        ])
+        return all(
+            not isinstance(i, dict) or i["$regex"].endswith("$") for i in self.service_description)
 
     # Compatibility code for pre 1.6 WATO code
     @property

@@ -85,22 +85,19 @@ class HostMatrixVisualization(MatrixVisualization):
             rows += 1
 
         # Calculate cell size (Automatic sizing with 100% does not work here)
-        # - Get cell spacing: 1px between each cell
-        # - Substract the cell spacing for each column from the total width
-        # - Then divide the total width through the number of columns
-        # - Then get the full-digit width of the cell and summarize the rest
-        #   to be substracted from the cell width
         # This is not a 100% solution but way better than having no links
-        cell_spacing = 4
-        cell_size = int((width - cell_spacing * (n + 1)) / n)
-        style = 'width:%spx' % width
+        cell_spacing = 3
+        cell_size = (width - cell_spacing * n) / n
+        cell_height = 2 * cell_size / 3
 
-        html.open_table(class_=["content_center", "hostmatrix"], style=[style])
-        col = 1
-        row = 1
+        # Add one cell_spacing so that the cells fill the whole snapin width.
+        # The spacing of the last cell overflows on the right.
+        html.open_table(class_=["hostmatrix"], style=['width:%spx' % (width + cell_spacing)])
+        col, row = 1, 1
         for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):
             if col == 1:
                 html.open_tr()
+
             if downtimedepth > 0:
                 s = "d"
             elif not has_been_checked:
@@ -115,13 +112,17 @@ class HostMatrixVisualization(MatrixVisualization):
                 s = "0"
             url = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(site),
                                                               html.urlencode(host))
-            html.open_td(class_=["state", "state%s" % s])
+            html.open_td(style=[
+                "width:%.2fpx" % (cell_size + cell_spacing),
+                "height:%.2fpx" % (cell_height + cell_spacing)
+            ])
             html.a('',
                    href=url,
                    title=host,
                    target="main",
-                   style=["width:%spx;" % cell_size,
-                          "height:%spx;" % (2 * cell_size / 3)])
+                   class_=["state", "state%s" % s],
+                   style=["width:%.2fpx;" % cell_size,
+                          "height:%.2fpx;" % cell_height])
             html.close_td()
 
             if col == n or (row == rows and n == lastcols):

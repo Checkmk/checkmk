@@ -593,7 +593,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=html.theme_url("images/tree_closed.png"),
+                html.img(src=html.theme_url("images/tree_closed.svg"),
                          class_=["treeangle", img_class],
                          onclick=mousecode)
 

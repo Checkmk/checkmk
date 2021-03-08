@@ -16,8 +16,9 @@ from six import ensure_str
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
+import cmk.gui.weblib as weblib
+from cmk.gui.table import table_element, init_rowselect
 import cmk.utils.render as render
 
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
@@ -40,6 +41,7 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
+    make_checkbox_selection_topic,
     make_simple_link,
     make_javascript_link,
 )
@@ -80,6 +82,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                             title=_("On selected sites"),
                             entries=list(self._page_menu_entries_selected_sites()),
                         ),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -119,16 +122,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return
 
         yield PageMenuEntry(
-            title=_("Activate on affected sites"),
-            icon_name="save",
-            item=make_javascript_link("cmk.activation.activate_changes(\"affected\")"),
-            name="activate_affected",
-            is_shortcut=True,
-            is_suggested=True,
-            is_enabled=self.has_changes(),
-        )
-
-        yield PageMenuEntry(
             title=_("Discard all pending changes"),
             icon_name="delete",
             item=make_simple_link(html.makeactionuri([("_action", "discard")])),
@@ -146,6 +139,8 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 },
                 item=make_javascript_link("cmk.activation.activate_changes(\"selected\")"),
                 name="activate_selected",
+                is_shortcut=True,
+                is_suggested=True,
                 is_enabled=self.has_changes(),
             )
 
@@ -257,7 +252,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             html.write_text(_("Pending changes"))
             html.div("", id_="row_info")
             html.close_h3()
-            html.final_javascript("cmk.utils.display_header_info();")
             self._change_table()
 
     def _activation_msg(self):
@@ -317,8 +311,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       "a permitted user to do it for you."))
 
         forms.end()
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _change_table(self):
         with table_element("changes",
@@ -376,11 +372,12 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                 need_restart = self._is_activate_needed(site_id)
                 need_sync = self.is_sync_needed(site_id)
                 need_action = need_restart or need_sync
+                nr_changes = len(self._changes_of_site(site_id))
 
                 # Activation checkbox
                 table.cell("", css="buttons")
-                if can_activate_all:
-                    html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
+                if can_activate_all and nr_changes:
+                    html.checkbox("site_%s" % site_id, need_action, cssclass="site_checkbox")
 
                 # Iconbuttons
                 table.cell(_("Actions"), css="buttons")
@@ -433,9 +430,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                            site_status.get("livestatus_version", ""),
                            css="narrow nobr")
 
-                table.cell(_("Changes"),
-                           "%d" % len(self._changes_of_site(site_id)),
-                           css="number narrow nobr")
+                table.cell(_("Changes"), "%d" % nr_changes, css="number narrow nobr")
 
                 table.cell(_("Progress"), css="repprogress")
                 html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
@@ -457,15 +452,6 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                       last_state["_state"] == cmk.gui.watolib.activate_changes.STATE_SUCCESS):
                     html.write_text(_("Activation needed"))
                 else:
-                    if html.request.has_var("_finished"):
-                        label = _("State")
-                    else:
-                        label = _("Last state")
-
-                    html.write_text("%s: %s. " % (label, last_state["_status_text"]))
-                    if last_state["_status_details"]:
-                        html.write(last_state["_status_details"])
-
                     html.javascript("cmk.activation.update_site_activation_state(%s);" %
                                     json.dumps(last_state))
 

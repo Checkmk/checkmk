@@ -201,38 +201,14 @@ class CMKWebSession:
         assert "sidebar" in r.text
         assert "dashboard.py" in r.text
 
-    def set_language(self, lang):
-        lang = "" if lang == "en" else lang
+    def enforce_non_localized_gui(self):
+        all_users = self.get_all_users()
+        all_users["cmkadmin"]["language"] = "en"
+        self.edit_htpasswd_users(all_users)
 
-        profile_page = self.get("user_profile.py").text
-        assert "name=\"language\"" in profile_page
-
-        if lang:
-            assert "value=\"" + lang + "\"" in profile_page
-
-        r = self.post(
-            "user_profile.py",
-            data={
-                "filled_in": "profile",
-                "ua_start_url_use": "0",
-                "ua_ui_theme_use": "0",
-                # Encoded None using DropdownChoice.option_id
-                "ua_ui_sidebar_position": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "ua_icons_per_item": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "ua_show_mode": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "ua_nav_hide_icons_title": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "language": lang,
-                "_save": "Save",
-            },
-            add_transid=True)
-
-        # message is shown next page call with flash
+        # Verify the language is as expected now
         r = self.get("user_profile.py")
-
-        if lang == "":
-            assert "Successfully updated" in r.text, "Body: %s" % r.text
-        else:
-            assert "Benutzerprofil erfolgreich aktualisiert" in r.text, "Body: %s" % r.text
+        assert "Edit profile" in r.text, "Body: %s" % r.text
 
     def logout(self):
         r = self.get("logout.py", allow_redirect_to_login=True)

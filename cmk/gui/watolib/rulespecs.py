@@ -36,7 +36,6 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
     ModuleRegistry,
-    main_module_registry,
 )
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -163,7 +162,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
     def get_host_rulespec_group_names(self) -> List[str]:
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
         names: List[str] = []
-        hidden_groups = ("static", "checkparams", "activechecks")
+        hidden_groups = ("static", "activechecks")
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
@@ -1245,26 +1244,22 @@ class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        main_module_reg: ModuleRegistry,
         rulesepc_group_reg: RulespecGroupRegistry,
         rulespec_reg: RulespecRegistry,
     ) -> None:
         super().__init__(name)
-        self._main_module_registry = main_module_reg
         self._rulespec_group_registry = rulesepc_group_reg
         self._rulespec_registry = rulespec_reg
 
-    def _topic_from_group_name(self, group_name: str) -> str:
-        topic_prefix = main_module_from_rulespec_group_name(
-            group_name,
-            self._main_module_registry,
-        ).topic.title
-        return f"{topic_prefix} > {self._rulespec_group_registry[group_name]().title}"
+    def _topic(self, rulespec: Rulespec) -> str:
+        if rulespec.is_deprecated:
+            return _("Deprecated rulesets")
+        return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=rulespec.title,
-            topic=self._topic_from_group_name(rulespec.main_group_name),
+            topic=self._topic(rulespec),
             url=makeuri_contextless(
                 request,
                 [("mode", "edit_ruleset"), ("varname", rulespec.name)],
@@ -1290,7 +1285,6 @@ rulespec_registry = RulespecRegistry(rulespec_group_registry)
 match_item_generator_registry.register(
     MatchItemGeneratorRules(
         'rules',
-        main_module_registry,
         rulespec_group_registry,
         rulespec_registry,
     ))

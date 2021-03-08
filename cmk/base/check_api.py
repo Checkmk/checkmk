@@ -4,8 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-The things in this module specify the official Check_MK check API. Meaning all
-variables, functions etc. and default modules that are available to checks.
+The things in this module specify the old Check_MK (<- see? Old!) check API
+
++---------------------------------------------------------------------------+
+|             THIS API IS OLD, AND NO LONGER MAINTAINED.                    |
+|                                                                           |
+| All new plugins should be programmed against the new API, please refer to |
+| the online user manual for details!                                       |
+|                                                                           |
++---------------------------------------------------------------------------+
+
+Meaning all variables, functions etc. and default modules that are available to checks.
 
 Modules available by default (pre imported by Check_MK):
     collections
@@ -104,7 +113,6 @@ from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=
     get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
 )
 # The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import CheckPluginNameStr
 from cmk.utils.type_defs import EvalableFloat as as_float  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.type_defs import (
     HostName,
@@ -130,18 +138,15 @@ import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    HOST_ONLY  # Symbolic representations of states in plugin output; Management board checks; Check is only executed for real SNMP host (e.g. interfaces),
+from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
+    check_type, host_name, service_description,
 )
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    HOST_PRECEDENCE  # Check is only executed for mgmt board (e.g. Managegment Uptime),
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import
+    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
+    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
+    MGMT_ONLY,  # Use host address/credentials when it's a SNMP HOST,
 )
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST,
-)
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    check_type, host_name, Service, service_description)
-from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
+from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 
 Warn = Union[None, int, float]
@@ -555,8 +560,10 @@ def get_agent_data_time() -> Optional[float]:
     return _agent_cache_file_age(host_name(), check_type())
 
 
-def _agent_cache_file_age(hostname: HostName,
-                          check_plugin_name: CheckPluginNameStr) -> Optional[float]:
+def _agent_cache_file_age(
+    hostname: HostName,
+    check_plugin_name: str,
+) -> Optional[float]:
     host_config = _config.get_config_cache().get_host_config(hostname)
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
@@ -743,8 +750,20 @@ def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]
         return iter(())
 
 
+# Obsolete! Do not confuse with the Service object exposed by the new API.
+class Service:
+    """Can be used to by the discovery function to tell Checkmk about a new service"""
+    def __init__(
+        self,
+        item: Optional[str],
+        parameters: Any = None,
+        service_labels: Optional[ServiceLabels] = None,
+    ) -> None:
+        self.item = item
+        self.parameters = parameters
+        self.service_labels = service_labels or ServiceLabels()
+
+
 # NOTE: Currently this is not really needed, it is just here to keep any start
 # import in sync with our intended API.
-# TODO: Do we really need this? Is there code which uses a star import for this
-# module?
 __all__ = list(get_check_api_context())

@@ -9,7 +9,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
     startswith,
 )
-from .utils import if64, interfaces
+from .utils import if64
 
 # Use ifName under the guise of ifAlias in order to make technical interface names available.
 # ifAlias or ifDescr may only contain user defined names. DO NOT roll back to ifAlias again
@@ -19,6 +19,7 @@ END_OIDS = if64.END_OIDS[:18] + ["31.1.1.1.1"] + if64.END_OIDS[19:]
 register.snmp_section(
     name="if_fortigate",
     parse_function=if64.parse_if64,
+    parsed_section_name="interfaces",
     fetch=[
         SNMPTree(
             base=if64.BASE_OID,
@@ -27,17 +28,4 @@ register.snmp_section(
     ],
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356"),
     supersedes=['if', 'if64'],
-)
-
-register.check_plugin(
-    name="if_fortigate",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
 )

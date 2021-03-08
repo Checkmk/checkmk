@@ -19,6 +19,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -42,8 +43,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -116,6 +118,7 @@ class ModeTimeperiods(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -352,7 +355,8 @@ class ModeTimeperiodImportICal(WatoMode):
         return _("Import iCalendar File to create a time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("iCalendar"),
+                                          breadcrumb,
                                           form_name="import_ical",
                                           button_name="upload",
                                           save_title=_("Import"))
@@ -586,7 +590,7 @@ class ModeTimeperiodImportICal(WatoMode):
             else:
                 resolved += resolve_multiple_days(event, time.struct_time(event["start"]))
 
-        ical['events'] = sorted(resolved)
+        ical['events'] = sorted(resolved, key=lambda x: x["date"])
 
         return ical
 
@@ -629,7 +633,9 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             clone_name = html.request.var("clone")
-            if clone_name:
+            if html.request.var("mode") == "import_ical":
+                self._timeperiod = {}
+            elif clone_name:
                 self._name = clone_name
 
                 self._timeperiod = self._get_timeperiod(self._name)
@@ -651,7 +657,10 @@ class ModeEditTimeperiod(WatoMode):
         return _("Edit time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="timeperiod", button_name="save")
+        return make_simple_form_page_menu(_("Time period"),
+                                          breadcrumb,
+                                          form_name="timeperiod",
+                                          button_name="save")
 
     def _valuespec(self):
         if self._new:
@@ -807,12 +816,13 @@ class ModeEditTimeperiod(WatoMode):
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
 
-        if self._name is None:
+        if self._new:
             self._name = vs_spec["name"]
             watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
         else:
             watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
+        assert self._name is not None
         self._timeperiods[self._name] = self._timeperiod
         watolib.timeperiods.save_timeperiods(self._timeperiods)
         return redirect(mode_url("timeperiods"))
@@ -849,7 +859,8 @@ class ModeEditTimeperiod(WatoMode):
                 exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
-            "name": self._name,
+            "name": unique_default_name_suggestion(self._name or "time_period",
+                                                   list(self._timeperiods.keys())),
             "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),

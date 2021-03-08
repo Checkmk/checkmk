@@ -5,26 +5,28 @@
 
 # Remove locale settings to eliminate localized outputs where possible
 
-read_python3_version() {
-    if command -v python3 >/dev/null 2>&1; then
-        python3_minor_version="$(python3 -c 'import sys; print(sys.version_info[1])')"
-        if [ "$python3_minor_version" -ge 4 ]; then
-            echo "$python3_minor_version"
-        fi
+read_python_version() {
+    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
+        echo "$1"
+        return 0
     fi
+    return 1
 }
-read_python2_version() {
-    if command -v python2 >/dev/null 2>&1; then
-        python2 -c 'import sys; print(sys.version_info[1])'
-        return
-    fi
-    if command -v python >/dev/null 2>&1; then
-        python -c 'import sys; print(sys.version_info[1])'
-        return
-    fi
-}
-PYTHON3=$(read_python3_version)
-PYTHON2=$(read_python2_version)
+PYTHON3=$(read_python_version python3 4)
+PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/python_path.cfg"
+fi
+export PYTHON2 PYTHON3
+
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
 
 export LC_ALL=C
 unset LANG
@@ -498,6 +500,42 @@ then
 
 fi
 
+run_agent_plugin() {
+    if [ "${1:(0):(2)}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+    if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
+            fi
+            return
+        fi
+        if [ -n "$PYTHON3" ]; then
+            $PYTHON3 "$agent_plugin"
+            return
+        fi
+        return
+    fi
+    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+    if [ -n "$PYTHON2" ]; then
+        $PYTHON2 "$agent_plugin"
+    fi
+}
+
 # Plugins
 if cd $PLUGINSDIR 2>/dev/null
 then
@@ -516,30 +554,13 @@ then
     done
 fi
 
-run_agent_plugin() {
-    if [ "${1:(0):(2)}" == "./" ]; then
-        agent_plugin="${1:2}"
-    else
-        agent_plugin="$1"
+
+if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+    if [ -n "$NO_PYTHON" ]; then
+        echo "FailedPythonReason: No suitable python installation found."
+    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+        echo "FailedPythonReason: Configured python command not found."
     fi
-    extension="${agent_plugin##*.}"
-    filename="${agent_plugin%.*}"
-    # Execute all non python plugins with ./foo
-    if [ "$extension" != "py" ]; then
-        ./"$agent_plugin"
-        return
-    fi
-    if [ "${filename:(-2):(2)}" != "_2" ]; then
-        if [ -n "$PYTHON3" ]; then
-            ./"$agent_plugin"
-            return
-        fi
-        return
-    fi
-    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
-        return
-    fi
-    if [ -n "$PYTHON2" ]; then
-        ./"$agent_plugin"
-    fi
-}
+fi

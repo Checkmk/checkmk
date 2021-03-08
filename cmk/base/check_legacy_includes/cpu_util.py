@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
 
 from cmk.base.check_api import clear_item_state
@@ -110,13 +110,11 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
         threshold, warn, crit = params["core_util_time_total"]
         yield cpu_util_time(this_time, "total", util, threshold, warn, crit)
 
-    if cores and any([
-            x in params for x in [
-                "average_single",
-                "core_util_graph",
-                "core_util_time",
-                "levels_single",
-            ]
+    if cores and any(x in params for x in [
+            "average_single",
+            "core_util_graph",
+            "core_util_time",
+            "levels_single",
     ]):
         for core_index, (core, total_perc) in enumerate(cores):
             yield from _util_perfdata(core, total_perc, core_index, this_time, params)

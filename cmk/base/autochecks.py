@@ -394,7 +394,7 @@ def save_autochecks_file(
     path.parent.mkdir(parents=True, exist_ok=True)
     content = []
     content.append("[")
-    for service in sorted(services, key=lambda s: (s.check_plugin_name, s.item)):
+    for service in sorted(services):
         content.append("  %s," % service.dump_autocheck())
     content.append("]\n")
     store.save_file(path, "\n".join(content))
@@ -407,17 +407,17 @@ def remove_autochecks_file(hostname: HostName) -> None:
         pass
 
 
-def remove_autochecks_of_host(hostname: HostName, host_of_clustered_service: HostOfClusteredService,
-                              service_description: GetServiceDescription,
-                              remove_clustered_autochecks: bool) -> int:
+def remove_autochecks_of_host(hostname: HostName, remove_hostname: HostName,
+                              host_of_clustered_service: HostOfClusteredService,
+                              service_description: GetServiceDescription) -> int:
     removed = 0
     new_items: List[Service] = []
     for existing_service in parse_autochecks_file(hostname, service_description):
-        is_on_cluster_host = hostname != host_of_clustered_service(
+        target_host = host_of_clustered_service(
             hostname,
             existing_service.description,
         )
-        if is_on_cluster_host == remove_clustered_autochecks:
+        if target_host == remove_hostname:
             removed += 1
         else:
             new_items.append(existing_service)

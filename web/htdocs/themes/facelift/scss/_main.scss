@@ -40,20 +40,6 @@ th {
   white-space: nowrap;
 }
 
-/* Default font size for the complete Multisite GUI */
-button,
-input,
-td,
-th,
-select,
-textarea {
-  font-size: 12px;
-}
-
-input.number {
-  text-align: right;
-}
-
 /* Styling for input elements */
 button,
 input,
@@ -127,7 +113,6 @@ input[type="checkbox"] {
     height: 12.5px;
     padding: 0;
     margin: -2px 4px 0 0;
-    font-size: 12px;
     vertical-align: middle;
     background-color: $inpage-highlight-color;
     border: 1px $inpage-highlight-color solid;
@@ -191,6 +176,7 @@ input.button:not([type="password"]) {
     &,
     &:hover,
     &:active {
+      color: $font-color-disabled;
       cursor: initial;
       background-color: $input-button-hover-bg-color;
       filter: grayscale(80%);
@@ -229,11 +215,10 @@ input.button.hot {
   body.main .popup_menu .wato div.globalvars & {
     width: $toggle-switch-width;
     height: $toggle-switch-height;
-    font-size: 8px;
+    font-size: $font-size-small;
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
-    text-transform: uppercase;
     border: none;
     border-radius: 8px;
     box-shadow: none;
@@ -253,9 +238,8 @@ input.button.hot {
     a,
     .wato div.globalvars & a {
       float: left;
-      background-color: $toggle-switch-on-bg-color;
-      border: $toggle-switch-on-border;
       color: $toggle-switch-font-color-on;
+      background-color: $success;
     }
   }
 
@@ -263,9 +247,8 @@ input.button.hot {
     a,
     .wato div.globalvars & a {
       float: left;
-      background-color: $toggle-switch-off-bg-color;
-      border: $toggle-switch-off-border;
       color: $toggle-switch-font-color-off;
+      background-color: $inpage-highlight-color;
     }
   }
 
@@ -289,7 +272,7 @@ input.button.hot {
 .dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgba($font-color, 0.2);
+  color: rgba($font-color, 0.4);
 
   &.required::before {
     color: $success;
@@ -354,7 +337,7 @@ h1 {
   margin-top: 0;
   margin-bottom: 5px;
   margin-left: 5px;
-  font-size: 23px;
+  font-size: $font-size-page-title;
   color: rgb(255, 255, 255);
 }
 
@@ -363,7 +346,6 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  font-size: 11px;
   color: rgb(0, 0, 0);
 }
 
@@ -379,21 +361,15 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-  width: 9px;
+  width: 8px;
   height: 8px;
-  margin-top: 0;
-  margin-right: 3px;
+  margin: 0 3px;
   vertical-align: middle;
   cursor: pointer;
-  filter: $treeangle-img-filter;
   transition: transform 0.2s ease-in-out;
-  -webkit-transition: -webkit-transform 0.2s ease-in-out;
-  -moz-transition: -moz-transform 0.2s ease-in-out;
 
   &.open {
     transform: rotate(90deg);
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
   }
 
   &.nform {
@@ -401,8 +377,6 @@ img.treeangle {
   }
 
   &.title {
-    width: 16px;
-    height: 16px;
     margin-right: 5px;
     vertical-align: middle;
     filter: none;
@@ -420,6 +394,7 @@ b.treeangle.title {
 }
 
 div.foldable_wrapper {
+  margin-top: $spacing;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
 
@@ -432,7 +407,7 @@ div.foldable_wrapper {
   }
 
   h3 {
-    padding-left: 5px;
+    margin-top: 0;
   }
 
   ul.treeangle {
@@ -486,7 +461,7 @@ div.warning {
   h1 {
     margin-bottom: 5px;
     margin-left: 0;
-    font-size: 16px;
+    font-size: $font-size-large;
     font-weight: $font-weight-bold;
     color: $white;
   }
@@ -499,8 +474,16 @@ div.warning {
 }
 
 div.really {
-  color: $black;
-  background-color: $warning;
+  &,
+  h3,
+  body.main & a {
+    color: $black;
+    background-color: $warning;
+  }
+
+  h3 {
+    padding-left: 0;
+  }
 }
 
 div.success {
@@ -549,7 +532,7 @@ form.confirm {
 
 h2,
 h3 {
-  margin-bottom: $wato-h3-margin-bottom;
+  margin-bottom: $h3-margin-bottom;
 
   + div.info,
   + div.success {
@@ -589,9 +572,10 @@ td > div.error {
 
 table.dictionary {
   width: 100%;
+  border-collapse: collapse;
 
   b.header {
-    font-size: 80%;
+    font-size: $font-size-small;
     font-weight: normal;
   }
 
@@ -617,6 +601,10 @@ table.dictionary {
     div.help {
       white-space: normal;
     }
+
+    > span {
+      margin: $input-field-margin;
+    }
   }
 }
 
@@ -625,10 +613,8 @@ td.dictleft div.dictelement {
   margin-top: 3px;
   margin-bottom: 10px;
   margin-left: 0;
-  font-size: 11px;
 
   * {
-    font-size: 11px;
   }
 
   &:empty {
@@ -637,8 +623,8 @@ td.dictleft div.dictelement {
 
   &.indent {
     padding-left: 10px;
-    margin-left: 8px;
-    border-left: 2px solid rgb(204, 204, 204);
+    margin-left: 6px;
+    border-left: 2px solid $inpage-highlight-color;
 
     ul {
       margin-top: 1px;
@@ -660,7 +646,11 @@ table.vs_dict_text {
 }
 
 table.valuespec_tuple {
-  border-spacing: 2px;
+  border-collapse: collapse;
+
+  &.horizontal tr:nth-child(1) td {
+    padding-top: 0; // override nform default
+  }
 
   td {
     padding: 0;
@@ -671,7 +661,7 @@ table.valuespec_tuple {
   }
 
   span.title {
-    font-size: 8pt;
+    font-size: $font-size-small;
   }
 }
 
@@ -687,7 +677,7 @@ table.vs_date {
 
   th {
     padding: 0;
-    font-size: 7pt;
+    font-size: $font-size-small;
     font-weight: normal;
     text-align: center;
   }
@@ -726,10 +716,27 @@ table.valuespec_listof {
   .unused {
     display: none;
   }
+
+  tr:first-child > td {
+    &.vlof_buttons,
+    &.vlof_content {
+      padding-top: 0;
+    }
+
+    &.vlof_buttons {
+      padding-bottom: $spacing-half;
+    }
+  }
 }
 
-div.valuespec_listof.floating > table > tbody > tr > td:first-child {
-  vertical-align: top;
+div.valuespec_listof {
+  table {
+    border-collapse: collapse;
+  }
+
+  &.floating > table > tbody > tr > td:first-child {
+    vertical-align: top;
+  }
 }
 
 div.valuespec_listof_floating_container {
@@ -743,6 +750,8 @@ div.valuespec_listof_floating_container {
       vertical-align: top;
 
       &.vlof_buttons img {
+        width: 12px;
+        height: 15px;
         margin-top: 4px;
       }
 
@@ -834,18 +843,11 @@ textarea.tt {
   font-family: monospace;
 }
 
-div.listofstrings {
+div.listofstrings.horizontal {
+  clear: left;
+
   > div {
-    margin-bottom: 2px;
-  }
-
-  &.horizontal {
-    clear: left;
-
-    > div {
-      float: left;
-      margin-right: 2px;
-    }
+    float: left;
   }
 }
 
@@ -858,13 +860,21 @@ table.listchoice {
     margin: 0;
 
     span.checkbox {
-      height: 10px;
+      height: $input-field-height;
     }
 
     input[type="checkbox"] {
       height: 12px;
       margin: 0;
     }
+  }
+}
+
+table.alternative {
+  border-collapse: collapse;
+
+  td:first-child {
+    padding-right: 0.5 * $spacing;
   }
 }
 
@@ -899,7 +909,7 @@ div#hover_menu {
      on the pages. In this case it was the perfometer which had 30. */
   z-index: 50;
   width: auto;
-  color: rgb(0, 0, 0);
+  color: $font-color;
 
   div.error,
   div.message {
@@ -912,17 +922,21 @@ div#hover_menu {
     background-color: $bg-color;
   }
 
-  .graph_container div.title {
-    display: block;
-  }
+  .graph_container {
+    margin: 0 2px 2px 0;
 
-  .graph_container div.time {
-    letter-spacing: 0;
-  }
+    color: $graph-hover-popup-font-color;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
 
-  /* For pnp4nagios hover_menu graphs in the Raw Edition */
-  table tbody tr td img {
-    filter: $pnp4nagios-img-filter;
+    div.title {
+      display: block;
+    }
+
+    div.time {
+      letter-spacing: 0;
+    }
   }
 }
 
@@ -1148,7 +1162,7 @@ body.main .popup_menu table.werks td span {
 /* NOWIKI formatting in Werks */
 td.nowiki {
   h3 {
-    font-size: 13px;
+    font-size: $font-size-large;
     font-weight: bold;
     color: rgb(0, 0, 0);
   }
@@ -1198,7 +1212,7 @@ table.modifydowntimes > tbody > tr {
 }
 
 .select2-container .select2-selection--single {
-  height: 23px;
+  height: $input-field-height;
   border: none;
 }
 
@@ -1211,7 +1225,7 @@ table.modifydowntimes > tbody > tr {
     border-radius: 4px;
 
     .select2-selection__rendered {
-      line-height: 23px;
+      line-height: $input-field-height;
       color: $select2-rendered-color;
     }
 
@@ -1294,20 +1308,20 @@ div.vs_age.inline {
  *       where needed
  */
 * {
+  font-size: inherit;
   letter-spacing: $letter-spacing-default;
   text-shadow: none;
 }
 
 html {
+  font-size: $font-size-normal;
   height: 100%;
-  font-size: $font-size-global;
 }
 
 .link,
 .title {
   display: inline-block;
   padding: 0 2px; /* affects spacing in sidebar plugins */
-  font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
   color: $font-color;
@@ -1315,10 +1329,6 @@ html {
 }
 
 div.graph {
-  border: 1px solid $color-table-border;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-
   &.preview {
     padding: 4px !important;
   }
@@ -1442,15 +1452,6 @@ div.graph_with_timeranges {
 
   table.timeranges > tbody > tr > td {
     padding: 0 8px 4px;
-    border: none;
-
-    &:first-child {
-      border-right: none solid;
-    }
-
-    &:last-child {
-      border-left: none solid;
-    }
   }
 }
 
@@ -1487,18 +1488,11 @@ select.vlof_filter {
 }
 
 div.timerange {
-  font-size: $font-size-default;
   color: $darkgrey;
 }
 
 body.main.visible div.foldable .title {
   color: $font-color;
-}
-
-div.color {
-  border-color: $color-div-border-color !important;
-  border-radius: 0;
-  box-shadow: $color-div-box-shadow;
 }
 
 .hot a,
@@ -1511,7 +1505,6 @@ body.main .popup_menu .hot span {
 
 div.info {
   margin: 16px 0 8px;
-  font-size: $font-size-default;
   font-weight: 500;
   letter-spacing: $letter-spacing-default;
   color: $font-color;
@@ -1567,13 +1560,8 @@ tr.hidden {
   opacity: 1;
 }
 
-body.main a.delete_button img {
-  filter: $inpage-close-button-filter;
-}
-
 div#row_info {
-  padding-right: 10px;
-  font-size: $font-size-global;
+  padding-bottom: $spacing-half;
   font-weight: $font-weight-default;
   text-align: right;
 }

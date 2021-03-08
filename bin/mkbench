@@ -899,8 +899,7 @@ class Measurement:
             if values:
                 if isinstance(values[0], tuple):
                     # averages of equal length tuples
-                    averaged = tuple([sum(y) / len(y) for y in zip(*values)
-                                     ])  # fixed: true-division
+                    averaged = tuple(sum(y) / len(y) for y in zip(*values))  # fixed: true-division
                 else:
                     # averages of dict items
                     averaged = {}
@@ -3269,7 +3268,7 @@ def verify_site_is_empty():
     # - empty
     # - created with "omd-vonheute"
     # - previously terminated mkbench runs
-    if not hosts or hosts == ["heute"] or all([h.startswith("std-agent-host-") for h in hosts]):
+    if not hosts or hosts == ["heute"] or all(h.startswith("std-agent-host-") for h in hosts):
         return
 
     raise MKGeneralException("Site needs to be empty")

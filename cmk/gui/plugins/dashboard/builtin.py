@@ -20,12 +20,12 @@ builtin_dashboards["problems"] = {
     "title": _("Problem dashboard"),
     "topic": "problems",
     "sort_index": 5,
-    "icon": "dashboard",
+    "icon": "dashboard_problems",
     "description": _("This dashboard gives you a general overview on the state of your "
                      "monitored devices."),
     "dashlets": [
         {
-            "title": _("Host Statistics"),
+            "title": _("Host statistics"),
             "type": 'hoststats',
             "position": (1, 1),
             "refresh": 60,
@@ -38,7 +38,7 @@ builtin_dashboards["problems"] = {
             'single_infos': [],
         },
         {
-            "title": _("Service Statistics"),
+            "title": _("Service statistics"),
             "type": 'servicestats',
             "position": (31, 1),
             "refresh": 60,
@@ -185,6 +185,8 @@ if "main" not in builtin_dashboards:
     builtin_dashboards["main"] = builtin_dashboards["problems"].copy()
     builtin_dashboards["main"].update({
         "title": _("Main dashboard"),
+        "title_url": "view.py?filled_in=filter&hoststate_filled=1&hst1=on&hst2=on&hstp=on&view_name=searchhost&_show_filter_form=0",
+        "icon": "dashboard_main",
         "topic": "overview",
         "sort_index": 12,
     })
@@ -336,7 +338,7 @@ builtin_dashboards["checkmk"] = {
         'size': (0, 0)
     }],
     'single_infos': [],
-    'icon': 'checkmk'
+    'icon': 'dashboard_system'
 }
 
 builtin_dashboards['checkmk_host'] = {
@@ -382,7 +384,7 @@ builtin_dashboards['checkmk_host'] = {
         },
         'background': True,
         'position': (1, 1),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['service', 'host'],
         'size': (26, 14)
     }, {
@@ -408,8 +410,8 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 8,
-        'show_title': False,
+        'source': 'METRIC_disk_latency',
+        'show_title': True,
         'position': (-36, 15),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -437,8 +439,8 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 2,
-        'show_title': False,
+        'source': 'METRIC_major_page_faults',
+        'show_title': True,
         'position': (27, 15),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -466,10 +468,10 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 1,
+        'source': 'mem_used_percent',
         'background': True,
         'position': (27, 1),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['service', 'host'],
         'size': (0, 14)
     }, {
@@ -495,8 +497,8 @@ builtin_dashboards['checkmk_host'] = {
             'background_color': 'default',
             'show_vertical_axis': True
         },
-        'source': 2,
-        'show_title': False,
+        'source': 'disk_throughput',
+        'show_title': True,
         'position': (-36, 1),
         'type': 'pnpgraph',
         'single_infos': ['service', 'host'],
@@ -522,7 +524,7 @@ builtin_dashboards['checkmk_host'] = {
         },
         'background': True,
         'position': (1, 15),
-        'show_title': False,
+        'show_title': True,
         'single_infos': ['host', 'service'],
         'size': (26, 14)
     }, {

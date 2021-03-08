@@ -69,8 +69,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
@@ -472,6 +473,7 @@ class ModeNotifications(ABCNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         self._extend_display_dropdown(menu)
         return menu
@@ -486,7 +488,10 @@ class ModeNotifications(ABCNotificationsMode):
                     PageMenuEntry(
                         title=_("Hide user rules")
                         if self._show_user_rules else _("Show user rules"),
-                        icon_name="checkbox",
+                        icon_name={
+                            'icon': 'checkbox',
+                            'emblem': 'disable' if self._show_user_rules else 'enable'
+                        },
                         item=make_simple_link(
                             html.makeactionuri([
                                 ("_show_user", "" if self._show_user_rules else "1"),
@@ -928,6 +933,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         return menu
 
@@ -982,6 +988,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _user_id(self):
@@ -1371,7 +1378,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                       "bulking or choose another notification plugin which allows bulking."))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        return make_simple_form_page_menu(_("Notification rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():

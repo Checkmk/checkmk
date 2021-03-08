@@ -16,7 +16,7 @@ The hierarchy here is:
 import abc
 import json
 from dataclasses import dataclass, field
-from typing import List, Iterator, Optional, Dict, Union
+from typing import List, Iterator, Optional, Dict, Union, Tuple
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -125,7 +125,6 @@ class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
     target_mode: Optional[str] = None
     default_value: str = ""
-    placeholder: Optional[str] = None
 
 
 @dataclass
@@ -144,6 +143,7 @@ class PageMenuEntry:
     shortcut_title: Optional[str] = None
     css_classes: CSSSpec = None
     disabled_tooltip: Optional[str] = None
+    sort_index: int = 1
 
 
 @dataclass
@@ -240,7 +240,7 @@ class PageMenu:
                 is_suggested=False,
             )
 
-        yield from shortcuts
+        yield from sorted(shortcuts, key=lambda e: e.sort_index)
 
     @property
     def suggestions(self) -> Iterator[PageMenuEntry]:
@@ -279,7 +279,7 @@ class PageMenu:
 def make_display_options_dropdown() -> PageMenuDropdown:
     return PageMenuDropdown(
         name="display",
-        title=_("View"),
+        title=_("Display"),
         topics=[
             PageMenuTopic(
                 title=_("General display options"),
@@ -373,26 +373,30 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
+def make_checkbox_selection_json_text() -> Tuple[str, str]:
+    return json.dumps(_("Select all checkboxes")), json.dumps(_("Deselect all checkboxes"))
+
+
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
-    name_selected = _("Select all checkboxes")
-    name_deselected = _("Deselect all checkboxes")
     is_selected = user.get_rowselection(weblib.selection_id(), selection_key)
+    name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
             PageMenuEntry(
                 name="checkbox_selection",
-                title=name_deselected if is_selected else name_selected,
+                title=_("Deselect all checkboxes") if is_selected else _("Select all checkboxes"),
                 icon_name="checkbox",
                 item=make_javascript_link("cmk.selection.toggle_all_rows(this.form, %s, %s);" %
-                                          (json.dumps(name_selected), json.dumps(name_deselected))),
+                                          (name_selected, name_deselected)),
                 is_enabled=is_enabled,
             ),
         ],
     )
 
 
-def make_simple_form_page_menu(breadcrumb: Breadcrumb,
+def make_simple_form_page_menu(title: str,
+                               breadcrumb: Breadcrumb,
                                form_name: Optional[str] = None,
                                button_name: Optional[str] = None,
                                save_title: Optional[str] = None,
@@ -415,7 +419,7 @@ def make_simple_form_page_menu(breadcrumb: Breadcrumb,
         dropdowns=[
             PageMenuDropdown(
                 name="actions",
-                title=_("Actions"),
+                title=title,
                 topics=[
                     PageMenuTopic(
                         title=_("Actions"),
@@ -513,8 +517,7 @@ class PageMenuRenderer:
 
     def _show_dropdown_area(self, dropdown: PageMenuDropdown) -> None:
         id_ = "menu_%s" % dropdown.name
-        show_more_mode = user.show_mode == "enforce_show_more"
-        show_more = user.get_tree_state("more_buttons", id_, isopen=False) or show_more_mode
+        show_more = user.get_tree_state("more_buttons", id_, isopen=False) or user.show_more_mode
         html.open_div(class_=["menu", ("more" if show_more else "less")], id_=id_)
 
         if dropdown.any_show_more_entries:
@@ -590,9 +593,7 @@ class PageMenuRenderer:
 
     def _show_inpage_search_field(self, item: PageMenuSearch) -> None:
         html.open_td(class_="inpage_search")
-        inpage_search_form(mode=item.target_mode,
-                           default_value=item.default_value,
-                           placeholder=item.placeholder)
+        inpage_search_form(mode=item.target_mode, default_value=item.default_value)
         html.close_td()
 
     def _show_pending_changes_icon(self) -> None:
@@ -727,9 +728,7 @@ def search_form(title: Optional[str] = None,
 
 
 # TODO: Mesh this function into one with the above search_form()
-def inpage_search_form(mode: Optional[str] = None,
-                       default_value: str = "",
-                       placeholder: Optional[str] = None) -> None:
+def inpage_search_form(mode: Optional[str] = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
     was_submitted = html.request.get_ascii_input("filled_in") == form_name
@@ -737,7 +736,7 @@ def inpage_search_form(mode: Optional[str] = None,
     html.text_input("search",
                     size=32,
                     default_value=default_value,
-                    placeholder=placeholder,
+                    placeholder=_("Filter"),
                     required=True,
                     title="")
     html.hidden_fields()

@@ -19,6 +19,7 @@
 #include "State.h"
 #include "cmc.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
 #include "nagios.h"
 #endif
@@ -69,7 +70,8 @@ std::vector<HostListColumn::Member> HostListColumn::getMembers(
         for (const hostsmember *mem = *p; mem != nullptr; mem = mem->next) {
             host *hst = mem->host_ptr;
             if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, hst, nullptr)) {
+                is_authorized_for(_mc->serviceAuthorization(), auth_user, hst,
+                                  nullptr)) {
                 members.emplace_back(hst->name,
                                      static_cast<HostState>(hst->current_state),
                                      hst->has_been_checked != 0);

@@ -121,18 +121,18 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("width", "100%")
             .attr("height", "100%")
             .attr("id", "svg_content")
-            .on("contextmenu", () => {
-                d3.event.preventDefault();
-                d3.event.stopPropagation();
+            .on("contextmenu", event => {
+                event.preventDefault();
+                event.stopPropagation();
                 // TODO: identify nodes layer (svg/canvas)
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].render_context_menu();
+                ].render_context_menu(event);
             })
-            .on("click.remove_context", () =>
+            .on("click.remove_context", event =>
                 this._layers[
                     node_visualization_viewport_layers.LayeredNodesLayer.prototype.id()
-                ].remove_context_menu()
+                ].remove_context_menu(event)
             );
 
         this.div_content_selection = this.selection
@@ -152,11 +152,11 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .attr("id", "div_layers");
 
         this.main_zoom = d3.zoom();
-        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", () => this.zoomed());
+        this.main_zoom.scaleExtent([0.2, 10]).on("zoom", event => this.zoomed(event));
 
         // Disable left click zoom
-        this.main_zoom.filter(() => {
-            return d3.event.button === 0 || d3.event.button === 1;
+        this.main_zoom.filter(event => {
+            return event.button === 0 || event.button === 1;
         });
         this.svg_content_selection.call(this.main_zoom).on("dblclick.zoom", null);
 
@@ -273,14 +273,14 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
             .classed("noselect", true)
             .classed("togglebox", true)
             .style("pointer-events", "all")
-            .on("click", () => this.toggle_overlay_click())
+            .on("click", event => this.toggle_overlay_click(event))
             .merge(toggleboxes);
         toggleboxes.classed("enabled", d => d.config.active);
     }
 
-    toggle_overlay_click() {
-        d3.event.stopPropagation();
-        let target = d3.select(d3.event.target);
+    toggle_overlay_click(event) {
+        event.stopPropagation();
+        let target = d3.select(event.target);
         let layer_id = target.attr("layer_id");
 
         var new_state = !this._layers[layer_id].is_enabled();
@@ -322,6 +322,7 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         // Generates a chunk object which includes the following data
         // {
         //   id:                 ID to identify this chunk
+        //   type:               bi / topology
         //   tree:               hierarchy tree
         //   nodes:              visible nodes as list
         //   nodes_by_id:        all nodes by id
@@ -331,6 +332,9 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         //   layout_settings:    layout configuration
         // }
         let chunk = {};
+
+        // Required to differentiate between bi and topology view
+        chunk.type = chunk_rawdata.type;
 
         let hierarchy = d3.hierarchy(chunk_rawdata.hierarchy);
 
@@ -609,6 +613,9 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
     }
 
     update_node_chunk_descendants_and_links(node_chunk) {
+        // This feature is only supported/useful for bi visualization
+        if (node_chunk.type != "bi") return;
+
         node_chunk.nodes = node_chunk.tree.descendants();
         let chunk_links = [];
         node_chunk.nodes.forEach(node => {
@@ -650,12 +657,12 @@ class LayeredViewportPlugin extends node_visualization_viewport_utils.AbstractVi
         }
     }
 
-    zoomed() {
+    zoomed(event) {
         if (!this.data_to_show) return;
 
-        this.last_zoom = d3.event.transform;
-        this.scale_x.range([0, this.width * d3.event.transform.k]);
-        this.scale_y.range([0, this.height * d3.event.transform.k]);
+        this.last_zoom = event.transform;
+        this.scale_x.range([0, this.width * event.transform.k]);
+        this.scale_y.range([0, this.height * event.transform.k]);
 
         for (var layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled()) continue;

@@ -26,14 +26,12 @@ h4 {
 }
 
 h3 {
-  margin-bottom: 2px;
-  font-size: 16px;
+  font-size: $font-size-large;
   font-weight: normal;
 }
 
 @mixin table-header-mixin {
-  padding: 5px 0 5px 8px;
-  font-size: $font-size-global;
+  padding: 6px 0 4px 8px;
   font-weight: $font-weight-bold;
   background-color: $headline-color;
   border-radius: $theme-border-radius $theme-border-radius 0 0;
@@ -41,7 +39,6 @@ h3 {
 
 h3.table {
   @include table-header-mixin;
-  margin-bottom: 0;
 }
 
 /*-------------------------------------------------------------------------.
@@ -83,7 +80,6 @@ body {
     padding: $main-body-padding;
     margin: 0;
     font-family: $font-family-default;
-    font-size: $font-size-default;
     font-weight: $font-weight-default;
     color: $font-color;
     background: $color-background;
@@ -131,7 +127,7 @@ body {
           height: 31px;
           max-width: 100px;
           padding-left: 0;
-          font-size: 21px;
+          font-size: $font-size-page-title;
 
           img {
             width: 24px;
@@ -152,7 +148,6 @@ body {
           }
 
           div.breadcrumb {
-            font-size: 11px;
             white-space: nowrap;
 
             span,
@@ -177,7 +172,6 @@ body {
 
         &.right {
           width: 1%;
-          font-size: 13px;
           color: $font-color;
           text-align: right;
 
@@ -211,7 +205,6 @@ body {
       top: -14px;
       width: 100%;
       font-family: monospace;
-      font-size: 11px;
       color: rgb(255, 255, 255);
     }
 
@@ -274,7 +267,7 @@ body {
 }
 
 #reload_pause_counter {
-  font-size: 120%;
+  font-size: $font-size-large;
   font-weight: bold;
   color: $lightgrey;
   text-align: center;
@@ -303,6 +296,12 @@ body {
 
 table.data {
   width: 100%;
+  // This basically has no effect since it is treated as a minimum height.
+  // It is needed so that the height attribute of nested elements has an
+  // effect. It is used e.g. in td.state of _status.scss.
+  // See: https://www.w3.org/TR/CSS22/tables.html#height-layout
+  // And: https://stackoverflow.com/a/56913789
+  height: 1px;
   padding: 0;
   margin: 0;
   color: $font-color;
@@ -318,12 +317,19 @@ table.data {
   th {
     height: 24px;
     padding: 0 8px;
-    font-size: $font-size-default;
     letter-spacing: $letter-spacing-table;
     color: $table-secondary-font-color;
     text-align: left;
     vertical-align: middle;
     background-color: $odd-tr-bg-color;
+
+    &.center {
+      text-align: center;
+    }
+
+    &.right {
+      text-align: right;
+    }
 
     /* Table header links (For sorting) */
     &.sort:hover {
@@ -339,7 +345,6 @@ table.data {
   }
 
   td {
-    font-size: $font-size-default;
     letter-spacing: $letter-spacing-default;
     color: $font-color;
 
@@ -352,11 +357,11 @@ table.data {
       }
     }
 
-    /* TODO: Reproduce this html element */
+    /* e.g. numeric columns on alert statistics views */
     &.count {
-      font-family: sans-serif;
       font-weight: bold;
       text-align: right;
+      white-space: nowrap;
     }
 
     &.number {
@@ -397,8 +402,6 @@ table.data {
 
     /* TODO: Refactor these messy and complicated styles */
     > td {
-      height: 26px;
-      padding: 2px 8px; /* spacing in every row */
       vertical-align: middle;
 
       a {
@@ -409,7 +412,9 @@ table.data {
         }
       }
 
-      &:not(.state) {
+      &:not(.state):not(.hstate) {
+        height: 26px;
+        padding: 2px 8px; /* spacing in every row */
         text-overflow: $td-text-overflow;
       }
     }
@@ -443,7 +448,7 @@ table.data {
     height: 16px;
     padding: 4px;
     margin: 0;
-    font-size: 10px;
+    font-size: $font-size-small;
     font-weight: bold;
     line-height: 5px;
     text-align: center;
@@ -455,7 +460,7 @@ table.data {
   td.host {
     padding-top: 1ex;
     padding-left: 0;
-    font-size: 120%;
+    font-size: $font-size-large;
     font-weight: bold;
     border-style: none;
   }
@@ -505,17 +510,11 @@ table.data {
     img {
       position: relative;
       top: 2px;
-      width: 12px;
-      height: 13px;
+      width: 8px;
+      height: auto;
       padding: 0;
       vertical-align: top;
     }
-  }
-
-  tr th a.toggle_actions img,
-  tr th body.main .popup_menu span.toggle_actions img,
-  body.main .popup_menu & tr th span.toggle_actions img {
-    filter: $treeangle-img-filter;
   }
 }
 
@@ -537,7 +536,7 @@ td.wide {
 table.groupheader {
   @include table-header-mixin;
   width: 100%;
-  margin: 0;
+  margin: 0 0 $h3-margin-bottom;
 
   td {
     text-align: left;
@@ -583,7 +582,6 @@ tr.data.group_end {
 tr.groupheader td {
   padding: 0;
   margin: 0;
-  font-size: $font-size-global;
   font-weight: $font-weight-bold;
   color: $font-color;
   background: transparent;
@@ -646,7 +644,10 @@ img.icon.reloading {
 /* Table with captions on the left side. Used e.g. for man pages and werks */
 table.data.headerleft tr {
   th {
-    background-color: inherit; // use odd/even instead of th color
+    // Override generic th styling in a single header row
+    font-weight: $font-weight-bold;
+    color: $font-color;
+    background-color: inherit;
   }
 
   th,
@@ -686,16 +687,19 @@ input[type="text"],
 input[type="password"],
 select,
 textarea,
-div.snapin textarea,
+div.snapin textarea,  // TODO: reproduce this element
 #mk_side_search_field,
 .tagify__input {
-  height: auto;
-  padding: 3px 6px;
+  $padding: 3px;
+
+  height: ($input-field-height - 2 * $padding);
+  padding: $padding 6px;
   color: $font-color;
   background-color: $inpage-highlight-color;
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
+  box-sizing: content-box;
 }
 
 span.select2 .select2-selection {
@@ -709,6 +713,11 @@ span.select2 .select2-selection {
 input[type="text"],
 textarea {
   position: relative;
+}
+
+textarea {
+  // textareas like e.g. comment fields should not have a fixed height
+  height: auto;
 }
 
 input[type="text"],
@@ -736,7 +745,6 @@ input[type="checkbox"] {
   margin-right: 8px;
   margin-bottom: 8px;
   margin-left: 0;
-  font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $input-button-color;
@@ -756,7 +764,7 @@ button {
 input,
 select {
   &.number {
-    text-align: left;
+    text-align: right;
   }
 
   &.button {
@@ -881,14 +889,13 @@ table.nform {
       vertical-align: middle;
       cursor: pointer;
       background-color: transparent;
-      border-radius: 5px 5px 0 0;
+      border-radius: $theme-border-radius $theme-border-radius 0 0;
     }
 
     td {
       position: relative;
       height: auto;
       padding: 4px 10px 3px 9px;
-      font-size: $font-size-global;
       font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
       color: $secondary-font-color;
@@ -909,16 +916,9 @@ table.nform {
     }
   }
 
-  > tbody > tr td {
-    color: $primary-font-color;
-  }
-
   > tbody > tr > td {
-    vertical-align: middle;
-
-    &.simple {
-      line-height: 20px;
-    }
+    padding-bottom: $spacing-half;
+    vertical-align: top;
   }
 
   tr td.legend {
@@ -927,17 +927,16 @@ table.nform {
     padding-right: 8px;
     padding-left: 10px;
     overflow: hidden;
-    line-height: 28px;
     text-align: left;
-    word-wrap: break-word;
-    vertical-align: baseline;
+    vertical-align: top;
+    overflow-wrap: break-word;
 
     div.title {
       float: left;
       max-width: 390px;
       padding: 0 8px 0 0;
       overflow: hidden;
-      font-weight: $font-weight-bold;
+      letter-spacing: $letter-spacing-default;
       white-space: nowrap;
     }
 
@@ -945,10 +944,6 @@ table.nform {
       float: right;
       margin-top: 3px;
     }
-  }
-
-  td.legend.simple {
-    padding-top: 5px;
   }
 
   &.narrow td.legend {
@@ -959,16 +954,8 @@ table.nform {
     padding-right: 10px;
     padding-left: 10px;
 
-    &.simple {
-      padding-bottom: 0;
-    }
-
     span.checkbox {
       display: inline-block;
-
-      &:not(first-of-type) {
-        margin-top: 4px;
-      }
     }
   }
 
@@ -1022,7 +1009,7 @@ table.nform {
   }
 
   .listchoice td {
-    height: 24px;
+    height: $input-field-height;
     vertical-align: middle;
   }
 
@@ -1034,8 +1021,8 @@ table.nform {
     border-spacing: 4px;
   }
 
-  tbody tr:nth-child(1) td {
-    padding-top: 4px;
+  > tbody > tr:nth-child(1) > td {
+    padding-top: $spacing-half;
   }
 
   tr td.legend {
@@ -1064,6 +1051,24 @@ table.nform {
       }
     }
   }
+
+  span.select2-container {
+    margin: $input-field-margin;
+    vertical-align: top;
+  }
+
+  input {
+    margin: $input-field-margin;
+    vertical-align: initial;
+  }
+
+  .vs_floating_text {
+    display: inline-block;
+    height: $input-field-height;
+    box-sizing: border-box;
+    margin: $input-field-margin;
+    line-height: $input-field-height;
+  }
 }
 
 form.visual {
@@ -1086,7 +1091,6 @@ div.help {
   width: auto;
   padding: 8px 16px;
   margin: 8px 0;
-  font-size: 12px;
   font-weight: normal;
   color: rgb(0, 0, 0);
   text-align: left;
@@ -1334,7 +1338,6 @@ div.log_output,
   margin: 16px;
   font-family: monospace;
   font-weight: $font-weight-default;
-  color: $lightgrey;
   background: $log-output-color;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
@@ -1347,7 +1350,6 @@ div.log_output {
 
   pre {
     font-family: monospace;
-    font-size: $font-size-global;
     color: $font-color;
   }
 }
@@ -1506,21 +1508,24 @@ table.data.job_table td {
 }
 
 /* Tags */
+/* FIXME: This section is really messy and should be cleaned up */
 .tagify {
   $self: &;
 
   border: none;
 
   #{ $self }__input {
+    flex-grow: 0;
     padding: $tag-padding;
-    margin: $tag-margin;
+    margin-left: 0;
   }
 
-  &.hasMaxTags #{ $self }__input {
+  &.tagify--hasMaxTags #{ $self }__input {
     display: none;
   }
 
   &__input::before {
+    line-height: 1.2em;
     color: inherit;
   }
 
@@ -1534,30 +1539,36 @@ table.data.job_table td {
     }
   }
 
+  a {
+    margin-right: $spacing;
+
+    tag {
+      margin-right: 0;
+    }
+  }
+
   tag {
-    margin: 0 5px 2px 0;
+    margin-right: $spacing;
 
     > div {
+      position: relative;
       padding: $tag-padding;
       padding-right: nth($tag-padding, 2) * 5;
-      margin: $tag-margin;
       color: $tag-font-color;
     }
 
     x {
-      top: 45%;
-      right: 7px;
-      font-size: 10px;
+      position: absolute;
+      right: 0;
+      z-index: 1;
+      margin-right: 0;
+      font-size: $font-size-small;
       line-height: 14px;
     }
 
     &,
     &.discovered {
-      &:hover:not([readonly]) div::before {
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
+      &:hover:not([readonly]) div {
         opacity: $tag-hover-opacity;
         box-shadow: none;
       }
@@ -1566,8 +1577,8 @@ table.data.job_table td {
 
   // Display input always non-colored
   &:not([readonly]) tag {
-    > div::before,
-    &:hover > div::before {
+    > div,
+    &:hover > div {
       background: $tag-input-bg-color;
       opacity: 1;
     }
@@ -1583,28 +1594,27 @@ table.data.job_table td {
 
   tag,
   &[readonly] tag {
-    > div::before {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      background: rgb(0, 168, 181);
-      opacity: $tag-opacity;
+    > div {
+      background: rgba(0, 168, 181, $tag-opacity);
+      border-radius: $theme-border-radius;
       box-shadow: none;
       animation: none;
+
+      &::before {
+        content: none; /* don't apply normal tagify style */
+      }
     }
 
-    &.explicit > div::before {
-      background: rgb(119, 72, 152);
+    &.explicit > div {
+      background: rgba(119, 72, 152, $tag-opacity);
     }
 
-    &.discovered > div::before {
-      background: rgb(243, 174, 75);
-      opacity: $tag-discovered-opacity;
+    &.discovered > div {
+      background: rgba(243, 174, 75, $tag-discovered-opacity);
     }
 
-    &.ruleset > div::before {
-      background: rgb(222, 67, 131);
+    &.ruleset > div {
+      background: rgba(222, 67, 131, $tag-opacity);
     }
   }
 
@@ -1624,19 +1634,24 @@ table.data.job_table td {
     border: none;
     box-shadow: none;
 
+    &__wrapper {
+      background: $tag-input-bg-color;
+      border: 1px solid $tag-dropdown-hover-border-color;
+      border-radius: 4px;
+    }
+
     &__item {
       margin: 1px;
 
       &--active {
-        color: $tag-font-color;
-        background-color: $tag-dropdown-active-bg-color;
-        border: $tag-dropdown-active-border;
+        color: $tag-dropdown-hover-font-color;
+        background-color: $tag-dropdown-hover-bg-color;
+        border: $tag-dropdown-hover-border-color;
       }
     }
   }
 }
 
 .tagify.display[readonly] tag {
-  padding: 1px 0;
-  margin: 0;
+  padding: 2px 0;
 }

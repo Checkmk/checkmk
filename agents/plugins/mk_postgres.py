@@ -19,10 +19,11 @@ import abc
 import platform
 import sys
 import logging
-import argparse
-from collections import namedtuple
+# optparse exist in python2.6 up to python 3.8. Do not use argparse, because it will not run with python2.6
+import optparse  # pylint: disable=W0402
+
 try:
-    from typing import Dict, List, Optional, Tuple
+    from typing import Any, Dict, List, Optional, Tuple
 except ImportError:
     # We need typing only for testing
     pass
@@ -50,6 +51,11 @@ else:
     raise NotImplementedError("The OS type(%s) is not yet implemented." % platform.system())
 
 
+# for compatibility with python 2.6
+def subprocess_check_output(args):
+    return subprocess.Popen(args, stdout=subprocess.PIPE).communicate()[0]
+
+
 # Borrowed from six
 def ensure_str(s):
     if sys.version_info[0] >= 3:
@@ -59,6 +65,10 @@ def ensure_str(s):
         if isinstance(s, unicode):  # pylint: disable=undefined-variable
             return s.encode("utf-8")
     return s
+
+
+class PostgresPsqlError(RuntimeError):
+    pass
 
 
 class PostgresBase:
@@ -73,7 +83,6 @@ class PostgresBase:
     """
     __metaclass__ = abc.ABCMeta
     _supported_pg_versions = ["12"]
-    _agent_prefix = "postgres"
 
     def __init__(self, db_user, instance):
         # type: (str, Dict) -> None
@@ -86,9 +95,6 @@ class PostgresBase:
         self.my_env["PGPASSFILE"] = instance.get("pg_passfile", "")
         self.sep = os.sep
         self.psql, self.bin_path = self.get_psql_and_bin_path()
-        self.databases = self.get_databases()
-        self.numeric_version = self.get_server_version()
-        self.row, self.idle = self.get_condition_vars()
         self.conn_time = ""  # For caching as conn_time and version are in one query
 
     @abc.abstractmethod
@@ -111,7 +117,7 @@ class PostgresBase:
         """Gets all instances"""
 
     @abc.abstractmethod
-    def get_stats(self):
+    def get_stats(self, databases):
         """Get the stats"""
 
     @abc.abstractmethod
@@ -119,7 +125,7 @@ class PostgresBase:
         """Get the pg version and the time for the query connection"""
 
     @abc.abstractmethod
-    def get_bloat(self):
+    def get_bloat(self, databases, numeric_version):
         """Get the db bloats"""
 
     def get_databases(self):
@@ -131,13 +137,15 @@ class PostgresBase:
     def get_server_version(self):
         """Gets the server version"""
         out = self.run_sql_as_db_user('SHOW server_version;')
+        if out == "":
+            raise PostgresPsqlError("psql connection returned with no data")
         version_as_string = out.split()[0]
         # Use Major and Minor version for float casting: "12.6.4" -> 12.6
         return float(".".join(version_as_string.split(".")[0:2]))
 
-    def get_condition_vars(self):
+    def get_condition_vars(self, numeric_version):
         """Gets condition variables for other queries"""
-        if self.numeric_version > 9.2:
+        if numeric_version > 9.2:
             return "state", "'idle'"
         return "current_query", "'<IDLE>'"
 
@@ -154,12 +162,12 @@ class PostgresBase:
                                        rows_only=False,
                                        extra_args="-P footer=off")
 
-    def get_sessions(self):
+    def get_sessions(self, row, idle):
         """Gets idle and open sessions"""
-        condition = "%s = %s" % (self.row, self.idle)
+        condition = "%s = %s" % (row, idle)
 
         sql_cmd = ("SELECT %s, count(*) FROM pg_stat_activity "
-                   "WHERE %s IS NOT NULL GROUP BY (%s);") % (condition, self.row, condition)
+                   "WHERE %s IS NOT NULL GROUP BY (%s);") % (condition, row, condition)
 
         out = self.run_sql_as_db_user(sql_cmd,
                                       quiet=False,
@@ -172,11 +180,11 @@ class PostgresBase:
             out += "\nt 0"
         return out
 
-    def get_query_duration(self):
+    def get_query_duration(self, numeric_version):
         """Gets the query duration"""
         # Previously part of simple_queries
 
-        if self.numeric_version > 9.2:
+        if numeric_version > 9.2:
             querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, state AS state, "
                                  "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
                                  "AS seconds, pid, "
@@ -233,37 +241,86 @@ class PostgresBase:
         pg_isready is a utility for checking the connection status of a PostgreSQL database server.
         """
 
-        out = subprocess.check_output(
+        out = subprocess_check_output(
             ["%s%spg_isready" % (self.bin_path, self.sep), "-p", self.pg_port],)
 
         sys.stdout.write("%s\n" % ensure_str(out))
 
     def execute_all_queries(self):
         """Executes all queries and writes the output formatted to stdout"""
-
-        query_template = namedtuple("query_template", ["method", "section", "has_db_text"])
-        queries = [
-            query_template(self.get_instances, "instances", False),
-            query_template(self.get_sessions, "sessions", False),
-            query_template(self.get_stat_database, "stat_database:sep(59)", False),
-            query_template(self.get_locks, "locks:sep(59)", True),
-            query_template(self.get_query_duration, "query_duration:sep(59)", True),
-            query_template(self.get_connections, "connections:sep(59)", True),
-            query_template(self.get_stats, "stats:sep(59)", True),
-            query_template(self.get_version, "version:sep(1)", False),
-            query_template(self.get_connection_time, "conn_time", False),
-            query_template(self.get_bloat, "bloat:sep(59)", True)
-        ]
-
-        database_text = "\n[databases_start]\n%s\n[databases_end]" % "\n".join(self.databases)
-
         instance = "\n[[[%s]]]" % self.name
-        for query in queries:
-            out = "<<<%s_%s>>>" % (self._agent_prefix, query.section)
+
+        try:
+            databases = self.get_databases()
+            database_text = "\n[databases_start]\n%s\n[databases_end]" % "\n".join(databases)
+            version = self.get_server_version()
+            row, idle = self.get_condition_vars(version)
+        except PostgresPsqlError:
+            # if tcp connection to db instance failed variables are empty
+            databases = ""
+            database_text = ""
+            version = None
+            row, idle = "", ""
+
+        out = "<<<postgres_instances>>>"
+        out += instance
+        out += "\n%s" % self.get_instances()
+        sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_sessions>>>"
+        if row and idle:
             out += instance
-            if query.has_db_text:
-                out += database_text
-            out += "\n%s" % query.method()
+            out += "\n%s" % self.get_sessions(row, idle)
+            sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_stat_database:sep(59)>>>"
+        out += instance
+        out += "\n%s" % self.get_stat_database()
+        sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_locks:sep(59)>>>"
+        if database_text:
+            out += instance
+            out += database_text
+            out += "\n%s" % self.get_locks()
+            sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_query_duration:sep(59)>>>"
+        if version:
+            out += instance
+            out += database_text
+            out += "\n%s" % self.get_query_duration(version)
+            sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_connections:sep(59)>>>"
+        if database_text:
+            out += instance
+            out += database_text
+            out += "\n%s" % self.get_connections()
+            sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_stats:sep(59)>>>"
+        if databases:
+            out += instance
+            out += database_text
+            out += "\n%s" % self.get_stats(databases)
+            sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_version:sep(1)>>>"
+        out += instance
+        out += "\n%s" % self.get_version()
+        sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_conn_time>>>"
+        out += instance
+        out += "\n%s" % self.get_connection_time()
+        sys.stdout.write("%s\n" % out)
+
+        out = "<<<postgres_bloat:sep(59)>>>"
+        if databases and version:
+            out += instance
+            out += database_text
+            out += "\n%s" % self.get_bloat(databases, version)
             sys.stdout.write("%s\n" % out)
 
 
@@ -325,7 +382,7 @@ class PostgresWin(PostgresBase):
         ]
 
         taskslist = ensure_str(
-            subprocess.check_output(
+            subprocess_check_output(
                 ["wmic", "process", "get", "processid,commandline",
                  "/format:list"])).split("\r\r\n\r\r\n\r\r\n")
 
@@ -342,8 +399,8 @@ class PostgresWin(PostgresBase):
                     out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
-    def get_stats(self):
-        # type: () -> str
+    def get_stats(self, databases):
+        # type: (List[str]) -> str
         """Get the stats"""
         # The next query had to be slightly modified:
         # As cmd.exe interprets > as redirect and we need <> as "not equal", this was changed to
@@ -365,7 +422,7 @@ class PostgresWin(PostgresBase):
         query = "\\pset footer off \\\\ BEGIN;SET statement_timeout=30000;COMMIT;"
 
         cur_rows_only = False
-        for cnt, database in enumerate(self.databases):
+        for cnt, database in enumerate(databases):
 
             query = "%s \\c %s \\\\ %s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
@@ -384,13 +441,13 @@ class PostgresWin(PostgresBase):
         diff = time.time() - start_time
         return out, '%.3f' % diff
 
-    def get_bloat(self):
-        # type: () -> str
+    def get_bloat(self, databases, numeric_version):
+        # type: (List[Any], float) -> str
         """Get the db bloats"""
         # Bloat index and tables
         # Supports versions <9.0, >=9.0
         # This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
-        if self.numeric_version > 9.0:
+        if numeric_version > 9.0:
             # TODO: Reformat query in a more readable way
             # Here as well: "<" and ">" must be escaped. As we're using meta-command + SQL in one
             # query, we need to use pipe. Due to Window's cmd behaviour, we need to escape those
@@ -518,7 +575,7 @@ class PostgresWin(PostgresBase):
         query = "\\pset footer off \\\\"
 
         cur_rows_only = False
-        for idx, database in enumerate(self.databases):
+        for idx, database in enumerate(databases):
 
             query = "%s \\c %s \\\\ %s" % (query, database, bloat_query)
             if idx == 0:
@@ -585,7 +642,7 @@ class PostgresLinux(PostgresBase):
             ["(.*)bin/postgres(.*)", "(.*)bin/postmaster(.*)", "(.*)bin/edb-postgres(.*)"]
         ]
 
-        procs_list = ensure_str(subprocess.check_output(["ps", "h", "-eo",
+        procs_list = ensure_str(subprocess_check_output(["ps", "h", "-eo",
                                                          "pid:1,command:1"])).split("\n")
         out = ""
         for proc in procs_list:
@@ -594,11 +651,11 @@ class PostgresLinux(PostgresBase):
                     out += proc + "\n"
         return out.rstrip()
 
-    def get_query_duration(self):
-        # type: () -> str
+    def get_query_duration(self, numeric_version):
+        # type: (float) -> str
         # Previously part of simple_queries
 
-        if self.numeric_version > 9.2:
+        if numeric_version > 9.2:
             querytime_sql_cmd = ("SELECT datname, datid, usename, client_addr, state AS state, "
                                  "COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) "
                                  "AS seconds, pid, "
@@ -621,8 +678,8 @@ class PostgresLinux(PostgresBase):
                                        rows_only=False,
                                        extra_args="-P footer=off")
 
-    def get_stats(self):
-        # type: () -> str
+    def get_stats(self, databases):
+        # type: (List[str]) -> str
         sql_cmd_lastvacuum = ("SELECT "
                               "current_database() AS datname, nspname AS sname, "
                               "relname AS tname, CASE WHEN v IS NULL THEN -1 "
@@ -640,7 +697,7 @@ class PostgresLinux(PostgresBase):
         query = "\\pset footer off\nBEGIN;\nSET statement_timeout=30000;\nCOMMIT;"
 
         cur_rows_only = False
-        for cnt, database in enumerate(self.databases):
+        for cnt, database in enumerate(databases):
 
             query = "%s\n\\c %s\n%s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
@@ -661,12 +718,12 @@ class PostgresLinux(PostgresBase):
 
         return out, '%.3f' % real
 
-    def get_bloat(self):
-        # type: () -> str
+    def get_bloat(self, databases, numeric_version):
+        # type: (List[Any], float) -> str
         # Bloat index and tables
         # Supports versions <9.0, >=9.0
         # This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
-        if self.numeric_version > 9.0:
+        if numeric_version > 9.0:
             # TODO: Reformat query in a more readable way
             bloat_query = (
                 "SELECT current_database() AS db, schemaname, tablename, reltuples::bigint "
@@ -788,7 +845,7 @@ class PostgresLinux(PostgresBase):
         query = "\\pset footer off"
 
         cur_rows_only = False
-        for idx, database in enumerate(self.databases):
+        for idx, database in enumerate(databases):
 
             query = "%s\n\\c %s\n%s" % (query, database, bloat_query)
             if idx == 0:
@@ -866,17 +923,15 @@ def parse_postgres_cfg(postgres_cfg):
 
 
 def parse_arguments(argv):
-    # type: (List[str]) -> argparse.Namespace
-
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--verbose', '-v', action="count", default=0)
-    parser.add_argument("-t",
-                        "--test-connection",
-                        default=False,
-                        action="store_true",
-                        help="Test if postgres is ready")
-
-    return parser.parse_args(argv)
+    parser = optparse.OptionParser()
+    parser.add_option('-v', '--verbose', action="count", default=0)
+    parser.add_option("-t",
+                      "--test-connection",
+                      default=False,
+                      action="store_true",
+                      help="Test if postgres is ready")
+    options, _ = parser.parse_args(argv)
+    return options
 
 
 def get_postgres_user_linux():
@@ -944,11 +999,11 @@ def main(argv=None):
         instances.append(default_postgres_installation_parameters)
 
     for instance in instances:
-        my_collector = postgres_factory(dbuser, instance)
+        postgres = postgres_factory(dbuser, instance)
         if opt.test_connection:
-            my_collector.is_pg_ready()
+            postgres.is_pg_ready()
             sys.exit(0)
-        my_collector.execute_all_queries()
+        postgres.execute_all_queries()
     return 0
 
 

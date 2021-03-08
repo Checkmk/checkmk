@@ -4,16 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
-import json
 
-import cmk.gui.valuespec as valuespec
-
-from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, config
+from cmk.gui import config, watolib
 from cmk.utils.defines import weekday_ids
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_host_downtime,
@@ -21,116 +16,33 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
-from cmk.gui.userdb import load_users
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
 )
-from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.gui.plugins.openapi.fields import HostField, query_field, AttributesField
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
+from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_tag_config, load_aux_tags
 
-
-class InputAttribute(BaseSchema):
-    key = fields.String(required=True)
-    value = fields.String(required=True)
-
-
-class Hostname(fields.String):
-    """A field representing a hostname.
-
-    """
-    default_error_messages = {
-        'should_exist': 'Host missing: {host_name!r}',
-        'should_not_exist': 'Host {host_name!r} already exists.',
-        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
-    }
-
-    def __init__(
-        self,
-        example='example.com',
-        pattern=HOST_NAME_REGEXP,
-        required=True,
-        validate=None,
-        should_exist: bool = True,
-        **kwargs,
-    ):
-        self._should_exist = should_exist
-        super().__init__(
-            example=example,
-            pattern=pattern,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-
-        host = watolib.Host.host(value)
-        if self._should_exist and not host:
-            self.fail("should_exist", host_name=value)
-        elif not self._should_exist and host:
-            self.fail("should_not_exist", host_name=value)
-
-        try:
-            valuespec.Hostname().validate_value(value, self.name)
-        except MKUserError as e:
-            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
-
-
-QUERY = fields.Nested(
-    fields.ExprSchema,
-    description=("An query expression in nested dictionary form. If you want to "
-                 "use multiple expressions, nest them with the AND/OR operators."),
-    many=False,
-    example=json.dumps({
-        'op': 'not',
-        'expr': {
-            'op': '=',
-            'left': 'hosts.name',
-            'right': 'example.com'
-        }
-    }),
-    required=False,
-)
-
-EXISTING_HOST_NAME = Hostname(
+EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
     required=True,
     should_exist=True,
 )
 
-MONITORED_HOST = fields.String(
+MONITORED_HOST = fields.HostField(
     description="The hostname or IP address itself.",
     example='example.com',
-    pattern=HOST_NAME_REGEXP,
+    should_exist=True,
+    should_be_monitored=True,
     required=True,
 )
-
-
-class AttributesField(fields.Dict):
-    default_error_messages = {
-        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
-    }
-
-    def _validate(self, value):
-        # Special keys:
-        #  - site -> validate against config.allsites().keys()
-        #  - tag_* -> validate_host_tags
-        #  - * -> validate against host_attribute_registry.keys()
-        try:
-            validate_host_attributes(value, new=True)
-            if 'meta_data' in value:
-                self.fail("attribute_forbidden", attribute='meta_data', value=value)
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
-
 
 EXISTING_FOLDER = fields.FolderField(
     description=("The folder-id of the folder under which this folder shall be created. May be "
@@ -154,7 +66,7 @@ SERVICEGROUP_NAME = fields.String(
 
 
 class CreateClusterHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname of the cluster host.",
         required=True,
         should_exist=False,
@@ -183,7 +95,7 @@ class UpdateNodes(BaseSchema):
 
 
 class CreateHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname or IP address of the host to be created.",
         required=True,
         should_exist=False,
@@ -241,7 +153,7 @@ class UpdateHost(BaseSchema):
         fields.String(),
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        missing=[],
+        missing=list,
         required=False,
     )
 
@@ -261,7 +173,7 @@ class BulkUpdateHost(BaseSchema):
 
 
 class RenameHost(BaseSchema):
-    new_name = Hostname(
+    new_name = HostField(
         description="The new name of the existing host.",
         required=True,
         should_exist=False,
@@ -523,6 +435,13 @@ class UpdateFolder(BaseSchema):
         missing=dict,
         required=False,
     )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
+        required=False,
+    )
 
 
 class UpdateFolderEntry(UpdateFolder):
@@ -540,6 +459,13 @@ class UpdateFolderEntry(UpdateFolder):
                      "attributes will not be touched."),
         example={},
         missing=dict,
+        required=False,
+    )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
         required=False,
     )
 
@@ -770,10 +696,13 @@ class UpdateTimePeriod(BaseSchema):
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
-        example={
-            'start': '12:00',
-            'end': '14:00'
-        },
+        example=[{
+            'day': 'monday',
+            'time_ranges': [{
+                'start': '12:00',
+                'end': '14:00'
+            }],
+        }],
         description="The list of active time ranges which replaces the existing list of time ranges",
         required=False,
     )
@@ -852,12 +781,12 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
 
 
 class CreateHostQueryDowntime(CreateDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Hosts, required=True)
     duration = HOST_DURATION
 
 
 class CreateServiceQueryDowntime(CreateDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Services, required=True)
     duration = SERVICE_DURATION
 
 
@@ -913,7 +842,7 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = QUERY
+    query = query_field(tables.Downtimes, required=True)
 
 
 class DeleteDowntime(OneOfSchema):
@@ -1073,7 +1002,7 @@ class InputPassword(BaseSchema):
         description="The list of members to share the password with",
         required=False,
         attribute="shared_with",
-        missing=[],
+        missing=list,
     )
 
 
@@ -1317,7 +1246,7 @@ class CreateUser(BaseSchema):
             "auth_type": "password",
             "password": "password"
         },
-        missing=lambda: {},
+        missing=dict,
     )
     disable_login = fields.Bool(
         required=False,
@@ -1329,7 +1258,7 @@ class CreateUser(BaseSchema):
     contact_options = fields.Nested(UserContactOption,
                                     required=False,
                                     description="Contact settings for the user",
-                                    missing={
+                                    missing=lambda: {
                                         "email": "",
                                         "fallback_contact": False
                                     },
@@ -1355,12 +1284,13 @@ class CreateUser(BaseSchema):
             example="user",
         ),
         required=False,
-        missing=[],
+        missing=list,
         description="The list of assigned roles to the user",
         example=["user"],
     )
     authorized_sites = fields.List(
-        fields.String(description="The sites the user is authorized to handle",),
+        fields.SiteField(),
+        description="The sites the user is authorized to handle",
         example=['heute'],
         required=False,
     )
@@ -1369,7 +1299,7 @@ class CreateUser(BaseSchema):
                       required=True,
                       example="all"),
         required=False,
-        missing=[],
+        missing=list,
         description="Assign the user to one or multiple contact groups. If no contact group is "
         "specified then no monitoring contact will be created for the user."
         "",
@@ -1377,7 +1307,7 @@ class CreateUser(BaseSchema):
     disable_notifications = fields.Nested(
         DisabledNotifications,
         required=False,
-        missing={},
+        missing=dict,
         example={"disabled": False},
     )
     # default language is not setting a key in dict
@@ -1405,7 +1335,7 @@ class UpdateUser(BaseSchema):
             "auth_type": "password",
             "password": "password"
         },
-        missing=lambda: {},
+        missing=dict,
     )
     enforce_password_change = fields.Bool(
         required=False,
@@ -1447,7 +1377,8 @@ class UpdateUser(BaseSchema):
         example=["user"],
     )
     authorized_sites = fields.List(
-        fields.String(description="The sites the user is authorized to handle",),
+        fields.SiteField(),
+        description="The sites the user is authorized to handle",
         example=['heute'],
         required=False,
     )
@@ -1589,7 +1520,7 @@ class HostTag(BaseSchema):
         "The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
         example=["ip-v4, ip-v6"],
         required=False,
-        missing=[],
+        missing=list,
     )
 
 
@@ -1709,9 +1640,11 @@ class AcknowledgeHostProblemBase(BaseSchema):
 
 
 class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
-    host_name = fields.String(description="The name of the host",
-                              example="example.com",
-                              required=True)
+    host_name = fields.HostField(description="The name of the host.",
+                                 should_exist=True,
+                                 should_be_monitored=True,
+                                 example="example.com",
+                                 required=True)
 
 
 class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
@@ -1723,7 +1656,7 @@ class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
 
 
 class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
-    query = QUERY
+    query = query_field(tables.Hosts, required=True)
 
 
 class AcknowledgeHostRelatedProblem(OneOfSchema):
@@ -1773,6 +1706,11 @@ class AcknowledgeServiceProblemBase(BaseSchema):
 
 
 class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
+    host_name = fields.HostField(
+        should_exist=True,
+        should_be_monitored=True,
+        required=True,
+    )
     service_description = fields.String(
         description=
         "The acknowledgement process will be applied to all matching service descriptions",
@@ -1790,7 +1728,7 @@ class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
-    query = QUERY
+    query = query_field(tables.Services, required=True)
 
 
 class AcknowledgeServiceRelatedProblem(OneOfSchema):
@@ -1862,7 +1800,6 @@ class BulkDeleteDowntime(BaseSchema):
 
 
 class BulkDeleteHost(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         EXISTING_HOST_NAME,
         required=True,
@@ -1880,7 +1817,6 @@ class BulkDeleteFolder(BaseSchema):
 
 
 class BulkDeleteHostGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1893,7 +1829,6 @@ class BulkDeleteHostGroup(BaseSchema):
 
 
 class BulkDeleteServiceGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1906,7 +1841,6 @@ class BulkDeleteServiceGroup(BaseSchema):
 
 
 class BulkDeleteContactGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1926,10 +1860,17 @@ class ActivateChanges(BaseSchema):
         example=False,
     )
     sites = fields.List(
-        fields.String(),
+        fields.SiteField(),
         description=("On which sites the configuration shall be activated. An empty list "
                      "means all sites which have pending changes."),
         required=False,
-        missing=[],
+        missing=list,
         example=['production'],
+    )
+    force_foreign_changes = fields.Boolean(
+        description=param_description(watolib.activate_changes_start.__doc__,
+                                      'force_foreign_changes'),
+        required=False,
+        missing=False,
+        example=False,
     )

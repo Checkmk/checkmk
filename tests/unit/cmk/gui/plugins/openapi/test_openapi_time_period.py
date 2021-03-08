@@ -33,7 +33,7 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
                 }]
             }]
         }),
-        status=204,
+        status=200,
         content_type='application/json',
     )
 
@@ -77,3 +77,68 @@ def test_openapi_time_period(wsgi_app, with_automation_user, suppress_automation
         }],
         'exclude': []
     }
+
+
+def test_openapi_time_period_collection(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/time_period/collections/all",
+        params=json.dumps({
+            "name": "foo",
+            "alias": "foobar",
+            "active_time_ranges": [{
+                "day": "all",
+                "time_ranges": [{
+                    "start": "12:00",
+                    "end": "14:00"
+                }]
+            }],
+            "exceptions": [{
+                "date": "2020-01-01",
+                "time_ranges": [{
+                    "start": "14:00",
+                    "end": "18:00"
+                }]
+            }]
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    resp_col = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/time_period/collections/all',
+        status=200,
+    )
+    assert len(resp_col.json_body["value"]) == 2
+
+    _ = wsgi_app.call_method(
+        'delete',
+        base + "/objects/time_period/foo",
+        headers={'If-Match': resp.headers['Etag']},
+        status=204,
+        content_type='application/json',
+    )
+
+    resp_col = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/time_period/collections/all',
+        status=200,
+    )
+    assert len(resp_col.json_body["value"]) == 1
+
+
+def test_openapi_timeperiod_builtin(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+
+    _resp = wsgi_app.call_method('get', base + "/objects/time_period/24X7", status=200)
+
+    _ = wsgi_app.call_method('put', base + "/objects/time_period/24X7", status=405)

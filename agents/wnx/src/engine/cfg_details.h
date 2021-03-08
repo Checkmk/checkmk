@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <stack>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "cfg.h"
@@ -34,6 +35,10 @@ std::filesystem::path ExtractPathFromServiceName(
 std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
 
 enum class CleanMode { none, smart, all };
+
+// The flag is based on AW report - only on positive report true
+// TODO(sk): Update comment and build till 5.03.2021
+constexpr bool g_remove_dirs_on_clean = true;
 
 CleanMode GetCleanDataFolderMode();
 bool CleanDataFolder(CleanMode mode);
@@ -243,6 +248,11 @@ public:
     bool pushFolders(const std::filesystem::path& root,
                      const std::filesystem::path& data);
 
+    // TODO (sk): move to tests
+    /// \brief Used in tests only( to prevent the tree from changing )
+    bool pushFoldersNoIo(const std::filesystem::path& root,
+                         const std::filesystem::path& data);
+
     // TODO (sk): move to tests only( to prevent the tree from changing )
     /// \brief Used in tests only to prevent context
     bool popFolders();
@@ -395,6 +405,7 @@ public:
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& file);
+    bool loadDirect(std::string_view text);
 
     uint64_t uniqId() const noexcept { return g_uniq_id; }
 

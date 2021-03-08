@@ -438,7 +438,7 @@ TEST(AgentConfig, Aggregate) {
             // prepare and check data
             auto core_yaml = YAML::LoadFile(cfgs[0].u8string());
             auto core_plugin = core_yaml[groups::kPlugins];
-            ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 3);
+            ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 4);
             ASSERT_EQ(core_plugin[vars::kPluginsFolders].size(), 2);
 
             auto bakery_yaml = YAML::LoadFile(cfgs[1].u8string());
@@ -454,7 +454,7 @@ TEST(AgentConfig, Aggregate) {
 
             // CHECK bakery
             ASSERT_EQ(bakery_plugin[vars::kPluginsFolders].size(), 3);
-            ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 4);
+            ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 5);
             ASSERT_EQ(bakery_yaml["bakery"]["status"].as<std::string>(),
                       "loaded");
         }
@@ -484,7 +484,7 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsFolders].size(), 3);
-    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 4);
+    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 5);
 
     CreateTestFile(cfgs[2], "user:\n  status: 'loaded'\nglobal:\n  port: 111");
 
@@ -498,7 +498,7 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsFolders].size(), 3);
-    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 4);
+    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 5);
     EXPECT_TRUE(GetCfg().isBakeryLoaded());
     EXPECT_TRUE(GetCfg().isUserLoaded());
 }
@@ -1159,7 +1159,7 @@ TEST(AgentConfig, SectionLoader) {
     EXPECT_NO_THROW(tst::PrintNode(cfg["plugins"], "plugins"));
     EXPECT_TRUE(p.enabledInConfig());
     EXPECT_TRUE(p.existInConfig());
-    EXPECT_EQ(p.unitsCount(), 3);
+    EXPECT_EQ(p.unitsCount(), 4);
     EXPECT_EQ(p.foldersCount(), 2);
 
     Plugins p_local;

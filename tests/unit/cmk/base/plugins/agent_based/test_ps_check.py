@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pytest  # type: ignore[import]
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based import value_store
 from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
@@ -94,7 +94,7 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
     ]
 
 
-PS_DISCOVERY_WATO_RULES = [  # type: ignore[var-annotated]
+PS_DISCOVERY_WATO_RULES = [
     {
         "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
         "descr": "smss",

@@ -36,8 +36,10 @@ class ServiceProcessor;
 namespace cma {
 
 namespace security {
-void ProtectFiles(const std::filesystem::path& root);
-void ProtectAll(const std::filesystem::path& root);
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands);
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands);
 }  // namespace security
 
 namespace tools {
@@ -102,6 +104,12 @@ void GatherMatchingFilesAndDirs(
 void FilterPathByExtension(PathVector& paths,
                            const std::vector<std::string>& exts);
 void RemoveDuplicatedNames(PathVector& paths);
+
+/// \brief remove all forbidden files
+///
+/// Normally deletes only cmk-update-agent.exe
+void RemoveForbiddenNames(PathVector& paths);
+
 PathVector FilterPathVector(
     const PathVector& found_files,
     const std::vector<cma::cfg::Plugins::ExeUnit>& units, bool check_exists);

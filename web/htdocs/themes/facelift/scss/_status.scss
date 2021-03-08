@@ -43,70 +43,87 @@ table.data tr.data td.stale.hstate1 {
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
+tr.groupheader .state span {
+  padding: 2px 4px 0;
+  border-radius: $theme-border-radius;
+}
+
+tr.data,
+div.tile {
+  td.state,
+  td.hstate {
+    height: 100%;
+    padding: 0 1px;
+
+    span {
+      display: flex;
+      align-items: center;
+      height: calc(100% - 3px);
+      border-radius: 2px;
+    }
+  }
+}
+
+td.state span {
+  justify-content: center;
+}
+
+td.hstate span {
+  padding: 0 5px;
+}
+
 /* OK/UP */
-.state0,
-.state0 a,
-.state0 body.main .popup_menu span,
-body.main .popup_menu .state0 span,
-.hstate0,
-.hstate0 a,
-.hstate0 body.main .popup_menu span,
-body.main .popup_menu .hstate0 span {
-  color: $success !important;
+.bibox_box.state0,
+span.content.state0,
+b.state0,
+.state0 span,
+.hstate0 span {
+  &,
+  a {
+    color: $black !important;
+    background-color: $color-state-success-background !important;
+  }
 }
 
 .hstate {
   white-space: nowrap;
 }
 
-@mixin state-label-mixin {
-  padding: 4px 2px 2px;
-  border-radius: 2px;
-}
-
 /* WARN */
+.bibox_box.state1,
+span.content.state1,
+b.state1,
 .state1 span {
-  @include state-label-mixin;
-  color: $black !important;
-  background-color: $color-state-1-background !important;
-}
-
-.count.state1 {
   &,
   a {
-    color: $color-state-1-background !important;
+    color: $black !important;
+    background-color: $color-state-1-background !important;
   }
 }
 
 /* CRIT/DOWN */
+.bibox_box.state2,
+span.content.state2,
+b.state2,
 .state2 span,
 .hstate1 span {
-  @include state-label-mixin;
-  color: $white !important;
-  background-color: $color-state-2-background !important;
-}
-
-.count.state2,
-.count.hstate1 {
   &,
   a {
-    color: $color-state-2-background !important;
+    color: $white !important;
+    background-color: $color-state-2-background !important;
   }
 }
 
 /* UNKNOWN / UNREACH */
+.bibox_box.state3,
+span.content.state3,
+b.state3,
 .state3 span,
 .hstate2 span {
-  @include state-label-mixin;
-  color: $white !important;
-  background-color: $color-state-3-background !important;
-}
-
-.count.state3,
-.count.hstate2 {
   &,
   a {
-    color: $color-state-3-background !important;
+    color: $white !important;
+    background-color: $color-state-3-background !important;
   }
 }
 
@@ -116,9 +133,11 @@ body.main .popup_menu .hstate0 span {
 .stated,
 .hstated {
   span {
-    @include state-label-mixin;
-    color: $statep-font-color !important;
-    background-color: $color-state-4-background !important;
+    &,
+    a {
+      color: $statep-font-color !important;
+      background-color: $color-state-4-background !important;
+    }
   }
 }
 
@@ -126,9 +145,9 @@ body.main .popup_menu .hstate0 span {
 b.stmark {
   position: relative;
   top: -1px;
-  padding: 1px 3px;
+  padding: 1.5px 3px;
   margin-left: 2px;
-  font-size: 9px;
+  font-size: $font-size-small;
   border-radius: 4px;
 }
 
@@ -141,44 +160,16 @@ img.pluginurl {
   vertical-align: middle;
 }
 
-/* *some* problem */
-.states,
-.hstates {
-  color: $black;
-  background-image: url("images/someproblem.png");
-  background-position: center center;
-  background-repeat: repeat;
-
-  body.main & a,
-  table.data tr.data > & a {
-    &,
-    &:hover,
-    &:link,
-    &:link:hover {
-      color: $grey-7;
-    }
-  }
-}
-
-.states {
-  background-color: $color-nuance-6;
-  background-image: none;
-  transition: 0.15s ease-in-out;
-}
-
 /* Status of sites in sidebar and in WATO */
 .status_label {
   width: 56px;
   height: 16px;
   padding: 2px;
-  font-size: 9px;
+  font-size: $font-size-small;
   line-height: 12px;
-  color: rgb(255, 255, 255);
+  color: $white;
   text-align: center;
   cursor: default;
-  border-color: rgb(27, 51, 61) rgb(38, 76, 24) rgb(27, 51, 61) rgb(39, 65, 65);
-  border-style: solid;
-  border-width: 1px;
   border-radius: 8px;
   box-shadow: none;
   box-sizing: border-box;
@@ -194,8 +185,8 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: rgb(178, 178, 178);
-    background-color: rgb(120, 120, 120);
+    color: $footnote-link-color;
+    background-color: $inpage-highlight-color;
   }
 
   &.dead {
@@ -207,10 +198,8 @@ img.pluginurl {
   }
 
   &.online {
-    font-weight: 500;
     color: $hot-font-color !important;
     background-color: $color-state-success-background;
-    border-color: $color-state-success-border !important;
   }
 
   &.partial {
@@ -256,7 +245,6 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-size: $font-size-default;
     font-weight: $font-weight-bold;
     letter-spacing: 0;
     color: $color-perfometer-title;
@@ -400,15 +388,9 @@ table.data {
   .state3 * {
     color: $white;
   }
-
-  tr.data td.states {
-    color: $states-font-color;
-    background-color: $color-nuance-6;
-  }
 }
 
 td.badflag span {
-  @include state-label-mixin;
   font-weight: bold;
   background-color: rgb(255, 102, 68);
 }
@@ -422,7 +404,6 @@ td.icons {
   white-space: nowrap;
 
   img {
-    height: 20px;
     margin-right: 0;
   }
 }
@@ -506,19 +487,26 @@ table.timeline {
 }
 
 table.data.availability tr.even0 td {
+  &.state0,
+  &.state1,
+  &.state2,
+  &.state3 {
+    color: $black;
+  }
+
   &.state0 {
-    background-color: $lightened-state0-bg-color !important;
+    background-color: $lightened-state0-bg-color;
   }
 
   &.state1 {
-    background-color: $lightened-state1-bg-color !important;
+    background-color: $lightened-state1-bg-color;
   }
 
   &.state2 {
-    background-color: $lightened-state2-bg-color !important;
+    background-color: $lightened-state2-bg-color;
   }
 
   &.state3 {
-    background-color: $lightened-state3-bg-color !important;
+    background-color: $lightened-state3-bg-color;
   }
 }

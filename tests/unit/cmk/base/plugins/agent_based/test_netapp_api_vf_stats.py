@@ -37,7 +37,7 @@ SECTION_NETAPP_API_VF_STATS = {
     }
 }
 
-SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
+SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
     '7mode': {
         'num_processors': '2',
         'cpu_busy': '153993540928'

@@ -53,7 +53,8 @@ class ModeIcons(WatoMode):
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Icon"),
+                                          breadcrumb,
                                           form_name="upload_form",
                                           button_name="_do_upload",
                                           save_title=_("Upload"))

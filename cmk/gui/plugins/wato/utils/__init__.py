@@ -1397,7 +1397,7 @@ def configure_attributes(new,
     hide_attributes = []
     show_more_mode: bool = False
 
-    show_more_mode = bool(config.user.show_mode)
+    show_more_mode = config.user.show_mode != "default_show_less"
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
@@ -1576,7 +1576,8 @@ def configure_attributes(new,
             forms.section(_u(attr.title()),
                           checkbox=checkbox_code,
                           section_id="attr_" + attrname,
-                          is_show_more=attr.is_show_more())
+                          is_show_more=attr.is_show_more(),
+                          is_changed=active)
             html.help(attr.help())
 
             if len(values) == 1:
@@ -1639,7 +1640,7 @@ def configure_attributes(new,
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write(content)
+                    html.write_text(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(content))

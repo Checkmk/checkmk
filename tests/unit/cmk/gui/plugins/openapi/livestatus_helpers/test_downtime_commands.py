@@ -24,7 +24,7 @@ def test_host_downtime(mock_livestatus, register_builtin_html, dates):
 
     with mock_livestatus(expect_status_query=True) as live:
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;13;0;120;;Going down',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
         )
         downtimes.schedule_host_downtime(
@@ -43,17 +43,17 @@ def test_host_downtime_with_services(mock_livestatus, register_builtin_html, dat
 
     with mock_livestatus(expect_status_query=True) as live:
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;13;0;120;;Going down',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
         )
         live.expect_query(
             'GET services\nColumns: host_name description\nFilter: host_name = example.com',)
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;13;0;120;;Going down',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;13;0;120;;Going down',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;12;0;120;;Going down',
             match_type='ellipsis',
         )
         downtimes.schedule_host_downtime(
@@ -78,11 +78,11 @@ def test_hostgroup_host_downtime(mock_livestatus, register_builtin_html, dates):
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
 
@@ -107,11 +107,11 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, register_builtin
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query([
@@ -122,15 +122,15 @@ def test_hostgroup_host_downtime_with_services(mock_livestatus, register_builtin
             'Or: 2',
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         downtimes.schedule_hostgroup_host_downtime(
@@ -155,15 +155,15 @@ def test_servicegroup_service_downtime(mock_livestatus, register_builtin_html, d
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         downtimes.schedule_servicegroup_service_downtime(
@@ -187,23 +187,23 @@ def test_servicegroup_service_downtime_and_hosts(mock_livestatus, register_built
             "Filter: name = example",
         ])
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         live.expect_query(
-            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;17;0;120;;Boom',
+            'COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;0;86400;16;0;120;;Boom',
             match_type='ellipsis',
         )
         downtimes.schedule_servicegroup_service_downtime(

@@ -25,13 +25,16 @@ import cmk.utils.paths
 import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+from functools import lru_cache
 
 
+@lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
     return ensure_str(version_link.resolve().name)
 
 
+@lru_cache
 def omd_site() -> str:
     try:
         return os.environ["OMD_SITE"]
@@ -41,6 +44,7 @@ def omd_site() -> str:
               "only execute this in an OMD site."))
 
 
+@lru_cache
 def edition_short() -> str:
     """Can currently either return \"cre\" or \"cee\"."""
     parts = omd_version().split(".")
@@ -130,12 +134,9 @@ def get_general_version_infos() -> Dict[str, Any]:
 
 
 def _get_os_info() -> str:
-    if os.environ.get("OMD_ROOT"):
-        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
-        if os.path.exists(disto_info):
-            return open(disto_info).readline().split("=", 1)[1].strip()
     if os.path.exists("/etc/redhat-release"):
         return open("/etc/redhat-release").readline().strip()
+
     if os.path.exists("/etc/SuSE-release"):
         return open("/etc/SuSE-release").readline().strip()
 
@@ -150,8 +151,15 @@ def _get_os_info() -> str:
 
     if "PRETTY_NAME" in info:
         return info["PRETTY_NAME"]
+
     if info:
         return "%s" % info
+
+    if os.environ.get("OMD_ROOT"):
+        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        if os.path.exists(disto_info):
+            return open(disto_info).readline().split("=", 1)[1].strip()
+
     return "UNKNOWN"
 
 

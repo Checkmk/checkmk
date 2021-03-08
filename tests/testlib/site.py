@@ -554,17 +554,17 @@ class Site:
     def start(self):
         if not self.is_running():
             assert self.omd("start") == 0
-            print("= BEGIN PROCESSES AFTER START ==============================")
-            self.execute(["ps", "aux"]).wait()
-            print("= END PROCESSES AFTER START ==============================")
+            #print("= BEGIN PROCESSES AFTER START ==============================")
+            #self.execute(["ps", "aux"]).wait()
+            #print("= END PROCESSES AFTER START ==============================")
             i = 0
             while not self.is_running():
                 i += 1
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
-                    print("= BEGIN PROCESSES FAIL ==============================")
-                    self.execute(["ps", "aux"]).wait()
-                    print("= END PROCESSES FAIL ==============================")
+                    #print("= BEGIN PROCESSES FAIL ==============================")
+                    #self.execute(["ps", "aux"]).wait()
+                    #print("= END PROCESSES FAIL ==============================")
                     raise Exception("Could not start site %s" % self.id)
                 logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
@@ -671,15 +671,12 @@ class Site:
 
         web = CMKWebSession(self)
         web.login()
-        web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
         logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
         #logger.debug("Debug: %r" % response)
-        assert "<title>Distributed Monitoring</title>" in response
-        assert "replication_status_%s" % web.site.id in response, \
-                "WATO does not seem to be initialized: %r" % response
+        assert "site=%s" % web.site.id in response
 
         logger.debug("Waiting for WATO files to be created...")
         wait_time = 20.0
@@ -691,6 +688,8 @@ class Site:
         assert not missing_files, \
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
+
+        web.enforce_non_localized_gui()
 
         self._add_wato_test_config(web)
 

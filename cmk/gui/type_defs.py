@@ -19,6 +19,7 @@ from typing import (
     TypedDict,
     Union,
 )
+
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
@@ -162,6 +163,7 @@ class TopicMenuTopic(NamedTuple):
     name: "str"
     title: "str"
     items: List[TopicMenuItem]
+    max_entries: int = 10
     icon: Optional[Icon] = None
     hide: bool = False
 
@@ -187,3 +189,15 @@ class SearchResult:
 
 
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
+
+# Metric & graph specific
+GraphIdentifier = Tuple[str, Any]
+RenderingExpression = Tuple[Any, ...]
+
+
+class RenderableRecipe(NamedTuple):
+    title: str
+    expression: RenderingExpression
+    color: str
+    line_type: str
+    visible: bool

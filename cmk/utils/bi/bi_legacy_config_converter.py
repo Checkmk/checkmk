@@ -18,6 +18,8 @@
 
 from typing import Dict, Union, List, Any, Tuple
 from pathlib import Path
+import logging
+import re
 from cmk.utils.rulesets.ruleset_matcher import (RulesetToDictTransformer, get_tag_to_group_map)
 import cmk.gui.config as config  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib as watolib  # pylint: disable=cmk-module-layer-violation
@@ -25,18 +27,35 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=cmk-module-layer-violation,no-name-in-module
-from cmk.utils.log import logger
 from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.exceptions import MKGeneralException
 
 BIAggrOptions = Dict[str, Any]
 BIAggrGroups = List[str]
 BIAggrNode = Tuple
 
 
+class ErrorCounter:
+    def __init__(self):
+        self._count = 0
+
+    def increase_error_count(self):
+        self._count += 1
+
+    def check(self):
+        if self._count > 0:
+            raise MKGeneralException(f"Detected {self._count} errors in BI rules")
+
+
 class BIRuleSchemaConverter:
-    def old_to_new_schema(self, old_schema):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+        self._logger = logger
+        self._error_counter = error_counter
+
+    def old_to_new_schema(self, pack_id, old_schema):
+        ID = old_schema["id"]
         new_schema = {}
-        new_schema["id"] = old_schema["id"]
+        new_schema["id"] = ID
         new_schema["params"] = {"arguments": old_schema.get("params", [])}
         new_schema["computation_options"] = {"disabled": old_schema.get("disabled", False)}
         new_schema["properties"] = {
@@ -54,8 +73,10 @@ class BIRuleSchemaConverter:
             old_schema.get("layout_style"))
         new_schema["aggregation_function"] = self.convert_aggr_func_old_to_new(
             old_schema["aggregation"])
-
-        new_schema["nodes"] = [self.convert_node_old_to_new(x) for x in old_schema["nodes"]]
+        new_schema["nodes"] = [
+            self.convert_node_old_to_new(pack_id, ID, nr, node)
+            for nr, node in enumerate(old_schema["nodes"], 1)
+        ]
         return new_schema
 
     def convert_node_visualization_old_to_new(self, node_vis_old):
@@ -89,14 +110,21 @@ class BIRuleSchemaConverter:
                 "value": int(str(aggr_func_old[1][0]).rstrip("%"))
             }
             aggr_func_new["levels_warn"] = {
-                "levels_warn": {
-                    "type": "percentage" if str(aggr_func_old[1][1]).endswith("%") else "count",
-                    "value": int(str(aggr_func_old[1][1]).rstrip("%"))
-                }
+                "type": "percentage" if str(aggr_func_old[1][1]).endswith("%") else "count",
+                "value": int(str(aggr_func_old[1][1]).rstrip("%"))
             }
         return aggr_func_new
 
-    def convert_node_old_to_new(self, node):
+    def _validate_regex(self, regex, diagnostic_msg):
+        try:
+            re.compile(regex)
+        except re.error as e:
+            self._error_counter.increase_error_count()
+            self._logger.error(
+                f"ERROR: Invalid regular expression in BI rule detected: {diagnostic_msg}, regex:{regex}, Exception: {e}"
+            )
+
+    def convert_node_old_to_new(self, pack_id: str, ID: str, nr: int, node):
         if node[0] == "call":
             return {
                 "search": {
@@ -111,36 +139,44 @@ class BIRuleSchemaConverter:
                 }
             }
         if node[0] == "service":
+            host_regex = node[1][0]
+            self._validate_regex(host_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
+            service_regex = node[1][1]
+            self._validate_regex(service_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
                 "search": {
                     "type": "empty"
                 },
                 "action": {
                     "type": "state_of_service",
-                    "host_regex": node[1][0],
-                    "service_regex": node[1][1],
+                    "host_regex": host_regex,
+                    "service_regex": service_regex,
                 }
             }
 
         if node[0] == "host":
+            host_regex = node[1][0]
+            self._validate_regex(host_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
                 "search": {
                     "type": "empty"
                 },
                 "action": {
                     "type": "state_of_host",
-                    "host_regex": node[1][0],
+                    "host_regex": host_regex,
                 }
             }
 
         if node[0] == "remaining":
+            host_regex = node[1][0]
+            self._validate_regex(host_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
             return {
                 "search": {
                     "type": "empty"
                 },
                 "action": {
                     "type": "state_of_remaining_services",
-                    "host_regex": node[1][0],
+                    "host_regex": host_regex,
                 }
             }
 
@@ -167,7 +203,8 @@ class BIRuleSchemaConverter:
                     "refer_to": node_config[0],
                     "conditions": conditions
                 },
-                "action": self.convert_node_old_to_new(node_config[3])["action"]
+                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])
+                          ["action"]
             }
 
         if node[0] == "foreach_service":
@@ -186,7 +223,9 @@ class BIRuleSchemaConverter:
                     "type": "host_alias_regex",
                     "pattern": node_config[1][1]
                 }
-            conditions["service_regex"] = node_config[2]
+            service_regex = node_config[2]
+            self._validate_regex(service_regex, f"pack: {pack_id}, id: {ID}, child node nr:{nr}")
+            conditions["service_regex"] = service_regex
             conditions["service_labels"] = {}
 
             return {
@@ -194,14 +233,20 @@ class BIRuleSchemaConverter:
                     "type": "service_search",
                     "conditions": conditions
                 },
-                "action": self.convert_node_old_to_new(node_config[3])["action"]
+                "action": self.convert_node_old_to_new(pack_id, ID + ".action", nr, node_config[3])
+                          ["action"]
             }
 
 
 class BIAggregationSchemaConverter:
-    def old_to_new_schema(self, old_schema):
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+        self._logger = logger
+        self._error_counter = error_counter
+
+    def old_to_new_schema(self, pack_id: str, old_schema):
         new_schema = {}
-        new_schema["id"] = old_schema["ID"]
+        ID = old_schema["ID"]
+        new_schema["id"] = ID
         new_schema["computation_options"] = {
             "disabled": old_schema.get("disabled", False),
             "escalate_downtimes_as_warn": old_schema.get("downtime_aggr_warn", False),
@@ -213,9 +258,9 @@ class BIAggregationSchemaConverter:
         new_schema["aggregation_visualization"] = node_vis
         if "customer" in old_schema:
             new_schema["customer"] = old_schema["customer"]
-
-        rule_converter = BIRuleSchemaConverter()
-        new_schema["node"] = rule_converter.convert_node_old_to_new(old_schema["node"])
+        rule_converter = BIRuleSchemaConverter(self._logger, self._error_counter)
+        new_schema["node"] = rule_converter.convert_node_old_to_new(pack_id, ID, 1,
+                                                                    old_schema["node"])
         new_schema["groups"] = self.convert_old_groups(old_schema["groups"])
 
         return new_schema
@@ -235,27 +280,33 @@ class BIAggregationSchemaConverter:
 
 
 class BIPackSchemaConverter:
+    def __init__(self, logger: logging.Logger, error_counter: ErrorCounter):
+        self._logger = logger
+        self._error_counter = error_counter
+
     def old_to_new_schema(self, old_schema):
         new_schema = {}
-        new_schema["id"] = old_schema["id"]
+        pack_id = old_schema["id"]
+        new_schema["id"] = pack_id
         new_schema["title"] = old_schema["title"]
         new_schema["public"] = old_schema["public"]
         new_schema["contact_groups"] = old_schema["contact_groups"]
 
-        rule_converter = BIRuleSchemaConverter()
+        rule_converter = BIRuleSchemaConverter(self._logger, self._error_counter)
         new_schema["rules"] = [
-            rule_converter.old_to_new_schema(x) for x in old_schema["rules"].values()
+            rule_converter.old_to_new_schema(pack_id, x) for x in old_schema["rules"].values()
         ]
 
-        aggr_converter = BIAggregationSchemaConverter()
+        aggr_converter = BIAggregationSchemaConverter(self._logger, self._error_counter)
         new_schema["aggregations"] = [
-            aggr_converter.old_to_new_schema(x) for x in old_schema["aggregations"]
+            aggr_converter.old_to_new_schema(pack_id, x) for x in old_schema["aggregations"]
         ]
         return new_schema
 
 
 class BIManagement:
-    def __init__(self):
+    def __init__(self, logger: logging.Logger):
+        self._logger = logger
         self._load_config()
 
     # .--------------------------------------------------------------------.
@@ -334,7 +385,7 @@ class BIManagement:
 
                 self._add_missing_aggr_ids()
         except Exception as e:
-            logger.error("Unable to load legacy bi.mk configuration %s", str(e))
+            self._logger.error("Unable to load legacy bi.mk configuration %s", str(e))
             raise
 
     def _add_missing_aggr_ids(self):
@@ -573,26 +624,36 @@ class BIManagement:
 
 
 class BILegacyConfigConverter(BIManagement):
+    def __init__(self, logger: logging.Logger):
+        super().__init__(logger)
+        self._logger = logger
+        self._error_counter = ErrorCounter()
+
     def get_schema_for_packs(self):
-        pack_converter = BIPackSchemaConverter()
+        pack_converter = BIPackSchemaConverter(self._logger, self._error_counter)
         packs = []
         for x in self._packs.values():
             packs.append(pack_converter.old_to_new_schema(x))
+        self._error_counter.check()
         return packs
 
 
 class BILegacyPacksConverter(BIAggregationPacks):
+    def __init__(self, logger: logging.Logger, bi_configuration_file: str):
+        super().__init__(bi_configuration_file)
+        self._logger = logger
+
     def convert_config(self):
         old_bi_config = Path(watolib.multisite_dir(), "bi.mk")
         if not old_bi_config.exists():
-            # No legacy bi.mk available
+            self._logger.info("Skipping conversion of bi.mk (already done)")
             return
 
         try:
             if Path(self._bi_configuration_file).exists():
                 # Already converted bi.mk -> bi_config.bi
                 return
-            packs_data = BILegacyConfigConverter().get_schema_for_packs()
+            packs_data = BILegacyConfigConverter(self._logger).get_schema_for_packs()
             self._instantiate_packs(packs_data)
             self.save_config()
         finally:

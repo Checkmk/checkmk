@@ -60,9 +60,21 @@ just to signal that real build script was not called -->
     <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
     
      <!-- Administrative rights is mandatory -->
-    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />        
-    
-    <!-- Other links
+    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+
+      <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
+      <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
+          <![CDATA[Installed OR  (VersionNT >= 600)]]>
+      </Condition>
+
+      <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->
+      <!-- This string may be patched by WATO, check cmk/utils/msi_patch.py -->
+      <!-- See: https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values -->
+      <Condition Message="Agent update failed: OS is too old. Please, check the agent rule &quot;Python environment&quot; and set it to &quot;Deploy legacy environment&quot;">
+          <![CDATA[Installed OR  ( VersionNT >= 600 )]]>
+      </Condition>
+
+      <!-- Other links
     <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
     <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
      -->

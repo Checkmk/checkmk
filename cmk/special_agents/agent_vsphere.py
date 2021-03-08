@@ -1171,9 +1171,13 @@ class ESXConnection:
 
         server_cookie = response.headers.get("set-cookie")
 
-        if response.status_code != 200 or not server_cookie:
+        if response.status_code != 200:
+
             raise SystemExit("Cannot login to vSphere Server (reason: [%s] %s). Please check the "
                              "credentials." % (response.status_code, response.reason))
+
+        if not server_cookie:
+            return
 
         with self._server_cookie_path.open("w", encoding="utf-8") as f_handle:
             f_handle.write(server_cookie)

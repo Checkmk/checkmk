@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union
+from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple
 
 from livestatus import (
     MultiSiteConnection,
@@ -58,9 +58,26 @@ def states(user: Optional[LoggedInUser] = None,
     return g.site_status
 
 
+@contextmanager
+def cleanup_connections() -> Iterator[None]:
+    """Context-manager to cleanup livestatus connections"""
+    try:
+        yield
+    finally:
+        try:
+            disconnect()
+        except Exception:
+            logger.exception("Error during livestatus cleanup")
+            raise
+
+
+# TODO: This is not really shutting down or closing connections. It only removes references to
+# sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
     logger.debug("Disconnecing site connections")
+    if "live" in g:
+        g.live.disconnect()
     g.pop('live', None)
     g.pop('site_status', None)
 
@@ -161,10 +178,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
             "GET status\n"
             "Cache: reload\n"
-            "Columns: livestatus_version program_version program_start num_hosts num_services"):
+            "Columns: livestatus_version program_version program_start num_hosts num_services "
+            "core_pid"):
 
         try:
-            site_id, v1, v2, ps, num_hosts, num_services = response
+            site_id, v1, v2, ps, num_hosts, num_services, pid = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -184,6 +202,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             "num_hosts": num_hosts,
             "num_services": num_services,
             "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+            "core_pid": pid,
         })
     g.live.set_prepend_site(False)
 
@@ -365,3 +384,37 @@ def set_limit(limit: Optional[int]) -> Iterator[None]:
         yield
     finally:
         live().set_limit()  # removes limit
+
+
+GroupedSiteState = NamedTuple("GroupedSiteState", [
+    ("readable", str),
+    ("site_ids", List[SiteId]),
+])
+
+
+def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
+    grouped_states = {
+        'ok': GroupedSiteState(
+            readable=_("OK"),
+            site_ids=[],
+        ),
+        'disabled': GroupedSiteState(
+            readable=_("disabled"),
+            site_ids=[],
+        ),
+        'error': GroupedSiteState(
+            readable=_("disconnected"),
+            site_ids=[],
+        ),
+    }
+    for site_id, info in states().items():
+        grouped_states[_map_site_state(info["state"])].site_ids.append(site_id)
+    return grouped_states
+
+
+def _map_site_state(state: str) -> str:
+    if state in ('online', 'waiting'):
+        return 'ok'
+    if state == 'disabled':
+        return 'disabled'
+    return 'error'

@@ -6,11 +6,7 @@
 import pytest  # type: ignore[import]
 
 from cmk.utils.check_utils import section_name_of
-from cmk.utils.type_defs import SectionName, CheckPluginName
-
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_api as check_api
-import cmk.base.config as config
+from cmk.utils.type_defs import SectionName
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import _create_snmp_trees
 from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
@@ -26,6 +22,7 @@ from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-d
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
     _has_table_2, _is_cisco, _is_cisco_nexus,
 )
+from cmk.base.check_utils import HOST_ONLY, MGMT_ONLY
 
 pytestmark = pytest.mark.checks
 
@@ -35,7 +32,7 @@ def test_management_board_interface_prefix(fix_plugin_legacy):
         ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
         ("Description must start with 'Management Interface: '",
          lambda k, c: c["service_description"].startswith("Management Interface: ")),
-        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == check_api.MGMT_ONLY),
+        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == MGMT_ONLY),
     )
 
     management_checks = [(key, check)
@@ -58,7 +55,7 @@ def test_management_board_interface_prefix(fix_plugin_legacy):
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
         requirement = "The corresponding non-mgmt check must have HOST_ONLY set"
-        assert host_check["management_board"] == check_api.HOST_ONLY, (
+        assert host_check["management_board"] == HOST_ONLY, (
             "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
 
@@ -500,7 +497,6 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'fortigate_memory_base_default_levels',
         'fortigate_memory_default_levels',
         'fortigate_node_cpu_default_levels',
-        'fortigate_node_memory_default_levels',
         'fortigate_node_sessions_default_levels',
         'fortigate_sessions_base_default_levels',
         'fortigate_sessions_default_levels',
@@ -807,12 +803,10 @@ def test_all_check_variables_present(fix_plugin_legacy):
         'postfix_mailq_default_levels',
         'postgres_bloat_default_levels',
         'postgres_connections_default_levels',
-        'postgres_stats_default_levels',
         'printer_alerts_group_map',
         'printer_alerts_text_map',
         'printer_code_map',
         'printer_input_default_levels',
-        'printer_io_states',
         'printer_io_units',
         'printer_output_default_levels',
         'printer_supply_default_levels',
@@ -1435,8 +1429,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'couchbase_nodes_stats.mem',
         'couchbase_nodes_uptime',
         'cpsecure_sessions',
-        'cpu.loads',
-        'cpu.threads',
         'cups_queues',
         'datapower_cpu',
         'datapower_fan',
@@ -1774,7 +1766,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'fortigate_memory_base',
         'fortigate_node',
         'fortigate_node.cpu',
-        'fortigate_node.memory',
         'fortigate_node.sessions',
         'fortigate_sensors',
         'fortigate_sessions',
@@ -2402,7 +2393,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'postgres_sessions',
         'postgres_stat_database',
         'postgres_stat_database.size',
-        'postgres_stats',
         'postgres_version',
         'printer_alerts',
         'printer_input',
@@ -2573,7 +2563,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'splunk_system_msg',
         'sshd_config',
         'statgrab_cpu',
-        'statgrab_disk',
         'statgrab_load',
         'steelhead_connections',
         'steelhead_peers',
@@ -2781,8 +2770,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'zfsget',
         'zorp_connections',
         'zpool',
-        'zpool_status',
-        'zypper',
     }
     current_legacy_checks = set(fix_plugin_legacy.check_info)
 

@@ -8,7 +8,7 @@ import abc
 import os
 import pprint
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from six import ensure_str
 
@@ -19,6 +19,7 @@ from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.utils.html import HTML
 
 
 def wato_fileheader() -> str:
@@ -248,6 +249,9 @@ class ConfigVariable:
     def in_global_settings(self) -> bool:
         """Whether or not to show this option on the global settings page"""
         return True
+
+    def hint(self) -> Union[str, HTML]:
+        return ""
 
 
 class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariable]]):

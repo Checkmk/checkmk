@@ -46,10 +46,6 @@ div.dashlet {
     /* Dashlets with "background" set to True */
     &.background {
       background-color: $dashlet-inner-bg-color;
-
-      &:first-child {
-        border-radius: $dashlet-title-border-radius;
-      }
     }
 
     > div[id*="dashlet_graph"] img[id*="dashlet_img"] {
@@ -82,16 +78,12 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $font-size-default;
     font-weight: 500;
     letter-spacing: 2px;
     color: $font-color;
     text-align: center;
     white-space: nowrap;
     background: $dashlet-body-bg-color;
-    border: 1px solid $color-table-border;
-    border-bottom: none;
-    border-radius: $dashlet-title-border-radius;
 
     &.highlighted {
       background: $headline-color;
@@ -102,6 +94,7 @@ div.dashlet {
     }
   }
 
+  g.title a text,
   div.title a {
     color: $font-color;
     text-decoration: none;
@@ -147,7 +140,6 @@ div.dashlet {
 
       th,
       td {
-        font-size: 11px;
         font-weight: normal;
       }
     }
@@ -185,6 +177,13 @@ div.dashlet {
       }
     }
   }
+
+  div.graph > div.v_axis_label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: rotate(-90deg) translateX(50%);
+  }
 }
 
 div.dashlet > div.title span {
@@ -196,7 +195,7 @@ div.dashlet > div.title span {
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
 table.dashlet_overview h2 {
   margin: 8px 0;
-  font-size: 13px;
+  font-size: $font-size-large;
 }
 
 div.dashlet_inner div.stats table.hoststats a,
@@ -233,11 +232,6 @@ body.main.dashlet {
   table.data.table {
     padding: 0 8px;
 
-    th:nth-child(1) {
-      padding-bottom: 2px;
-      padding-left: 1px;
-    }
-
     tr.data {
       transition: 0.15s ease-in-out;
     }
@@ -248,11 +242,6 @@ body.main.dashlet {
     > td {
       padding-top: 2px;
       padding-bottom: 2px;
-      border-bottom: none;
-
-      &.state {
-        border-top: none;
-      }
     }
   }
 
@@ -265,8 +254,9 @@ body.main.dashlet {
   }
 
   &.view {
-    padding: 4px 0 0 8px;
+    padding: $h3-margin-bottom 0 0; // add padding-top for consistency with other tables
     overflow: hidden;
+    background-color: $dashlet-inner-bg-color;
 
     div#dashlet_content_wrapper[data-simplebar="init"] {
       height: 100%;
@@ -285,14 +275,11 @@ body.main.dashlet {
 }
 
 div[id^="dashlet"] div.dashlet_inner > div {
-  border: 1px solid $color-table-border;
-  border-radius: $dashlet-title-border-radius;
   box-sizing: border-box;
   transition: 0.15s ease-in-out;
 }
 
 div[id^="dashlet"] div.title + div.dashlet_inner > div {
-  border-top: none;
   border-radius: 0;
 }
 
@@ -543,12 +530,12 @@ div#dashboard.grid {
 
   &.max {
     color: #f00;
-    background-color: #10181d;
+    background-color: $dashlet-editor-free;
   }
 
   &.grow {
     color: $white;
-    background-color: #10181d;
+    background-color: $dashlet-editor-free;
   }
 
   &.abs {
@@ -723,41 +710,60 @@ div#dashboard.grid {
   color: $primary-font-color;
 }
 
-div.dashlet g {
-  &.state.svcstate {
-    &.state0 rect {
-      stroke: $color-state-success-background;
-    }
-
-    &.state1 rect {
-      stroke: $color-state-1-background;
-    }
-
-    &.state2 rect {
-      stroke: $color-state-2-background;
-    }
-
-    &.state3 rect {
-      stroke: $color-state-3-background;
+svg {
+  .title,
+  .single_value,
+  .state_component {
+    fill: $primary-font-color;
+    text {
+      // because there is conflict with a general: svg text
+      stroke: none;
     }
   }
+  .status_background {
+    opacity: 0.3;
+    fill: $dashlet-inner-bg-color;
+  }
 
-  &.state.svcstate {
-    &.state0 text {
-      fill: $color-state-success-background;
-    }
+  .line {
+    fill: none !important;
+  }
 
-    &.state1 text {
-      fill: $color-state-1-background;
-    }
+  .area {
+    opacity: 0.3;
+  }
 
-    &.state2 text {
-      fill: $color-state-2-background;
-    }
+  .svcstate {
+    // Default UX timeseries blue #008EFF, No variable yet, thus equal on themes
+    fill: rgb(0, 142, 255);
+    stroke: rgb(0, 142, 255);
+  }
 
-    &.state3 text {
-      fill: $color-state-3-background;
-    }
+  .state0 {
+    fill: $success;
+    stroke: $success;
+  }
+
+  .state1 {
+    fill: $color-state-1-background;
+    stroke: $color-state-1-background;
+  }
+
+  .state2 {
+    fill: $color-state-2-background;
+    stroke: $color-state-2-background;
+  }
+
+  .state3 {
+    fill: $color-state-3-background;
+    stroke: $color-state-3-background;
+  }
+  // gauge
+  .gauge_span {
+    // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
+    // Gives enough contrast on both themes against the color of the gauge level
+    // which is $primary-font-color
+    fill: $darkgrey;
   }
 }
 
@@ -773,152 +779,6 @@ svg.renderer {
   }
 }
 
-div.dashlet.single_metric {
-  /* When no dashlet title (div.title) is rendered, div.dashlet_inner is the
-     first child of div.dashlet */
-  div.dashlet_inner:first-child {
-    &:not(.background) div.metric {
-      border: none;
-    }
-
-    div.metric {
-      padding: 4px;
-    }
-  }
-
-  div.single_metric {
-    a.single_value {
-      width: 100%;
-
-      text {
-        &.state0,
-        &.state0 > a,
-        &.state0 > a:link {
-          fill: $black;
-        }
-
-        &.state-fill-font,
-        &.no-state-color {
-          &,
-          > a {
-            fill: $font-color !important;
-          }
-        }
-
-        &.state-fill-font {
-          &.state0,
-          &.state0 > a,
-          &.state0 > a:link {
-            fill: $color-state-success-background !important;
-          }
-
-          &.state1,
-          &.state1 > a,
-          &.state1 > a:link {
-            fill: $color-state-1-background !important;
-          }
-
-          &.state2,
-          &.state2 > a,
-          &.state2 > a:link {
-            fill: $color-state-2-background !important;
-          }
-
-          &.state3,
-          &.state3 > a,
-          &.state3 > a:link {
-            fill: $color-state-3-background !important;
-          }
-        }
-      }
-    }
-  }
-
-  div.dashlet_inner div.metric {
-    height: inherit;
-    padding: 0 4px 4px;
-
-    table.metric_content {
-      width: 100%;
-      height: 100%;
-      margin: 0 auto;
-      table-layout: fixed;
-
-      td {
-        padding: 0;
-        text-align: center;
-        border-radius: 16px;
-
-        &.metric_value {
-          position: relative;
-          height: 100%;
-          margin: 0 auto;
-          text-align: center;
-          border-radius: 16px;
-
-          a {
-            text-decoration: none;
-            white-space: nowrap;
-          }
-
-          &.state0,
-          &.state0 > a,
-          &.state0 > a:link {
-            color: $black;
-          }
-
-          &.state-color-font,
-          &.no-state-color {
-            &,
-            > a {
-              color: $font-color !important;
-              background-color: transparent !important;
-            }
-          }
-
-          &.state-color-font {
-            &.state0,
-            &.state0 > a,
-            &.state0 > a:link {
-              color: $color-state-success-background !important;
-            }
-
-            &.state1,
-            &.state1 > a,
-            &.state1 > a:link {
-              color: $color-state-1-background !important;
-            }
-
-            &.state2,
-            &.state2 > a,
-            &.state2 > a:link {
-              color: $color-state-2-background !important;
-            }
-
-            &.state3,
-            &.state3 > a,
-            &.state3 > a:link {
-              color: $color-state-3-background !important;
-            }
-          }
-        }
-      }
-
-      div.no_metric_match {
-        margin: 8px 0;
-      }
-
-      a {
-        text-decoration: none;
-
-        &:hover {
-          text-decoration: underline;
-        }
-      }
-    }
-  }
-}
-
 div.dashlet.nodata {
   > div.dashlet_inner div.msg {
     padding: 10px;
@@ -926,16 +786,19 @@ div.dashlet.nodata {
 }
 
 div.site_overview,
-div.alert_statistics {
+div.alert_statistics,
+div.hoststats,
+div.servicestats {
   g.element_box:hover {
-    opacity: 0.8;
+    path + path {
+      fill-opacity: 0.96;
+    }
   }
 
   div.tooltip {
     h3 {
       margin-top: 2px;
       margin-bottom: 2px;
-      font-size: 1.1em;
     }
 
     td.color {
@@ -965,37 +828,75 @@ div.alert_statistics {
     td.count {
       padding-left: 4px;
       text-align: right;
+      vertical-align: top;
     }
   }
 
-  path.hexagon_0.site_element {
+  path.hexagon.hexagon_0 {
     stroke: #404a55;
   }
 
-  path.site_element {
-    &.critical {
-      fill: #f00;
+  path.hexagon {
+    &.critical,
+    &.down {
+      fill: $hexagon-critical-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-critical-color;
     }
 
-    &.unknown {
-      fill: #f80;
+    &.unknown,
+    &.unreachable {
+      fill: $hexagon-unknown-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-unknown-color;
     }
 
     &.warning {
-      fill: #ff0;
+      fill: $hexagon-warning-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-warning-color;
     }
 
     &.downtime {
-      fill: #0af;
+      fill: $hexagon-downtime-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-downtime-color;
+    }
+
+    &.host_down {
+      fill: $hexagon-host-down-color;
+      fill-opacity: 0.5;
+      stroke: $hexagon-host-down-color;
     }
 
     &.ok {
-      fill: #262f38;
+      fill: $hexagon-ok-color;
+      fill-opacity: $hexagon-ok-fill-opacity;
+      stroke: $hexagon-ok-stroke-color;
+      stroke-opacity: $hexagon-ok-stroke-opacity;
     }
   }
 
-  g.element_box.host_element path.hexagon.ok {
-    stroke: #404a55;
+  g.element_box.host_element path.hexagon,
+  path.hexagon.host_element {
+    fill-opacity: 0.8;
+    stroke-opacity: 0.8;
+
+    &.ok {
+      fill: $host-hexagon-ok-stroke-color;
+      stroke: none;
+
+      + path.up:hover,
+      &:hover + path.up {
+        fill-opacity: 0.6;
+      }
+    }
+
+    &.up {
+      fill: $headline-color;
+      fill-opacity: 0.85;
+      stroke: none;
+    }
   }
 
   path.icon_element {
@@ -1003,8 +904,99 @@ div.alert_statistics {
     stroke-dasharray: 3, 3;
     stroke: #404a55;
   }
+}
 
-  path.alert_element {
-    stroke: #b1d2e8;
+div.hoststats,
+div.servicestats {
+  height: 100%;
+
+  g.hexagons {
+    transform: translate(60px, 95px);
+  }
+
+  path.hexagon.ok {
+    fill: $success;
+    fill-opacity: 0.06;
+    stroke: $success;
+    stroke-opacity: 0.9;
+  }
+
+  div.stats_table {
+    position: absolute;
+    right: 0;
+
+    table {
+      pointer-events: all;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 3px;
+    }
+
+    td:last-child {
+      width: 115px; // aligns the host and service stats tables
+    }
+
+    a {
+      text-decoration: none;
+      cursor: pointer;
+
+      &.box {
+        display: inline-block;
+        width: $spacing-half;
+        height: 14px;
+        padding: 0;
+        background-color: $font-color;
+        border-radius: $theme-border-radius;
+
+        &.critical {
+          background-color: $hexagon-critical-color;
+        }
+
+        &.unknown {
+          background-color: $hexagon-unknown-color;
+        }
+
+        &.warning {
+          background-color: $hexagon-warning-color;
+        }
+
+        &.downtime {
+          background-color: $hexagon-downtime-color;
+        }
+
+        &.host_down {
+          background-color: $hexagon-host-down-color;
+        }
+
+        &.ok {
+          background-color: $success;
+        }
+      }
+
+      &.count {
+        float: right;
+      }
+
+      &.count:hover,
+      &.text:hover {
+        color: $success;
+      }
+    }
+
+    .warning {
+      background-color: transparent;
+    }
+  }
+}
+
+div.stats_table {
+  div.hoststats & {
+    top: 44px;
+  }
+
+  div.servicestats & {
+    top: 28px;
   }
 }

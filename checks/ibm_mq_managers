@@ -101,7 +101,13 @@ def check_ibm_mq_managers(item, params, data):
 
     standby = data["STANDBY"]
     instances = data.get("INSTANCES", [])
-    if standby == "PERMITTED":
+    ha = data.get("HA")
+    if ha == "REPLICATED":
+        if len(instances) > 0:
+            yield 0, "High availability: replicated, Instance: %s" % (instances[0][0],)
+        else:
+            yield 0, "High availability: replicated"
+    elif standby == "PERMITTED":
         if len(instances) == 2:
             yield 0, "Multi-Instance: %s=%s and %s=%s" % (instances[0][0], instances[0][1],
                                                           instances[1][0], instances[1][1])

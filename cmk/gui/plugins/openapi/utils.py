@@ -36,7 +36,8 @@ def problem(
     if isinstance(ext, dict):
         problem_dict.update(ext)
     else:
-        problem_dict['ext'] = ext
+        if ext:
+            problem_dict['ext'] = ext
 
     response = Response()
     response.status_code = status
@@ -90,7 +91,7 @@ class BaseSchema(Schema):
 def param_description(
     string: Optional[str],
     param_name: str,
-    errors: Literal['raise', 'ignore'] = 'ignore',
+    errors: Literal['raise', 'ignore'] = 'raise',
 ) -> Optional[str]:
     """Get a param description of a docstring.
 
@@ -108,10 +109,14 @@ def param_description(
 
         If a docstring is given, there are a few possibilities.
 
+            >>> from cmk.gui import watolib
+            >>> param_description(watolib.activate_changes_start.__doc__, 'force_foreign_changes')
+            'Will activate changes even if the user who made those changes is not the currently logged in user.'
+
             >>> param_description(param_description.__doc__, 'string')
             'The docstring from which to extract the parameter description.'
 
-            >>> param_description(param_description.__doc__, 'foo')
+            >>> param_description(param_description.__doc__, 'foo', errors='ignore')
 
             >>> param_description(param_description.__doc__, 'foo', errors='raise')
             Traceback (most recent call last):
@@ -120,7 +125,7 @@ def param_description(
 
         There are cases, when no docstring is assigned to a function.
 
-            >>> param_description(None, 'foo')
+            >>> param_description(None, 'foo', errors='ignore')
 
             >>> param_description(None, 'foo', errors='raise')
             Traceback (most recent call last):
@@ -139,7 +144,7 @@ def param_description(
     docstring = docstring_parser.parse(string)
     for param in docstring.params:
         if param.arg_name == param_name:
-            return param.description
+            return param.description.replace("\n", " ")
     if errors == 'raise':
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")
     return None

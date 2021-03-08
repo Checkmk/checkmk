@@ -27,7 +27,7 @@ public:
     [[nodiscard]] std::string columnName() const { return _columnName; }
     [[nodiscard]] RelationalOperator oper() const { return _relOp; }
     [[nodiscard]] std::string value() const { return _value; }
-    std::unique_ptr<Filter> partialFilter(
+    [[nodiscard]] std::unique_ptr<Filter> partialFilter(
         columnNamePredicate predicate) const override;
     [[nodiscard]] bool is_tautology() const override;
     [[nodiscard]] bool is_contradiction() const override;

@@ -154,6 +154,22 @@ def get_response_body(proto, cafile, address, portspec, page):
     return response.read().decode(get_response_charset(response))
 
 
+# 'context' parameter was added to urlopen in python 3.5 / 2.7
+def urlopen_with_ssl(request, timeout):
+    result = None
+    if (sys.version_info[0] == 3 and sys.version_info >= (3, 5)) or \
+        (sys.version_info[0] == 2 and sys.version_info >= (2, 7)):
+        result = urlopen(request, context=get_ssl_no_verify_context(), timeout=timeout)
+    else:
+        if sys.version_info[0] == 2:
+            from urllib2 import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error
+        else:
+            from urllib.request import HTTPSHandler, build_opener, install_opener  # pylint: disable=import-error,no-name-in-module
+        install_opener(build_opener(HTTPSHandler()))
+        result = urlopen(request, timeout=timeout)
+    return result
+
+
 def get_response(proto, cafile, address, portspec, page):
     url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
     request = Request(url, headers={"Accept": "text/plain"})
@@ -163,7 +179,7 @@ def get_response(proto, cafile, address, portspec, page):
         if proto == "https" and cafile:
             return urlopen(request, cafile=cafile, timeout=5)
         if proto == "https" and is_local:
-            return urlopen(request, context=get_ssl_no_verify_context(), timeout=5)
+            return urlopen_with_ssl(request, timeout=5)
         return urlopen(request, timeout=5)
     except URLError as exc:
         if 'unknown protocol' in str(exc):

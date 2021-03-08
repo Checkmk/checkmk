@@ -81,6 +81,7 @@ quicksearch_dropdown_limit = 80
 
 # Quicksearch search order
 quicksearch_search_order = [
+    ("menu", "continue"),
     ("h", "continue"),
     ("al", "continue"),
     ("ad", "continue"),
@@ -200,6 +201,9 @@ custom_style_sheet = None
 # UI theme to use
 ui_theme = "modern-dark"
 
+# Show mode to use
+show_mode = "default_show_less"
+
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 
@@ -318,7 +322,7 @@ default_user_profile: _Dict[str, _Any] = {
     'force_authuser': False,
 }
 lock_on_logon_failures = False
-user_idle_timeout = None
+user_idle_timeout = 5400
 single_user_session = None
 password_policy: _Dict = {}
 

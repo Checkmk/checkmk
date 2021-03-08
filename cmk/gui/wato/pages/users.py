@@ -46,8 +46,11 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
@@ -140,6 +143,7 @@ class ModeUsers(WatoMode):
                             title=_("Notify users"),
                             entries=list(self._page_menu_entries_notify_users()),
                         ),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -154,6 +158,7 @@ class ModeUsers(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
@@ -315,13 +320,15 @@ class ModeUsers(WatoMode):
                 table.row()
 
                 # Checkboxes
-                table.cell(html.render_input("_toggle_group",
-                                             type_="button",
-                                             class_="checkgroup",
-                                             onclick="cmk.selection.toggle_all_rows();",
-                                             value='X'),
-                           sortable=False,
-                           css="checkbox")
+                table.cell(
+                    html.render_input("_toggle_group",
+                                      type_="button",
+                                      class_="checkgroup",
+                                      onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                      make_checkbox_selection_json_text(),
+                                      value='X'),
+                    sortable=False,
+                    css="checkbox")
 
                 if uid != config.user.id:
                     html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
@@ -576,7 +583,10 @@ class ModeEditUser(WatoMode):
         return _("Edit user %s") % self._user_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="user", button_name="save")
+        menu = make_simple_form_page_menu(_("User"),
+                                          breadcrumb,
+                                          form_name="user",
+                                          button_name="save")
 
         action_dropdown = menu.dropdowns[0]
         action_dropdown.topics.append(
@@ -1023,7 +1033,7 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            user_np = self._user.get("notification_period")
+            user_np = self._user.get("notification_period", "24X7")
             if not isinstance(user_np, str):
                 raise Exception("invalid notification period %r" % (user_np,))
             choices: Choices = [

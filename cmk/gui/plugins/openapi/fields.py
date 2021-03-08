@@ -7,14 +7,21 @@
 import collections.abc
 import json
 import re
+import typing
 from typing import Any, Optional, Tuple, Callable
 
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib
+from cmk.gui import watolib, valuespec as valuespec, sites, config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.gui.plugins.webapi import validate_host_attributes
 from cmk.utils.exceptions import MKException
 
 
@@ -245,7 +252,7 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
                          if not partial or key in partial)
 
     if isinstance(obj, list):
-        return tuple([_freeze(entry) for entry in obj])
+        return tuple(_freeze(entry) for entry in obj)
 
     return obj
 
@@ -265,7 +272,7 @@ class UniqueFields:
     }
 
     def _verify_unique_schema_entries(self, value, fields):
-        required_fields = tuple([name for name, field in fields.items() if field.required])
+        required_fields = tuple(name for name, field in fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
             # If some fields are required, we only freeze the required fields. This has the effect
@@ -432,6 +439,11 @@ class Nested(_fields.Nested, UniqueFields):
         return value
 
 
+# NOTE
+# All these non-capturing match groups are there to properly distinguish the alternatives.
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9]+)+)|[0-9a-fA-F]{32})"
+
+
 class FolderField(String):
     """This field represents a WATO Folder.
 
@@ -443,13 +455,54 @@ class FolderField(String):
 
     def __init__(
         self,
-        pattern: str = "/|(/[ -_a-zA-Z0-9]+)+|[a-fA-F0-9]{32}",
         **kwargs,
     ):
-        super().__init__(pattern=pattern, **kwargs)
+        if 'description' not in kwargs:
+            kwargs['description'] = (
+                "The folder identifier. This can be a path name or the folder-specific 128 bit "
+                "identifier. This identifier is unique to the folder and stays the same, even if "
+                "the folder has been moved. When identifying a folder by it's path, delimiters can "
+                "be either `~`, `/` or `\\`. Please use the one most appropriate for your "
+                "quoting/escaping needs. A good default choice is `~`.")
+        super().__init__(pattern=FOLDER_PATTERN, **kwargs)
+
+    @classmethod
+    def _normalize_folder(cls, folder_id):
+        r"""
+
+        Args:
+            folder_id:
+        Examples:
+
+            >>> FolderField._normalize_folder("\\")
+            '/'
+
+            >>> FolderField._normalize_folder("/foo/bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("\\foo\\bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("~foo~bar")
+            '/foo/bar'
+
+        Returns:
+
+        """
+        prev = folder_id
+        separators = ['\\', '~']
+        while True:
+            for sep in separators:
+                folder_id = folder_id.replace(sep, "/")
+            if prev == folder_id:
+                break
+            prev = folder_id
+        return folder_id
 
     @classmethod
     def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+        folder_id = cls._normalize_folder(folder_id)
+
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -496,9 +549,10 @@ class NotExprSchema(BaseSchema):
 
     Examples:
 
-        >>> input_expr = {'op': '=', 'left': 'foo.bar', 'right': 'foo'}
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> input_expr = {'op': '=', 'left': 'hosts.name', 'right': 'foo'}
         >>> q = {'op': 'not', 'expr': input_expr}
-        >>> result = NotExprSchema().load(q)
+        >>> result = NotExprSchema(context={'table': Hosts}).load(q)
         >>> assert result == q
 
     """
@@ -517,13 +571,13 @@ class LogicalExprSchema(BaseSchema):
     # many=True does not work here for some reason.
     expr = List(
         Nested(
-            lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+            lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
         ))
 
 
 class ExprSchema(OneOfSchema):
-    """
+    """Top level class for query expression schema
 
     Operators can be one of: AND, OR
 
@@ -537,8 +591,16 @@ class ExprSchema(OneOfSchema):
         ...             ]},
         ...         },
         ...     ]}
-        >>> result = ExprSchema().load(q)
-        >>> assert result == q
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> schema = ExprSchema(context={'table': Hosts})
+        >>> assert schema.load(q) == schema.load(json.dumps(q))
+
+        >>> q = {'op': '=', 'left': 'foo', 'right': 'bar'}
+        >>> schema.load(q)
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Table 'hosts' has no column 'foo'.
 
     """
     type_field = 'op'
@@ -576,21 +638,68 @@ class ExprSchema(OneOfSchema):
                         str(exc),
                     ],
                 })
+        elif isinstance(data, QueryExpression):
+            return data
 
+        if not self.context or 'table' not in self.context:
+            raise RuntimeError(f"No table in context for field {self}")
+
+        try:
+            tree_to_expr(data, self.context['table'])
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
         return super().load(data, many=many, partial=partial, unknown=unknown)
+
+
+class _ExprNested(Nested):
+    def _load(self, value, data, partial=None):
+        _data = super()._load(value, data, partial=partial)
+        return tree_to_expr(_data, table=self.metadata['table'])
+
+
+def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
+    """Returns a Nested ExprSchema Field which validates a Livestatus query.
+
+    Args:
+        table:
+            A Livestatus Table class.
+        required:
+            Whether the field shall be required.
+
+    Returns:
+        A marshmallow Nested field.
+
+    """
+    return _ExprNested(
+        ExprSchema(context={'table': table}),
+        table=table,
+        description=(
+            f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
+            "dictionary form. If you want to use multiple expressions, nest them with the "
+            "AND/OR operators."),
+        many=False,
+        example=json.dumps({
+            'op': 'and',
+            'expr': [{
+                'op': '=',
+                'left': 'name',
+                'right': 'example.com'
+            }, {
+                'op': '!=',
+                'left': 'state',
+                'right': '0'
+            }],
+        }),
+        required=required,
+    )
 
 
 class LiveStatusColumn(String):
     """Represents a LiveStatus column.
 
-    >>> class Hosts:
-    ...      __tablename__ = 'hosts'
-    ...      @classmethod
-    ...      def __columns__(cls):
-    ...          return ['foo']
-
-    >>> LiveStatusColumn(table=Hosts).deserialize('foo')
-    'foo'
+    >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+    >>> LiveStatusColumn(table=Hosts).deserialize('name')
+    'name'
 
     >>> import pytest
     >>> with pytest.raises(ValidationError) as exc:
@@ -615,6 +724,90 @@ class LiveStatusColumn(String):
             if column not in value:
                 value.append(column)
         return value
+
+
+HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+
+
+class HostField(String):
+    """A field representing a hostname.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Host not found: {host_name!r}',
+        'should_not_exist': 'Host {host_name!r} already exists.',
+        'should_be_monitored': 'Host {host_name!r} exists, but is not monitored. '
+                               'Activate the configuration?',
+        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
+    }
+
+    def __init__(
+        self,
+        example='example.com',
+        pattern=HOST_NAME_REGEXP,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        should_be_monitored: Optional[bool] = None,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        self._should_be_monitored = should_be_monitored
+        super().__init__(
+            example=example,
+            pattern=pattern,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        try:
+            valuespec.Hostname().validate_value(value, self.name)
+        except MKUserError as e:
+            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
+
+        host = watolib.Host.host(value)
+        if self._should_exist and not host:
+            self.fail("should_exist", host_name=value)
+
+        if not self._should_exist and host:
+            self.fail("should_not_exist", host_name=value)
+
+        if self._should_be_monitored is not None and not host_is_monitored(value):
+            self.fail("should_be_monitored", host_name=value)
+
+
+def host_is_monitored(host_name: str) -> bool:
+    return bool(Query([Hosts.name], Hosts.name == host_name).value(sites.live()))
+
+
+class AttributesField(_fields.Dict):
+    default_error_messages = {
+        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
+    }
+
+    def _validate(self, value):
+        # Special keys:
+        #  - site -> validate against config.allsites().keys()
+        #  - tag_* -> validate_host_tags
+        #  - * -> validate against host_attribute_registry.keys()
+        try:
+            validate_host_attributes(value, new=True)
+            if 'meta_data' in value:
+                self.fail("attribute_forbidden", attribute='meta_data', value=value)
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
+class SiteField(_fields.String):
+    default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
+
+    def _validate(self, value):
+        if value not in config.allsites().keys():
+            self.fail("unknown_site", site=value)
 
 
 Boolean = _fields.Boolean
@@ -648,4 +841,9 @@ __all__ = [
     'Time',
     'Field',
     'ExprSchema',
+    'FolderField',
+    'HostField',
+    'FOLDER_PATTERN',
+    'query_field',
+    'AttributesField',
 ]

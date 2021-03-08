@@ -6,7 +6,7 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import Any, List, Mapping
+from typing import Any, List, Mapping, Optional
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -179,6 +179,48 @@ register.snmp_section(
 register.check_plugin(
     name="f5_bigip_cluster_status_v11_2",  # name taken from pre-1.7 plugin
     service_name="BIG-IP Cluster Status",
+    discovery_function=discover_f5_bigip_cluster_status,
+    check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
+    check_ruleset_name="cluster_status",
+    check_function=check_f5_bigip_cluster_status_v11_2,
+    cluster_check_function=cluster_check_f5_bigip_cluster_status_v11_2,
+)
+
+#
+#F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
+
+
+def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[NodeState]:
+    """Read a node status encoded as stringified int
+    >>> parse_f5_bigip_vcmpfailover([[["0", "4"]]])
+    4
+    """
+    # .1.3.6.1.4.1.3375.2.1.13.1.1.0 0 # sysVcmpNumber
+    # .1.3.6.1.4.1.3375.2.1.14.1.1.0 3 # sysCmFailoverStatusId
+    count, status = string_table[0][0]
+    if int(count) == 0:
+        return NodeState(status)
+    # do nothing if we're at a vCMP-/Host/
+    return None
+
+
+register.snmp_section(
+    name="f5_bigip_vcmpfailover",
+    detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
+    parse_function=parse_f5_bigip_vcmpfailover,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.3375.2.1",
+            oids=[
+                "13.1.1.0",  # sysVcmpNumber
+                "14.3.1.0",  # sysCmFailoverStatusId
+            ]),
+    ],
+)
+
+register.check_plugin(
+    name="f5_bigip_vcmpfailover",  # name taken from pre-1.7 plugin
+    service_name="BIG-IP vCMP Guest Failover Status",
     discovery_function=discover_f5_bigip_cluster_status,
     check_default_parameters=F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     check_ruleset_name="cluster_status",

@@ -241,6 +241,13 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def schema(cls) -> Type["BIAggregationComputationOptionsSchema"]:
         return BIAggregationComputationOptionsSchema
 
+    def serialize(self):
+        return {
+            "disabled": self.disabled,
+            "use_hard_states": self.use_hard_states,
+            "escalate_downtimes_as_warn": self.escalate_downtimes_as_warn,
+        }
+
 
 class BIAggregationComputationOptionsSchema(Schema):
     disabled = ReqBoolean(default=False, example=False)
@@ -261,6 +268,12 @@ class BIAggregationGroups(ABCWithSchema):
     def schema(cls) -> Type["BIAggregationGroupsSchema"]:
         return BIAggregationGroupsSchema
 
+    def serialize(self):
+        return {
+            "names": self.names,
+            "paths": self.paths,
+        }
+
 
 class BIAggregationGroupsSchema(Schema):
     names = MList(ReqString(), default=[], example=["group1", "group2"])
@@ -277,6 +290,11 @@ class BIParams(ABCWithSchema):
     @classmethod
     def schema(cls) -> Type["BIParamsSchema"]:
         return BIParamsSchema
+
+    def serialize(self):
+        return {
+            "arguments": self.arguments,
+        }
 
 
 class BIParamsSchema(Schema):
@@ -384,6 +402,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def compile_postprocess(
         self,
         bi_branch_root: "ABCBICompiledNode",
+        services_of_host: Dict[HostName, Set[ServiceName]],
         bi_searcher: ABCBISearcher,
     ) -> List["ABCBICompiledNode"]:
         raise NotImplementedError()
@@ -397,6 +416,10 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def required_elements(self) -> Set[RequiredBIElement]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
 
@@ -422,6 +445,10 @@ class ABCBIAction(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def schema(cls) -> Type[Schema]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -465,6 +492,10 @@ class ABCBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         raise NotImplementedError()
 
@@ -505,6 +536,10 @@ class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def schema(cls) -> Type[Schema]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
 

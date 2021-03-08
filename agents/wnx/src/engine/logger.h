@@ -248,6 +248,7 @@ namespace XLOG {
 namespace setup {
 void DuplicateOnStdio(bool On);
 void ColoredOutputOnStdio(bool On);
+void SetContext(std::string_view context);
 
 }  // namespace setup
 

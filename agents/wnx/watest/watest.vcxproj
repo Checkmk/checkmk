@@ -199,8 +199,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>@echo off
+copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -280,8 +281,9 @@ copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>@echo off
+copy $(SolutionDir)install\resources\check_mk.yml $(REMOTE_MACHINE)
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

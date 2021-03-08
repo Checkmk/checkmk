@@ -106,7 +106,6 @@ cmc_service_rrd_config: _List = []
 # Inventory and inventory checks
 inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
-inventory_check_do_scan = True  # include SNMP scan for SNMP devices
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 # TODO: Remove this already deprecated option
@@ -129,7 +128,7 @@ service_dependency_template = 'check_mk'
 generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
-nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
+nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()=\t'  # Tab is an illegal character for CMC
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {

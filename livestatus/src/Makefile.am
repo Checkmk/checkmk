@@ -28,10 +28,10 @@ RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs
 RRDTOOL_CPPFLAGS := -I$(RRDTOOL_SRC_DIR)
 
 PACKAGE_GOOGLETEST := $(abs_top_srcdir)/omd/packages/googletest
-GOOGLETEST_VERSION := googletest-07d4a6e93d
+GOOGLETEST_VERSION := googletest-f3ef7e173f
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation
+.PHONY: unit-test tidy iwyu cppcheck cppcheck-xml documentation documentation-quick
 
 AM_CPPFLAGS = \
     -I.. \
@@ -53,15 +53,21 @@ unixcat_LDADD = -lpthread
 test_neb_SOURCES = \
     test/DummyNagios.cc \
     test/TableQueryHelper.cc \
+    test/test_BlobColumn.cc \
     test/test_CrashReport.cc \
     test/test_CustomVarsDictFilter.cc \
+    test/test_DoubleColumn.cc \
     test/test_FileSystemHelper.cc \
+    test/test_IntColumn.cc \
+    test/test_ListColumn.cc \
     test/test_LogEntry.cc \
     test/test_MacroExpander.cc \
     test/test_Metric.cc \
     test/test_Queue.cc \
     test/test_RegExp.cc \
+    test/test_StringColumn.cc \
     test/test_StringUtil.cc \
+    test/test_TimeColumn.cc \
     test/test_utilities.cc
 $(test_neb_SOURCES): $(ASIO_INCLUDE) $(GOOGLETEST_INCLUDE) $(RRDTOOL_VERSION)
 test_neb_CPPFLAGS = \
@@ -98,38 +104,35 @@ liblivestatus_a_SOURCES = \
         AttributeListColumn.cc \
         Average.cc \
         BlobColumn.cc \
+        BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
         CommentColumn.cc \
-        ContactGroupsColumn.cc \
         CountAggregator.cc \
         CrashReport.cc \
         CustomVarsDictColumn.cc \
         CustomVarsDictFilter.cc \
-        CustomVarsExplicitColumn.cc \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
         DoubleFilter.cc \
         DowntimeColumn.cc \
         DowntimeOrComment.cc \
-        DowntimesOrComments.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicFileColumn-impl.cc \
         DynamicRRDColumn.cc \
         EventConsoleConnection.cc \
-        FileColumn-impl.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostContactsColumn.cc \
         HostGroupsColumn.cc \
         HostListColumn.cc \
-        HostListStateColumn.cc \
+        HostListState.cc \
         HostServiceState.cc \
         InputBuffer.cc \
         IntColumn.cc \
         IntFilter.cc \
         ListColumn.cc \
+        ListLambdaColumn.cc \
         ListFilter.cc \
         LogCache.cc \
         LogEntry.cc \
@@ -153,14 +156,12 @@ liblivestatus_a_SOURCES = \
         RendererPython.cc \
         RendererPython3.cc \
         RRDColumn.cc \
-        ServiceContactsColumn.cc \
         ServiceGroupMembersColumn.cc \
         ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
-        ServiceListStateColumn.cc \
+        ServiceListState.cc \
         StatsColumn.cc \
         Store.cc \
-        StringColumn.cc \
         StringFilter.cc \
         StringUtils.cc \
         Table.cc \
@@ -188,7 +189,6 @@ liblivestatus_a_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
-        TimeColumn.cc \
         TimeFilter.cc \
         TimeperiodsCache.cc \
         Triggers.cc \
@@ -227,6 +227,7 @@ $(RRDTOOL_VERSION):
 $(GOOGLETEST_INCLUDE): $(GOOGLETEST_VERSION)/Makefile
 # NOTE: We don't want the googletest files in our compile_commands.json!
 	$(MAKE) -C $(GOOGLETEST_VERSION) install > /dev/null
+	patch -p0 < $(PACKAGE_GOOGLETEST)/googletest.diff
 	touch $(GOOGLETEST_INCLUDE) $(LIBS_DIR)/libgmock.a $(LIBS_DIR)/libgmock_main.a $(LIBS_DIR)/libgtest.a $(LIBS_DIR)/libgtest_main.a
 # See: https://www.gnu.org/software/automake/manual/html_node/Multiple-Outputs.html
 $(LIBS_DIR)/libgmock.a: $(GOOGLETEST_INCLUDE)
@@ -253,7 +254,7 @@ livestatus.o: $(liblivestatus_a_OBJECTS)
 # RE2 we make sure that this is the case, too.
 	$(CXXLINK) -shared $^ -lstdc++fs -lpthread $(AM_LDFLAGS) @RE2_LIBS@ $(RRDTOOL_LD_FLAGS)
 # To make sure we can dlopen() our NEB later
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -I. -I../.. -I.. -c NagiosMockup.cc -o NagiosMockup.o
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup $(liblivestatus_a_LD_FLAGS)
 	$(RM) NagiosMockup
 
@@ -287,8 +288,12 @@ cppcheck-xml: compile_commands.json
 	$(CPPCHECK) -UCMC --enable=all --suppressions-list=$(abs_top_srcdir)/.cppcheck-suppressions --inline-suppr --project=compile_commands.json --quiet --template=gcc --xml --xml-version=2 2> $(CPPCHECK_NEB_RESULT)
 	sed -i "s%\\(<location.* file=\"\\)\\([^/]\\)%\\1$(subdir)/\\2%" $(CPPCHECK_NEB_RESULT)
 
-documentation: doc/plantuml.jar
+documentation: compile_commands.json doc/plantuml.jar
 	$(DOXYGEN) doc/Doxyfile
+	$(RM) '$$depbase.Tpo'
+
+documentation-quick: compile_commands.json doc/plantuml.jar
+	( cat doc/Doxyfile; echo "CLANG_ASSISTED_PARSING=NO") | $(DOXYGEN) -
 
 doc/plantuml.jar:
 	wget https://master.dl.sourceforge.net/project/plantuml/$(PLANTUTML_VERSION)/plantuml.$(PLANTUTML_VERSION).jar --quiet --output-document=$@ || { $(RM) $@; exit 1; }

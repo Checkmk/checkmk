@@ -72,13 +72,17 @@ CmkEndpointName = Literal[
     'cmk/delete_bi_aggregation',
     'cmk/delete_bi_pack',
     'cmk/put_bi_rule',
+    'cmk/post_bi_rule',
     'cmk/put_bi_aggregation',
+    'cmk/post_bi_aggregation',
     'cmk/put_bi_pack',
     'cmk/put_bi_packs',
     'cmk/get_bi_rule',
     'cmk/get_bi_aggregation',
     'cmk/get_bi_pack',
     'cmk/get_bi_packs',
+    'cmk/put_bi_pack',
+    'cmk/post_bi_pack',
     'cmk/wait-for-completion',
     'cmk/baking-status',
     'cmk/bakery-status',
@@ -124,7 +128,7 @@ RestfulEndpointName = Literal[
     ".../version",
 ]  # yapf: disable
 
-EndpointName = Union[CmkEndpointName, RestfulEndpointName]
+LinkRelation = Union[CmkEndpointName, RestfulEndpointName]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]
 
@@ -289,11 +293,18 @@ PathItem = TypedDict(
 ResponseType = TypedDict(
     "ResponseType",
     {
-        "default": PathItem,
         "200": PathItem,
         "204": PathItem,
         "301": PathItem,
         "302": PathItem,
+        "400": PathItem,
+        "404": PathItem,
+        "405": PathItem,
+        "409": PathItem,
+        "415": PathItem,
+        "412": PathItem,
+        "422": PathItem,
+        "428": PathItem,
     },
     total=False,
 )
@@ -351,11 +362,14 @@ EndpointEntry = TypedDict(
         'endpoint': Any,
         'href': str,
         'method': HTTPMethod,
-        'rel': EndpointName,
+        'rel': LinkRelation,
         'parameters': Sequence[OpenAPIParameter],
     },
     total=True,
 )
 
-EndpointKey = Tuple[str, EndpointName]
+EndpointKey = Tuple[str, LinkRelation]
 ParameterKey = Tuple[str, ...]
+
+StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 405, 409, 412, 415, 422, 428]
+StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "415", "422", "428"]

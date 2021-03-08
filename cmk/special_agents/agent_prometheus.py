@@ -316,6 +316,7 @@ class CAdvisorExporter:
         self.pod_containers = {}
         self.container_ids = {}
         self.prepend_namespaces = options.get("prepend_namespaces", True)
+        self.namespace_include_patterns = options.get("namespace_include_patterns", [])
 
     def _pod_name(self, labels):
         return parse_pod_name(labels, self.prepend_namespaces)
@@ -385,14 +386,20 @@ class CAdvisorExporter:
         logging.debug("Parsing cAdvisor pod memory")
 
         memory_info = [
-            ("memory_usage_pod", 'container_memory_usage_bytes{pod!="", container=""}'),
+            ("memory_usage_pod",
+             'container_memory_usage_bytes{pod!="", container=""{namespace_filter}}'),
             ("memory_limit",
-             'sum by(pod, namespace, instance)(container_spec_memory_limit_bytes{container!=""})'),
-            ("memory_rss", 'sum by(pod, namespace, instance)(container_memory_rss{container!=""})'),
+             'sum by(pod, namespace, instance)(container_spec_memory_limit_bytes{container!=""{namespace_filter}})'
+            ),
+            ("memory_rss",
+             'sum by(pod, namespace, instance)(container_memory_rss{container!=""{namespace_filter}})'
+            ),
             ("memory_swap",
-             'sum by(pod, namespace, instance)(container_memory_swap{container!=""})'),
+             'sum by(pod, namespace, instance)(container_memory_swap{container!=""{namespace_filter}})'
+            ),
             ("memory_cache",
-             'sum by(pod, namespace, instance)(container_memory_cache{container!=""})'),
+             'sum by(pod, namespace, instance)(container_memory_cache{container!=""{namespace_filter}})'
+            ),
         ]
 
         pods_raw, pod_machine_associations = self._retrieve_pods_memory_summary(memory_info)
@@ -412,6 +419,7 @@ class CAdvisorExporter:
         result: Dict[str, Dict[str, Union[str, Dict[str, str]]]] = {}
         associations = {}
         for memory_stat, promql_query in memory_info:
+            promql_query = promql_query.replace("{namespace_filter}", self._namespace_query_part())
             for pod_memory_info in self.api_client.query_promql(promql_query):
                 pod_name = self._pod_name(pod_memory_info.labels)
                 pod = result.setdefault(pod_name, {})
@@ -444,7 +452,7 @@ class CAdvisorExporter:
         pods_complete = {}
         pods_missing_limit = {}
         for pod_name, pod_info in pods_memory.items():
-            if not all([stat in pod_info for stat in required_stats]):
+            if not all(stat in pod_info for stat in required_stats):
                 continue
             if self._verify_valid_memory_limit(pod_info):
                 pods_complete[pod_name] = pod_info
@@ -482,16 +490,22 @@ class CAdvisorExporter:
     def memory_container_summary(self, _group_element: str) -> List[Dict[str, Dict[str, Any]]]:
         logging.debug("Parsing cAdvisor container memory")
         memory_info = {
-            "memory_usage_container": 'sum by (pod, namespace, container, name)(container_memory_usage_bytes{container!=""})',
-            "memory_rss": 'container_memory_rss{container!=""}',
-            "memory_swap": 'container_memory_swap{container!=""}',
-            "memory_cache": 'container_memory_cache{container!=""}',
+            "memory_usage_container": 'sum by (pod, namespace, container, name)(container_memory_usage_bytes{container!=""{namespace_filter}})',
+            "memory_rss": 'container_memory_rss{container!=""{namespace_filter}}',
+            "memory_swap": 'container_memory_swap{container!=""{namespace_filter}}',
+            "memory_cache": 'container_memory_cache{container!=""{namespace_filter}}',
+        }
+        memory_info = {
+            k: v.replace("{namespace_filter}", self._namespace_query_part())
+            for k, v in memory_info.items()
         }
         result_temp = self._retrieve_cadvisor_info(memory_info, group_element="name")
 
         extra_result = {}
         for pod_memory_info in self.api_client.query_promql(
-                'sum by (pod, namespace)(container_memory_usage_bytes{pod!="", container=""})'):
+                f'sum by (pod, namespace)(container_memory_usage_bytes{{pod!="", container=""{self._namespace_query_part()}}})'
+        ):
+
             pod_name = self._pod_name(pod_memory_info.labels)
             for container_name in self.pod_containers[pod_name]:
                 extra_result[container_name] = {
@@ -507,7 +521,9 @@ class CAdvisorExporter:
     def _retrieve_formatted_cadvisor_info(self, entity_info: Dict[str, str],
                                           group_element: str) -> List[Dict[str, Dict[str, Any]]]:
 
-        exclusion_element = '{{container!="POD",container!=""}}' if group_element == "container" else '{{container!=""}}'
+        exclusion_element = '{{container!="POD",container!=""{namespace_filter}}}' if group_element == "container" else '{{container!=""{namespace_filter}}}'
+        exclusion_element = exclusion_element.replace("{namespace_filter}",
+                                                      self._namespace_query_part())
 
         for metric_name, metric_promql in entity_info.items():
             entity_info[metric_name] = metric_promql.format(exclusion=exclusion_element)
@@ -545,6 +561,11 @@ class CAdvisorExporter:
             promql_query = entity_promql
         return promql_query
 
+    def _namespace_query_part(self):
+        if not self.namespace_include_patterns:
+            return ""
+        return f", namespace=~'{'|'.join(self.namespace_include_patterns)}'"
+
     def _apply_container_name_option(self, promql_result):
         promql_result_new = {}
         for piggyback_host_name, piggyback_data in promql_result.items():
@@ -558,6 +579,7 @@ class KubeStateExporter:
         self.api_client = api_client
         self.cluster_name = options["cluster_name"]
         self.prepend_namespaces = options.get("prepend_namespaces", True)
+        self.namespace_include_patterns = options.get("namespace_include_patterns", [])
 
     def _pod_name(self, labels: Dict[str, str]):
         return parse_pod_name(labels, self.prepend_namespaces)
@@ -606,6 +628,7 @@ class KubeStateExporter:
         return {"limits": cluster_limits}
 
     def storage_classes_summary(self) -> List[Dict[str, Dict[str, Any]]]:
+        # namespace independent
         logging.debug("Parsing kube storage classes")
         result: Dict[str, Dict[str, Any]] = {}
         for cluster_storage_info in self.api_client.query_promql("kube_storageclass_info"):
@@ -625,7 +648,7 @@ class KubeStateExporter:
         # Cluster Section
         logging.debug("Parsing kube namespaces summary")
         node_result: Dict[str, Dict[str, Any]] = {}
-        for namespace_info in self.api_client.query_promql("kube_namespace_status_phase"):
+        for namespace_info in self._perform_query("kube_namespace_status_phase{namespace_filter}"):
             if not namespace_info.has_labels(["namespace", "phase"]) or not int(
                     namespace_info.value()):
                 continue
@@ -742,15 +765,15 @@ class KubeStateExporter:
         logging.debug("Parsing kube pod conditions")
         # Unschedulable missing for now
         pod_conditions_info = [
-            ("PodScheduled", "kube_pod_status_scheduled"),
-            ("Ready", "kube_pod_status_ready"),
+            ("PodScheduled", "kube_pod_status_scheduled{namespace_filter}"),
+            ("Ready", "kube_pod_status_ready{namespace_filter}"),
             ("ContainersReady",
-             "sum by (pod, namespace)(kube_pod_container_status_ready) / count by (pod, namespace)(kube_pod_container_status_ready)"
+             "sum by (pod, namespace)(kube_pod_container_status_ready{namespace_filter}) / count by (pod, namespace)(kube_pod_container_status_ready{namespace_filter})"
             ),
         ]
         result = []
         for promql_metric, promql_query in pod_conditions_info:
-            promql_result = self.api_client.query_promql(promql_query)
+            promql_result = self._perform_query(promql_query)
             if promql_metric == "ContainersReady":
                 for node_result in promql_result:
                     if not node_result.has_labels(["pod", "namespace"]):
@@ -774,14 +797,14 @@ class KubeStateExporter:
     def pod_container_summary(self) -> List[Dict[str, Dict[str, Any]]]:
         logging.debug("Parsing kube pod container")
 
-        info = [("waiting", "kube_pod_container_status_waiting"),
-                ("running", "kube_pod_container_status_running"),
-                ("ready", "kube_pod_container_status_ready"),
-                ("terminated", "kube_pod_container_status_terminated")]
+        info = [("waiting", "kube_pod_container_status_waiting{namespace_filter}"),
+                ("running", "kube_pod_container_status_running{namespace_filter}"),
+                ("ready", "kube_pod_container_status_ready{namespace_filter}"),
+                ("terminated", "kube_pod_container_status_terminated{namespace_filter}")]
         pod_container_result = []
         for condition, promql_query in info:
             temp_result: Dict[str, Dict[str, Any]] = {}
-            for container_info in self.api_client.query_promql(promql_query):
+            for container_info in self._perform_query(promql_query):
                 if not container_info.has_labels(["pod", "container", "namespace"]):
                     continue
                 query_value = int(container_info.value())
@@ -809,23 +832,26 @@ class KubeStateExporter:
         logging.debug("Parsing kube pod resources")
 
         pods_container_count = {
-            self._pod_name(pod_info.labels): pod_info.value() for pod_info in
-            self.api_client.query_promql("count by (pod, namespace)(kube_pod_container_info)")
+            self._pod_name(pod_info.labels): pod_info.value() for pod_info in self._perform_query(
+                "count by (pod, namespace)(kube_pod_container_info{namespace_filter})")
         }
 
-        resources_list = [
-            ("requests", "cpu",
-             "sum by (pod, namespace)(kube_pod_container_resource_requests_cpu_cores)"),
-            ("requests", "memory", "kube_pod_container_resource_requests_memory_bytes"),
-            ("limits", "cpu", "kube_pod_container_resource_limits_cpu_cores"),
-            ("limits", "memory", "kube_pod_container_resource_limits_memory_bytes")
-        ]
+        resources_list = [(
+            "requests", "cpu",
+            "sum by (pod, namespace)(kube_pod_container_resource_requests_cpu_cores{namespace_filter})"
+        ),
+                          ("requests", "memory",
+                           "kube_pod_container_resource_requests_memory_bytes{namespace_filter}"),
+                          ("limits", "cpu",
+                           "kube_pod_container_resource_limits_cpu_cores{namespace_filter}"),
+                          ("limits", "memory",
+                           "kube_pod_container_resource_limits_memory_bytes{namespace_filter}")]
 
         def _process_resources(resource: str, query: str) -> Dict[str, Dict[str, Dict[str, float]]]:
             pod_resources: Dict[str, Dict[str, Dict[str, float]]] = {}
             resource_result = {
                 self._pod_name(pod_info.labels): pod_info.value()
-                for pod_info in self.api_client.query_promql(query)
+                for pod_info in self._perform_query(query)
             }
             for pod in pods_container_count.keys():
                 resource_value = 0.0 if pod not in resource_result else resource_result[pod]
@@ -836,12 +862,11 @@ class KubeStateExporter:
         def _process_limits(resource: str, query: str) -> Dict[str, Dict[str, Dict[str, float]]]:
             promql_limits = {
                 self._pod_name(pod_info.labels): pod_info.value()
-                for pod_info in self.api_client.query_promql("sum by (pod, namespace)(%s)" % query)
+                for pod_info in self._perform_query("sum by (pod, namespace)(%s)" % query)
             }
             promql_counts = {
                 self._pod_name(pod_info.labels): pod_info.value()
-                for pod_info in self.api_client.query_promql("count by (pod, namespace)(%s)" %
-                                                             query)
+                for pod_info in self._perform_query("count by (pod, namespace)(%s)" % query)
             }
 
             pod_limits: Dict[str, Dict[str, Dict[str, float]]] = {}
@@ -867,17 +892,17 @@ class KubeStateExporter:
         logging.debug("Parsing kube daemon pods")
 
         daemon_pods_info = {
-            "number_ready": "kube_daemonset_status_number_ready",
-            "desired_number_scheduled": "kube_daemonset_status_desired_number_scheduled",
-            "current_number_scheduled": "kube_daemonset_status_current_number_scheduled",
-            "updated_number_scheduled": "kube_daemonset_updated_number_scheduled",
-            "number_available": "kube_daemonset_status_number_available",
-            "number_unavailable": "kube_daemonset_status_number_unavailable"
+            "number_ready": "kube_daemonset_status_number_ready{namespace_filter}",
+            "desired_number_scheduled": "kube_daemonset_status_desired_number_scheduled{namespace_filter}",
+            "current_number_scheduled": "kube_daemonset_status_current_number_scheduled{namespace_filter}",
+            "updated_number_scheduled": "kube_daemonset_updated_number_scheduled{namespace_filter}",
+            "number_available": "kube_daemonset_status_number_available{namespace_filter}",
+            "number_unavailable": "kube_daemonset_status_number_unavailable{namespace_filter}"
         }
         result = []
         for entity_name, promql_query in daemon_pods_info.items():
             piggybacked_services = parse_piggybacked_values(
-                self.api_client.query_promql(promql_query),
+                self._perform_query(promql_query),
                 metric_description=entity_name,
                 label_as_piggyback_host="daemonset",
                 values_as_int=True,
@@ -894,7 +919,7 @@ class KubeStateExporter:
             "label_app_kubernetes_io_name": "app.kubernetes.io/name"
         }
         result: Dict[str, Dict[str, Any]] = {}
-        for service_result in self.api_client.query_promql("kube_service_labels"):
+        for service_result in self._perform_query("kube_service_labels{namespace_filter}"):
             if not service_result.has_labels(["service"]):
                 continue
 
@@ -914,7 +939,7 @@ class KubeStateExporter:
         logging.debug("Parsing kube services info")
 
         result: Dict[str, Dict[str, Any]] = {}
-        for service_result in self.api_client.query_promql("kube_service_info"):
+        for service_result in self._perform_query("kube_service_info{namespace_filter}"):
             if not service_result.has_labels(["service", "cluster_ip"]):
                 continue
             service_piggyback = result.setdefault(service_result.label_value("service"), {})
@@ -923,6 +948,15 @@ class KubeStateExporter:
                 "load_balance_ip": service_result.label_value("load_balancer_ip", default="null")
             })
         return [result]
+
+    def _perform_query(self, promql_query):
+        if "namespace_filter" in promql_query:
+            if self.namespace_include_patterns:
+                namespace_detail = f"{{namespace=~'{'|'.join(self.namespace_include_patterns)}'}}"
+                promql_query = promql_query.format(namespace_filter=namespace_detail)
+            else:
+                promql_query = promql_query.format(namespace_filter="")
+        return self.api_client.query_promql(promql_query)
 
     @staticmethod
     def _retrieve_promql_specific(metrics, entries):
@@ -1872,6 +1906,9 @@ def _extract_config_args(config: Dict[str, Any]) -> Dict[str, Any]:
                 exporter_options[exporter_name].update({
                     "prepend_namespaces": grouping_info[1]["prepend_namespaces"] != "omit_namespace"
                 })
+            if "namespace_include_patterns" in exporter_info:
+                exporter_options[exporter_name].update(
+                    {"namespace_include_patterns": exporter_info["namespace_include_patterns"]})
         elif exporter_name == "node_exporter":
             exporter_info.update({
                 "host_address": config["host_address"],

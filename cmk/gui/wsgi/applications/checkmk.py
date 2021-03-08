@@ -15,7 +15,7 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config, pages, http, htmllib
+from cmk.gui import config, pages, http, htmllib, sites
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     MKUserError,
@@ -149,7 +149,7 @@ class CheckmkApp:
 
     def wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
-        with cmk.utils.store.cleanup_locks():
+        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 
@@ -164,8 +164,6 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
 
         page_handler = get_and_wrap_page(html.myfile)
         response = page_handler()
-        # If page_handler didn't raise we assume everything is OK.
-        response.status_code = http_client.OK
     except HTTPRedirect as e:
         # This can't be a new Response as it can have already cookies set/deleted by the pages.
         # We can't return the response because the Exception has been raised instead.

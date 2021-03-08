@@ -19,8 +19,9 @@ from typing import Literal
 
 from cmk.gui import config, sites
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -29,7 +30,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, SERVICE_DESCRIPTION, QUERY
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    OPTIONAL_HOST_NAME,
+    SERVICE_DESCRIPTION,
+)
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
@@ -38,7 +42,7 @@ DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_
 
 
 class DowntimeParameter(BaseSchema):
-    query = QUERY
+    query = fields.query_field(Downtimes, required=False)
 
 
 @Endpoint(constructors.collection_href('downtime', 'host'),
@@ -159,7 +163,7 @@ def create_service_related_downtime(params):
           method='get',
           tag_group='Monitoring',
           query_params=[
-              HOST_NAME,
+              OPTIONAL_HOST_NAME,
               SERVICE_DESCRIPTION,
               DowntimeParameter,
           ],
@@ -183,16 +187,15 @@ def show_downtimes(param):
         Downtimes.comment,
     ])
 
-    filter_tree = param.get('query')
-    host_name = param.get('host_name')
-    service_description = param.get('service_description')
-    if filter_tree is not None:
-        expr = tree_to_expr(filter_tree, Downtimes.__tablename__)
-        q = q.filter(expr)
+    query_expr = param.get('query')
+    if query_expr is not None:
+        q = q.filter(query_expr)
 
+    host_name = param.get('host_name')
     if host_name is not None:
         q = q.filter(Downtimes.host_name.contains(host_name))
 
+    service_description = param.get('service_description')
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
 
@@ -218,25 +221,14 @@ def delete_downtime(params):
     elif delete_type == "params":
         hostname = body['hostname']
         if "services" not in body:
-            host_query = {"op": "~", "left": "downtimes.host_name", "right": hostname}
-            downtime_commands.delete_downtime_with_query(live, host_query)
+            host_expr = Downtimes.host_name.op("~", hostname)
+            downtime_commands.delete_downtime_with_query(live, host_expr)
         else:
-            services_query = {
-                "op": "and",
-                "expr": [{
-                    'op': '=',
-                    'left': 'downtimes.host_name',
-                    'right': body['hostname']
-                }, {
-                    'op': 'or',
-                    'expr': [{
-                        'op': '=',
-                        'left': 'downtimes.service_description',
-                        'right': service_description
-                    } for service_description in body['services']]
-                }]
-            }
-            downtime_commands.delete_downtime_with_query(live, services_query)
+            services_expr = And(*[
+                Downtimes.host_name == body['hostname'],
+                Or(*[Downtimes.service_description == svc_desc for svc_desc in body['services']])
+            ])
+            downtime_commands.delete_downtime_with_query(live, services_expr)
     else:
         return problem(status=400,
                        title="Unhandled delete_type.",
@@ -253,26 +245,27 @@ def _serve_downtimes(downtimes):
 
 def _serialize_downtimes(downtimes):
     entries = []
-    for downtime_info in downtimes:
-        service_description = downtime_info.get("service_description")
+    for downtime in downtimes:
+        service_description = downtime.get("service_description")
         if service_description:
             downtime_detail = "service: %s" % service_description
         else:
-            downtime_detail = "host: %s" % downtime_info["host_name"]
+            downtime_detail = "host: %s" % downtime["host_name"]
 
-        downtime_id = downtime_info['id']
+        downtime_id = downtime['id']
         entries.append(
             constructors.domain_object(
                 domain_type='downtime',
                 identifier=downtime_id,
                 title='Downtime for %s' % downtime_detail,
-                extensions=_downtime_properties(downtime_info),
+                extensions=_downtime_properties(downtime),
                 links=[
-                    constructors.link_rel(rel='.../delete',
-                                          href='/objects/host/%s/objects/downtime/%s' %
-                                          (downtime_info['host_name'], downtime_id),
-                                          method='delete',
-                                          title='Delete the downtime'),
+                    constructors.link_rel(
+                        rel='.../delete',
+                        href=f'/objects/host/{downtime["host_name"]}/objects/downtime/{downtime_id}',
+                        method='delete',
+                        title='Delete the downtime',
+                    ),
                 ]))
 
     return constructors.object_collection(

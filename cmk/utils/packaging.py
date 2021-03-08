@@ -664,7 +664,9 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:
         return []
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = [p.path for p in get_package_parts() + get_config_parts() if p.ident != part]
+    taboo_dirs = {p.path for p in get_package_parts() + get_config_parts() if p.ident != part}
+    # os.path.realpath would resolve /omd to /opt/omd ...
+    taboo_dirs |= {p.replace('lib/check_mk', 'lib/python3/cmk') for p in taboo_dirs}
     if directory in taboo_dirs:
         return []
 

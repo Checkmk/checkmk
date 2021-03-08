@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
+import http.client
 import json
 import logging
 import mimetypes
@@ -344,16 +345,20 @@ class CheckmkRESTAPI:
             return wsgi_app(environ, start_response)
         except HTTPException as exc:
             # We don't want to log explicit HTTPExceptions as these are intentional.
-            # HTTPExceptions are WSGI apps
-            return exc(environ, start_response)
+            assert isinstance(exc.code, int)
+            return problem(
+                status=exc.code,
+                title=http.client.responses[exc.code],
+                detail=str(exc),
+            )(environ, start_response)
         except MKException as exc:
             if self.debug:
                 raise
 
             return problem(
                 status=EXCEPTION_STATUS.get(type(exc), 500),
-                title=str(exc),
-                detail="An exception occurred.",
+                title="An exception occurred.",
+                detail=str(exc),
             )(environ, start_response)
         except Exception as exc:
             crash = APICrashReport.from_exception()
@@ -367,7 +372,7 @@ class CheckmkRESTAPI:
                 ("site", config.omd_site()),
             ],)
 
-            return problem(status=EXCEPTION_STATUS.get(type(exc), 500),
+            return problem(status=500,
                            title=str(exc),
                            detail="An internal error occured while processing your request.",
                            ext={

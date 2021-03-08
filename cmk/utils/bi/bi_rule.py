@@ -85,6 +85,17 @@ class BIRule(ABCBIRule, ABCWithSchema):
     def schema(cls) -> Type["BIRuleSchema"]:
         return BIRuleSchema
 
+    def serialize(self):
+        return {
+            "id": self.id,
+            "nodes": [node.serialize() for node in self.nodes],
+            "params": self.params.serialize(),
+            "node_visualization": self.node_visualization,
+            "properties": self.properties.serialize(),
+            "aggregation_function": self.aggregation_function.serialize(),
+            "computation_options": self.computation_options.serialize(),
+        }
+
     def clone(self) -> "BIRule":
         rule_config = self.schema()().dump(self)
         return BIRule(rule_config)

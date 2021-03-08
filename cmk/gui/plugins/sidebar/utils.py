@@ -52,7 +52,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
     @property
     def title(self) -> str:
-        return _("Sidebar snapins")
+        return _("Sidebar elements")
 
     @property
     def do_sort(self) -> bool:
@@ -346,6 +346,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
             TopicMenuTopic(
                 name=topic.name(),
                 title=topic.title(),
+                max_entries=topic.max_entries(),
                 items=[],
                 icon=topic.icon_name(),
                 hide=topic.hide(),
@@ -353,7 +354,10 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
         topic.items.append(
             TopicMenuItem(
                 name=name,
-                title=visual_title(visual_type_name, visual, visual["context"]),
+                title=visual_title(visual_type_name,
+                                   visual,
+                                   visual["context"],
+                                   skip_title_context=True),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
@@ -414,7 +418,7 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
     for item in topic.items:
         if show_item_icons:
             html.open_li(class_=["sidebar", "show_more_mode" if item.is_show_more else None])
-            iconlink(item.title, item.url, item.icon)
+            iconlink(item.title, item.url, item.icon or "icon_missing")
             html.close_li()
         else:
             bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")

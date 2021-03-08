@@ -808,6 +808,7 @@ function autocomplete_show(input_id, select) {
         width: input.outerWidth(),
         tags: true,
         allowClear: true,
+        selectOnClose: true,
     });
 
     select.on("select2:open", function (e) {

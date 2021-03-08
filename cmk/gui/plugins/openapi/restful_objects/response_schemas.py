@@ -33,11 +33,12 @@ class ApiError(BaseSchema):
         required=True,
         example="Not found",
     )
-    errors = fields.List(
-        fields.String(),
-        allow_none=True,
-        description="Optionally a list of errors used for debugging.",
-        example=None,
+    _fields = fields.Dict(
+        data_key='fields',  # mypy
+        keys=fields.String(description="The field name"),
+        values=fields.List(fields.String(description="The error messages")),
+        description="Detailed error messages on all fields failing validation.",
+        required=False,
     )
 
 

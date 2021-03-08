@@ -43,10 +43,11 @@ class ModeSearch(WatoMode):
         self._folder = watolib.Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Search"),
+                                          breadcrumb,
                                           form_name="edit_host",
                                           button_name="_local",
-                                          save_title=_("Search"),
+                                          save_title=_("Submit"),
                                           save_icon="search",
                                           save_is_enabled=True)
 

@@ -20,6 +20,7 @@ def test_strip_snmp_value(value, expected):
     assert utils.strip_snmp_value(value) == expected
 
 
+@pytest.mark.usefixtures("create_files")
 class TestStoredWalkSNMPBackend:
     @pytest.mark.parametrize("a, b, result", [
         ("1.2.3", "1.2.3", 0),
@@ -32,3 +33,18 @@ class TestStoredWalkSNMPBackend:
     ])
     def test_compare_oids(self, a, b, result):
         assert StoredWalkSNMPBackend._compare_oids(a, b) == result
+
+    def test_read_walk_data(self, tmpdir):
+        assert StoredWalkSNMPBackend.read_walk_data(
+            tmpdir / "walkdata" / "1.txt") == [".1.2.3 foo\n", ".1.2.4 bar\nfoobar\n"]
+        assert StoredWalkSNMPBackend.read_walk_data(
+            tmpdir / "walkdata" / "2.txt") == [".1.2.3 foo\n\n\n", ".1.2.5 test\n"]
+
+
+@pytest.fixture
+def create_files(tmpdir):
+    tmpdir.mkdir("walkdata")
+    p1 = (tmpdir / "walkdata").join("1.txt")
+    p1.write(".1.2.3 foo\n.1.2.4 bar\nfoobar\n")
+    p2 = (tmpdir / "walkdata").join("2.txt")
+    p2.write(".1.2.3 foo\n\n\n.1.2.5 test\n")

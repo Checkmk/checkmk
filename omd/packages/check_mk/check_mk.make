@@ -18,7 +18,7 @@ $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
-	$(MAKE) -C $(REPO_PATH)/locale all
+	$(MAKE) -C $(REPO_PATH)/locale mo
 	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz -C $(PACKAGE_BUILD_DIR)
 	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) bin ; \

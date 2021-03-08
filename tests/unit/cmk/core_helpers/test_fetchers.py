@@ -526,6 +526,13 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         assert fetcher.fetch(Mode.INVENTORY) == result.OK({})  # 'pim' is not an inventory section
         assert fetcher.fetch(Mode.CHECKING) == result.OK({section_name: [table]})
 
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: {SectionName('pim')},
+        )
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({section_name: [table]})
+
     def test_fetch_from_io_partially_empty(self, monkeypatch, fetcher):
         section_name = SectionName('pum')
         monkeypatch.setattr(fetcher, "sections", {
@@ -557,6 +564,56 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
         )
         assert fetcher.fetch(Mode.DISCOVERY) == result.OK({})
 
+    @pytest.fixture(name="set_sections")
+    def _set_sections(self, monkeypatch):
+        table = [['1']]
+        monkeypatch.setattr(snmp_table, "get_snmp_table", lambda tree, **__: table)
+        monkeypatch.setattr(SNMPFetcher, "disabled_sections",
+                            property(lambda self: {SectionName("pam")}))
+        monkeypatch.setattr(
+            SNMPFetcher, "inventory_sections",
+            property(lambda self: {SectionName("pim"), SectionName("pam")}))
+        return table
+
+    def test_mode_inventory_do_status_data_inventory(self, set_sections, monkeypatch, fetcher):
+        table = set_sections
+        monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
+        )
+        assert fetcher.fetch(Mode.INVENTORY) == result.OK({SectionName('pim'): [table]})
+
+    def test_mode_inventory_not_do_status_data_inventory(self, set_sections, monkeypatch, fetcher):
+        table = set_sections
+        monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: fetcher._get_detected_sections(Mode.INVENTORY),
+        )
+        assert fetcher.fetch(Mode.INVENTORY) == result.OK({SectionName('pim'): [table]})
+
+    def test_mode_checking_do_status_data_inventory(self, set_sections, monkeypatch, fetcher):
+        table = set_sections
+        monkeypatch.setattr(fetcher, "do_status_data_inventory", True)
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
+        )
+        assert fetcher.fetch(Mode.CHECKING) == result.OK({SectionName('pim'): [table]})
+
+    def test_mode_checking_not_do_status_data_inventory(self, set_sections, monkeypatch, fetcher):
+        monkeypatch.setattr(fetcher, "do_status_data_inventory", False)
+        monkeypatch.setattr(
+            snmp,
+            "gather_available_raw_section_names",
+            lambda *_, **__: fetcher._get_detected_sections(Mode.CHECKING),
+        )
+        assert fetcher.fetch(Mode.CHECKING) == result.OK({})
+
 
 class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     @pytest.fixture
@@ -578,13 +635,9 @@ class TestSNMPFetcherFetchCache(ABCTestSNMPFetcher):
     def patch_io(self, fetcher, monkeypatch):
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
 
-    def test_fetch_not_reading_cache_in_discovery_mode(self, fetcher):
+    def test_fetch_reading_cache_in_discovery_mode(self, fetcher):
         assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"fetched_section")
-
-    def test_fetch_reading_cache_in_cached_discovery_mode(self, fetcher):
-        assert fetcher.file_cache.cache == b"cached_section"
-        assert fetcher.fetch(Mode.CACHED_DISCOVERY) == result.OK(b"cached_section")
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK(b"cached_section")
 
 
 class TestSNMPSectionMeta:

@@ -47,7 +47,7 @@ from cmk.gui.permissions import Permission
 from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _, _u
+from cmk.gui.i18n import _, _u, ungettext
 from cmk.gui.globals import g, html, request, display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.permissions import permission_registry
@@ -310,7 +310,7 @@ def _create_dict_key(value: Any) -> Hashable:
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     if isinstance(value, dict):
-        return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
+        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
     return value
 
 
@@ -484,12 +484,30 @@ class Command(metaclass=abc.ABCMeta):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        what = "host" if cmdtag == "HOST" else "service"
+        return title + " the following %(count)d %(what)s?" % {
+            "count": len_action_rows,
+            "what": ungettext(what, what + "s", len_action_rows)
+        }
+
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple]:
+        return [(_("Confirm"), "_do_confirm")]
+
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
                num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+        result = self._action(cmdtag, spec, row, row_index, num_rows)
+        if result:
+            commands, title = result
+            return commands, self.user_dialog_suffix(title, num_rows, cmdtag)
+        return None
+
+    @abc.abstractmethod
+    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+                num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
         raise NotImplementedError()
 
     @property
@@ -545,6 +563,8 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
             "render": lambda s: s._spec["render"](),
             "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"]
                       (cmdtag, spec, row),
+            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"]
+                       (cmdtag, spec, row),
             "group": lambda s: command_group_registry[s._spec.get("group", "various")],
             "only_view": lambda s: s._spec.get("only_view"),
         })
@@ -825,6 +845,10 @@ class Painter(metaclass=abc.ABCMeta):
     def title(self, cell: 'Cell') -> str:
         """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
+
+    def title_classes(self) -> List[str]:
+        """Additional css classes used to render the title"""
+        return []
 
     @abc.abstractproperty
     def columns(self) -> List[ColumnName]:
@@ -1134,7 +1158,13 @@ def _get_singlecontext_html_vars_from_row(
         for filter_name in visuals.info_params(info_key):
             filter_object = visuals.get_filter(filter_name)
             # Get the list of URI vars to be set for that filter
-            url_vars.update(filter_object.request_vars_from_row(row))
+            try:
+                url_vars.update(filter_object.request_vars_from_row(row))
+            except KeyError:
+                # The information needed for a mandatory filter (single context) is not available.
+                # Continue without failing: The target site will show up a warning and ask for the
+                # missing information.
+                pass
 
     # See get_link_filter_names() comment for details
     for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
@@ -1185,7 +1215,13 @@ def get_linked_visual_request_vars(visual: Visual,
                                    singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
     vars_values: HTTPVariables = []
     for var in visuals.get_single_info_keys(visual["single_infos"]):
-        vars_values.append((var, singlecontext_request_vars[var]))
+        try:
+            vars_values.append((var, singlecontext_request_vars[var]))
+        except KeyError:
+            # The information needed for a mandatory filter (single context) is not available.
+            # Continue without failing: The target site will show up a warning and ask for the
+            # missing information.
+            pass
 
     if "site" in singlecontext_request_vars:
         vars_values.append(("site", singlecontext_request_vars["site"]))
@@ -1860,6 +1896,7 @@ class Cell:
             onclick = "location.href=\'%s\'" % makeuri(
                 request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
+        classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
         html.write(self.title())

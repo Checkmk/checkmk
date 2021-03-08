@@ -132,7 +132,7 @@ static std::vector<T> OverrideTargetIfEmpty(YAML::Node target,
 }
 
 void LogNodeAsBad(const YAML::Node& node, std::string_view comment) {
-    XLOG::d.t("{}.  Type {}", comment, node.Type());
+    XLOG::t("{}:  Type {}", comment, node.Type());
 }
 
 // merge source's content into the target if the content is absent in the target
@@ -471,15 +471,17 @@ std::filesystem::path ExtractPathFromServiceName(
     std::wstring_view service_name) {
     namespace fs = std::filesystem;
     if (service_name.empty()) return {};
-    XLOG::l.t("Try service '{}'", wtools::ToUtf8(service_name));
+    XLOG::l.t("Try service: '{}'", wtools::ToUtf8(service_name));
 
     fs::path service_path = FindServiceImagePath(service_name);
     std::error_code ec;
     if (fs::exists(service_path, ec)) {
         // location of the services
         auto p = service_path.parent_path();
+        XLOG::l.t("Service is found '{}'", service_path);
         return p.lexically_normal();
     }
+
     XLOG::l("'{}' doesn't exist, error_code: [{}] '{}'", service_path,
             ec.value(), ec.message());
 
@@ -493,7 +495,7 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                       const std::wstring& preset_root    // look in disk
 ) {
     namespace fs = std::filesystem;
-    XLOG::d.t("Setting root. service: '{}', preset: '{}'",
+    XLOG::l.t("Setting root. service: '{}', preset: '{}'",
               wtools::ToUtf8(service_name), wtools::ToUtf8(preset_root));
 
     // Path from registry if provided
@@ -505,6 +507,8 @@ bool Folders::setRoot(const std::wstring& service_name,  // look in registry
                   wtools::ToUtf8(service_name));
         return true;
     }
+
+    XLOG::l.i("Service '{}' not found", wtools::ToUtf8(service_name));
 
     // working folder is defined
     std::error_code ec;
@@ -671,10 +675,16 @@ void RemoveDirs(const std::filesystem::path& path) {
     namespace fs = std::filesystem;
     std::error_code ec;
     auto del_dirs = details::RemovableDirTable();
-    for (auto& d : del_dirs) fs::remove_all(path / d, ec);
+    for (auto& d : del_dirs) {
+        fs::remove_all(path / d, ec);
+        XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
+    }
 
     auto std_dirs = details::AllDirTable();
-    for (auto& d : std_dirs) fs::remove(path / d, ec);
+    for (auto& d : std_dirs) {
+        fs::remove(path / d, ec);
+        XLOG::l.i("removed '{}' with status [{}]", path / d, ec.value());
+    }
 }
 }  // namespace
 
@@ -706,7 +716,13 @@ bool CleanDataFolder(CleanMode mode) {
                 "Removing SMART from the Program Data Folder");
             RemoveCapGeneratedFile();
             RemoveOwnGeneratedFiles();
-            RemoveDirs(path);
+            if (g_remove_dirs_on_clean) {
+                XLOG::l.i("cleaning dirs...");
+                RemoveDirs(path);
+            } else {
+                XLOG::l.i(
+                    "ATTENTION: cleaning of the dirs is disabled in this release");
+            }
         } break;
 
         case CleanMode::all:
@@ -798,12 +814,17 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
         if (protection == Protection::yes) {
-            cma::security::ProtectAll(fs::path(app_data_folder) /
-                                      cma::cfg::kAppDataCompanyName);
+            XLOG::l.i("Protection requested");
+            std::vector<std::wstring> commands;
+
+            cma::security::ProtectAll(
+                fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName,
+                commands);
+            wtools::ExecuteCommandsAsync(L"all", commands);
         }
 
         if (ret == 0) return app_data;
-        XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
+        XLOG::l("Failed to access ProgramData Folder {}", ret);
 
         if constexpr (false) {
             // Public fallback
@@ -1143,7 +1164,7 @@ std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
 
 // #TODO refactor this trash
 void SetupPluginEnvironment() {
-    const std::array<std::pair<const std::string_view, const std::wstring>, 9>
+    const std::array<std::pair<const std::string_view, const std::wstring>, 10>
         env_pairs{{{envs::kMkLocalDirName, GetLocalDir()},
                    {envs::kMkStateDirName, GetStateDir()},
                    {envs::kMkPluginsDirName, GetUserPluginsDir()},
@@ -1152,6 +1173,7 @@ void SetupPluginEnvironment() {
                    {envs::kMkConfDirName, GetPluginConfigDir()},
                    {envs::kMkSpoolDirName, GetSpoolDir()},
                    {envs::kMkInstallDirName, GetUserInstallDir()},
+                   {envs::kMkModulesDirName, GetUserModulesDir()},
                    {envs::kMkMsiPathName, GetUpdateDir()}}};
 
     for (const auto& d : env_pairs)
@@ -1254,8 +1276,10 @@ void ConfigInfo::initFolders(
 
     if (!service_valid_name.empty()) {
         auto exe_path = FindServiceImagePath(service_valid_name);
-        wtools::ProtectFileFromUserWrite(exe_path);
-        wtools::ProtectPathFromUserAccess(root);
+        std::vector<std::wstring> commands;
+        wtools::ProtectFileFromUserWrite(exe_path, commands);
+        wtools::ProtectPathFromUserAccess(root, commands);
+        wtools::ExecuteCommandsAsync(L"data", commands);
     }
 
     if (folders_.getData().empty())
@@ -1303,6 +1327,19 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     folders_.createDataFolderStructure(data, Folders::CreateMode::direct,
                                        Folders::Protection::no);
 
+    return true;
+}
+
+bool ConfigInfo::pushFoldersNoIo(const std::filesystem::path& root,
+                                 const std::filesystem::path& data) {
+    std::lock_guard lk(lock_);
+    if (folders_stack_.size() >= kMaxFoldersStackSize) {
+        XLOG::l("Folders Stack is overflown, max size is [{}]",
+                kMaxFoldersStackSize);
+        return false;
+    }
+    folders_stack_.push(folders_);
+    folders_.setRoot({}, root.wstring());
     return true;
 }
 
@@ -1390,16 +1427,19 @@ constexpr Combine GetCombineMode(std::string_view name) {
 
 void CombineSequence(std::string_view name, YAML::Node target_value,
                      const YAML::Node& source_value, Combine combine) {
+    if (!source_value.IsDefined() || source_value.IsNull()) {
+        XLOG::t(XLOG_FUNC + " skipping empty section '{}'", name);
+        return;
+    }
+
     if (source_value.IsScalar()) {
-        XLOG::d.t("Overriding seq named '{}' with scalar, this is allowed",
-                  name);  // may happen when with empty sequence sections
+        XLOG::d.t("Overriding seq named '{}' with scalar. OK.", name);
         target_value = source_value;
         return;
     }
 
     if (!IsYamlSeq(source_value)) {
-        XLOG::l.t(XLOG_FLINE + " skipping section '{}' as different type",
-                  name);  // may happen when with empty sequence sections
+        XLOG::l(XLOG_FLINE + " skipping '{}' : wrong type ", name);
         return;
     }
 
@@ -1804,6 +1844,23 @@ bool ConfigInfo::loadDirect(const std::filesystem::path& file) {
     return true;
 }
 
+bool ConfigInfo::loadDirect(std::string_view text) {
+    auto new_yaml = YAML::Load(std::string{text});
+    if (0 == new_yaml.size()) return false;
+
+    std::lock_guard lk(lock_);
+    yaml_ = new_yaml;
+
+    // setting up paths  to the other files
+    user_yaml_path_.clear();
+    user_yaml_path_.clear();
+    bakery_yaml_path_.clear();
+    aggregated_ = false;
+    ok_ = true;
+    g_uniq_id++;
+    return true;
+}
+
 }  // namespace cma::cfg::details
 
 namespace cma::cfg {
@@ -1941,6 +1998,14 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
     return true;
 }
 
+//*** WMIC uninstaller ***
+// Run
+// wmic product get name,version /format:csv
+//      to get name and version
+// Run
+// wmic product where name="Check MK Agent 2.0" call uninstall /nointeractive
+//      to remove the product
+// Oprations ARE VERY LONG
 constexpr std::string_view g_wmic_uninstall_command =
     "wmic product where name=\"{}\" call uninstall /nointeractive";
 
@@ -1967,21 +2032,19 @@ std::filesystem::path CreateWmicUninstallFile(
 }
 
 bool UninstallProduct(std::string_view name) {
-    if constexpr (tgt::IsWindows()) {
-        std::filesystem::path temp{cma::cfg::GetTempDir()};
-        auto fname = CreateWmicUninstallFile(temp, name);
-        if (fname.empty()) return false;
-        XLOG::l("Starting '{}'", fname.u8string());
-        auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
-        if (pid == 0) {
-            XLOG::l("Failed to start '{}'", fname);
-            return false;
-        }
-        XLOG::l("Started '{}' with pid [{}]", fname, pid);
-        return true;
+    std::filesystem::path temp{cfg::GetTempDir()};
+    auto fname = CreateWmicUninstallFile(temp, name);
+    if (fname.empty()) {
+        return false;
     }
-
-    return false;
+    XLOG::l.i("Starting uninstallation command '{}'", fname);
+    auto pid = tools::RunStdCommand(fname.wstring(), true);
+    if (pid == 0) {
+        XLOG::l("Failed to start '{}'", fname);
+        return false;
+    }
+    XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname, pid);
+    return true;
 }
 
 details::ConfigInfo& GetCfg() { return details::g_config_info; }

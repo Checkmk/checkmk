@@ -105,6 +105,7 @@ def patch_themes(EDITION) {
                     echo '@mixin graphs_cee {}' > web/htdocs/themes/${THEME}/scss/cee/_graphs_cee.scss
                     echo '@mixin reporting {}' > web/htdocs/themes/${THEME}/scss/cee/_reporting.scss
                     echo '@mixin ntop {}' > web/htdocs/themes/${THEME}/scss/cee/_ntop.scss
+                    echo '@mixin license_usage {}' > web/htdocs/themes/${THEME}/scss/cee/_license_usage.scss
                     echo '@mixin managed {}' > web/htdocs/themes/${THEME}/scss/cme/_managed.scss
                 """
             }

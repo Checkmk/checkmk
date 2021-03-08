@@ -9,7 +9,7 @@ from .agent_based_api.v1 import (
     register,
     type_defs,
 )
-from .utils import if64, interfaces
+from .utils import interfaces
 
 
 def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Section:
@@ -67,17 +67,5 @@ def parse_statgrab_net(string_table: type_defs.StringTable) -> interfaces.Sectio
 register.agent_section(
     name='statgrab_net',
     parse_function=parse_statgrab_net,
-)
-
-register.check_plugin(
-    name="statgrab_net",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.generic_check_if64,
-    cluster_check_function=interfaces.cluster_check,
+    parsed_section_name='interfaces',
 )

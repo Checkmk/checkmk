@@ -6,8 +6,7 @@ import "core-js/stable";
 
 import $ from "jquery";
 import * as d3 from "d3";
-import * as d3_sankey from "d3-sankey";
-import {hexbin as Hexbin} from "d3-hexbin";
+import * as d3Sankey from "d3-sankey";
 import * as crossfilter from "crossfilter2";
 import * as dc from "dc";
 import * as forms from "forms";
@@ -45,9 +44,10 @@ import * as page_menu from "page_menu";
 
 import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
+try {
+    require("cmk_figures_plugins_cee");
+} catch (e) {}
 import * as graphs from "graphs";
-
-import * as cmk_tabs from "cmk_tabs";
 
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
@@ -93,6 +93,13 @@ try {
     ntop_top_talkers = null;
 }
 
+var license_usage_timeseries_graph;
+try {
+    license_usage_timeseries_graph = require("license_usage_timeseries_graph");
+} catch (e) {
+    license_usage_timeseries_graph = null;
+}
+
 $(() => {
     utils.update_header_timer();
     forms.enable_dynamic_form_elements();
@@ -100,12 +107,11 @@ $(() => {
     element_dragging.register_event_handlers();
 });
 
-d3.hexbin = Hexbin;
 export const cmk_export = {
     crossfilter: crossfilter.default,
     d3: d3,
     dc: dc,
-    sankey: d3_sankey,
+    d3Sankey: d3Sankey,
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -148,12 +154,14 @@ export const cmk_export = {
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
         figures: cmk_figures,
-        tabs: cmk_tabs,
         ntop: {
             host_details: ntop_host_details,
             alerts: ntop_alerts,
             flows: ntop_flows,
             top_talkers: ntop_top_talkers,
+        },
+        license_usage: {
+            timeseries_graph: license_usage_timeseries_graph,
         },
     },
 };

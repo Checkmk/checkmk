@@ -4,76 +4,83 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import copy
+from dataclasses import dataclass
 import json
-from typing import Set, Dict, Optional, Tuple, Type, List, Union, Callable, Iterator
+import time
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 from six import ensure_str
 
 import cmk.utils.version as cmk_version
-from cmk.gui.utils.html import HTML
 from cmk.utils.exceptions import MKException
 
-import cmk.gui.pages
 import cmk.gui.config as config
-import cmk.gui.visuals as visuals
-import cmk.gui.forms as forms
-import cmk.gui.utils as utils
 import cmk.gui.crash_reporting as crash_reporting
-from cmk.gui.type_defs import InfoName, VisualContext
-from cmk.gui.valuespec import (
-    Transform,
-    Dictionary,
-    DropdownChoice,
-    Checkbox,
-)
-from cmk.gui.valuespec import ValueSpec, ValueSpecValidateFunc, DictionaryEntry
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
+import cmk.gui.forms as forms
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.log import logger
-from cmk.gui.globals import html, request
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.views import ABCAjaxInitialFilters
-from cmk.gui.pages import page_registry, Page, PageResult
+import cmk.gui.pages
+import cmk.gui.plugins.dashboard
+import cmk.gui.utils as utils
+import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import (
-    make_topic_breadcrumb,
     Breadcrumb,
     BreadcrumbItem,
     make_current_page_breadcrumb_item,
+    make_topic_breadcrumb,
 )
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    PageMenuSidePopup,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_javascript_link,
-    make_display_options_dropdown,
-)
-
 from cmk.gui.exceptions import (
     HTTPRedirect,
-    MKGeneralException,
     MKAuthException,
+    MKGeneralException,
+    MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.permissions import (
-    declare_permission,
-    permission_section_registry,
-    PermissionSection,
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_javascript_link,
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuLink,
+    PageMenuSidePopup,
+    PageMenuTopic,
 )
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    VisualType,
+from cmk.gui.pages import Page, page_registry, PageResult
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
+from cmk.gui.type_defs import InfoName, VisualContext
+from cmk.gui.utils.html import HTML, HTMLInput
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    Transform,
+    ValueSpec,
+    ValueSpecValidateFunc,
 )
-
-import cmk.gui.plugins.dashboard
+from cmk.gui.views import ABCAjaxInitialFilters
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.dashboard  # pylint: disable=no-name-in-module
@@ -81,30 +88,17 @@ if not cmk_version.is_raw_edition():
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
-from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.plugins.dashboard.utils import (
-    GROW,
-    MAX,
-    Dashlet,
-    copy_view_into_dashlet,
-    builtin_dashboards,
-    dashboard_breadcrumb,
-    dashlet_types,
-    dashlet_registry,
-    dashlet_vs_general_settings,
-    get_all_dashboards,
-    get_permitted_dashboards,
-    save_all_dashboards,
-)
+from cmk.gui.node_visualization import get_topology_view_and_filters
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
-    DashletType, DashletTypeName, DashletRefreshInterval, DashletRefreshAction, DashletConfig,
-    DashboardConfig, DashboardName, DashletSize, DashletInputFunc, DashletHandleInputFunc,
-    DashletId, ABCFigureDashlet,
+    ABCFigureDashlet, builtin_dashboards, copy_view_into_dashlet, dashboard_breadcrumb,
+    DashboardConfig, DashboardName, Dashlet, dashlet_registry, dashlet_types,
+    dashlet_vs_general_settings, DashletConfig, DashletHandleInputFunc, DashletId, DashletInputFunc,
+    DashletRefreshAction, DashletRefreshInterval, DashletSize, DashletType, DashletTypeName,
+    get_all_dashboards, get_permitted_dashboards, GROW, MAX, save_all_dashboards,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.node_visualization import get_topology_view_and_filters
-
+from cmk.gui.plugins.views.utils import data_source_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 loaded_with_language: Union[None, bool, str] = False
@@ -181,7 +175,7 @@ class VisualTypeDashboards(VisualType):
                     # displaying host graphs.
                     "service": specification[1]["service_description"],
                 }
-                parameters = {"source": specification[1]["graph_index"] + 1}
+                parameters = {"source": specification[1]["graph_id"]}
 
             elif specification[0] == "custom":
                 # Override the dashlet type here. It would be better to get the
@@ -289,11 +283,21 @@ def load_plugins(force: bool) -> None:
 
     # Declare permissions for all dashboards
     for name, board in builtin_dashboards.items():
+        # Special hack for the "main" dashboard: It contains graphs that are only correct in case
+        # you are permitted on all hosts and services. All elements on the dashboard are filtered by
+        # the individual user permissions. Only the problem graphs are not able to respect these
+        # permissions. To not confuse the users we make the "main" dashboard in the enterprise
+        # editions only visible to the roles that have the "general.see_all" permission.
+        if name == "main" and not cmk_version.is_raw_edition():
+            default_permissions = config.base_roles_with_permission("general.see_all")
+        else:
+            default_permissions = config.builtin_role_ids
+
         declare_permission(
             "dashboard.%s" % name,
             board["title"],
             board.get("description", ""),
-            config.builtin_role_ids,
+            default_permissions,
         )
 
     # Make sure that custom views also have permissions
@@ -383,11 +387,8 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     def infos(self) -> List[str]:
         return self._spec.get("infos", [])
 
-    def display_title(self) -> str:
-        title_func = self._spec.get("title_func")
-        if title_func:
-            return title_func(self._dashlet_spec)
-        return self.title()
+    def default_display_title(self) -> str:
+        return self._spec.get("title_func", lambda _arg: self.title)(self._dashlet_spec)
 
     def on_resize(self) -> Optional[str]:
         on_resize_func = self._spec.get("on_resize")
@@ -429,7 +430,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
 # Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:
 #
 # dashlet_types["hoststats"] = {
-#     "title"       : _("Host Statistics"),
+#     "title"       : _("Host statistics"),
 #     "sort_index"  : 45,
 #     "description" : _("Displays statistics about host states as globe and a table."),
 #     "render"      : dashlet_hoststats,
@@ -664,8 +665,8 @@ def dashlet_container_end() -> None:
 
 
 def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, mtime: int,
-                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], str]:
-    content = ""
+                    missing_mandatory_context_filters: bool) -> Tuple[Union[str, HTML], HTMLInput]:
+    content: HTMLInput = ""
     title: Union[str, HTML] = ""
     try:
         missing_single_infos = dashlet.missing_single_infos()
@@ -674,9 +675,9 @@ def _render_dashlet(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
                 _("Filter context missing"),
                 str(
                     html.render_warning(
-                        _("Unable to render this dashlet, "
+                        _("Unable to render this element, "
                           "because we miss some required context information (%s). Please update the "
-                          "form on the right to make this dashlet render.") %
+                          "form on the right to make this element render.") %
                         ", ".join(sorted(missing_single_infos)))))
 
         title = dashlet.render_title_html()
@@ -720,13 +721,15 @@ def _update_or_show(board: DashboardConfig, dashlet: Dashlet, is_update: bool, m
         return html.drain()
 
 
-def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
+def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
+    if isinstance(e, MKMissingDataError):
+        return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):
         # Do not write regular error messages related to normal user interaction and validation to
         # the web.log
-        logger.exception("Problem while rendering dashlet %d of type %s", dashlet.dashlet_id,
-                         dashlet.type_name())
+        logger.exception("Problem while rendering dashboard element %d of type %s",
+                         dashlet.dashlet_id, dashlet.type_name())
 
     with html.plugged():
         if isinstance(e, MKException):
@@ -737,7 +740,7 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> str:
                 exc_txt = ensure_str(str(e))
 
             html.show_error(
-                _("Problem while rendering dashlet %d of type %s: %s. Have a look at "
+                _("Problem while rendering dashboard element %d of type %s: %s. Have a look at "
                   "<tt>var/log/web.log</tt> for further information.") %
                 (dashlet.dashlet_id, dashlet.type_name(), exc_txt))
             return html.drain()
@@ -794,12 +797,29 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
                         title=_("Edit"),
                         entries=list(_dashboard_edit_entries(name, board, mode)),
                     ),
+                    PageMenuTopic(
+                        title=_("User profile"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Set as start URL"),
+                                icon_name="home",
+                                item=make_javascript_link('cmk.dashboard.set_start_url(%s)' %
+                                                          json.dumps(name)),
+                            )
+                        ],
+                    ),
                 ],
             ),
             PageMenuDropdown(
                 name="add_dashlets",
                 title=_("Add"),
-                topics=list(_page_menu_topics(name, board, mode)),
+                topics=list(_page_menu_topics(name)),
+                is_enabled=True,
+            ),
+            PageMenuDropdown(
+                name="dashboards",
+                title=_("Dashboards"),
+                topics=list(_page_menu_dashboards(name)),
                 is_enabled=True,
             ),
         ],
@@ -812,37 +832,63 @@ def _page_menu(breadcrumb: Breadcrumb, name: DashboardName, board: DashboardConf
     return menu
 
 
-def _page_menu_topics(name: DashboardName, board: DashboardConfig,
-                      mode: str) -> Iterator[PageMenuTopic]:
+def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:
+    if cmk_version.is_raw_edition():
+        linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
+    else:
+        linked_dashboards = ["main", "problems", "checkmk"]
+
+    yield PageMenuTopic(
+        title=_("Related Dashboards"),
+        entries=list(_dashboard_related_entries(name, linked_dashboards)),
+    )
+    yield PageMenuTopic(
+        title=_("Other Dashboards"),
+        entries=list(_dashboard_other_entries(name, linked_dashboards)),
+    )
+    yield PageMenuTopic(
+        title=_("Customize"),
+        entries=[
+            PageMenuEntry(
+                title=_("Customize Dashboards"),
+                icon_name="dashboard",
+                item=make_simple_link("edit_dashboards.py"),
+            )
+        ] if config.user.may("general.edit_dashboards") else [],
+    )
+
+
+def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
+
     yield PageMenuTopic(
         title=_("Views"),
-        entries=list(_dashboard_add_views_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_views_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Graphs"),
-        entries=list(_dashboard_add_graphs_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_graphs_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Metrics"),
-        entries=list(_dashboard_add_metrics_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_metrics_dashlet_entries(name)),
     )
 
     yield PageMenuTopic(
         title=_("Checkmk"),
-        entries=list(_dashboard_add_checkmk_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
     )
 
     if config.is_ntop_configured():
         yield PageMenuTopic(
             title=_("Ntop"),
-            entries=list(_dashboard_add_ntop_dashlet_entries(name, board, mode)),
+            entries=list(_dashboard_add_ntop_dashlet_entries(name)),
         )
 
     yield PageMenuTopic(
         title=_("Other"),
-        entries=list(_dashboard_add_other_dashlet_entries(name, board, mode)),
+        entries=list(_dashboard_add_other_dashlet_entries(name)),
     )
 
 
@@ -876,6 +922,7 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
         is_shortcut=True,
         is_suggested=False,
         name="toggle_edit",
+        sort_index=99,
     )
 
     yield PageMenuEntry(
@@ -891,6 +938,58 @@ def _dashboard_edit_entries(name: DashboardName, board: DashboardConfig,
                 filename="edit_dashboard.py",
             )),
     )
+
+
+def _dashboard_other_entries(
+    name: str,
+    linked_dashboards: Iterable[str],
+) -> Iterable[PageMenuEntry]:
+    ntop_not_configured = not config.is_ntop_configured()
+    for dashboard_name, dashboard in get_permitted_dashboards().items():
+        if name in linked_dashboards and dashboard_name in linked_dashboards:
+            continue
+        if dashboard["hidden"]:
+            continue
+        if ntop_not_configured and dashboard_name.startswith("ntop_"):
+            continue
+
+        yield PageMenuEntry(
+            title=dashboard["title"],
+            icon_name=dashboard["icon"] or "dashboard",
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("name", dashboard_name)],
+                    filename="dashboard.py",
+                )),
+        )
+
+
+def _dashboard_related_entries(
+    name: str,
+    linked_dashboards: Iterable[str],
+) -> Iterable[PageMenuEntry]:
+    if name not in linked_dashboards:
+        return  # only the three main dashboards are related
+
+    dashboards = get_permitted_dashboards()
+    for entry_name in linked_dashboards:
+        if entry_name not in dashboards:
+            continue
+        dashboard = dashboards[entry_name]
+        yield PageMenuEntry(
+            title=dashboard['title'],
+            icon_name=dashboard['icon'] or 'unknown',
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("name", entry_name)],
+                    filename="dashboard.py",
+                )),
+            is_shortcut=True,
+            is_suggested=False,
+            is_enabled=name != entry_name,
+        )
 
 
 def _extend_display_dropdown(menu: PageMenu, board: DashboardConfig, board_context: VisualContext,
@@ -937,238 +1036,254 @@ class AjaxInitialDashboardFilters(ABCAjaxInitialFilters):
         return board["context"]
 
 
-def _dashboard_add_views_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                         mode: str) -> Iterator[PageMenuEntry]:
+@dataclass
+class PageMenuEntryCEEOnly(PageMenuEntry):
+    def __post_init__(self) -> None:
+        if cmk_version.is_raw_edition():
+            self.is_enabled = False
+            self.disabled_tooltip = _("Enterprise feature")
+
+
+def _dashboard_add_dashlet_back_http_var() -> Tuple[str, str]:
+    return "back", makeuri(request, [('edit', '1')])
+
+
+def _dashboard_add_view_dashlet_link(
+    name: DashboardName,
+    create: Literal["0", "1"],
+    filename: str,
+) -> PageMenuLink:
+    return make_simple_link(
+        makeuri_contextless(
+            request,
+            [
+                ("name", name),
+                ("create", create),
+                _dashboard_add_dashlet_back_http_var(),
+            ],
+            filename=filename,
+        ))
+
+
+def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
+
     yield PageMenuEntry(
         title=_('New view'),
         icon_name='view',
-        item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=1&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "1", "create_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_('Link to existing view'),
         icon_name='view_link',
-        item=make_simple_link(
-            'create_link_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "0", "create_link_view_dashlet.py"),
     )
 
     yield PageMenuEntry(
         title=_('Copy of existing view'),
         icon_name="view_copy",
-        item=make_simple_link(
-            'create_view_dashlet.py?name=%s&create=0&back=%s' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_view_dashlet_link(name, "0", "create_view_dashlet.py"),
     )
 
 
-def _dashboard_add_graphs_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                          mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_non_view_dashlet_link(
+    name: DashboardName,
+    dashlet_type: str,
+) -> PageMenuLink:
+    return make_simple_link(
+        makeuri_contextless(
+            request,
+            [
+                ("name", name),
+                ("create", "0"),
+                _dashboard_add_dashlet_back_http_var(),
+                ("type", dashlet_type),
+            ],
+            filename="edit_dashlet.py",
+        ))
 
-    yield PageMenuEntry(
-        title='Performance Graph',
-        icon_name='graph',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=pnpgraph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
-    )
 
-    yield PageMenuEntry(
-        title='Custom Graph',
+def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
+
+    yield PageMenuEntryCEEOnly(
+        title='Single metric graph',
         icon_name={
             'icon': 'graph',
             'emblem': 'add',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=custom_graph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "single_timeseries"),
     )
 
     yield PageMenuEntry(
-        title='Combined Graph',
+        title=_('Performance graph'),
+        icon_name='graph',
+        item=_dashboard_add_non_view_dashlet_link(name, "pnpgraph"),
+    )
+
+    yield PageMenuEntryCEEOnly(
+        title=_('Custom graph'),
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'add',
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "custom_graph"),
+    )
+
+    yield PageMenuEntryCEEOnly(
+        title=_('Combined graph'),
         icon_name={
             'icon': 'graph',
             'emblem': 'add',  # TODO: Need its own icon
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=combined_graph' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "combined_graph"),
     )
 
 
-def _dashboard_add_metrics_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                           mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Average scatterplot',
         icon_name='scatterplot',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=average_scatterplot' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "average_scatterplot"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Barplot',
         icon_name='barplot',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=barplot' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "barplot"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Gauge',
         icon_name='gauge',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=gauge' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "gauge"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Single metric',
         icon_name='single_metric',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=single_metric' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "single_metric"),
     )
 
 
-def _dashboard_add_checkmk_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                           mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Site overview',
         icon_name='site_overview',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=site_overview' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "site_overview"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alert statistics',
-        icon_name='statistic',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=alert_statistics' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        icon_name={
+            'icon': 'alerts',
+            'emblem': 'statistic'
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "alert_statistics"),
     )
     yield PageMenuEntry(
-        title='Host Statistics',
+        title='Host statistics',
         icon_name={
             'icon': 'folder',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=hoststats' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "hoststats"),
     )
 
     yield PageMenuEntry(
-        title='Service Statistics',
+        title='Service statistics',
         icon_name={
             'icon': 'services',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=servicestats' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "servicestats"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Notification timeline',
         icon_name={
             'icon': 'notifications',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=notifications_bar_chart' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "notifications_bar_chart"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alert timeline',
         icon_name={
             'icon': 'alerts',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=alerts_bar_chart' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "alerts_bar_chart"),
+    )
+
+    yield PageMenuEntryCEEOnly(
+        title=_('Percentage of service problems'),
+        icon_name={
+            'icon': 'graph',
+            'emblem': 'statistic'
+        },
+        item=_dashboard_add_non_view_dashlet_link(name, "problem_graph"),
     )
 
     yield PageMenuEntry(
         title='User notifications',
         icon_name='notifications',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=notify_users' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "notify_users"),
     )
 
     yield PageMenuEntry(
-        title='Sidebar Snapin',
+        title='Sidebar element',
         icon_name='custom_snapin',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=snapin' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "snapin"),
         is_show_more=True,
     )
 
 
-def _dashboard_add_ntop_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                        mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Alerts',
         icon_name={
             'icon': 'ntop',
             'emblem': 'warning',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_alerts' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_alerts"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Flows',
         icon_name={
             'icon': 'ntop',
             'emblem': 'more',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_flows' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_flows"),
     )
 
-    yield PageMenuEntry(
+    yield PageMenuEntryCEEOnly(
         title='Top talkers',
         icon_name={
             'icon': 'ntop',
             'emblem': 'statistic',
         },
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=ntop_top_talkers' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "ntop_top_talkers"),
     )
 
 
-def _dashboard_add_other_dashlet_entries(name: DashboardName, board: DashboardConfig,
-                                         mode: str) -> Iterator[PageMenuEntry]:
+def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
 
     yield PageMenuEntry(
         title='Custom URL',
         icon_name='dashlet_url',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=url' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "url"),
         is_show_more=True,
     )
 
     yield PageMenuEntry(
         title='Static text',
         icon_name='dashlet_nodata',
-        item=make_simple_link(
-            'edit_dashlet.py?name=%s&create=0&back=%s&type=nodata' %
-            (html.urlencode(name), html.urlencode(makeuri(request, [('edit', '1')])))),
+        item=_dashboard_add_non_view_dashlet_link(name, "nodata"),
         is_show_more=True,
     )
 
@@ -1240,10 +1355,10 @@ def get_dashlet(board: DashboardName, ident: DashletId) -> DashletConfig:
     try:
         return dashboard['dashlets'][ident]
     except IndexError:
-        raise MKGeneralException(_('The dashlet does not exist.'))
+        raise MKGeneralException(_('The dashboard element does not exist.'))
 
 
-def draw_dashlet(dashlet: Dashlet, content: str, title: Union[str, HTML]) -> None:
+def draw_dashlet(dashlet: Dashlet, content: HTMLInput, title: Union[str, HTML]) -> None:
     """Draws the initial HTML code for one dashlet
 
     Each dashlet has an id "dashlet_%d", where %d is its index (in
@@ -1305,10 +1420,10 @@ def ajax_dashlet() -> None:
             break
 
     if not dashlet_spec:
-        raise MKUserError("id", _('The dashlet can not be found on the dashboard.'))
+        raise MKUserError("id", _('The element can not be found on the dashboard.'))
 
     if dashlet_spec['type'] not in dashlet_registry:
-        raise MKUserError("id", _('The requested dashlet type does not exist.'))
+        raise MKUserError("id", _('The requested element type does not exist.'))
 
     mtime = html.request.get_integer_input_mandatory('mtime', 0)
 
@@ -1317,7 +1432,7 @@ def ajax_dashlet() -> None:
         dashlet_type = get_dashlet_type(dashlet_spec)
         dashlet = dashlet_type(name, board, ident, dashlet_spec)
 
-        content = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
+        content: HTMLInput = _render_dashlet_content(board, dashlet, is_update=True, mtime=mtime)
     except Exception as e:
         if dashlet is None:
             dashlet = _fallback_dashlet(name, board, dashlet_spec, ident)
@@ -1405,11 +1520,17 @@ def page_create_dashboard() -> None:
 
 @cmk.gui.pages.register("edit_dashboard")
 def page_edit_dashboard() -> None:
-    visuals.page_edit_visual('dashboards',
-                             get_all_dashboards(),
-                             create_handler=create_dashboard,
-                             custom_field_handler=dashboard_fields_handler,
-                             info_handler=_dashboard_info_handler)
+    visuals.page_edit_visual(
+        'dashboards',
+        get_all_dashboards(),
+        create_handler=create_dashboard,
+        custom_field_handler=dashboard_fields_handler,
+        info_handler=_dashboard_info_handler,
+        help_text_context=_(
+            "A dashboard can have an optional context. It can for example be restricted to display "
+            "only information of a single host or for a set of services matching a regular "
+            "expression."),
+    )
 
 
 def _dashboard_info_handler(visual):
@@ -1460,6 +1581,14 @@ def _vs_dashboard() -> Dictionary:
                         "the users to first provide some context before rendering the dashboard."),
                 )),
         ],
+        form_isopen=False,
+        help=_(
+            "Here, you can configure additional properties of the dashboard. This is completely "
+            "optional and only needed to create more advanced dashboards. For example, you can "
+            "make certain filters mandatory. This enables you to build generic dashboards which "
+            "could for example contain all the relevant information for a single Oracle DB. "
+            "However, before the dashboard is rendered, the user has to decide which DB he wants "
+            "to look at."),
     )
 
 
@@ -1589,7 +1718,8 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
 
 
 def _choose_view_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb,
+    return make_simple_form_page_menu(_("View"),
+                                      breadcrumb,
                                       form_name="choose_view",
                                       button_name="save",
                                       save_title=_("Continue"))
@@ -1613,12 +1743,12 @@ class EditDashletPage(Page):
         if self._ident is None:
             type_name = html.request.get_str_input_mandatory('type')
             mode = 'add'
-            title = _('Add Dashlet')
+            title = _('Add element')
 
             try:
                 dashlet_type = dashlet_registry[type_name]
             except KeyError:
-                raise MKUserError("type", _('The requested dashlet type does not exist.'))
+                raise MKUserError("type", _('The requested element type does not exist.'))
 
             # Initial configuration
             dashlet_spec: DashletConfig = {
@@ -1648,12 +1778,12 @@ class EditDashletPage(Page):
             dashlet_spec['single_infos'] = single_infos
         else:
             mode = 'edit'
-            title = _('Edit Dashlet')
+            title = _('Edit element')
 
             try:
                 dashlet_spec = self._dashboard['dashlets'][self._ident]
             except IndexError:
-                raise MKUserError("id", _('The dashlet does not exist.'))
+                raise MKUserError("id", _('The element does not exist.'))
 
             type_name = dashlet_spec['type']
             dashlet_type = dashlet_registry[type_name]
@@ -1698,7 +1828,8 @@ class EditDashletPage(Page):
             settings_elements = set(el[0] for el in vs_general._get_elements())
             properties_elements = set(el[0] for el in vs_type._get_elements())
             assert settings_elements.isdisjoint(
-                properties_elements), "Dashlet settings and properties have a shared option name"
+                properties_elements
+            ), "Dashboard element settings and properties have a shared option name"
 
         if html.request.var('save') and html.transaction_valid():
             try:
@@ -1755,7 +1886,10 @@ class EditDashletPage(Page):
 
 
 def _dashlet_editor_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb, form_name="dashlet", button_name="save")
+    return make_simple_form_page_menu(_("Element"),
+                                      breadcrumb,
+                                      form_name="dashlet",
+                                      button_name="save")
 
 
 def _dashlet_editor_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:
@@ -1791,7 +1925,7 @@ def page_clone_dashlet() -> None:
     try:
         dashlet_spec = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     new_dashlet_spec = dashlet_spec.copy()
     dashlet_type = get_dashlet_type(new_dashlet_spec)
@@ -1823,7 +1957,7 @@ def page_delete_dashlet() -> None:
     try:
         _dashlet_spec = dashboard['dashlets'][ident]  # noqa: F841
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     dashboard['dashlets'].pop(ident)
     dashboard['mtime'] = int(time.time())
@@ -1860,7 +1994,7 @@ def check_ajax_update() -> Tuple[DashletConfig, DashboardConfig]:
     try:
         dashlet_spec = dashboard['dashlets'][ident]
     except IndexError:
-        raise MKUserError("id", _('The dashlet does not exist.'))
+        raise MKUserError("id", _('The element does not exist.'))
 
     return dashlet_spec, dashboard
 

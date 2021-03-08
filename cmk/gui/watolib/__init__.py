@@ -248,7 +248,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     convert_cgroups_from_tuple,
     host_attribute_matches,
-    default_site,
     format_config_value,
     liveproxyd_config_dir,
     mk_repr,
@@ -510,7 +509,6 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     'severity_unmonitored': 1,
                     'severity_vanished': 0,
                     'check_interval': 120.0,
-                    'inventory_check_do_scan': True
                 },
                 'options': {
                     'description': u'Perform every two hours a service discovery'
@@ -603,6 +601,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "mknotifyd",
                 "mknotifyd_connection",
                 "mssql_backup",
+                "mssql_blocked_sessions",
                 "mssql_counters_cache_hits",
                 "mssql_counters_file_sizes",
                 "mssql_counters_locks",

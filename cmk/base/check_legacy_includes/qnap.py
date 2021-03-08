@@ -6,5 +6,5 @@
 
 
 def scan(oid):
-    return (oid('.1.3.6.1.2.1.1.1').startswith('Linux TS-') or
-            oid('.1.3.6.1.2.1.1.1').startswith('NAS Q'))
+    return (oid('.1.3.6.1.2.1.1.1.0').startswith('Linux TS-') or
+            oid('.1.3.6.1.2.1.1.1.0').startswith('NAS Q'))

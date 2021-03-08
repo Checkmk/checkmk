@@ -25,8 +25,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -147,7 +148,10 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="attr", button_name="save")
+        return make_simple_form_page_menu(_("Attribute"),
+                                          breadcrumb,
+                                          form_name="attr",
+                                          button_name="save")
 
     def _add_extra_attrs_from_html_vars(self):
         pass
@@ -455,6 +459,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     @abc.abstractmethod

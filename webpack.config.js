@@ -4,14 +4,13 @@
 
 const path = require("path");
 const FixStyleOnlyEntriesPlugin = require("webpack-fix-style-only-entries");
-const TerserPlugin = require('terser-webpack-plugin');
+const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
 
 module.exports = {
     mode: "production",
     devtool: "source-map",
     optimization: {
-        minimize: true,
         minimizer: [
             new TerserPlugin({
                 terserOptions: {
@@ -48,7 +47,9 @@ module.exports = {
             path.resolve(__dirname, "web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "web/htdocs/js/modules/node_visualization"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules/figures"),
             path.resolve(__dirname, "enterprise/web/htdocs/js/modules/ntop"),
+            path.resolve(__dirname, "enterprise/web/htdocs/js/modules/license_usage"),
         ],
     },
     module: {
@@ -134,6 +135,9 @@ if (process.env.WEBPACK_MODE === "quick") {
             path.resolve(__dirname, "node_modules/d3-flextree"),
             path.resolve(__dirname, "node_modules/d3-sankey"),
             path.resolve(__dirname, "node_modules/crossfilter2"),
+            // Additional packages needed for D3js v6:
+            path.resolve(__dirname, "node_modules/internmap"),
+            path.resolve(__dirname, "node_modules/delaunator"),
         ],
         use: {
             loader: "babel-loader",

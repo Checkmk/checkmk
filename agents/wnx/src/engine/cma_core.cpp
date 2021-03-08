@@ -7,6 +7,7 @@
 #include <chrono>
 #include <ctime>
 #include <filesystem>
+#include <ranges>
 #include <set>
 #include <string>
 #include <string_view>
@@ -17,12 +18,16 @@
 #include "glob_match.h"
 #include "section_header.h"  // we have logging here
 #include "service_processor.h"
+#include "tools/_misc.h"
 #include "windows_service_api.h"
+namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma {
 
 namespace security {
-void ProtectFiles(const std::filesystem::path& root) {
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands) {
     for (const auto& p : {
              root / cfg::kAppDataAppName / cfg::files::kUserYmlFile,
              root / cfg::kAppDataAppName / cfg::dirs::kBakery /
@@ -33,19 +38,15 @@ void ProtectFiles(const std::filesystem::path& root) {
              root / cfg::kAppDataAppName / cfg::dirs::kUpdate,
 
          }) {
-        if (!wtools::ProtectPathFromUserAccess(p)) {
-            XLOG::l.e("Protection of the '{}' failed!", p);
-        }
+        wtools::ProtectPathFromUserAccess(p, commands);
     }
 }
 
-void ProtectAll(const std::filesystem::path& root) {
-    if (!wtools::ProtectPathFromUserWrite(root)) {
-        XLOG::l.crit("Protection of the folder '{}' failed!", root);
-        return;
-    }
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands) {
+    wtools::ProtectPathFromUserWrite(root, commands);
 
-    ProtectFiles(root);
+    ProtectFiles(root, commands);
 }
 
 }  // namespace security
@@ -214,6 +215,15 @@ void RemoveDuplicatedNames(PathVector& paths) {
                               });
 
     paths.erase(end, paths.end());
+}
+
+// remove so-called forbidden files, we do not want to execute
+void RemoveForbiddenNames(PathVector& paths) {
+    const auto end = rs::remove_if(paths, [](fs::path const& p) {
+        return tools::IsEqual(p.filename().string(), "cmk-update-agent.exe");
+    });
+
+    paths.erase(end.begin(), end.end());
 }
 
 // make a list of files to be run(check exists normally is true)

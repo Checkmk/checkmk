@@ -864,9 +864,9 @@ rulespec_registry.register(
 def _ip_address_family_element():
     return (
         "address_family",
-        DropdownChoice(title=_("IP Address Family"),
+        DropdownChoice(title=_("IP address family"),
                        choices=[
-                           (None, _("Primary Address Family")),
+                           (None, _("Primary address family")),
                            ('ipv4', _("Enforce IPv4")),
                            ('ipv6', _("Enforce IPv6")),
                        ],

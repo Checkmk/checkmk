@@ -106,6 +106,30 @@ def show_host_tag_group(params):
     return _serve_host_tag_group(tag_group.get_dict_format())
 
 
+@Endpoint(constructors.collection_href('host_tag_group'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
+def list_host_tag_groups(params):
+    """Show all host tags"""
+    tag_config = load_tag_config()
+    tag_groups_collection = {
+        'id': 'host_tag',
+        'domainType': 'host_tag_group',
+        'value': [
+            constructors.collection_item(
+                domain_type='host_tag_group',
+                obj={
+                    'title': tag_group_obj.title,
+                    'id': tag_group_obj.id
+                },
+            ) for tag_group_obj in tag_config.get_tag_groups()
+        ],
+        'links': [constructors.link_rel('self', constructors.collection_href('host_tag_group'))]
+    }
+    return constructors.serve_json(tag_groups_collection)
+
+
 @Endpoint(
     constructors.object_href('host_tag_group', '{name}'),
     '.../update',
@@ -139,7 +163,6 @@ def update_host_tag_group(params):
     constructors.object_href('host_tag_group', '{name}'),
     '.../delete',
     method='delete',
-    etag='input',
     path_params=[HOST_TAG_GROUP_NAME],
     request_schema=request_schemas.DeleteHostTagGroup,
     output_empty=True,

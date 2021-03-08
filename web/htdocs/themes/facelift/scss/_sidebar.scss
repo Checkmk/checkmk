@@ -21,7 +21,6 @@ body.side {
   margin: 0;
   overflow: hidden;
   font-family: $font-family-default;
-  font-size: 14px;
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
@@ -35,10 +34,6 @@ body.side {
 
   b.treeangle.title {
     color: $font-color-sidebar;
-  }
-
-  img.treeangle {
-    filter: $treeangle-img-filter-sidebar;
   }
 }
 
@@ -60,6 +55,7 @@ body.side {
   float: right;
   width: 280px;
   height: 100%;
+  padding-top: $spacing;
 
   &.folded {
     display: none;
@@ -141,20 +137,23 @@ body.side {
 #side_header {
   height: 58px;
 
-  > a {
-    display: block;
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
     text-decoration: none;
-    background-image: url("images/tribe29_icon.svg");
-    background-position: center $spacing;
-    background-repeat: no-repeat;
-    background-size: auto 44px;
     outline: none;
+  }
 
-    &.min {
-      background-image: url("images/tribe29_icon_min.svg");
-    }
+  img {
+    width: 48px;
+    height: auto;
+  }
+
+  .min & img {
+    width: 45px;
   }
 }
 
@@ -166,10 +165,6 @@ body.main .popup_menu #side_header > span {
   background-position: 16px center;
   background-repeat: no-repeat;
   background-size: auto 30px;
-}
-
-#side_bg {
-  display: none;
 }
 
 #side_fold {
@@ -202,7 +197,7 @@ body.main .popup_menu #side_header > span {
 
 #side_version {
   margin: $spacing;
-  font-size: 8px;
+  font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color-sidebar;
@@ -264,25 +259,23 @@ div.snapin {
 
     b.heading {
       padding-bottom: 3px;
-      font-size: $font-size-global;
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
     }
 
     &.closed span.minisnapin {
-      background-image: url("images/icon_maxisnapin.png");
+      background-image: url("images/icon_maxisnapin.svg");
     }
 
     span.minisnapin {
-      position: absolute;
       display: inline-block;
-      width: 16px;
-      height: 16px;
+      width: 8px;
+      height: 8px;
       margin-left: 6px;
       line-height: 0;
       cursor: pointer;
-      background: no-repeat center / 100% url("images/icon_minisnapin.png");
+      background: no-repeat center / 100% url("images/icon_minisnapin.svg");
     }
   }
 
@@ -300,8 +293,8 @@ div.snapin {
 
   span.moresnapin {
     display: inline-block;
-    height: 16px;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
+    height: 16px;
     margin-right: 4px;
     vertical-align: middle;
 
@@ -314,13 +307,13 @@ div.snapin {
 
   span.closesnapin {
     display: inline-block;
-    width: 16px;
-    height: 16px;
+    width: 12px;
+    height: 12px;
     vertical-align: middle;
 
     img {
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 12px;
       padding: 0;
     }
   }
@@ -330,8 +323,8 @@ div.snapin {
     width: 100%;
     padding: $spacing 0;
     color: $font-color-sidebar;
-    box-sizing: border-box;
     border-bottom: 1px solid $snapin-heading-border-color;
+    box-sizing: border-box;
   }
 
   select {
@@ -352,7 +345,6 @@ div.snapin {
 
   h3 {
     margin: 2px 0;
-    font-size: 100%;
     color: $font-color;
   }
 
@@ -413,7 +405,6 @@ div.snapin {
 
     h2 {
       margin-top: 0;
-      font-size: 12px;
       color: rgb(255, 0, 0);
     }
 
@@ -467,7 +458,7 @@ div.snapin {
 }
 
 #add_snapin {
-  margin-top: auto;
+  margin: auto 0 $spacing;
   text-align: center;
 
   a {
@@ -503,15 +494,18 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 3px 7px 1px;
-  margin: 5px 10px 0 0;
+  height: 11px;
+  padding: 2px 7px;
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-table;
   color: $footnote-link-color;
-  background: $footnote-bg-color;
+  background: $inpage-highlight-color;
   border: none;
   box-shadow: none;
+
+  &:not(:last-child) {
+    margin: $spacing-half $spacing-half 0 0;
+  }
 }
 
 //div.snapin div.footnotelink a.link::before,
@@ -559,8 +553,6 @@ div.add_snapin {
       background-color: $snapin-bg-color;
       border: 1px solid $snapin-bg-color;
       border-radius: 5px;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.15s 0s ease-in-out;
     }
 
     *,
@@ -573,12 +565,8 @@ div.add_snapin {
     }
 
     div.description {
-      padding: 16px;
-      font-size: $font-size-small;
-      font-weight: $font-weight-default;
-      line-height: 1.333;
-      letter-spacing: $letter-spacing-table;
-      text-rendering: optimizeLegibility;
+      padding: $spacing;
+      border-top: 1px solid $snapin-heading-border-color;
     }
 
     div.snapin {
@@ -589,37 +577,11 @@ div.add_snapin {
     }
 
     .head {
-      height: auto;
       padding: 8px;
-      color: $font-color-sidebar;
-      text-align: left;
-      background: transparent;
-
-      b.heading {
-        font-size: $font-size-default;
-        font-weight: 500;
-        letter-spacing: $letter-spacing-table;
-        text-transform: uppercase;
-      }
-    }
-
-    .snapin b,
-    .head b {
-      font-weight: $font-weight-bold;
     }
 
     .content {
-      color: $font-color-sidebar;
-    }
-
-    div.foldable {
-      b.treeangle {
-        color: $font-color-sidebar;
-      }
-
-      img.treeangle {
-        filter: $treeangle-img-filter-sidebar;
-      }
+      border-bottom: none;
     }
   }
 

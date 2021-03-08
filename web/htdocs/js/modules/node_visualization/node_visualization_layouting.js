@@ -364,7 +364,7 @@ export class LayoutStyleConfiguration {
         //        matchers_enter.append("img")
         //                        .classed("treeangle", true)
         //                        .classed("open", d=>d.default_open)
-        //                        .attr("src",  theme_prefix + "/images/tree_closed.png")
+        //                        .attr("src",  theme_prefix + "/images/tree_closed.svg")
         //                        .on("click", function() {
         //                            let image = d3.select(this)
         //                            image.classed("open", !image.classed("open"))
@@ -781,7 +781,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .append("table")
             .attr("id", "overlay_configuration")
             .style("width", "100%")
-            .on("change", () => this._overlay_checkbox_options_changed());
+            .on("change", event => this._overlay_checkbox_options_changed(event));
 
         let row_enter = table_enter.append("tr").classed("header", true);
         row_enter.append("th").text("");
@@ -901,16 +901,16 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             active_id = this.layout_manager.layout_applier.current_layout_group.id;
         else if (choices.length > 0) active_id = choices[0];
 
-        this.add_dropdown_choice(choice_selection, choices, active_id, () =>
-            this.layout_changed_callback()
+        this.add_dropdown_choice(choice_selection, choices, active_id, event =>
+            this.layout_changed_callback(event)
         );
 
         if (active_id) this.content_selection.select("#layout_name").property("value", active_id);
         this.update_save_layout_button();
     }
 
-    layout_changed_callback() {
-        let selected_id = d3.event.target.value;
+    layout_changed_callback(event) {
+        let selected_id = event.target.value;
         this.layout_manager.layout_applier.apply_layout_id(selected_id);
         this.layout_style_configuration.show_style_configuration();
         this.content_selection.select("#layout_name").property("value", selected_id);
@@ -925,10 +925,10 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         this.layout_manager.viewport.update_active_overlays();
     }
 
-    _overlay_checkbox_options_changed() {
+    _overlay_checkbox_options_changed(event) {
         let current_overlay_config = this.layout_manager.layout_applier.current_layout_group
             .overlay_config;
-        let checkbox = d3.select(d3.event.target);
+        let checkbox = d3.select(event.target);
         let checked = checkbox.property("checked");
         let option_id = checkbox.attr("option_id");
         let overlay_id = checkbox.attr("overlay_id");
@@ -957,7 +957,7 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
         // Dropdown choice and delete button
         let row_enter = table_enter.append("tr");
         let td_enter = row_enter.append("td").attr("id", "available_layouts");
-        this.add_dropdown_choice(td_enter, [], null, () => this.layout_changed_callback());
+        this.add_dropdown_choice(td_enter, [], null, event => this.layout_changed_callback(event));
         row_enter
             .append("td")
             .append("input")
@@ -984,10 +984,10 @@ export class LayoutingToolbarPlugin extends node_visualization_toolbar_utils.Too
             .style("width", "100%")
             .style("box-sizing", "border-box")
             .on("input", () => this.update_save_layout_button())
-            .on("keydown", () => {
+            .on("keydown", event => {
                 let save_button = this.content_selection.select("#save_button");
                 if (save_button.attr("disabled")) return;
-                if (d3.event.keyCode == 13) {
+                if (event.keyCode == 13) {
                     this._save_layout_clicked();
                 }
             });
@@ -1120,9 +1120,9 @@ class LayoutingMouseEventsOverlay {
         this.layout_manager = layout_manager;
         this.drag = d3
             .drag()
-            .on("start.drag", () => this._dragstarted())
-            .on("drag.drag", () => this._dragging())
-            .on("end.drag", () => this._dragended());
+            .on("start.drag", event => this._dragstarted(event))
+            .on("drag.drag", event => this._dragging(event))
+            .on("end.drag", event => this._dragended(event));
 
         this.dragged_node = null;
     }
@@ -1135,16 +1135,16 @@ class LayoutingMouseEventsOverlay {
         nodes_selection.selectAll(".node_element").call(this.drag);
     }
 
-    _dragstarted() {
+    _dragstarted(event) {
         if (!this.layout_manager.is_node_drag_allowed()) return;
-        d3.event.sourceEvent.stopPropagation();
-        this._dragged_node = d3.select(d3.event.sourceEvent.target);
+        event.sourceEvent.stopPropagation();
+        this._dragged_node = d3.select(event.sourceEvent.target);
         let dragged_node_datum = this._dragged_node.datum();
         if (!dragged_node_datum) return;
 
-        this._apply_drag_force(dragged_node_datum, d3.event.x, d3.event.y);
-        this.drag_start_x = d3.event.x;
-        this.drag_start_y = d3.event.y;
+        this._apply_drag_force(dragged_node_datum, event.x, event.y);
+        this.drag_start_x = event.x;
+        this.drag_start_y = event.y;
 
         if (dragged_node_datum.data.use_style) {
             this.layout_manager.toolbar_plugin.layout_style_configuration.show_style_configuration(
@@ -1165,7 +1165,7 @@ class LayoutingMouseEventsOverlay {
         force.fy = y;
     }
 
-    _dragging() {
+    _dragging(event) {
         if (!this.layout_manager.is_node_drag_allowed()) return;
 
         let dragged_node_datum = this._dragged_node.datum();
@@ -1185,8 +1185,8 @@ class LayoutingMouseEventsOverlay {
         }
 
         let scale = 1.0;
-        let delta_x = d3.event.x - this.drag_start_x;
-        let delta_y = d3.event.y - this.drag_start_y;
+        let delta_x = event.x - this.drag_start_x;
+        let delta_y = event.y - this.drag_start_y;
 
         let last_zoom = this.layout_manager.viewport.last_zoom;
         scale = 1 / last_zoom.k;
@@ -1197,7 +1197,6 @@ class LayoutingMouseEventsOverlay {
             this.drag_start_y + delta_y * scale
         );
 
-        let node_data = d3.select(d3.event.sourceEvent.target).datum();
         node_visualization_layout_styles.force_simulation.restart_with_alpha(0.5);
         if (dragged_node_datum.data.use_style) {
             dragged_node_datum.data.use_style.force_style_translation();
@@ -1216,7 +1215,7 @@ class LayoutingMouseEventsOverlay {
         this.layout_manager.viewport.update_gui_of_layers();
     }
 
-    _dragended() {
+    _dragended(event) {
         this.layout_manager.dragging = false;
         if (!this.layout_manager.is_node_drag_allowed()) return;
 

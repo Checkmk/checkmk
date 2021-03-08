@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
 from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
     main_module_from_rulespec_group_name,
     MatchItemGeneratorRules,
     rulespec_group_registry,
@@ -1267,7 +1268,7 @@ def _expected_rulespec_group_choices():
     expected = [
         ('activechecks', u'HTTP, TCP, Email, ...'),
         ('agent', u'Access to Agents'),
-        ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Checkmk Agent'),
+        ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Checkmk agent'),
         ('agent/general_settings', u'&nbsp;&nbsp;\u2319 General Settings'),
         ('agents', u'Agent rules'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
@@ -1302,7 +1303,7 @@ def _expected_rulespec_group_choices():
         ('datasource_programs/hw', '&nbsp;&nbsp;⌙ Hardware'),
         ('datasource_programs/os', '&nbsp;&nbsp;⌙ Operating systems'),
         ('datasource_programs/testing', '&nbsp;&nbsp;⌙ Testing'),
-        ('snmp', 'SNMP settings'),
+        ('snmp', 'SNMP rules'),
         ('static', 'Enforced services'),
         ('static/applications', '&nbsp;&nbsp;⌙ Applications, Processes & Services'),
         ('static/environment', '&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc.'),
@@ -1443,6 +1444,9 @@ def test_rulespec_get_all_groups():
 def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
+        'checkparams',
+        'checkparams/discovery',
+        'checkparams/inventory_and_check_mk_settings',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',
@@ -1745,42 +1749,6 @@ def test_rulespecs_get_by_group():
 
 
 def test_match_item_generator_rules():
-    class SomeMainModule(ABCMainModule):
-        @property
-        def mode_or_url(self):
-            return makeuri_contextless_rulespec_group(request, "rulespec_group")
-
-        @property
-        def topic(self):
-            return MainModuleTopicHosts
-
-        @property
-        def title(self):
-            return "Main Module"
-
-        @property
-        def icon(self):
-            return "icon"
-
-        @property
-        def permission(self):
-            return "some_permission"
-
-        @property
-        def description(self):
-            return "Description"
-
-        @property
-        def sort_index(self):
-            return 30
-
-        @property
-        def is_show_more(self):
-            return False
-
-    main_module_reg = ModuleRegistry()
-    main_module_reg.register(SomeMainModule)
-
     class SomeRulespecGroup(RulespecGroup):
         @property
         def name(self):
@@ -1805,19 +1773,32 @@ def test_match_item_generator_rules():
             valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
             title=lambda: "Title",  # pylint: disable=unnecessary-lambda
         ))
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_deprecated_host_rulespec",
+            group=SomeRulespecGroup,
+            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            is_deprecated=True,
+        ))
 
     match_item_generator = MatchItemGeneratorRules(
         "rules",
-        main_module_reg,
         rulespec_group_reg,
         rulespec_reg,
     )
     assert list(match_item_generator.generate_match_items()) == [
         MatchItem(
             title='Title',
-            topic='Hosts > Rulespec Group',
+            topic='Rulespec Group',
             url='wato.py?mode=edit_ruleset&varname=some_host_rulespec',
             match_texts=['title', 'some_host_rulespec'],
+        ),
+        MatchItem(
+            title='Title',
+            topic='Deprecated rulesets',
+            url='wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec',
+            match_texts=['title', 'some_deprecated_host_rulespec'],
         )
     ]
 
@@ -1829,3 +1810,10 @@ def test_all_rulespec_groups_have_main_group(load_plugins):
                 rulespec_group_name,
                 main_module_registry,
             )
+
+
+def test_rulespec_groups_have_unique_names(load_plugins):
+    # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
+    # distinguish where a rule is located in the menu hierarchy.
+    main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
+    assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"

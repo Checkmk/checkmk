@@ -58,7 +58,7 @@
 /* TODO: Reproduce this html element */
 .wato div.sitestatus {
   padding: 0 10px;
-  font-size: 9px;
+  font-size: $font-size-small;
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
@@ -193,13 +193,18 @@ div#service_container {
 
   table.data {
     tr.data > td {
-      height: auto;
       padding: 3px 7px;
+
+      &.state {
+        height: 100%;
+        padding: 0 1px;
+      }
 
       &.service {
         width: 250px;
         max-width: 250px;
         min-width: 250px;
+        overflow-wrap: break-word;
       }
     }
   }
@@ -209,6 +214,50 @@ div#service_container {
 
     img {
       position: relative;
+    }
+  }
+
+  div#fixall {
+    background-color: $headline-color;
+    border-radius: 2px;
+
+    img {
+      float: left;
+      margin: 10px 0 0 10px;
+    }
+
+    ul {
+      float: left;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding-left: 10px;
+    }
+
+    li {
+      display: inline-block;
+      padding: 0 10px;
+      border-right: 1px solid $font-color;
+    }
+
+    li:last-child {
+      border-right: none;
+    }
+
+    span {
+      padding: 2px;
+    }
+
+    span.changed {
+      color: $success;
+      font-weight: $font-weight-bold;
+    }
+
+    input.button {
+      height: 25px;
+      padding: 5px 10px;
+      margin-left: 10px;
+      background-color: $success;
+      color: $black;
     }
   }
 }
@@ -330,7 +379,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      font-size: $font-size-default;
       color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -391,7 +439,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-size: 13px;
   font-weight: 500;
   color: $font-color;
 }
@@ -466,7 +513,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   div.title {
     position: absolute;
     top: 12px;
-    font-size: 13px;
     font-weight: bold;
     color: rgb(255, 255, 255);
 
@@ -574,7 +620,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     color: inherit;
   }
 
-  tag > div::before {
+  tag > div {
     opacity: 0.5;
   }
 }
@@ -607,7 +653,6 @@ form#form_timeperiod td.vlof_content {
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
-  font-size: 11px;
 }
 
 /* main menu */
@@ -838,7 +883,6 @@ div.varname {
   #row_info {
     float: right;
     padding-right: $spacing;
-    font-size: $font-size-global;
     font-weight: $font-weight-default;
   }
 }
@@ -862,62 +906,72 @@ div.varname {
   vertical-align: middle;
 }
 
-/* Replication */
-.wato table.data td.repprogress {
-  position: relative;
-  width: 160px;
-  padding: 0;
-  margin: 0;
-}
+.wato table.activation {
+  td.details {
+    div.warning,
+    div.error {
+      margin: 2px 0;
+    }
 
-.wato td.repprogress {
-  div.msg {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    z-index: 20;
-    width: 160px;
-    height: 16px;
-    text-align: center;
-
-    &.state_success,
-    &.state_warning {
-      color: $dark-font-color;
+    pre {
+      white-space: pre-wrap;
     }
   }
 
-  div.progress {
-    position: absolute;
-    top: 4px;
-    left: 0;
-    z-index: 0;
-    width: 160px;
-    height: 24px;
-    padding-top: 10px;
-    font-size: 11px;
-    color: $black;
-    border-radius: $theme-border-radius;
-    box-shadow: none;
-    box-sizing: border-box;
+  td.repprogress {
+    position: relative;
+    width: 140px;
+    min-width: 140px;
+    padding: 0;
+    margin: 0;
 
-    &.in_progress {
-      background: $repprogress-progress-bg-color;
-      border-color: $repprogress-progress-border-color;
+    div.msg {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      z-index: 20;
+      width: 160px;
+      height: 16px;
+      text-align: center;
+
+      &.state_success,
+      &.state_warning {
+        color: $dark-font-color;
+      }
     }
 
-    &.state_success {
-      background: $color-state-success-background;
-      border-color: $color-state-success-border;
-    }
+    div.progress {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      z-index: 0;
+      width: 160px;
+      height: 24px;
+      padding-top: 10px;
+      color: $black;
+      border-radius: $theme-border-radius;
+      box-shadow: none;
+      box-sizing: border-box;
 
-    &.state_error {
-      background: $color-state-2-background;
-      border-color: $color-state-2-border;
-    }
+      &.in_progress {
+        background: $repprogress-progress-bg-color;
+        border-color: $repprogress-progress-border-color;
+      }
 
-    &.state_warning {
-      background: $yellow;
-      border-color: $color-state-1-border;
+      &.state_success {
+        background: $color-state-success-background;
+        border-color: $color-state-success-border;
+      }
+
+      &.state_error {
+        background: $color-state-2-background;
+        border-color: $color-state-2-border;
+      }
+
+      &.state_warning {
+        background: $yellow;
+        border-color: $color-state-1-border;
+      }
     }
   }
 }
@@ -1118,6 +1172,10 @@ table.data tr.data.dcd_log_entries {
   td.right {
     width: 0;
   }
+}
+
+.wato div.error pre {
+  white-space: pre-wrap;
 }
 
 /* TODO: Reproduce this html element */
@@ -1469,5 +1527,4 @@ table.data.analyze_config td.buttons {
 
 .wato h3 {
   @include table-header-mixin;
-  margin-bottom: 0;
 }

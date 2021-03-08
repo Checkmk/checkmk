@@ -54,6 +54,29 @@ def show_user(params):
 
 
 @Endpoint(constructors.collection_href('user_config'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
+def list_users(params):
+    """Show all users"""
+    user_collection = {
+        'id': 'user',
+        'domainType': 'user_config',
+        'value': [
+            constructors.collection_item(
+                domain_type='user_config',
+                obj={
+                    'title': attrs['alias'],
+                    'id': user_id
+                },
+            ) for user_id, attrs in userdb.load_users(False).items()
+        ],
+        'links': [constructors.link_rel('self', constructors.collection_href('user_config'))],
+    }
+    return constructors.serve_json(user_collection)
+
+
+@Endpoint(constructors.collection_href('user_config'),
           'cmk/create',
           method='post',
           etag='output',
@@ -113,7 +136,6 @@ def create_user(params):
           '.../delete',
           method='delete',
           path_params=[USERNAME],
-          etag='input',
           output_empty=True)
 def delete_user(params):
     """Delete a user"""

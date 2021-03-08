@@ -37,10 +37,8 @@ from cmk.utils.type_defs import (
     AgentTargetVersion,
     ExitSpec,
     HostName,
-    MetricTuple,
     SectionName,
     ServiceDetails,
-    ServiceCheckResult,
     ServiceState,
     state_markers,
 )
@@ -87,23 +85,27 @@ class NoCache(AgentFileCache):
 
 
 class DefaultAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
-    def make(self) -> DefaultAgentFileCache:
+    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
+    # to implement it here anyway:
+    def make(self, *, force_cache_refresh: bool = False) -> DefaultAgentFileCache:
         return DefaultAgentFileCache(
             path=self.path,
-            max_age=self.max_age,
+            max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
-            use_outdated=self.use_outdated,
+            use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
 
 
 class NoCacheFactory(FileCacheFactory[AgentRawData]):
-    def make(self) -> NoCache:
+    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
+    # to implement it here anyway. At the time of this writing NoCache does nothing either way.
+    def make(self, *, force_cache_refresh: bool = False) -> NoCache:
         return NoCache(
             path=self.path,
-            max_age=self.max_age,
+            max_age=0 if force_cache_refresh else self.max_age,
             disabled=self.disabled | self.agent_disabled,
-            use_outdated=self.use_outdated,
+            use_outdated=False if force_cache_refresh else self.use_outdated,
             simulation=self.simulation,
         )
 
@@ -765,7 +767,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         return self.summarize_check_mk_section(
             host_sections.sections.get(SectionName("check_mk")),
             mode=mode,
@@ -776,12 +778,11 @@ class AgentSummarizerDefault(AgentSummarizer):
         cmk_section: Optional[AgentRawDataSection],
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
+    ) -> Tuple[ServiceState, ServiceDetails]:
         agent_info = self._get_agent_info(cmk_section)
 
         status: ServiceState = 0
         output: List[ServiceDetails] = []
-        perfdata: List[MetricTuple] = []
         if not self.is_cluster and agent_info["version"] is not None:
             output.append("Version: %s" % agent_info["version"])
 
@@ -789,17 +790,16 @@ class AgentSummarizerDefault(AgentSummarizer):
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
-            for sub_result in [
+            for sub_status, sub_output in (r for r in [
                     self._check_version(agent_info.get("version")),
                     self._check_only_from(agent_info.get("onlyfrom")),
-            ]:
-                if not sub_result:
-                    continue
-                sub_status, sub_output, sub_perfdata = sub_result
+                    self._check_python_plugins(agent_info.get("failedpythonplugins"),
+                                               agent_info.get("failedpythonreason")),
+            ] if r):
                 status = max(status, sub_status)
                 output.append(sub_output)
-                perfdata += sub_perfdata
-        return status, ", ".join(output), perfdata
+
+        return status, ", ".join(output)
 
     @staticmethod
     def _get_agent_info(cmk_section: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
@@ -815,7 +815,8 @@ class AgentSummarizerDefault(AgentSummarizer):
             agent_info[line[0][:-1].lower()] = value
         return agent_info
 
-    def _check_version(self, agent_version: Optional[str]) -> Optional[ServiceCheckResult]:
+    def _check_version(
+            self, agent_version: Optional[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         expected_version = self.agent_target_version
 
         if expected_version and agent_version \
@@ -837,21 +838,21 @@ class AgentSummarizerDefault(AgentSummarizer):
             else:
                 expected = "%s" % (expected_version,)
             status = cast(int, self.exit_spec.get("wrong_version", 1))
-            return (status, "unexpected agent version %s (should be %s)%s" %
-                    (agent_version, expected, state_markers[status]), [])
+            return status, (f"unexpected agent version {agent_version} "
+                            f"(should be {expected}){state_markers[status]}")
 
         if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = self.exit_spec.get("wrong_version", 1)
-            return (status, "old plugin version %s (should be at least %s)%s" %
-                    (agent_version, self.agent_min_version, state_markers[status]), [])
+            return status, (f"old plugin version {agent_version} "
+                            f"(should be at least {self.agent_min_version}){state_markers[status]}")
 
         return None
 
     def _check_only_from(
         self,
         agent_only_from: Optional[str],
-    ) -> Optional[ServiceCheckResult]:
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         if agent_only_from is None:
             return None
 
@@ -862,7 +863,7 @@ class AgentSummarizerDefault(AgentSummarizer):
         allowed_nets = set(normalize_ip_addresses(agent_only_from))
         expected_nets = set(normalize_ip_addresses(config_only_from))
         if allowed_nets == expected_nets:
-            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0]), []
+            return 0, "Allowed IP ranges: %s%s" % (" ".join(allowed_nets), state_markers[0])
 
         infotexts = []
         exceeding = allowed_nets - expected_nets
@@ -875,8 +876,20 @@ class AgentSummarizerDefault(AgentSummarizer):
 
         mismatch_state = self.exit_spec.get("restricted_address_mismatch", 1)
         assert isinstance(mismatch_state, int)
-        return (mismatch_state, "Unexpected allowed IP ranges (%s)%s" %
-                (", ".join(infotexts), state_markers[mismatch_state]), [])
+        return mismatch_state, "Unexpected allowed IP ranges (%s)%s" % (
+            ", ".join(infotexts),
+            state_markers[mismatch_state],
+        )
+
+    def _check_python_plugins(
+        self,
+        agent_failed_plugins: Optional[str],
+        agent_fail_reason: Optional[str],
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+        if agent_failed_plugins is None or agent_fail_reason is None:
+            return None
+
+        return 1, f"Failed to execute python plugins: {agent_failed_plugins} ({agent_fail_reason})"
 
     @staticmethod
     def _is_expected_agent_version(

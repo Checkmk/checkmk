@@ -222,6 +222,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return next(self.iterate(sites), None)
 
+    def fetchall(self, sites) -> List[ResultRow]:
+        return list(self.iterate(sites))
+
     def fetchone(self, sites) -> ResultRow:
         """Fetch one row of the result.
 

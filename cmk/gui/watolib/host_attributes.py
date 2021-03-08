@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
+from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
@@ -22,6 +23,7 @@ from cmk.gui.valuespec import (
     Transform,
     Checkbox,
     DropdownChoice,
+    Dictionary,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
 from cmk.gui.type_defs import Choices
@@ -799,7 +801,18 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().default_value()
 
     def paint(self, value, hostname):
-        return "", self.valuespec().value_to_text(value)
+        vs = self.valuespec()
+        content = vs.value_to_text(value)
+
+        # This should be the job of the valuespec: value_to_text should either
+        # return a str (which is then escaped during rendering or a HTML object
+        # which is not escaped). For Dictionary we know that it cares about
+        # escaping it's values. For this reason it is OK to wrap it into HTML
+        # to prevent escaping during rendering.
+        if isinstance(vs, Dictionary):
+            content = HTML(content)
+
+        return "", content
 
     def render_input(self, varprefix, value):
         self.valuespec().render_input(varprefix + self.name(), value)

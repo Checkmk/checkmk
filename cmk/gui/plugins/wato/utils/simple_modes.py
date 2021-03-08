@@ -39,8 +39,9 @@ from cmk.gui.config import SiteId
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuTopic,
+    PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -191,6 +192,7 @@ class SimpleListMode(_SimpleWatoModeBase):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _new_button_label(self) -> str:
@@ -331,7 +333,10 @@ class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit", button_name="save")
+        return make_simple_form_page_menu(_("Actions"),
+                                          breadcrumb,
+                                          form_name="edit",
+                                          button_name="save")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()

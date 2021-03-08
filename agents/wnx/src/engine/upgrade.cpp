@@ -100,11 +100,6 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
                  auto folder_exists = CreateFolderSmart(tgt);
                  if (!folder_exists) return;
 
-                 if (IsFileNonCompatible(src)) {
-                     XLOG::l.i("File '{}' is skipped as not compatible", src);
-                     return;
-                 }
-
                  auto c = CopyFolderRecursive(
                      src, tgt, fs::copy_options::skip_existing, [](fs::path p) {
                          XLOG::l.i("\tCopy '{}'", p);
@@ -214,6 +209,11 @@ int CopyFolderRecursive(
                         continue;
                     }
                 } else {
+                    if (IsFileNonCompatible(p)) {
+                        XLOG::l.i("File '{}' is skipped as not compatible", p);
+                        continue;
+                    }
+
                     // Copy to the targetParentPath which we just created.
                     auto ret =
                         fs::copy_file(p, target_parent_path, copy_mode, ec);

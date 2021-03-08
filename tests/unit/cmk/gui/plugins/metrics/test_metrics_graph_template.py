@@ -46,8 +46,19 @@ def test_rpn_stack(expression, result):
 def test_create_graph_recipe_from_template():
 
     metrics.fixup_unit_info()
-    import cmk.gui.plugins.metrics.utils as utils
-    graph_template = utils.graph_info['fs_used']
+    graph_template = {
+        "metrics": [
+            ("fs_used", "area"),
+            ("fs_size,fs_used,-#e3fff9", "stack", "Free space"),
+            ("fs_size", "line"),
+        ],
+        "scalars": [
+            "fs_used:warn",
+            "fs_used:crit",
+        ],
+        "range": (0, "fs_used:max"),
+        "conflicting_metrics": ["fs_free"],
+    }
     translated_metrics = metrics.translate_perf_data(
         '/=163651.992188;;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;', "check_mk-df")
     lq_row = {"site": "", "host_name": "", "service_description": ""}
@@ -80,25 +91,6 @@ def test_create_graph_recipe_from_template():
         'omit_zero_metrics': False,
         'consolidation_function': 'max'
     }
-
-
-@pytest.mark.parametrize("perf_string, result", [
-    pytest.param('one=5;;;; power=5;;;; output=5;;;;', [], id="Unknown thresholds from check"),
-    pytest.param('one=5;7;6;; power=5;9;10;; output=5;2;3;;', [
-        (7.0, '7.00', '#ffff00', 'Warning'),
-        (10.0, '10.0 W', '#ff0000', 'Critical power'),
-        (-2.0, '-2.00', '#ffff00', 'Warning output'),
-    ],
-                 id="Thresholds present"),
-])
-def test_horizontal_rules_from_thresholds(perf_string, result):
-    thresholds = [
-        "one:warn",
-        ("power:crit", "Critical power"),
-        ("output:warn,-1,*", "Warning output"),
-    ]
-    translated_metrics = metrics.translate_perf_data(perf_string)
-    assert gt._horizontal_rules_from_thresholds(thresholds, translated_metrics) == result
 
 
 @pytest.mark.parametrize("expression, perf_string, check_command, result_color", [

@@ -23,6 +23,8 @@ from cmk.gui.type_defs import ABCMegaMenuSearch
 import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
@@ -36,6 +38,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     ViewName,
+    Icon,
 )
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
@@ -490,6 +493,13 @@ class QuicksearchManager:
     def generate_search_url(self, query: SearchQuery) -> str:
         search_objects = self._determine_search_objects(query)
 
+        # Hitting enter on the search field to open the search in the
+        # page content area is currently only supported for livestatus
+        # search plugins
+        search_objects = [
+            s for s in search_objects if isinstance(s, LivestatusQuicksearchConductor)
+        ]
+
         try:
             self._conduct_search(search_objects)
         except TooManyRowsError:
@@ -666,9 +676,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def show(self):
         id_ = "mk_side_search_field"
-        html.open_div(id_="mk_side_search",
-                      class_="content_center",
-                      onclick="cmk.quicksearch.close_popup();")
+        html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button("#",
                          _("Search"),
@@ -1228,6 +1236,29 @@ class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
 match_plugin_registry.register(HostLabelMatchPlugin())
 match_plugin_registry.register(ServiceLabelMatchPlugin())
 
+
+class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
+    """Create matches for the entries of the monitor menu"""
+    def __init__(self) -> None:
+        super().__init__("menu")
+
+    def get_match_topic(self) -> str:
+        return _("Monitor")
+
+    def get_results(self, query: str) -> List[SearchResult]:
+        return [
+            SearchResult(
+                title=topic_menu_item.title,
+                url=topic_menu_item.url,
+            )
+            for topic_menu_topic in mega_menu_registry["monitoring"].topics()
+            for topic_menu_item in topic_menu_topic.items
+            if query.lower() in topic_menu_item.title.lower()
+        ]
+
+
+match_plugin_registry.register(MonitorMenuMatchPlugin())
+
 #   .--Menu Search---------------------------------------------------------.
 #   |      __  __                    ____                      _           |
 #   |     |  \/  | ___ _ __  _   _  / ___|  ___  __ _ _ __ ___| |__        |
@@ -1270,42 +1301,88 @@ class MenuSearchResultsRenderer:
             error_as_html = html.drain()
         return error_as_html
 
-    def _render_results(self, results: SearchResultsByTopic) -> str:
+    def _get_icon_mapping(
+        self,
+        default_icon: Icon = "topic_overview",
+    ) -> Dict[str, Tuple[Icon, Icon]]:
+        # {topic: (Icon(Topic): green, Icon(Item): colorful)}
+        mapping: Dict[str, Tuple[Icon, Icon]] = {}
+        for menu in [
+                mega_menu_registry.menu_setup(),
+                mega_menu_registry.menu_monitoring(),
+        ]:
+            mapping[menu.title] = (
+                menu.icon + "_active" if isinstance(menu.icon, str) else default_icon,
+                menu.icon if menu.icon else default_icon,
+            )
+
+            for topic in menu.topics():
+                mapping[topic.title] = (
+                    topic.icon if topic.icon else default_icon,
+                    topic.icon if topic.icon else default_icon,
+                )
+                for item in topic.items:
+                    mapping[item.title] = (
+                        topic.icon if topic.icon else default_icon,
+                        item.icon if item.icon else default_icon,
+                    )
+        for module_class in main_module_registry.values():
+            module = module_class()
+            if module.title not in mapping:
+                mapping[module.title] = (
+                    module.topic.icon_name
+                    if module.topic and module.topic.icon_name else default_icon,
+                    module.icon if module.icon else default_icon,
+                )
+        return mapping
+
+    def _render_results(
+        self,
+        results: SearchResultsByTopic,
+        default_icon: Icon = "topic_overview",
+    ) -> str:
         with html.plugged():
+            icon_mapping = self._get_icon_mapping(default_icon)
             for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
-                self._render_topic(topic)
+                icons = icon_mapping.get(topic, (default_icon, default_icon))
+                self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(list(search_results)):
-                    self._render_result(result, hidden=count >= self._max_num_displayed_results)
+                    self._render_result(
+                        result,
+                        hidden=count >= self._max_num_displayed_results,
+                    )
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
                     html.input(name="show_all_results",
                                value=_("Show all results"),
                                type_="button",
-                               onclick=f"cmk.search.on_click_show_all_results('{topic}');")
+                               onclick=f"cmk.search.on_click_show_all_results('{topic}');",
+                               class_="button")
                 html.close_ul()
                 html.close_div()
             html.div(None, class_=["topic", "sentinel"])
             html_text = html.drain()
         return html_text
 
-    def _render_topic(self, topic):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
         html.open_h2()
         html.div(class_="spacer", content="")
-        # TODO: Add the corresponding icon
-        html.icon("topic_overview")
+        if not config.user.get_attribute("icons_per_item"):
+            html.icon(icons[0])
+        else:
+            html.icon(icons[1])
         html.span(topic)
         html.close_h2()
 
     def _render_result(self, result, hidden=False):
-        html.open_li()
+        html.open_li(class_="hidden" if hidden else "")
         html.open_a(
             href=result.url,
             target="main",
-            onclick=
-            f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');",
-            class_="hidden" if hidden else "")
+            onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');"
+        )
         html.write_text(result.title)
         html.close_a()
         html.close_li()
@@ -1314,15 +1391,22 @@ class MenuSearchResultsRenderer:
 class MonitoringSearch(ABCMegaMenuSearch):
     """Search field in the monitoring menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_monitoring",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_monitoring")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, hosts, services or host- and servicegroups.\n"
+                    "You can use the following filters:\n"
+                    "h: Host\n"
+                    "s: Service\n"
+                    "hg: Hostgroup\n"
+                    "sg: Servicegroup\n"
+                    "ad: Address\n"
+                    "al: Alias\n"
+                    "tg: Hosttag")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Monitoring"),
                    onkeydown="cmk.search.on_key_down('monitoring')",
@@ -1346,15 +1430,14 @@ class PageSearchMonitoring(AjaxPage):
 class SetupSearch(ABCMegaMenuSearch):
     """Search field in the setup menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_setup",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Setup"),
                    onkeydown="cmk.search.on_key_down('setup')",

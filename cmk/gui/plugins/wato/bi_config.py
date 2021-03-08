@@ -19,9 +19,10 @@ except ImportError:
     managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
     ValueSpec,
@@ -66,9 +67,11 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_checkbox_selection_json_text,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
@@ -287,7 +290,8 @@ class ModeBIEditPack(ABCBIMode):
         return redirect(mode_url("bi_packs"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("BI pack"),
+                                          breadcrumb,
                                           form_name="bi_pack",
                                           button_name="_save",
                                           save_title=_("Save") if self._bi_pack else _("Create"))
@@ -443,6 +447,7 @@ class ModeBIPacks(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -617,7 +622,7 @@ class ModeBIRules(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic("bi"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -661,6 +666,7 @@ class ModeBIRules(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -759,8 +765,10 @@ class ModeBIRules(ABCBIMode):
         else:
             self.render_rules(_("Unused BI Rules"), only_unused=True)
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -809,11 +817,13 @@ class ModeBIRules(ABCBIMode):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(html.render_input("_toggle_group",
-                                                 type_="button",
-                                                 class_="checkgroup",
-                                                 onclick="cmk.selection.toggle_all_rows();",
-                                                 value='X'),
+                    table.cell(html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                        make_checkbox_selection_json_text(),
+                        value='X'),
                                sortable=False,
                                css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)
@@ -969,7 +979,8 @@ class ModeBIEditRule(ABCBIMode):
         return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
                                           form_name="birule",
                                           button_name="_save",
                                           save_title=_("Create") if self._new else _("Save"),
@@ -983,9 +994,9 @@ class ModeBIEditRule(ABCBIMode):
         self.verify_pack_permission(self.bi_pack)
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars('rule')
-
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), 'rule')
-        new_bi_rule = BIRule(vs_rule_config)
+        schema_validated_config = BIRuleSchema().load(vs_rule_config)
+        new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
@@ -1225,6 +1236,10 @@ class ModeBIEditRule(ABCBIMode):
                 value[what] = value["properties"].pop(what)
             value["disabled"] = value["computation_options"].pop("disabled")
 
+            # Marshmallow cannot handle None, it saves {}
+            if value["state_messages"] == {}:
+                value["state_messages"] = None
+
             del value["properties"]
             del value["computation_options"]
             return value
@@ -1235,7 +1250,7 @@ class ModeBIEditRule(ABCBIMode):
                 value["properties"][what] = value.pop(what) or ""
 
             for what in ["state_messages"]:
-                value["properties"][what] = value.get(what, {})
+                value["properties"][what] = value.pop(what) or {}
 
             value["computation_options"] = {}
             value["computation_options"]["disabled"] = value.pop("disabled")
@@ -1444,7 +1459,8 @@ class BIModeEditAggregation(ABCBIMode):
         return _("Edit Aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Aggregation"),
+                                          breadcrumb,
                                           form_name="biaggr",
                                           button_name="_save",
                                           save_is_enabled=bi_valuespecs.is_contact_for_pack(
@@ -1804,7 +1820,7 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic("bi"),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1828,13 +1844,16 @@ class BIModeAggregations(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def page(self):
         html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -1988,7 +2007,7 @@ class ModeBIRuleTree(ABCBIMode):
             self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb)
+        return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)

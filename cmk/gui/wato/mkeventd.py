@@ -1259,7 +1259,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rule packs")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -1456,7 +1456,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 _("You have not created any rule packs yet. The Event Console is useless unless "
                   "you have activated <i>Force message archiving</i> in the global settings."))
         elif search_expression and not found_packs:
-            html.show_message(_("Found no rules packs."))
+            html.show_message(_("Found no rule packs."))
             return
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -1702,7 +1702,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rules")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -2040,7 +2040,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule_pack", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule pack"),
+                                          breadcrumb,
+                                          form_name="rule_pack",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2171,7 +2174,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2442,7 +2448,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -2768,7 +2774,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return _('Upload SNMP MIBs')
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("MIBs"),
+                                          breadcrumb,
                                           form_name="upload_form",
                                           button_name="upload_button",
                                           save_title=_("Upload"))

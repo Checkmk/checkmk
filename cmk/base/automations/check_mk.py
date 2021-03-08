@@ -51,22 +51,22 @@ from cmk.core_helpers import factory
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.agent_based.checking as checking
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.check_api as check_api
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
 from cmk.base.check_utils import Service
-import cmk.base.checking
 import cmk.base.config as config
 import cmk.base.core
 from cmk.base.core import CoreAction, do_restart
 import cmk.base.core_config as core_config
 import cmk.base.sources as sources
-import cmk.base.discovery as discovery
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
+import cmk.base.plugin_contexts as plugin_contexts
 
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.autochecks import ServiceWithNodes
@@ -96,17 +96,6 @@ class DiscoveryAutomation(Automation):
         discovery.schedule_discovery_check(host_config.hostname)
 
 
-def _set_cache_opts_of_checkers(use_caches: bool) -> None:
-    # TODO check these settings vs.
-    # cmk.base.sources/_abstract.py:set_cache_opts
-    if use_caches:
-        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
-        # TODO why does this only apply to TCP data sources and not
-        # to all agent data sources?
-        sources.tcp.TCPSource.use_only_cache = True
-    cmk.core_helpers.cache.FileCacheFactory.maybe = use_caches
-
-
 class AutomationDiscovery(DiscoveryAutomation):
     cmd = "inventory"  # TODO: Rename!
     needs_config = True
@@ -120,7 +109,7 @@ class AutomationDiscovery(DiscoveryAutomation):
     # Hosts on the list that are offline (unmonitored) will
     # be skipped.
     def execute(self, args: List[str]) -> Dict[str, Any]:
-        # Error sensivity
+        # Error sensitivity
         if args[0] == "@raiseerrors":
             args = args[1:]
             on_error = "raise"
@@ -130,12 +119,10 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         # Do a full service scan
         if args[0] == "@scan":
+            use_cached_snmp_data = False
             args = args[1:]
-            use_caches = False
         else:
-            use_caches = True
-
-        _set_cache_opts_of_checkers(use_caches)
+            use_cached_snmp_data = True
 
         if len(args) < 2:
             raise MKAutomationError(
@@ -143,7 +130,6 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         mode = args[0]
         hostnames = args[1:]
-        service_filters = discovery.get_service_filter_funcs({})
 
         config_cache = config.get_config_cache()
 
@@ -152,12 +138,13 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
             results[hostname] = discovery.discover_on_host(
-                config_cache,
-                host_config,
-                mode,
-                use_caches,
-                service_filters,
+                config_cache=config_cache,
+                host_config=host_config,
+                mode=mode,
+                service_filters=None,
                 on_error=on_error,
+                use_cached_snmp_data=use_cached_snmp_data,
+                max_cachefile_age=config.discovery_max_cachefile_age(),
             )
 
             if results[hostname].error_text is None:
@@ -190,16 +177,14 @@ class AutomationTryDiscovery(Automation):
     def _execute_discovery(
             self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
 
-        use_caches = False
+        use_cached_snmp_data = False
         if args[0] == '@noscan':
             args = args[1:]
-            use_caches = True
+            use_cached_snmp_data = True
 
         elif args[0] == '@scan':
             # Do a full service scan
             args = args[1:]
-
-        _set_cache_opts_of_checkers(use_caches)
 
         if args[0] == '@raiseerrors':
             on_error = "raise"
@@ -207,10 +192,10 @@ class AutomationTryDiscovery(Automation):
         else:
             on_error = "warn"
 
-        hostname = args[0]
         return discovery.get_check_preview(
-            hostname,
-            use_caches=use_caches,
+            host_name=args[0],
+            max_cachefile_age=config.discovery_max_cachefile_age(),
+            use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
         )
 
@@ -233,6 +218,15 @@ class AutomationSetAutochecks(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
+
+        # Not loading all checks improves performance of the calls and as a result the
+        # responsiveness of the "service discovery" page.  For real hosts we don't need the checks,
+        # because we already have calculated service descriptions. For clusters we have to load all
+        # checks for host_config.set_autochecks, because it needs to calculate the
+        # service_descriptions of existing services to decided whether or not they are clustered
+        # (See autochecks.set_autochecks_of_cluster())
+        if host_config.is_cluster:
+            config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
         new_services: List[ServiceWithNodes] = []
         for (raw_check_plugin_name, item), (descr, params, raw_service_labels,
@@ -344,6 +338,10 @@ class AutomationRenameHosts(Automation):
 
         if self._rename_host_file(cmk.utils.paths.autochecks_dir, oldname + ".mk", newname + ".mk"):
             actions.append("autochecks")
+
+        if self._rename_host_file(str(cmk.utils.paths.discovered_host_labels_dir), oldname + ".mk",
+                                  newname + ".mk"):
+            actions.append("host-labels")
 
         # Rename temporary files of the host
         for d in ["cache", "counters"]:
@@ -608,7 +606,6 @@ class AutomationAnalyseServices(Automation):
     def _get_service_info(self, config_cache: config.ConfigCache, host_config: config.HostConfig,
                           servicedesc: str) -> Dict:
         hostname = host_config.hostname
-        check_api_utils.set_hostname(hostname)
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
@@ -656,15 +653,15 @@ class AutomationAnalyseServices(Automation):
 
             plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
             if plugin is None:
-                # Just to be safe, and to let mypy know.
-                # plugin should never be None for services that are in the check_table.
+                # plugin can only be None if we looked for the "Unimplemented check..." description.
+                # In this case we can run into the 'not found' case below.
                 continue
 
             parameters = service.parameters
             if isinstance(parameters, cmk.base.config.TimespecificParamList):
                 effective_parameters: LegacyCheckParameters = {
                     "tp_computed_params": {
-                        "params": cmk.base.checking.time_resolved_check_parameters(parameters),
+                        "params": checking.time_resolved_check_parameters(parameters),
                         "computed_at": time.time()
                     }
                 }
@@ -694,16 +691,17 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        for plugin_name, entries in host_config.active_checks:
-            for active_check_params in entries:
-                description = config.active_check_service_description(hostname, plugin_name,
-                                                                      active_check_params)
-                if description == servicedesc:
-                    return {
-                        "origin": "active",
-                        "checktype": plugin_name,
-                        "parameters": active_check_params,
-                    }
+        with plugin_contexts.current_host(hostname, write_state=False):
+            for plugin_name, entries in host_config.active_checks:
+                for active_check_params in entries:
+                    description = config.active_check_service_description(
+                        hostname, plugin_name, active_check_params)
+                    if description == servicedesc:
+                        return {
+                            "origin": "active",
+                            "checktype": plugin_name,
+                            "parameters": active_check_params,
+                        }
 
         return {}  # not found
 
@@ -1048,10 +1046,7 @@ class AutomationDiagHost(Automation):
 
         if not ipaddress:
             try:
-                resolved_address = ip_lookup.lookup_ip_address(
-                    host_config,
-                    family=host_config.default_address_family,
-                )
+                resolved_address = config.lookup_ip_address(host_config)
             except Exception:
                 raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
@@ -1324,19 +1319,18 @@ class AutomationActiveCheck(Automation):
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
-        check_api_utils.set_hostname(hostname)
+        with plugin_contexts.current_host(hostname, write_state=False):
+            for params in dict(host_config.active_checks).get(plugin, []):
+                description = config.active_check_service_description(hostname, plugin, params)
+                if description != item:
+                    continue
 
-        for params in dict(host_config.active_checks).get(plugin, []):
-            description = config.active_check_service_description(hostname, plugin, params)
-            if description != item:
-                continue
-
-            command_args = core_config.active_check_arguments(hostname, description,
-                                                              act_info["argument_function"](params))
-            command_line = self._replace_core_macros(
-                hostname, act_info["command_line"].replace("$ARG1$", command_args))
-            cmd = core_config.autodetect_plugin(command_line)
-            return self._execute_check_plugin(cmd)
+                command_args = core_config.active_check_arguments(
+                    hostname, description, act_info["argument_function"](params))
+                command_line = self._replace_core_macros(
+                    hostname, act_info["command_line"].replace("$ARG1$", command_args))
+                cmd = core_config.autodetect_plugin(command_line)
+                return self._execute_check_plugin(cmd)
 
         return None
 
@@ -1396,7 +1390,15 @@ class AutomationUpdateDNSCache(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: List[str]) -> ip_lookup.UpdateDNSCacheResult:
-        return ip_lookup.update_dns_cache()
+        config_cache = config.get_config_cache()
+        return ip_lookup.update_dns_cache(
+            host_configs=(
+                config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+            configured_ipv4_addresses=config.ipaddresses,
+            configured_ipv6_addresses=config.ipv6addresses,
+            simulation_mode=config.simulation_mode,
+            override_dns=config.fake_dns,
+        )
 
 
 automations.register(AutomationUpdateDNSCache())
@@ -1416,10 +1418,7 @@ class AutomationGetAgentOutput(Automation):
         info = b""
 
         try:
-            ipaddress = ip_lookup.lookup_ip_address(
-                host_config,
-                family=host_config.default_address_family,
-            )
+            ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
                 for source in sources.make_sources(
@@ -1433,7 +1432,7 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = source.fetch()
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_state, source_output, _source_perfdata = source.summarize(host_sections)
+                    source_state, source_output = source.summarize(host_sections)
                     if source_state != 0:
                         # Optionally show errors of problematic data sources
                         success = False

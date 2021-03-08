@@ -14,7 +14,7 @@ from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.check_api_utils import Service as OldService
+from cmk.base.check_api import Service as OldService
 import cmk.base.config as config
 
 

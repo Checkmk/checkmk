@@ -1588,14 +1588,21 @@ def call_scripts(site: SiteContext, phase: str) -> None:
                 encoding="utf-8")
             if p.stdout is None:
                 raise Exception("stdout needs to be set")
-            stdout = p.stdout.read()
+
+            wrote_output = False
+            for line in p.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
             exitcode = p.wait()
             if exitcode == 0:
                 sys.stdout.write(tty.ok + '\n')
             else:
                 sys.stdout.write(tty.error + ' (exit code: %d)\n' % exitcode)
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -1632,6 +1639,8 @@ def main_help(version_info: VersionInfo,
         args = []
     if options is None:
         options = {}
+    sys.stdout.write("Manage multiple monitoring sites comfortably with OMD. "
+                     "The Open Monitoring Distribution.\n")
 
     if is_root():
         sys.stdout.write("Usage (called as root):\n\n")
@@ -3977,11 +3986,11 @@ def main() -> None:
         set_environment(site)
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
-        sys.stdout.write("%s (yes/NO): " % command.confirm_text)
-        sys.stdout.flush()
-        a = sys.stdin.readline().strip()
-        if a.lower() != "yes":
-            sys.exit(0)
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
+        if answer in ["", "no"]:
+            bail_out(tty.normal + "Aborted.")
 
     try:
         command.handler(version_info, site, global_opts, args, command_options)

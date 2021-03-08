@@ -12,7 +12,6 @@ import enum
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 
 from cmk.base.check_utils import Service, ServiceID
@@ -97,9 +96,6 @@ class _ServiceFilter:
         self._skip_ignored = skip_ignored
 
     def keep(self, service: Service) -> bool:
-        # drop unknown plugins:
-        if agent_based_register.get_check_plugin(service.check_plugin_name) is None:
-            return False
 
         if self._skip_ignored and config.service_ignored(
                 self._host_name,

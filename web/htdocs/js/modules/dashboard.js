@@ -9,6 +9,23 @@ import * as forms from "forms";
 var reload_on_resize = {};
 export var dashboard_properties = {};
 
+// Set the dashboard as a start URL for the user
+export function set_start_url(dashboard_name) {
+    ajax.call_ajax("ajax_set_dashboard_start_url.py?name=" + encodeURIComponent(dashboard_name), {
+        response_handler: (_handler_data, response_body) => {
+            const response = JSON.parse(response_body);
+            if (response.result_code === 0) {
+                utils.reload_whole_page();
+            } else {
+                forms.confirm_dialog(
+                    {text: response.result, confirmButtonText: "OK", showCancelButton: false},
+                    null
+                );
+            }
+        },
+    });
+}
+
 export function set_reload_on_resize(dashlet_id, url) {
     reload_on_resize[dashlet_id] = url;
 }
@@ -48,8 +65,7 @@ function size_dashlets() {
             if (d_width <= 20) {
                 d_width = 21;
             }
-            // 14 => 9 title padding + empty space on right of dashlet
-            oDashTitle.style.width = d_width - 19 + "px";
+            oDashTitle.style.width = d_width - 17 + "px"; // 9 title padding + empty space on right of dashlet
             oDashTitle.style.display = disstyle;
             oDashTitle.style.left = dashboard_properties.dashlet_padding[3] + "px";
             oDashTitle.style.top = dashboard_properties.dashlet_padding[4] + "px";
@@ -591,26 +607,32 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         edits.appendChild(
             create_a_button(
                 "edit",
-                "Edit properties of this dashlet",
+                "Edit properties of this element",
                 click_actions("edit_dashlet.py")
             )
         );
 
         // Add clone dashlet button
         edits.appendChild(
-            create_a_button("clone", "Clone this dashlet", click_actions("clone_dashlet.py"))
+            create_a_button("clone", "Clone this element", click_actions("clone_dashlet.py"))
         );
 
         // Add delete dashlet button
         edits.appendChild(
-            create_a_button("del", "Delete this dashlet", () =>
+            create_a_button("del", "Delete this element", () =>
                 forms.confirm_dialog(
-                    {text: "Do you really want to delete this dashlet?"},
+                    {text: "Do you really want to delete this element?"},
                     click_actions("delete_dashlet.py")
                 )
             )
         );
-        centered_controls.prepend(edits);
+
+        const first_control = centered_controls.firstChild;
+        if (first_control) {
+            centered_controls.insertBefore(edits, first_control);
+        } else {
+            centered_controls.appendChild(edits);
+        }
     } else {
         // make the inner parts visible again
         utils.remove_class(dashlet_obj, "edit");
@@ -899,7 +921,7 @@ function persist_dashlet_pos(nr) {
         !Number.isInteger(dashlet.h)
     ) {
         alert(
-            "Error: Invalid dashlet coordinates found. Please report " +
+            "Error: Invalid element coordinates found. Please report " +
                 "this issue (" +
                 JSON.stringify(dashlet) +
                 ")."

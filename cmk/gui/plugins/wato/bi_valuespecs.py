@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import copy
 from typing import Type, List, Any, Dict, Union
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
@@ -80,57 +81,128 @@ def convert_from_cascading_vs_choice(value):
     return result
 
 
+# Aggregation Valuespec <-> REST conversions
+######################################################
+#   ('call_a_rule',
+#   {'params': {'arguments': []},
+#    'rule_id': 'applications',
+#    'type': 'call_a_rule'})
+#####################################################
+#   ('host_search',
+#   ({'conditions': {'host_choice': {'type': 'all_hosts'},
+#                    'host_folder': '',
+#                    'host_labels': {},
+#                    'host_tags': {}},
+#     'refer_to': 'host'},
+#    {'params': {'arguments': []},
+#     'rule_id': 'applications',
+#     'type': 'call_a_rule'}))
+def _convert_bi_aggr_to_vs(value):
+    if value["search"]["type"] == "empty":
+        return value["action"]["type"], value["action"]
+    return value["search"]["type"], (value["search"], value["action"])
+
+
+def _convert_bi_aggr_from_vs(value):
+    if value[0] == "call_a_rule":
+        return {"action": value[1], "search": {"type": "empty"}}
+
+    search = copy.deepcopy(value[1][0])
+    search["type"] = value[0]
+    return {
+        "search": search,
+        "action": value[1][1],
+    }
+
+
 def get_bi_aggregation_node_choices():
-    return Dictionary(
-        elements=[("search",
-                   Transform(
-                       CascadingDropdown(title=_("Search node arguments"),
-                                         choices=_get_search_cascading_dropdown_choices()),
-                       forth=convert_to_cascading_vs_choice,
-                       back=convert_from_cascading_vs_choice,
-                   )),
-                  ("action",
-                   Transform(
-                       CascadingDropdown(
-                           title=_("Nodes to create from search result(s)"),
-                           choices=[
-                               bi_config_action_registry[bi_actions.BICallARuleAction.type()].
-                               cascading_dropdown_choice_element()
-                           ],
-                       ),
-                       forth=convert_to_cascading_vs_choice,
-                       back=convert_from_cascading_vs_choice,
-                   ))],
-        title=_("Node configuration"),
-        optional_keys=[],
+    return Transform(
+        CascadingDropdown(choices=_get_aggregation_choices()),
+        forth=_convert_bi_aggr_to_vs,
+        back=_convert_bi_aggr_from_vs,
     )
+
+
+def _get_aggregation_choices():
+    # These choices are currently hardcoded
+    # A more dynamic approach will be introduced once the BI GUI gets an overhaul
+    elements = []
+    call_a_rule = bi_config_action_registry["call_a_rule"]
+    elements.append(call_a_rule.cascading_dropdown_choice_element())
+    for search_plugin in ["host_search", "service_search"]:
+        plugin = bi_config_search_registry[search_plugin]
+        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element()
+        elements.append((plugin_type, title, Tuple(elements=[
+            valuespec,
+            call_a_rule.valuespec(),
+        ],)))
+    return elements
+
+
+# Rule Valuespec <-> REST conversions
+######################################################
+#   ('call_a_rule',
+#   {'params': {'arguments': []},
+#    'rule_id': 'applications',
+#    'type': 'call_a_rule'})
+#####################################################
+# ('host_search',
+#  ({'conditions': {'host_choice': {'type': 'all_hosts'},
+#                   'host_folder': '',
+#                   'host_labels': {},
+#                   'host_tags': {}},
+#    'refer_to': 'host'},
+#   ('call_a_rule',
+#    {'params': {'arguments': ['test']},
+#     'rule_id': 'applications',
+#     'type': 'call_a_rule'})))
+def _convert_bi_rule_to_vs(value):
+    if value is None:
+        # The "complain phase" sets the value to None. o.O
+        # If None is returned, it seems the valuespec uses the parameters from the request
+        return value
+    if value["search"]["type"] == "empty":
+        return value["action"]["type"], value["action"]
+
+    return value["search"]["type"], (value["search"], (value["action"]["type"], value["action"]))
+
+
+def _convert_bi_rule_from_vs(value):
+    if value[0] in [
+            "state_of_host", "state_of_service", "state_of_remaining_services", "call_a_rule"
+    ]:
+        action = copy.deepcopy(value[1])
+        action["type"] = value[0]
+        return {"action": action, "search": {"type": "empty"}}
+
+    search = copy.deepcopy(value[1][0])
+    search["type"] = value[0]
+    return {
+        "search": search,
+        "action": value[1][1][1],
+    }
 
 
 def get_bi_rule_node_choices_vs():
-    return Dictionary(
-        elements=[
-            (
-                "search",
-                Transform(
-                    CascadingDropdown(title=_("Search"),
-                                      choices=_get_search_cascading_dropdown_choices()),
-                    forth=convert_to_cascading_vs_choice,
-                    back=convert_from_cascading_vs_choice,
-                ),
-            ),
-            ("action",
-             Transform(
-                 CascadingDropdown(
-                     title=_("Nodes to create from search result(s)"),
-                     choices=_get_action_cascading_dropdown_choices(),
-                 ),
-                 forth=convert_to_cascading_vs_choice,
-                 back=convert_from_cascading_vs_choice,
-             )),
-        ],
-        optional_keys=[],
-        title=_("Nodes configuration"),
+    return Transform(
+        CascadingDropdown(choices=_get_rule_choices(), sorted=False),
+        forth=_convert_bi_rule_to_vs,
+        back=_convert_bi_rule_from_vs,
     )
+
+
+def _get_rule_choices():
+    action_choices = _get_action_cascading_dropdown_choices()
+    choices = list(action_choices)
+    for search_plugin in ["host_search", "service_search"]:
+        plugin = bi_config_search_registry[search_plugin]
+        plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element()
+        choices.append((plugin_type, title,
+                        Tuple(elements=[
+                            valuespec,
+                            CascadingDropdown(title=_("Nodes to create"), choices=action_choices)
+                        ])))
+    return choices
 
 
 def _get_action_cascading_dropdown_choices():
@@ -154,6 +226,11 @@ class ABCBIConfigSearch(ABCBISearch):
     @classmethod
     @abc.abstractmethod
     def cascading_dropdown_choice_element(cls):
+        raise NotImplementedError()
+
+    @classmethod
+    @abc.abstractmethod
+    def valuespec(cls):
         raise NotImplementedError()
 
 
@@ -199,12 +276,16 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
         return (cls.type(), _("No search"),
                 Transform(FixedValue(""), forth=lambda x: "", back=lambda x: {"type": cls.type()}))
 
+    @classmethod
+    def valuespec(cls):
+        return None
+
 
 @bi_config_search_registry.register
 class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("Search hosts"), cls.valuespec())
+        return (cls.type(), _("Create nodes based on a host search"), cls.valuespec())
 
     @classmethod
     def valuespec(cls):
@@ -263,7 +344,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
     def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("Search services"), cls.valuespec())
+        return (cls.type(), _("Create nodes based on a service search"), cls.valuespec())
 
     @classmethod
     def valuespec(cls):
@@ -271,7 +352,6 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
             title=_("Conditions"),
             elements=[("conditions",
                        Dictionary(
-                           title=_("Conditions"),
                            elements=BIConfigHostSearch.get_host_conditions() +
                            cls.get_service_conditions(),
                            optional_keys=[],
@@ -345,6 +425,11 @@ class ABCBIConfigAction(ABCBIAction):
     def cascading_dropdown_choice_element(cls):
         raise NotImplementedError()
 
+    @classmethod
+    @abc.abstractmethod
+    def valuespec(cls):
+        raise NotImplementedError()
+
 
 class BIConfigActionRegistry(plugin_registry.Registry[Type[ABCBIConfigAction]]):
     def plugin_name(self, instance) -> str:
@@ -394,6 +479,7 @@ class BIConfigCallARuleAction(bi_actions.BICallARuleAction, ABCBIConfigAction):
                 ],
                 validate=cls._validate_rule_call,
             ),
+            title=_("Call a rule"),
             forth=convert_to_vs,
             back=convert_from_vs,
         )

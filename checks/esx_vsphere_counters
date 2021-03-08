@@ -249,7 +249,7 @@ def _parse_esx_vsphere_counters_swap(parsed):
 def inventory_esx_vsphere_counters_swap(parsed):
     SWAP = _parse_esx_vsphere_counters_swap(parsed)
 
-    if any([elem for elem in SWAP.values()]):
+    if any(elem for elem in SWAP.values()):
         return [(None, {})]
 
 

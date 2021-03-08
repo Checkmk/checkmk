@@ -9,7 +9,9 @@
 
 import abc
 import time
-from typing import Dict, List, Optional, Tuple, Union, Type, Iterator
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
+
+from livestatus import SiteId
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
@@ -21,7 +23,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.view_utils import get_labels
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName, Row, Rows, VisualContext
 from cmk.gui.htmllib import Choices
 from cmk.gui.page_menu import PageMenuEntry
 
@@ -257,7 +259,9 @@ class Filter(metaclass=abc.ABCMeta):
     def display(self) -> None:
         raise NotImplementedError()
 
-    def filter(self, infoname: str) -> str:
+    # The reason for infoname: Any is that no subclass uses this argument and it will be removed
+    # in the future.
+    def filter(self, infoname: Any) -> str:
         return ""
 
     def need_inventory(self) -> bool:
@@ -267,7 +271,11 @@ class Filter(metaclass=abc.ABCMeta):
     def validate_value(self, value: Dict) -> None:
         return
 
-    def filter_table(self, rows: List[dict]) -> List[dict]:
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+        """Columns needed to perform post-Livestatus filtering"""
+        return []
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         """post-Livestatus filtering (e.g. for BI aggregations)"""
         return rows
 
@@ -447,3 +455,49 @@ class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
 
 
 filter_registry = FilterRegistry()
+
+
+def get_only_sites_from_context(context: VisualContext) -> Optional[List[SiteId]]:
+    """Gather possible existing "only sites" information from context
+
+      We need to deal with
+
+      a) all possible site filters (sites, site and siteopt).
+      b) with single and multiple contexts
+
+      Single contexts are structured like this:
+
+      {"site": "sitename"}
+      {"sites": "sitename|second"}
+
+      Multiple contexts are structured like this:
+
+      {"site": {"site": "sitename"}}
+      {"sites": {"sites": "sitename|second"}}
+
+      The difference is no fault or "old" data structure. We can have both kind of structures.
+      These are the data structure the visuals work with.
+
+      "site" and "sites" are conflicting filters. The new optional filter
+      "sites" for many sites filter is only used if the view is configured
+      to only this filter.
+      """
+
+    if "sites" in context and "site" not in context:
+        only_sites = context["sites"]
+        if isinstance(only_sites, dict):
+            only_sites = only_sites["sites"]
+        only_sites_list = [SiteId(site) for site in only_sites.strip().split("|") if site]
+        return only_sites_list if only_sites_list else None
+
+    for var in ["site", "siteopt"]:
+        if var in context:
+            value = context[var]
+            if isinstance(value, dict):
+                site_name = value.get("site")
+                if site_name:
+                    return [SiteId(site_name)]
+                return None
+            return [SiteId(value)]
+
+    return None

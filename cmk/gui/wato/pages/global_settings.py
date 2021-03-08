@@ -247,7 +247,10 @@ class ABCEditGlobalSettingMode(WatoMode):
         return True
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="value_editor", button_name="save")
+        menu = make_simple_form_page_menu(_("Setting"),
+                                          breadcrumb,
+                                          form_name="value_editor",
+                                          button_name="save")
 
         reset_possible = self._config_variable.allow_reset() and self._is_configured()
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
@@ -323,6 +326,10 @@ class ABCEditGlobalSettingMode(WatoMode):
         defvalue = default_values[self._varname]
         value = self._current_settings.get(self._varname,
                                            self._global_settings.get(self._varname, defvalue))
+
+        hint = self._config_variable.hint()
+        if hint:
+            html.show_warning(hint)
 
         html.begin_form("value_editor", method="POST")
         title = self._valuespec.title()
@@ -408,7 +415,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
         menu = PageMenu(
             dropdowns=dropdowns,
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
         self._extend_display_dropdown(menu)

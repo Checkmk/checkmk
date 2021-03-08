@@ -8,6 +8,7 @@
 import base64
 import os
 import py_compile
+import socket
 import sys
 from io import StringIO
 from pathlib import Path
@@ -41,9 +42,9 @@ from cmk.core_helpers.type_defs import Mode
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 import cmk.base.obsolete_output as out
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
 import cmk.base.ip_lookup as ip_lookup
 
@@ -394,25 +395,28 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
     if actchecks:
         cfg.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
-            # Make hostname available as global variable in argument functions
-            check_api_utils.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = config.active_check_service_description(hostname, acttype, params)
 
-            if not description:
-                core_config.warning(
-                    "Skipping invalid service with empty description (active check: %s) on host %s"
-                    % (acttype, hostname))
-                continue
+            # Make hostname available as global variable in argument functions
+            with plugin_contexts.current_host(hostname, write_state=False):
 
-            if do_omit_service(hostname, description):
-                continue
+                description = config.active_check_service_description(hostname, acttype, params)
 
-            # compute argument, and quote ! and \ for Nagios
-            args = core_config.active_check_arguments(
-                hostname, description,
-                act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
+                if not description:
+                    core_config.warning(
+                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                    )
+                    continue
+
+                if do_omit_service(hostname, description):
+                    continue
+
+                # compute argument, and quote ! and \ for Nagios
+                args = core_config.active_check_arguments(
+                    hostname, description,
+                    act_info["argument_function"](params)).replace("\\",
+                                                                   "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -1005,8 +1009,6 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache,
                                 verify_site_python=True) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
 
-    check_api_utils.set_hostname(hostname)
-
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
 
@@ -1110,28 +1112,34 @@ if '-d' in sys.argv:
         for node in host_config.nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
-                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node_config)
+                needed_ipaddresses[node] = config.lookup_ip_address(node_config,
+                                                                    family=socket.AF_INET)
 
             if node_config.is_ipv6_host:
-                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node_config)
+                needed_ipv6addresses[node] = config.lookup_ip_address(node_config,
+                                                                      family=socket.AF_INET6)
 
         try:
             if host_config.is_ipv4_host:
-                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+                needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                        family=socket.AF_INET)
         except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
-                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+                needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                          family=socket.AF_INET6)
         except Exception:
             pass
     else:
         if host_config.is_ipv4_host:
-            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+            needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                    family=socket.AF_INET)
 
         if host_config.is_ipv6_host:
-            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+            needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                      family=socket.AF_INET6)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
@@ -1228,10 +1236,7 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
     needs to be loaded
     """
     try:
-        ipaddress = ip_lookup.lookup_ip_address(
-            host_config,
-            family=host_config.default_address_family,
-        )
+        ipaddress = config.lookup_ip_address(host_config)
     except Exception:
         ipaddress = None
 

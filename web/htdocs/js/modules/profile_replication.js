@@ -88,6 +88,5 @@ function set_result(site_id, success, msg) {
 }
 
 function finish() {
-    // check if we have a sidebar-main frame setup
-    if (this.parent && parent && parent.frames[0] == this) utils.reload_whole_page(g_back_url);
+    utils.reload_whole_page(g_back_url);
 }

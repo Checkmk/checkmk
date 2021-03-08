@@ -13,7 +13,8 @@ import pprint
 import time
 import traceback
 from dataclasses import dataclass
-from typing import Any, Callable, cast, Dict, Iterator, List, Optional, Sequence, Set
+from itertools import chain
+from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -1255,7 +1256,8 @@ def show_create_view_dialog(next_url=None):
     breadcrumb = visuals.visual_page_breadcrumb("views", title, "create")
     html.header(
         title, breadcrumb,
-        make_simple_form_page_menu(breadcrumb,
+        make_simple_form_page_menu(_("View"),
+                                   breadcrumb,
                                    form_name="create_view",
                                    button_name="save",
                                    save_title=_("Continue")))
@@ -1640,6 +1642,9 @@ def transform_view_to_valuespec_value(view):
         if key in view:
             view["view"][key] = view[key]
 
+    if not view.get("topic"):
+        view["topic"] = "other"
+
     view["view"]['options'] = []
     for key, _title in view_editor_options():
         if view.get(key):
@@ -1951,23 +1956,23 @@ def _process_availability_view(view_renderer: ABCViewRenderer) -> None:
 # TODO: Use livestatus Stats: instead of fetching rows?
 def get_row_count(view: View) -> int:
     """Returns the number of rows shown by a view"""
-    all_active_filters = _get_view_filters(view)
-
-    # Check that all needed information for configured single contexts are available
-    missing_single_infos = view.missing_single_infos
-    if missing_single_infos:
-        raise MKUserError(
-            None,
-            _("Missing context information: %s. You can either add this as a fixed "
-              "setting, or call the with the missing HTTP variables.") %
-            (", ".join(missing_single_infos)))
-
     # This must not modify the request variables of the view currently being processed. It would be
     # ideal to not deal with the global request variables data structure at all, but that would
     # first need a rewrite of the visual filter processing.
     with html.stashed_vars():
+        all_active_filters = _get_view_filters(view)
+
+        # Check that all needed information for configured single contexts are available
+        missing_single_infos = view.missing_single_infos
+        if missing_single_infos:
+            raise MKUserError(
+                None,
+                _("Missing context information: %s. You can either add this as a fixed "
+                  "setting, or call the with the missing HTTP variables.") %
+                (", ".join(missing_single_infos)))
+
         _unfiltered_amount_of_rows, rows = _get_view_rows(view, all_active_filters, only_count=True)
-    return len(rows)
+        return len(rows)
 
 
 # TODO: Move to View
@@ -1997,7 +2002,7 @@ def _get_view_rows(view: View,
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
         for filter_ in all_active_filters:
-            rows = filter_.filter_table(rows)
+            rows = filter_.filter_table(view.context, rows)
 
     view.process_tracking.amount_unfiltered_rows = unfiltered_amount_of_rows
     view.process_tracking.amount_filtered_rows = len(rows)
@@ -2023,8 +2028,10 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        columns = _get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters,
-                                              view.datasource)
+        columns = _get_needed_regular_columns(
+            all_active_filters,
+            view,
+        )
 
         rows: Rows = view.datasource.table.query(view, columns, headers, view.only_sites,
                                                  view.row_limit, all_active_filters)
@@ -2120,8 +2127,10 @@ def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:
             "host" in view_spec["single_infos"] and view_spec.get("name") != "ec_events_of_monhost")
 
 
-def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
-                                datasource: ABCDataSource) -> List[ColumnName]:
+def _get_needed_regular_columns(
+    all_active_filters: Iterable[Filter],
+    view: View,
+) -> List[ColumnName]:
     """Compute the list of all columns we need to query via Livestatus
 
     Those are: (1) columns used by the sorters in use, (2) columns use by column- and group-painters
@@ -2130,21 +2139,26 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     """
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
-    if html.request.var("mode") == "availability" and "aggr" in datasource.infos:
+    if html.request.var("mode") == "availability" and "aggr" in view.datasource.infos:
         return ["aggr_tree", "aggr_name", "aggr_group"]
 
-    columns = columns_of_cells(cells)
+    columns = columns_of_cells(view.group_cells + view.row_cells)
 
     # Columns needed for sorters
     # TODO: Move sorter parsing and logic to something like Cells()
-    for entry in sorters:
+    for entry in view.sorters:
         columns.update(entry.sorter.columns)
 
     # Add key columns, needed for executing commands
-    columns.update(datasource.keys)
+    columns.update(view.datasource.keys)
 
     # Add idkey columns, needed for identifying the row
-    columns.update(datasource.id_keys)
+    columns.update(view.datasource.id_keys)
+
+    # Add columns requested by filters for post-livestatus filtering
+    columns.update(
+        chain.from_iterable(
+            filter.columns_for_filter_table(view.context) for filter in all_active_filters))
 
     # Remove (implicit) site column
     try:
@@ -2158,7 +2172,7 @@ def _get_needed_regular_columns(cells: List[Cell], sorters: List[SorterEntry],
     # E.g. on a "single host" page the host labels are needed for the decision.
     # This is currently realized explicitly until we need a more flexible mechanism.
     if display_options.enabled(display_options.B) \
-            and "host" in datasource.infos:
+            and "host" in view.datasource.infos:
         columns.add("host_labels")
 
     return list(columns)
@@ -3105,6 +3119,7 @@ def core_command(what, row, row_nr, total_rows):
         cmd = cmd_class()
         if config.user.may(cmd.permission.name):
             result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
+            confirm_options = cmd.user_confirm_options(total_rows, cmdtag)
             if result:
                 executor = cmd.executor
                 commands, title = result
@@ -3118,7 +3133,7 @@ def core_command(what, row, row_nr, total_rows):
     if not isinstance(commands, list):
         commands = [commands]
 
-    return commands, title, executor
+    return commands, confirm_options, title, executor
 
 
 # Returns:
@@ -3140,21 +3155,29 @@ def do_actions(view, what, action_rows, backurl):
         return False  # no actions done
 
     command = None
-    title, executor = core_command(what, action_rows[0], 0,
-                                   len(action_rows))[1:3]  # just get the title and executor
-    if not confirm_with_preview(
-            _("Do you really want to %(title)s the following %(count)d %(what)s?") % {
-                "title": title,
-                "count": len(action_rows),
-                "what": visual_info_registry[what]().title_plural,
-            },
-            method='GET'):
+    confirm_options, cmd_title, executor = core_command(
+        what,
+        action_rows[0],
+        0,
+        len(action_rows),
+    )[1:4]  # just get confirm_options, title and executor
+
+    command_title = _("Do you really want to %s") % cmd_title
+    if not confirm_with_preview(command_title, confirm_options, method='GET'):
         return False
+
+    if html.request.has_var("_do_confirm_host_downtime"):
+        html.request.set_var("_on_hosts", "on")
 
     count = 0
     already_executed = set()
     for nr, row in enumerate(action_rows):
-        core_commands, title, executor = core_command(what, row, nr, len(action_rows))
+        core_commands, _confirm_options, _title, executor = core_command(
+            what,
+            row,
+            nr,
+            len(action_rows),
+        )
         for command_entry in core_commands:
             site = row.get(
                 "site")  # site is missing for BI rows (aggregations can spawn several sites)

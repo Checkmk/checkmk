@@ -39,7 +39,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     convert_cgroups_from_tuple,
     host_attribute_matches,
-    default_site,
     format_config_value,
     ALL_HOSTS,
     ALL_SERVICES,
@@ -1284,14 +1283,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def site_id(self) -> SiteId:
+        """Returns the ID of the site that responsible for hosts in this folder
+
+        - Use explicitly set site attribute
+        - Go down the folder hierarchy to find a folder with set site attribute
+        - Remote sites: Use "" -> Assigned to central site
+        - Standalone and central sites: Use the ID of the local site
+        """
         if "site" in self._attributes:
             return self._attributes["site"]
         if self.has_parent():
             return self.parent().site_id()
-        ds = default_site()
-        if isinstance(ds, SiteId):
-            return ds
-        raise Exception("unknown site ID")
+        if not config.is_wato_slave_site():
+            return config.omd_site()
+
+        # Placeholder for "central site". This is only relevant when using WATO on a remote site
+        # and a host / folder has no site set.
+        return SiteId("")
 
     def all_site_ids(self) -> List[SiteId]:
         site_ids: Set[SiteId] = set()
@@ -1839,30 +1847,25 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         cgconf = convert_cgroups_from_tuple(v)
         return cgconf
 
-    def create_hosts(self, entries, bake_hosts=True):
-        # 1. Check preconditions
+    def prepare_create_hosts(self):
         config.user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
-        for host_name, attributes, cluster_nodes in entries:
-            must_be_in_contactgroups(attributes.get("contactgroups"))
-            validate_host_uniqueness("host", host_name)
-            attributes = update_metadata(attributes, created_by=config.user.id)
+    def create_hosts(self, entries, bake_hosts=True):
+        # 1. Check preconditions
+        self.prepare_create_hosts()
 
+        for host_name, attributes, _cluster_nodes in entries:
+            self.verify_host_details(host_name, attributes)
+
+        self.create_validated_hosts(entries, bake_hosts)
+
+    def create_validated_hosts(self, entries, bake_hosts):
         # 2. Actual modification
         self._load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
-            host = Host(self, host_name, attributes, cluster_nodes)
-            self._hosts[host_name] = host
-            self._num_hosts = len(self._hosts)
-            add_change("create-host",
-                       _("Created new host %s.") % host_name,
-                       object_ref=host.object_ref(),
-                       sites=[host.site_id()],
-                       diff_text=make_diff_text({},
-                                                make_host_audit_log_object(
-                                                    host.attributes(), host.cluster_nodes())))
+            self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
@@ -1873,6 +1876,25 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
+
+    @staticmethod
+    def verify_host_details(name, attributes):
+        # MKAuthException, MKUserError
+        must_be_in_contactgroups(attributes.get("contactgroups"))
+        validate_host_uniqueness("host", name)
+        _attributes = update_metadata(attributes, created_by=config.user.id)
+
+    def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
+        host = Host(self, host_name, attributes, cluster_nodes)
+        self._hosts[host_name] = host
+        self._num_hosts = len(self._hosts)
+        add_change("create-host",
+                   _("Created new host %s.") % host_name,
+                   object_ref=host.object_ref(),
+                   sites=[host.site_id()],
+                   diff_text=make_diff_text({},
+                                            make_host_audit_log_object(
+                                                host.attributes(), host.cluster_nodes())))
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions

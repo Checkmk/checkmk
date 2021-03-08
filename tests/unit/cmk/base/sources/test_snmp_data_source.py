@@ -51,11 +51,12 @@ def source_fixture(scenario, hostname, ipaddress, mode):
         mode=mode,
         selected_sections=NO_SELECTION,
         on_scan_error="raise",
+        force_cache_refresh=False,
     )
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
-    def fake_lookup_ip_address(host_config, *, family, for_mgmt_board=True):
+    def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
     Scenario().add_host(hostname).apply(monkeypatch)
@@ -66,7 +67,7 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
         },
     })
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
+    assert config.lookup_mgmt_board_ip_address(host_config) is None
 
 
 def test_attribute_defaults(source, hostname, ipaddress, monkeypatch):
@@ -94,6 +95,7 @@ class TestSNMPSource_SNMP:
             mode=mode,
             selected_sections=NO_SELECTION,
             on_scan_error="raise",
+            force_cache_refresh=False,
         )
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
@@ -121,6 +123,7 @@ class TestSNMPSource_MGMT:
             hostname,
             ipaddress,
             mode=mode,
+            force_cache_refresh=False,
             selected_sections=NO_SELECTION,
             on_scan_error="raise",
         )
@@ -151,6 +154,7 @@ class TestSNMPSummaryResult:
             hostname,
             "1.2.3.4",
             mode=mode,
+            force_cache_refresh=False,
             selected_sections=NO_SELECTION,
             source_type=SourceType.HOST,
             id_="snmp_id",
@@ -160,11 +164,11 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source):
-        assert source.summarize(result.OK(AgentHostSections())) == (0, "Success", [])
+        assert source.summarize(result.OK(AgentHostSections())) == (0, "Success")
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source):
-        assert source.summarize(result.Error(Exception())) == (3, "(?)", [])
+        assert source.summarize(result.Error(Exception())) == (3, "(?)")
 
 
 @pytest.fixture(name="check_plugin")

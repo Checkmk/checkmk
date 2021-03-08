@@ -20,7 +20,14 @@
 
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
-static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+inline AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+
+inline auto AnswerIdToNumber(AnswerId id) {
+    return id.time_since_epoch().count();
+}
+inline std::wstring AnswerIdToWstring(AnswerId id) {
+    return std::to_wstring(AnswerIdToNumber(id));
+}
 
 // MAIN CLASS to gather all data for CMA on kick from Monitor
 // not POD

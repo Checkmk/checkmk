@@ -4,38 +4,56 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Tuple as _Tuple, Iterator, Optional
-
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKGeneralException,
-)
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Sequence, Tuple
 
 from cmk.utils import pnp_cleanup
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.identification import GraphIdentification, graph_identification_types
 
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
-    available_metrics_translated,
     evaluate,
     get_graph_data_from_livestatus,
     get_graph_range,
     get_graph_templates,
+    GraphRecipe,
+    GraphTemplate,
+    horizontal_rules_from_thresholds,
     metrics_used_in_expression,
     replace_expressions,
     split_expression,
     stack_resolver,
+    translated_metrics_from_row,
+    TranslatedMetrics,
 )
 
-RPNAtom = _Tuple  # TODO: Improve this type
+RPNAtom = Tuple  # TODO: Improve this type
+
+
+# Performance graph dashlets already use graph_id, but for example in reports, we still use
+# graph_index. Therefore, this function needs to support both. We should switch to graph_id
+# everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot easily
+# build a corresponding transform, so even after switching to graph_id everywhere, we will need to
+# keep this functionality here for some time to support already created dashlets, reports etc.
+def matching_graph_templates(
+    graph_identification_info: Mapping,
+    translated_metrics: TranslatedMetrics,
+) -> Iterable[Tuple[int, GraphTemplate]]:
+    graph_index = graph_identification_info.get(
+        "graph_index")  # can be None -> no restriction by index
+    graph_id = graph_identification_info.get("graph_id")  # can be None -> no restriction by id
+    yield from ((index, graph_template)
+                for index, graph_template in enumerate(get_graph_templates(translated_metrics))
+                if (graph_index is None or index == graph_index) and
+                (graph_id is None or graph_template["id"] == graph_id))
 
 
 class GraphIdentificationTemplate(GraphIdentification):
     @classmethod
-    def ident(cls):
+    def ident(cls) -> str:
         return "template"
 
-    def create_graph_recipes(self, ident_info, destination=None):
+    def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
         graph_identification_info = ident_info
 
         def get_info(key):
@@ -48,37 +66,32 @@ class GraphIdentificationTemplate(GraphIdentification):
         site = get_info('site')
         host_name = get_info('host_name')
         service_description = get_info('service_description')
-
-        graph_index = graph_identification_info.get("graph_index")  # can be None -> show all graphs
-
         row = get_graph_data_from_livestatus(site, host_name, service_description)
-
         translated_metrics = translated_metrics_from_row(row)
-        graph_templates = get_graph_templates(translated_metrics)
-        site = row["site"]
 
         graph_recipes = []
-        for index, graph_template in enumerate(graph_templates):
-            if graph_index is None or index == graph_index and graph_template is not None:
-                graph_recipe = create_graph_recipe_from_template(graph_template, translated_metrics,
-                                                                 row)
-                # Put the specification of this graph into the graph_recipe
-                spec_info = graph_identification_info.copy()
-                spec_info["graph_index"] = index
-                graph_recipe["specification"] = ("template", spec_info)
-                graph_recipes.append(graph_recipe)
+        for index, graph_template in matching_graph_templates(
+                graph_identification_info,
+                translated_metrics,
+        ):
+            graph_recipe = create_graph_recipe_from_template(
+                graph_template,
+                translated_metrics,
+                row,
+            )
+            # Put the specification of this graph into the graph_recipe
+            spec_info = graph_identification_info.copy()
+            # Performance graph dashlets already use graph_id, but for example in reports, we still
+            # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
+            # done, we can remove the line below.
+            spec_info["graph_index"] = index
+            spec_info["graph_id"] = graph_template["id"]
+            graph_recipe["specification"] = ("template", spec_info)
+            graph_recipes.append(graph_recipe)
         return graph_recipes
 
 
 graph_identification_types.register(GraphIdentificationTemplate)
-
-
-def translated_metrics_from_row(row):
-    what = "service" if "service_check_command" in row else "host"
-    perf_data_string = row[what + "_perf_data"]
-    rrd_metrics = row[what + "_metrics"]
-    check_command = row[what + "_check_command"]
-    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
 def create_graph_recipe_from_template(graph_template, translated_metrics, row):
@@ -108,7 +121,7 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
         "metrics": metrics,
         "unit": units.pop(),
         "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
-        "horizontal_rules": _horizontal_rules_from_thresholds(graph_template.get(
+        "horizontal_rules": horizontal_rules_from_thresholds(graph_template.get(
             "scalars", []), translated_metrics),  # e.g. lines for WARN and CRIT
         "omit_zero_metrics": graph_template.get("omit_zero_metrics", False),
         "consolidation_function": graph_template.get("consolidation_function", "max"),
@@ -117,7 +130,7 @@ def create_graph_recipe_from_template(graph_template, translated_metrics, row):
 
 def iter_rpn_expression(
         expression: str,
-        enforced_consolidation_function: Optional[str]) -> Iterator[_Tuple[str, Optional[str]]]:
+        enforced_consolidation_function: Optional[str]) -> Iterator[Tuple[str, Optional[str]]]:
     for part in expression.split(","):  # var names, operators
         if any(part.endswith(cf) for cf in ['.max', '.min', '.average']):
             part, consolidation_function = part.rsplit(".", 1)
@@ -180,7 +193,7 @@ def metric_expression_to_graph_recipe_expression(expression, translated_metrics,
                           apply_element=lambda x: x)
 
 
-def metric_line_title(metric_definition: _Tuple, translated_metrics: Dict) -> str:
+def metric_line_title(metric_definition: Tuple, translated_metrics: Dict) -> str:
     if len(metric_definition) >= 3:
         return metric_definition[2]
 
@@ -200,34 +213,3 @@ def metric_unit_color(metric_expression, translated_metrics, optional_metrics=No
             (metric_expression, metric_name, ", ".join(sorted(translated_metrics.keys())) or
              "None"))
     return {"unit": unit["id"], "color": color}
-
-
-def _horizontal_rules_from_thresholds(thresholds, translated_metrics):
-    horizontal_rules = []
-    for entry in thresholds:
-        if len(entry) == 2:
-            expression, title = entry
-        else:
-            expression = entry
-            if expression.endswith(":warn"):
-                title = _("Warning")
-            elif expression.endswith(":crit"):
-                title = _("Critical")
-            else:
-                title = expression
-
-        try:
-            value, unit, color = evaluate(expression, translated_metrics)
-            if value:
-                horizontal_rules.append((
-                    value,
-                    unit["render"](value),
-                    color,
-                    title,
-                ))
-        # Scalar value like min and max are always optional. This makes configuration
-        # of graphs easier.
-        except Exception:
-            pass
-
-    return horizontal_rules

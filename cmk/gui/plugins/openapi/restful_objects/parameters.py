@@ -3,16 +3,21 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 
 from cmk.gui.plugins.openapi import fields
 
-HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
 HOST_NAME = {
-    'host_name': fields.String(
+    'host_name': fields.HostField(
         description="A hostname.",
-        example='example.com',
-        pattern=HOST_NAME_REGEXP,
+        should_exist=True,
+    )
+}
+
+OPTIONAL_HOST_NAME = {
+    'host_name': fields.HostField(
+        description="A hostname.",
+        should_exist=True,
+        required=False,
     )
 }
 
@@ -46,9 +51,10 @@ ETAG_IF_MATCH_HEADER = {
     'If-Match': fields.String(
         required=True,
         description=(
-            'The ETag of the object to be modified. This value comes from the ETag HTTP header '
-            'whenever the object is displayed. To update this object the currently stored ETag '
-            'needs to be the same as the one sent.'),
+            "The value of the, to be modified, object's ETag header. You can get this value "
+            "by displaying the object it individually. To update this object the currently "
+            "stored ETag needs to be the same as the one sent."),
+        pattern='[0-9a-fA-F]{32}',
         example='a20ceacf346041dc',
     ),
 }
@@ -63,29 +69,22 @@ ETAG_HEADER_PARAM = {
     )
 }
 
+CONTENT_TYPE = {
+    'Content-Type': fields.String(
+        required=True,
+        description=("A header specifying which type of content is in the request/response body. "
+                     "This is required when sending encoded data in a POST/PUT body. When the "
+                     "request body is empty, this header should not be sent."),
+        example='application/json',
+    )
+}
+
 SERVICE_DESCRIPTION = {
     'service_description': fields.String(
         description="The service description.",
         example="Memory",
     )
 }
-
-QUERY = fields.Nested(
-    fields.ExprSchema,
-    description=("An query expression in nested dictionary form. If you want to "
-                 "use multiple expressions, nest them with the AND/OR operators. "
-                 "The query parameter always has priority if applicable"),
-    many=False,
-    example=json.dumps({
-        'op': 'not',
-        'expr': {
-            'op': '=',
-            'left': 'hosts.name',
-            'right': 'example.com'
-        }
-    }),
-    required=False,
-)
 
 SITES = fields.List(
     fields.String(),

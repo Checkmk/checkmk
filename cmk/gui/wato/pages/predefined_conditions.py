@@ -126,7 +126,7 @@ class ModePredefinedConditions(SimpleListMode):
     def _search_url(self, ident):
         return makeuri_contextless(
             request,
-            [("mode", "rulesets"),
+            [("mode", "rule_search"), ("filled_in", "rule_search"),
              ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
              ("search_p_rule_predefined_condition_USE", "on")],
         )

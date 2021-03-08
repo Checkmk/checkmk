@@ -10,7 +10,6 @@ from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
-RulesetName = str
 ServiceID = Tuple[CheckPluginName, Item]
 CheckTable = Dict[ServiceID, 'Service']
 
@@ -55,6 +54,17 @@ class Service:
     def id(self) -> ServiceID:
         return self.check_plugin_name, self.item
 
+    def __lt__(self, other: Any) -> bool:
+        """Allow to sort services
+
+        Basically sort by id(). Unfortunately we have plugins with *AND* without
+        items.
+        """
+        if not isinstance(other, Service):
+            raise TypeError("Can only be compared with other Service objects")
+        return (self.check_plugin_name, self.item or "") < (other.check_plugin_name, other.item or
+                                                            "")
+
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
         For this the parameters and similar need to be ignored."""
@@ -79,3 +89,10 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
+
+
+# Management board checks
+# These are only used in the legacy check_api.py and checking._legacy_mode.
+MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
+HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)

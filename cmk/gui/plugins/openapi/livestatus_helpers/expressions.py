@@ -15,9 +15,8 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
-from typing import Any, List, Tuple, Optional
+from typing import Any, List, Tuple, cast
 
-# TODO: statistics operators
 # TODO: column functions
 # TODO: more tests
 
@@ -376,12 +375,16 @@ def lookup_column(table_name, column_name) -> UnaryExpression:
         table_class = getattr(tables, table_name.title())
     else:
         table_class = table_name
+        table_name = table_class.__tablename__
 
-    column = getattr(table_class, column_name)
+    try:
+        column = getattr(table_class, column_name)
+    except AttributeError as e:
+        raise ValueError(f"Table {table_name!r} has no column {column_name!r}.") from e
     return column.expr
 
 
-def tree_to_expr(filter_dict, table: Optional[str] = None) -> QueryExpression:
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -416,6 +419,10 @@ def tree_to_expr(filter_dict, table: Optional[str] = None) -> QueryExpression:
                                             'right': 'example.com'}}})
         Not(Not(Filter(name = example.com)))
 
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> tree_to_expr({'op': 'not', 'expr': Hosts.name == 'example.com'})
+        Not(Filter(name = example.com))
+
         >>> tree_to_expr({'op': 'no_way', \
                           'expr': {'op': '=', 'left': 'hosts.name', 'right': 'example.com'}})
         Traceback (most recent call last):
@@ -433,17 +440,32 @@ def tree_to_expr(filter_dict, table: Optional[str] = None) -> QueryExpression:
     Returns:
         A valid LiveStatus query expression.
 
-    """
+    Raises:
+        ValueError: when unknown columns are queried
 
+    """
+    if not isinstance(filter_dict, dict):
+        # FIXME
+        #   Because of not having correct Python packages at the root-level, sometimes a
+        #   locally defined class ends up having a relative dotted path, like for example
+        #       <class 'expressions.BinaryExpression'>
+        #   instead of
+        #       <class 'cmk.gui.plugins.openapi.livestatus_helpers.expressions.BinaryExpression'>
+        #   While these classes are actually the same, Python treats them distinct, so we can't
+        #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
+        return cast(QueryExpression, filter_dict)
     op = filter_dict['op']
     if op in LIVESTATUS_OPERATORS:
         left = filter_dict['left']
         if "." in left:
             _table, column = left.split(".")
+            if table is not None and _table_name(table) != _table:
+                raise ValueError(
+                    f"This field can only query table {_table_name(table)!r}. ({left})")
         else:
             if table is None:
                 raise ValueError("Missing table parameter.")
-            _table = table
+            _table = _table_name(table)
             column = left
         return BinaryExpression(
             lookup_column(_table, column),
@@ -461,3 +483,10 @@ def tree_to_expr(filter_dict, table: Optional[str] = None) -> QueryExpression:
         return Not(tree_to_expr(filter_dict['expr'], table))
 
     raise ValueError(f"Unknown operator: {op}")
+
+
+def _table_name(table) -> str:
+    if isinstance(table, str):
+        return table
+
+    return table.__tablename__

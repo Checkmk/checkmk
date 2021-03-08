@@ -52,6 +52,12 @@ metric_info["predict_load15"] = {
     "color": "#a0b0c0",
 }
 
+metric_info["load_instant"] = {
+    "title": _("Instantaneous CPU load"),
+    "unit": "",
+    "color": "42/a",
+}
+
 metric_info["context_switches"] = {
     "title": _("Context switches"),
     "unit": "1/s",
@@ -497,6 +503,7 @@ graph_info["fgpa_utilization"] = {
 #
 
 graph_info["util_average_1"] = {
+    "title": _("CPU utilization"),
     "metrics": [
         ("util", "area"),
         ("util_average", "line"),
@@ -733,6 +740,7 @@ graph_info["cpu_utilization_8"] = {
 }
 
 graph_info["util_fallback"] = {
+    "title": _("CPU utilization"),
     "metrics": [("util", "area"),],
     "scalars": [
         "util:warn",
@@ -782,6 +790,7 @@ graph_info["threads"] = {
 }
 
 graph_info["thread_usage"] = {
+    "title": _("Thread usage"),
     "metrics": [("thread_usage", "area"),],
     "scalars": ["thread_usage:warn", "thread_usage:crit"],
     "range": (0, 100),

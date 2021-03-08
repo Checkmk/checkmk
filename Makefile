@@ -78,9 +78,9 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
-        format format-c format-python format-shell format-js GTAGS headers help \
-        install iwyu mrproper mrclean optimize-images packages setup setversion \
-        tidy version am--refresh skel openapi openapi-doc
+        documentation-quick format format-c format-python format-shell format-js \
+        GTAGS headers help install iwyu mrproper mrclean optimize-images packages \
+        setup setversion tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -227,6 +227,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.zip \
+		windows/python-3.4.zip \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
@@ -584,6 +585,12 @@ documentation: config.h
 	$(MAKE) -C livestatus/src documentation
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
+endif
+
+documentation-quick: config.h
+	$(MAKE) -C livestatus/src documentation-quick
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src documentation-quick
 endif
 
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already

@@ -1410,16 +1410,12 @@ class html(ABCHTMLGenerator):
             cls = 'error'
             prefix = _('ERROR')
 
-        code = HTML()
-
         if self.output_format == "html":
-            code += self.render_div(self.render_text(msg), class_=cls)
+            code = self.render_div(self.render_text(msg), class_=cls)
             if self.mobile:
-                code += self.render_center(code)
-        else:
-            code += self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
-
-        return code
+                return self.render_center(code)
+            return code
+        return self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -2436,14 +2432,22 @@ class html(ABCHTMLGenerator):
             self.close_b()
 
         if icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "title", "open" if isopen else "closed"],
-                     src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                     onclick=onclick)
+            self.img(
+                id_=img_id,
+                class_=[
+                    "treeangle",
+                    "title",
+                    # Although foldable_sidebar is given via the argument icon it should not be
+                    # displayed as big as an icon.
+                    "icon" if icon != "foldable_sidebar" else None,
+                    "open" if isopen else "closed",
+                ],
+                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                onclick=onclick)
         else:
             self.img(id_=img_id,
                      class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
+                     src="themes/%s/images/tree_closed.svg" % (self._theme),
                      onclick=onclick)
 
         if indent != "form" or not isinstance(title, HTML):
@@ -2652,11 +2656,11 @@ class html(ABCHTMLGenerator):
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.open_div(title="Show more items" if not with_text else "", class_="show_more")
+        self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
             self.write_text(_("show more"))
         self.close_div()
-        self.open_div(title="Show less items" if not with_text else "", class_="show_less")
+        self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
         if with_text:
             self.write_text(_("show less"))
         self.close_div()

@@ -11,6 +11,8 @@ import io
 from pathlib import Path
 import pytest  # type: ignore[import]
 
+from testlib.base import Scenario
+
 import cmk.utils.log
 import cmk.update_config as update_config
 import cmk.gui.config
@@ -325,3 +327,48 @@ def test__migrate_pre_2_0_audit_log_not_migrate_already_migrated(tmp_path, old_a
 
     assert new_path.open().read() == "abc\n"
     assert old_audit_log.exists()
+
+
+def test__rename_discovered_host_label_files_fix_wrong_name(monkeypatch):
+    Scenario().add_host("abc.d").apply(monkeypatch)
+
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    host_name = "abc.d"
+    old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
+    new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
+
+    old_path.parent.mkdir(exist_ok=True, parents=True)
+    with old_path.open("w") as f:
+        f.write("{}\n")
+    assert old_path.exists()
+    assert not new_path.exists()
+
+    uc._rename_discovered_host_label_files()
+
+    assert not old_path.exists()
+    assert new_path.exists()
+
+
+def test__rename_discovered_host_label_files_do_not_overwrite(monkeypatch):
+    Scenario().add_host("abc.d").apply(monkeypatch)
+
+    uc = update_config.UpdateConfig(cmk.utils.log.logger, argparse.Namespace())
+
+    host_name = "abc.d"
+    old_path = (cmk.utils.paths.discovered_host_labels_dir / host_name).with_suffix(".mk")
+    new_path = cmk.utils.paths.discovered_host_labels_dir / (host_name + ".mk")
+
+    old_path.parent.mkdir(exist_ok=True, parents=True)
+    with old_path.open("w") as f:
+        f.write("{}\n")
+    assert old_path.exists()
+
+    with new_path.open("w") as f:
+        f.write("{}\n")
+    assert new_path.exists()
+
+    uc._rename_discovered_host_label_files()
+
+    assert old_path.exists()
+    assert new_path.exists()

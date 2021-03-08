@@ -1,5 +1,6 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
+import * as utils from "utils";
 
 // The FigureRegistry holds all figure class templates
 class FigureRegistry {
@@ -73,6 +74,7 @@ class Scheduler {
 
     _schedule() {
         if (!this._enabled) return;
+        if (!utils.is_window_active()) return;
         let now = Math.floor(new Date().getTime() / 1000);
         if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
@@ -134,6 +136,7 @@ export class MultiDataFetcher {
     }
 
     _schedule_operations() {
+        if (!utils.is_window_active()) return;
         for (let url_id in this._fetch_operations) {
             for (let body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);
@@ -446,11 +449,9 @@ export class FigureBase {
             .on("click", () => this.scheduler.force_update());
     }
 
-    render_title(title) {
+    render_title(title, title_url) {
         if (!this.svg) return;
-
-        if (title) title = [title];
-        else title = [];
+        title = title ? [{title: title, url: title_url}] : [];
 
         let title_component = this.svg
             .selectAll(".title")
@@ -473,11 +474,20 @@ export class FigureBase {
             .attr("height", 22)
             .classed(highlight_container ? "highlighted" : "", true);
 
+        if (title_url) {
+            title_component = title_component
+                .selectAll("a")
+                .data(d => [d])
+                .join("a")
+                .attr("xlink:href", d => d.url || "#");
+        }
+
         title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
-            .text(d => d)
+            .text(d => d.title)
+            .classed("title", true)
             .attr("y", 16)
             .attr("x", this.figure_size.width / 2)
             .attr("text-anchor", "middle");
@@ -507,22 +517,22 @@ export function clamp(value, domain) {
     return Math.min(Math.max(value, domain[0]), domain[1]);
 }
 
-export function make_levels(domain, metrics) {
+export function make_levels(domain, bounds) {
     let [dmin, dmax] = domain;
-    if (metrics.warn == null || metrics.crit == null) return [];
+    if (bounds.warn == null || bounds.crit == null) return [];
 
-    if (metrics.warn >= dmax) metrics.warn = dmax;
-    if (metrics.crit >= dmax) metrics.crit = dmax;
-    if (metrics.warn <= dmin) dmin = metrics.warn;
+    if (bounds.warn >= dmax) bounds.warn = dmax;
+    if (bounds.crit >= dmax) bounds.crit = dmax;
+    if (bounds.warn <= dmin) dmin = bounds.warn;
 
     return [
-        {from: metrics.crit, to: dmax, color: "#FF3232"},
+        {from: bounds.crit, to: dmax, style: "metricstate state2"},
         {
-            from: metrics.warn,
-            to: metrics.crit,
-            color: "#FFFE44",
+            from: bounds.warn,
+            to: bounds.crit,
+            style: "metricstate state1",
         },
-        {from: dmin, to: metrics.warn, color: "#13D389"},
+        {from: dmin, to: bounds.warn, style: "metricstate state0"},
     ];
 }
 // Base class for dc.js based figures (using crossfilter)
@@ -554,10 +564,10 @@ export class FigureTooltip {
         this.plot_size = plot_size;
     }
 
-    update_position() {
+    update_position(event) {
         if (!this.active()) return;
 
-        let ev = "sourceEvent" in d3.event ? d3.event.sourceEvent : d3.event;
+        let ev = "sourceEvent" in event ? event.sourceEvent : event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
@@ -589,80 +599,44 @@ export class FigureTooltip {
     add_support(node) {
         let element = d3.select(node);
         element
-            .on("mouseover", () => this._mouseover())
-            .on("mouseleave", () => this._mouseleave())
-            .on("mousemove", () => this._mousemove());
+            .on("mouseover", event => this._mouseover(event))
+            .on("mouseleave", event => this._mouseleave(event))
+            .on("mousemove", event => this._mousemove(event));
+    }
+
+    activate() {
+        this._tooltip.style("display", null);
+    }
+
+    deactivate() {
+        this._tooltip.style("display", "none");
     }
 
     active() {
-        return this._tooltip.style("opacity") == 1;
+        return this._tooltip.style("display") != "none";
     }
 
-    _mouseover() {
-        let node_data = d3.select(d3.event.target).datum();
+    _mouseover(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
-
-        this._tooltip.style("opacity", 1);
+        this.activate();
     }
 
-    _mousemove() {
-        let node_data = d3.select(d3.event.target).datum();
+    _mousemove(event) {
+        let node_data = d3.select(event.target).datum();
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this._tooltip.html(node_data.tooltip);
-        this.update_position();
+        this.update_position(event);
     }
 
-    _mouseleave() {
-        this._tooltip.style("opacity", 0);
-    }
-}
-
-export class FigureLegend {
-    constructor(legend_selection) {
-        this._legend = legend_selection;
-        this._legend.classed("legend", true);
-    }
-
-    _dragstart() {
-        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
-    }
-
-    _drag() {
-        this._dragged_object
-            .style("position", "absolute")
-            .style("top", d3.event.y + "px")
-            .style("right", -d3.event.x + "px");
-    }
-
-    _dragend() {
-        this._dragged_object.remove();
-
-        let point_in_rect = (r, p) => p.x > r.x1 && p.x < r.x2 && p.y > r.y1 && p.y < r.y2;
-        let renderer_instances = d3.selectAll("svg.renderer");
-        let target_renderer = null;
-        renderer_instances.each((d, idx, nodes) => {
-            let rect = nodes[idx].getBoundingClientRect();
-            let x1 = rect.left;
-            let x2 = x1 + rect.width;
-            let y1 = rect.top;
-            let y2 = y1 + rect.height;
-            if (
-                point_in_rect(
-                    {x1: x1, y1: y1, x2: x2, y2: y2},
-                    {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}
-                )
-            )
-                target_renderer = d;
-        });
-
-        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
-            d3.event.subject.migrate_to(target_renderer);
+    _mouseleave(event) {
+        this.deactivate();
     }
 }
 
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, state) {
-    if (!state.draw) {
+    if (!getIn(state, "draw")) {
         figurebase.svg.selectAll(".state_component").remove();
         return;
     }
@@ -674,7 +648,6 @@ export function state_component(figurebase, state) {
         .selectAll(".state_component")
         .data([state])
         .join("g")
-        .attr("class", d => d.style)
         .classed("state_component", true);
     let the_rect = state_component
         .selectAll("rect")
@@ -683,8 +656,9 @@ export function state_component(figurebase, state) {
     the_rect
         .attr("x", border_width / 2)
         .attr("y", border_width / 2)
-        .attr("width", figurebase.figure_size.width - 2 * border_width)
-        .attr("height", figurebase.figure_size.height - 2 * border_width)
+        .attr("width", figurebase.figure_size.width - border_width)
+        .attr("height", figurebase.figure_size.height - border_width)
+        .attr("class", d => d.style)
         .style("fill", "none")
         .style("stroke-width", border_width);
 
@@ -697,21 +671,15 @@ export function state_component(figurebase, state) {
         .attr("y", figurebase.figure_size.height - font_size)
         .attr("text-anchor", "middle")
         .style("font-size", font_size + "px")
+        .attr("class", d => d.style)
         .text(d => d.msg);
 }
 
 export function renderable_value(value, domain, plot) {
-    const levels = make_levels(domain, plot.metrics);
     const formatter = plot_render_function(plot);
-
-    const color = levels.length
-        ? levels.find(element => clamp(value.value, domain) >= element.from).color
-        : "#3CC2FF";
-
     return {
         ...split_unit(formatter(value.value)),
         url: value.url || "",
-        color: color,
     };
 }
 
@@ -730,16 +698,44 @@ export function split_unit(formatted_value) {
     return {value: formatted_value, unit: ""};
 }
 
-export function get_function(render_string) {
-    return Function(`"use strict"; return ${render_string}`)();
+export function getIn(object, ...args) {
+    return args.reduce((obj, level) => obj && obj[level], object);
 }
-
+export function get_function(render_string) {
+    return new Function(`"use strict"; return ${render_string}`)();
+}
 export function plot_render_function(plot) {
-    if (plot.js_render) return get_function(plot.js_render);
+    let js_render = getIn(plot, "metric", "unit", "js_render");
+    if (js_render) return get_function(js_render);
     return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
 }
+export function svc_status_css(paint, params) {
+    let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
 
+    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
+    return status_cls;
+}
+export function background_status_component(selection, params, rect_size) {
+    let status_cls = svc_status_css("background", params);
+
+    if (status_cls) {
+        selection
+            .selectAll("rect.status_background")
+            .data([null])
+            .join(enter => enter.insert("rect", ":first-child"))
+            .attr("class", `status_background ${status_cls}`)
+            .attr("y", 0)
+            .attr("x", 0)
+            .attr("width", rect_size.width)
+            .attr("height", rect_size.height);
+    } else {
+        selection.selectAll("rect.status_background").remove();
+    }
+}
 export function metric_value_component(selection, value, attr, style) {
+    let css_class = svc_status_css("text", style);
+    if (!css_class) css_class = "single_value";
+
     let link = selection
         .selectAll("a.single_value")
         .data([value])
@@ -754,7 +750,7 @@ export function metric_value_component(selection, value, attr, style) {
         .attr("x", attr.x)
         .attr("y", attr.y)
         .attr("text-anchor", "middle")
-        .style("fill", style.color)
+        .attr("class", css_class)
         .style("font-size", style.font_size + "px");
 
     let unit = text

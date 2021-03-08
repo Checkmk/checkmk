@@ -17,8 +17,6 @@
 
 import abc
 import base64
-from collections.abc import MutableMapping, Sequence as ABCSequence
-from enum import Enum
 import datetime
 import hashlib
 import io
@@ -29,71 +27,54 @@ import logging
 import math
 import numbers
 import os
-from pathlib import Path
 import re
 import socket
 import time
-import uuid
 import urllib.parse
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Final,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional as _Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    Set,
-    SupportsFloat,
-    Tuple as _Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+import uuid
+from collections.abc import MutableMapping
+from collections.abc import Sequence as ABCSequence
+from enum import Enum
+from pathlib import Path
+from typing import Any, Callable, Dict, Final, Generic, Iterable, List, NamedTuple
+from typing import Optional as _Optional
+from typing import Pattern, Protocol, Sequence, Set, SupportsFloat
+from typing import Tuple as _Tuple
+from typing import Type, TypeVar, Union
 
+from Cryptodome.Cipher import AES
+from Cryptodome.PublicKey import RSA
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzlocal
-
+from OpenSSL import crypto  # type: ignore[import]
 from PIL import Image  # type: ignore[import]
 from six import ensure_binary, ensure_str
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import AES
-from OpenSSL import crypto  # type: ignore[import]
-
-import cmk.utils.log
-import cmk.utils.paths
-import cmk.utils.defines as defines
-from cmk.utils.type_defs import Seconds
-import cmk.utils.regex
-
-import cmk.gui.forms as forms
-import cmk.gui.utils as utils
-import cmk.gui.escaping as escaping
-import cmk.gui.sites as sites
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request as global_request
-from cmk.gui.utils.html import HTML
-from cmk.gui.utils.labels import (
-    encode_labels_for_tagify,
-    encode_labels_for_http,
-    label_help_text,
-)
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.http import UploadedFile
-from cmk.gui.type_defs import Choices, GroupedChoices, ChoiceGroup
-from cmk.gui.view_utils import render_labels
-from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
-
-from cmk.gui.utils.urls import makeuri
 
 import livestatus
+
+import cmk.utils.defines as defines
+import cmk.utils.log
+import cmk.utils.paths
+import cmk.utils.regex
+from cmk.utils.type_defs import Seconds
+
+import cmk.gui.config as config
+import cmk.gui.escaping as escaping
+import cmk.gui.forms as forms
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.http import UploadedFile
+from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.type_defs import ChoiceGroup, Choices, GroupedChoices
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import encode_labels_for_http, encode_labels_for_tagify, label_help_text
+from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400
 
@@ -347,7 +328,7 @@ class Age(ValueSpec):
 
         html.open_div(class_=["vs_age", self._cssclass])
         if self._label:
-            html.write(self._label + " ")
+            html.span(self._label, class_="vs_floating_text")
 
         takeover = 0
         for uid, title, val, tkovr_fac in [("days", _("days"), days, 24),
@@ -438,12 +419,10 @@ class NumericRenderer:
 
     def render_input(self, varprefix: str, text: str) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
         self.text_input(varprefix, text)
         if self._unit:
-            html.nbsp()
-            html.write(self._unit)
+            html.span(self._unit, class_="vs_floating_text")
 
     def format_text(self, text: str) -> str:
         if self._thousand_sep:
@@ -625,8 +604,7 @@ class TextAscii(ValueSpec):
     # NOTE: Class hierarchy is broken, we can get Unicode here!
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         html.text_input(
             varprefix,
@@ -2575,7 +2553,7 @@ class DropdownChoice(ValueSpec):
 
     def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
         if self._label:
-            html.write("%s " % self._label)
+            html.span(self._label, class_="vs_floating_text")
 
         choices = self.choices()
         defval = choices[0][0] if choices else None
@@ -2804,8 +2782,7 @@ class CascadingDropdown(ValueSpec):
         self._render_sub_vs_request_vars = render_sub_vs_request_vars or {}
 
     def allow_empty(self) -> bool:
-        return not self._no_preselect and all(
-            vs.allow_empty() for _ident, _title, vs in self.choices() if vs is not None)
+        return not self._no_preselect
 
     def choices(self) -> Sequence[CascadingDropdownCleanChoice]:
         return list(itertools.chain(self._preselected, self._choices()))
@@ -2863,12 +2840,9 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange = "cmk.valuespecs.cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        html.dropdown(vp,
-                      options,
-                      deflt=def_val,
-                      onchange=onchange,
-                      ordered=self._sorted,
-                      label=self._label)
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
+        html.dropdown(vp, options, deflt=def_val, onchange=onchange, ordered=self._sorted)
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -3643,14 +3617,13 @@ class AbsoluteDate(ValueSpec):
 
     def render_input(self, varprefix: Any, value: Any) -> None:
         if self._label:
-            html.write("%s" % self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
         year, month, day, hour, mmin, sec = self.split_date(value)
         values: List[_Optional[_Tuple[str, _Optional[int], int]]] = [
-            ("_year", year, 6),
-            ("_month", month, 3),
-            ("_day", day, 3),
+            ("_year", year, 4),
+            ("_month", month, 2),
+            ("_day", day, 2),
         ]
         if self._include_time:
             values += [
@@ -4020,7 +3993,6 @@ class TimeHelper:
 class Timerange(CascadingDropdown):
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        allow_empty: bool = False,
         include_time: bool = False,
         choices: Union[None, List[CascadingDropdownChoice],
                        Callable[[], List[CascadingDropdownChoice]]] = None,
@@ -4064,12 +4036,8 @@ class Timerange(CascadingDropdown):
             validate=validate,
         )
         self._title = title if title is not None else _('Time range')
-        self._allow_empty = allow_empty
         self._include_time = include_time
         self._fixed_choices = choices
-
-    def allow_empty(self) -> bool:
-        return self._allow_empty
 
     def _prepare_choices(self) -> List[CascadingDropdownChoice]:
         # TODO: We have dispatching code like this all over place...
@@ -4081,9 +4049,6 @@ class Timerange(CascadingDropdown):
             choices = self._fixed_choices()
         else:
             raise ValueError("invalid type for choices")
-
-        if self._allow_empty:
-            choices += [(None, '', None)]
 
         choices.extend(self._get_graph_timeranges())
         choices.extend([
@@ -4460,7 +4425,7 @@ class Alternative(ValueSpec):
         if self._on_change:
             onchange += self._on_change
         if self._orientation == "horizontal":
-            html.open_table()
+            html.open_table(class_="alternative")
             html.open_tr()
             html.open_td()
         html.dropdown(varprefix + "_use",
@@ -4468,7 +4433,6 @@ class Alternative(ValueSpec):
                       deflt=("???" if sel_option is None else sel_option),
                       onchange=onchange)
         if self._orientation == "vertical":
-            html.br()
             html.br()
 
         for nr, vs in enumerate(self._elements):
@@ -4571,10 +4535,10 @@ class Tuple(ValueSpec):
         return all(vs.allow_empty() for vs in self._elements)
 
     def canonical_value(self):
-        return tuple([x.canonical_value() for x in self._elements])
+        return tuple(x.canonical_value() for x in self._elements)
 
     def default_value(self):
-        return tuple([x.default_value() for x in self._elements])
+        return tuple(x.default_value() for x in self._elements)
 
     def render_input(self, varprefix, value):
         if self._orientation != "float":
@@ -4601,16 +4565,18 @@ class Tuple(ValueSpec):
                     title = ""
                 if self._orientation == "vertical":
                     html.open_td(class_="tuple_left")
-                    html.write(title)
+                    if title:
+                        html.span(title, class_="vs_floating_text")
 
                     html.close_td()
                 elif self._orientation == "horizontal":
                     html.open_td(class_="tuple_td")
-                    html.open_span(class_=["title"])
-                    html.write(title)
+                    if title:
+                        html.open_span(class_=["title"])
+                        html.write(title)
 
                     html.close_span()
-                    if self._title_br:
+                    if self._title_br and title:
                         html.br()
                     else:
                         html.write_text(" ")
@@ -4848,7 +4814,8 @@ class Dictionary(ValueSpec):
                     isopen=self._form_isopen,
                     narrow=self._form_narrow,
                     show_more_toggle=self._section_has_show_more(section_elements),
-                    show_more_mode=bool(config.user.show_mode),
+                    show_more_mode=config.user.show_mode != "default_show_less",
+                    help_text=self.help(),
                 )
             self.render_input_form_header(varprefix, value, header, section_elements, css=css)
         if not as_part:
@@ -5080,8 +5047,7 @@ class ElementSelection(ValueSpec):
             html.write(self._empty_text)
         else:
             if self._label:
-                html.write("%s" % self._label)
-                html.nbsp()
+                html.span(self._label, class_="vs_floating_text")
             html.dropdown(varprefix, self._elements.items(), deflt=value, ordered=True)
 
     def value_to_text(self, value):
@@ -5293,8 +5259,12 @@ class LDAPDistinguishedName(TextUnicode):
 
 class Password(TextAscii):
     # TODO: Cleanup kwargs
-    def __init__(self, is_stored_plain: bool = True, **kwargs: Any) -> None:
+    def __init__(self,
+                 is_stored_plain: bool = True,
+                 encrypt_value: bool = True,
+                 **kwargs: Any) -> None:
         self._is_stored_plain = is_stored_plain
+        self._encrypt_value = encrypt_value
         kwargs.setdefault("autocomplete", False)
 
         if self._is_stored_plain:
@@ -5315,13 +5285,18 @@ class Password(TextAscii):
             value = ""
 
         if self._label:
-            html.write(self._label)
-            html.nbsp()
+            html.span(self._label, class_="vs_floating_text")
 
-        html.hidden_field(varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else "")
+        if self._encrypt_value:
+            html.hidden_field(varprefix + "_orig",
+                              value=ValueEncrypter.encrypt(value) if value else "")
+            default_value = ""
+        else:
+            default_value = value
+
         html.password_input(
             varprefix,
-            default_value="",
+            default_value=default_value,
             size=self._size,
             autocomplete="new-password" if self._autocomplete is False else None,
             placeholder="******",
@@ -5341,8 +5316,8 @@ class Password(TextAscii):
 
     def from_html_vars(self, varprefix: str) -> str:
         value = super().from_html_vars(varprefix)
-        if value:
-            return value  # New password entered
+        if value or not self._encrypt_value:
+            return value  # New password entered or unencrypted password
 
         # Gather the value produced by render_input() and use it.
         value = html.request.get_str_input_mandatory(varprefix + "_orig", "")
@@ -5406,7 +5381,7 @@ class ValueEncrypter:
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
     def __init__(self, hidden: bool = True, **kwargs: Any) -> None:
-        super().__init__(hidden=hidden, **kwargs)
+        super().__init__(hidden=hidden, encrypt_value=False, **kwargs)
 
     def render_input(self, varprefix: str, value: _Optional[str]) -> None:
         super().render_input(varprefix, value)
@@ -6103,14 +6078,40 @@ class Color(ValueSpec):
             raise MKUserError(varprefix, _("You need to select a color."))
 
 
-def GraphColor(title, default_value):
+def ColorWithThemeOrMetricDefault(
+    title: str,
+    default_value: str,
+) -> Alternative:
     return Alternative(
         title=title,
         elements=[
             FixedValue(
                 "default",
-                title=_("Use default color"),
-                totext=_("Use default color of the theme or medium"),
+                title=_("Default color"),
+                totext=_("Use the default color of the theme or the metric."),
+            ),
+            Color(title=_("Use the following color")),
+        ],
+        default_value=default_value,
+    )
+
+
+def ColorWithThemeAndMetricDefault(
+    title: str,
+    default_value: str,
+) -> Alternative:
+    return Alternative(
+        title=title,
+        elements=[
+            FixedValue(
+                "default_theme",
+                title=_("Default theme color"),
+                totext=_("Use the default color of the theme."),
+            ),
+            FixedValue(
+                "default_metric",
+                title=_("Default metric color"),
+                totext=_("Use the default color of the metric."),
             ),
             Color(title=_("Use the following color")),
         ],
@@ -6269,7 +6270,9 @@ class SetupSiteChoice(DropdownChoice):
 
     def _site_default_value(self):
         if config.is_wato_slave_site():
-            return False
+            # Placeholder for "central site". This is only relevant when using WATO on a remote site
+            # and a host / folder has no site set.
+            return ""
 
         default_value = config.site_attribute_default_value()
         if default_value:
@@ -6368,3 +6371,60 @@ def _type_name(v):
         return type(v).__name__
     except Exception:
         return escaping.escape_attribute(str(type(v)))
+
+
+class DropdownChoiceWithHostAndServiceHints(DropdownChoice):
+    def __init__(
+        self,
+        css_spec: str,
+        hint_label: str,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+        self._css_spec = css_spec
+        self._hint_label = hint_label
+
+    def from_html_vars(self, varprefix: str) -> _Optional[str]:
+        return html.request.var(varprefix)
+
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
+        raise NotImplementedError()
+
+    def render_input(self, varprefix: str, value: DropdownChoiceValue) -> None:
+        if self._label:
+            html.span(self._label, class_="vs_floating_text")
+
+        html.dropdown(
+            varprefix,
+            self._options_for_html(self._choices_from_value(value)),
+            deflt=self._option_for_html(value),
+            class_=self._css_spec,
+            style="width: 250px;",
+            read_only=self._read_only,
+        )
+
+        vs_host = MonitoredHostname(
+            label=_("Filter %s selection by hostname: ") % self._hint_label,
+            placeholder=_("Hint a hostname"),
+            size=20,
+        )
+        html.br()
+        host_varprefix = varprefix + "_hostname_hint"
+        vs_host.render_input(host_varprefix, None)
+        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
+                        json.dumps(host_varprefix))
+
+        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
+            host_varprefix)
+        vs_service = MonitoredServiceDescription(
+            label=_("Filter %s selection by service: ") % self._hint_label,
+            placeholder=_("Hint a service"),
+            completion_params_js=completion_js,
+            size=20,
+        )
+        service_varprefix = varprefix + "_service_hint"
+        html.br()
+        vs_service.render_input(service_varprefix, None)
+        html.javascript(
+            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
+            json.dumps(service_varprefix))

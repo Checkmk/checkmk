@@ -143,15 +143,13 @@ def _generate_hash(username: UserId, value: str) -> str:
 
 
 def del_auth_cookie() -> None:
-    # Note: in distributed setups a cookie issued by one site is accepted by
-    # others with the same auth.secret and user serial numbers. When a users
-    # logs out then we need to delete all cookies that are accepted by us -
-    # not just the one that we have issued.
-    for cookie_name in html.request.get_cookie_names():
-        if cookie_name.startswith("auth_"):
-            cookie = _fetch_cookie(cookie_name)
-            if auth_cookie_is_valid(cookie):
-                html.response.delete_cookie(cookie_name)
+    cookie_name = auth_cookie_name()
+    if not html.request.has_cookie(cookie_name):
+        return
+
+    cookie = _fetch_cookie(cookie_name)
+    if auth_cookie_is_valid(cookie):
+        html.response.delete_cookie(cookie_name)
 
 
 def _auth_cookie_value(username: UserId, session_id: str) -> str:
@@ -365,18 +363,20 @@ def _check_auth_web_server(request: Request) -> Optional[UserId]:
 
 
 def _check_auth_by_cookie() -> Optional[UserId]:
-    for cookie_name in html.request.get_cookie_names():
-        if cookie_name.startswith('auth_'):
-            try:
-                set_auth_type("cookie")
-                return _check_auth_cookie(cookie_name)
-            except MKAuthException:
-                # Suppress cookie validation errors from other sites cookies
-                auth_logger.debug('Exception while checking cookie %s: %s' %
-                                  (cookie_name, traceback.format_exc()))
-            except Exception:
-                auth_logger.debug('Exception while checking cookie %s: %s' %
-                                  (cookie_name, traceback.format_exc()))
+    cookie_name = auth_cookie_name()
+    if not html.request.has_cookie(cookie_name):
+        return None
+
+    try:
+        set_auth_type("cookie")
+        return _check_auth_cookie(cookie_name)
+    except MKAuthException:
+        # Suppress cookie validation errors from other sites cookies
+        auth_logger.debug('Exception while checking cookie %s: %s' %
+                          (cookie_name, traceback.format_exc()))
+    except Exception:
+        auth_logger.debug('Exception while checking cookie %s: %s' %
+                          (cookie_name, traceback.format_exc()))
     return None
 
 
@@ -519,8 +519,7 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.div("" if "hide_version" in config.login_screen else cmk_version.__version__,
-                 id_="version")
+        html.img(src=html.theme_url("images/mk-logo.svg"), id_="logo")
 
         html.begin_form("login", method='POST', add_transid=False, action='login.py')
         html.hidden_field('_login', '1')

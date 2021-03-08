@@ -38,7 +38,6 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-size: 11px;
     font-weight: bold;
     color: $font-color;
     background-color: $floatfilter-bg-color;
@@ -107,8 +106,7 @@ div.floatfilter {
     }
 
     input[type="text"] {
-      width: 100%;
-      box-sizing: border-box;
+      width: calc(100% - 12px); // subtract padding
 
       &.number {
         text-align: center;
@@ -170,12 +168,12 @@ div.floatfilter {
   &.service_custom_variable,
   &.host_custom_variable {
     .select2-container {
-      max-width: 55%;
+      max-width: 52%;
     }
 
     input[type="text"] {
       display: inline-block;
-      width: 43%;
+      width: 40%;
       margin-left: 4px;
     }
   }
@@ -327,12 +325,11 @@ div.side_popup_content table.valuespec_listof.filter {
 
     a.delete_button img {
       position: absolute;
-      top: 7px;
+      top: 4px;
       right: $spacing;
       z-index: 5;
-      width: 16px;
-      height: 16px;
-      filter: $inpage-close-button-filter;
+      width: 12px;
+      height: 12px;
     }
   }
 
@@ -363,7 +360,7 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_content {
-    padding: 8px 0;
+    padding: $spacing-half 0 0;
     vertical-align: top;
 
     .valuespec_tuple {
@@ -379,17 +376,17 @@ table.nform table.valuespec_listof {
   .vlof_buttons {
     width: 44px;
     min-width: 44px;
-    padding-right: 8px;
+    padding-right: $spacing-half;
     text-align: center;
     vertical-align: middle;
 
     img {
-      width: 16px;
-      height: 16px;
+      width: 12px;
+      height: 15px;
     }
 
     a:not(:last-child) {
-      margin-right: 4px;
+      margin-right: $spacing-half;
     }
   }
 }
@@ -423,11 +420,12 @@ table.boxlayout {
   border-spacing: 0;
 
   td.boxcolumn {
-    padding-right: 20px;
-  }
+    padding-right: $spacing;
+    vertical-align: top;
 
-  &.graph table.data tr.data {
-    background: $boxlayout-tr-bg-color;
+    &:last-child {
+      padding-right: 0;
+    }
   }
 }
 
@@ -449,7 +447,7 @@ table.boxlayout {
   }
 
   td {
-    font-size: 9px;
+    font-size: $font-size-small;
     border-style: none;
 
     &.tl,
@@ -501,13 +499,18 @@ table.data.tiled td.tiles {
       td {
         padding: 8px;
 
+        &.state {
+          height: 30px;
+          padding: 0;
+        }
+
         &.states {
           border-radius: $theme-border-radius;
         }
 
         &.center {
-          word-wrap: anywhere;
           white-space: break-spaces;
+          overflow-wrap: anywhere;
         }
       }
     }
@@ -533,7 +536,6 @@ table.data.single {
 
   tr.data {
     > td {
-      height: 16px;
       padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
@@ -541,9 +543,13 @@ table.data.single {
     }
 
     td.left {
-      width: 10%;
-      padding: $td-single-left-padding;
+      width: 1%;
+      padding: 2px 20px 2px 16px;
       white-space: nowrap;
+    }
+
+    td:not(.left) {
+      width: auto;
     }
 
     td.invtree table {
@@ -569,8 +575,7 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: $table-data-single-padding;
-    background-color: $td-single-bg-color;
+    padding: 2px;
     border-radius: 0;
 
     &.left {
@@ -628,7 +633,6 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-        font-size: $font-size-global;
         letter-spacing: $letter-spacing-table;
         text-transform: uppercase;
       }
@@ -939,7 +943,6 @@ div.avlegend {
 
   h3 {
     margin-top: 0;
-    font-size: 13px;
     color: rgb(0, 0, 0);
   }
 
@@ -951,7 +954,6 @@ div.avlegend {
 
     &.state {
       padding: 2px 0;
-      font-size: 12px;
       text-align: center;
     }
 

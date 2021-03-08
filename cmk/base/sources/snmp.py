@@ -33,12 +33,13 @@ from ._abstract import Source
 
 
 def make_inventory_sections() -> Set[SectionName]:
-    return set(
-        agent_based_register.get_relevant_raw_sections(
+    return {
+        s for s in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=(),
             inventory_plugin_names=(
-                p.name for p in agent_based_register.iter_all_inventory_plugins()),
-        )).intersection(s.name for s in agent_based_register.iter_all_snmp_sections())
+                p.name for p in agent_based_register.iter_all_inventory_plugins()))
+        if agent_based_register.is_registered_snmp_section_plugin(s)
+    }
 
 
 def make_plugin_store() -> SNMPPluginStore:
@@ -62,6 +63,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         source_type: SourceType,
         selected_sections: SectionNameCollection,
         id_: str,
+        force_cache_refresh: bool,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
@@ -89,6 +91,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             self.host_config.snmp_config(self.ipaddress)
             if self.source_type is SourceType.HOST else self.host_config.management_snmp_config)
         self._on_snmp_scan_error = on_scan_error
+        self._force_cache_refresh = force_cache_refresh
 
     @classmethod
     def snmp(
@@ -99,6 +102,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
+        force_cache_refresh: bool,
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -109,6 +113,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             id_="snmp",
             title="SNMP",
             on_scan_error=on_scan_error,
+            force_cache_refresh=force_cache_refresh,
         )
 
     @classmethod
@@ -120,6 +125,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
         mode: Mode,
         selected_sections: SectionNameCollection,
         on_scan_error: str,
+        force_cache_refresh: bool,
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -130,6 +136,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             id_="mgmt_snmp",
             title="Management board - SNMP",
             on_scan_error=on_scan_error,
+            force_cache_refresh=force_cache_refresh,
         )
 
     def _make_file_cache(self) -> SNMPFileCache:
@@ -137,7 +144,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             path=self.file_cache_path,
             simulation=config.simulation_mode,
             max_age=self.file_cache_max_age,
-        ).make()
+        ).make(force_cache_refresh=self._force_cache_refresh)
 
     def _make_fetcher(self) -> SNMPFetcher:
         if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
@@ -212,8 +219,10 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
                         skip_ignored=True,
                     ).needed_check_names(),
                     inventory_plugin_names=()))
-        return checking_sections.intersection(
-            s.name for s in agent_based_register.iter_all_snmp_sections())
+        return {
+            s for s in checking_sections
+            if agent_based_register.is_registered_snmp_section_plugin(s)
+        }
 
     @staticmethod
     def _make_description(

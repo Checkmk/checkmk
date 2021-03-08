@@ -103,7 +103,6 @@ def validate_function_arguments(
     sections: List[ParsedSectionName],
 ) -> None:
     """Validate the functions signature and type"""
-
     if not inspect.isgeneratorfunction(function):
         raise TypeError(f"{type_label}_function must be a generator function")
 
@@ -141,7 +140,9 @@ def validate_function_arguments(
                         "and only if default parameters are not None")
 
     exp_str = ', '.join(expected_params)
-    raise TypeError(f"{type_label}_function: expected arguments: {exp_str}")
+    act_str = ', '.join(present_params)
+    raise TypeError(
+        f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'")
 
 
 def _validate_optional_section_annotation(params: Mapping[str, inspect.Parameter]) -> None:

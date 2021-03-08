@@ -89,6 +89,15 @@ LocalResource<SERVICE_FAILURE_ACTIONS> actions(
 template <typename T>
 using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
 
+struct HandleDeleter {
+    using pointer = HANDLE;  // trick to use HANDLE as STL pointer
+
+    void operator()(HANDLE h) { ::CloseHandle(h); }
+};
+
+/// Unique ptr for Windows HANDLE
+using UniqueHandle = std::unique_ptr<HANDLE, HandleDeleter>;
+
 // returns <exit_code, 0>, <0, error> or <-1, error>
 std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 
@@ -154,6 +163,7 @@ public:
     virtual void shutdownService() = 0;
     virtual const wchar_t* getMainLogName() const = 0;
     virtual void preContextCall() = 0;
+    virtual void cleanupOnStop() {}
 };
 
 // keeps two handles
@@ -1113,24 +1123,23 @@ public:
     BSTR data_;
 };
 
-/// \brief Set correct access rights for the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users write access from the specified path(usually it is
-///  %ProgramData%/checkmk)
-bool ProtectPathFromUserWrite(const std::filesystem::path& path);
+/// \brief Add command to set correct access rights for the path
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the path
-///
-///  Normally called once on the start of the service.
-///  Removes Users Access to the specified path
-bool ProtectPathFromUserAccess(const std::filesystem::path& entry);
+/// \brief Add command to remove user write to the path
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
 
-/// \brief Remove user access to the file
+/// \brief Add command to remove user access to the path
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
 ///
-///  Normally called once on the start of the service.
-///  Removes Users Access Writes to the specified file
-bool ProtectFileFromUserWrite(const std::filesystem::path& path);
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
 
 /// \brief Changes Access Rights in Windows crazy manner
 ///
@@ -1151,6 +1160,7 @@ bool ChangeAccessRights(
 
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
+const wchar_t* GetMultiSzEntry(wchar_t*& pos, const wchar_t* end);
 }  // namespace wtools
 
 #endif  // wtools_h__

@@ -32,7 +32,7 @@ from typing import Final, Iterator, Sequence, Type, Union
 
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.exceptions import MKTimeout
+from cmk.utils.exceptions import MKFetcherError, MKTimeout
 from cmk.utils.type_defs import AgentRawData, result, SectionName
 from cmk.utils.type_defs.protocol import Protocol
 
@@ -344,7 +344,7 @@ class FetcherMessage(Protocol):
         return "%s(%r, %r, %r)" % (type(self).__name__, self.header, self.payload, self.stats)
 
     def __len__(self) -> int:
-        return len(self.header) + len(self.payload) + len(self.stats)
+        return len(self.header) + self.header.payload_length + self.header.stats_length
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
@@ -374,7 +374,8 @@ class FetcherMessage(Protocol):
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
-                    status=50,
+                    status=logging.INFO
+                    if isinstance(raw_data.error, MKFetcherError) else logging.CRITICAL,
                     payload_length=len(error_payload),
                     stats_length=len(stats),
                 ),
@@ -552,7 +553,7 @@ class CMCMessage(Protocol):
         return "%s(%r, %r)" % (type(self).__name__, self.header, self.payload)
 
     def __len__(self) -> int:
-        return len(self.header) + sum(len(_) for _ in self.payload)
+        return len(self.header) + self.header.payload_length
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header

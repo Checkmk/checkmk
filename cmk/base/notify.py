@@ -24,7 +24,7 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast
+from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast, Mapping
 import traceback
 import uuid
 
@@ -255,11 +255,11 @@ def do_notify(options: Dict[str, bool], args: List[str]) -> Optional[int]:
                 replay_nr = 0
             notify_notify(raw_context_from_backlog(replay_nr))
         elif notify_mode == 'stdin':
-            notify_notify(raw_context_from_stdin())
+            notify_notify(events.raw_context_from_string(sys.stdin.read()))
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
         else:
-            notify_notify(raw_context_from_env())
+            notify_notify(raw_context_from_env(os.environ))
 
     except Exception:
         crash_dir = cmk.utils.paths.var_dir + "/notify"
@@ -661,13 +661,20 @@ def rbn_fallback_contacts() -> Contacts:
 def rbn_finalize_plugin_parameters(hostname: HostName, plugin_name: NotificationPluginNameStr,
                                    rule_parameters: NotifyPluginParams) -> NotifyPluginParams:
     # Right now we are only able to finalize notification plugins with dict parameters..
-    if isinstance(rule_parameters, dict):
-        host_config = config.get_config_cache().get_host_config(hostname)
-        parameters = host_config.notification_plugin_parameters(plugin_name).copy()
-        parameters.update(rule_parameters)
-        return parameters
+    if not isinstance(rule_parameters, dict):
+        return rule_parameters
 
-    return rule_parameters
+    host_config = config.get_config_cache().get_host_config(hostname)
+    parameters = host_config.notification_plugin_parameters(plugin_name).copy()
+    parameters.update(rule_parameters)
+
+    # Added in 2.0.0b8. Applies if no value is set either in the notification rule
+    # or the rule "Parameters for HTML Email".
+    if plugin_name == "mail":
+        parameters.setdefault("graphs_per_notification", 5)
+        parameters.setdefault("notifications_with_graphs", 5)
+
+    return parameters
 
 
 # Create a table of all user specific notification rules. Important:
@@ -748,7 +755,7 @@ def rbn_split_plugin_context(plugin_context: PluginContext) -> List[PluginContex
 
     contexts = []
     keys_to_split = {"CONTACTNAME", "CONTACTALIAS", "CONTACTEMAIL", "CONTACTPAGER"} \
-                    | {key for key in plugin_context if key.startswith("CONTACT_")}
+        | {key for key in plugin_context if key.startswith("CONTACT_")}
 
     for i in range(num_contacts):
         context = plugin_context.copy()
@@ -2025,12 +2032,6 @@ def call_bulk_notification_script(
 #   '----------------------------------------------------------------------'
 
 
-# Be aware: The backlog.mk contains the raw context which has not been decoded
-# to unicode yet. It contains raw encoded strings e.g. the plugin output provided
-# by third party plugins which might be UTF-8 encoded but can also be encoded in
-# other ways. Currently the context is converted later by bot, this module
-# and the GUI. TODO Maybe we should centralize the encoding here and save the
-# backlock already encoded.
 def store_notification_backlog(raw_context: EventContext) -> None:
     path = notification_logdir + "/backlog.mk"
     if not config.notification_backlog:
@@ -2057,21 +2058,10 @@ def raw_context_from_backlog(nr: int) -> EventContext:
     return backlog[nr]
 
 
-def raw_context_from_stdin() -> EventContext:
-    context = {}
-    for line in sys.stdin:
-        varname, value = line.strip().split("=", 1)
-        context[varname] = events.expand_backslashes(value)
-    events.pipe_decode_raw_context(context)
-    return context
-
-
-def raw_context_from_env() -> EventContext:
-    # Information about notification is excpected in the
-    # environment in variables with the prefix NOTIFY_
+def raw_context_from_env(environ: Mapping[str, str]) -> EventContext:
     context = {
         var[7:]: value
-        for (var, value) in os.environ.items()
+        for (var, value) in environ.items()
         if var.startswith("NOTIFY_") and not dead_nagios_variable(value)
     }
     events.pipe_decode_raw_context(context)

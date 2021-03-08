@@ -31,7 +31,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
 from cmk.utils.i18n import _
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledAggregationSchema
+from cmk.utils.bi.bi_trees import BICompiledAggregation
 from cmk.utils.bi.bi_aggregation import BIAggregation
 from cmk.utils.bi.bi_lib import SitesCallback
 
@@ -117,12 +117,10 @@ class BICompiler:
 
             for aggr_id, aggr in self._compiled_aggregations.items():
                 start = time.time()
-                result = BICompiledAggregationSchema().dump(aggr)
-                self._logger.debug("Schema dump took config took %f (%d branches)" %
-                                   (time.time() - start, len(aggr.branches)))
-                start = time.time()
+                result = aggr.serialize()
+                self._logger.debug("Schema dump %s took config took %f (%d branches)" %
+                                   (aggr_id, time.time() - start, len(aggr.branches)))
                 self._marshal_save_data(self._path_compiled_aggregations.joinpath(aggr_id), result)
-                self._logger.debug("Save dump to disk took %f" % (time.time() - start))
 
             self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
 

@@ -204,14 +204,16 @@ class ABCRulesetMode(WatoMode):
         grouped_rulesets = sorted(rulesets.get_grouped(),
                                   key=lambda k_v: watolib.get_rulegroup(k_v[0]).title)
 
+        show_main_group_title = len(grouped_rulesets) > 1
+
         for main_group_name, sub_groups in grouped_rulesets:
-            # Display the main group header only when there are several main groups shown
-            if len(grouped_rulesets) > 1:
-                html.h3(watolib.get_rulegroup(main_group_name).title)
-                html.br()
+            main_group_title = watolib.get_rulegroup(main_group_name).title
 
             for group_name, group_rulesets in sub_groups:
-                forms.header(watolib.get_rulegroup(group_name).title)
+                group_title = watolib.get_rulegroup(group_name).title
+                forms.header(title=(
+                    f"{main_group_title} > {group_title}" if show_main_group_title else group_title
+                ))
                 forms.container()
 
                 for ruleset in group_rulesets:
@@ -341,10 +343,8 @@ class ModeRuleSearch(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(
-                default_value=self._search_options.get("fulltext", ""),
-                placeholder=_("Filter"),
-            ) if self._page_type is not PageType.RuleSearch else None,
+            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""))
+            if self._page_type is not PageType.RuleSearch else None,
         )
         return menu
 
@@ -404,7 +404,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     # pylint does not understand this overloading
     @overload
     @classmethod
-    def mode_url(cls, *, group: str) -> str:  # pylint: disable=arguments-differ
+    def mode_url(cls, *, group: str, host: str, item: str, service: str) -> str:  # pylint: disable=arguments-differ
         ...
 
     @overload
@@ -467,8 +467,7 @@ class ModeRulesetGroup(ABCRulesetMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", ""),
-                                         placeholder=_("Filter")),
+            inpage_search=PageMenuSearch(default_value=self._search_options.get("fulltext", "")),
         )
         return menu
 
@@ -779,8 +778,15 @@ class ModeEditRuleset(WatoMode):
             )
 
     def action(self) -> ActionResult:
+        back_url = self.mode_url(
+            varname=self._name,
+            host=self._hostname or "",
+            item=ensure_str(watolib.mk_repr(self._item)),
+            service=ensure_str(watolib.mk_repr(self._service)),
+        )
+
         if not html.check_transaction():
-            return redirect(self.mode_url(varname=self._name))
+            return redirect(back_url)
 
         rule_folder = watolib.Folder.folder(html.request.var("_folder", html.request.var("folder")))
         rule_folder.need_permission("write")
@@ -804,7 +810,7 @@ class ModeEditRuleset(WatoMode):
             ruleset.move_rule_to(rule, html.request.get_integer_input_mandatory("_index"))
 
         rulesets.save()
-        return redirect(self.mode_url(varname=self._name))
+        return redirect(back_url)
 
     def page(self):
         if not config.wato_hide_varnames:
@@ -978,12 +984,12 @@ class ModeEditRuleset(WatoMode):
         ]
         if html.request.var("rule_folder"):
             vars_.append(("rule_folder", folder.path()))
-        if html.request.var("host"):
+        if self._hostname:
             vars_.append(("host", self._hostname))
-        if html.request.var("item"):
-            vars_.append(("item", watolib.mk_repr(self._item)))
-        if html.request.var("service"):
-            vars_.append(("service", watolib.mk_repr(self._service)))
+        if self._item:
+            vars_.append(("item", ensure_str(watolib.mk_repr(self._item))))
+        if self._service:
+            vars_.append(("service", ensure_str(watolib.mk_repr(self._service))))
 
         return make_action_link(vars_)
 
@@ -1105,12 +1111,11 @@ class ModeRuleSearchForm(WatoMode):
         return _("Search rulesets and rules")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(
-            breadcrumb,
-            form_name="rule_search",
-            button_name="_do_search",
-            save_title=_("Search"),
-        )
+        menu = make_simple_form_page_menu(_("Search"),
+                                          breadcrumb,
+                                          form_name="rule_search",
+                                          button_name="_do_search",
+                                          save_title=_("Search"))
         action_topic = menu.dropdowns[0].topics[0]
         action_topic.entries.insert(
             1,
@@ -1375,7 +1380,8 @@ class ABCEditRuleMode(WatoMode):
         return _("Edit rule: %s") % self._rulespec.title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
                                           form_name="rule_editor",
                                           button_name="save",
                                           add_abort_link=True,
@@ -1460,7 +1466,11 @@ class ABCEditRuleMode(WatoMode):
 
         if html.request.has_var("_export_rule"):
             return redirect(
-                mode_url("edit_rule", varname=self._name, folder=watolib.Folder.current().path()))
+                mode_url("edit_rule",
+                         _export_rule="ON",
+                         varname=self._name,
+                         rule_id=self._rule.id,
+                         folder=watolib.Folder.current().path()))
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
@@ -1666,7 +1676,8 @@ class ABCEditRuleMode(WatoMode):
         return VSExplicitConditions(rulespec=self._rulespec, **kwargs)
 
     def _show_rule_representation(self):
-        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_config()))
+        pretty_rule_config = pprint.pformat(self._rule.to_config()).replace("\n", "<br>")
+        content = html.render_text(pretty_rule_config)
 
         html.write(_("This rule representation can be used for Web API calls."))
         html.br()
@@ -1788,7 +1799,7 @@ class VSExplicitConditions(Transform):
             return _("Check types")
 
         if item_type == "item":
-            return self._rulespec.item_name.title()
+            return self._rulespec.item_name
 
         raise MKUserError(None, "Invalid item type '%s'" % item_type)
 
@@ -2201,8 +2212,12 @@ class ModeCloneRule(ABCEditRuleMode):
     def title(self):
         return _("Copy rule: %s") % self._rulespec.title
 
+    def _set_rule(self):
+        super()._set_rule()
+        self._rule = self._orig_rule.clone(preserve_id=False)
+
     def _save_rule(self):
-        self._ruleset.clone_rule(self._orig_rule, self._rule.clone())
+        self._ruleset.clone_rule(self._orig_rule, self._rule)
         self._rulesets.save()
 
     def _remove_from_orig_folder(self):

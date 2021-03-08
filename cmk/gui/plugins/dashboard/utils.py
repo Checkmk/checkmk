@@ -11,72 +11,44 @@ import json
 import time
 import urllib.parse
 from itertools import chain
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
-from cmk.utils.macros import (
-    MacroMapping,
-    replace_macros_in_str,
-)
+from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.type_defs import UserId
-from cmk.gui.type_defs import (
-    HTTPVariables,
-    SingleInfos,
-    VisualContext,
-)
 
-import cmk.gui.sites as sites
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.figures import create_figures_response
-import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _, _u
-from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
+import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
+from cmk.gui.figures import create_figures_response
 from cmk.gui.globals import g, html, request
-from cmk.gui.sites import get_alias_of_host
-from cmk.gui.valuespec import (
-    ValueSpec,
-    ValueSpecValidateFunc,
-    DictionaryEntry,
-    DictionaryElements,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    Checkbox,
-    TextUnicode,
-)
-from cmk.gui.plugins.views.utils import (
-    get_permitted_views,
-    get_all_views,
-    transform_painter_spec,
-)
+from cmk.gui.i18n import _, _u
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import (
-    make_topic_breadcrumb,
-    Breadcrumb,
-    BreadcrumbItem,
-)
+from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
+from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DictionaryElements,
+    DictionaryEntry,
+    DropdownChoice,
+    FixedValue,
+    TextUnicode,
+    ValueSpec,
+    ValueSpecValidateFunc,
+)
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -105,32 +77,45 @@ def macro_mapping_from_context(
     context: VisualContext,
     single_infos: SingleInfos,
     title: str,
+    default_title: str,
+    **additional_macros: str,
 ) -> MacroMapping:
-    macro_mapping = {
+    macro_mapping = {"$DEFAULT_TITLE$": default_title}
+    macro_mapping.update({
         macro: str(context[key]) for macro, key in (
             ("$HOST_NAME$", "host"),
             ("$SERVICE_DESCRIPTION$", "service"),
         ) if key in context and key in single_infos
-    }
-
-    only_sites = visuals.get_only_sites_from_context(context)
-    if only_sites and len(only_sites) == 1:
-        macro_mapping["$SITE$"] = only_sites[0]
+    })
 
     if "$HOST_ALIAS$" in title and "$HOST_NAME$" in macro_mapping:
         macro_mapping["$HOST_ALIAS$"] = get_alias_of_host(
-            macro_mapping.get("$SITE$"),
+            additional_macros.get("$SITE$"),
             macro_mapping["$HOST_NAME$"],
         )
+
+    macro_mapping.update(additional_macros)
 
     return macro_mapping
 
 
 def render_title_with_macros_string(
+    context: VisualContext,
+    single_infos: SingleInfos,
     title: str,
-    macro_mapping: MacroMapping,
+    default_title: str,
+    **additional_macros: str,
 ):
-    return replace_macros_in_str(_u(title), macro_mapping)
+    return replace_macros_in_str(
+        _u(title),
+        macro_mapping_from_context(
+            context,
+            single_infos,
+            title,
+            default_title,
+            **additional_macros,
+        ),
+    )
 
 
 class Dashlet(metaclass=abc.ABCMeta):
@@ -290,13 +275,19 @@ class Dashlet(metaclass=abc.ABCMeta):
     def dashboard_name(self) -> str:
         return self._dashboard_name
 
+    def default_display_title(self) -> str:
+        return self.title()
+
     def display_title(self) -> str:
-        return self._dashlet_spec.get("title", self.title())
+        return self._dashlet_spec.get("title", self.default_display_title())
 
     def _get_macro_mapping(self, title: str) -> MacroMapping:
-        if self.has_context():
-            return macro_mapping_from_context(self.context, self.single_infos(), title)
-        return {}
+        return macro_mapping_from_context(
+            self.context if self.has_context() else {},
+            self.single_infos(),
+            title,
+            self.default_display_title(),
+        )
 
     def render_title_html(self) -> HTML:
         title = self.display_title()
@@ -455,8 +446,8 @@ class Dashlet(metaclass=abc.ABCMeta):
 
         return globals()[urlfunc]()
 
-    @staticmethod
-    def get_additional_title_macros() -> Iterable[str]:
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
         yield from []
 
 
@@ -470,16 +461,17 @@ def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[s
 
 
 def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
-    available_macros = list(
-        chain(
-            _get_title_macros_from_single_infos(dashlet_type.single_infos()),
-            dashlet_type.get_additional_title_macros(),
-        ))
-    if not available_macros:
-        return ""
+    available_macros = chain(
+        ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
+        _get_title_macros_from_single_infos(dashlet_type.single_infos()),
+        dashlet_type.get_additional_title_macros(),
+    )
     macros_as_list = f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
-    return _("You can use the following macros to fill in the corresponding information:%s"
-            ) % macros_as_list
+    return _("You can use the following macros to fill in the corresponding information:%s%s") % (
+        macros_as_list,
+        _("These macros can be combined with arbitrary text elements, e.g. \"some text "
+          "<tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\"."),
+    )
 
 
 def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[str]):
@@ -492,20 +484,20 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
              FixedValue(
                  dashlet_type.type_name(),
                  totext=dashlet_type.title(),
-                 title=_('Dashlet Type'),
+                 title=_('Element type'),
              )),
             visuals.single_infos_spec(single_infos),
             ('background',
              Checkbox(
-                 title=_('Colored Background'),
+                 title=_('Colored background'),
                  label=_('Render background'),
-                 help=_('Render gray background color behind the dashlets content.'),
+                 help=_('Render gray background color behind the elements content.'),
                  default_value=True,
              )),
             ('show_title',
              DropdownChoice(
                  title=_("Show title header"),
-                 help=_('Render the titlebar including title and link above the dashlet.'),
+                 help=_('Render the titlebar including title and link above the element.'),
                  choices=[
                      (False, _("Don't show any header")),
                      (True, _("Show header with highlighted background")),
@@ -515,20 +507,23 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
              )),
             ('title',
              TextUnicode(
-                 title=_('Custom Title') + '<sup>*</sup>',
+                 title=_('Custom title') + '<sup>*</sup>',
+                 placeholder=_(
+                     "This option is macro-capable, please check the inline help for more "
+                     "information."),
                  help=" ".join((
-                     _('Most dashlets have a hard coded static title and some are aware of its '
+                     _('Most elements have a hard coded static title and some are aware of their '
                        'content and set the title dynamically, like the view snapin, which '
                        'displays the title of the view. If you like to use any other title, set it '
                        'here.'),
                      _title_help_text_for_macros(dashlet_type),
-                 )).rstrip(),
+                 )),
                  size=75,
              )),
             ('title_url',
              TextUnicode(
                  title=_('Link of Title'),
-                 help=_('The URL of the target page the link of the dashlet should link to.'),
+                 help=_('The URL of the target page the link of the element should link to.'),
                  size=50,
              )),
         ],
@@ -597,7 +592,7 @@ class FigureDashletPage(AjaxPage):
         try:
             dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
         except KeyError:
-            raise MKUserError("type", _('The requested dashlet type does not exist.'))
+            raise MKUserError("type", _('The requested element type does not exist.'))
 
         settings = dashlet_vs_general_settings(
             dashlet_type, dashlet_type.single_infos()).value_from_json(settings)
@@ -813,7 +808,19 @@ def _transform_dashlets_mut(dashlet_spec: DashletConfig) -> DashletConfig:
         # -> 2.0.0i Removed network topology dashlet type
         transform_topology_dashlet(dashlet_spec)
 
+    if dashlet_spec["type"] in ["notifications_bar_chart", "alerts_bar_chart"]:
+        # -> v2.0.0b6 introduced the different render modes
+        _transform_event_bar_chart_dashlet(dashlet_spec)
+
     return dashlet_spec
+
+
+def _transform_event_bar_chart_dashlet(dashlet_spec: DashletConfig):
+    if "render_mode" not in dashlet_spec:
+        dashlet_spec["render_mode"] = ("bar_chart", {
+            "time_range": dashlet_spec.pop("time_range", "d0"),
+            "time_resolution": dashlet_spec.pop("time_resolution", "h"),
+        })
 
 
 def transform_topology_dashlet(dashlet_spec: DashletConfig,
@@ -849,7 +856,7 @@ def _transform_builtin_dashboards() -> None:
             dashlet.setdefault('show_title', True)
 
             if dashlet.get('url', '').startswith('dashlet_hoststats') or \
-                dashlet.get('url', '').startswith('dashlet_servicestats'):
+                    dashlet.get('url', '').startswith('dashlet_servicestats'):
 
                 # hoststats and servicestats
                 dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
@@ -1063,3 +1070,10 @@ def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Bread
                                        PagetypeTopics.get_topic(board["topic"]))
     breadcrumb.append(BreadcrumbItem(title, makeuri_contextless(request, [("name", name)])))
     return breadcrumb
+
+
+def purge_metric_for_js(metric):
+    return {
+        "bounds": metric.get("scalar", {}),
+        "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
+    }

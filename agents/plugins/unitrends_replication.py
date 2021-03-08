@@ -8,7 +8,12 @@ __version__ = "2.1.0i1"
 
 import sys
 import time
-import urllib.request
+
+if sys.version_info[0] == 2:
+    from urllib2 import urlopen  # pylint: disable=import-error
+else:
+    from urllib.request import urlopen  # pylint: disable=import-error,no-name-in-module
+
 from xml.dom import minidom
 
 now = int(time.time())
@@ -19,7 +24,7 @@ dpu = 1
 url = "http://localhost/recoveryconsole/bpl/syncstatus.php?type=replicate&arguments=start:%s,end:%s&sid=%s&auth=1:" % (
     start, end, dpu)
 
-xml = urllib.request.urlopen(url)
+xml = urlopen(url)
 
 sys.stdout.write("<<<unitrends_replication:sep(124)>>>\n")
 dom = minidom.parse(xml)

@@ -261,7 +261,7 @@ class MainModuleHostAndServiceParameters(ABCMainModule):
 
     @property
     def icon(self):
-        return {"icon": "folder", "emblem": "settings"}
+        return {"icon": "folder", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1037,7 +1037,7 @@ class MainModuleMonitoringRules(ABCMainModule):
 
     @property
     def icon(self):
-        return {"icon": "services", "emblem": "settings"}
+        return {"icon": "services", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1221,7 +1221,7 @@ class MainModuleAgentRules(ABCMainModule):
 
     @property
     def icon(self):
-        return {"icon": "agents", "emblem": "settings"}
+        return {"icon": "agents", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1302,7 +1302,7 @@ class MainModuleAgentAccessRules(ABCMainModule):
 
     @property
     def icon(self):
-        return {"icon": "agents", "emblem": "settings"}
+        return {"icon": "agents", "emblem": "rulesets"}
 
     @property
     def permission(self):

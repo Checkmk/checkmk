@@ -37,9 +37,11 @@ def test_registered_pages():
         'ajax_search_monitoring',
         'ajax_search_setup',
         'ajax_service_discovery',
+        'ajax_set_dashboard_start_url',
         'ajax_set_foldertree',
         'ajax_set_rowselection',
         'ajax_sidebar_position',
+        'ajax_sidebar_get_unack_incomp_werks',
         'ajax_start_activation',
         'ajax_switch_help',
         'ajax_ui_theme',
@@ -139,10 +141,12 @@ def test_registered_pages():
         'ajax_initial_dashboard_filters',
         'ajax_initial_view_filters',
         'ajax_initial_topology_filters',
+        'noauth:ajax_graph_images',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_pages += [
+            "ajax_host_overview_tooltip",
             'ajax_metric_choice',
             'ajax_pagetype_add_element',
             'ajax_popup_add_metric_to_graph',
@@ -173,7 +177,6 @@ def test_registered_pages():
             'graph_export',
             'graph_image',
             'graph_tunings',
-            'noauth:ajax_graph_images',
             'noauth:deploy_agent',
             'register_agent',
             'report',

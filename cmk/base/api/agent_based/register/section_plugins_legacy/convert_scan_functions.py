@@ -369,7 +369,11 @@ def _compute_detect_spec(
     if _is_false(expression_ast):
         return SNMPDetectSpecification()
 
-    return _ast_convert_dispatcher(expression_ast)
+    try:
+        return _ast_convert_dispatcher(expression_ast)
+    except (ValueError, NotImplementedError) as exc:
+        msg = f"{section_name}: failed to convert scan function: {scan_function.__name__}"
+        raise NotImplementedError(msg) from exc
 
 
 def create_detect_spec(

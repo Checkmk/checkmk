@@ -58,7 +58,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
             path = cmk.utils.paths.snmpwalks_dir + "/" + self.config.hostname
             console.vverbose("  Loading %s from %s\n" % (oid, path))
             try:
-                lines = open(path).readlines()
+                lines = StoredWalkSNMPBackend.read_walk_data(path)
             except IOError:
                 raise MKSNMPError("No snmpwalk file %s" % path)
             host_cache[self.config.hostname] = lines
@@ -68,9 +68,6 @@ class StoredWalkSNMPBackend(SNMPBackend):
         hit = None
         while end - begin > 0:
             current = (begin + end) // 2
-            # skip over values including newlines to the next oid
-            while not lines[current].startswith(".") and current < end:
-                current += 1
             parts = lines[current].split(None, 1)
             comp = parts[0]
             hit = StoredWalkSNMPBackend._compare_oids(oid_prefix, comp)
@@ -92,6 +89,19 @@ class StoredWalkSNMPBackend(SNMPBackend):
             return [rowinfo[0]]
 
         return rowinfo
+
+    @staticmethod
+    def read_walk_data(path: str):
+        lines = []
+        with open(path) as f:
+            # Sometimes there are newlines in the data of snmpwalks.
+            # Append the data to the last OID rather than throwing it away/skipping it.
+            for line in f.readlines():
+                if line.startswith("."):
+                    lines.append(line)
+                elif lines:
+                    lines[-1] += line
+        return lines
 
     @staticmethod
     def _compare_oids(a: OID, b: OID) -> int:

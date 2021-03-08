@@ -4,8 +4,8 @@
 	 viewBox="0 0 273.4 273.4" style="enable-background:new 0 0 273.4 273.4;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:none;}
-	.st1{fill:#F5F0FF;}
-	.st2{fill:#E1DCF3;}
+	.st1{fill:#505862;}
+	.st2{fill:#40454D;}
 </style>
 <rect y="0.7" class="st0" width="273.4" height="272.7"/>
 <g id="Icons">
@@ -18,6 +18,6 @@
 		</g>
 	</g>
 </g>
-<path class="st2" d="M129.3,200.5c-31.8-3.7-56.8-30.8-56.8-63.6c0-32.8,24.8-60,56.8-63.6V30.5C73.9,34.1,30,80.4,30,136.9
+<path class="st2" d="M129.3,200.5c-31.8-3.7-56.8-30.8-56.8-63.6s24.8-60,56.8-63.6V30.5C73.9,34.1,30,80.4,30,136.9
 	c0,56.3,43.9,103,99.3,106.8V200.5z"/>
 </svg>

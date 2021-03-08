@@ -11,22 +11,23 @@ from typing import NamedTuple, List, Optional, Union
 
 import cmk.gui.config as config
 import cmk.gui.notify as notify
-from cmk.gui.pages import page_registry, AjaxPage, register
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.popups import MethodInline
+from cmk.gui.i18n import _, ungettext
+from cmk.gui.main_menu import (
+    mega_menu_registry,
+    any_show_more_items,
+)
+from cmk.gui.pages import page_registry, AjaxPage, register
 from cmk.gui.type_defs import (
     Icon,
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
 )
-
-from cmk.gui.main_menu import (
-    mega_menu_registry,
-    any_show_more_items,
-)
+from cmk.gui.utils.popups import MethodInline
+from cmk.gui.werks import num_unacknowledged_incompatible_werks, may_acknowledge
 
 MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),
@@ -140,6 +141,24 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
         }
 
 
+@page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")
+class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
+    def page(self):
+        if not may_acknowledge():
+            raise MKAuthException(_("You are not allowed to acknowlegde werks"))
+
+        num_unack_werks = num_unacknowledged_incompatible_werks()
+        tooltip_text = ungettext("%d unacknowledged incompatible werk" % num_unack_werks,
+                                 "%d unacknowledged incompatible werks" % num_unack_werks,
+                                 num_unack_werks)
+
+        return {
+            "count": num_unack_werks,
+            "text": _("%d open incompatible werks") % num_unack_werks,
+            "tooltip": tooltip_text,
+        }
+
+
 class MegaMenuRenderer:
     """Renders the content of the mega menu popups"""
     def show(self, menu: MegaMenu) -> None:
@@ -167,6 +186,8 @@ class MegaMenuRenderer:
         html.close_div()
         html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
         for topic in topics:
+            if not topic.items:
+                continue
             self._show_topic(topic, menu.name)
         html.div(None, class_=["topic", "sentinel"])
         html.close_div()
@@ -181,7 +202,9 @@ class MegaMenuRenderer:
         topic_id = "_".join(
             [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())])
 
-        html.open_div(id_=topic_id, class_=["topic"] + (["show_more_mode"] if show_more else []))
+        html.open_div(id_=topic_id,
+                      class_=["topic"] + (["show_more_mode"] if show_more else []),
+                      **{"data-max-entries": "%d" % topic.max_entries})
 
         self._show_topic_title(menu_id, topic_id, topic)
         self._show_items(topic_id, topic)

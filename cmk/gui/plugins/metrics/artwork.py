@@ -76,9 +76,9 @@ def _graph_colors(theme_id):
             "canvas_color": "#ffffff",
         },
     }.get(theme_id, {
-        "background_color": "#f0f2f4",
+        "background_color": None,
         "foreground_color": "#000000",
-        "canvas_color": "#ffffff",
+        "canvas_color": None,
     })
 
 

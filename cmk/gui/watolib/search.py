@@ -37,10 +37,6 @@ from cmk.gui.htmllib import html
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.pages import get_page_handler
-from cmk.gui.plugins.watolib.utils import (
-    SampleConfigGenerator,
-    sample_config_generator_registry,
-)
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
@@ -267,7 +263,8 @@ class PermissionsHandler:
             "folders": user.may("wato.hosts"),
             "hosts": user.may("wato.hosts"),
             "event_console": user.may("mkeventd.edit") or user.may("wato.seeall"),
-            "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall")
+            "event_console_settings": user.may("mkeventd.config") or user.may("wato.seeall"),
+            "logfile_pattern_analyzer": user.may("wato.pattern_editor") or user.may("wato.seeall"),
         }
         self._url_checker = URLChecker()
 
@@ -369,7 +366,7 @@ class IndexSearcher:
                 if not permissions_check(match_item_dict["url"]):
                     continue
 
-                results[match_item_dict["topic"]].append(
+                results[_(match_item_dict["topic"])].append(
                     SearchResult(
                         match_item_dict["title"],
                         match_item_dict["url"],
@@ -394,27 +391,29 @@ class IndexSearcher:
 
     @staticmethod
     def _first_topics() -> Iterable[str]:
-        # Note: this could just be a class attribute, however, due to the string concatenation,
-        # this would mess up the localization
+        # This is not a class attribute because it could mess up the localization if e.g.
+        # string concatenation is used
         return (
             _("Setup"),
             _("Hosts"),
-            _("Services") + " > " + _("Service monitoring rules"),
-            _("Services") + " > " + _("Service discovery rules"),
+            _("Service monitoring rules"),
+            _("Service discovery rules"),
         )
 
     @staticmethod
     def _last_topics() -> Iterable[str]:
-        # Note: this could just be a class attribute, however, due to the string concatenation,
-        # this would mess up the localization
+        # This is not a class attribute because it could mess up the localization if e.g.
+        # string concatenation is used
         return (
             # _("Business Intelligence"),
             _("Event Console rule packages"),
             _("Event Console rules"),
             _("Event Console settings"),
             # _("Users"),
-            _("Services") + " > " + _("Enforced services"),
+            _("Enforced services"),
             _("Global settings"),
+            _("Miscellaneous"),
+            _("Deprecated rulesets"),
             # _("Maintenance"),
         )
 
@@ -501,23 +500,6 @@ class SearchIndexBackgroundJob(GUIBackgroundJob):
             stoppable=False,
             estimated_duration=last_job_status.get("duration"),
         )
-
-
-@sample_config_generator_registry.register
-class SampleConfigGeneratorSearchIndex(SampleConfigGenerator):
-    """Initial building and storing of search index"""
-    @classmethod
-    def ident(cls) -> str:
-        return "search_index"
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 70
-
-    def generate(self) -> None:
-        # it is possible that Redis is not yet up and running, therefore we explicitly allow
-        # multiple connection attempts
-        build_index_background(n_attempts_redis_connection=5)
 
 
 match_item_generator_registry = MatchItemGeneratorRegistry()

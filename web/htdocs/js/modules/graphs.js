@@ -468,28 +468,6 @@ function render_graph(graph) {
         ctx.restore();
     }
 
-    // Paint axes and a strong line at 0, if that is in the range
-    if (graph.render_options.show_vertical_axis)
-        paint_line(
-            [t_orig, v_orig + axis_over_width],
-            [t_orig, top_border],
-            graph.render_options.foreground_color
-        );
-
-    if (graph.render_options.show_time_axis)
-        paint_line(
-            [t_orig - axis_over_width, v_orig],
-            [width, v_orig],
-            graph.render_options.foreground_color
-        );
-
-    if (v_range_from <= 0 && v_range_to >= 0)
-        paint_line(
-            trans(graph["start_time"], 0),
-            trans(graph["end_time"], 0),
-            graph.render_options.foreground_color
-        );
-
     // Paint horizontal rules like warn and crit
     ctx.save();
     ctx.lineWidth = rule_line_width;
@@ -625,12 +603,6 @@ function update_graph_styling(graph, container) {
             selector: "div.graph div.indicator",
             attrs: {
                 "border-right": "1px dotted " + graph.render_options.foreground_color,
-            },
-        },
-        {
-            selector: "div.color",
-            attrs: {
-                border: "1px solid " + graph.render_options.foreground_color,
             },
         },
     ];
@@ -849,14 +821,12 @@ function graph_activate_mouse_control(graph) {
             resize_img
         );
 
-        utils.add_event_handler("mousemove", global_graph_mouse_move);
+        utils.add_event_handler("mousemove", graph_mouse_resize);
     }
-}
 
-function global_graph_mouse_move(event) {
-    event = event || window.event; // IE FIX
-    update_mouse_hovering(event);
-    graph_mouse_resize(event);
+    if (graph.ajax_context.render_options.interaction) {
+        utils.add_event_handler("mousemove", update_mouse_hovering);
+    }
 }
 
 function graph_start_resize(event, graph) {
@@ -1268,35 +1238,33 @@ function render_graph_hover_popup(graph, event, popup_data) {
     time.innerText = popup_data.rendered_hover_time;
     popup_container.appendChild(time);
 
-    var entries = document.createElement("div");
+    var entries = document.createElement("table");
     utils.add_class(entries, "entries");
     popup_container.appendChild(entries);
 
-    for (var i = 0, curve = null; i < popup_data.curve_values.length; i++) {
-        curve = popup_data.curve_values[i];
-
-        var entry = document.createElement("div");
-
-        var color = document.createElement("div");
+    popup_data.curve_values.forEach(curve => {
+        let row = entries.insertRow();
+        let title = row.insertCell(0);
+        let color = document.createElement("div");
         utils.add_class(color, "color");
-        color.style.backgroundColor = curve.color;
-        entry.appendChild(color);
+        color.style.backgroundColor = curve.color + "4c";
+        color.style.borderColor = curve.color;
+        title.appendChild(color);
+        title.appendChild(document.createTextNode(curve.title + ": "));
 
-        var value = document.createElement("span");
+        let value = row.insertCell(1);
         utils.add_class(value, "value");
         value.innerText = curve.rendered_value[1];
-        entry.appendChild(value);
-
-        entries.appendChild(entry);
-    }
+    });
 
     hover.update_content(wrapper.innerHTML, event);
 }
 
+// Hide the tooltips that show the metric values at the position of the pointer
 function remove_all_graph_hover_popups() {
     for (const menu of document.getElementsByClassName("hover_menu")) {
-        const graph_container = menu.getElementsByClassName("graph_container");
-        if (graph_container) {
+        const graph_container = menu.getElementsByClassName("graph_hover_popup");
+        if (graph_container.length > 0) {
             hover.hide();
         }
     }

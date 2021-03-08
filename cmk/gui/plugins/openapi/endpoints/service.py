@@ -12,12 +12,9 @@ is monitored by Checkmk.
 You can find an introduction to services in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
-import json
-
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import verify_columns
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -25,25 +22,15 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 
 PARAMETERS = [{
-    'site': fields.String(description="Restrict the query to this particular site."),
-    'query': fields.Nested(
-        fields.ExprSchema,
-        description=("An query expression in nested dictionary form. If you want to "
-                     "use multiple expressions, nest them with the AND/OR operators."),
-        many=False,
-        example=json.dumps({
-            'op': 'not',
-            'expr': {
-                'op': '=',
-                'left': 'name',
-                'right': 'example.com'
-            }
-        }),
-        required=False,
+    'sites': fields.List(
+        fields.SiteField(),
+        description="Restrict the query to this particular site.",
+        missing=list,
     ),
+    'query': fields.query_field(Services, required=False),
     'columns': fields.List(
         fields.LiveStatusColumn(
             table=Services,
@@ -60,7 +47,7 @@ PARAMETERS = [{
 }]
 
 
-@Endpoint(constructors.domain_object_sub_collection_href('host', '{host_name}', 'services'),
+@Endpoint(constructors.domain_object_collection_href('host', '{host_name}', 'services'),
           '.../collection',
           method='get',
           path_params=[HOST_NAME],
@@ -79,7 +66,7 @@ def _list_host_services(param):
     constructors.collection_href('service'),
     '.../collection',
     method='get',
-    query_params=[HOST_NAME, *PARAMETERS],
+    query_params=[OPTIONAL_HOST_NAME, *PARAMETERS],
     tag_group='Monitoring',
     response_schema=response_schemas.DomainObjectCollection,
 )
@@ -100,10 +87,9 @@ def _list_services(param):
     if host_name is not None:
         q = q.filter(Services.host_name == host_name)
 
-    filter_tree = param.get('query')
-    if filter_tree:
-        expr = tree_to_expr(filter_tree, Services.__tablename__)
-        q = q.filter(expr)
+    query_expr = param.get('query')
+    if query_expr:
+        q = q.filter(query_expr)
 
     result = q.iterate(live)
 

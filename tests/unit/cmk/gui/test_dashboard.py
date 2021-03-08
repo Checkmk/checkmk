@@ -35,11 +35,6 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
-        'average_scatterplot',
-        'alerts_bar_chart',
-        'barplot',
-        'gauge',
-        'notifications_bar_chart',
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
@@ -51,19 +46,26 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'single_metric',
         'snapin',
-        'site_overview',
-        'alert_statistics',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_plugins += [
+            'alerts_bar_chart',
+            'alert_statistics',
+            'average_scatterplot',
+            'barplot',
+            'gauge',
+            'notifications_bar_chart',
+            'problem_graph',
+            'single_metric',
+            'site_overview',
             'custom_graph',
             'combined_graph',
             'ntop_alerts',
             'ntop_flows',
             'ntop_top_talkers',
+            'single_timeseries',
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -72,14 +74,14 @@ def test_dashlet_registry_plugins():
 
 def _expected_intervals():
     expected = [
-        ('hoststats', 60),
+        ('hoststats', False),
         ('mk_logo', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),
         ('overview', False),
         ('pnpgraph', 60),
-        ('servicestats', 60),
+        ('servicestats', False),
         ('snapin', 30),
         ('url', False),
         ('view', False),

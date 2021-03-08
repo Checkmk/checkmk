@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Any, Set, Dict, Tuple, Union
+from typing import List, Optional, Any, Set, Dict, Tuple, Union, Type
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
@@ -88,6 +88,7 @@ class BICompiledLeaf(ABCBICompiledNode):
     def compile_postprocess(
         self,
         bi_branch_root: ABCBICompiledNode,
+        services_of_host: Dict[HostName, Set[ServiceName]],
         bi_searcher: ABCBISearcher,
     ) -> List[ABCBICompiledNode]:
         return [self]
@@ -179,6 +180,23 @@ class BICompiledLeaf(ABCBICompiledNode):
             return entity
         return entity.services_with_fullstate.get(self.service_description)
 
+    @classmethod
+    def schema(cls) -> Type["BICompiledLeafSchema"]:
+        return BICompiledLeafSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "required_hosts": list(
+                map(lambda x: {
+                    "site_id": x[0],
+                    "host_name": x[1]
+                }, self.required_hosts)),
+            "site_id": self.site_id,
+            "host_name": self.host_name,
+            "service_description": self.service_description,
+        }
+
 
 class BISiteHostPairSchema(Schema):
     site_id = ReqString()
@@ -241,10 +259,11 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
+                            services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         self.nodes = [
             res for node in self.nodes
-            for res in node.compile_postprocess(bi_branch_root, bi_searcher)
+            for res in node.compile_postprocess(bi_branch_root, services_of_host, bi_searcher)
         ]
         return [self]
 
@@ -314,6 +333,26 @@ class BICompiledRule(ABCBICompiledNode):
             {},
         )
 
+    @classmethod
+    def schema(cls) -> Type["BICompiledRuleSchema"]:
+        return BICompiledRuleSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "pack_id": self.pack_id,
+            "type": self.type(),
+            "required_hosts": list(
+                map(lambda x: {
+                    "site_id": x[0],
+                    "host_name": x[1]
+                }, self.required_hosts)),
+            "nodes": [node.serialize() for node in self.nodes],
+            "aggregation_function": self.aggregation_function.serialize(),
+            "node_visualization": self.node_visualization,
+            "properties": self.properties.serialize(),
+        }
+
 
 class BICompiledRuleSchema(Schema):
     id = ReqString()
@@ -356,22 +395,18 @@ class BIRemainingResult(ABCBICompiledNode):
         self.host_names = host_names
 
     def compile_postprocess(self, bi_branch_root: ABCBICompiledNode,
+                            services_of_host: Dict[HostName, Set[ServiceName]],
                             bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
         postprocessed_nodes: List[ABCBICompiledNode] = []
         for host_name in self.host_names:
             site_id = bi_searcher.hosts[host_name].site_id
-            for service_description in self._remaining_services_for(host_name, bi_branch_root,
-                                                                    bi_searcher):
+            used_services = services_of_host.get(host_name, set())
+            for service_description in set(bi_searcher.hosts[host_name].services) - used_services:
                 postprocessed_nodes.append(
                     BICompiledLeaf(host_name=host_name,
                                    service_description=service_description,
                                    site_id=site_id))
         return postprocessed_nodes
-
-    def _remaining_services_for(self, host_name: HostName, node: ABCBICompiledNode,
-                                bi_searcher: ABCBISearcher) -> Set[ServiceName]:
-        used_services = node.services_of_host(host_name)
-        return set(bi_searcher.hosts[host_name].services) - used_services
 
     def required_elements(self) -> Set[RequiredBIElement]:
         return set()
@@ -384,6 +419,9 @@ class BIRemainingResult(ABCBICompiledNode):
                 bi_status_fetcher: ABCBIStatusFetcher,
                 use_assumed=False) -> Optional[NodeResultBundle]:
         return None
+
+    def serialize(self) -> Dict[str, Any]:
+        return {}
 
 
 #   .--Aggregation---------------------------------------------------------.
@@ -508,6 +546,19 @@ class BICompiledAggregation:
             return result
 
         raise NotImplementedError("Unknown node type %r" % node)
+
+    @classmethod
+    def schema(cls) -> Type["BICompiledAggregationSchema"]:
+        return BICompiledAggregationSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "branches": [branch.serialize() for branch in self.branches],
+            "aggregation_visualization": self.aggregation_visualization,
+            "computation_options": self.computation_options.serialize(),
+            "groups": self.groups.serialize(),
+        }
 
 
 class BICompiledAggregationSchema(Schema):

@@ -7,9 +7,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Final, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, Final, List, Optional, Tuple, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
+from pyghmi.exceptions import IpmiException  # type: ignore[import]
 
 if TYPE_CHECKING:
     # The remaining pyghmi imports are expensive (60 ms for all of them together).
@@ -24,8 +25,8 @@ from cmk.utils.type_defs import (
     AgentRawData,
     HostAddress,
     SectionName,
-    ServiceCheckResult,
     ServiceDetails,
+    ServiceState,
 )
 
 from .agent import AgentFetcher, AgentHostSections, AgentSummarizer, DefaultAgentFileCache
@@ -92,12 +93,15 @@ class IPMIFetcher(AgentFetcher):
 
         # Performance: See header.
         import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
-        self._command = ipmi_cmd.Command(
-            bmc=self.address,
-            userid=self.username,
-            password=self.password,
-            privlevel=2,
-        )
+        try:
+            self._command = ipmi_cmd.Command(
+                bmc=self.address,
+                userid=self.username,
+                password=self.password,
+                privlevel=2,
+            )
+        except IpmiException as exc:
+            raise MKFetcherError("IPMI connection failed") from exc
 
     def close(self) -> None:
         if self._command is None:
@@ -168,7 +172,7 @@ class IPMIFetcher(AgentFetcher):
                     continue
                 sensors.append(IPMIFetcher._parse_sensor_reading(sensor.sensor_number, reading))
 
-        return AgentRawData(b"<<<mgmt_ipmi_sensors:sep(124)>>>\n" +
+        return AgentRawData(b"<<<ipmi_sensors:sep(124)>>>\n" +
                             b"".join(b"|".join(sensor) + b"\n" for sensor in sensors))
 
     def _firmware_section(self) -> AgentRawData:
@@ -183,7 +187,7 @@ class IPMIFetcher(AgentFetcher):
             self._logger.debug("Exception", exc_info=True)
             return AgentRawData(b"")
 
-        output = b"<<<mgmt_ipmi_firmware:sep(124)>>>\n"
+        output = b"<<<ipmi_firmware:sep(124)>>>\n"
         for entity_name, attributes in firmware_entries:
             for attribute_name, value in attributes.items():
                 output += b"|".join(f.encode("utf8") for f in (entity_name, attribute_name, value))
@@ -274,15 +278,15 @@ class IPMISummarizer(AgentSummarizer):
         host_sections: AgentHostSections,
         *,
         mode: Mode,
-    ) -> ServiceCheckResult:
-        return 0, "Version: %s" % self._get_ipmi_version(host_sections), []
+    ) -> Tuple[ServiceState, ServiceDetails]:
+        return 0, "Version: %s" % self._get_ipmi_version(host_sections)
 
     @staticmethod
     def _get_ipmi_version(host_sections: Optional[AgentHostSections]) -> ServiceDetails:
         if host_sections is None:
             return "unknown"
 
-        section = host_sections.sections.get(SectionName("mgmt_ipmi_firmware"))
+        section = host_sections.sections.get(SectionName("ipmi_firmware"))
         if not section:
             return "unknown"
 

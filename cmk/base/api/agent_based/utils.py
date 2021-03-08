@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Generator, Optional, overload, Tuple, Un
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.base.check_api_utils as check_api_utils  # pylint: disable=cmk-module-layer-violation
+import cmk.base.plugin_contexts as plugin_contexts  # pylint: disable=cmk-module-layer-violation
 import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
@@ -310,14 +310,17 @@ def check_levels(
 
     Example:
 
-        >>> result, = check_levels(
+        >>> result, metric = check_levels(
         ...     23.0,
         ...     levels_upper=(12., 42.),
+        ...     metric_name="temperature",
         ...     label="Fridge",
         ...     render_func=lambda v: "%.1f°" % v,
         ... )
         >>> print(result.summary)
         Fridge: 23.0° (warn/crit at 12.0°/42.0°)
+        >>> print(metric)
+        Metric('temperature', 23.0, levels=(12.0, 42.0))
 
     """
     if render_func is None:
@@ -366,15 +369,15 @@ def check_levels_predictive(
 
     """
     if render_func is None:
-        render_func = "%.2f".format
+        render_func = "{:.2f}".format
 
     # validate the metric name, before we can get the levels.
-    Metric.validate_name(metric_name)
+    _ = Metric(metric_name, value)
 
     try:
         ref_value, levels_tuple = cmk.base.prediction.get_levels(
-            check_api_utils.host_name(),
-            check_api_utils.service_description(),
+            plugin_contexts.host_name(),
+            plugin_contexts.service_description(),
             metric_name,
             levels,
             "MAX",
@@ -423,15 +426,58 @@ def check_levels_predictive(
 
 
 class GetRateError(IgnoreResultsError):
-    pass
+    """The exception raised by :func:`.get_rate`.
+    If unhandled, this exception will make the service go stale.
+    """
 
 
-def get_rate(value_store: ValueStore,
-             key: str,
-             time: float,
-             value: float,
-             *,
-             raise_overflow: bool = False) -> float:
+def get_rate(
+    value_store: ValueStore,
+    key: str,
+    time: float,
+    value: float,
+    *,
+    raise_overflow: bool = False,
+) -> float:
+    """Return a rate based based on current value and time and last value and time
+
+    Args:
+
+        value_store:     The Mapping that holds the last value.
+                         Usually this will be the value store provided by the APIs
+                         :func:`get_value_store`.
+        key:             Unique ID for storing this average until the next check
+        time:            Timestamp of new value
+        value:           The new value
+        raise_overflow:  Raise a :class:`GetRateError` if the rate is negative
+
+    This function returns the rate of a measurement rₙ as the quotient of the
+    current value and time (xₙ, tₙ) and the last recorded value and time (xₙ₋₁, tₙ₋₁):
+
+        rₙ = (xₙ - xₙ₋₁) / (tₙ - tₙ₋₁)
+
+    A :class:`GetRateError` will be raised if one of the following happens:
+
+        * the function is called for the first time
+        * the time has not changed
+        * the rate is negative and `raise_overflow` is set to True (usefull
+          for instance when dealing with counters)
+
+    In general there is no need to catch a :class:`.GetRateError`, as it
+    inherits :class:`.IgnoreResultsError`.
+
+    Example:
+
+        >>> # in practice: my_store = get_value_store()
+        >>> my_store = {"cookies": (1600000000, 23)}
+        >>> get_rate(my_store, "cookies", 1600000060, 56)
+        0.55
+
+    Returns:
+
+        The computed rate
+
+    """
     last_state = value_store.get(key)
     value_store[key] = (time, value)
 
@@ -453,8 +499,13 @@ def get_rate(value_store: ValueStore,
     return rate
 
 
-def get_average(value_store: ValueStore, key: str, time: float, value: float,
-                backlog_minutes: float) -> float:
+def get_average(
+    value_store: ValueStore,
+    key: str,
+    time: float,
+    value: float,
+    backlog_minutes: float,
+) -> float:
     """Return new average based on current value and last average
 
     Args:

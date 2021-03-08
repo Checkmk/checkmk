@@ -21,7 +21,6 @@
 #include "Poller.h"
 
 int copy_data(int from, int to);
-void *voidp;
 
 struct thread_info {
     int from;
@@ -64,7 +63,7 @@ void *copy_thread(void *info) {
             }
             if (ti->terminate_on_read_eof != 0) {
                 exit(0);
-                return voidp;
+                return nullptr;
             }
             break;
         }
@@ -86,7 +85,7 @@ void *copy_thread(void *info) {
             bytes_to_write -= bytes_written;
         }
     }
-    return voidp;
+    return nullptr;
 }
 
 int main(int argc, char **argv) {

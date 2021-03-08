@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.metrics import (
-    perfometer_info,
-    MB,
     GB,
-    TB,
     MAX_NUMBER_HOPS,
+    MB,
+    perfometer_info,
     skype_mobile_devices,
+    TB,
 )
 
 #.
@@ -1602,5 +1602,11 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["log_file_utilization"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["disk_utilization"],
     "total": 100.0,
 })

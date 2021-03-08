@@ -1,11 +1,13 @@
 // library for Windows builds
 package lib
 
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+
 def build(Map args) {
     def ARTIFACTS_DIR = 'artefacts'
     def ARTIFACTS = ''
     if (args.TARGET == "test_integration") {
-        download_artifacts('cmk_master/windows-agent-build', ARTIFACTS_DIR)
+        download_artifacts("${FOLDER_ID}/windows-agent-build", ARTIFACTS_DIR)
     }
 
     stage("Windows ${args.TARGET} build") {
@@ -13,12 +15,9 @@ def build(Map args) {
         // No job should exceed 3*5 = 15 minutes
         timeout(time: 15, unit: 'MINUTES') {
             try {
-                if (args.TARGET == "module") {
-                    bat 'cd agents\\modules\\windows && call build_the_module.cmd python'
-                    ARTIFACTS = 'python-3.8.zip'
-                } else if (args.TARGET == "cached") {
+                if (args.TARGET == "cached") {
                     bat 'cd agents\\modules\\windows && call build_the_module.cmd cached ' + args.CREDS + ' ' + args.CACHE_URL
-                    ARTIFACTS = 'python-3.8.zip'
+                    ARTIFACTS = 'python-3.8.zip,python-3.4.zip'
                 } else if (args.TARGET == "agent") {
                     bat 'cd agents\\wnx && call build_release.cmd'
                     ARTIFACTS = "check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk.user.yml,check_mk.yml"
@@ -61,7 +60,7 @@ def download_artifacts(PROJECT_NAME, DIR) {
         dir(DIR) {
             script {
                 step ([$class: 'CopyArtifact',
-                projectName: 'cmk_master/windows-agent-build',
+                projectName: "${FOLDER_ID}/windows-agent-build",
             ]);
             }
         }

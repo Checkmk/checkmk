@@ -192,26 +192,6 @@ def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
     return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
 
 
-def len_agent_sections() -> int:
-    return len(registered_agent_sections)
-
-
-def len_check_plugins() -> int:
-    return len(registered_check_plugins)
-
-
-def len_discovery_rulesets() -> int:
-    return len(stored_rulesets)
-
-
-def len_host_label_rulesets() -> int:
-    return len(stored_rulesets)
-
-
-def len_inventory_plugins() -> int:
-    return len(registered_inventory_plugins)
-
-
 def len_snmp_sections() -> int:
     return len(registered_snmp_sections)
 
@@ -230,3 +210,7 @@ def set_host_label_ruleset(
 ) -> None:
     """Set a ruleset to a given value"""
     stored_rulesets[ruleset_name] = rules
+
+
+def is_registered_snmp_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_snmp_sections

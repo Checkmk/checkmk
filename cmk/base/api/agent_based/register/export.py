@@ -72,6 +72,8 @@ def agent_section(
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no forther processing will take place (just as if the agent had
                            not sent any data).
+                           This function may raise arbitrary exceptions, which will be dealt with
+                           by the checking engine. You should expect well formatted data.
 
       parsed_section_name: The name under which the parsed section will be available to the plugins.
                            Defaults to the original name.
@@ -190,6 +192,8 @@ def snmp_section(
                            It may return an arbitrary object. Note that if the return value is
                            `None`, no forther processing will take place (just as if the agent had
                            not sent any data).
+                           This function may raise arbitrary exceptions, which will be dealt with
+                           by the checking engine. You should expect well formatted data.
 
       parsed_section_name: The name under which the parsed section will be available to the plugins.
                            Defaults to the original name.
@@ -269,7 +273,8 @@ def check_plugin(
                                 of "service_name".
 
       discovery_function:       The discovery_function. Arguments must be 'params' (if discovery
-                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                                parameters are defined) and 'section' (if the plugin subscribes
+                                to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Service` instances.
 
@@ -285,6 +290,7 @@ def check_plugin(
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
+                                'section' (if the plugin subscribes to a single section), or
                                 'section_<name1>, section_<name2>' ect. corresponding to the
                                 `sections`.
 
@@ -347,7 +353,8 @@ def inventory_plugin(
                                 a name equal to the name of the inventory plugin.
 
       inventory_function:       The inventory_function. Arguments must be 'params' (if inventory
-                                parameters are defined) and 'section_<name1>, section_<name2>' ect.
+                                parameters are defined) and 'section' (if the plugin subscribes
+                                to a single section), or 'section_<name1>, section_<name2>' ect.
                                 corresponding to the `sections`.
                                 It is expected to be a generator of :class:`Attributes` or
                                 :class:`TableRow` instances.

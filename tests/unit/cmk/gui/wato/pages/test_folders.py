@@ -9,10 +9,12 @@ def test_ajax_call(logged_in_wsgi_app):
     ajax_page = "/NO_SITE/check_mk/ajax_popup_move_to_folder.py"
     app = logged_in_wsgi_app
     resp = app.get(f"{ajax_page}?ident=test2&what=folder&_ajaxid=1611222306&back_url=wato.py",
-                   status=200)
-    assert "Move this folder to" in resp.text
+                   status=400)
+    assert "Move this folder to" in resp.text, resp.text
+    assert "No WATO folder test2." in resp.text, resp.text
 
-    resp = app.get(f"{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=200)
-    assert "Move this folder to" in resp.text
+    resp = app.get(f"{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=400)
+    assert "Move this folder to" in resp.text, resp.text
+    assert "No WATO folder test2." in resp.text, resp.text
 
     app.get(f"{ajax_page}/{ajax_page}?ident=test2&what=folder&back_url=wato.py", status=404)

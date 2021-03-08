@@ -27,6 +27,7 @@
 #include <cstring>
 #include <deque>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -35,9 +36,11 @@
 
 #include "Average.h"
 #include "ChronoUtils.h"
+#include "DowntimeOrComment.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
+#include "NagiosGlobals.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
 #include "Queue.h"
@@ -52,34 +55,40 @@
 
 using namespace std::chrono_literals;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-#ifndef NAGIOS4
-extern int event_broker_options;
-#else
-extern unsigned long event_broker_options;
-#endif  // NAGIOS4
-extern int enable_environment_macros;
 
 // maximum idle time for connection in keep alive state
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_idle_timeout = 5min;
 
 // maximum time for reading a query
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_query_timeout = 10s;
 
 // allow 10 concurrent connections per default
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_livestatus_threads = 10;
 // current number of queued connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_queued_connections = 0;
 // current number of active connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *g_nagios_handle;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_unix_socket = -1;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_max_fd_ever = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosPaths fl_paths;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -87,34 +96,52 @@ struct ThreadInfo {
     std::string name;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::vector<ThreadInfo> fl_thread_info;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static thread_local ThreadInfo *tl_info;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosLimits fl_limits;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_thread_running = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosAuthorization fl_authorization;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Encoding fl_data_encoding{Encoding::utf8};
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static Logger *fl_logger_nagios = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
 using ClientQueue_t = Queue<std::deque<int>>;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ClientQueue_t *fl_client_queue = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
-extern host *host_list;
-extern service *service_list;
-extern int log_initial_states;
-
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Average g_avg_livestatus_usage;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosCore *fl_core = nullptr;
 
 namespace {
@@ -155,8 +182,6 @@ void update_status() {
         g_livestatus_threads);
 }
 }  // namespace
-
-void *voidp;
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
@@ -227,7 +252,7 @@ void *main_thread(void *data) {
         counterIncrement(Counter::connections);
     }
     Notice(logger) << "socket thread has terminated";
-    return voidp;
+    return nullptr;
 }
 
 void *client_thread(void *data) {
@@ -255,7 +280,7 @@ void *client_thread(void *data) {
         }
         g_livestatus_active_connections--;
     }
-    return voidp;
+    return nullptr;
 }
 
 namespace {
@@ -479,7 +504,26 @@ int broker_check(int event_type, void *data) {
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto *co = static_cast<nebstruct_comment_data *>(data);
-    fl_core->registerComment(co);
+    unsigned long id = co->comment_id;
+    switch (co->type) {
+        case NEBTYPE_COMMENT_ADD:
+        case NEBTYPE_COMMENT_LOAD:
+            fl_comments[id] = std::make_unique<Comment>(
+                ::find_host(co->host_name),
+                co->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(co->host_name, co->service_description),
+                co);
+            break;
+        case NEBTYPE_COMMENT_DELETE:
+            if (fl_comments.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing comment " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
@@ -487,7 +531,26 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    fl_core->registerDowntime(dt);
+    unsigned long id = dt->downtime_id;
+    switch (dt->type) {
+        case NEBTYPE_DOWNTIME_ADD:
+        case NEBTYPE_DOWNTIME_LOAD:
+            fl_downtimes[id] = std::make_unique<Downtime>(
+                ::find_host(dt->host_name),
+                dt->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(dt->host_name, dt->service_description),
+                dt);
+            break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            if (fl_downtimes.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing downtime " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
@@ -537,7 +600,6 @@ int broker_program(int event_type __attribute__((__unused__)),
 }
 
 void livestatus_log_initial_states() {
-    extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
@@ -576,8 +638,9 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
-                                     fl_data_encoding);
+            fl_core =
+                new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
+                               fl_authorization, fl_data_encoding);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -718,9 +781,7 @@ std::string check_path(const std::string &name, const std::string &path) {
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
-        // set default path to our logfile to be in the same path as
-        // nagios.log
-        extern char *log_file;
+        // set default path to our logfile to be in the same path as nagios.log
         std::string lf{log_file};
         auto slash = lf.rfind('/');
         fl_paths._logfile =

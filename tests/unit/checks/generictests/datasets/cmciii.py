@@ -22,7 +22,7 @@ info = [
             '30.50 degree C', '3050'
         ],
         [
-            '1.3', 'Temperature.Offset', '18', 'degree C', '-100',
+            '1.3', 'Temperature.Offset', '18', 'degree C', '',
             '0.00 degree C', '0'
         ],
         [
@@ -415,42 +415,42 @@ checks = {
     'io': [
         (
             'CMC-IOModul Input 1', {}, [
-                (0, 'Status: OK, Logic: 0:OK / 1:Alarm, Delay 5.0 s', [])
+                (0, 'Status: OK, Logic: 0:OK / 1:Alarm, Delay: 5.0 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 2', {}, [
-                (0, 'Status: OK, Logic: 0:OK / 1:Alarm, Delay 5.0 s', [])
+                (0, 'Status: OK, Logic: 0:OK / 1:Alarm, Delay: 5.0 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 3', {}, [
-                (0, 'Status: Off, Logic: 0:On / 1:Off, Delay 5.0 s', [])
+                (0, 'Status: Off, Logic: 0:On / 1:Off, Delay: 5.0 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 4', {}, [
-                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay 0.5 s', [])
+                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay: 0.5 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 5', {}, [
-                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay 0.5 s', [])
+                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay: 0.5 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 6', {}, [
-                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay 0.5 s', [])
+                (0, 'Status: OK, Logic: 0:Alarm / 1:OK, Delay: 0.5 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 7', {}, [
-                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay 0.5 s', [])
+                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay: 0.5 s', [])
             ]
         ),
         (
             'CMC-IOModul Input 8', {}, [
-                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay 0.5 s', [])
+                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay: 0.5 s', [])
             ]
         ),
         (
@@ -475,12 +475,12 @@ checks = {
         ),
         (
             'CMC-PU Input 1', {}, [
-                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay 0.5 s', [])
+                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay: 0.5 s', [])
             ]
         ),
         (
             'CMC-PU Input 2', {}, [
-                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay 0.5 s', [])
+                (0, 'Status: Off, Logic: 0:Off / 1:On, Delay: 0.5 s', [])
             ]
         ),
         (

@@ -48,7 +48,7 @@ ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
-class PersistedSections(
+class PersistedSections(  # pylint: disable=too-many-ancestors
         Generic[TRawDataSection],
         MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
 ):
@@ -160,7 +160,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger: Final[logging.Logger] = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
-        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r" % (
+        return "%s(path=%r, max_age=%r, disabled=%r, use_outdated=%r, simulation=%r)" % (
             type(self).__name__,
             self.path,
             self.max_age,
@@ -271,11 +271,8 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
     #       can change these class attributes to object attributes.
     #
     # Set by the user via command line to prevent using cached information at all.
-    # Is also set by inventory for SNMP checks to handle the special situation that
-    # the inventory is not allowed to use the regular checking based SNMP data source
-    # cache.
     disabled: bool = False
-    snmp_disabled: bool = False
+
     agent_disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
@@ -304,5 +301,5 @@ class FileCacheFactory(Generic[TRawData], abc.ABC):
         cls.maybe = not cls.disabled
 
     @abc.abstractmethod
-    def make(self) -> FileCache[TRawData]:
+    def make(self, *, force_cache_refresh: bool = False) -> FileCache[TRawData]:
         raise NotImplementedError

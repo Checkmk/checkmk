@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
 )
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 from cmk.base.plugins.agent_based.utils import uptime
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
@@ -85,12 +85,19 @@ PARSED_NOT_RUNNING = {"Status": "stopped"}
 
 @pytest.mark.parametrize("string_table, parse_type", [
     (STRING_TABLE_WITH_VERSION, dict),
-    (STRING_TABLE_WITHOUT_VERSION, DeprecatedDict),
 ])
 def test_parse_docker_container_status(string_table, parse_type):
     actual_parsed = docker.parse_docker_container_status(string_table)
     assert actual_parsed == PARSED
     assert isinstance(actual_parsed, parse_type)
+
+
+@pytest.mark.parametrize("string_table, exception_type", [
+    (STRING_TABLE_WITHOUT_VERSION, AgentOutputMalformatted),
+])
+def test_parse_docker_container_status_legacy_raises(string_table, exception_type):
+    with pytest.raises(exception_type):
+        docker.parse_docker_container_status(string_table)
 
 
 def _test_discovery(discovery_function, section, expected_discovery):

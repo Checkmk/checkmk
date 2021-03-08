@@ -31,9 +31,9 @@ setup:
 setversion:
 	sed -i 's/^ARG CMK_VERSION=.*$$/ARG CMK_VERSION="$(NEW_VERSION)"/g' Dockerfile
 
-needed-packages: ../omd/distros/DEBIAN_9.mk
+needed-packages: ../omd/distros/DEBIAN_10.mk
 	echo -e '.PHONY: needed-packages\nneeded-packages:\n\t@echo \$$(OS_PACKAGES) > needed-packages\n' | \
-	    make -f - -f ../omd/distros/DEBIAN_9.mk --no-print-directory needed-packages
+	    make -f - -f ../omd/distros/DEBIAN_10.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
 	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz

@@ -32,6 +32,12 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     ConfigHostname,
 )
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 from cmk.gui.utils.urls import makeuri_contextless
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
@@ -81,9 +87,13 @@ class ModePatternEditor(WatoMode):
         if self._item and not self._hostname:
             raise MKUserError(None, _("You need to specify a host name to test file matching."))
 
+    @staticmethod
+    def title_pattern_analyzer():
+        return _("Logfile pattern analyzer")
+
     def title(self):
         if not self._hostname and not self._item:
-            return _("Logfile pattern analyzer")
+            return self.title_pattern_analyzer()
         if not self._hostname:
             return _("Logfile patterns of logfile %s on all hosts") % (self._item)
         if not self._item:
@@ -279,3 +289,30 @@ class ModePatternEditor(WatoMode):
     def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
                                  item: Item) -> ServiceName:
         return cmk.base.export.service_description(hostname, check_plugin_name, item)
+
+
+class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        title = ModePatternEditor.title_pattern_analyzer()
+        yield MatchItem(
+            title=title,
+            topic=_("Miscellaneous"),
+            url=makeuri_contextless(
+                request,
+                [("mode", ModePatternEditor.name())],
+                filename="wato.py",
+            ),
+            match_texts=[title],
+        )
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorLogfilePatternAnalyzer("logfile_pattern_analyzer"))

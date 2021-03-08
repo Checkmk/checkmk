@@ -5,33 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
 
-from collections import OrderedDict
-import re
 import colorsys
 import random
+import re
 import shlex
-import json
-from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union, TypeVar
+from collections import OrderedDict
+from itertools import chain
+from typing import (
+    Any,
+    AnyStr,
+    Callable,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 from six import ensure_binary, ensure_str
 
 import livestatus
 
 import cmk.utils.regex
-from cmk.utils.memoize import MemoizeCache
-from cmk.utils.werks import parse_check_mk_version
 import cmk.utils.version as cmk_version
+from cmk.utils.memoize import MemoizeCache
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.type_defs import MetricName as _MetricName
-from cmk.gui.type_defs import Choices
+from cmk.utils.type_defs import (
+    HostName,
+    MetricName as _MetricName,
+    ServiceName,
+)
+from cmk.utils.werks import parse_check_mk_version
 
 import cmk.gui.config as config
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import DropdownChoice, TextAsciiAutocomplete, MonitoredHostname, MonitoredServiceDescription
 import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import g, html
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.type_defs import Choices, RenderableRecipe, Row
+from cmk.gui.valuespec import (
+    DropdownChoiceValue,
+    DropdownChoiceWithHostAndServiceHints,
+    TextAsciiAutocomplete,
+)
 
 LegacyPerfometer = Tuple[str, Any]
 Perfometer = Dict[str, Any]
@@ -39,13 +62,15 @@ TranslatedMetrics = Dict[str, Dict[str, Any]]
 Atom = TypeVar('Atom')
 TransformedAtom = TypeVar('TransformedAtom')
 StackElement = Union[Atom, TransformedAtom]
+GraphTemplate = Dict[str, Any]
+GraphRecipe = Dict[str, Any]
 
 
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
     def __init__(self, list_identifier=None, start_index=None):
-        OrderedDict.__init__(self)
+        super().__init__(self)
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
@@ -61,12 +86,7 @@ check_metrics: Dict[str, Dict[str, Any]] = {}
 perfometer_info: List[Union[LegacyPerfometer, Perfometer]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info = AutomaticDict("manual_graph_template")
-
-scalar_colors = {
-    "warn": "#ffff00",
-    "crit": "#ff0000",
-}
+graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")
 
 #.
 #   .--Constants-----------------------------------------------------------.
@@ -168,7 +188,7 @@ def indexed_color(idx, total):
     red = int(base_color in [0, 3, 4, 6])
     green = int(base_color in [1, 3, 5, 6])
     blue = int(base_color in [2, 4, 5, 6])
-    return "#%02x%02x%02x" % (red * offset, green * offset, blue * offset)
+    return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
 
 
 def parse_perf_values(data_str):
@@ -374,8 +394,11 @@ def perf_data_string_from_metric_names(metric_names):
     return " ".join(parts)
 
 
-def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_MetricName],
-                                 check_command: str) -> Dict:
+def available_metrics_translated(
+    perf_data_string: str,
+    rrd_metrics: List[_MetricName],
+    check_command: str,
+) -> TranslatedMetrics:
     # If we have no RRD files then we cannot paint any graph :-(
     if not rrd_metrics:
         return {}
@@ -397,6 +420,14 @@ def available_metrics_translated(perf_data_string: str, rrd_metrics: List[_Metri
                 perf_data.append(entry)
 
     return translate_metrics(perf_data, check_command)
+
+
+def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
+    what = "service" if "service_check_command" in row else "host"
+    perf_data_string = row[what + "_perf_data"]
+    rrd_metrics = row[what + "_metrics"]
+    check_command = row[what + "_check_command"]
+    return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
 #.
@@ -630,7 +661,7 @@ def get_graph_template(template_id):
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
-def generic_graph_template(metric_name):
+def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
         "metrics": [(metric_name, "area"),],
@@ -641,38 +672,40 @@ def generic_graph_template(metric_name):
     }
 
 
-def get_graph_templates(translated_metrics):
+def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
     if not translated_metrics:
-        return []
+        yield from ()
+        return
 
     explicit_templates = list(_get_explicit_graph_templates(translated_metrics))
-    already_graphed_metrics = _get_graphed_metrics(explicit_templates)
-    implicit_templates = list(
-        _get_implicit_graph_templates(translated_metrics, already_graphed_metrics))
-    return explicit_templates + implicit_templates
+    yield from explicit_templates
+    yield from _get_implicit_graph_templates(
+        translated_metrics,
+        _get_graphed_metrics(explicit_templates),
+    )
 
 
-def _get_explicit_graph_templates(translated_metrics):
+def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
         template = graph_template_for_metrics(graph_template, translated_metrics)
         if template:
             yield template
 
 
-def _get_graphed_metrics(graph_templates: List) -> Set:
-    graphed_metrics: Set = set()
-    for graph_template in graph_templates:
-        graphed_metrics.update(_metrics_used_by_graph(graph_template))
-    return graphed_metrics
+def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> Set[str]:
+    return set(chain.from_iterable(map(_metrics_used_by_graph, graph_templates)))
 
 
-def _get_implicit_graph_templates(translated_metrics, already_graphed_metrics):
+def _get_implicit_graph_templates(
+    translated_metrics: TranslatedMetrics,
+    already_graphed_metrics: Container[str],
+) -> Iterable[GraphTemplate]:
     for metric_name, metric_entry in sorted(translated_metrics.items()):
         if metric_entry["auto_graph"] and metric_name not in already_graphed_metrics:
             yield generic_graph_template(metric_name)
 
 
-def _metrics_used_by_graph(graph_template: Any) -> Iterator:
+def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
     for metric_definition in graph_template["metrics"]:
         yield from metrics_used_in_expression(metric_definition[0])
 
@@ -690,7 +723,10 @@ def drop_metric_consolidation_advice(expression: str) -> str:
     return expression
 
 
-def graph_template_for_metrics(graph_template, translated_metrics):
+def graph_template_for_metrics(
+    graph_template: GraphTemplate,
+    translated_metrics: TranslatedMetrics,
+) -> GraphTemplate:
     # Skip early on conflicting_metrics
     for var in graph_template.get("conflicting_metrics", []):
         if var in translated_metrics:
@@ -737,6 +773,65 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
         info['service_description'] = service_description
 
     return info
+
+
+def metric_title(metric_name: _MetricName) -> str:
+    return metric_info.get(metric_name, {}).get("title", metric_name.title())
+
+
+def metric_recipe_and_unit(
+    host_name: HostName,
+    service_description: ServiceName,
+    metric_name: _MetricName,
+    consolidation_function: str,
+    line_type: str = "stack",
+    visible: bool = True,
+) -> Tuple[RenderableRecipe, str]:
+    mi = metric_info.get(metric_name, {})
+    return (
+        RenderableRecipe(
+            title=metric_title(metric_name),
+            expression=("rrd", host_name, service_description, metric_name, consolidation_function),
+            color=parse_color_into_hexrgb(mi.get("color", get_next_random_palette_color())),
+            line_type=line_type,
+            visible=visible,
+        ),
+        mi.get("unit", ""),
+    )
+
+
+def horizontal_rules_from_thresholds(
+    thresholds: Iterable[Union[str, Tuple[str, str]]],
+    translated_metrics: TranslatedMetrics,
+):
+    horizontal_rules = []
+    for entry in thresholds:
+        if isinstance(entry, tuple):
+            expression, title = entry
+        else:
+            expression = entry
+            if expression.endswith(":warn"):
+                title = _("Warning")
+            elif expression.endswith(":crit"):
+                title = _("Critical")
+            else:
+                title = expression
+
+        try:
+            value, unit, color = evaluate(expression, translated_metrics)
+            if value:
+                horizontal_rules.append((
+                    value,
+                    unit["render"](value),
+                    color,
+                    title,
+                ))
+        # Scalar value like min and max are always optional. This makes configuration
+        # of graphs easier.
+        except Exception:
+            pass
+
+    return horizontal_rules
 
 
 #.
@@ -804,6 +899,26 @@ _cmk_color_palette = {
     "51": (0, 0, 0.5),  # grey_50
     "52": (0.067, 0.7, 0.5),  # brown 1
     "53": (0.083, 0.8, 0.55),  # brown 2
+}
+
+
+def rgb_color_to_hex_color(red: int, green: int, blue: int) -> str:
+    return "#%02x%02x%02x" % (red, green, blue)
+
+
+# These colors are also used in the CSS stylesheets, do not change one without changing the other.
+MONITORING_STATUS_COLORS = {
+    "critical/down": rgb_color_to_hex_color(255, 50, 50),
+    "unknown/unreachable": rgb_color_to_hex_color(255, 136, 0),
+    "warning": rgb_color_to_hex_color(255, 254, 68),
+    "in_downtime": rgb_color_to_hex_color(60, 194, 255),
+    "on_down_host": rgb_color_to_hex_color(16, 99, 176),
+    "ok/up": rgb_color_to_hex_color(19, 211, 137),
+}
+
+scalar_colors = {
+    "warn": MONITORING_STATUS_COLORS["warning"],
+    "crit": MONITORING_STATUS_COLORS["critical/down"],
 }
 
 
@@ -882,7 +997,7 @@ def hsv_to_hexrgb(hsv: Tuple[float, float, float]) -> str:
 
 
 def render_color(color_rgb: Tuple[float, float, float]) -> str:
-    return "#%02x%02x%02x" % (
+    return rgb_color_to_hex_color(
         int(color_rgb[0] * 255),
         int(color_rgb[1] * 255),
         int(color_rgb[2] * 255),
@@ -912,7 +1027,7 @@ def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
 
-    return tuple([darken(x, v) for x in rgb])
+    return tuple(darken(x, v) for x in rgb)
 
 
 def lighten_color(rgb, v):
@@ -920,7 +1035,7 @@ def lighten_color(rgb, v):
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 
-    return tuple([lighten(x, v) for x in rgb])
+    return tuple(lighten(x, v) for x in rgb)
 
 
 def _rgb_to_gray(rgb):
@@ -929,11 +1044,13 @@ def _rgb_to_gray(rgb):
 
 
 def _mix_colors(a, b):
-    return tuple([(ca + cb) / 2.0 for (ca, cb) in zip(a, b)])
+    return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
 
 
 def render_color_icon(color):
-    return html.render_div('', class_="color", style="background-color: %s" % color)
+    return html.render_div('',
+                           class_="color",
+                           style="background-color: %s4c; border-color: %s;" % (color, color))
 
 
 @MemoizeCache
@@ -996,74 +1113,41 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
         yield name, mi.get("title", name.title())
 
 
-class MetricName(DropdownChoice):
+class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
-    def __init__(self):
+    def __init__(self, **kwargs: Any):
         # Customer's metrics from local checks or other custom plugins will now appear as metric
         # options extending the registered metric names on the system. Thus assuming the user
         # only selects from available options we skip the input validation(invalid_choice=None)
         # Since it is not possible anymore on the backend to collect the host & service hints
-        super().__init__(title=_("Metric"),
-                         sorted=True,
-                         encode_value=False,
-                         choices=[(None, _("Select metric"))])
+        kwargs_with_defaults: Mapping[str, Any] = {
+            "css_spec": "metric-selector",
+            "hint_label": _("metric"),
+            "choices": [(None, _("Select metric"))],
+            "title": _("Metric"),
+            "encode_value": False,
+            "sorted": True,
+            "no_preselect": True,
+            **kwargs,
+        }
+        super().__init__(**kwargs_with_defaults)
         self._regex = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
         self._regex_error = _("Metric names must only consist of letters, digits and "
                               "underscores and they must start with a letter.")
 
-    def from_html_vars(self, varprefix: str) -> Optional[str]:
-        return html.request.var(varprefix)
-
-    def _validate_value(self, value: Optional[str], varprefix: str) -> None:
+    def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         if value is not None and not self._regex.match(ensure_str(value)):
             raise MKUserError(varprefix, self._regex_error)
 
-    def render_input(self, varprefix: str, value: str) -> None:
-        if self._label:
-            html.write(self._label)
-            html.nbsp()
-
+    def _choices_from_value(self, value: DropdownChoiceValue) -> Choices:
         if value is None:
-            clean_choices = self.choices()
-        else:
-            # Need to create an on the fly metric option
-            clean_choices = [
-                next(((metric_id, metric_detail['title'])
-                      for metric_id, metric_detail in metric_info.items()
-                      if metric_id == value), (value, value.title()))
-            ]
-
-        html.write(_("Select metric: "))
-        html.dropdown(varprefix,
-                      self._options_for_html(clean_choices),
-                      deflt=self._option_for_html(value),
-                      class_="metric-selector",
-                      style="width: 250px;",
-                      read_only=self._read_only)
-
-        vs_host = MonitoredHostname(
-            label=_("Filter metric selection by hostname: "),
-            placeholder=_("Hint a hostname"),
-            size=20,
-        )
-        html.br()
-        host_varprefix = varprefix + "_hostname_hint"
-        vs_host.render_input(host_varprefix, None)
-        html.javascript("cmk.valuespecs.transfer_context_onchange('context_host_p_host', %s)" %
-                        json.dumps(host_varprefix))
-
-        completion_js = '(() => ({host: document.getElementsByName(%s)[0].value}))()' % json.dumps(
-            host_varprefix)
-        vs_service = MonitoredServiceDescription(label=_("Filter metric selection by service: "),
-                                                 placeholder=_("Hint a service"),
-                                                 completion_params_js=completion_js,
-                                                 size=20)
-        service_varprefix = varprefix + "_service_hint"
-        html.br()
-        vs_service.render_input(service_varprefix, None)
-        html.javascript(
-            "cmk.valuespecs.transfer_context_onchange('context_service_p_service', %s)" %
-            json.dumps(service_varprefix))
+            return self.choices()
+        # Need to create an on the fly metric option
+        return [
+            next(((metric_id, metric_detail['title'])
+                  for metric_id, metric_detail in metric_info.items()
+                  if metric_id == value), (value, value.title()))
+        ]
 
 
 class MonitoredMetrics(TextAsciiAutocomplete):

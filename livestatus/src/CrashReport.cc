@@ -52,7 +52,7 @@ bool mk::crash_report::any(
 }
 
 bool mk::crash_report::delete_id(const std::filesystem::path &base_path,
-                                 const std::string &id, Logger *const logger) {
+                                 const std::string &id, Logger *logger) {
     std::optional<CrashReport> target;
     bool found =
         mk::crash_report::any(base_path, [&target, &id](const CrashReport &cr) {

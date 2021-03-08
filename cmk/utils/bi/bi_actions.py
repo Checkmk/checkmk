@@ -48,6 +48,13 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
     def schema(cls) -> Type["BICallARuleActionSchema"]:
         return BICallARuleActionSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "rule_id": self.rule_id,
+            "params": self.params.serialize(),
+        }
+
     def __init__(self, action_config: Dict[str, Any]):
         super().__init__(action_config)
         self.rule_id = action_config["rule_id"]
@@ -95,6 +102,12 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     def schema(cls) -> Type["BIStateOfHostActionSchema"]:
         return BIStateOfHostActionSchema
 
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "host_regex": self.host_regex,
+        }
+
     def __init__(self, action_config: Dict[str, Any]):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
@@ -136,6 +149,13 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def schema(cls) -> Type["BIStateOfServiceActionSchema"]:
         return BIStateOfServiceActionSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "host_regex": self.host_regex,
+            "service_regex": self.service_regex,
+        }
 
     def __init__(self, action_config: Dict[str, Any]):
         super().__init__(action_config)
@@ -187,6 +207,12 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @classmethod
     def schema(cls) -> Type["BIStateOfRemainingServicesActionSchema"]:
         return BIStateOfRemainingServicesActionSchema
+
+    def serialize(self):
+        return {
+            "type": self.type(),
+            "host_regex": self.host_regex,
+        }
 
     def __init__(self, action_config: Dict[str, Any]):
         super().__init__(action_config)

@@ -13,8 +13,6 @@ from typing import Any, Union, List
 
 from six import ensure_binary, ensure_str
 
-from livestatus import SiteId
-
 from cmk.gui.sites import SiteStatus
 from cmk.utils.werks import parse_check_mk_version
 
@@ -92,20 +90,6 @@ def host_attribute_matches(crit, value):
 
     # insensitive infix search
     return crit.lower() in value.lower()
-
-
-# Returns the ID of the default site. This is the site the main folder has
-# configured by default. It inherits to all folders and hosts which don't have
-# a site set on their own.
-# In standalone and master sites this defaults to the local site. In distributed
-# slave sites, we don't know the site ID of the master site. We set this explicit
-# to false to configure that this host is monitored by another site (that we don't
-# know about).
-# TODO: Find a better place later. Find a less depressing return type.
-def default_site() -> Union[bool, None, SiteId]:
-    if config.is_wato_slave_site():
-        return False
-    return config.default_site()
 
 
 def format_config_value(value: Any) -> str:

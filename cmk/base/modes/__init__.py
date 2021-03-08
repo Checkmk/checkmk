@@ -26,8 +26,7 @@ Arguments = List[str]
 
 class Modes:
     def __init__(self) -> None:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Modes, self).__init__()  # pylint: disable=bad-super-call
+        super().__init__()
         self._mode_map: Dict[OptionName, Mode] = {}
         self._modes: List[Mode] = []
         self._general_options: List[Option] = []
@@ -211,8 +210,7 @@ class Option:
                  handler_function: Optional[OptionFunction] = None,
                  *,
                  deprecated_long_options: Optional[Set[str]] = None) -> None:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Option, self).__init__()  # pylint: disable=bad-super-call
+        super().__init__()
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
@@ -305,29 +303,27 @@ class Mode(Option):
                  needs_config: bool = True,
                  needs_checks: bool = True,
                  sub_options: Optional[List[Option]] = None) -> None:
-        super(Mode, self).__init__(long_option,
-                                   short_help,
-                                   short_option,
-                                   argument,
-                                   argument_descr,
-                                   argument_conv,
-                                   argument_optional,
-                                   handler_function=handler_function)
+        super().__init__(long_option,
+                         short_help,
+                         short_option,
+                         argument,
+                         argument_descr,
+                         argument_conv,
+                         argument_optional,
+                         handler_function=handler_function)
         self.long_help = long_help
         self.needs_config = needs_config
         self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
     def short_getopt_specs(self) -> List[str]:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).short_getopt_specs()  # pylint: disable=bad-super-call
+        specs = super().short_getopt_specs()
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
     def long_getopt_specs(self) -> List[str]:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).long_getopt_specs()  # pylint: disable=bad-super-call
+        specs = super().long_getopt_specs()
         for option in self.sub_options:
             specs += option.long_getopt_specs()
         return specs

@@ -5,43 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import time
 import json
+import time
 import traceback
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union
 
 import livestatus
 
 import cmk.utils.render
 
-from cmk.gui import escaping
-from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html, request as global_request
 import cmk.gui.config as config
+from cmk.gui import escaping
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.sites import get_alias_of_host
-
-from cmk.gui.i18n import _u, _
-
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-
-from cmk.gui.plugins.metrics.utils import render_color_icon
-
 from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-
+from cmk.gui.plugins.metrics.utils import render_color_icon
+from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
+from cmk.gui.sites import get_alias_of_host
+from cmk.gui.type_defs import GraphIdentifier
 from cmk.gui.utils.popups import MethodAjax
-
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -310,7 +297,7 @@ def render_graph_canvas(graph_render_options):
     graph_width = size[0] * html_size_per_ex
     graph_height = size[1] * html_size_per_ex
     return '<canvas style="position: relative; width: %dpx; height: %dpx;"' \
-           ' width=%d height=%d></canvas>' % (graph_width, graph_height, graph_width*2, graph_height*2)
+           ' width=%d height=%d></canvas>' % (graph_width, graph_height, graph_width * 2, graph_height * 2)
 
 
 def show_pin_time(graph_artwork, graph_render_options):
@@ -410,7 +397,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
             descr = ""
 
         output += '<th class="%s" style="%s" title=\"%s\">%s</th>' % \
-                        (" ".join(classes), font_size_style, escaping.escape_attribute(descr), title)
+            (" ".join(classes), font_size_style, escaping.escape_attribute(descr), title)
     output += '</tr>'
 
     # Render the curve related rows
@@ -429,7 +416,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
                 inactive_cls = ""
 
             output += '<td class="scalar%s" style="%s">%s</td>' % \
-                        (inactive_cls, font_size_style, curve["scalars"][scalar][1])
+                (inactive_cls, font_size_style, curve["scalars"][scalar][1])
 
         output += '</tr>'
 
@@ -566,10 +553,22 @@ def forget_manual_vertical_zoom():
         save_user_graph_data_range(user_range)
 
 
-def resolve_graph_recipe(graph_identification, destination=None):
+def resolve_graph_recipe(graph_identification: GraphIdentifier, destination=None):
+    return graph_identification_types.create_graph_recipes(
+        graph_identification,
+        destination=None,
+    )
+
+
+def resolve_graph_recipe_with_error_handling(
+    graph_identification: GraphIdentifier,
+    destination=None,
+):
     try:
-        return graph_identification_types.create_graph_recipes(graph_identification,
-                                                               destination=None)
+        return resolve_graph_recipe(
+            graph_identification,
+            destination=destination,
+        )
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r" % (_("Cannot fetch data via Livestatus"),
@@ -579,12 +578,14 @@ def resolve_graph_recipe(graph_identification, destination=None):
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
 
 
-def render_graphs_from_specification_html(graph_identification,
-                                          graph_data_range,
-                                          graph_render_options,
-                                          render_async=True):
+def render_graphs_from_specification_html(
+    graph_identification: GraphIdentifier,
+    graph_data_range,
+    graph_render_options,
+    render_async=True,
+):
 
-    graph_recipes = resolve_graph_recipe(graph_identification)
+    graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
     if not isinstance(graph_recipes, list):
         return graph_recipes  # This is to html.write the exception
 
@@ -626,9 +627,9 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
     graph_height = size[1] * html_size_per_ex
 
     content = html.render_div("", class_="title") \
-            + html.render_div("",
-                class_="content",
-                style="width:%dpx;height:%dpx" % (graph_width, graph_height))
+        + html.render_div("",
+                          class_="content",
+                          style="width:%dpx;height:%dpx" % (graph_width, graph_height))
 
     output = html.render_div(html.render_div(content, class_=["graph", "loading_graph"]),
                              class_="graph_load_container") \
@@ -818,7 +819,7 @@ class GraphDestinations:
     @classmethod
     def choices(cls):
         return [
-            (GraphDestinations.dashlet, _("Dashlet")),
+            (GraphDestinations.dashlet, _("Dashboard element")),
             (GraphDestinations.view, _("View")),
             (GraphDestinations.report, _("Report")),
             (GraphDestinations.notification, _("Notification")),
@@ -843,7 +844,10 @@ default_dashlet_graph_render_options: Mapping[str, Any] = {
 }
 
 
-def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
+def host_service_graph_dashlet_cmk(
+    graph_identification: GraphIdentifier,
+    custom_graph_render_options,
+):
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
     graph_render_options.update(custom_graph_render_options)
@@ -884,8 +888,10 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
     graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
                                                             graph_render_options)
 
-    graph_recipes = resolve_graph_recipe(graph_identification,
-                                         destination=GraphDestinations.dashlet)
+    graph_recipes = resolve_graph_recipe_with_error_handling(
+        graph_identification,
+        destination=GraphDestinations.dashlet,
+    )
     if not isinstance(graph_recipes, list):
         return graph_recipes  # This is to html.write the exception
     if graph_recipes:

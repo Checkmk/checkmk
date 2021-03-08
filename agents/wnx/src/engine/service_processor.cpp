@@ -17,15 +17,17 @@
 #include "common/wtools_service.h"
 #include "common/yaml.h"
 #include "external_port.h"
+#include "firewall.h"
 #include "install_api.h"
+#include "providers/perf_counters_cl.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
 #include "windows_service_api.h"
 
 namespace cma::srv {
-extern bool global_stop_signaled;  // semi-hidden global variable for global
-                                   // status #TODO ???
+extern bool g_global_stop_signaled;  // semi-hidden global variable for global
+                                     // status #TODO ???
 
 // Implementation of the Windows signals
 
@@ -56,9 +58,44 @@ void ServiceProcessor::startServiceAsLegacyTest() {
     XLOG::t("Successful legacy start of thread");
 }
 
+namespace {
+void KillProcessesInUserFolder() {
+    std::filesystem::path user_dir{cfg::GetUserDir()};
+    std::error_code ec;
+    if (user_dir.empty() ||
+        std::filesystem::exists(user_dir / cfg::dirs::kUserPlugins, ec)) {
+        auto killed_processes_count = wtools::KillProcessesByDir(user_dir);
+        XLOG::l.i("Killed [{}] processes from the user folder",
+                  killed_processes_count);
+    } else {
+        XLOG::l.i("Kill isn't possible, the path '{}' looks as bad", user_dir);
+    }
+}
+
+void TryCleanOnExit() {
+    namespace details = cfg::details;
+
+    KillProcessesInUserFolder();
+
+    if (!cma::g_uninstall_alert.isSet()) {
+        XLOG::l.i("Clean on exit was not requested, not uninstall sequence");
+
+        return;
+    }
+
+    fw::RemoveRule(srv::kSrvFirewallRuleName);
+
+    auto mode = details::GetCleanDataFolderMode();  // read config
+    XLOG::l.i(
+        "Clean on exit was requested, trying to remove what we have, mode is [{}]",
+        static_cast<int>(mode));
+    details::CleanDataFolder(mode);  // normal
+}
+}  // namespace
+
 void ServiceProcessor::stopService() {
     XLOG::l.i("Stop Service called");
-    cma::srv::global_stop_signaled = true;
+    cma::srv::g_global_stop_signaled = true;
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up
@@ -68,6 +105,17 @@ void ServiceProcessor::stopService() {
     if (thread_.joinable()) thread_.join();
     if (process_thread_.joinable()) thread_.join();
     if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
+}
+
+void ServiceProcessor::cleanupOnStop() {
+    XLOG::l.i("Cleanup called by service");
+
+    if (!cma::IsService()) {
+        XLOG::l("Invalid call!");
+    }
+    cma::KillAllInternalUsers();
+
+    TryCleanOnExit();
 }
 
 // #TODO - implement
@@ -94,19 +142,15 @@ void ServiceProcessor::stopTestingMainThread() {
     thread_.join();
 }
 
-void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
-    using namespace cma::cfg;
-
-    auto cmd_line = groups::winperf.buildCmdLine();
-    if (Ip.size())
-        cmd_line = L"ip:" + wtools::ConvertToUTF16(Ip) + L" " + cmd_line;
-    auto exe_name = groups::winperf.exe();
-    if (cma::tools::IsEqual(exe_name, "agent")) {
+namespace {
+std::string FindWinPerfExe() {
+    auto exe_name = cfg::groups::winperf.exe();
+    if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
         namespace fs = std::filesystem;
-        fs::path f = cma::cfg::GetRootDir();
-        std::vector<fs::path> names = {
-            f / cma::cfg::kDefaultAppFileName  // on install
+        fs::path f = cfg::GetRootDir();
+        std::vector<fs::path> names{
+            f / cfg::kDefaultAppFileName  // on install
 
         };
 
@@ -126,23 +170,60 @@ void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
         }
         if (exe_name.empty()) {
             XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
-            return;
+            return {};
         }
     } else {
         XLOG::d.i("Looking for agent '{}'", exe_name);
     }
-    auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
-    auto prefix = groups::winperf.prefix();
-    auto timeout = groups::winperf.timeout();
-    auto wide_prefix = wtools::ConvertToUTF16(prefix);
+    return exe_name;
+}
 
-    vf_.emplace_back(kickExe(true,           // async ???
-                             wide_exe_name,  // perf_counter.exe
-                             Tp,             // answer id
-                             this,           // context
-                             wide_prefix,    // for section
-                             timeout,        // in seconds
-                             cmd_line));     // counters
+std::wstring GetWinPerfLogFile() {
+    return cfg::groups::winperf.isTrace()
+               ? (std::filesystem::path{cfg::GetLogDir()} / "winperf.log")
+                     .wstring()
+               : L"";
+}
+}  // namespace
+
+void ServiceProcessor::kickWinPerf(const AnswerId answer_id,
+                                   const std::string& ip_addr) {
+    using cfg::groups::winperf;
+
+    auto cmd_line = winperf.buildCmdLine();
+    if (!ip_addr.empty()) {
+        // we may need IP info and using for this pseudo-counter
+        cmd_line = L"ip:" + wtools::ConvertToUTF16(ip_addr) + L" " + cmd_line;
+    }
+
+    auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
+    auto timeout = winperf.timeout();
+    auto prefix = wtools::ConvertToUTF16(winperf.prefix());
+
+    if (winperf.isFork() && !exe_name.empty()) {
+        vf_.emplace_back(kickExe(true,                   // async ???
+                                 exe_name,               // perf_counter.exe
+                                 answer_id,              // answer id
+                                 this,                   // context
+                                 prefix,                 // for section
+                                 timeout,                // in seconds
+                                 cmd_line,               // counters
+                                 GetWinPerfLogFile()));  // log file
+    } else {
+        // NOTE: This part is for debug/testing only.
+        // NOT TESTED with Automatic tests
+        XLOG::d("No forking to get winperf data: may lead to handle leak.");
+        vf_.emplace_back(std::async(
+            std::launch::async, [prefix, this, answer_id, timeout, cmd_line]() {
+                auto cs = tools::SplitString(cmd_line, L" ");
+                std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
+                return provider::RunPerf(prefix,
+                                         wtools::ConvertToUTF16(internal_port_),
+                                         AnswerIdToWstring(answer_id), timeout,
+                                         std::vector<std::wstring_view>{
+                                             cs.begin(), cs.end()}) == 0;
+            }));
+    }
     answer_.newTimeout(timeout);
 }
 
@@ -220,29 +301,6 @@ void ServiceProcessor::checkMaxWaitTime() noexcept {
                   max_wait_time_);
     } else
         XLOG::t.i("Max Wait Time for Answer is [{}]", max_wait_time_);
-}
-
-// Global config reloaded here
-// our list of plugins is GLOBAl
-// so process it as global one
-void ServiceProcessor::preLoadConfig() {
-    using namespace cma::cfg;
-    XLOG::t(XLOG_FUNC + " entering");
-    PathVector pv;
-    for (auto& folder : groups::plugins.folders()) {
-        pv.emplace_back(folder);
-    }
-    auto files = cma::GatherAllFiles(pv);
-
-    auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);
-
-    cma::FilterPathByExtension(files, execute);
-    cma::RemoveDuplicatedNames(files);
-
-    auto yaml_units = GetArray<YAML::Node>(cma::cfg::groups::kPlugins,
-                                           cma::cfg::vars::kPluginsExecution);
-    std::vector<Plugins::ExeUnit> exe_units;
-    cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
 }
 
 void ServiceProcessor::preStartBinaries() {
@@ -360,8 +418,6 @@ int ServiceProcessor::startProviders(AnswerId Tp, const std::string& Ip) {
     vf_.clear();
     max_wait_time_ = 0;
 
-    preLoadConfig();
-
     // call of sensible to CPU-load sections
     bool started_sync = tryToDirectCall(wmi_cpuload_provider_, Tp, Ip);
 
@@ -451,7 +507,7 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
 cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
-        XLOG::d.i("Id is [{}] ", tp.value().time_since_epoch().count());
+        XLOG::d.i("Id is [{}] ", AnswerIdToNumber(tp.value()));
         auto count_of_started = startProviders(tp.value(), ip_from);
 
         return getAnswer(count_of_started);
@@ -542,23 +598,6 @@ void WaitForNetwork(std::chrono::seconds period) {
 }
 }  // namespace
 
-namespace {
-void ReProtectFiles() {
-    // Some secret files may be installed during start/update/upgrade.
-    // We must protect them.
-    try {
-        auto app_data_folder =
-            cma::tools::win::GetSomeSystemFolder(FOLDERID_ProgramData);
-        cma::security::ProtectFiles(std::filesystem::path(app_data_folder) /
-                                    cma::cfg::kAppDataCompanyName);
-    } catch (const std::exception& e) {
-        // no crashes allowed
-        XLOG::l.crit("Unexpected exception '{}' during re-protect files call",
-                     e.what());
-    }
-}
-}  // namespace
-
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
@@ -570,8 +609,6 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     auto mailslot_name = cma::IsService() ? kServiceMailSlot : kTestingMailSlot;
 
     if (cma::IsService()) {
-        ReProtectFiles();
-
         auto wait_period = GetVal(groups::kSystem, vars::kWaitNetwork,
                                   defaults::kServiceWaitNetwork);
         WaitForNetwork(seconds{wait_period});

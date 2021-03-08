@@ -138,6 +138,30 @@ class ConfigVariableUITheme(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableShowMoreMode(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "show_mode"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Show more / Show less"),
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            choices=config.show_mode_choices(),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
@@ -462,6 +486,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                 DropdownChoice(
                     title=_("Search filter"),
                     choices=[
+                        ("menu", _("Monitor menu entries")),
                         ("h", _("Hostname")),
                         ("al", _("Hostalias")),
                         ("ad", _("Hostaddress")),
@@ -2007,8 +2032,8 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
             Age(
                 title=None,
                 display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
+                minvalue=5400,
+                default_value=5400,
             ),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),
@@ -2166,7 +2191,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
                 ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
                 ("cmk_inventory", _("Monitor hosts for unchecked services (Checkmk Discovery)")),
-                ("dbd2_mem", _("DB2 memory usage")),
+                ("db2_mem", _("DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
                 ("df_netapp32", _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
@@ -2526,17 +2551,17 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
         return Checkbox(
             title=_("Use Inline SNMP (deprecated)"),
             label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
-            help=_(
-                "By default Check_MK uses command line calls of Net-SNMP tools like snmpget or "
-                "snmpwalk to gather SNMP information. For each request a new command line "
-                "program is being executed. It is now possible to use the inline SNMP implementation "
-                "which calls the net-snmp libraries directly via its python bindings. This "
-                "should increase the performance of SNMP checks in a significant way. The inline "
-                "SNMP mode is a feature which improves the performance for large installations and "
-                "only available via our subscription."
-                "<b>Note:</b> This option is deprecated and has been replaced by "
-                "Choose SNMP Backend. Changes to this option will have no effect "
-                "to the behaviour of Checkmk"),
+            help=
+            _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
+              "snmpwalk to gather SNMP information. For each request a new command line "
+              "program is being executed. It is now possible to use the inline SNMP implementation "
+              "which calls the net-snmp libraries directly via its python bindings. This "
+              "should increase the performance of SNMP checks in a significant way. The inline "
+              "SNMP mode is a feature which improves the performance for large installations and "
+              "only available via our subscription."
+              "<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
+              "Changes to this option will have no effect to the behaviour of "
+              "Checkmk") % _("Choose SNMP Backend (Enterprise Edition only)"),
         )
 
 
@@ -2663,27 +2688,6 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
                 (1, _("Warning")),
                 (2, _("Critical")),
                 (3, _("Unknown")),
-            ],
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableInventoryCheckDoScan(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self):
-        return ConfigDomainCore
-
-    def ident(self):
-        return "inventory_check_do_scan"
-
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Service discovery check for SNMP devices"),
-            choices=[
-                (True, _("Perform full SNMP scan always, detect new check types")),
-                (False, _("Just rely on existing check files, detect new items only")),
             ],
         )
 
@@ -3520,7 +3524,6 @@ def _valuespec_periodic_discovery():
             "severity_unmonitored": 1,
             "severity_vanished": 0,
             "severity_new_host_label": 1,
-            "inventory_check_do_scan": True,
         },
         elements=[
             FixedValue(
@@ -3587,17 +3590,10 @@ def _vs_periodic_discovery() -> Transform:
                          (3, _("Unknown")),
                      ],
                  )),
-                ("inventory_check_do_scan",
-                 DropdownChoice(
-                     title=_("Service discovery check for SNMP devices"),
-                     choices=[
-                         (True, _("Perform full SNMP scan always, detect new check types")),
-                         (False, _("Just rely on existing check files, detect new items only")),
-                     ],
-                 )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
             optional_keys=["inventory_rediscovery"],
+            ignored_keys=["inventory_check_do_scan"],
         ),
         forth=_periodic_discovery_add_severity_new_host_label,
     )
@@ -4225,7 +4221,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
 
     @property
     def title(self):
-        return _("SNMP settings")
+        return _("SNMP rules")
 
     @property
     def help(self):
@@ -4548,7 +4544,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Checkmk Agent")
+        return _("Checkmk agent")
 
 
 def _valuespec_agent_ports():

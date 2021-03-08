@@ -403,6 +403,14 @@ class Job(MKBackupJob, BackupEntity):
     def _cron_cmdline(self):
         return "mkbackup backup %s >/dev/null" % self.ident()
 
+    def from_config(self, config):
+        # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
+        # compatibility.
+        schedule = config.get("schedule", {})
+        if "timeofday" in schedule:
+            config["schedule"]["timeofday"] = [e for e in schedule["timeofday"] if e is not None]
+        self._config = config
+
 
 class Jobs(BackupEntityCollection):
     def __init__(self, config_file_path):
@@ -503,7 +511,7 @@ class Jobs(BackupEntityCollection):
                 elif schedule["disabled"]:
                     html.write(_("Disabled"))
 
-                else:
+                elif schedule["timeofday"]:
                     # find the next time of all configured times
                     times = []
                     for timespec in schedule["timeofday"]:
@@ -700,7 +708,10 @@ class PageEditBackupJob:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_job", button_name="save")
+        return make_simple_form_page_menu(_("Job"),
+                                          breadcrumb,
+                                          form_name="edit_job",
+                                          button_name="save")
 
     def vs_backup_schedule(self):
         return Alternative(
@@ -722,7 +733,10 @@ class PageEditBackupJob:
                         ("period", SchedulePeriod(from_end=False)),
                         ("timeofday",
                          ListOf(
-                             Timeofday(default_value=(0, 0),),
+                             Timeofday(
+                                 default_value=(0, 0),
+                                 allow_empty=False,
+                             ),
                              title=_("Time of day to start the backup at"),
                              movable=False,
                              default_value=[(0, 0)],
@@ -1204,7 +1218,10 @@ class PageEditBackupTarget:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_target", button_name="save")
+        return make_simple_form_page_menu(_("Target"),
+                                          breadcrumb,
+                                          form_name="edit_target",
+                                          button_name="save")
 
     def vs_backup_target(self):
         if self._new:

@@ -248,7 +248,7 @@ export class AbstractGUINode {
             .style("pointer-events", "all")
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
-            .on("contextmenu", () => this.nodes_layer.render_context_menu(this));
+            .on("contextmenu", event => this.nodes_layer.render_context_menu(event, this));
     }
 
     _get_details_url() {

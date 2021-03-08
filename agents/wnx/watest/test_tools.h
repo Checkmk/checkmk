@@ -7,6 +7,8 @@
 #define test_tools_h__
 //
 
+#include <chrono>
+#include <functional>
 #include <vector>
 
 #include "cfg.h"
@@ -24,6 +26,7 @@ namespace tst {
 
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
 
 ///  from the TestEnvironment
 [[nodiscard]] std::filesystem::path GetTempDir();
@@ -148,6 +151,10 @@ void SafeCleanTmpxDir();
 
 void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
+inline std::vector<std::string> ReadFileAsTable(
+    const std::filesystem::path& name) {
+    return ReadFileAsTable(name.u8string());
+}
 
 using CheckYamlVector =
     std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
@@ -169,7 +176,9 @@ std::wstring GenerateRandomFileName() noexcept;
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
 public:
-    TempCfgFs();
+    enum class Mode { standard, no_io };
+    TempCfgFs() : TempCfgFs(Mode::standard) {}
+    TempCfgFs(Mode mode);
 
     TempCfgFs(const TempCfgFs&) = delete;
     TempCfgFs(TempCfgFs&&) = delete;
@@ -179,6 +188,8 @@ public:
     ~TempCfgFs();
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+
+    [[nodiscard]] bool loadContent(std::string_view config);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
                                       const std::string& content) const;
@@ -200,10 +211,34 @@ private:
     std::filesystem::path root_;
     std::filesystem::path data_;
     std::filesystem::path base_;
+    Mode mode_;
 };
 
 const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
+std::string GetFabricYmlContent();
+
+bool WaitForSuccessSilent(std::chrono::milliseconds ms,
+                          std::function<bool()> predicat);
+
+bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
+                            std::function<bool()> predicat);
+
+// Usage FirewallOpener fwo;
+class FirewallOpener {
+public:
+    FirewallOpener();
+    ~FirewallOpener();
+
+    FirewallOpener(const FirewallOpener&) = delete;
+    FirewallOpener(FirewallOpener&&) = delete;
+
+    FirewallOpener& operator=(const FirewallOpener&) = delete;
+    FirewallOpener& operator=(FirewallOpener&&) = delete;
+
+private:
+    std::wstring argv0_;
+};
 
 }  // namespace tst
 #endif  // test_tools_h__

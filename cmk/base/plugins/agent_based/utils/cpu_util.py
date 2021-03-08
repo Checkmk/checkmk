@@ -173,13 +173,11 @@ def check_cpu_util(
             this_time=this_time,
         )
 
-    if cores and any([
-            x in params for x in [
-                "average_single",
-                "core_util_graph",
-                "core_util_time",
-                "levels_single",
-            ]
+    if cores and any(x in params for x in [
+            "average_single",
+            "core_util_graph",
+            "core_util_time",
+            "levels_single",
     ]):
         for core_index, (core, total_perc) in enumerate(cores):
             yield from _util_perfdata(

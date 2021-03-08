@@ -185,6 +185,8 @@ def inventory_if(
             if_index_nr = ""
 
         interface_row: Dict[str, Union[str, float]] = {
+            "description": interface.descr,
+            "alias": interface.alias,
             "speed": interface.speed,
             "phys_address": interface.phys_address,
             "oper_status": interface.oper_status,
@@ -203,8 +205,6 @@ def inventory_if(
                        key_columns={"index": if_index_nr},
                        inventory_columns=interface_row,
                        status_columns={
-                           "description": interface.descr,
-                           "alias": interface.alias,
                            "last_change": int(last_change_timestamp),
                        })
 

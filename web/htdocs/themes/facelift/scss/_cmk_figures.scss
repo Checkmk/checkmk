@@ -89,6 +89,13 @@ div.cmk_tab {
 }
 
 div.cmk_figure {
+  div.loading_img_icon {
+    background-image: url("images/load_graph.png");
+    background-repeat: no-repeat;
+    background-position: left;
+    background-size: 24px 24px;
+  }
+
   div.loading_img {
     position: relative;
     left: 50%;
@@ -103,14 +110,15 @@ div.cmk_figure {
   div.tooltip {
     position: absolute;
     z-index: 1;
-    padding: 5px;
+    padding: 10px;
+    color: $graph-hover-popup-font-color;
     pointer-events: none;
-    background-color: rgba(0, 0, 0, 0.6);
-    border: $tooltip-border;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
     border-radius: 5px;
 
     td {
-      font-size: 11px;
     }
   }
 
@@ -259,12 +267,10 @@ div.cmk_figure {
   }
 
   g.title rect {
-    font-size: $font-size-default;
     fill: $dashlet-body-bg-color;
 
     &.highlighted {
       fill: $headline-color;
-      stroke: $color-table-border;
     }
   }
 }

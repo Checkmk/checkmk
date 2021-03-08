@@ -11,8 +11,18 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
+    TypedDict,
 )
 from ..agent_based_api.v1 import type_defs
+
+CPUSection = TypedDict(
+    'CPUSection',
+    {
+        'clustermode': Dict[str, Dict[str, str]],
+        '7mode': Dict[str, str],
+    },
+    total=False,
+)
 
 Instance = Dict[str, str]
 SectionMultipleInstances = Dict[str, List[Instance]]

@@ -8,21 +8,18 @@
 
 import json
 from pathlib import Path
-from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import pytest  # type: ignore[import]
+from flask_babel.speaklater import LazyString  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.config as config
-from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
-from cmk.gui.permissions import (
-    permission_section_registry,
-    permission_registry,
-    Permission,
-)
+from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
@@ -59,8 +56,8 @@ def test_sorted_sites(mocker):
 def test_registered_permission_sections():
     expected_sections = [
         ('bookmark_list', (50, u'Bookmark lists', True)),
-        ('custom_snapin', (50, u'Custom snapins', True)),
-        ('sidesnap', (50, u'Sidebar snapins', True)),
+        ('custom_snapin', (50, u'Custom sidebar elements', True)),
+        ('sidesnap', (50, u'Sidebar elements', True)),
         ('notification_plugin', (50, u'Notification plugins', True)),
         ('wato', (50, u"WATO - Checkmk's Web Administration Tool", False)),
         ('background_jobs', (50, u'Background jobs', False)),
@@ -77,9 +74,9 @@ def test_registered_permission_sections():
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
-            ('custom_graph', (50, u'Custom Graphs', True)),
-            ('forecast_graph', (50, u'Forecast Graphs', True)),
-            ('graph_collection', (50, u'Graph Collections', True)),
+            ('custom_graph', (50, u'Custom graphs', True)),
+            ('forecast_graph', (50, u'Forecast graphs', True)),
+            ('graph_collection', (50, u'Graph collections', True)),
             ('graph_tuning', (50, u'Graph tunings', True)),
             ('sla_configuration', (50, u'Service Level Agreements', True)),
             ('report', (50, u'Reports', True)),
@@ -262,7 +259,6 @@ def test_registered_permissions():
         'sidesnap.hosts',
         'sidesnap.master_control',
         'sidesnap.mkeventd_performance',
-        'sidesnap.nagios_legacy',
         'sidesnap.nagvis_maps',
         'sidesnap.performance',
         'sidesnap.problem_hosts',
@@ -527,6 +523,7 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            'dashboard.site',
             'dashboard.ntop_alerts',
             'dashboard.ntop_flows',
             'dashboard.ntop_top_talkers',
@@ -554,6 +551,7 @@ def test_registered_permissions():
             'wato.dcd_connections',
             'wato.download_all_agents',
             'wato.license_usage',
+            'wato.submit_license_usage',
             'wato.manage_mkps',
             'wato.mkps',
             'wato.sign_agents',
@@ -1237,3 +1235,74 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
 ])
 def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
     assert may_edit_ruleset(varname) is False
+
+
+def test_is_ntop_available():
+    is_ntop_available = config.is_ntop_available()
+
+    if cmk_version.is_raw_edition():
+        assert not is_ntop_available
+    if not cmk_version.is_raw_edition():
+        assert is_ntop_available
+
+
+@pytest.mark.parametrize("ntop_connection, custom_user, answer, reason", [
+    (
+        {
+            'is_activated': False
+        },
+        "",
+        False,
+        "ntopng integration is not activated under global settings.",
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': False
+        },
+        "",
+        True,
+        "",
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "",
+        False,
+        ("The ntopng username should be derived from \'ntopng Username\' "
+         "under the current's user settings (identity) but this is not "
+         "set for the current user."),
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "a_ntop_user",
+        True,
+        "",
+    ),
+])
+def test_is_ntop_configured_and_reason(
+    mocker,
+    ntop_connection,
+    custom_user,
+    answer,
+    reason,
+):
+    if cmk_version.is_raw_edition():
+        assert not config.is_ntop_configured()
+        assert config.get_ntop_misconfiguration_reason(
+        ) == "ntopng integration is only available in CEE"
+    if not cmk_version.is_raw_edition():
+        mocker.patch.object(
+            config,
+            'ntop_connection',
+            ntop_connection,
+        )
+        if custom_user:
+            config.user._set_attribute("ntop_alias", custom_user)
+        assert config.is_ntop_configured() == answer
+        assert config.get_ntop_misconfiguration_reason() == reason

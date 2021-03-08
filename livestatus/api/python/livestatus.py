@@ -116,8 +116,11 @@ def site_local_ca_path() -> str:
     return os.path.join(omd_root, "var/ssl/ca-certificates.crt")
 
 
-def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
-                         ca_file_path: Optional[str]) -> socket.socket:
+def create_client_socket(family: socket.AddressFamily,
+                         tls: bool,
+                         verify: bool,
+                         ca_file_path: Optional[str],
+                         do_handshake_on_connect: bool = True) -> socket.socket:
     """Create a client socket object for the livestatus connection"""
     sock = socket.socket(family, socket.SOCK_STREAM)
 
@@ -135,7 +138,7 @@ def create_client_socket(family: socket.AddressFamily, tls: bool, verify: bool,
     except Exception as e:
         raise MKLivestatusConfigError("Failed to load CA file '%s': %s" % (ca_file_path, e))
 
-    return context.wrap_socket(sock)
+    return context.wrap_socket(sock, do_handshake_on_connect=do_handshake_on_connect)
 
 
 #.
@@ -344,7 +347,6 @@ class SingleSiteConnection(Helpers):
     # So we only collect in a specific thread, and not in all of them. We also use
     # a class-variable for this case, so we activate this across all sites at once.
     collect_queries = threading.local()
-    collect_queries.active = False
 
     def __init__(self,
                  socketurl: str,
@@ -417,19 +419,20 @@ class SingleSiteConnection(Helpers):
             try:
                 if self.timeout:
                     self.socket.settimeout(sleep_interval)
-                self.socket.connect(address)
+
+                # In case of TLS it may happen that we are retrying after the connect succeeded
+                # and the handshake failed. In this case do not retry the connect.
+                try:
+                    self.socket.connect(address)
+                except ValueError as e:
+                    if "attempt to connect already-connected SSLSocket" not in str(e):
+                        raise
+
+                if self.tls:
+                    # Mypy does not understand the SSL socket wrapping
+                    self.socket.do_handshake()  # type: ignore[attr-defined]
+
                 break
-            except ssl.SSLError as e:
-                # Do not retry in case of SSL protocol / handshake errors. They don't seem to be
-                # recoverable by retrying
-
-                if "The handshake operation timed out" in str(e):
-                    raise MKLivestatusSocketError("Cannot connect to '%s': %s. The encryption "
-                                                  "settings are probably wrong." %
-                                                  (self.socketurl, e))
-
-                raise
-
             except Exception as e:
                 if self.timeout:
                     time_left = self.timeout - (time.time() - before)
@@ -460,7 +463,11 @@ class SingleSiteConnection(Helpers):
 
         It ensures that either a TLS secured socket or a plain text socket
         is being created."""
-        return create_client_socket(family, self.tls, self.tls_verify, self._tls_ca_file_path)
+        return create_client_socket(family,
+                                    self.tls,
+                                    self.tls_verify,
+                                    self._tls_ca_file_path,
+                                    do_handshake_on_connect=False)
 
     def disconnect(self) -> None:
         self.socket = None
@@ -519,8 +526,8 @@ class SingleSiteConnection(Helpers):
             # TODO: Use socket.sendall()
             # socket.send() only works with byte strings
             self.socket.send(query.encode("utf-8") + b"\n\n")
-            if SingleSiteConnection.collect_queries.active:
-                SingleSiteConnection.collect_queries.queries.append(query)
+            if getattr(self.collect_queries, 'active', False):
+                self.collect_queries.queries.append(query)
         except IOError as e:
             if self.persist:
                 del persistent_connections[self.socketurl]
@@ -848,6 +855,11 @@ class MultiSiteConnection(Helpers):
         connection.connect()
         return connection
 
+    def disconnect(self) -> None:
+        for _name, _site, connection in self.connections:
+            connection.disconnect()
+        self.connections.clear()
+
     # Needed for temporary connection for status_hosts in disabled sites
     def _disconnect_site(self, sitename: SiteId) -> None:
         i = 0
@@ -1045,8 +1057,7 @@ class LocalConnection(SingleSiteConnection):
         if not omd_root:
             raise MKLivestatusConfigError(
                 "OMD_ROOT is not set. You are not running in OMD context.")
-        SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", 'local', *args,
-                                      **kwargs)
+        super().__init__("unix:" + omd_root + "/tmp/run/live", 'local', *args, **kwargs)
 
 
 def _combine_query(query: str, headers: Union[str, List[str]]):

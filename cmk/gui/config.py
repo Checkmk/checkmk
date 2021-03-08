@@ -317,25 +317,48 @@ def get_ntop_connection() -> Optional[Dict]:
         return None
 
 
+def get_ntop_connection_mandatory() -> Dict:
+    connection = get_ntop_connection()
+    return connection if connection else {}
+
+
 def is_ntop_available() -> bool:
     # Use this function if you want to know if the ntop intergration is available in general
-    return bool(get_ntop_connection())
+    return isinstance(get_ntop_connection(), dict)
 
 
 def is_ntop_configured() -> bool:
     # Use this function if you want to know if the connection to ntop is fully set-up
     # e.g. to decide if ntop links should be hidden
-    ntop = get_ntop_connection()
 
-    if is_ntop_available() and isinstance(ntop, dict):
-        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+    if is_ntop_available():
+        ntop = get_ntop_connection_mandatory()
+        if not ntop.get("is_activated", False):
+            return False
+        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
+
         # We currently have two options to get an ntop username
         # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
         # 2) Take the checkmk username as ntop username -> always declare ntop as configured
-        return bool(
-            isinstance(custom_attribute_name, str) and
-            user.get_attribute(custom_attribute_name, "")) or not custom_attribute_name
+        return (bool(user.get_attribute(custom_attribute_name, '')) if isinstance(
+            custom_attribute_name, str) else not custom_attribute_name)
+
     return False
+
+
+def get_ntop_misconfiguration_reason() -> str:
+    if not is_ntop_available():
+        return _("ntopng integration is only available in CEE")
+    ntop = get_ntop_connection()
+    assert isinstance(ntop, dict)
+    if not ntop.get("is_activated", False):
+        return _("ntopng integration is not activated under global settings.")
+    custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+    if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
+        return _("The ntopng username should be derived from \'ntopng Username\' "
+                 "under the current's user settings (identity) but this is not "
+                 "set for the current user.")
+    return ""
 
 
 #.
@@ -386,6 +409,10 @@ def get_role_permissions() -> Dict[str, List[str]]:
             if _may_with_roles([role_id], perm.name):
                 role_permissions[role_id].append(perm.name)
     return role_permissions
+
+
+def base_roles_with_permission(pname: str) -> List[str]:
+    return [r for r in builtin_role_ids if _may_with_roles([r], pname)]
 
 
 def _may_with_roles(some_role_ids: List[str], pname: str) -> bool:
@@ -541,7 +568,7 @@ class LoggedInUser:
 
     @property
     def show_mode(self) -> str:
-        return self.get_attribute("show_mode")
+        return self.get_attribute("show_mode") or show_mode
 
     @property
     def show_more_mode(self) -> bool:
@@ -554,6 +581,10 @@ class LoggedInUser:
     @property
     def contact_groups(self) -> List:
         return self.get_attribute("contactgroups", [])
+
+    @property
+    def start_url(self) -> Optional[str]:
+        return self.load_file("start_url", None)
 
     @property
     def show_help(self) -> bool:
@@ -1158,13 +1189,6 @@ def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> boo
     return False
 
 
-def default_site() -> Optional[SiteId]:
-    for site_name, _site in sites.items():
-        if site_is_local(site_name):
-            return site_name
-    return None
-
-
 def is_single_local_site() -> bool:
     if len(sites) > 1:
         return False
@@ -1181,10 +1205,10 @@ def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
 
 
 def site_attribute_default_value() -> Optional[SiteId]:
-    def_site = default_site()
+    site_id = omd_site()
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if def_site and def_site in authorized_site_ids:
-        return def_site
+    if site_id in authorized_site_ids:
+        return site_id
     return None
 
 
@@ -1279,6 +1303,14 @@ def theme_choices() -> List[Tuple[str, str]]:
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
 
 
 def get_page_heading() -> str:

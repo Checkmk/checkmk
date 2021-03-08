@@ -11,23 +11,24 @@
 #include "Column.h"
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "nagios.h"
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringLambdaColumn<contactgroup>>(
+    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
         "name", "The name of the contactgroup", offsets,
         [](const contactgroup &r) {
             return r.group_name == nullptr ? "" : r.group_name;
         }));
-    addColumn(std::make_unique<StringLambdaColumn<contactgroup>>(
+    addColumn(std::make_unique<StringColumn::Callback<contactgroup>>(
         "alias", "The alias of the contactgroup", offsets,
         [](const contactgroup &r) {
             return r.alias == nullptr ? "" : r.alias;
         }));
-    addColumn(std::make_unique<ListLambdaColumn<contactgroup>>(
+    addColumn(std::make_unique<ListColumn::Callback<contactgroup>>(
         "members", "A list of all members of this contactgroup", offsets,
         [](const contactgroup &r) {
             std::vector<std::string> names;
@@ -43,7 +44,6 @@ std::string TableContactGroups::name() const { return "contactgroups"; }
 std::string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query *query) {
-    extern contactgroup *contactgroup_list;
     for (const auto *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         const contactgroup *r = cg;
         if (!query->processDataset(Row(r))) {

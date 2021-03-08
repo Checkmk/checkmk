@@ -28,6 +28,12 @@ def test_openapi_cluster_host(wsgi_app, with_automation_user, suppress_automatio
         content_type='application/json',
     )
 
+    wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/bazfoozle",
+        status=404,
+    )
+
     resp = wsgi_app.call_method(
         'get',
         base + "/objects/host_config/bazfoo",

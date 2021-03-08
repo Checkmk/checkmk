@@ -944,10 +944,13 @@ def _dashboard_other_entries(
     name: str,
     linked_dashboards: Iterable[str],
 ) -> Iterable[PageMenuEntry]:
+    ntop_not_configured = not config.is_ntop_configured()
     for dashboard_name, dashboard in get_permitted_dashboards().items():
         if name in linked_dashboards and dashboard_name in linked_dashboards:
             continue
         if dashboard["hidden"]:
+            continue
+        if ntop_not_configured and dashboard_name.startswith("ntop_"):
             continue
 
         yield PageMenuEntry(

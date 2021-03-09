@@ -1578,7 +1578,10 @@ class ABCEditRuleMode(WatoMode):
 
         # Value
         valuespec = self._ruleset.valuespec()
-        forms.header(valuespec.title() or _("Value"))
+        forms.header(
+            valuespec.title() or _("Value"),
+            show_more_toggle=valuespec.has_show_more(),
+        )
         forms.section()
         html.prevent_password_auto_completion()
         try:

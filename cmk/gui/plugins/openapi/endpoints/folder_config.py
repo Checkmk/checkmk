@@ -133,7 +133,12 @@ def update(params):
     request_schema=request_schemas.BulkUpdateFolder,
 )
 def bulk_update(params):
-    """Bulk update folders"""
+    """Bulk update folders
+
+    Please be aware that when doing bulk updates, it is not possible to prevent the
+    [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
+    mechanism. Use at your own risk
+    """
     body = params['body']
     entries = body['entries']
     folders = []

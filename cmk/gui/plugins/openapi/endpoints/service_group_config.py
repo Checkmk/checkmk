@@ -158,7 +158,12 @@ def update(params):
           request_schema=request_schemas.BulkUpdateServiceGroup,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_update(params):
-    """Bulk update service groups"""
+    """Bulk update service groups
+
+    Please be aware that when doing bulk updates, it is not possible to prevent the
+    [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
+    mechanism. Use at your own risk.
+    """
     body = params['body']
     entries = body['entries']
     updated_service_groups = update_groups("service", entries)

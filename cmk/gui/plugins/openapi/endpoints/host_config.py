@@ -225,7 +225,12 @@ def update_host(params):
           request_schema=request_schemas.BulkUpdateHost,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_update_hosts(params):
-    """Bulk update hosts"""
+    """Bulk update hosts
+
+    Please be aware that when doing bulk updates, it is not possible to prevent the
+    [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
+    mechanism. Use at your own risk.
+    """
     body = params['body']
     entries = body['entries']
 

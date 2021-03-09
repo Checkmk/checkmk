@@ -1097,8 +1097,8 @@ def find_host_services(host_name: str,
     host_check_command, host_metrics = None, None
     for svc_desc, check_command, perf_data, rrd_metrics, \
         host_check_command, host_metrics in sites.live().query(query):
-        known_metrics = set(perf[0] for perf in parse_perf_data(perf_data, check_command)[0])
-        known_metrics.update(rrd_metrics)
+        parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
+        known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
         yield svc_desc, check_command, tuple(known_metrics)
 
     if host_check_command:
@@ -1161,8 +1161,7 @@ class MonitoredMetrics(TextAsciiAutocomplete):
         def metrics():
             options = set(find_host_services(params.get("host", ""), params.get("service", "")))
             for _, check_command, metrics in options:
-                # Check_command replace is for 1.6 backwards compatibility
-                yield from metric_choices(check_command.replace(".", "_"), metrics)
+                yield from metric_choices(check_command, metrics)
 
         if not params.get("host") and not params.get("service"):
             choices: Choices = [(metric_id, metric_detail['title'])

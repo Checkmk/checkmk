@@ -33,6 +33,7 @@ from ..agent_based_api.v1 import (
     Service,
     State,
     type_defs,
+    get_rate,
 )
 
 Disk = Mapping[str, float]
@@ -75,6 +76,42 @@ def compute_rates_multiple_disks(
     value_store: MutableMapping[str, Any],
     single_disk_rate_computer: Callable[[Disk, MutableMapping[str, Any], str], Disk],
 ) -> Section:
+    """Compute rates for multiple disks
+
+    Args:
+        disks: Dictionary with multiple disks: {'sda': {'read_ios': 7}}
+        value_store: value store
+        single_disk_rate_computer: function that computes rates for a single disk.
+            1. parameter: disk: dictionary with absolute disk stats: {'read_ios': 20}
+            2. parameter: value_store
+            3. parameter: suffix to use for the value_store key (this value is
+                needed because this function is normally called for the
+                'SUMMARY' item. in order to distinguish the different
+                'read_ios' of multiple disks, the key will be suffixed with the
+                disk name before asking get_rate for the values.
+            return value: dictionary with relative disk stats: {'read_ios': 1}
+
+    Example:
+        >>> from contextlib import suppress
+        >>> VALUE_STORE = {}  # normally obtained via get_value_store()
+        >>> THIS_TIME = 0  # either read from section or time.time()
+        >>> DISKS_ABSOLUTE = {'sda': {'read_ios': 11}, 'sdb': {'read_ios': 22}}
+        >>> def single_disk_rate_computer(disk_absolute, value_store, value_store_suffix):
+        ...     return compute_rates(  # or use your own function
+        ...         disk=disk_absolute,
+        ...         value_store=value_store,
+        ...         disk_name=value_store_suffix,
+        ...         this_time=THIS_TIME)
+        >>> with suppress(IgnoreResultsError):
+        ...     # first computation will throw error as value_store is empty
+        ...     compute_rates_multiple_disks(DISKS_ABSOLUTE, VALUE_STORE, single_disk_rate_computer)
+        >>> THIS_TIME = 10
+        >>> DISKS_ABSOLUTE = {'sda': {'read_ios': 22}, 'sdb': {'read_ios': 44}}
+        >>> compute_rates_multiple_disks(DISKS_ABSOLUTE, VALUE_STORE, single_disk_rate_computer)
+        {'sda': {'read_ios': 1.1}, 'sdb': {'read_ios': 2.2}}
+
+    This may be used as input for summarize_disks.
+    """
     disks_with_rates = {}
     ignore_res_excpt = None
 
@@ -303,6 +340,52 @@ def _get_averaged_disk(
             backlog_minutes=averaging / 60.,
         ) for key, value in list(disk.items()) if isinstance(value, (int, float))
     }
+
+
+def compute_rates(
+    *,
+    disk: Disk,
+    value_store: MutableMapping[str, Any],
+    this_time: float,
+    disk_name: str = '',
+) -> Disk:
+    """Compute rates for a single disk.
+
+    Args:
+        disk: Dictionary holding various disk metrics
+        value_store: The value_store
+        this_time: Monotonic time in seconds
+        disk_name: Can be empty when used for a single disk item, if item ==
+            'SUMMARIZE' the disk_name must hold the item name of the disk.
+
+    Example:
+        >>> from contextlib import suppress
+        >>> VALUE_STORE = {} # use the real value_store via get_value_store()
+        >>> DISK = {"read_throughput": 60000, "write_throughput": 0}
+        >>> with suppress(IgnoreResultsError):
+        ...     # first computation will throw error as value_store is empty
+        ...     compute_rates(disk=DISK, value_store=VALUE_STORE, this_time=0)
+        >>> DISK = {"read_throughput": 61024, "write_throughput": 1024*1024}
+        >>> compute_rates(disk=DISK, value_store=VALUE_STORE, this_time=10)
+        {'read_throughput': 102.4, 'write_throughput': 104857.6}
+
+    """
+    disk_with_rates = {}
+    ignore_res = False
+    for key, value in disk.items():
+        try:
+            disk_with_rates[key] = get_rate(
+                value_store,
+                f'{key}{disk_name}',
+                this_time,
+                value,
+                raise_overflow=True,
+            )
+        except IgnoreResultsError:
+            ignore_res = True
+    if ignore_res:
+        raise IgnoreResultsError('Initializing counters')
+    return disk_with_rates
 
 
 # Example:

@@ -34,14 +34,6 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_compute_rates(value_store):
-    # first call should result in IngoreResults, second call should yield rates
-    with pytest.raises(IgnoreResultsError):
-        assert aix_diskiod._compute_rates(DISK, value_store)
-    disk_with_rates = aix_diskiod._compute_rates(DISK, value_store)
-    assert disk_with_rates == {k: 0 for k in DISK}
-
-
 def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
         list(aix_diskiod._check_disk({}, DISK))

@@ -142,10 +142,7 @@ def to_openapi(
     return result
 
 
-def to_schema(
-    params: Optional[Sequence[RawParameter]],
-    required='none',
-) -> Optional[Union[Type[Schema], type]]:
+def to_schema(params: Optional[Sequence[RawParameter]]) -> Optional[Union[Type[Schema], type]]:
     """
     Examples:
 
@@ -154,20 +151,19 @@ def to_schema(
         >>> to_schema([])
 
         >>> class Foo(Schema):
-        ...       field = fields.String()
+        ...       field = fields.String(description="Foo")
 
         >>> dict(to_schema([Foo])().declared_fields)  # doctest: +ELLIPSIS
         {'field': <fields.String(...)>}
 
-        >>> to_schema(to_openapi([{'name': fields.String()}], 'path'))
+        >>> to_schema(to_openapi([{'name': fields.String(description="Foo")}], 'path'))
         <class 'marshmallow.schema.GeneratedSchema'>
 
         >>> s = to_schema(
         ...     [
-        ...         {'name': fields.String()},
-        ...         {'title': fields.String()},
+        ...         {'name': fields.String(description="Foo")},
+        ...         {'title': fields.String(description="Foo")},
         ...     ],
-        ...     'path',
         ... )
         >>> s
         <class 'marshmallow.schema.GeneratedSchema'>
@@ -186,11 +182,24 @@ def to_schema(
     if not params:
         return None
 
-    if isinstance(params, SchemaMeta):
-        return params
+    def _validate_fields(dict_):
+        for key, field in dict_.items():
+            if 'description' not in field.metadata:
+                raise ValueError(f"Field {key} has no description. {dict_!r}")
 
     def _from_dict(dict_):
+        needs_validating = False
+        for value in dict_.values():
+            if isinstance(value, fields.Field):
+                needs_validating = True
+
+        if needs_validating:
+            _validate_fields(dict_)
         return BaseSchema.from_dict(dict_)
+
+    if isinstance(params, SchemaMeta):
+        _validate_fields(params().declared_fields)
+        return params
 
     if isinstance(params, list):
         p = {}
@@ -201,8 +210,10 @@ def to_schema(
                 p.update(entry)
         return _from_dict(p)
 
-    # Marshmallow's type is invariant (Dict instead of Mapping) so we have to cast.
-    return _from_dict(params)
+    if isinstance(params, dict):
+        return _from_dict(params)
+
+    raise ValueError(f"Unknown type {type(params)!r}: {params!r}")
 
 
 def fill_out_path_template(

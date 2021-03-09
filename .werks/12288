@@ -1,0 +1,13 @@
+Title: Prometheus: Fix javascript error when configuring PromQL queries
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615281424
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+When trying to configure the option "Service creation using PromQL queries" in
+the Prometheus special agent a javascript popup appeared with an error message
+like "cmk.valuespecs.transfer_context_onchange() ...".

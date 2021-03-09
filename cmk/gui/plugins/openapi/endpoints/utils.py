@@ -125,11 +125,6 @@ def _verify_groups_exist(group_type: str, entries: List[Dict[str, Any]]):
             detail=f"The following {group_type} groups do not exist: {', '.join(missing_groups)}")
 
 
-def verify_group_exist(group_type: str, name):
-    specific_existing_groups = load_group_information()[group_type]
-    return name in specific_existing_groups
-
-
 def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     specific_existing_groups = load_group_information()[group_type]
     groups: Dict[str, Dict[str, Any]] = {}

@@ -285,6 +285,7 @@ def test_openapi_acknowledge_servicegroup(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
+    with_groups,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -294,11 +295,11 @@ def test_openapi_acknowledge_servicegroup(
     live.add_table('servicegroups', [
         {
             'members': [('example.com', 'Memory'), ('example.com', 'CPU load')],
-            'name': 'windows',
+            'name': 'routers',
         },
     ])
 
-    live.expect_query('GET servicegroups\nColumns: members\nFilter: name = windows',)
+    live.expect_query('GET servicegroups\nColumns: members\nFilter: name = routers',)
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;Memory;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
@@ -313,7 +314,7 @@ def test_openapi_acknowledge_servicegroup(
             content_type='application/json',
             params=json.dumps({
                 'acknowledge_type': 'servicegroup',
-                'servicegroup_name': 'windows',
+                'servicegroup_name': 'routers',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,
@@ -327,6 +328,7 @@ def test_openapi_acknowledge_hostgroup(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
+    with_groups,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -336,11 +338,11 @@ def test_openapi_acknowledge_hostgroup(
     live.add_table('hostgroups', [
         {
             'members': ['example.com', 'heute'],
-            'name': 'samples',
+            'name': 'windows',
         },
     ])
-
-    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = samples')
+    live.expect_query('GET hostgroups\nColumns: name\nFilter: name = windows')
+    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = windows')
     live.expect_query(
         'COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged',
         match_type='ellipsis',
@@ -356,7 +358,7 @@ def test_openapi_acknowledge_hostgroup(
             content_type='application/json',
             params=json.dumps({
                 'acknowledge_type': 'hostgroup',
-                'hostgroup_name': 'samples',
+                'hostgroup_name': 'windows',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,
@@ -365,14 +367,31 @@ def test_openapi_acknowledge_hostgroup(
             status=204,
         )
 
-    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = twiddledee')
-    with live(expect_status_query=True):
+    with live(expect_status_query=False):
         wsgi_app.post(
             base + '/domain-types/acknowledge/collections/host',
             content_type='application/json',
             params=json.dumps({
                 'acknowledge_type': 'hostgroup',
                 'hostgroup_name': 'twiddledee',
+                'sticky': False,
+                'notify': False,
+                'persistent': False,
+                'comment': 'Acknowledged'
+            }),
+            status=400,
+        )
+
+    # Test created but not monitored
+    live.add_table('hostgroups', [])
+    live.expect_query('GET hostgroups\nColumns: name\nFilter: name = windows')
+    with live(expect_status_query=True):
+        wsgi_app.post(
+            base + '/domain-types/acknowledge/collections/host',
+            content_type='application/json',
+            params=json.dumps({
+                'acknowledge_type': 'hostgroup',
+                'hostgroup_name': 'windows',
                 'sticky': False,
                 'notify': False,
                 'persistent': False,

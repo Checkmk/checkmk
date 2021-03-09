@@ -15,9 +15,10 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib, valuespec as valuespec, sites, config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.groups import load_group_information
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
-from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
 
 from cmk.gui.plugins.openapi.utils import BaseSchema
@@ -898,8 +899,21 @@ class HostField(String):
                 raise self.make_error("should_not_be_monitored", host_name=value)
 
 
+def group_is_monitored(group_type, group_name):
+    # Danke mypy
+    rv: bool
+    if group_type == 'service':
+        rv = bool(
+            Query([Servicegroups.name], Servicegroups.name == group_name).first_value(sites.live()))
+    elif group_type == 'host':
+        rv = bool(Query([Hostgroups.name], Hostgroups.name == group_name).first_value(sites.live()))
+    else:
+        raise ValueError("Unknown group type.")
+    return rv
+
+
 def host_is_monitored(host_name: str) -> bool:
-    return bool(Query([Hosts.name], Hosts.name == host_name).value(sites.live()))
+    return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
 class AttributesField(_fields.Dict):
@@ -980,6 +994,66 @@ class _CustomerField(_fields.String):
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data, **kwargs)
         return None if value == "global" else value
+
+
+def verify_group_exists(group_type: str, name):
+    specific_existing_groups = load_group_information()[group_type]
+    return name in specific_existing_groups
+
+
+class GroupField(String):
+    """A field representing a group.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Group missing: {name!r}',
+        'should_not_exist': 'Group {name!r} already exists.',
+        'should_be_monitored': 'Group {host_name!r} exists, but is not monitored. '
+                               'Activate the configuration?',
+        'should_not_be_monitored': 'Group {host_name!r} exists, but should not be monitored. '
+                                   'Activate the configuration?',
+    }
+
+    def __init__(
+        self,
+        group_type,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        should_be_monitored: Optional[bool] = None,
+        **kwargs,
+    ):
+        self._group_type = group_type
+        self._should_exist = should_exist
+        self._should_be_monitored = should_be_monitored
+        if should_be_monitored and not should_exist:
+            raise ValueError("No use in trying to validate deleted but still monitored groups.")
+
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        group_exists = verify_group_exists(self._group_type, value)
+        if self._should_exist and not group_exists:
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and group_exists:
+            raise self.make_error("should_not_exist", name=value)
+
+        if self._should_be_monitored is not None:
+            monitored = group_is_monitored(self._group_type, value)
+            if self._should_be_monitored and not monitored:
+                raise self.make_error("should_be_monitored", host_name=value)
+
+            if not self._should_be_monitored and monitored:
+                raise self.make_error("should_not_be_monitored", host_name=value)
 
 
 Boolean = _fields.Boolean

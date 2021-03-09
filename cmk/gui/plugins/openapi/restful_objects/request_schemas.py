@@ -19,8 +19,8 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
+    acknowledge_hostgroup_problem,
 )
-from cmk.gui.plugins.openapi.fields import HostField, query_field, AttributesField
 from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.userdb import load_users
@@ -29,9 +29,7 @@ from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 
-import cmk.gui.plugins.openapi.endpoints.utils as utils
-
-EXISTING_HOST_NAME = HostField(
+EXISTING_HOST_NAME = fields.HostField(
     description="The hostname or IP address itself.",
     required=True,
     should_exist=True,
@@ -50,12 +48,6 @@ EXISTING_FOLDER = fields.FolderField(
     required=True,
 )
 
-GROUP_NAME_FIELD = fields.String(
-    required=True,
-    description="A name used as identifier",
-    example='windows',
-)
-
 SERVICEGROUP_NAME = fields.String(
     required=True,
     description=param_description(schedule_servicegroup_service_downtime.__doc__,
@@ -65,13 +57,13 @@ SERVICEGROUP_NAME = fields.String(
 
 
 class CreateClusterHost(BaseSchema):
-    host_name = HostField(
+    host_name = fields.HostField(
         description="The hostname of the cluster host.",
         required=True,
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = AttributesField(
+    attributes = fields.AttributesField(
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
         missing=dict,
@@ -94,13 +86,13 @@ class UpdateNodes(BaseSchema):
 
 
 class CreateHost(BaseSchema):
-    host_name = HostField(
+    host_name = fields.HostField(
         description="The hostname or IP address of the host to be created.",
         required=True,
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = AttributesField(
+    attributes = fields.AttributesField(
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
         missing=dict,
@@ -134,14 +126,14 @@ class UpdateHost(BaseSchema):
       * `update_attributes`
       * `nodes`
     """
-    attributes = AttributesField(
+    attributes = fields.AttributesField(
         description=("Replace all currently set attributes on the host, with these attributes. "
                      "Any previously set attributes which are not given here will be removed."),
         example={'ipaddress': '192.168.0.123'},
         missing=dict,
         required=False,
     )
-    update_attributes = AttributesField(
+    update_attributes = fields.AttributesField(
         description=("Just update the hosts attributes with these attributes. The previously set "
                      "attributes will not be touched."),
         example={'ipaddress': '192.168.0.123'},
@@ -172,7 +164,7 @@ class BulkUpdateHost(BaseSchema):
 
 
 class RenameHost(BaseSchema):
-    new_name = HostField(
+    new_name = fields.HostField(
         description="The new name of the existing host.",
         required=True,
         should_exist=False,
@@ -188,44 +180,7 @@ class MoveHost(BaseSchema):
     )
 
 
-class Group(fields.String):
-    """A field representing a group.
-
-    """
-    default_error_messages = {
-        'should_exist': 'Group missing: {name!r}',
-        'should_not_exist': 'Group {name!r} already exists.',
-    }
-
-    def __init__(
-        self,
-        group_type,
-        example,
-        required=True,
-        validate=None,
-        should_exist: bool = True,
-        **kwargs,
-    ):
-        self._group_type = group_type
-        self._should_exist = should_exist
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-
-        group_exists = utils.verify_group_exist(self._group_type, value)
-        if self._should_exist and not group_exists:
-            raise self.make_error("should_exist", name=value)
-        if not self._should_exist and group_exists:
-            raise self.make_error("should_not_exist", name=value)
-
-
-EXISTING_HOST_GROUP_NAME = Group(
+EXISTING_HOST_GROUP_NAME = fields.GroupField(
     group_type="host",
     example="windows",
     required=True,
@@ -233,7 +188,7 @@ EXISTING_HOST_GROUP_NAME = Group(
     should_exist=True,
 )
 
-EXISTING_SERVICE_GROUP_NAME = Group(
+EXISTING_SERVICE_GROUP_NAME = fields.GroupField(
     group_type="service",
     example="windows",
     required=True,
@@ -252,7 +207,13 @@ class InputGroup(BaseSchema):
 
 class InputHostGroup(InputGroup):
     """Creating a host group"""
-    name = GROUP_NAME_FIELD
+    name = fields.GroupField(
+        group_type='host',
+        example='windows',
+        required=True,
+        description="A name used as identifier",
+        should_exist=False,
+    )
     alias = fields.String(example="Windows Servers")
 
 
@@ -319,7 +280,7 @@ class BulkInputContactGroup(BaseSchema):
 
 class UpdateContactGroup(BaseSchema):
     """Updating a contact group"""
-    name = Group(
+    name = fields.GroupField(
         group_type="contact",
         description="The name of the contact group.",
         example="OnCall",
@@ -342,7 +303,13 @@ class BulkUpdateContactGroup(BaseSchema):
 
 class InputServiceGroup(InputGroup):
     """Creating a service group"""
-    name = GROUP_NAME_FIELD
+    name = fields.GroupField(
+        group_type='service',
+        example='windows',
+        required=True,
+        description="A name used as identifier",
+        should_exist=False,
+    )
     alias = fields.String(example="Environment Sensors")
 
 
@@ -410,7 +377,7 @@ class CreateFolder(BaseSchema):
                      "specified by '/'."),
         example="/",
     )
-    attributes = AttributesField(
+    attributes = fields.AttributesField(
         description=("Specific attributes to apply for all hosts in this folder "
                      "(among other things)."),
         missing=dict,
@@ -438,14 +405,14 @@ class UpdateFolder(BaseSchema):
         example="Virtual Servers.",
         required=False,
     )
-    attributes = AttributesField(
+    attributes = fields.AttributesField(
         description=("Replace all attributes with the ones given in this field. Already set"
                      "attributes, not given here, will be removed."),
         example={},
         missing=dict,
         required=False,
     )
-    update_attributes = AttributesField(
+    update_attributes = fields.AttributesField(
         description=("Only set the attributes which are given in this field. Already set "
                      "attributes will not be touched."),
         example={},
@@ -770,19 +737,18 @@ class CreateServiceDowntime(CreateServiceDowntimeBase):
 
 
 class CreateServiceGroupDowntime(CreateServiceDowntimeBase):
-    servicegroup_name = Group(
+    servicegroup_name = fields.GroupField(
         group_type="service",
         example="windows",
         required=True,
         description=param_description(schedule_servicegroup_service_downtime.__doc__,
                                       'servicegroup_name'),
-        should_exist=True,
     )
     duration = HOST_DURATION
 
 
 class CreateHostGroupDowntime(CreateHostDowntimeBase):
-    hostgroup_name = Group(
+    hostgroup_name = fields.GroupField(
         group_type="host",
         example="windows",
         required=True,
@@ -793,12 +759,12 @@ class CreateHostGroupDowntime(CreateHostDowntimeBase):
 
 
 class CreateHostQueryDowntime(CreateHostDowntimeBase):
-    query = query_field(tables.Hosts, required=True)
+    query = fields.query_field(tables.Hosts, required=True)
     duration = HOST_DURATION
 
 
 class CreateServiceQueryDowntime(CreateServiceDowntimeBase):
-    query = query_field(tables.Services, required=True)
+    query = fields.query_field(tables.Services, required=True)
     duration = SERVICE_DURATION
 
 
@@ -856,7 +822,7 @@ class DeleteDowntimeByName(DeleteDowntimeBase):
 
 
 class DeleteDowntimeByQuery(DeleteDowntimeBase):
-    query = query_field(tables.Downtimes, required=True)
+    query = fields.query_field(tables.Downtimes, required=True)
 
 
 class DeleteDowntime(OneOfSchema):
@@ -1686,15 +1652,18 @@ class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
 
 
 class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
-    hostgroup_name = fields.String(
-        required=True,
-        description="The name of the hostgroup",
+    hostgroup_name = fields.GroupField(
+        group_type='host',
         example="Servers",
+        required=True,
+        should_exist=True,
+        should_be_monitored=True,
+        description=param_description(acknowledge_hostgroup_problem.__doc__, 'hostgroup_name'),
     )
 
 
 class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
-    query = query_field(tables.Hosts, required=True)
+    query = fields.query_field(tables.Hosts, required=True)
 
 
 class AcknowledgeHostRelatedProblem(OneOfSchema):
@@ -1758,15 +1727,17 @@ class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
 
 
 class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
-    servicegroup_name = fields.String(
-        description='The name of the service group',
+    servicegroup_name = fields.GroupField(
+        group_type='service',
         example='windows',
         required=True,
+        description=param_description(schedule_servicegroup_service_downtime.__doc__,
+                                      'servicegroup_name'),
     )
 
 
 class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
-    query = query_field(tables.Services, required=True)
+    query = fields.query_field(tables.Services, required=True)
 
 
 class AcknowledgeServiceRelatedProblem(OneOfSchema):

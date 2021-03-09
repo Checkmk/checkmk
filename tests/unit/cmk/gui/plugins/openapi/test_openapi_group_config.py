@@ -27,7 +27,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
     base = "/NO_SITE/check_mk/api/1.0"
     resp = wsgi_app.call_method(
         'post',
-        base + "/domain-types/%s_group_config/collections/all" % (group_type,),
+        base + f"/domain-types/{group_type}_group_config/collections/all",
         params=json.dumps(group),
         status=200,
         content_type='application/json',
@@ -35,7 +35,7 @@ def test_openapi_groups(group_type, wsgi_app, with_automation_user):
 
     _ = wsgi_app.call_method(
         'get',
-        base + "/domain-types/%s_group_config/collections/all" % (group_type,),
+        base + f"/domain-types/{group_type}_group_config/collections/all",
         status=200,
     )
 

@@ -36,16 +36,20 @@ def test_openapi_schedule_hostgroup_downtime(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
-    monkeypatch,
+    with_groups,
 ):
-    monkeypatch.setattr("cmk.gui.plugins.openapi.endpoints.utils.verify_group_exist",
-                        lambda a, b: True)
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
-    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = example',)
+    live.add_table('hostgroups', [
+        {
+            'members': ['example.com', 'heute'],
+            'name': 'windows',
+        },
+    ])
+    live.expect_query('GET hostgroups\nColumns: members\nFilter: name = windows')
     live.expect_query(
         'COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
@@ -60,7 +64,7 @@ def test_openapi_schedule_hostgroup_downtime(
             content_type='application/json',
             params=json.dumps({
                 'downtime_type': 'hostgroup',
-                'hostgroup_name': 'example',
+                'hostgroup_name': 'windows',
                 'start_time': '2020-01-01T00:00:00Z',
                 'end_time': '2020-01-02T00:00:00Z',
             }),
@@ -102,16 +106,21 @@ def test_openapi_schedule_servicegroup_downtime(
     wsgi_app,
     with_automation_user,
     mock_livestatus,
-    monkeypatch,
+    with_groups,
 ):
-    monkeypatch.setattr("cmk.gui.plugins.openapi.endpoints.utils.verify_group_exist",
-                        lambda group, name: True)
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
     base = '/NO_SITE/check_mk/api/1.0'
 
-    live.expect_query('GET servicegroups\nColumns: members\nFilter: name = example',)
+    live.add_table('servicegroups', [
+        {
+            'members': [['example.com', 'Memory'], ['example.com', 'CPU load'],
+                        ['heute', 'CPU load']],
+            'name': 'routers',
+        },
+    ])
+    live.expect_query('GET servicegroups\nColumns: members\nFilter: name = routers')
     live.expect_query(
         'COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...',
         match_type='ellipsis',
@@ -130,7 +139,7 @@ def test_openapi_schedule_servicegroup_downtime(
             content_type='application/json',
             params=json.dumps({
                 'downtime_type': 'servicegroup',
-                'servicegroup_name': 'example',
+                'servicegroup_name': 'routers',
                 'start_time': '2020-01-01T00:00:00Z',
                 'end_time': '2020-01-02T00:00:00Z',
             }),

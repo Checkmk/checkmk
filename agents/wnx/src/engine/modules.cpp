@@ -370,75 +370,6 @@ bool ModuleCommander::isBelongsToModules(
         });
 }
 
-// looks for the kTargetDir file in target_dir - this is symbolic link to
-// folder for remove content
-bool ModuleCommander::RemoveContentByTargetDir(
-    const std::vector<std::wstring> &content,
-    const std::filesystem::path &target_dir) {
-    namespace fs = std::filesystem;
-    std::error_code ec;
-    if (!fs::exists(target_dir, ec)) return false;
-
-    if (!fs::exists(target_dir / kTargetDir, ec)) return false;
-
-    auto dir =
-        tools::ReadFileInString((target_dir / kTargetDir).wstring().c_str());
-
-    if (dir.has_value() && fs::exists(*dir, ec) && fs::is_directory(*dir, ec)) {
-        if (dir->size() < kResonableDirLengthMin) {
-            XLOG::l("The dir '{}' is suspicious, skipping", *dir);
-            return false;
-        }
-        fs::path d{*dir};
-
-        auto count = wtools::KillProcessesByDir(d);
-        XLOG::l.i("Killed [{}] processes from dir '{}'", count, d);
-        for (auto line : content) {
-            fs::remove_all(d / line, ec);
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
-bool ModuleCommander::CreateFileForTargetDir(
-    const std::filesystem::path &module_dir,
-    const std::filesystem::path &target_dir) {
-    namespace fs = std::filesystem;
-
-    try {
-        if (target_dir.u8string().size() < kResonableDirLengthMin) {
-            XLOG::l("suspicious dir '{}' to create link", target_dir);
-            return false;
-        }
-
-        if (module_dir.u8string().size() < kResonableDirLengthMin) {
-            XLOG::l("suspicious dir '{}' to create link", module_dir);
-            return false;
-        }
-
-        std::error_code ec;
-        fs::create_directories(module_dir);
-
-        std::ofstream ofs(module_dir / kTargetDir);
-
-        if (!ofs) {
-            XLOG::l("Can't open file {} error {}", module_dir / kTargetDir,
-                    GetLastError());
-            return false;
-        }
-
-        ofs << target_dir.u8string();
-        return true;
-    } catch (const std::exception &e) {
-        XLOG::l(XLOG_FUNC + " Exception '{}' when creating '{}'", e.what(),
-                module_dir / kTargetDir);
-        return false;
-    }
-}
-
 bool ModuleCommander::UninstallModuleZip(
     const std::filesystem::path &file, const std::filesystem::path &mod_root) {
     namespace fs = std::filesystem;
@@ -451,14 +382,10 @@ bool ModuleCommander::UninstallModuleZip(
     auto name = file.filename();
     name.replace_extension("");
     auto target_dir = mod_root / name;
-    auto list = cma::tools::zip::List(file.wstring());
-    bool relink = RemoveContentByTargetDir(list, target_dir);
 
-    if (!relink) {
-        auto count = wtools::KillProcessesByDir(target_dir);
-        XLOG::l.i("Killed [{}] processes from dir '{}'", count,
-                  target_dir.u8string());
-    }
+    auto count = wtools::KillProcessesByDir(target_dir);
+    XLOG::l.i("Killed [{}] processes from dir '{}'", count,
+              target_dir.u8string());
 
     fs::remove_all(target_dir, ec);
     fs::remove(file, ec);
@@ -563,13 +490,6 @@ bool ModuleCommander::InstallModule(const Module &mod,
     fs::path actual_dir = user / mod.dir();
     if (!PrepareCleanTargetDir(default_dir)) {
         return false;
-    }
-
-    if (!fs::equivalent(default_dir, actual_dir, ec)) {
-        XLOG::l.i("Default dir '{}' differs from actual '{}'", default_dir,
-                  actual_dir);
-        // establish symbolic link
-        CreateFileForTargetDir(default_dir, actual_dir);
     }
 
     auto ret = tools::zip::Extract(backup_file.wstring(), actual_dir.wstring());

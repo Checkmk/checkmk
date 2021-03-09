@@ -94,7 +94,7 @@ def set_acknowledgement_on_hosts(params):
             )
         except ValueError:
             raise ProblemException(
-                404,
+                400,
                 title="Hostgroup could not be found.",
                 detail=f"Unknown hostgroup: {host_group}",
             )

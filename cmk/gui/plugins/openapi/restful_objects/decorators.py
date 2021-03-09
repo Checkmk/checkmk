@@ -330,7 +330,7 @@ class Endpoint:
                 header_params.append(CONTENT_TYPE)
             header_schema = to_schema(header_params)
 
-        path_schema = to_schema(self.path_params, required='all')
+        path_schema = to_schema(self.path_params)
         query_schema = to_schema(self.query_params)
 
         self.func = func

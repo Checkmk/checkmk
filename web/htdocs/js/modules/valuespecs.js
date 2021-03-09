@@ -734,8 +734,8 @@ export function autocomplete(input, completion_ident, completion_params, on_chan
 }
 
 export function transfer_context_onchange(from, to) {
-    let source_field = $(`input[name='${from}']`);
-    let target_field = $(`input[name='${to}]'`);
+    let source_field = $(`input[name=${from}]`);
+    let target_field = $(`input[name=${to}]`);
     target_field.val(source_field.val());
     source_field.on("change", () => target_field.val(source_field.val()));
 }

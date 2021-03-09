@@ -38,7 +38,7 @@ def check_mongodb_instance(_no_item, _no_params, info):
     for line in info:
         status, messg = line
         if status == "error":
-            yield 2, ", ".join(infos)
+            yield 2, messg
         else:
             yield 0, ", ".join(infos)
 

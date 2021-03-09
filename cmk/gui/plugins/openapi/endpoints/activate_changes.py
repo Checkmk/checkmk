@@ -168,4 +168,5 @@ def list_activations(params):
                 },
             ))
 
-    return constructors.collection_object(domain_type='activation_run', value=activations)
+    return constructors.serve_json(
+        constructors.collection_object(domain_type='activation_run', value=activations))

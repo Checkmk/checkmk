@@ -222,6 +222,50 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         return next(self.iterate(sites), None)
 
+    def first_value(self, sites) -> Optional[Any]:
+        """Fetch one cell from the result.
+
+        If no result could be found, None is returned.
+
+        When a result could be found however, the result must have exactly one column. Any other
+        combination will lead to a ValueError
+
+        Args:
+            sites:
+                A LiveStatus connection object.
+
+        Returns:
+            The queried value or None.
+
+        Raises:
+            ValueError: When the column-count is not 1.
+
+        Examples:
+
+            >>> class Hosts(Table):
+            ...      __tablename__ = 'hosts'
+            ...      name = Column('name', 'string', 'The host name')
+            ...      parents = Column('parents', 'list', 'The hosts parents')
+
+            >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
+            >>> with simple_expect() as live:
+            ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
+            ...    Query([Hosts.parents], Hosts.name == "heute").first_value(live)
+            ['example.com']
+
+            >>> Query([Hosts.name, Hosts.name], Hosts.name == "heute").first_value(live)
+            Traceback (most recent call last):
+            ...
+            ValueError: Number of columns need to be exactly 1 to give a value.
+
+        """
+        if len(self.columns) != 1:
+            raise ValueError("Number of columns need to be exactly 1 to give a value.")
+        entry = self.first(sites)
+        if entry is not None:
+            return list(entry.values())[0]
+        return None
+
     def fetchall(self, sites) -> List[ResultRow]:
         return list(self.iterate(sites))
 

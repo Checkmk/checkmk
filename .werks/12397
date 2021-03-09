@@ -1,0 +1,11 @@
+Title: Use correct units for Top Talkers Dashboard
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1615300053
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+The graphs for ntops TopTalkers dashboard is now using the correct units "bits/s"

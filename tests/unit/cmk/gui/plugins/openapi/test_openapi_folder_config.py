@@ -230,6 +230,17 @@ def test_openapi_folder_config_collections(wsgi_app, with_automation_user):
     )
 
 
+def test_openapi_folder_hosts_sub_resource(wsgi_app, with_automation_user, with_host):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    wsgi_app.call_method(
+        'get',
+        '/NO_SITE/check_mk/api/1.0/objects/folder_config/~/collections/hosts',
+        status=200,
+    )
+
+
 def test_openapi_hosts_in_folder_collection(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

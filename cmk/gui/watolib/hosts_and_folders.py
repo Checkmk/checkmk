@@ -526,7 +526,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.exists(wato_root_dir() + folder_path)
 
     @staticmethod
-    def root_folder():
+    def root_folder() -> 'CREFolder':
         return Folder.folder("")
 
     # Need this for specifying the correct type
@@ -1133,7 +1133,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
 
-    def hosts(self):
+    def hosts(self) -> Dict[str, 'CREHost']:
         self._load_hosts_on_demand()
         return self._hosts
 
@@ -1147,7 +1147,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             num += subfolder.num_hosts_recursively()
         return num
 
-    def all_hosts_recursively(self):
+    def all_hosts_recursively(self) -> Dict[str, 'CREHost']:
         hosts = {}
         hosts.update(self.hosts())
         for subfolder in self.subfolders():

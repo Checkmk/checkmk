@@ -1,0 +1,13 @@
+Title: REST API list of currently running activations
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615310135
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+Fetching the list of currently running activations always led
+to a HTTP 500 due to a incompatible return value. This has now
+been fixed. No further action is neccessary.

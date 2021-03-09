@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.gui.plugins.openapi.restful_objects import constructors
 
 CMK_WAIT_FOR_COMPLETION = 'cmk/wait-for-completion'
 
@@ -22,6 +23,22 @@ def test_openapi_show_activations(
         'get',
         base + '/objects/activation_run/asdf/actions/wait-for-completion/invoke',
         status=404,
+    )
+
+
+def test_openapi_list_currently_running_activations(
+    wsgi_app,
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    wsgi_app.call_method(
+        'get',
+        base + constructors.collection_href('activation_run', 'running'),
+        status=200,
     )
 
 

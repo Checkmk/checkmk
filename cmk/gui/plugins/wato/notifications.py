@@ -1290,6 +1290,7 @@ class NotificationParameterPushover(NotificationParameter):
                          ("spacealarm", _("Space Alarm")),
                          ("tugboat", _("Tug Boat")),
                          ("updown", _("Up Down (long)")),
+                         ("vibrate", _("Vibrate only")),
                      ],
                      default_value="none")),
             ],

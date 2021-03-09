@@ -1269,6 +1269,7 @@ class NotificationParameterPushover(NotificationParameter):
                      ),
                      choices=[
                          ("none", _("None (silent)")),
+                         ("vibrate", _("Vibrate only")),
                          ("alien", _("Alien Alarm (long)")),
                          ("bike", _("Bike")),
                          ("bugle", _("Bugle")),

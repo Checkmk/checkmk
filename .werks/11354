@@ -1,0 +1,11 @@
+Title: Crash in service dropdown of interfaces without IP
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1615279635
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+For interfaces which do not have an IP address, the service dropdown crashed in case ntop was configured. This is fixed now.

@@ -15,6 +15,8 @@ the services assigned that are provided by the cluster.
 You can find an introduction to hosts in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
+from typing import Iterable
+
 import itertools
 import json
 import operator
@@ -123,7 +125,7 @@ def list_hosts(param):
     return host_collection(watolib.Folder.root_folder().all_hosts_recursively().values())
 
 
-def host_collection(hosts) -> Response:
+def host_collection(hosts: Iterable[watolib.CREHost]) -> Response:
     _hosts = {
         'id': 'host',
         'domainType': 'host_config',
@@ -267,9 +269,10 @@ def bulk_update_hosts(params):
           method='put',
           path_params=[HOST_NAME],
           etag='both',
-          additional_status_codes=[409],
+          additional_status_codes=[409, 422],
           status_descriptions={
               409: 'There are pending changes not yet activated.',
+              422: 'The host could not be renamed.',
           },
           request_schema=request_schemas.RenameHost,
           response_schema=response_schemas.DomainObject)
@@ -290,7 +293,7 @@ def rename_host(params):
     _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
     if auth_problems:
         return problem(
-            status=404,
+            status=422,
             title="Rename process failed",
             detail=f"It was not possible to rename the host {host_name} to {new_name}",
         )

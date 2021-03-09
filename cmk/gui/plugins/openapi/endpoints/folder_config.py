@@ -76,8 +76,8 @@ def create(params):
 def hosts_of_folder(params):
     """Show all hosts in a folder
     """
-    folder = params['folder']
-    return host_collection(folder.hosts())
+    folder: watolib.CREFolder = params['folder']
+    return host_collection(folder.hosts().values())
 
 
 @Endpoint(constructors.object_href('folder_config', '{folder}'),
@@ -365,7 +365,7 @@ def _serialize_folder(folder: CREFolder, show_hosts):
                         'title': host.name(),
                         'id': host.id()
                     },
-                ) for host in folder.hosts()
+                ) for host in folder.hosts().values()
             ],
         )
     return rv

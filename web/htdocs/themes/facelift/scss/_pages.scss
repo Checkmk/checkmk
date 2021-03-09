@@ -699,7 +699,6 @@ div.snapin textarea,  // TODO: reproduce this element
   background-image: none;
   border-radius: $theme-border-radius;
   box-shadow: none;
-  box-sizing: content-box;
 }
 
 span.select2 .select2-selection {
@@ -715,6 +714,7 @@ textarea {
   position: relative;
 }
 
+select,
 textarea {
   // textareas like e.g. comment fields should not have a fixed height
   height: auto;

@@ -157,7 +157,12 @@ def update(params):
           request_schema=request_schemas.BulkUpdateContactGroup,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_update(params):
-    """Bulk update contact groups"""
+    """Bulk update contact groups
+
+    Please be aware that when doing bulk updates, it is not possible to prevent the
+    [Updating Values]("lost update problem"), which is normally prevented by the ETag locking
+    mechanism. Use at your own risk.
+    """
     body = params['body']
     entries = body['entries']
     updated_contact_groups = update_groups("contact", entries)

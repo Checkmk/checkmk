@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, fields
-from typing import Dict, Mapping, Optional, Tuple, Union
+from typing import Dict, Mapping, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -33,6 +33,16 @@ class ServiceStatistics:
 CMKSiteStatisticsSection = Mapping[str, Tuple[HostStatistics, ServiceStatistics]]
 
 
+def _timeout_and_delta_position(*lines_stats: Sequence[str]) -> Tuple[bool, int]:
+    for delta_position, line_stats in enumerate(
+            lines_stats,
+            start=1,
+    ):
+        if len(line_stats) == 1:
+            return True, delta_position
+    return False, len(lines_stats) + 1
+
+
 def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSection:
     """
     >>> from pprint import pprint
@@ -44,17 +54,27 @@ def parse_cmk_site_statistics(string_table: StringTable) -> CMKSiteStatisticsSec
                ServiceStatistics(ok=32, in_downtime=0, on_down_hosts=0, warning=2, unknown=0, critical=1))}
     """
     section: Dict[str, Tuple[HostStatistics, ServiceStatistics]] = {}
-    iter_lines = iter(string_table)
 
+    current_position = 0
     while True:
         try:
-            line_site_name = next(iter_lines)
-        except StopIteration:
+            line_site_name = string_table[current_position]
+            line_hosts_stats = string_table[current_position + 1]
+            line_service_stats = string_table[current_position + 2]
+        except IndexError:
             return section
 
+        timed_out, delta_position = _timeout_and_delta_position(
+            line_hosts_stats,
+            line_service_stats,
+        )
+        current_position += delta_position
+        if timed_out:
+            continue
+
         site_name = line_site_name[0][1:-1]
-        host_stats = HostStatistics(*(int(n) for n in next(iter_lines)))
-        service_stats = ServiceStatistics(*(int(n) for n in next(iter_lines)))
+        host_stats = HostStatistics(*(int(n) for n in line_hosts_stats))
+        service_stats = ServiceStatistics(*(int(n) for n in line_service_stats))
         section[site_name] = host_stats, service_stats
 
 

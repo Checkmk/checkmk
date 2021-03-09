@@ -4,18 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.cmk_site_statistics import (
-    HostStatistics,
-    ServiceStatistics,
     check_cmk_site_statistics,
     discover_cmk_site_statistics,
+    HostStatistics,
     parse_cmk_site_statistics,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
+    ServiceStatistics,
 )
 
 _SECTION_CMK_SITE_STATISTICS = {
@@ -175,15 +172,66 @@ _SECTION_LIVESTATUS_STATUS = {
 }
 
 
-def test_parse_cmk_site_statistics():
-    assert parse_cmk_site_statistics([
-        ['[heute]'],
-        ['1', '0', '0', '0'],
-        ['32', '0', '0', '2', '0', '1'],
-        ['[gestern]'],
-        ['1', '2', '3', '4'],
-        ['5', '6', '7', '8', '9', '10'],
-    ]) == _SECTION_CMK_SITE_STATISTICS
+@pytest.mark.parametrize(
+    "string_table, parsed_section",
+    [
+        pytest.param(
+            [
+                ['[heute]'],
+                ['1', '0', '0', '0'],
+                ['32', '0', '0', '2', '0', '1'],
+                ['[gestern]'],
+                ['1', '2', '3', '4'],
+                ['5', '6', '7', '8', '9', '10'],
+            ],
+            _SECTION_CMK_SITE_STATISTICS,
+            id="standard case",
+        ),
+        pytest.param(
+            [
+                ['[site1]'],
+                ['1', '0', '0', '0'],
+                ['32', '0', '0', '2', '0', '1'],
+                ['[site2]'],
+                ['1', '2', '3', '4'],
+                ['[site3]'],
+                ['1', '0', '0', '0'],
+                ['32', '0', '0', '2', '0', '1'],
+                ['[site4]'],
+                ['32', '0', '0', '2', '0', '1'],
+                ['[site5]'],
+                ['[site6]'],
+                ['1', '0', '0', '0'],
+                ['32', '0', '0', '2', '0', '1'],
+            ],
+            {
+                site: (
+                    HostStatistics(
+                        up=1,
+                        down=0,
+                        unreachable=0,
+                        in_downtime=0,
+                    ),
+                    ServiceStatistics(
+                        ok=32,
+                        in_downtime=0,
+                        on_down_hosts=0,
+                        warning=2,
+                        unknown=0,
+                        critical=1,
+                    ),
+                ) for site in (
+                    "site1",
+                    "site3",
+                    "site6",
+                )
+            },
+            id="timeouts in checkmk agent",
+        ),
+    ],
+)
+def test_parse_cmk_site_statistics(string_table, parsed_section):
+    assert parse_cmk_site_statistics(string_table) == parsed_section
 
 
 def test_discover_cmk_site_statistics():

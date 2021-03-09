@@ -176,7 +176,7 @@ class ABCModeDownloadAgents(WatoMode):
             # FIXME: Rename classes etc. to something generic
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
-            html.a(filename, href="agents/%s" % relpath)
+            html.a(filename, href="agents/%s" % relpath, download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")

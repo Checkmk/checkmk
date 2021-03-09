@@ -12,11 +12,12 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Type, Optional as _Optional, Tuple as _Tuple
+from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple
 
 from six import ensure_str
 
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.mkeventd
 import cmk.gui.config as config
@@ -1046,16 +1047,54 @@ def Levels(**kwargs):
     )
 
 
-class CheckTypeSelection(DualListChoice):
+def valuespec_check_plugin_selection(
+    *,
+    title: str,
+    help_: str,
+) -> Transform:
+    return Transform(
+        Dictionary(
+            title=title,
+            help=help_,
+            elements=[
+                ("host", _CheckTypeHostSelection(title=_("Checks on regular hosts"))),
+                ("mgmt", _CheckTypeMgmtSelection(title=_("Checks on management boards"))),
+            ],
+            optional_keys=["mgmt"],
+        ),
+        # omit empty mgmt key
+        forth=lambda list_: {
+            k: v for k, v in (
+                ("host", [name for name in list_ if not name.startswith("mgmt_")]),
+                ("mgmt", [name[5:] for name in list_ if name.startswith("mgmt_")]),
+            ) if v or k == "host"
+        },
+        back=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
+    )
+
+
+class _CheckTypeHostSelection(DualListChoice):
     def __init__(self, **kwargs):
-        super(CheckTypeSelection, self).__init__(rows=25, **kwargs)
+        super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
         checks = get_check_information()
-        elements = sorted([
-            (cn, (cn + " - " + ensure_str(c["title"]))[:60]) for (cn, c) in checks.items()
-        ])
-        return elements
+        return [
+            (str(cn), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            for (cn, c) in checks.items()
+            # filter out plugins implemented *explicitly* for management boards
+            if not cn.is_management_name()
+        ]
+
+
+class _CheckTypeMgmtSelection(DualListChoice):
+    def __init__(self, **kwargs):
+        super().__init__(rows=25, **kwargs)
+
+    def get_elements(self):
+        checks = get_check_information()
+        return [(str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+                for (cn, c) in checks.items()]
 
 
 class ConfigHostname(TextAsciiAutocomplete):
@@ -1261,9 +1300,9 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  orientation="horizontal",
              )),
             ("match_checktype",
-             CheckTypeSelection(
+             valuespec_check_plugin_selection(
                  title=_("Match check types"),
-                 help=
+                 help_=
                  _("Only apply the rule if the notification originates from certain types of check plugins. "
                    "Note: Host notifications never match this rule if this option is being used."),
              )),
@@ -2289,10 +2328,12 @@ class FolderChoice(DropdownChoice):
         DropdownChoice.__init__(self, **kwargs)
 
 
-def get_check_information():
+def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
     if 'automation_get_check_information' not in g:
-        g.automation_get_check_information = watolib.check_mk_local_automation(
-            "get-check-information")
+        raw_check_dict = watolib.check_mk_local_automation("get-check-information")
+        g.automation_get_check_information = {
+            CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
+        }
 
     return g.automation_get_check_information
 

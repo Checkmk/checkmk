@@ -56,7 +56,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.plugins.wato import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    CheckTypeSelection,
     ConfigDomainCACertificates,
     ConfigDomainCore,
     ConfigDomainGUI,
@@ -83,6 +82,7 @@ from cmk.gui.plugins.wato import (
     SNMPCredentials,
     TimeperiodSelection,
     UserIconOrAction,
+    valuespec_check_plugin_selection,
 )
 
 from cmk.gui.plugins.views.icons import icon_and_action_registry
@@ -3494,12 +3494,13 @@ rulespec_registry.register(
 
 
 def _valuespec_ignored_checks():
-    return CheckTypeSelection(
+    return valuespec_check_plugin_selection(
         title=_("Disabled checks"),
-        help=_("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
-               "by their <b>type</b>. This allows you to disable certain technical implementations "
-               "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
-               "installed."),
+        help_=_(
+            "This ruleset is similar to 'Disabled services', but selects checks to be disabled "
+            "by their <b>type</b>. This allows you to disable certain technical implementations "
+            "such as filesystem checks via SNMP on hosts that also have the Checkmk agent "
+            "installed."),
     )
 
 

@@ -506,6 +506,11 @@ class Endpoint:
         return _validating_wrapper
 
     @property
+    def does_redirects(self):
+        # created, moved permanently, found
+        return any(code in self._expected_status_codes for code in [201, 301, 302])
+
+    @property
     def default_path(self):
         replace = {}
         if self.path_params is not None:

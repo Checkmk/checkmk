@@ -382,6 +382,14 @@ msgstr[1] "Adaugă element"
 msgstr[2] "Adaugă element"
 
 #, fuzzy, python-format
+msgid "%d sites %s: %s"
+msgstr "Adaugă element"
+
+#, fuzzy, python-format
+msgid "%d sites without history: %s"
+msgstr "Adaugă element"
+
+#, fuzzy, python-format
 msgid "%d specific settings"
 msgstr "%d setări de Filtrare"
 
@@ -42775,7 +42783,7 @@ msgid "Systemd single services"
 msgstr "Afectat de serviciu"
 
 #, fuzzy
-msgid "Systemd single services siscovery"
+msgid "Systemd single services discovery"
 msgstr "Afectat de serviciu"
 
 msgid "TCP"
@@ -46181,6 +46189,12 @@ msgstr ""
 
 #, python-format
 msgid "The timeperiod %s is not known to the local monitoring core"
+msgstr ""
+
+#, python-format
+msgid ""
+"The timeseries graph may be incomplete due to the following warnings:<ul>%s</"
+"ul>"
 msgstr ""
 
 msgid "The title is used to label this attribute."

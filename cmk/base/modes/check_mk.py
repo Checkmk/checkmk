@@ -7,7 +7,19 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple, Type, TypedDict, TypeVar, Union
+from typing import (
+    Container,
+    Dict,
+    List,
+    Optional,
+    overload,
+    Set,
+    Tuple,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 from six import ensure_str
 
@@ -32,6 +44,7 @@ from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
+    EVERYTHING,
     HostAddress,
     HostgroupName,
     HostName,
@@ -1401,10 +1414,8 @@ modes.register(
 
 _TName = TypeVar('_TName', str, CheckPluginName, InventoryPluginName, SectionName)
 
-_OptionalNameSet = Optional[Set[_TName]]
 
-
-def _convert_sections_argument(arg: str) -> _OptionalNameSet[SectionName]:
+def _convert_sections_argument(arg: str) -> Set[SectionName]:
     try:
         # kindly forgive empty strings
         return {SectionName(n) for n in arg.split(",") if n}
@@ -1423,7 +1434,7 @@ _option_sections = Option(
 
 
 def _get_plugins_option(type_: Type[_TName]) -> Option:
-    def _convert_plugins_argument(arg: str) -> _OptionalNameSet:
+    def _convert_plugins_argument(arg: str) -> Set[_TName]:
         try:
             # kindly forgive empty strings
             return {type_(n) for n in arg.split(",") if n}
@@ -1439,7 +1450,7 @@ def _get_plugins_option(type_: Type[_TName]) -> Option:
     )
 
 
-def _convert_detect_plugins_argument(arg: str) -> _OptionalNameSet[str]:
+def _convert_detect_plugins_argument(arg: str) -> Set[str]:
     try:
         # kindly forgive empty strings
         # also maincheckify, as we may be dealing with old "--checks" input including dots.
@@ -1458,15 +1469,32 @@ _option_detect_plugins = Option(
 )
 
 
+@overload
+def _extract_plugin_selection(
+    options: Union["_CheckingOptions", "_DiscoveryOptions"],
+    type_: Type[CheckPluginName],
+) -> Tuple[SectionNameCollection, Container[CheckPluginName]]:
+    pass
+
+
+@overload
+def _extract_plugin_selection(
+    options: "_InventoryOptions",
+    type_: Type[InventoryPluginName],
+) -> Tuple[SectionNameCollection, Container[InventoryPluginName]]:
+    pass
+
+
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
-    type_: Type[_TName],
-) -> Tuple[SectionNameCollection, _OptionalNameSet]:
+    type_: Type,
+) -> Tuple[SectionNameCollection, Container]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
-        selected_sections = options.get("detect-sections", NO_SELECTION)
-        assert selected_sections is not None  # for mypy false positive
-        return selected_sections, options.get("plugins")
+        return (
+            options.get("detect-sections", NO_SELECTION),
+            options.get("plugins", EVERYTHING),
+        )
 
     conflicting_options = {'detect-sections', 'plugins'}
     if conflicting_options.intersection(options):
@@ -1477,7 +1505,7 @@ def _extract_plugin_selection(
         # this is the same as ommitting the option entirely.
         # (mo) ... which is weird, because specifiying *all* plugins would do
         # something different. Keeping this for compatibility with old --checks
-        return NO_SELECTION, None
+        return NO_SELECTION, EVERYTHING
 
     if type_ is CheckPluginName:
         check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
@@ -1501,9 +1529,9 @@ def _extract_plugin_selection(
 _DiscoveryOptions = TypedDict(
     '_DiscoveryOptions',
     {
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[CheckPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'discover': int,
         'only-host-labels': bool,
     },
@@ -1520,11 +1548,11 @@ def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
         # new enough.
         cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
 
-    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.do_discovery(
         set(hostnames),
         selected_sections=selected_sections,
-        run_only_plugin_names=run_only_plugin_names,
+        run_plugin_names=run_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
     )
@@ -1583,9 +1611,9 @@ _CheckingOptions = TypedDict(
     {
         'no-submit': bool,
         'perfdata': bool,
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[CheckPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'keepalive': bool,
         'keepalive-fd': int,
     },
@@ -1621,12 +1649,12 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     return checking.do_check(
         hostname,
         ipaddress,
         selected_sections=selected_sections,
-        run_only_plugin_names=run_only_plugin_names,
+        run_plugin_names=run_plugin_names,
         dry_run=options.get("no-submit", False),
         show_perfdata=options.get("perfdata", False),
     )
@@ -1691,9 +1719,9 @@ _InventoryOptions = TypedDict(
     '_InventoryOptions',
     {
         'force': bool,
-        'detect-sections': _OptionalNameSet[SectionName],
-        'plugins': _OptionalNameSet[InventoryPluginName],
-        'detect-plugins': _OptionalNameSet[str],
+        'detect-sections': Set[SectionName],
+        'plugins': Set[InventoryPluginName],
+        'detect-plugins': Set[str],
     },
     total=False,
 )
@@ -1714,11 +1742,11 @@ def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
     if "force" in options:
         sources.agent.AgentSource.use_outdated_persisted_sections = True
 
-    selected_sections, run_only_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     inventory.do_inv(
         hostnames,
         selected_sections=selected_sections,
-        run_only_plugin_names=run_only_plugin_names,
+        run_plugin_names=run_plugin_names,
     )
 
 

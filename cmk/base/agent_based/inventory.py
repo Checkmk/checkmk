@@ -11,6 +11,7 @@ In the future all inventory code should be moved to this module."""
 import os
 from contextlib import suppress
 from typing import (
+    Container,
     Dict,
     Hashable,
     Iterable,
@@ -19,7 +20,6 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -33,6 +33,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataTree
 from cmk.utils.type_defs import (
+    EVERYTHING,
     HostAddress,
     HostName,
     HostKey,
@@ -91,7 +92,7 @@ def do_inv(
     hostnames: List[HostName],
     *,
     selected_sections: SectionNameCollection,
-    run_only_plugin_names: Optional[Set[InventoryPluginName]] = None,
+    run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
 ) -> None:
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
@@ -103,7 +104,7 @@ def do_inv(
             inv_result = _do_active_inventory_for(
                 host_config=host_config,
                 selected_sections=selected_sections,
-                run_only_plugin_names=run_only_plugin_names,
+                run_plugin_names=run_plugin_names,
             )
 
             _run_inventory_export_hooks(host_config, inv_result.trees.inventory)
@@ -141,7 +142,7 @@ def do_inv_check(
     inv_result = _do_active_inventory_for(
         host_config=host_config,
         selected_sections=NO_SELECTION,
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
     )
     trees = inv_result.trees
 
@@ -206,7 +207,7 @@ def do_inv_check(
 def _do_active_inventory_for(
     *,
     host_config: config.HostConfig,
-    run_only_plugin_names: Optional[Set[InventoryPluginName]],
+    run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
@@ -236,10 +237,13 @@ def _do_active_inventory_for(
             host_config,
             ipaddress,
             parsed_sections_broker=broker,
-            run_only_plugin_names=run_only_plugin_names,
+            run_plugin_names=run_plugin_names,
         ),
         source_results=results,
-        safe_to_write=_safe_to_write_tree(results) and selected_sections is NO_SELECTION,
+        safe_to_write=(
+            _safe_to_write_tree(results) and  #
+            selected_sections is NO_SELECTION and  #
+            run_plugin_names is EVERYTHING),
     )
 
 
@@ -272,7 +276,7 @@ def do_inventory_actions_during_checking_for(
         host_config,
         ipaddress,
         parsed_sections_broker=parsed_sections_broker,
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
     )
     _save_status_data_tree(host_config.hostname, trees.status_data)
 
@@ -308,14 +312,14 @@ def _do_inv_for_realhost(
     ipaddress: Optional[HostAddress],
     *,
     parsed_sections_broker: ParsedSectionsBroker,
-    run_only_plugin_names: Optional[Set[InventoryPluginName]],
+    run_plugin_names: Container[InventoryPluginName],
 ) -> InventoryTrees:
     tree_aggregator = _TreeAggregator()
     _set_cluster_property(tree_aggregator.trees.inventory, host_config)
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
-        if run_only_plugin_names and inventory_plugin.name not in run_only_plugin_names:
+        if inventory_plugin.name not in run_plugin_names:
             continue
 
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):

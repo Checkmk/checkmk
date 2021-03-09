@@ -106,7 +106,8 @@ def analyse_cluster_host_labels(
         # keep the latest for every label.name
         nodes_host_labels.update({
             # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-            # Im not sure this is desired. If it is, it should be explained.
+            # I'm not sure this is desired. If it is, it should be explained.
+            # Whenever we do not load the host labels, vanished will be empty.
             **{l.name: l for l in node_result.vanished},
             **{l.name: l for l in node_result.present},
         })
@@ -140,7 +141,8 @@ def _analyse_host_labels(
 
     if discovery_parameters.save_labels:
         DiscoveredHostLabelsStore(host_name).save({
-            # TODO (mo): Im not sure this is desired. If it is, it should be explained.
+            # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
+            # Whenever we do not load the host labels, vanished will be empty.
             **{l.name: l.to_dict() for l in host_labels.vanished},
             **{l.name: l.to_dict() for l in host_labels.present},
         })
@@ -218,7 +220,7 @@ def _discover_host_labels_for_source_type(
 ) -> Mapping[str, HostLabel]:
 
     try:
-        host_data = parsed_sections_broker[host_key]
+        sections_parser = parsed_sections_broker[host_key]
     except KeyError:
         return {}
 
@@ -228,7 +230,7 @@ def _discover_host_labels_for_source_type(
         # sections would result from them, and then process those.
         parse_sections = {
             agent_based_register.get_section_plugin(rs).parsed_section_name
-            for rs in host_data.sections
+            for rs in sections_parser.sections
         }
         applicable_sections = parsed_sections_broker.determine_applicable_sections(
             parse_sections,

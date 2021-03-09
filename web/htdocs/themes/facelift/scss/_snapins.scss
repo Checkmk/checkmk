@@ -1,28 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /*
  * Bookmarks snapin
@@ -31,10 +10,10 @@ div.bookmark {
   width: 230px;
   max-width: 230px;
   overflow: hidden;
-  color: $primary-sidebar-font-color;
+  color: $font-color;
   text-overflow: ellipsis;
-  -o-text-overflow: ellipsis;
   white-space: nowrap;
+  -o-text-overflow: ellipsis;
 }
 
 /*
@@ -45,13 +24,9 @@ div.bookmark {
     padding-left: 10px;
   }
 
-  img {
-    margin-right: 5px;
-
-    &.icon {
-      width: 16px;
-      height: 16px;
-    }
+  img.icon {
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -59,39 +34,18 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
 
-  tr {
+  tr,
+  td {
     padding: 0;
-    border-spacing: 0;
   }
 
   a {
     display: block;
-    width: 100%;
-    height: 100%;
-    line-height: 100%;
+    border-radius: 1px;
   }
-
-  td {
-    padding: 0;
-    border: 1px solid #123a4a;
-    border-spacing: 0;
-  }
-}
-
-.hostmatrix td.state1 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state1 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $theme-color-main;
-}
-
-.hostmatrix td.state0 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state0 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $theme-color-nuance-12;
 }
 
 /*
@@ -106,14 +60,14 @@ body.main .popup_menu .hostmatrix td.state0 span {
   }
 
   .statebullet {
-    margin: 2px;
+    margin: 5px 2px 2px;
   }
 }
 
 /*
  * Master control snapin
  */
-div.snapin table.master_control {
+table.master_control {
   width: 100%;
   margin: 0;
   border-spacing: 0;
@@ -121,48 +75,40 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
-      background-color: $primary-bg-color;
 
       a {
-	font-weight: $theme-font-weight-bold;
+        font-weight: $font-weight-bold;
+        text-transform: lowercase;
       }
     }
 
     &.left {
       display: inline-block;
-      font-size: $theme-font-size-main;
-      font-weight: $theme-font-weight-global;
-      line-height: 22px;
-      letter-spacing: $theme-letter-spacing-table;
-      color: $theme-color-nuance-9;
+      font-weight: $font-weight-default;
+      letter-spacing: $letter-spacing-table;
       text-align: left;
 
       a {
-        font-size: 11px;
         font-weight: normal;
         text-align: left;
       }
     }
-
-    /* TODO: Reproduce this html element */
-    img.iconbutton {
-      width: 60px;
-      height: 16px;
-    }
   }
+}
+
+div#snapin_master_control div.foldable:not(:last-child) {
+  margin-bottom: 4px;
 }
 
 /* Styles shared/inherited by different performance tables */
 %performance-table-shared {
+  width: 100%;
   padding: $performance-table-shared-padding;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
-  border-spacing: 0 4px;
   box-sizing: border-box;
 
   td {
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
+    font-weight: $font-weight-default;
+    letter-spacing: $letter-spacing-table;
   }
 }
 
@@ -171,12 +117,10 @@ div.snapin table.master_control {
  */
 table.mkeventd_performance {
   @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
   border-radius: 2px;
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &:nth-of-type(2) {
       padding: 0;
@@ -197,19 +141,22 @@ table.mkeventd_performance {
  * NagVis maps snapin
  */
 div.state1 {
-  &.statea, &.stated {
-    border-color: #ff0;
+  &.statea,
+  &.stated {
+    border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
-  &.statea, &.stated {
-    border-color: #f00;
+  &.statea,
+  &.stated {
+    border-color: rgb(255, 0, 0);
   }
 }
 
-div.statea, div.stated {
-  background-color: #0b3;
+div.statea,
+div.stated {
+  background-color: rgb(0, 187, 51);
 }
 
 /*
@@ -217,12 +164,10 @@ div.statea, div.stated {
  */
 table.performance {
   @extend %performance-table-shared;
-  width: $theme-snapin-width - 2px;
   border-radius: 2px;
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &.right {
       padding: 0;
@@ -243,14 +188,16 @@ table.performance {
  */
 #snapin_time div.time {
   width: $theme-snapin-width - 2px;
-  padding: 0;
+  padding: 4px 0 0;
   margin: 0 auto;
   font-size: 24px;
   font-weight: bold;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $primary-sidebar-font-color;
+  letter-spacing: $letter-spacing-table;
+  color: $font-color-sidebar;
+  background-color: $server-time-div-bg-color;
   text-align: center;
   border-spacing: 4px;
+  border-radius: $theme-border-radius;
 }
 
 /*
@@ -274,7 +221,7 @@ table.sitestate {
 
     &.state {
       width: 60px;
-      font-size: 9px;
+      font-size: $font-size-small;
     }
   }
 }
@@ -292,10 +239,15 @@ div.speedometer {
   position: relative;
   top: 0;
   left: 0;
-  height: 223px;
+  height: 170px;
 }
 
-img#speedometerbg, canvas#speedometer {
+img#speedometerbg {
+  width: 260px;
+  height: auto;
+}
+
+canvas#speedometer {
   position: absolute;
   top: 0;
   left: 0;
@@ -305,41 +257,46 @@ img#speedometerbg, canvas#speedometer {
  * Tactical overview snapin
  */
 div#snapin_tactical_overview {
-  padding-bottom: 6.5px;
+  width: 100%;
+}
+
+div.snapin.more table.tacticaloverview th span.more,
+div.snapin.less table.tacticaloverview th span.less {
+  display: inline;
 }
 
 table.tacticaloverview {
-  width: 100%;
-  margin: 0;
+  /* remove the border-spacing of the first and last element */
+  width: calc(100% + 2 * #{$spacing});
+  margin: 0 (-$spacing);
   border-collapse: separate;
-  border-spacing: 2px;
+  border-spacing: $spacing 0;
+  table-layout: fixed;
 
   th {
-    padding: 0;
-    padding-top: 4px;
-    font-size: 11px;
+    font-size: $font-size-small;
     font-weight: normal;
-    line-height: 9px;
+    line-height: 1.6;
     letter-spacing: 0;
     color: $tactical-overview-th-font-color;
-    text-align: center;
-    vertical-align: bottom;
+    text-align: left;
+
+    span {
+      display: none;
+    }
   }
 
   td {
-    height: 14px;
-    padding: 2px;
+    height: $input-field-height;
     text-align: right;
     background: $tactical-overview-td-bg-color;
-    border: 1px solid $theme-color-table-border-dark;
-    border-radius: $theme-border-radius;
+    border-radius: $popup-filters-border-radius;
 
     &.states {
-      background: $theme-color-nuance-6;
       box-shadow: none;
 
       a.link {
-        color: $states-font-color;
+        color: $color-nuance-16;
       }
     }
 
@@ -352,7 +309,8 @@ table.tacticaloverview {
     }
   }
 
-  a, span {
+  a,
+  span {
     display: block;
     margin-right: 2px;
   }
@@ -366,25 +324,27 @@ table.tacticaloverview td span,
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
-  font-size: $theme-font-size-main;
-  font-weight: $theme-font-weight-bold;
+  font-weight: $font-weight-bold;
   letter-spacing: 0;
-  color: $theme-color-text;
+  color: $font-color-sidebar;
 }
 
-table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $theme-color-text;
+div.tacticalalert,
+div.tacticalinfo {
+  height: 25px;
+  margin-top: 8px;
+  line-height: 25px;
+  text-align: center;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
 }
 
 div.tacticalalert {
-  height: 25px;
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 25px;
-  text-align: center;
-  background-color: $theme-color-state-2-background;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
+  background-color: $color-state-2-background;
+}
+
+div.tacticalinfo {
+  background-color: $overview-info-bg;
 }
 
 div.spacertop {
@@ -410,7 +370,6 @@ div.spacertop {
     float: right;
     margin-top: -2px;
     margin-bottom: 2px;
-    font-size: 11px;
     border: $primary-border;
   }
 
@@ -424,7 +383,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $theme-font-size-main;
   }
 
   div.statebullet {
@@ -437,7 +395,7 @@ div.spacertop {
     height: 8px;
     margin-right: 0;
     border-radius: 50%;
-    box-shadow: 0 0 0.7px #284850;
+    box-shadow: 0 0 0.7px rgb(40, 72, 80);
   }
 
   ul > div.statebullet.leaf {
@@ -464,18 +422,24 @@ div.spacertop {
 /*
  * Admin mini snapin (WATO)
  */
+#snapin_container_admin_mini.more a.show_more_mode {
+  display: inline;
+}
+
 #snapin_admin_mini {
   padding-top: 6px;
   clear: right;
 
-  img {
-    position: relative;
-    left: 3px;
-    width: 18px;
-    height: 18px;
+  img.icon {
+    width: 14px;
+    height: 14px;
     padding: 0;
-    margin-right: 3.9px;
-    margin-bottom: 4px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+  }
+
+  img.emblem {
+    bottom: 3px;
   }
 
   div.footnotelink {
@@ -487,33 +451,34 @@ div.spacertop {
   }
 }
 
+#snapin_container_admin.less li.sidebar.show_more_mode {
+  display: none;
+}
+
+#snapin_admin {
+  li {
+    line-height: $menu-item-spacing;
+
+    img.icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
 /*
  * WATO folder tree snapin
  */
 #snapin_wato_foldertree {
-  table {
-    width: 100%;
-    margin: 4px 0;
-    border-spacing: 0;
-
-    td {
-      vertical-align: baseline;
-
-      &.label {
-        width: 1px;
-      }
-    }
-  }
-
   select {
-    padding: 6px 0 6px 8px;
-    margin: 1px 0 2px;
+    width: $theme-snapin-width;
+    margin-bottom: 10px;
     clear: both;
-    font-size: $theme-font-size-main;
-    color: $foldertree-snapin-font-color;
-    background-color: $foldertree-snapin-bg-color;
-    border-radius: $theme-border-radius;
     box-sizing: border-box;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
   }
 }
 
@@ -523,16 +488,18 @@ div.spacertop {
   padding: 0;
 
   img {
-    display: none; }
+    display: none;
+  }
 
   input {
-    float: left;
-    margin:  0;
-    font-size: 11px;
+    margin: 0;
     background-repeat: no-repeat;
   }
 
-  input, select, textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  #mk_side_search_field {
     box-sizing: border-box;
   }
 }
@@ -542,7 +509,7 @@ div.spacertop {
  */
 #snapin_container_wiki div.content {
   font-weight: bold;
-  color: $primary-sidebar-font-color;
+  color: $font-color-sidebar;
 
   p {
     font-weight: normal;
@@ -575,41 +542,55 @@ div.spacertop {
 
   input {
     width: 100%;
-    height: 100%;
+    height: $input-field-height;
+    color: $font-color-sidebar;
+    background-image: url("images/icon_quicksearch.png");
+    background-position: right $spacing bottom 4px;
+    background-size: 15px;
+  }
+
+  input::placeholder {
+    line-height: 16px;
+    letter-spacing: 0;
+    color: $font-color;
   }
 
   div.topic {
-    margin-top: 3px;
-    margin-left: 2px;
-    font-size: 125%;
+    margin: 0 0 4px 4px;
+    font-size: $font-size-large;
+
+    &:not(:first-child) {
+      margin-top: $spacing;
+    }
   }
 }
 
 #mk_search_results {
-  position: relative;
-  float: left;
+  position: absolute;
+  z-index: 1;
   width: 223px;
-  font-size: 80%;
-  color: $primary-font-color;
-  background-color: $mk-search-results-bg-color;
-  border: $mk-search-results-border;
+  padding: 8px;
+  margin-top: 2px;
+  color: $font-color-sidebar;
+  background-color: $inpage-highlight-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    color: $primary-font-color;
+    color: $font-color-sidebar;
     text-align: left;
     text-decoration: none;
 
-    &:hover, &.active {
-      background-color: $mk-search-results-hover-bg-color;
+    &:hover,
+    &.active {
+      background-color: $snapin-bg-color;
     }
   }
 
-  div.error, div.warning {
+  div.error,
+  div.warning {
     padding: 2px;
-    font-size: 12px;
   }
 }
 
@@ -621,7 +602,7 @@ div.spacertop {
  * Micro Core Stats (CMC) snapin
  */
 #snapin_cmc_stats {
-    color: $primary-sidebar-font-color;
+  color: $font-color;
 
   select {
     margin-bottom: 2px;
@@ -630,17 +611,13 @@ div.spacertop {
 
 table.cmc_stats {
   width: $snapin-cmc-table-width;
-  background-color: $theme-color-table-background-dark;
-  border: 1px solid $theme-color-table-border-dark;
   border-spacing: 0 4px;
-  border-radius: 2px;
   box-sizing: border-box;
 
   td {
     padding: 0;
-    font-size: 11px;
-    font-weight: $theme-font-weight-global;
-    letter-spacing: $theme-letter-spacing-table;
+    font-weight: $font-weight-default;
+    letter-spacing: $letter-spacing-table;
 
     &.right {
       padding: 0;
@@ -656,32 +633,35 @@ table.cmc_stats {
  */
 #snapin_reports {
   i {
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   input {
     padding: 3px 4px;
-    font-size: 9px;
+    font-size: $font-size-small;
     text-align: center;
+  }
+
+  div {
+    font-size: $font-size-small;
+    color: $footnote-link-color;
   }
 
   div.timerange {
     margin-bottom: 10px;
-    color: $primary-sidebar-font-color;
+    color: $font-color;
 
     table {
       display: inline-block;
 
       td {
-	font-size: 11px;
+        &.tuple_td:nth-of-type(2) {
+          padding-left: 8px;
+        }
 
-	&.tuple_td:nth-of-type(2) {
-	  padding-left: 8px;
-	}
-
-	&.tuple_left {
-	  padding-right: 4px;
-	}
+        &.tuple_left {
+          padding-right: 4px;
+        }
       }
 
       span.title {
@@ -695,6 +675,10 @@ table.cmc_stats {
     margin-top: 3px;
     margin-bottom: 5px;
   }
+}
+
+div.snapin select {
+  background-image: url(images/select_arrow.png);
 }
 
 /*
@@ -723,7 +707,7 @@ body.main {
 
     // TODO: Rm this if redundant
     div.snapin {
-      background-color: $theme-color-table-border-dark;
+      background-color: $color-table-border-dark;
     }
   }
 }

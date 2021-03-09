@@ -437,9 +437,18 @@ void LogNodeAsBad(YAML::Node node, std::string_view comment);
 template <typename T>
 std::vector<T> GetArray(YAML::Node node) noexcept {
     try {
-        if (node.IsDefined() && node.IsSequence())
-            return ConvertNode2Sequence<T>(node);
-        LogNodeAsBad(node, "Invalid Node");
+        if (node.IsDefined()) {
+            if (node.IsSequence()) {
+                return ConvertNode2Sequence<T>(node);
+            }
+
+            if (node.IsNull()) {
+                // this is a valid case, no logging
+                return {};
+            }
+        }
+        LogNodeAsBad(node, "Node is not suitable");
+
     } catch (const std::exception& e) {
         XLOG::l("Cannot read node '{}'", e.what());
     }

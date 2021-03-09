@@ -203,6 +203,9 @@ public:
     // our callbacks withing processor:
     void stopService();
 
+    // Called only from the service
+    void cleanupOnStop() override;
+
     // true will generate one call without external port usage
     void startService();
     void startServiceAsLegacyTest();
@@ -332,7 +335,6 @@ private:
     void detachedPluginsStart();
 
 private:
-    void preLoadConfig();
     TheMiniProcess ohm_process_;
     void updateMaxWaitTime(int timeout_seconds) noexcept;
     void checkMaxWaitTime() noexcept;

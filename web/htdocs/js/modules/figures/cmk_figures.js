@@ -634,49 +634,6 @@ export class FigureTooltip {
     }
 }
 
-export class FigureLegend {
-    constructor(legend_selection) {
-        this._legend = legend_selection;
-        this._legend.classed("legend", true);
-    }
-
-    _dragstart(event) {
-        this._dragged_object = d3.select(event.sourceEvent.currentTarget);
-    }
-
-    _drag(event) {
-        this._dragged_object
-            .style("position", "absolute")
-            .style("top", event.y + "px")
-            .style("right", -event.x + "px");
-    }
-
-    _dragend(event) {
-        this._dragged_object.remove();
-
-        let point_in_rect = (r, p) => p.x > r.x1 && p.x < r.x2 && p.y > r.y1 && p.y < r.y2;
-        let renderer_instances = d3.selectAll("svg.renderer");
-        let target_renderer = null;
-        renderer_instances.each((d, idx, nodes) => {
-            let rect = nodes[idx].getBoundingClientRect();
-            let x1 = rect.left;
-            let x2 = x1 + rect.width;
-            let y1 = rect.top;
-            let y2 = y1 + rect.height;
-            if (
-                point_in_rect(
-                    {x1: x1, y1: y1, x2: x2, y2: y2},
-                    {x: event.sourceEvent.clientX, y: event.sourceEvent.clientY}
-                )
-            )
-                target_renderer = d;
-        });
-
-        if (target_renderer != null && target_renderer != event.subject.renderer)
-            event.subject.migrate_to(target_renderer);
-    }
-}
-
 // Figure which inherited from FigureBase. Needs access to svg and size
 export function state_component(figurebase, state) {
     if (!getIn(state, "draw")) {
@@ -745,7 +702,7 @@ export function getIn(object, ...args) {
     return args.reduce((obj, level) => obj && obj[level], object);
 }
 export function get_function(render_string) {
-    return Function(`"use strict"; return ${render_string}`)();
+    return new Function(`"use strict"; return ${render_string}`)();
 }
 export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");

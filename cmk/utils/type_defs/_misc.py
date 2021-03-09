@@ -6,6 +6,7 @@
 
 import enum
 import sys
+from collections.abc import Container
 from dataclasses import asdict, dataclass
 from typing import (
     Any,
@@ -172,6 +173,13 @@ class EvalableFloat(float):
             return '-1e%d' % (sys.float_info.max_10_exp + 1)
         return super().__repr__()
 
+
+class _Everything(Container):
+    def __contains__(self, other: object) -> bool:
+        return True
+
+
+EVERYTHING = _Everything()
 
 # Symbolic representations of states in plugin output
 # TODO(ml): Should probably be of type enum::int -> str

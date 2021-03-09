@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Container,
     Generator,
     Iterator,
     List,
@@ -22,6 +23,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
+    EVERYTHING,
     HostAddress,
     HostName,
     HostKey,
@@ -54,7 +56,7 @@ def analyse_discovered_services(
         ipaddress: Optional[HostAddress],
         parsed_sections_broker: ParsedSectionsBroker,
         discovery_parameters: DiscoveryParameters,
-        run_only_plugin_names: Optional[Set[CheckPluginName]],
+        run_plugin_names: Container[CheckPluginName],
         only_new: bool,  # TODO: find a better name downwards in the callstack
 ) -> QualifiedDiscovery[Service]:
 
@@ -74,9 +76,9 @@ def analyse_discovered_services(
             ipaddress=ipaddress,
             parsed_sections_broker=parsed_sections_broker,
             discovery_parameters=discovery_parameters,
-            run_only_plugin_names=run_only_plugin_names,
+            run_plugin_names=run_plugin_names,
         ),
-        run_only_plugin_names=run_only_plugin_names,
+        run_plugin_names=run_plugin_names,
         only_new=only_new,
     )
 
@@ -85,7 +87,7 @@ def _analyse_discovered_services(
     *,
     existing_services: Sequence[Service],
     discovered_services: List[Service],
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
     only_new: bool,
 ) -> QualifiedDiscovery[Service]:
 
@@ -93,7 +95,7 @@ def _analyse_discovered_services(
         preexisting=existing_services,
         current=discovered_services + _services_to_keep(
             choose_from=existing_services,
-            run_only_plugin_names=run_only_plugin_names,
+            run_plugin_names=run_plugin_names,
             only_new=only_new,
         ),
         key=lambda s: s.id(),
@@ -104,19 +106,19 @@ def _services_to_keep(
     *,
     choose_from: Sequence[Service],
     only_new: bool,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
 ) -> List[Service]:
     # There are tree ways of how to merge existing and new discovered checks:
     # 1. -II without --plugins=
-    #        check_plugin_names is None, only_new is False
+    #        run_plugin_names is EVERYTHING, only_new is False
     #    --> completely drop old services, only use new ones
     if not only_new:
-        if not run_only_plugin_names:
+        if run_plugin_names is EVERYTHING:
             return []
     # 2. -II with --plugins=
     #        check_plugin_names is not empty, only_new is False
     #    --> keep all services of other plugins
-        return [s for s in choose_from if s.check_plugin_name not in run_only_plugin_names]
+        return [s for s in choose_from if s.check_plugin_name not in run_plugin_names]
     # 3. -I
     #    --> just add new services
     #        only_new is True
@@ -154,10 +156,10 @@ def _discover_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
 ) -> List[Service]:
     # find out which plugins we need to discover
-    plugin_candidates = _find_candidates(parsed_sections_broker, run_only_plugin_names)
+    plugin_candidates = _find_candidates(parsed_sections_broker, run_plugin_names)
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The host name must be set for the host_name() calls commonly used to determine the
@@ -193,7 +195,7 @@ def _discover_services(
 
 def _find_candidates(
     broker: ParsedSectionsBroker,
-    run_only_plugin_names: Optional[Set[CheckPluginName]],
+    run_plugin_names: Container[CheckPluginName],
 ) -> Set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
@@ -210,12 +212,11 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    if run_only_plugin_names is None:
+    if run_plugin_names is EVERYTHING:
         preliminary_candidates = list(agent_based_register.iter_all_check_plugins())
     else:
         preliminary_candidates = [
-            p for p in agent_based_register.iter_all_check_plugins()
-            if p.name in run_only_plugin_names
+            p for p in agent_based_register.iter_all_check_plugins() if p.name in run_plugin_names
         ]
 
     parsed_sections_of_interest = {

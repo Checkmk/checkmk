@@ -765,6 +765,11 @@ class MultiSiteConnection(Helpers):
         connection.connect()
         return connection
 
+    def disconnect(self) -> None:
+        for _name, _site, connection in self.connections:
+            connection.disconnect()
+        self.connections.clear()
+
     # Needed for temporary connection for status_hosts in disabled sites
     def _disconnect_site(self, sitename):
         i = 0

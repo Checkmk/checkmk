@@ -15,7 +15,7 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config, pages, http, htmllib
+from cmk.gui import config, pages, http, htmllib, sites
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
     MKUserError,
@@ -149,7 +149,7 @@ class CheckmkApp:
 
     def wsgi_app(self, environ, start_response):
         """Is called by the WSGI server to serve the current page"""
-        with cmk.utils.store.cleanup_locks():
+        with cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
             return _process_request(environ, start_response, debug=self.debug)
 
 

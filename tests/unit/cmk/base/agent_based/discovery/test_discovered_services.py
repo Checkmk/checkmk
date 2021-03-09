@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, EVERYTHING
 from cmk.base.check_utils import Service
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
@@ -19,7 +19,7 @@ def test_discover_only_new():
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
         only_new=True,
     )
 
@@ -33,7 +33,7 @@ def test_discover_not_only_new():
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
-        run_only_plugin_names=None,
+        run_plugin_names=EVERYTHING,
         only_new=False,
     )
 
@@ -42,12 +42,12 @@ def test_discover_not_only_new():
     assert result.new == [_service("B", "1")]
 
 
-def test_discover_run_only_plugin_names():
+def test_discover_run_plugin_names():
 
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],
-        run_only_plugin_names={CheckPluginName("B")},
+        run_plugin_names={CheckPluginName("B")},
         only_new=False,
     )
 

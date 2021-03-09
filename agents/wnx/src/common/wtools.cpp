@@ -425,10 +425,12 @@ void ServiceController::Stop() {
     auto log_name = processor_->getMainLogName();
     try {
         // Tell SCM that the service is stopping.
+        XLOG::l.i("Initiating stop routine...");
         setServiceStatus(SERVICE_STOP_PENDING);
 
         // Perform service-specific stop operations.
         processor_->stopService();
+        processor_->cleanupOnStop();
 
         // Tell SCM that the service is stopped.
         setServiceStatus(SERVICE_STOPPED);

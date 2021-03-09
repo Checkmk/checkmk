@@ -4,29 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    MutableMapping,
-    Optional,
-)
+from typing import Any, Dict, Mapping, MutableMapping, Optional
+
 from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    Metric,
-    State as state,
+    check_levels,
     get_rate,
     get_value_store,
+    Metric,
+    register,
     render,
-    check_levels,
+    Result,
+    Service,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.livestatus_status import LivestatusSection
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>
@@ -60,11 +52,9 @@ livestatus_status_default_levels = {
     "livestatus_overflows_rate": (0.01, 0.02),
 }
 
-ParsedSection = Dict[str, Any]
 
-
-def parse_livestatus_status(string_table: StringTable):
-    parsed: ParsedSection = {}
+def parse_livestatus_status(string_table: StringTable) -> LivestatusSection:
+    parsed: LivestatusSection = {}
     site, headers = None, None
     for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
@@ -87,7 +77,7 @@ register.agent_section(
 )
 
 
-def parse_livestatus_ssl_certs(string_table: StringTable):
+def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
     parsed: Dict[str, Dict[str, str]] = {}
     site = None
     for line in string_table:
@@ -109,8 +99,8 @@ register.agent_section(
 
 
 def discovery_livestatus_status(
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
 ) -> DiscoveryResult:
     if section_livestatus_status is None:
         return
@@ -122,8 +112,8 @@ def discovery_livestatus_status(
 def check_livestatus_status(
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
 ) -> CheckResult:
     # Check Performance counters
     this_time = time.time()
@@ -141,8 +131,8 @@ def check_livestatus_status(
 def _generate_livestatus_results(
     item: str,
     params: Mapping[str, Any],
-    section_livestatus_status: Optional[ParsedSection],
-    section_livestatus_ssl_certs: Optional[ParsedSection],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
     value_store: MutableMapping[str, Any],
     this_time: float,
 ) -> CheckResult:

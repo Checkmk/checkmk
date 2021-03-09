@@ -16,10 +16,11 @@
 import shlex
 import time
 
-from typing import Any, Dict, Generator, List, Mapping, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, Generator, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 import six
 
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .agent_based_api.v1 import (
     check_levels,
     Metric,
@@ -31,21 +32,26 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.clusterize import make_node_notice_results
 
-Perfdata = NamedTuple("Perfdata", [
-    ("name", str),
-    ("value", float),
-    ("levels", Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]),
-    ("tuple", Tuple[str, Optional[float], Optional[float], Optional[float], Optional[float],
-                    Optional[float]]),
-])
+SimpleCheckResult = Generator[Union[Result, Metric], None, None]
 
-LocalResult = NamedTuple("LocalResult", [
-    ("cached", Optional[Tuple[float, float, float]]),
-    ("item", str),
-    ("state", Union[int, str]),
-    ("text", str),
-    ("perfdata", List[Perfdata]),
-])
+
+class Perfdata(NamedTuple):
+    name: str
+    value: float
+    levels: Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
+    as_tuple: Tuple[str, float, Optional[float], Optional[float], Optional[float], Optional[float]]
+
+
+class LocalResult(NamedTuple):
+    cached: Optional[Tuple[float, float, float]]
+    item: str
+    state: State
+    apply_levels: bool
+    text: str
+    perfdata: Sequence[Perfdata]
+
+
+LocalSection = Mapping[Optional[str], Union[LocalResult, Sequence[str]]]
 
 
 def float_ignore_uom(value):
@@ -152,9 +158,9 @@ def _parse_perftxt(string):
     return perfdata, ""
 
 
-def parse_local(string_table):
+def parse_local(string_table: StringTable) -> LocalSection:
     now = time.time()
-    parsed: Dict[Optional[str], Union[LocalResult, List]] = {}
+    parsed: Dict[Optional[str], Union[LocalResult, Sequence[str]]] = {}
     for line in string_table:
         # allows blank characters in service description
         if len(line) == 1:
@@ -181,7 +187,14 @@ def parse_local(string_table):
         if state_msg or perf_msg:
             raw_state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed[item] = LocalResult(cached, item, raw_state, text, perfdata)
+        parsed[item] = LocalResult(
+            cached=cached,
+            item=item,
+            state=State(raw_state) if raw_state != 'P' else State.OK,
+            apply_levels=raw_state == 'P',
+            text=text,
+            perfdata=perfdata,
+        )
 
     return parsed
 
@@ -201,19 +214,47 @@ _STATE_MARKERS = {
 
 # Compute state according to warn/crit levels contained in the
 # performance data.
-def local_compute_state(perfdata):
-    for entry in perfdata:
+def _local_make_metrics(local_result: LocalResult) -> SimpleCheckResult:
+    for entry in local_result.perfdata:
         yield from check_levels(
             entry.value,
-            levels_upper=entry.levels[:2],
-            levels_lower=entry.levels[2:],
+            # check_levels does not like levels like (23, None), but it does deal with it.
+            levels_upper=(
+                entry.levels[:2]  # type: ignore[arg-type]
+                if local_result.apply_levels else None),
+            levels_lower=(
+                entry.levels[2:]  # type: ignore[arg-type]
+                if local_result.apply_levels else None),
             metric_name=entry.name,
-            label=entry.name,
-            boundaries=entry.tuple[-2:],
+            label=_labelify(entry.name),
+            boundaries=entry.as_tuple[-2:],
         )
 
 
-def discover_local(section):
+def _labelify(word: str) -> str:
+    """
+        >>> _labelify("weekIncidence")
+        'Week incidence'
+        >>> _labelify("casesPer100k")
+        'Cases per 100 k'
+        >>> _labelify("WHOrecommendation4")
+        'WHO recommendation 4'
+        >>> _labelify("zombie_apocalypse")
+        'Zombie apocalypse'
+
+    """
+    label = ''.join("%s%s" % (
+        this if prev.isupper() else this.lower(),
+        ' ' if (  #
+            prev.isupper() and this.isupper() and nxt.islower() or  #
+            this.islower() and nxt.isupper() or  #
+            this.isdigit() is not nxt.isdigit()  #
+        ) else '',
+    ) for prev, this, nxt in zip(' ' + word, word, word[1:] + ' '))
+    return (label[0].upper() + label[1:].replace('_', ' ')).strip()
+
+
+def discover_local(section: LocalSection) -> DiscoveryResult:
     if None in section:
         output = section[None][0]
         raise ValueError("Invalid line in agent section <<<local>>>: %r" % (output,))
@@ -222,32 +263,27 @@ def discover_local(section):
         yield Service(item=key)
 
 
-def check_local(item, params, section):
+def check_local(
+    item: str,
+    params: Mapping[str, Any],
+    section: LocalSection,
+) -> SimpleCheckResult:
     local_result = section.get(item)
-    if local_result is None:
+    if not isinstance(local_result, LocalResult):
         return
 
     try:
         summary, details = local_result.text.split("\n", 1)
     except ValueError:
         summary, details = local_result.text, ""
-    if local_result.state != 'P':
+
+    if local_result.text:
         yield Result(
-            state=State(local_result.state),
+            state=local_result.state,
             summary=summary,
             details=details if details else None,
         )
-        for perf in local_result.perfdata:
-            yield Metric(perf.name, perf.value, levels=perf.levels[:2], boundaries=perf.tuple[4:6])
-
-    else:
-        if local_result.text:
-            yield Result(
-                state=State.OK,
-                summary=summary,
-                details=details if details else None,
-            )
-        yield from local_compute_state(local_result.perfdata)
+    yield from _local_make_metrics(local_result)
 
     if local_result.cached is not None:
         # We try to mimic the behaviour of cached agent sections.
@@ -264,11 +300,11 @@ def check_local(item, params, section):
 def cluster_check_local(
     item: str,
     params: Mapping[str, Any],
-    section: Dict[str, Dict[str, LocalResult]],
-) -> Generator[Union[Result, Metric], None, None]:
+    section: Mapping[str, LocalSection],
+) -> SimpleCheckResult:
 
     # collect the result instances and yield the rest
-    results_by_node: Dict[str, List[Union[Result, Metric]]] = {}
+    results_by_node: Dict[str, Sequence[Union[Result, Metric]]] = {}
     for node, node_section in section.items():
         node_results = list(check_local(item, {}, node_section))
         if node_results:
@@ -283,8 +319,7 @@ def cluster_check_local(
 
 
 def _aggregate_worst(
-    node_results: Dict[str, List[Union[Result, Metric]]],
-) -> Generator[Union[Result, Metric], None, None]:
+    node_results: Dict[str, Sequence[Union[Result, Metric]]],) -> SimpleCheckResult:
     node_states: Dict[State, str] = {}
     for node_name, results in node_results.items():
         node_states.setdefault(
@@ -310,9 +345,7 @@ def _aggregate_worst(
             yield from make_node_notice_results(node, results)
 
 
-def _aggregate_best(
-    node_results: Dict[str, List[Union[Result, Metric]]],
-) -> Generator[Union[Result, Metric], None, None]:
+def _aggregate_best(node_results: Dict[str, Sequence[Union[Result, Metric]]],) -> SimpleCheckResult:
     node_states: Dict[State, str] = {}
     for node_name, results in node_results.items():
         node_states.setdefault(

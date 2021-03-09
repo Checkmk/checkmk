@@ -585,7 +585,7 @@ body.dashboard {
     background-color: rgba(0, 0, 0, 0.2) !important; // sass-lint:disable-line no-important
 
     .confirm_popup {
-      flex-grow: 0;
+      flex: 0 0 auto;
       margin: auto;
     }
 
@@ -627,7 +627,7 @@ div#page_menu_popups div.side_popup {
       box-shadow: none;
 
       input.neg[type="text"] {
-        width: 81%;
+        width: 74%;
       }
 
       div.content {

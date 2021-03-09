@@ -1,30 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
-
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /*-------------------------------------------------------------------------.
 |                     __        ___  _____ ___                             |
@@ -37,9 +14,8 @@ Boston, MA 02110-1301 USA.
 | Styles used in WATO.                                                     |
 '-------------------------------------------------------------------------*/
 
-
 .wato {
-  color: $theme-color-text;
+  color: $font-color;
 }
 
 /* Icon image place inline in some documentation text */
@@ -51,26 +27,8 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato table.data {
-  border: $wato-data-table-border;
-  box-shadow: $wato-data-table-box-shadow;
-
-  &.job_table {
-    border: none;
-    box-shadow: none;
-  }
-
-  &:not(.job_table) th {
-    background: $wato-data-th-bg-color;
-    border-radius: 0;
-
-    &.header_state {
-      color: $primary-font-color !important;
-      background: $wato-data-th-bg-color !important;
-    }
-  }
-
-  tr {
-    background-color: $wato-tr-bg-color;
+  th.header_state {
+    color: $table-secondary-font-color !important; // prevents state colors in table headers
   }
 
   /* TODO: Reproduce this html element */
@@ -80,33 +38,11 @@ Boston, MA 02110-1301 USA.
       text-align: center;
     }
 
-    &.buttons, &.buttons a, &.buttons img {
+    &.buttons,
+    &.buttons a,
+    &.buttons img {
       white-space: nowrap;
     }
-  }
-}
-
-/* Tables renderes in forms. */
-/* TODO: Reproduce these data tables within nform tables */
-.wato table.nform table.data {
-  box-shadow: 1px 1px 2px #444;
-
-  th {
-    background-color: #527280;
-  }
-}
-
-.wato th {
-  /* TODO: Reproduce this html element */
-  &.left {
-    border-left-style: none;
-    border-radius: 4px 0 0;
-  }
-
-  /* TODO: Reproduce these .right elements */
-  &.right {
-    border-right-style: none;
-    border-radius: 0 4px 0 0;
   }
 }
 
@@ -122,7 +58,7 @@ Boston, MA 02110-1301 USA.
 /* TODO: Reproduce this html element */
 .wato div.sitestatus {
   padding: 0 10px;
-  font-size: 9px;
+  font-size: $font-size-small;
   font-weight: bold;
   text-align: center;
   vertical-align: middle;
@@ -164,7 +100,7 @@ Boston, MA 02110-1301 USA.
   td {
     padding: 2px 8px;
     margin: 2px;
-    background-color: #ff0;
+    background-color: rgb(255, 255, 0);
   }
 }
 
@@ -175,15 +111,15 @@ Boston, MA 02110-1301 USA.
 
 /* TODO: Reproduce these .dns .dnserror and .error elements */
 .wato td.dns {
-  color: #666;
+  color: rgb(102, 102, 102);
 }
 
 .wato td.dnserror {
-  color: #f00;
+  color: rgb(255, 0, 0);
 }
 
 .wato td.error {
-  color: #f00;
+  color: rgb(255, 0, 0);
 }
 
 .wato div.inherited {
@@ -200,11 +136,11 @@ Boston, MA 02110-1301 USA.
 }
 
 .wato td.inherited {
-  color: #666;
+  color: rgb(102, 102, 102);
 }
 
 /* host validation error */
-table.validationerror  {
+table.validationerror {
   width: 100%;
 
   td.img {
@@ -222,7 +158,8 @@ table.validationerror  {
 
 /* bulk actions in host table */
 .wato table.data tr.data {
-  td.bulksearch, td.bulkactions {
+  td.bulksearch,
+  td.bulkactions {
     padding-top: 25px;
   }
 
@@ -255,22 +192,80 @@ div#service_container {
   }
 
   table.data {
-    tr.groupheader {
-      background-color: $service-container-groupheader-bg-color;
+    tr.data > td {
+      padding: 3px 7px;
+
+      &.state {
+        height: 100%;
+        padding: 0 1px;
+      }
+
+      &.service {
+        width: 250px;
+        max-width: 250px;
+        min-width: 250px;
+        overflow-wrap: break-word;
+      }
+    }
+  }
+
+  h3 {
+    margin-top: 2 * $spacing;
+
+    img {
+      position: relative;
+    }
+  }
+
+  div#fixall {
+    background-color: $headline-color;
+    border-radius: 2px;
+
+    img {
+      float: left;
+      margin: 10px 0 0 10px;
     }
 
-    td h3 {
-      margin-top: $td-h3-margin-top;
+    ul {
+      float: left;
+      list-style: none;
+      margin: 15px 0 0 0;
+      padding-left: 10px;
+    }
+
+    li {
+      display: inline-block;
+      padding: 0 10px;
+      border-right: 1px solid $font-color;
+    }
+
+    li:last-child {
+      border-right: none;
+    }
+
+    span {
+      padding: 2px;
+    }
+
+    span.changed {
+      color: $success;
+      font-weight: $font-weight-bold;
+    }
+
+    input.button {
+      height: 25px;
+      padding: 5px 10px;
+      margin-left: 10px;
+      background-color: $success;
+      color: $black;
     }
   }
 }
-
 
 table.data tr.data > td.bulkactions {
   background: transparent;
   border: none;
 }
-
 
 a.service_button.disabled {
   pointer-events: none;
@@ -306,7 +301,7 @@ table.data tr.data > td.bulksearch {
 }
 
 .wato td.bulksearch {
-  input[type=text] {
+  input[type="text"] {
     width: 150px;
     margin-right: 5px;
   }
@@ -329,107 +324,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   height: 24px;
   padding: 1.5px;
   box-sizing: border-box;
-}
-
-/* Path to current folder at top of screen */
-.wato div.folderpath {
-  position: relative;
-  left: 4px;
-  height: auto;
-  margin-top: -5px;
-  margin-bottom: 8px;
-
-  ul {
-    padding-left: 0;
-    list-style-type: none;
-
-    li {
-      &:before {
-        position: absolute;
-        top: 0;
-        left: 0;
-        font-size: 29px;
-        font-weight: 800;
-        color: $theme-color-main;
-        content: "»";
-      }
-
-      &:first-child:before {
-        content: " ";
-      }
-    }
-
-    &:after {
-      display: block;
-      width: 0;
-      height: 0;
-      clear: both;
-      content: " ";
-    }
-  }
-
-  li {
-    position: relative;
-    display: block;
-    float: left;
-    height: 44px;
-    padding-right: 20px; /* spacing for the image divs left/right */
-    padding-left: 20px;
-    margin-left: -13px; /* move left border of all items 22px left to make the items overlap */
-    color: #fff;
-    background: transparent;
-
-    a {
-      text-decoration: none;
-    }
-
-    div.content {
-      height: auto;
-      padding: 4px;
-      line-height: 33px;
-      color: $theme-color-text;
-      background: none;
-    }
-
-    select {
-      position: relative;
-      right: -6px;
-      z-index: 200;
-      height: auto;
-      margin: 0;
-      font-size: 12px;
-      font-weight: normal;
-      color: #fff;
-      background-color: $theme-color-white;
-      box-shadow: none;
-    }
-
-    &:hover {
-      div.content {
-        background-image: none;
-      }
-
-      select {
-        background-color: $theme-color-table-background;
-      }
-    }
-
-    select option {
-      color: $theme-color-text;
-      background-color: $theme-color-white;
-    }
-
-    .left,
-    .right {
-      display: none;
-    }
-  }
-
-  li a,
-  li body.main .popup_menu span,
-  body.main .popup_menu li span {
-    color: $theme-color-text;
-  }
 }
 
 .wato div.floatfolder {
@@ -485,7 +379,6 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      font-size: $theme-font-size-main;
       color: $host-folder-font-color;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -512,11 +405,11 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 20px;
     padding: 0;
     overflow: hidden;
-    color: #fff;
+    color: rgb(255, 255, 255);
     text-align: left;
     text-overflow: ellipsis;
-    -o-text-overflow: ellipsis;
     white-space: nowrap;
+    -o-text-overflow: ellipsis;
 
     a {
       position: relative;
@@ -532,15 +425,22 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       text-decoration: underline;
     }
   }
+
+  &.newfolder {
+    font-size: 80px;
+    line-height: 145px;
+    color: rgb(220, 220, 220);
+    text-align: center;
+    opacity: 0.4;
+  }
 }
 
 .wato div.floatfolder div.title a,
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-size: 13px;
   font-weight: 500;
-  color: $theme-color-text;
+  color: $font-color;
 }
 
 .wato img.authicon {
@@ -572,14 +472,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   clear: left;
 }
 
-/* Information boxes displayed directly in the data area */
-.wato div.info {
-  padding-left: 1px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  color: $theme-color-text;
-}
-
 /* Controls for the audit log paged mechanism */
 .wato div.paged_controls {
   position: relative;
@@ -597,7 +489,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   height: 140px;
   margin-top: 10px;
   background-color: rgba(255, 255, 255, 0.3);
-  border: 1px solid #fff;
+  border: 1px solid rgb(255, 255, 255);
   border-radius: 4px;
 
   div.nr {
@@ -606,10 +498,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     left: 9px;
     width: 20px;
     height: 20px;
-    color: #000;
+    color: rgb(0, 0, 0);
     text-align: center;
-    background-color: #fcd340;
-    border: 1px solid #fff;
+    background-color: rgb(252, 211, 64);
+    border: 1px solid rgb(255, 255, 255);
     border-radius: 10px;
 
     b {
@@ -621,9 +513,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   div.title {
     position: absolute;
     top: 12px;
-    font-size: 13px;
     font-weight: bold;
-    color: #fff;
+    color: rgb(255, 255, 255);
 
     &.conditions {
       left: 40px;
@@ -639,8 +530,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     top: 30px;
     height: 90px;
     padding: 5px;
-    background-color: #a7bec3;
-    border: 1px solid #fff;
+    background-color: rgb(167, 190, 195);
+    border: 1px solid rgb(255, 255, 255);
     border-radius: 4px;
 
     &.conditions {
@@ -667,14 +558,6 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato td.value img {
   width: 20px;
   height: 20px;
-}
-
-.wato table.ruleeditor img,
-.wato img.ruleyesno {
-  position: relative;
-  top: -3px;
-  width: 22px;
-  height: 22px;
 }
 
 .wato ul.conditions {
@@ -711,7 +594,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 .wato form.rule_editor {
   table.hosttags td.title {
     min-width: 200px;
-    }
+  }
 
   td.tag_sel {
     display: table-cell;
@@ -730,15 +613,15 @@ body.main .popup_menu .wato div.floatfolder div.title span,
 
 .wato table.data.ruleset tr.disabled td {
   * {
-    color: #999;
+    color: rgb(153, 153, 153);
   }
 
   .tagify__tag-text {
     color: inherit;
   }
 
-  tag > div::before {
-    opacity: .5;
+  tag > div {
+    opacity: 0.5;
   }
 }
 
@@ -770,11 +653,11 @@ form#form_timeperiod td.vlof_content {
 .wato pre.ve_textarea {
   padding: 0;
   margin: 0;
-  font-size: 11px;
 }
 
 /* main menu */
-form.search, div.filter_buttons {
+form.search,
+div.filter_buttons {
   display: inline-block;
   padding-top: 10px;
   margin-bottom: 10px;
@@ -782,21 +665,24 @@ form.search, div.filter_buttons {
 }
 
 .wato form.search {
-  color: $theme-color-text;
+  color: $font-color;
 }
 
 .wato div.mainmenu {
-  a, body.main .popup_menu span, body.main .popup_menu & span {
+  a,
+  body.main .popup_menu span,
+  body.main .popup_menu & span {
     display: block;
     width: 330px;
     height: 80px;
     margin: 0 8px 8px 0;
-    background: $secondary-bg-color;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
+    border-radius: $theme-border-radius;
     box-shadow: none;
 
     &:hover {
-      background: $wato-a-hover-bg-color;
+      background: $input-button-hover-bg-color;
     }
   }
 
@@ -804,12 +690,8 @@ form.search, div.filter_buttons {
     position: relative;
     float: left;
     width: 317px;
-    padding: 0 0 14px;
+    padding: 0 0 $spacing;
     border: $wato-a-border;
-
-    &:hover div.title {
-      color: $secondary-font-color;
-    }
   }
 
   div {
@@ -821,7 +703,6 @@ form.search, div.filter_buttons {
       left: 72px;
       padding: 0;
       font-weight: bold;
-      color: $secondary-link-color;
     }
 
     &.subtitle {
@@ -831,10 +712,10 @@ form.search, div.filter_buttons {
       width: 234px;
       padding: 16px 0;
       overflow: hidden;
-      font-size: $theme-font-size-small;
+      font-size: $font-size-small;
       font-weight: 500;
       line-height: 1.5;
-      letter-spacing: $theme-letter-spacing-table;
+      letter-spacing: $letter-spacing-table;
       color: $wato-subtitle-color;
       text-rendering: optimizeLegibility;
     }
@@ -844,8 +725,8 @@ form.search, div.filter_buttons {
     position: absolute;
     top: 16px;
     left: 16px;
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -882,7 +763,6 @@ form.search, div.filter_buttons {
   }
 
   a {
-    margin-right: 3px;
     color: $primary-font-color;
     text-decoration: none;
     white-space: nowrap;
@@ -890,10 +770,6 @@ form.search, div.filter_buttons {
     &:hover {
       text-decoration: underline;
     }
-  }
-
-  .dots {
-    overflow: hidden;
   }
 
   div.rulecount {
@@ -914,7 +790,7 @@ form.search, div.filter_buttons {
  * with white color it wasn't visible anyways */
 div.varname {
   font-family: monospace, sans-serif;
-  color: #fff;
+  color: rgb(255, 255, 255);
 }
 
 /* page "global settings*/
@@ -931,10 +807,10 @@ div.varname {
   td.simple a.modified,
   td.simple div.toggle_switch_container.modified,
   td.content a.modified > table {
-    padding: 1px 4px 2px;
+    padding: 2px 4px;
     margin-left: -4px;
     border: 1px solid $globalvars-modified-border-color;
-    border-radius: 5px;
+    border-radius: $spacing;
     box-shadow: $globalvars-modified-box-shadow;
   }
 
@@ -945,7 +821,8 @@ div.varname {
   }
 
   td.simple div.toggle_switch_container {
-    width: 56px;
+    width: $toggle-switch-width;
+    height: $toggle-switch-height;
   }
 
   /* TODO: Reproduce this html class "vs_dict_text" */
@@ -1002,6 +879,14 @@ div.varname {
   pointer-events: none;
 }
 
+.wato .pending_changes_header {
+  #row_info {
+    float: right;
+    padding-right: $spacing;
+    font-weight: $font-weight-default;
+  }
+}
+
 .wato table.changes {
   width: 100%;
 
@@ -1010,7 +895,7 @@ div.varname {
   }
 
   tr.foreign.not_permitted td {
-    color: #f00;
+    color: rgb(255, 0, 0);
   }
 }
 
@@ -1021,70 +906,74 @@ div.varname {
   vertical-align: middle;
 }
 
-/* Replication */
-.wato table.data td.repprogress {
-  position: relative;
-  width: 160px;
-  padding: 0;
-  margin: 0;
-}
+.wato table.activation {
+  td.details {
+    div.warning,
+    div.error {
+      margin: 2px 0;
+    }
 
-.wato td.repprogress {
-  div.msg {
-    position: absolute;
-    top: 10px;
-    left: 0;
-    z-index: 20;
-    width: 160px;
-    height: 16px;
-    text-align: center;
-
-    &.state_success, &.state_warning {
-      color: $dark-font-color;
+    pre {
+      white-space: pre-wrap;
     }
   }
 
-  div.progress {
-    position: absolute;
-    top: 4px;
-    left: 0;
-    z-index: 0;
-    height: 24px;
-    padding-top: 10px;
-    font-size: 11px;
-    color: $theme-color-black;
-    background: $repprogress-progress-bg-color;
-    border: 1px solid $repprogress-progress-border-color;
-    border-radius: $theme-border-radius;
-    box-shadow: none;
-    box-sizing: border-box;
+  td.repprogress {
+    position: relative;
+    width: 140px;
+    min-width: 140px;
+    padding: 0;
+    margin: 0;
 
-    &.state_success {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
-      background: $theme-color-state-success-background;
-      border-color: $theme-color-state-success-border;
+    div.msg {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      z-index: 20;
+      width: 160px;
+      height: 16px;
+      text-align: center;
+
+      &.state_success,
+      &.state_warning {
+        color: $dark-font-color;
+      }
     }
 
-    &.state_error {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
-      background: $theme-color-state-2-background;
-      border-color: $theme-color-state-2-border;
-    }
+    div.progress {
+      position: absolute;
+      top: 4px;
+      left: 0;
+      z-index: 0;
+      width: 160px;
+      height: 24px;
+      padding-top: 10px;
+      color: $black;
+      border-radius: $theme-border-radius;
+      box-shadow: none;
+      box-sizing: border-box;
 
-    &.state_warning {
-      /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
-      background: $theme-color-main;
-      border-color: $theme-color-state-1-border;
+      &.in_progress {
+        background: $repprogress-progress-bg-color;
+        border-color: $repprogress-progress-border-color;
+      }
+
+      &.state_success {
+        background: $color-state-success-background;
+        border-color: $color-state-success-border;
+      }
+
+      &.state_error {
+        background: $color-state-2-background;
+        border-color: $color-state-2-border;
+      }
+
+      &.state_warning {
+        background: $yellow;
+        border-color: $color-state-1-border;
+      }
     }
   }
-}
-
-/* TODO: Either remove this style or remove all repprogress styles from above */
-.wato td.details,
-.wato th.header_details,
-.wato td.repprogress,
-.wato th.header_repprogress {
-  display: none;
 }
 
 .wato td.tag-ellipsis {
@@ -1098,24 +987,25 @@ div.varname {
 
 table.data tr.notification_context table {
   margin: 5px;
-  border: 1px solid $theme-color-table-border;
+  border: 1px solid $color-table-border;
   box-shadow: none;
 
-  th, td {
+  th,
+  td {
     font-family: monospace;
   }
 
   th {
     padding: 2px 4px;
-    color: $theme-color-text;
+    color: $font-color;
     background-color: $primary-th-bg-color;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
   }
 
   td {
     padding: 2px 4px;
     background-color: $primary-td-bg-color;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
   }
 }
 
@@ -1123,8 +1013,8 @@ table.data tr.notification_context table {
 table.data tr.data.dcd_log_entries {
   > td {
     font-family: monospace, sans-serif;
-    color: #fff;
-    background-color: #000;
+    color: rgb(255, 255, 255);
+    background-color: rgb(0, 0, 0);
   }
 
   pre {
@@ -1148,14 +1038,14 @@ table.data tr.data.dcd_log_entries {
 
 .wato table.progress {
   width: 50%;
-  color: #000;
-  background: $theme-color-white;
-  border: 1px solid $theme-color-table-border;
+  color: rgb(0, 0, 0);
+  background: $bg-color-secondary;
+  border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
   th {
     padding: 3px 0;
-    background-color: #fff;
+    background-color: rgb(255, 255, 255);
   }
 
   td {
@@ -1170,11 +1060,11 @@ table.data tr.data.dcd_log_entries {
         margin: 16px;
         overflow: auto;
         font-family: monospace;
-        font-weight: $theme-font-weight-global;
-        color: $theme-color-lightgrey;
+        font-weight: $font-weight-default;
+        color: $lightgrey;
         text-align: left;
-        background: $theme-color-sidebar-background;
-        border: 1px solid $theme-color-table-border-dark;
+        background: $navigation-bg-color;
+        border: 1px solid $color-table-border-dark;
         border-radius: $theme-border-radius;
         box-shadow: none;
       }
@@ -1182,7 +1072,7 @@ table.data tr.data.dcd_log_entries {
       div.exc {
         padding: 5px;
         margin: 10px;
-        border: 1px solid #f00;
+        border: 1px solid rgb(255, 0, 0);
       }
     }
 
@@ -1197,7 +1087,7 @@ table.data tr.data.dcd_log_entries {
         top: 12px;
         width: 100%;
         height: 22px;
-        background-color: #fff;
+        background-color: rgb(255, 255, 255);
         border-spacing: 1px 2px;
       }
 
@@ -1224,7 +1114,7 @@ table.data tr.data.dcd_log_entries {
 
       td.left {
         width: 0%;
-        background-color: #4080ff;
+        background-color: rgb(64, 128, 255);
       }
 
       td.right {
@@ -1238,15 +1128,16 @@ table.data tr.data.dcd_log_entries {
       padding: 24px 12px 18px;
 
       table {
-        border: 1px solid #fff;
+        border: 1px solid rgb(255, 255, 255);
         border-collapse: collapse;
         border-spacing: 0;
       }
 
-      th, td {
+      th,
+      td {
         padding: 6px 0;
-        border-bottom: 1px solid #fff;
-        border-color: $theme-color-table-border;
+        border-bottom: 1px solid rgb(255, 255, 255);
+        border-color: $color-table-border;
       }
 
       th {
@@ -1274,13 +1165,17 @@ table.data tr.data.dcd_log_entries {
 .wato #progress_bar.finished {
   td.left {
     padding: 0;
-    background-color: $theme-color-state-success-background;
+    background-color: $color-state-success-background;
     box-shadow: none;
   }
 
   td.right {
     width: 0;
   }
+}
+
+.wato div.error pre {
+  white-space: pre-wrap;
 }
 
 /* TODO: Reproduce this html element */
@@ -1292,8 +1187,8 @@ table.data tr.data.dcd_log_entries {
   padding: 2px 5px;
   margin: 2px;
   font-weight: bold;
-  color: #000;
-  background-color: #ff0;
+  color: rgb(0, 0, 0);
+  background-color: rgb(255, 255, 0);
   border-radius: 3px;
   opacity: 0.9;
 }
@@ -1307,13 +1202,13 @@ table.data tr.data.dcd_log_entries {
 /* TODO: Reproduce these table.logwatch elements */
 table.logwatch {
   tr.noreason {
-    color: #898989;
+    color: rgb(137, 137, 137);
   }
 
   span.match {
     padding: 0 2px 2px;
-    background-color: #fff;
-    border: 1px solid #49768b;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid rgb(73, 118, 139);
     border-radius: 4px;
   }
 }
@@ -1333,7 +1228,7 @@ table.multisite_conn_method td {
 table.data td.bi_rule_tree {
   b.treeangle {
     font-weight: normal;
-    color: #000;
+    color: rgb(0, 0, 0);
   }
 
   ul.treeangle {
@@ -1355,7 +1250,6 @@ table.data td.bi_rule_tree {
   }
 }
 
-
 /*-Host Diag-----------------------------------------------------------.
 |              _   _           _     ____  _                           |
 |             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
@@ -1373,21 +1267,20 @@ table.data td.bi_rule_tree {
   overflow-y: scroll;
   font-family: monospace, sans-serif;
   vertical-align: top;
-  background-color: $primary-bg-color;
-  box-shadow: 1px 1px 3px #888 inset;
+  background-color: $bg-color;
+  box-shadow: 1px 1px 3px rgb(136, 136, 136) inset;
   /* below resize option is css3 */
   resize: both;
 }
 
 .backup_job {
-
   .log pre {
     margin: 2px;
   }
 
   td.left {
-    min-width: 200px;
     width: 12%;
+    min-width: 200px;
   }
 }
 
@@ -1411,7 +1304,7 @@ table.data td.bi_rule_tree {
   .log {
     padding: 8px;
     margin: 8px;
-    border: 1px solid $theme-color-table-border;
+    border: 1px solid $color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -1471,10 +1364,11 @@ table.setting td.reason {
   float: none;
   width: 180px;
   font-style: italic;
-  color: #fff;
+  color: rgb(255, 255, 255);
 
-  i { /* default value */
-    color: #b6c8d1;
+  i {
+    /* default value */
+    color: rgb(182, 200, 209);
   }
 
   a {
@@ -1486,7 +1380,8 @@ table.setting td.reason {
   }
 }
 
-td.settingvalue.unused, td.settingvalue.unused td {
+td.settingvalue.unused,
+td.settingvalue.unused td {
   font-style: italic;
   color: $td-unused-color;
 }
@@ -1523,12 +1418,13 @@ table.nform.rulesettings td.legend {
     padding: 2px;
     margin: 0 5px 5px 0;
     text-overflow: ellipsis;
-    background: $theme-color-white;
-    border: 1px solid $theme-color-table-border;
+    background: $bg-color-secondary;
+    border: 1px solid $color-table-border;
     border-radius: 6px;
     box-shadow: none;
 
-    div, span {
+    div,
+    span {
       display: inline-block;
       vertical-align: middle;
     }
@@ -1629,30 +1525,6 @@ table.data.analyze_config td.buttons {
   display: block;
 }
 
-.wato h2, .wato h3 {
-  margin-bottom: $wato-h3-margin-bottom;
-
-  + div.info {
-    padding: $wato-info-padding;
-    padding-top: 10px;
-    margin-top: 0;
-    background-color: $data-container-bg-color;
-    border: $primary-border;
-  }
-}
-
 .wato h3 {
-  font-size: $theme-font-table-header;
-  font-weight: $theme-font-weight-global;
-  letter-spacing: $theme-letter-spacing-table;
-  color: $theme-color-text;
-}
-
-.wato table.data.job_table {
-  td div.info {
-    padding: $wato-info-padding;
-    margin: $wato-info-margin;
-    background-color: $data-container-bg-color;
-    border: $primary-border;
-  }
+  @include table-header-mixin;
 }

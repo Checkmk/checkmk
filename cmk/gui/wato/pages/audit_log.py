@@ -221,15 +221,15 @@ class ModeAuditLog(WatoMode):
 
         def time_url_args(t):
             return [
-                ("options_p_start_1_day", time.strftime("%d", time.localtime(t))),
-                ("options_p_start_1_month", time.strftime("%m", time.localtime(t))),
-                ("options_p_start_1_year", time.strftime("%Y", time.localtime(t))),
-                ("options_p_start_sel", "1"),
+                ("options_start_1_day", time.strftime("%d", time.localtime(t))),
+                ("options_start_1_month", time.strftime("%m", time.localtime(t))),
+                ("options_start_1_year", time.strftime("%Y", time.localtime(t))),
+                ("options_start_sel", "1"),
             ]
 
         if next_log_time is not None:
             html.icon_button(html.makeactionuri([
-                ("options_p_start_sel", "0"),
+                ("options_start_sel", "0"),
             ]), _("Most recent events"), "start")
 
             html.icon_button(html.makeactionuri(time_url_args(next_log_time)),

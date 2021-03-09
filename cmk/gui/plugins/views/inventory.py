@@ -1,50 +1,36 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+import abc
+from typing import Dict, List, Tuple, Union, Callable, Any
+from functools import partial
+
+from six import ensure_str
 
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
+from cmk.utils.structured_data import StructuredDataTree
 
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, current_app
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import Dictionary, Checkbox, Hostname
-from cmk.gui.exceptions import MKUserError
-
+from cmk.gui.valuespec import Dictionary, Checkbox
+from cmk.gui.escaping import escape_text
 from cmk.gui.plugins.visuals import (
     filter_registry,
     VisualInfo,
     visual_info_registry,
 )
+
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvText,
     FilterInvBool,
@@ -55,7 +41,7 @@ from cmk.gui.plugins.visuals.inventory import (
 
 from cmk.gui.plugins.views import (
     data_source_registry,
-    DataSource,
+    ABCDataSource,
     RowTable,
     painter_registry,
     Painter,
@@ -67,12 +53,15 @@ from cmk.gui.plugins.views import (
     PainterOptions,
     inventory_displayhints,
     multisite_builtin_views,
-    view_is_enabled,
     paint_age,
     declare_1to1_sorter,
     cmp_simple_number,
     render_labels,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
+
+PaintResult = Tuple[str, Union[str, HTML]]
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
@@ -82,7 +71,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
-        tree_renderer = AttributeRenderer(
+        tree_renderer: NodeRenderer = AttributeRenderer(
             row["site"],
             row["host_name"],
             "",
@@ -161,7 +150,7 @@ def _inv_filter_info():
 
 
 # Declares painters, sorters and filters to be used in views based on all host related datasources.
-def declare_inv_column(invpath, datatype, title, short=None):
+def _declare_inv_column(invpath, datatype, title, short=None, is_show_more: bool = True):
     if invpath == ".":
         name = "inv"
     else:
@@ -204,47 +193,59 @@ def declare_inv_column(invpath, datatype, title, short=None):
                 "title": _("Inventory") + ": " + title,
                 "columns": ["host_inventory", "host_structured_status"],
                 "load_inv": True,
-                "cmp": lambda self, a, b: cmp_inventory_node(a, b, self._spec["_inv_path"]),
+                "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inv_path"]),
             })
 
         filter_info = _inv_filter_info().get(datatype, {})
 
-        # Declare filter. Sync this with declare_invtable_columns()
-        if datatype in ["str", "bool"]:
-            parent_class = FilterInvText if datatype == "str" else FilterInvBool
-            filter_class = type(
-                "FilterInv%s" % name.title(), (parent_class,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
+        # Declare filter. Sync this with _declare_invtable_column()
+        if datatype == "str":
+            filter_registry.register(
+                FilterInvText(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
+        elif datatype == "bool":
+            filter_registry.register(
+                FilterInvBool(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    is_show_more=is_show_more,
+                ))
         else:
-            filter_class = type(
-                "FilterInv%s" % name.title(), (FilterInvFloat,), {
-                    "_ident": name,
-                    "_title": title,
-                    "_inv_path": invpath,
-                    "_unit_val": filter_info.get("unit"),
-                    "_scale_val": filter_info.get("scale", 1.0),
-                    "_unit": property(lambda s: s._unit_val),
-                    "_scale": property(lambda s: s._scale_val),
-                    "_invpath": property(lambda s: s._inv_path),
-                    "sort_index": property(lambda s: 800),
-                    "ident": property(lambda s: s._ident),
-                    "title": property(lambda s: s._title),
-                })
-
-        filter_registry.register(filter_class)
+            filter_registry.register(
+                FilterInvFloat(
+                    ident=name,
+                    title=title,
+                    inv_path=invpath,
+                    unit=filter_info.get("unit"),
+                    scale=filter_info.get("scale", 1.0),
+                    is_show_more=is_show_more,
+                ))
 
 
-def cmp_inventory_node(a, b, invpath):
+def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
+                        invpath: str) -> int:
+    # TODO merge with _decorate_sort_func
+    # Returns
+    # (1)  1 if val_a > val_b
+    # (2)  0 if val_a == val_b
+    # (3) -1 if val_a < val_b
     val_a = inventory.get_inventory_data(a["host_inventory"], invpath)
     val_b = inventory.get_inventory_data(b["host_inventory"], invpath)
-    return cmp(val_a, val_b)
+
+    if val_a is None:
+        # as (2) or (3)
+        return 0 if val_b is None else -1
+
+    if val_b is None:
+        # as (2) or (1)
+        return 0 if val_a is None else 1
+
+    return (val_a > val_b) - (val_a < val_b)
 
 
 @painter_option_registry.register
@@ -267,8 +268,7 @@ class PainterInventoryTree(Painter):
     def ident(self):
         return "inventory_tree"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Hardware & Software Tree")
 
     @property
@@ -287,6 +287,69 @@ class PainterInventoryTree(Painter):
         return paint_host_inventory_tree(row)
 
 
+class ABCRowTable(RowTable):
+    def __init__(self, info_names, add_host_columns):
+        super(ABCRowTable, self).__init__()
+        self._info_names = info_names
+        self._add_host_columns = add_host_columns
+
+    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+        self._add_declaration_errors()
+
+        # Create livestatus filter for filtering out hosts
+        host_columns = ["host_name"] + list({
+            c for c in columns if c.startswith("host_") and c != "host_name"
+        }) + self._add_host_columns
+
+        query = "GET hosts\n"
+        query += "Columns: " + (" ".join(host_columns)) + "\n"
+        query += "".join(
+            filt.filter(info_name) for filt in all_active_filters for info_name in self._info_names)
+
+        if config.debug_livestatus_queries and html.output_format == "html" and display_options.enabled(
+                display_options.W):
+            html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
+            html.open_tt()
+            html.write(query.replace('\n', '<br>\n'))
+            html.close_tt()
+            html.close_div()
+
+        data = self._get_raw_data(only_sites, query)
+
+        # Now create big table of all inventory entries of these hosts
+        headers = ["site"] + host_columns
+        rows = []
+        for row in data:
+            hostrow = dict(zip(headers, row))
+            for subrow in self._get_rows(hostrow):
+                subrow.update(hostrow)
+                rows.append(subrow)
+        return rows
+
+    def _get_raw_data(self, only_sites, query):
+        sites.live().set_only_sites(only_sites)
+        sites.live().set_prepend_site(True)
+        data = sites.live().query(query)
+        sites.live().set_prepend_site(False)
+        sites.live().set_only_sites(None)
+        return data
+
+    def _get_rows(self, hostrow):
+        inv_data = self._get_inv_data(hostrow)
+        return self._prepare_rows(inv_data)
+
+    @abc.abstractmethod
+    def _get_inv_data(self, hostrow):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _prepare_rows(self, inv_data):
+        raise NotImplementedError()
+
+    def _add_declaration_errors(self):
+        pass
+
+
 #.
 #   .--paint helper--------------------------------------------------------.
 #   |                   _       _     _          _                         |
@@ -298,68 +361,73 @@ class PainterInventoryTree(Painter):
 #   '----------------------------------------------------------------------'
 
 
-def decorate_inv_paint(f):
-    def wrapper(v):
-        if v in ["", None]:
-            return "", ""
-        return f(v)
+def decorate_inv_paint(skip_painting_if_string=False):
+    def decorator(f):
+        def wrapper(v):
+            if v in ["", None]:
+                return "", ""
+            if skip_painting_if_string and isinstance(v, str):
+                return "number", v
+            return f(v)
 
-    return wrapper
+        return wrapper
+
+    return decorator
 
 
-@decorate_inv_paint
-def inv_paint_generic(v):
+@decorate_inv_paint()
+def inv_paint_generic(v: Union[str, float, int]) -> PaintResult:
     if isinstance(v, float):
         return "number", "%.2f" % v
-    elif isinstance(v, int):
+    if isinstance(v, int):
         return "number", "%d" % v
-    return "", html.escaper.escape_text("%s" % v)
+    return "", escape_text("%s" % v)
 
 
-@decorate_inv_paint
-def inv_paint_hz(hz):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_hz(hz: float) -> PaintResult:
     return "number", cmk.utils.render.fmt_number_with_precision(hz, drop_zeroes=False, unit="Hz")
 
 
-@decorate_inv_paint
-def inv_paint_bytes(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_bytes(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b, precision=0)
 
 
-@decorate_inv_paint
-def inv_paint_size(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_size(b: int) -> PaintResult:
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
-def inv_paint_bytes_rounded(b):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_bytes_rounded(b: int) -> PaintResult:
     if b == 0:
         return "number", "0"
     return "number", cmk.utils.render.fmt_bytes(b)
 
 
-@decorate_inv_paint
-def inv_paint_number(b):
+@decorate_inv_paint()
+def inv_paint_number(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
 # Similar to paint_number, but is allowed to
 # abbreviate things if numbers are very large
 # (though it doesn't do so yet)
-@decorate_inv_paint
-def inv_paint_count(b):
+@decorate_inv_paint()
+def inv_paint_count(b: Union[str, int, float]) -> PaintResult:
     return "number", str(b)
 
 
-@decorate_inv_paint
-def inv_paint_nic_speed(bits_per_second):
+@decorate_inv_paint()
+def inv_paint_nic_speed(bits_per_second: str) -> PaintResult:
     return "number", cmk.utils.render.fmt_nic_speed(bits_per_second)
 
 
-@decorate_inv_paint
-def inv_paint_if_oper_status(oper_status):
+@decorate_inv_paint()
+def inv_paint_if_oper_status(oper_status: int) -> PaintResult:
     if oper_status == 1:
         css_class = "if_state_up"
     elif oper_status == 2:
@@ -372,92 +440,92 @@ def inv_paint_if_oper_status(oper_status):
 
 
 # admin status can only be 1 or 2, matches oper status :-)
-@decorate_inv_paint
-def inv_paint_if_admin_status(admin_status):
+@decorate_inv_paint()
+def inv_paint_if_admin_status(admin_status: int) -> PaintResult:
     return inv_paint_if_oper_status(admin_status)
 
 
-@decorate_inv_paint
-def inv_paint_if_port_type(port_type):
+@decorate_inv_paint()
+def inv_paint_if_port_type(port_type: int) -> PaintResult:
     type_name = defines.interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 
-@decorate_inv_paint
-def inv_paint_if_available(available):
+@decorate_inv_paint()
+def inv_paint_if_available(available: bool) -> PaintResult:
     return "if_state " + (available and "if_available" or "if_not_available"), \
                          (available and _("free") or _("used"))
 
 
-@decorate_inv_paint
-def inv_paint_mssql_is_clustered(clustered):
+@decorate_inv_paint()
+def inv_paint_mssql_is_clustered(clustered: bool) -> PaintResult:
     return "mssql_" + (clustered and "is_clustered" or "is_not_clustered"), \
                       (clustered and _("is clustered") or _("is not clustered"))
 
 
-@decorate_inv_paint
-def inv_paint_mssql_node_names(node_names):
+@decorate_inv_paint()
+def inv_paint_mssql_node_names(node_names: str) -> PaintResult:
     return "", node_names
 
 
-@decorate_inv_paint
-def inv_paint_ipv4_network(nw):
+@decorate_inv_paint()
+def inv_paint_ipv4_network(nw: str) -> PaintResult:
     if nw == "0.0.0.0/0":
         return "", _("Default")
     return "", nw
 
 
-@decorate_inv_paint
-def inv_paint_ip_address_type(t):
+@decorate_inv_paint()
+def inv_paint_ip_address_type(t: str) -> PaintResult:
     if t == "ipv4":
         return "", _("IPv4")
-    elif t == "ipv6":
+    if t == "ipv6":
         return "", _("IPv6")
     return "", t
 
 
-@decorate_inv_paint
-def inv_paint_route_type(rt):
+@decorate_inv_paint()
+def inv_paint_route_type(rt: str) -> PaintResult:
     if rt == "local":
         return "", _("Local route")
     return "", _("Gateway route")
 
 
-@decorate_inv_paint
-def inv_paint_volt(volt):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_volt(volt: float) -> PaintResult:
     return "number", "%.1f V" % volt
 
 
-@decorate_inv_paint
-def inv_paint_date(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_date(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
-def inv_paint_date_and_time(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_date_and_time(timestamp: int) -> PaintResult:
     date_painted = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
     return "number", "%s" % date_painted
 
 
-@decorate_inv_paint
-def inv_paint_age(age):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_age(age: float) -> PaintResult:
     return "number", cmk.utils.render.approx_age(age)
 
 
-@decorate_inv_paint
-def inv_paint_bool(value):
+@decorate_inv_paint()
+def inv_paint_bool(value: bool) -> PaintResult:
     return "", (_("Yes") if value else _("No"))
 
 
-@decorate_inv_paint
-def inv_paint_timestamp_as_age(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_timestamp_as_age(timestamp: int) -> PaintResult:
     age = time.time() - timestamp
     return inv_paint_age(age)
 
 
-@decorate_inv_paint
-def inv_paint_timestamp_as_age_days(timestamp):
+@decorate_inv_paint(skip_painting_if_string=True)
+def inv_paint_timestamp_as_age_days(timestamp: int) -> PaintResult:
     def round_to_day(ts):
         broken = time.localtime(ts)
         return int(
@@ -475,31 +543,31 @@ def inv_paint_timestamp_as_age_days(timestamp):
 
     now_day = round_to_day(time.time())
     change_day = round_to_day(timestamp)
-    age_days = (now_day - change_day) / 86400
+    age_days = int((now_day - change_day) / 86400.0)
 
     css_class = "number"
     if age_days == 0:
         return css_class, _("today")
-    elif age_days == 1:
+    if age_days == 1:
         return css_class, _("yesterday")
     return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 
-@decorate_inv_paint
-def inv_paint_csv_labels(csv_list):
+@decorate_inv_paint()
+def inv_paint_csv_labels(csv_list: str) -> PaintResult:
     return "labels", html.render_br().join(csv_list.split(","))
 
 
-@decorate_inv_paint
-def inv_paint_cmk_label(label):
+@decorate_inv_paint()
+def inv_paint_cmk_label(label: List[str]) -> PaintResult:
     return "labels", render_labels({label[0]: label[1]},
                                    object_type="host",
                                    with_links=True,
                                    label_sources={label[0]: "discovered"})
 
 
-@decorate_inv_paint
-def inv_paint_container_ready(ready):
+@decorate_inv_paint()
+def inv_paint_container_ready(ready: str) -> PaintResult:
     if ready == 'yes':
         css_class = "if_state_up"
     elif ready == 'no':
@@ -508,6 +576,18 @@ def inv_paint_container_ready(ready):
         css_class = "if_state_other"
 
     return "if_state " + css_class, ready
+
+
+@decorate_inv_paint()
+def inv_paint_service_status(status: str) -> PaintResult:
+    if status == 'running':
+        css_class = "if_state_up"
+    elif status == 'stopped':
+        css_class = "if_state_down"
+    else:
+        css_class = "if_not_available"
+
+    return "if_state " + css_class, status
 
 
 #.
@@ -593,12 +673,12 @@ def _convert_display_hint(hint):
     return hint
 
 
-def inv_titleinfo(invpath, node):
+def _inv_titleinfo(invpath, node):
     hint = _inv_display_hint(invpath)
     icon = hint.get("icon")
     if "title" in hint:
         title = hint["title"]
-        if callable(title):
+        if hasattr(title, '__call__'):
             title = title(node)
     else:
         title = invpath.rstrip(".").rstrip(':').split('.')[-1].split(':')[-1].replace("_",
@@ -607,11 +687,11 @@ def inv_titleinfo(invpath, node):
 
 
 # The titles of the last two path components of the node, e.g. "BIOS / Vendor"
-def inv_titleinfo_long(invpath, node):
-    _icon, last_title = inv_titleinfo(invpath, node)
+def _inv_titleinfo_long(invpath, node):
+    _icon, last_title = _inv_titleinfo(invpath, node)
     parent = inventory.parent_path(invpath)
     if parent:
-        _icon, parent_title = inv_titleinfo(parent, None)
+        _icon, parent_title = _inv_titleinfo(parent, None)
         return parent_title + u" ➤ " + last_title
     return last_title
 
@@ -621,8 +701,12 @@ def declare_inventory_columns():
     for invpath, hint in inventory_displayhints.items():
         if "*" not in invpath:
             datatype = hint.get("paint", "str")
-            long_title = inv_titleinfo_long(invpath, None)
-            declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
+            long_title = _inv_titleinfo_long(invpath, None)
+            _declare_inv_column(invpath,
+                                datatype,
+                                long_title,
+                                hint.get("short", hint["title"]),
+                                is_show_more=hint.get("is_show_more", True))
 
 
 #.
@@ -644,78 +728,7 @@ def declare_inventory_columns():
 #   '----------------------------------------------------------------------'
 
 
-def _create_inv_rows(hostrow, invpath, infoname):
-    try:
-        merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
-    except inventory.LoadStructuredDataError:
-        html.add_user_error(
-            "load_inventory_tree",
-            _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
-            inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
-        return []
-
-    if merged_tree is None:
-        return []
-    invdata = inventory.get_inventory_data(merged_tree, invpath)
-    if invdata is None:
-        return []
-    entries = []
-    for entry in invdata:
-        newrow = {}
-        for key, value in entry.items():
-            newrow[infoname + "_" + key] = value
-        entries.append(newrow)
-    return entries
-
-
-def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, limit, filters):
-    # Create livestatus filter for filtering out hosts
-    filter_code = ""
-    for filt in filters:
-        header = filt.filter(infoname)
-        filter_code += header
-
-    host_columns = ["host_name"] + list(
-        {c for c in columns if c.startswith("host_") and c != "host_name"})
-    if infoname != "invhist":
-        host_columns.append("host_structured_status")
-
-    query = "GET hosts\n"
-    query += "Columns: " + (" ".join(host_columns)) + "\n"
-    query += filter_code
-
-    if config.debug_livestatus_queries \
-            and html.output_format == "html" and display_options.enabled(display_options.W):
-        html.open_div(class_="livestatus message", onmouseover="this.style.display=\'none\';")
-        html.open_tt()
-        html.write(query.replace('\n', '<br>\n'))
-        html.close_tt()
-        html.close_div()
-
-    sites.live().set_only_sites(only_sites)
-    sites.live().set_prepend_site(True)
-    data = sites.live().query(query)
-    sites.live().set_prepend_site(False)
-    sites.live().set_only_sites(None)
-
-    headers = ["site"] + host_columns
-    # Now create big table of all inventory entries of these hosts
-    rows = []
-    for row in data:
-        hostname = row[1]
-        hostrow = dict(zip(headers, row))
-        if infoname == "invhist":
-            subrows = _create_hist_rows(hostname, columns)
-        else:
-            subrows = _create_inv_rows(hostrow, invpath, infoname)
-
-        for subrow in subrows:
-            subrow.update(hostrow)
-            rows.append(subrow)
-    return rows
-
-
-def inv_find_subtable_columns(invpath):
+def _inv_find_subtable_columns(invpath):
     """Find the name of all columns of an embedded table that have a display
     hint. Respects the order of the columns if one is specified in the
     display hint.
@@ -729,7 +742,7 @@ def inv_find_subtable_columns(invpath):
     order = dict(swapped)
 
     columns = []
-    for path in inventory_displayhints.iterkeys():
+    for path in inventory_displayhints:
         if path.startswith(invpath + "*."):
             # ".networking.interfaces:*.port_type" -> "port_type"
             columns.append(path.split(".")[-1])
@@ -738,81 +751,249 @@ def inv_find_subtable_columns(invpath):
         if key not in columns:
             columns.append(key)
 
-    columns.sort(cmp=lambda a, b: cmp(order.get(a, 999), order.get(b, 999)) or cmp(a, b))
-    return columns
+    return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
-def declare_invtable_columns(infoname, invpath, topic):
-    for name in inv_find_subtable_columns(invpath):
-        sub_invpath = invpath + "*." + name
-        hint = inventory_displayhints.get(sub_invpath, {})
+def _decorate_sort_func(f):
+    def wrapper(val_a, val_b):
+        if val_a is None:
+            return 0 if val_b is None else -1
 
-        sortfunc = hint.get("sort", cmp)
-        if "paint" in hint:
-            paint_name = hint["paint"]
-            paint_function = globals()["inv_paint_" + paint_name]
+        if val_b is None:
+            return 0 if val_a is None else 1
+
+        return f(val_a, val_b)
+
+    return wrapper
+
+
+def _declare_invtable_column(infoname, invpath, topic, name, column):
+    sub_invpath = invpath + "*." + name
+    hint = inventory_displayhints.get(sub_invpath, {})
+
+    def cmp_func(a, b):
+        return (a > b) - (a < b)
+
+    sortfunc = hint.get("sort", cmp_func)
+    if "paint" in hint:
+        paint_name = hint["paint"]
+        paint_function = globals()["inv_paint_" + paint_name]
+    else:
+        paint_name = "str"
+        paint_function = inv_paint_generic
+
+    title = _inv_titleinfo(sub_invpath, None)[1]
+
+    # Sync this with _declare_inv_column()
+    filter_class = hint.get("filter")
+    if not filter_class:
+        if paint_name == "str":
+            filter_class = FilterInvtableText
         else:
-            paint_name = "str"
-            paint_function = inv_paint_generic
+            filter_class = FilterInvtableIDRange
 
-        title = inv_titleinfo(sub_invpath, None)[1]
+    filter_registry.register(
+        filter_class(
+            inv_info=infoname,
+            ident=infoname + "_" + name,
+            title=topic + ": " + title,
+        ))
 
-        # Sync this with declare_inv_column()
-        parent_class = hint.get("filter")
-        if not parent_class:
-            if paint_name == "str":
-                parent_class = FilterInvtableText
-            else:
-                parent_class = FilterInvtableIDRange
-
-        filter_class = type(
-            "FilterInv%s" % name.title(), (parent_class,), {
-                "_inv_info": infoname,
-                "_ident": infoname + "_" + name,
-                "_title": topic + ": " + title,
-                "_invinfo": property(lambda s: s._inv_info),
-                "sort_index": property(lambda s: 800),
-                "ident": property(lambda s: s._ident),
-                "title": property(lambda s: s._title),
-            })
-
-        declare_invtable_column(infoname, name, topic, title, hint.get("short", title), sortfunc,
-                                paint_function, filter_class)
-
-
-def declare_invtable_column(infoname, name, topic, title, short_title, sortfunc, paint_function,
-                            filter_class):
-    column = infoname + "_" + name
     register_painter(
         column, {
             "title": topic + ": " + title,
-            "short": short_title,
+            "short": hint.get("short", title),
             "columns": [column],
             "paint": lambda row: paint_function(row.get(column)),
             "sorter": column,
         })
+
     register_sorter(
         column, {
             "title": _("Inventory") + ": " + title,
             "columns": [column],
-            "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: _decorate_sort_func(sortfunc)(a.get(column), b.get(column)),
         })
 
-    filter_registry.register(filter_class)
 
-
-class RowTableInventory(RowTable):
+class RowTableInventory(ABCRowTable):
     def __init__(self, info_name, inventory_path):
-        self._info_name = info_name
+        super(RowTableInventory, self).__init__([info_name], ["host_structured_status"])
         self._inventory_path = inventory_path
 
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return inv_multisite_table(self._info_name, self._inventory_path, columns, headers,
-                                   only_sites, limit, all_active_filters)
+    def _get_inv_data(self, hostrow):
+        try:
+            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            return []
+
+        if merged_tree is None:
+            return []
+
+        invdata = inventory.get_inventory_data(merged_tree, self._inventory_path)
+        if invdata is None:
+            return []
+        return invdata
+
+    def _prepare_rows(self, inv_data):
+        info_name = self._info_names[0]
+        entries = []
+        for entry in inv_data:
+            newrow = {}
+            for key, value in entry.items():
+                newrow[info_name + "_" + key] = value
+            entries.append(newrow)
+        return entries
+
+
+class ABCDataSourceInventory(ABCDataSource):
+    @abc.abstractproperty
+    def inventory_path(self) -> str:
+        raise NotImplementedError()
 
 
 # One master function that does all
 def declare_invtable_view(infoname, invpath, title_singular, title_plural):
+    _register_info_class(infoname, title_singular, title_plural)
+
+    # Create the datasource (like a database view)
+    ds_class = type(
+        "DataSourceInventory%s" % infoname.title(), (ABCDataSourceInventory,), {
+            "_ident": infoname,
+            "_inventory_path": invpath,
+            "_title": "%s: %s" % (_("Inventory"), title_plural),
+            "_infos": ["host", infoname],
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+            "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
+            "infos": property(lambda s: s._infos),
+            "keys": property(lambda s: []),
+            "id_keys": property(lambda s: []),
+            "inventory_path": property(lambda s: s._inventory_path),
+        })
+    data_source_registry.register(ds_class)
+
+    painters = []
+    filters = []
+    for name in _inv_find_subtable_columns(invpath):
+        column = infoname + "_" + name
+
+        # Declare a painter, sorter and filters for each path with display hint
+        _declare_invtable_column(infoname, invpath, title_singular, name, column)
+
+        painters.append((column, '', ''))
+        filters.append(column)
+
+    _declare_views(infoname, title_plural, painters, filters, [invpath])
+
+
+class RowMultiTableInventory(ABCRowTable):
+    def __init__(self, sources, match_by, errors):
+        super(RowMultiTableInventory, self).__init__([infoname for infoname, _path in sources],
+                                                     ["host_structured_status"])
+        self._sources = sources
+        self._match_by = match_by
+        self._errors = errors
+
+    def _get_inv_data(self, hostrow):
+        try:
+            merged_tree = inventory.load_filtered_and_merged_tree(hostrow)
+        except inventory.LoadStructuredDataError:
+            html.add_user_error(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.") %
+                inventory.get_short_inventory_filepath(hostrow.get("host_name", "")))
+            return []
+
+        if merged_tree is None:
+            return []
+
+        multi_inv_data = []
+        for info_name, inventory_path in self._sources:
+            inv_data = inventory.get_inventory_data(merged_tree, inventory_path)
+            if inv_data is None:
+                continue
+            multi_inv_data.append((info_name, inv_data))
+        return multi_inv_data
+
+    def _prepare_rows(self, inv_data):
+        joined_rows: Dict[Tuple[str, ...], Dict] = {}
+        for this_info_name, this_inv_data in inv_data:
+            for entry in this_inv_data:
+                inst = joined_rows.setdefault(tuple(entry[key] for key in self._match_by), {})
+                inst.update({this_info_name + "_" + k: v for k, v in entry.items()})
+        return [joined_rows[match_by_key] for match_by_key in sorted(joined_rows)]
+
+    def _add_declaration_errors(self):
+        if self._errors:
+            html.add_user_error("declare_invtable_view", ", ".join(self._errors))
+
+
+def declare_joined_inventory_table_view(tablename, title_singular, title_plural, tables, match_by):
+
+    _register_info_class(tablename, title_singular, title_plural)
+
+    info_names: List[str] = []
+    invpaths: List[str] = []
+    titles: List[str] = []
+    errors = []
+    for this_tablename in tables:
+        vi = visual_info_registry.get(this_tablename)
+        ds = data_source_registry.get(this_tablename)
+        if ds is None or vi is None:
+            errors.append("Missing declare_invtable_view for inventory table view '%s'" %
+                          this_tablename)
+            continue
+        assert isinstance(ds, ABCDataSourceInventory)
+        info_names.append(ds.ident)
+        invpaths.append(ds.inventory_path)
+        titles.append(vi.title)
+
+    # Create the datasource (like a database view)
+    ds_class = type(
+        "DataSourceInventory%s" % tablename.title(), (ABCDataSource,), {
+            "_ident": tablename,
+            "_sources": list(zip(info_names, invpaths)),
+            "_match_by": match_by,
+            "_errors": errors,
+            "_title": "%s: %s" % (_("Inventory"), title_plural),
+            "_infos": ["host"] + info_names,
+            "ident": property(lambda s: s._ident),
+            "title": property(lambda s: s._title),
+            "table": property(lambda s: RowMultiTableInventory(s._sources, s._match_by, s._errors)),
+            "infos": property(lambda s: s._infos),
+            "keys": property(lambda s: []),
+            "id_keys": property(lambda s: []),
+        })
+    data_source_registry.register(ds_class)
+
+    known_common_columns = set()
+    painters = []
+    filters = []
+    for this_invpath, this_infoname, this_title in zip(invpaths, info_names, titles):
+        for name in _inv_find_subtable_columns(this_invpath):
+            if name in match_by:
+                # Filter out duplicate common columns which are used to join tables
+                if name in known_common_columns:
+                    continue
+                known_common_columns.add(name)
+
+            column = this_infoname + "_" + name
+
+            # Declare a painter, sorter and filters for each path with display hint
+            _declare_invtable_column(this_infoname, this_invpath, this_title, name, column)
+
+            painters.append((column, '', ''))
+            filters.append(column)
+
+    _declare_views(tablename, title_plural, painters, filters, invpaths)
+
+
+def _register_info_class(infoname, title_singular, title_plural):
     # Declare the "info" (like a database table)
     info_class = type(
         "VisualInfo%s" % infoname.title(), (VisualInfo,), {
@@ -826,39 +1007,19 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         })
     visual_info_registry.register(info_class)
 
-    # Create the datasource (like a database view)
-    ds_class = type(
-        "DataSourceInventory%s" % infoname.title(), (DataSource,), {
-            "_ident": infoname,
-            "_inventory_path": invpath,
-            "_title": "%s: %s" % (_("Inventory"), title_plural),
-            "_infos": ["host", infoname],
-            "ident": property(lambda s: s._ident),
-            "title": property(lambda s: s._title),
-            "table": property(lambda s: RowTableInventory(s._ident, s._inventory_path)),
-            "infos": property(lambda s: s._infos),
-            "keys": property(lambda s: []),
-            "id_keys": property(lambda s: []),
-        })
-    data_source_registry.register(ds_class)
 
-    # Declare a painter, sorter and filters for each path with display hint
-    declare_invtable_columns(infoname, invpath, title_singular)
-
-    # Create a nice search-view containing these columns
-    painters = []
-    filters = []
-    for name in inv_find_subtable_columns(invpath):
-        column = infoname + "_" + name
-        painters.append((column, '', ''))
-        filters.append(column)
+def _declare_views(infoname, title_plural, painters, filters, invpaths):
+    is_show_more = True
+    if len(invpaths) == 1:
+        hint = _inv_display_hint(invpaths[0])
+        is_show_more = hint.get("is_show_more", True)
 
     # Declare two views: one for searching globally. And one
     # for the items of one host.
-
     view_spec = {
         'datasource': infoname,
-        'topic': _('Inventory'),
+        "topic": "inventory",
+        "sort_index": 30,
         'public': True,
         'layout': 'table',
         'num_columns': 1,
@@ -870,6 +1031,7 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'mobile': False,
         'group_painters': [],
         'sorters': [],
+        'is_show_more': is_show_more,
     }
 
     # View for searching for items
@@ -908,6 +1070,10 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'description': _('A view for the %s of one host') % title_plural,
         'hidden': True,
         'mustsearch': False,
+        'link_from': {
+            'single_infos': ['host'],
+            'has_inventory_tree': invpaths,
+        },
 
         # Columns
         'painters': painters,
@@ -919,65 +1085,6 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
         'hide_filters': ["host"],
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
-
-    # View enabled checker for the _of_host view
-    view_is_enabled[infoname + "_of_host"] = _create_view_enabled_check_func(invpath)
-
-
-def _create_view_enabled_check_func(invpath, is_history=False):
-    def _check_view_enabled(linking_view, view, context_vars):
-        context = dict(context_vars)
-        hostname = context.get("host")
-        if hostname is None:
-            return True  # No host data? Keep old behaviour
-        elif hostname == "":
-            return False
-
-        # TODO: host is not correctly validated by visuals. Do it here for the moment.
-        try:
-            Hostname().validate_value(hostname, None)
-        except MKUserError:
-            return False
-
-        # FIXME In order to decide whether this view is enabled
-        # do we really need to load the whole tree?
-        try:
-            struct_tree = _get_struct_tree(is_history, hostname, context.get("site"))
-        except inventory.LoadStructuredDataError:
-            return False
-
-        if not struct_tree:
-            return False
-
-        if struct_tree.is_empty():
-            return False
-
-        parsed_path, _attribute_keys = inventory.parse_tree_path(invpath)
-        if parsed_path:
-            children = struct_tree.get_sub_children(parsed_path)
-        else:
-            children = [struct_tree.get_root_container()]
-        if children is None:
-            return False
-        return True
-
-    return _check_view_enabled
-
-
-def _get_struct_tree(is_history, hostname, site_id):
-    struct_tree_cache = current_app.g.setdefault("struct_tree_cache", {})
-    cache_id = (is_history, hostname, site_id)
-    if cache_id in struct_tree_cache:
-        return struct_tree_cache[cache_id]
-
-    if is_history:
-        struct_tree = inventory.load_filtered_inventory_tree(hostname)
-    else:
-        row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        struct_tree = inventory.load_filtered_and_merged_tree(row)
-
-    struct_tree_cache[cache_id] = struct_tree
-    return struct_tree
 
 
 # Now declare Multisite views for a couple of embedded tables
@@ -1030,6 +1137,18 @@ declare_invtable_view(
     ".hardware.components.backplanes:",
     _("Backplane"),
     _("Backplanes"),
+)
+declare_invtable_view(
+    "invcmksites",
+    ".software.applications.check_mk.sites:",
+    _("Checkmk site"),
+    _("Checkmk sites"),
+)
+declare_invtable_view(
+    "invcmkversions",
+    ".software.applications.check_mk.versions:",
+    _("Checkmk version"),
+    _("Checkmk versions"),
 )
 declare_invtable_view(
     "invcontainer",
@@ -1095,11 +1214,35 @@ declare_invtable_view(
 declare_invtable_view(
     "invorasga",
     ".software.applications.oracle.sga:",
-    _("Oracle performance"),
-    _("Oracle performance"),
+    _("Oracle SGA performance"),
+    _("Oracle SGA performance"),
 )
+declare_invtable_view(
+    "invorapga",
+    ".software.applications.oracle.pga:",
+    _("Oracle PGA performance"),
+    _("Oracle PGA performance"),
+)
+declare_invtable_view(
+    "invorasystemparameter",
+    ".software.applications.oracle.systemparameter:",
+    _("Oracle system parameter"),
+    _("Oracle system parameters"),
+)
+declare_invtable_view("invibmmqmanagers", ".software.applications.ibm_mq.managers:", _("Manager"),
+                      _("IBM MQ Managers"))
+declare_invtable_view("invibmmqchannels", ".software.applications.ibm_mq.channels:", _("Channel"),
+                      _("IBM MQ Channels"))
+declare_invtable_view("invibmmqqueues", ".software.applications.ibm_mq.queues:", _("Queue"),
+                      _("IBM MQ Queues"))
 declare_invtable_view("invtunnels", ".networking.tunnels:", _("Networking Tunnels"),
                       _("Networking Tunnels"))
+declare_invtable_view(
+    "invkernelconfig",
+    ".software.kernel_config:",
+    _("Kernel configuration (sysctl)"),
+    _("Kernel configurations (sysctl)"),
+)
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))
@@ -1120,14 +1263,17 @@ declare_invtable_view("invtunnels", ".networking.tunnels:", _("Networking Tunnel
 multisite_builtin_views["inv_host"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    'topic': 'inventory',
     'title': _('Inventory of host'),
-    'linktitle': _('Inventory'),
     'description': _('The complete hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': 'inventory',
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree': '.',
+    },
 
     # Layout options
     'layout': 'dataset',
@@ -1155,20 +1301,19 @@ multisite_builtin_views["inv_host"] = {
     'sorters': [],
 }
 
-view_is_enabled["inv_host"] = _create_view_enabled_check_func(".")
-
 generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 
 # View with table of all hosts, with some basic information
 multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 10,
     'title': _('CPU Related Inventory of all Hosts'),
-    'linktitle': _('CPU Inv. (all Hosts)'),
     'description': _('A list of all hosts with some CPU related inventory data'),
     'public': True,
     'hidden': False,
+    'is_show_more': True,
 
     # Layout options
     'layout': 'table',
@@ -1209,13 +1354,14 @@ multisite_builtin_views["inv_hosts_cpu"] = {
 multisite_builtin_views["inv_hosts_ports"] = {
     # General options
     'datasource': 'hosts',
-    'topic': _('Inventory'),
+    "topic": "inventory",
+    "sort_index": 20,
     'title': _('Switch port statistics'),
-    'linktitle': _('Switch ports (all Hosts)'),
     'description':
         _('A list of all hosts with statistics about total, used and free networking interfaces'),
     'public': True,
     'hidden': False,
+    'is_show_more': False,
 
     # Layout options
     'layout': 'table',
@@ -1259,34 +1405,36 @@ multisite_builtin_views["inv_hosts_ports"] = {
 #   '----------------------------------------------------------------------'
 
 
-class RowTableInventoryHistory(RowTable):
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-        return inv_multisite_table("invhist", None, columns, headers, only_sites, limit,
-                                   all_active_filters)
+class RowTableInventoryHistory(ABCRowTable):
+    def __init__(self):
+        super(RowTableInventoryHistory, self).__init__(["invhist"], [])
+        self._inventory_path = None
 
+    def _get_inv_data(self, hostrow):
+        hostname = hostrow.get("host_name")
+        history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
+        if corrupted_history_files:
+            html.add_user_error(
+                "load_inventory_delta_tree",
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                  % ", ".join(sorted(corrupted_history_files))))
+        return history_deltas
 
-def _create_hist_rows(hostname, columns):
-    history_deltas, corrupted_history_files = inventory.get_history_deltas(hostname)
-    if corrupted_history_files:
-        html.add_user_error(
-            "load_inventory_delta_tree",
-            _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files." %
-              ", ".join(sorted(corrupted_history_files))))
-
-    for timestamp, delta_info in history_deltas:
-        new, changed, removed, delta_tree = delta_info
-        newrow = {
-            "invhist_time": int(timestamp),
-            "invhist_delta": delta_tree,
-            "invhist_removed": removed,
-            "invhist_new": new,
-            "invhist_changed": changed,
-        }
-        yield newrow
+    def _prepare_rows(self, inv_data):
+        for timestamp, delta_info in inv_data:
+            new, changed, removed, delta_tree = delta_info
+            newrow = {
+                "invhist_time": int(timestamp),
+                "invhist_delta": delta_tree,
+                "invhist_removed": removed,
+                "invhist_new": new,
+                "invhist_changed": changed,
+            }
+            yield newrow
 
 
 @data_source_registry.register
-class DataSourceInventoryHistory(DataSource):
+class DataSourceInventoryHistory(ABCDataSource):
     @property
     def ident(self):
         return "invhist"
@@ -1318,12 +1466,10 @@ class PainterInvhistTime(Painter):
     def ident(self):
         return "invhist_time"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Inventory Date/Time")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Date/Time")
 
     @property
@@ -1344,8 +1490,7 @@ class PainterInvhistDelta(Painter):
     def ident(self):
         return "invhist_delta"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Inventory changes")
 
     @property
@@ -1369,12 +1514,10 @@ class PainterInvhistRemoved(Painter):
     def ident(self):
         return "invhist_removed"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("Removed entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("Removed")
 
     @property
@@ -1391,12 +1534,10 @@ class PainterInvhistNew(Painter):
     def ident(self):
         return "invhist_new"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("new entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("new")
 
     @property
@@ -1413,12 +1554,10 @@ class PainterInvhistChanged(Painter):
     def ident(self):
         return "invhist_changed"
 
-    @property
-    def title(self):
+    def title(self, cell):
         return _("changed entries")
 
-    @property
-    def short_title(self):
+    def short_title(self, cell):
         return _("changed")
 
     @property
@@ -1440,14 +1579,21 @@ declare_1to1_sorter("invhist_changed", cmp_simple_number)
 multisite_builtin_views["inv_host_history"] = {
     # General options
     'datasource': 'invhist',
-    'topic': _('Inventory'),
+    'topic': 'inventory',
     'title': _('Inventory history of host'),
-    'linktitle': _('Inventory History'),
     'description': _('The history for changes in hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': {
+        'icon': 'inventory',
+        'emblem': 'time',
+    },
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'is_show_more': True,
+    'link_from': {
+        'single_infos': ['host'],
+        'has_inventory_tree_history': '.',
+    },
 
     # Layout options
     'layout': 'table',
@@ -1478,8 +1624,6 @@ multisite_builtin_views["inv_host_history"] = {
     'sorters': [('invhist_time', False)],
 }
 
-view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".", is_history=True)
-
 #.
 #   .--Node Renderer-------------------------------------------------------.
 #   |  _   _           _        ____                _                      |
@@ -1496,7 +1640,14 @@ def render_inv_dicttable(*args):
     pass
 
 
-class NodeRenderer(object):
+def _sort_by_index(keyorder, item):
+    try:
+        return keyorder.index(item[0])
+    except ValueError:
+        return len(keyorder) + 1
+
+
+class NodeRenderer:
     def __init__(self, site_id, hostname, tree_id, invpath, show_internal_tree_paths=False):
         self._site_id = site_id
         self._hostname = hostname
@@ -1510,20 +1661,21 @@ class NodeRenderer(object):
     #   ---container------------------------------------------------------------
 
     def show_container(self, container, path=None):
-        for _, node in container.get_edge_nodes():
+        for _x, node in container.get_edge_nodes():
             node_abs_path = node.get_absolute_path()
 
             raw_invpath = self._get_raw_path(".".join(map(str, node_abs_path)))
             invpath = ".%s." % raw_invpath
 
-            icon, title = inv_titleinfo(invpath, node)
+            icon, title = _inv_titleinfo(invpath, node)
 
             # Replace placeholders in title with the real values for this path
             if "%d" in title or "%s" in title:
                 title = self._replace_placeholders(title, invpath)
 
             header = self._get_header(title, ".".join(map(str, node_abs_path)), "#666")
-            fetch_url = html.makeuri_contextless(
+            fetch_url = makeuri_contextless(
+                request,
                 [
                     ("site", self._site_id),
                     ("host", self._hostname),
@@ -1576,7 +1728,7 @@ class NodeRenderer(object):
         titles = []
         for key in keyorder:
             sub_invpath = "%s0.%s" % (invpath, key)
-            _icon, title = inv_titleinfo(sub_invpath, None)
+            _icon, title = _inv_titleinfo(sub_invpath, None)
             sub_hint = _inv_display_hint(sub_invpath)
             short_title = sub_hint.get("short", title)
             titles.append((short_title, key))
@@ -1588,14 +1740,14 @@ class NodeRenderer(object):
         extratitles = []
         for key in keys:
             if key not in keyorder:
-                _icon, title = inv_titleinfo("%s0.%s" % (invpath, key), None)
+                _icon, title = _inv_titleinfo("%s0.%s" % (invpath, key), None)
                 extratitles.append((title, key))
-        extratitles.sort()
-        titles += extratitles
+        titles += sorted(extratitles)
 
         # Link to Multisite view with exactly this table
         if "view" in hint:
-            url = html.makeuri_contextless(
+            url = makeuri_contextless(
+                request,
                 [
                     ("view_name", hint["view"]),
                     ("host", self._hostname),
@@ -1650,24 +1802,19 @@ class NodeRenderer(object):
         invpath = ".%s" % self._get_raw_path(path)
         hint = _inv_display_hint(invpath)
 
-        def _sort_attributes(item):
-            """Sort the attributes by the configured key order. In case no key order
-            is given sort by the key. In case there is a key order and a key is not
-            in the list, put it at the end and sort all of those by key."""
-            key = item[0]
-            keyorder = hint.get("keyorder")
-            if not keyorder:
-                return key
-
-            try:
-                return keyorder.index(key)
-            except ValueError:
-                return len(keyorder) + 1, key
+        keyorder = hint.get("keyorder")
+        if keyorder:
+            sort_func: Union[partial[Tuple[str, Any]],
+                             Callable[[Tuple[str, Any]], str]] = partial(_sort_by_index, keyorder)
+        else:
+            # Simply sort by keys
+            def sort_func(item):
+                return item[0]
 
         html.open_table()
-        for key, value in sorted(attributes.get_child_data().iteritems(), key=_sort_attributes):
+        for key, value in sorted(attributes.get_child_data().items(), key=sort_func):
             sub_invpath = "%s.%s" % (invpath, key)
-            _icon, title = inv_titleinfo(sub_invpath, key)
+            _icon, title = _inv_titleinfo(sub_invpath, key)
             hint = _inv_display_hint(sub_invpath)
 
             html.open_tr()
@@ -1701,13 +1848,7 @@ class NodeRenderer(object):
             _tdclass, code = hint["paint_function"](value)
             html.write(code)
         elif isinstance(value, str):
-            try:
-                text = value.decode("utf-8")
-            except:
-                text = value
-            html.write_text(text)
-        elif isinstance(value, unicode):
-            html.write_text(value)
+            html.write_text(ensure_str(value))
         elif isinstance(value, int):
             html.write(str(value))
         elif isinstance(value, float):
@@ -1767,10 +1908,10 @@ def ajax_inv_render_tree():
         if corrupted_history_files:
             html.add_user_error(
                 "load_inventory_delta_tree",
-                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files.") \
-                % ", ".join(corrupted_history_files))
+                _("Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                 ) % ", ".join(corrupted_history_files))
             return
-        tree_renderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
+        tree_renderer: NodeRenderer = DeltaNodeRenderer(site_id, hostname, tree_id, invpath)
 
     else:
         row = inventory.get_status_data_via_livestatus(site_id, hostname)

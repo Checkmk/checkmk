@@ -143,11 +143,11 @@ class MockLiveStatusConnection:
             ...     response = live.result_of_next_query(
             ...         'GET status\\n'
             ...         'Columns: livestatus_version program_version program_start '
-            ...         'num_hosts num_services'
+            ...         'num_hosts num_services core_pid'
             ...     )
             ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36]]
             ...     assert len(response) == 1
-            ...     assert len(response[0]) == 5
+            ...     assert len(response[0]) == 6
 
         Some Stats calls are supported as well:
             >>> live = MockLiveStatusConnection()
@@ -170,7 +170,7 @@ class MockLiveStatusConnection:
             ...
             livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
-program_start num_hosts num_services'
+program_start num_hosts num_services core_pid'
 
         This example will fail due to a wrong query being issued:
 
@@ -290,7 +290,7 @@ program_start num_hosts num_services'
             # We expect this query and give the expected result.
             query = [
                 'GET status',
-                'Columns: livestatus_version program_version program_start num_hosts num_services',
+                'Columns: livestatus_version program_version program_start num_hosts num_services core_pid',
             ]
             self.expect_query(query, force_pos=0)  # first query to be expected
 
@@ -601,6 +601,7 @@ def _default_tables() -> Dict[TableName, ResultList]:
             'average_latency_cmk': 0.0846039,
             'average_latency_fetcher': 0.0846039,
             'average_latency_generic': 0.0846039,
+            'core_pid': 12345,
         }],
         'downtimes': [{
             'id': 54,

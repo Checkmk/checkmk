@@ -148,6 +148,7 @@ public:
     virtual void shutdownService() = 0;
     virtual const wchar_t* getMainLogName() const = 0;
     virtual void preContextCall() = 0;
+    virtual void cleanupOnStop() {}
 };
 
 // keeps two handles

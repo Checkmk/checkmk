@@ -214,7 +214,10 @@ class InputHostGroup(InputGroup):
         description="A name used as identifier",
         should_exist=False,
     )
-    alias = fields.String(example="Windows Servers")
+    alias = fields.String(
+        description="The name used for displaying in the GUI.",
+        example="Windows Servers",
+    )
 
 
 class BulkInputHostGroup(BaseSchema):
@@ -232,7 +235,7 @@ class BulkInputHostGroup(BaseSchema):
 class UpdateGroup(BaseSchema):
     alias = fields.String(
         example="Example Group",
-        description="The alias of the group",
+        description="The name used for displaying in the GUI.",
         required=True,
     )
     customer = fields.customer_field(
@@ -262,7 +265,8 @@ class BulkUpdateHostGroup(BaseSchema):
 class InputContactGroup(InputGroup):
     """Creating a contact group"""
     name = fields.String(required=True, example="OnCall")
-    alias = fields.String(example="Not on Sundays.")
+    alias = fields.String(description="The name used for displaying in the GUI.",
+                          example="Not on Sundays.")
 
 
 class BulkInputContactGroup(BaseSchema):
@@ -310,7 +314,8 @@ class InputServiceGroup(InputGroup):
         description="A name used as identifier",
         should_exist=False,
     )
-    alias = fields.String(example="Environment Sensors")
+    alias = fields.String(description="The name used for displaying in the GUI.",
+                          example="Environment Sensors")
 
 
 class BulkInputServiceGroup(BaseSchema):

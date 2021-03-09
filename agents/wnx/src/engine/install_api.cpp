@@ -241,7 +241,7 @@ std::pair<std::wstring, std::wstring> MakeCommandLine(
         command += L" REINSTALL = ALL REINSTALLMODE = amus";
     }
 
-    command += L" /L*V ";  // quoting too!
+    command += L" REBOOT=ReallySuppress /L*V ";  // quoting too!
     command += log_file_name;
     command += L"";
 

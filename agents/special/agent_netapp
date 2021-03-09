@@ -1008,7 +1008,8 @@ def process_clustermode(server, netapp_mode, licenses):
                             "destination-volume",
                             config_report=[
                                 "destination-volume-node", "policy", "mirror-state",
-                                "source-vserver", "lag-time", "relationship-status"
+                                "source-vserver", "lag-time", "relationship-status",
+                                "destination-location"
                             ],
                             config_rename={
                                 "destination-volume-node": "destination-system",

@@ -4,6 +4,7 @@ from checktestlib import (
     DiscoveryResult,
     assertDiscoveryResultsEqual,
     assertCheckResultsEqual,
+    MockHostExtraConf,
 )
 
 pytestmark = pytest.mark.checks
@@ -54,6 +55,36 @@ pytestmark = pytest.mark.checks
                 'destination-system': 'nlhoo2-scl020-01',
                 'status': 'idle',
             },
+            'nlhoo2snas003:sv_home': {
+                'snapvault': 'sv_home',
+                'state': 'snapmirrored',
+                'source-system': 'cnlan1snas001',
+                'destination-location': 'nlhoo2snas003:sv_home',
+                'policy': 'XPDefaultCompression',
+                'lag-time': '91486',
+                'destination-system': 'nlhoo2-scl020-02',
+                'status': 'idle',
+            },
+            'nlhoo2snas001:sv_home': {
+                'snapvault': 'sv_home',
+                'state': 'snapmirrored',
+                'source-system': 'inpnq1snas001',
+                'destination-location': 'nlhoo2snas001:sv_home',
+                'policy': 'XDPDefault',
+                'lag-time': '82486',
+                'destination-system': 'nlhoo2-scl020-02',
+                'status': 'idle',
+            },
+            'nlhoo2snas002:sv_home': {
+                'snapvault': 'sv_home',
+                'state': 'snapmirrored',
+                'source-system': 'trizm1snas001',
+                'destination-location': 'nlhoo2snas002:sv_home',
+                'policy': 'XDPDefault',
+                'lag-time': '73487',
+                'destination-system': 'nlhoo2-scl020-01',
+                'status': 'idle',
+            }
         },
     ),
 ])
@@ -67,7 +98,7 @@ def test_parse_netapp_api_snapvault(check_manager, info, expected_parsed):
         assert sorted(actual_parsed.items()) == sorted(expected_parsed.items())
 
 
-@pytest.mark.parametrize('info, expected_discovery', [
+@pytest.mark.parametrize('info, discovery_params, expected_discovery', [
     (
         [
             [
@@ -101,18 +132,104 @@ def test_parse_netapp_api_snapvault(check_manager, info, expected_parsed):
                 u'status idle',
             ],
         ],
+        {
+            'exclude_destination_vserver': True,
+        },
         [
             ('sv_home', {}),
         ],
     ),
+    (
+        [
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system cnlan1snas001',
+                u'destination-location nlhoo2snas003:sv_home',
+                u'policy XPDefaultCompression',
+                u'lag-time 91486',
+                u'destination-system nlhoo2-scl020-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system inpnq1snas001',
+                u'destination-location nlhoo2snas001:sv_home',
+                u'policy XDPDefault',
+                u'lag-time 82486',
+                u'destination-system nlhoo2-scl020-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system trizm1snas001',
+                u'destination-location nlhoo2snas002:sv_home',
+                u'policy XDPDefault',
+                u'lag-time 73487',
+                u'destination-system nlhoo2-scl020-01',
+                u'status idle',
+            ],
+        ],
+        {},
+        [
+            ('nlhoo2snas001:sv_home', {}),
+            ('nlhoo2snas002:sv_home', {}),
+            ('nlhoo2snas003:sv_home', {}),
+        ],
+    ),
+    (
+        [
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system cnlan1snas001',
+                u'destination-location nlhoo2snas003:sv_home',
+                u'policy XPDefaultCompression',
+                u'lag-time 91486',
+                u'destination-system nlhoo2-scl020-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system inpnq1snas001',
+                u'destination-location nlhoo2snas001:sv_home',
+                u'policy XDPDefault',
+                u'lag-time 82486',
+                u'destination-system nlhoo2-scl020-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault sv_home',
+                u'state snapmirrored',
+                u'source-system trizm1snas001',
+                u'destination-location nlhoo2snas002:sv_home',
+                u'policy XDPDefault',
+                u'lag-time 73487',
+                u'destination-system nlhoo2-scl020-01',
+                u'status idle',
+            ],
+        ],
+        {
+            'exclude_destination_vserver': False,
+        },
+        [
+            ('nlhoo2snas001:sv_home', {}),
+            ('nlhoo2snas002:sv_home', {}),
+            ('nlhoo2snas003:sv_home', {}),
+        ],
+    ),
 ])
-def test_discover_netapp_api_snapvault(check_manager, info, expected_discovery):
+def test_discover_netapp_api_snapvault(check_manager, info, discovery_params, expected_discovery):
     check = check_manager.get_check('netapp_api_snapvault')
-    assertDiscoveryResultsEqual(
-        check,
-        DiscoveryResult(check.run_discovery(check.run_parse(info))),
-        DiscoveryResult(expected_discovery),
-    )
+    with MockHostExtraConf(check, discovery_params, 'host_extra_conf_merged'):
+        assertDiscoveryResultsEqual(
+            check,
+            DiscoveryResult(check.run_discovery(check.run_parse(info))),
+            DiscoveryResult(expected_discovery),
+        )
 
 
 @pytest.mark.parametrize('item, params, parsed, expected_result', [

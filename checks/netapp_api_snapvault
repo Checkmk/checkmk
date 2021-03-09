@@ -30,6 +30,14 @@
 # snapvault /vol/ipb_user/    status idle state snapvaulted   lag-time 97007  source-system 172.31.12.15
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
+# Netapp clustermode:
+# <<<netapp_api_snapvault:sep(9)>>>
+# snapvault sv_home	state snapmirrored	source-system cnlan1snas001	destination-location nlhoo2snas003:sv_home	policy XPDefaultCompression	lag-time 91486	destination-system nlhoo2-scl020-02	status idle
+# snapvault sv_home	state snapmirrored	source-system inpnq1snas001	destination-location nlhoo2snas001:sv_home	policy XDPDefault	lag-time 82486	destination-system nlhoo2-scl020-02	status idle
+# snapvault sv_home	state snapmirrored	source-system trizm1snas001	destination-location nlhoo2snas002:sv_home	policy XDPDefault	lag-time 73487	destination-system nlhoo2-scl020-01	status idle
+
+discovery_snapvault = []
+
 
 def _cleanse_item_name(name):
     return name.replace("$", "_")
@@ -39,12 +47,35 @@ def parse_netapp_api_snapvault(info):
     parsed = {}
     for line in info:
         parsed_line = dict([tuple(i.split(' ', 1)) for i in line])
+        # Whether the item will be named after the snapvault or destination-location
+        # values depends on the user's configuration (discovery parameters). For simplicity,
+        # the same line is referenced to both in the parsed dictionary, so that the items
+        # can easily be retrieved using the .get method, without needing to worry
+        # about what the discovery parameters are.
         parsed[_cleanse_item_name(parsed_line['snapvault'])] = parsed_line
+        if 'destination-location' in parsed_line:
+            # 7mode netapp data comes without destination-location. We currently do not have
+            # a test case for this.
+            parsed[_cleanse_item_name(parsed_line['destination-location'])] = parsed_line
     return parsed
 
 
+def _discovery_snapvault():
+    params = host_extra_conf_merged(host_name(), discovery_snapvault)
+    if not params:
+        return {'exclude_destination_vserver': False}
+    return params
+
+
+def _prefilter_items(parsed, exclude_vserver):
+    if exclude_vserver:
+        return [i for i in parsed.items() if ':' not in i[0]]
+    return [i for i in parsed.items() if ':' in i[0] or 'destination-location' not in i[1]]
+
+
 def discover_netapp_api_snapvault(parsed):
-    for snapvault, values in parsed.items():
+    params = _discovery_snapvault()
+    for snapvault, values in _prefilter_items(parsed, params['exclude_destination_vserver']):
         if "lag-time" in values:
             yield snapvault, {}
 

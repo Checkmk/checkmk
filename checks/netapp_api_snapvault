@@ -4,11 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_vf_snapvault:sep(9)>>>
 # snapvault /vol/ipb_datap/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
 # snapvault /vol/ipb_datas/   status idle state snapvaulted   lag-time 53812  source-system 172.31.12.15
@@ -16,7 +11,19 @@ from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildc
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
 
-def inventory_netapp_api_snapvault(parsed):
+def _cleanse_item_name(name):
+    return name.replace("$", "_")
+
+
+def parse_netapp_api_snapvault(info):
+    parsed = {}
+    for line in info:
+        parsed_line = dict(tuple(i.split(' ', 1)) for i in line)
+        parsed[_cleanse_item_name(parsed_line['snapvault'])] = parsed_line
+    return parsed
+
+
+def discover_netapp_api_snapvault(parsed):
     for snapvault, values in parsed.items():
         if "lag-time" in values:
             yield snapvault, {}
@@ -56,14 +63,10 @@ def check_netapp_api_snapvault(item, params, snapvault):
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
 
 
-def netapp_api_snapvault_item(name, _values):
-    return name.replace("$", "_")
-
-
 check_info["netapp_api_snapvault"] = {
-    'parse_function': lambda x: netapp_api_parse_lines(x, item_func=netapp_api_snapvault_item),
+    'parse_function': parse_netapp_api_snapvault,
     'check_function': check_netapp_api_snapvault,
-    'inventory_function': inventory_netapp_api_snapvault,
+    'inventory_function': discover_netapp_api_snapvault,
     'group': "snapvault",
     'service_description': 'Snapvault %s',
 }

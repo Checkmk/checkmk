@@ -1,13 +1,11 @@
 Title: Dynamic host configuration: Fix config activation on WATO enabled remote sites
-Class: fix
-Compatible: compat
-Component: dcd
-Date: 1603353465
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: dcd
+Compatible: compat
+Edition: cee
+Version: 1.6.0p19
+Date: 1603353465
+Class: fix
 
 The dynamic host configuration is working in a special mode in distributed
 setups. The dcd on the remote site is executed to collect the information about

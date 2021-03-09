@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 
 checkname = 'dell_compellent_enclosure'
 
@@ -18,7 +11,7 @@ info = [
     [u'10', u'2', u'KAPUTT', u'TYP', u'MODEL', u'TAG'],
 ]
 
-discovery = {'': [(u'1', {}), (u'2', {}), (u'3', {}), (u'4', {}), (u'10', {})]}
+discovery = {'': [(u'1', None), (u'2', None), (u'3', None), (u'4', None), (u'10', None)]}
 
 checks = {
     '': [

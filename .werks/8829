@@ -1,11 +1,12 @@
 Title: netapp_api_volumes: Fixed wrong scaling of latency values
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b8
 Date: 1566225807
-Class: fix
 
 The affected performance values are
 <ul>

@@ -1,41 +1,50 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=redefined-outer-name
-
 import errno
 import socket
 import ssl
 from contextlib import closing
+try:
+    from pathlib import Path  # Py3 first
+except ImportError:
+    from pathlib2 import Path
 
-import pytest  # type: ignore[import]
+import pytest  # type: ignore
 
 import omdlib.certs as certs
 import livestatus
 
 
-# Override top level fixture to make livestatus connects possible here
-@pytest.fixture
-def prevent_livestatus_connect():
-    pass
+@pytest.mark.parametrize("source, utf8str", [
+    ('hi', u'hi'),
+    ("há li", u"há li"),
+    (u"hé ßß", u"hé ßß"),
+])
+def test_ensure_unicode(source, utf8str):
+    assert livestatus.ensure_unicode(source) == utf8str
+
+
+@pytest.mark.parametrize("source, bytestr", [
+    ('hi', b'hi'),
+    ("há li", b"h\xc3\xa1 li"),
+    (u"hé ßß", b"h\xc3\xa9 \xc3\x9f\xc3\x9f"),
+])
+def test_ensure_bytestr(source, bytestr):
+    assert livestatus.ensure_bytestr(source) == bytestr
 
 
 @pytest.fixture
-def ca(tmp_path, monkeypatch):
-    p = tmp_path / "etc" / "ssl"
+def ca(tmpdir, monkeypatch):
+    p = Path("%s" % tmpdir) / "etc" / "ssl"
     return certs.CertificateAuthority(p, "ca-name")
 
 
 @pytest.fixture()
-def sock_path(monkeypatch, tmp_path):
-    omd_root = tmp_path
+def sock_path(monkeypatch, tmpdir):
+    omd_root = Path("%s" % tmpdir)
     sock_path = omd_root / "tmp" / "run" / "live"
     monkeypatch.setenv("OMD_ROOT", "%s" % omd_root)
     # Will be fixed with pylint >2.0
-    sock_path.parent.mkdir(parents=True)
+    sock_path.parent.mkdir(parents=True)  # pylint: disable=no-member
     return sock_path
 
 
@@ -56,11 +65,11 @@ def test_lqencode(query_part):
 ])
 def test_quote_dict(inp, expected_result):
     result = livestatus.quote_dict(inp)
-    assert isinstance(result, str)
+    assert isinstance(result, unicode)
     assert result == expected_result
 
 
-def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmp_path):
+def test_livestatus_local_connection_omd_root_not_set(monkeypatch, tmpdir):
     with pytest.raises(livestatus.MKLivestatusConfigError, match="OMD_ROOT is not set"):
         livestatus.LocalConnection()
 
@@ -93,13 +102,13 @@ def test_livestatus_local_connection(sock_path):
 
 def test_livestatus_ipv4_connection():
     with closing(socket.socket(socket.AF_INET)) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # pylint: disable=no-member
 
         # Pick a random port
-        sock.bind(("127.0.0.1", 0))
-        port = sock.getsockname()[1]
+        sock.bind(("127.0.0.1", 0))  # pylint: disable=no-member
+        port = sock.getsockname()[1]  # pylint: disable=no-member
 
-        sock.listen(1)
+        sock.listen(1)  # pylint: disable=no-member
 
         live = livestatus.SingleSiteConnection("tcp:127.0.0.1:%d" % port)
         live.connect()
@@ -107,20 +116,20 @@ def test_livestatus_ipv4_connection():
 
 def test_livestatus_ipv6_connection():
     with closing(socket.socket(socket.AF_INET6)) as sock:
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # pylint: disable=no-member
 
         # Pick a random port
         try:
-            sock.bind(("::1", 0))
+            sock.bind(("::1", 0))  # pylint: disable=no-member
         except socket.error as e:
             # Skip this test in case ::1 can not be bound to
             # (happened in docker container with IPv6 disabled)
             if e.errno == errno.EADDRNOTAVAIL:
                 pytest.skip("Unable to bind to ::1 (%s)" % e)
 
-        port = sock.getsockname()[1]
+        port = sock.getsockname()[1]  # pylint: disable=no-member
 
-        sock.listen(1)
+        sock.listen(1)  # pylint: disable=no-member
 
         live = livestatus.SingleSiteConnection("tcp6:::1:%d" % port)
         live.connect()
@@ -136,26 +145,28 @@ def test_livestatus_ipv6_connection():
     ("xyz:bla", None),
 ])
 def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
+    live = livestatus.SingleSiteConnection(socket_url)
+
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
-            livestatus._parse_socket_url(socket_url)
+            live._parse_socket_url(socket_url)
         return
 
-    assert livestatus._parse_socket_url(socket_url) == result
+    assert live._parse_socket_url(socket_url) == result
 
 
 @pytest.mark.parametrize("tls", [True, False])
 @pytest.mark.parametrize("verify", [True, False])
 @pytest.mark.parametrize("ca_file_path", ["ca.pem", None])
-def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
+def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmpdir):
     ca.initialize()
 
-    ssl_dir = tmp_path / "var/ssl"
+    ssl_dir = Path("%s/var/ssl" % tmpdir)
     ssl_dir.mkdir(parents=True)
-    with (ssl_dir / "ca-certificates.crt").open(mode="w", encoding="utf-8") as f:
-        f.write((ca.ca_path / "ca.pem").open(encoding="utf-8").read())
+    with ssl_dir.joinpath("ca-certificates.crt").open(mode="w", encoding="utf-8") as f:  # pylint: disable=no-member
+        f.write(ca.ca_path.joinpath("ca.pem").open(encoding="utf-8").read())
 
-    monkeypatch.setenv("OMD_ROOT", str(tmp_path))
+    monkeypatch.setenv("OMD_ROOT", "%s" % tmpdir)
 
     if ca_file_path is not None:
         ca_file_path = "%s/%s" % (ca.ca_path, ca_file_path)
@@ -166,7 +177,7 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
                                            ca_file_path=ca_file_path)
 
     if ca_file_path is None:
-        ca_file_path = tmp_path / "var/ssl/ca-certificates.crt"
+        ca_file_path = "%s/var/ssl/ca-certificates.crt" % tmpdir
 
     sock = live._create_socket(socket.AF_INET)
 
@@ -178,7 +189,7 @@ def test_create_socket(tls, verify, ca, ca_file_path, monkeypatch, tmp_path):
     assert isinstance(sock, ssl.SSLSocket)
     assert sock.context.verify_mode == (ssl.CERT_REQUIRED if verify else ssl.CERT_NONE)
     assert len(sock.context.get_ca_certs()) == 1
-    assert live.tls_ca_file_path == str(ca_file_path)
+    assert live.tls_ca_file_path == ca_file_path
 
 
 def test_create_socket_not_existing_ca_file():
@@ -190,25 +201,12 @@ def test_create_socket_not_existing_ca_file():
         live._create_socket(socket.AF_INET)
 
 
-def test_create_socket_no_cert(tmp_path):
-    open(str(tmp_path / "z.pem"), "wb")
+def test_create_socket_no_cert(tmpdir):
+    open("%s/z.pem" % tmpdir, "wb")
     live = livestatus.SingleSiteConnection("unix:/tmp/xyz",
                                            tls=True,
                                            verify=True,
-                                           ca_file_path=str(tmp_path / "z.pem"))
+                                           ca_file_path="%s/z.pem" % tmpdir)
     with pytest.raises(livestatus.MKLivestatusConfigError,
                        match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)
-
-
-def test_local_connection(mock_livestatus):
-    live = mock_livestatus
-    live.set_sites(['local'])
-    live.add_table("status", [
-        {
-            'program_start': 1,
-        },
-    ])
-    live.expect_query("GET status\nColumns: program_start\nColumnHeaders: off")
-    with mock_livestatus(expect_status_query=False):
-        livestatus.LocalConnection().query_value("GET status\nColumns: program_start")

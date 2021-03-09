@@ -1,12 +1,11 @@
 Title: Fix excessive memory consumption on systems using apache 2.2 (e.g. RedHat 6)
 Level: 2
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1568974382
+Class: fix
 
 The site apache was consuming a lot more memory than intended. The memory usage
 seemed to grow with every request to the apache 2.2 process. This was caused by

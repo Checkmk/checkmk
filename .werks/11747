@@ -1,13 +1,11 @@
 Title: Fix stored XSS triggered by received syslog messages
-Class: security
-Compatible: compat
-Component: ec
-Date: 1606992315
-Edition: cre
-Knowledge: undoc
 Level: 2
-State: unknown
-Version: 2.1.0i1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1606992315
+Class: security
 
 You are only affected by this issue in case you use the Event Console.
 

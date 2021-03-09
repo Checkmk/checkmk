@@ -1,12 +1,10 @@
 Title: Opsgenie: Added missing proxy option
-Class: feature
-Compatible: compat
-Component: notifications
-Date: 1608136899
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1608136899
+Class: feature
 
 You can now use the globally configured proxies.

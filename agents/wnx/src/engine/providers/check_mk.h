@@ -1,7 +1,3 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
 
 //
 
@@ -23,7 +19,7 @@ namespace provider {
 // Carefully tested to be maximally compatible with legacy
 // integrations tests
 // on error returns empty string
-std::string AddressToCheckMkString(std::string_view entry);
+std::string AddressToCheckMkString(std::string_view entry) noexcept;
 
 class CheckMk : public Synchronous {
 public:

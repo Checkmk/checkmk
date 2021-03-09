@@ -1,12 +1,11 @@
 Title: Custom tag topics are now correctly shown in host edit dialog
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1560927754
+Class: fix
 
 In previous 1.6 releases the custom tag topics were ignored in the host edit
 dialog and all tag attributes not associated with standard topics were shown

@@ -6,8 +6,7 @@ Date: 1586865599
 Edition: cre
 Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p12
 
 Earlier versions may have run into memory problems when too much sites were activated at the same time.
 Each site was handled in a separate helper process. This consumed quite a lot of memory when your

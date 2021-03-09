@@ -1,13 +1,11 @@
 Title: mtr mk_jolokia apache_status mk_mongodb: Fixed Python 2.5 compatibility of agent plugins
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1569496749
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569496749
+Class: fix
 
 The agent plugins need to be executed on older Linux systems which may
 have very old Python versions available. For this reason we need to use

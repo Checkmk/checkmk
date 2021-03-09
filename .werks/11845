@@ -1,0 +1,15 @@
+Title: Eliminated a possibility of the Windows crash when Windows agent terminates updater
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p21
+Date: 1612254929
+Class: fix
+
+Previously, on older Windows OS Windows agent may use invalid PID to kill 
+process tree of the hanging Windows agent's updater thus crashing Windows.
+
+Since this release, terminating of the hanging <tt>cmk-update-agent.exe</tt> 
+is based not only on PID, but also on name thus eliminating possibility of 
+the crash.

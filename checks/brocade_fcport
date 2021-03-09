@@ -1,14 +1,29 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # lookup tables for check implementation
 # Taken from swFCPortPhyState
 brocade_fcport_phystates = {
@@ -60,7 +75,7 @@ brocade_fcport_speed = {
 }
 
 # Taken from swNbBaudRate
-isl_speed_map = {
+isl_speed = {
     "1": 0,  # other (1) - None of the following.
     "2": 0.155,  # oneEighth (2) - 155 Mbaud.
     "4": 0.266,  # quarter (4) - 266 Mbaud.
@@ -83,28 +98,6 @@ factory_settings["brocade_fcport_default_levels"] = {
 }
 
 
-def _try_int(int_str):
-    try:
-        return int(int_str)
-    except ValueError:
-        return None
-
-
-def _to_int(raw_value):
-    """Convert a raw integer
-
-    This is done by considering the string to be a little endian byte string.
-    Such strings are sometimes used by SNMP to encode 64 bit counters without
-    needed COUNTER64 (which is not available in SNMP v1).
-    """
-    value = 0
-    mult = 1
-    for ord_int in raw_value[::-1]:
-        value += mult * ord_int
-        mult *= 256
-    return value
-
-
 def _get_if_table_offset(speed_info, offset):
     # http://community.brocade.com/t5/Fibre-Channel-SAN/SNMP-FC-port-speed/td-p/64980
     # says that "1073741824" from if-table correlates with index 1 from
@@ -120,7 +113,9 @@ def _get_if_table_offset(speed_info, offset):
 
 def parse_brocade_fcport(info):
     if_info, link_info, speed_info, if64_info = info
-    isl_ports = dict(link_info)
+    isl_ports = {}
+    if len(info) > 1:
+        isl_ports = dict(link_info)
 
     # if-table and brocade-if-table do NOT have same length
     speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, int(if_info[0][0])):]]
@@ -133,7 +128,7 @@ def parse_brocade_fcport(info):
         # here we go through ports of the IF-NIB, but consider only FC ports (type 56)
         # and assume that the sequence number of the FC port here is the same
         # as the sequence number in the borcade MIB (pindex = item_index)
-        if_table = [x + (y if y[0] == "56" else ["", x[-2]]) for x, y in zip(if_info, speed_info)]
+        if_table = [x + y if y[0] == "56" else ["", x[-2]] for x, y in zip(if_info, speed_info)]
     else:
         if_table = [x + ["", x[-2]] for x in if_info]
 
@@ -145,36 +140,30 @@ def parse_brocade_fcport(info):
         # Since FW v8.0.1b [rx/tx]words are no longer available
         # Use 64bit counters if available
         bbcredits = None
-        if if64_info:
+        if len(if64_info) > 0:
             fcmgmt_portstats = []
-            for oidend, tx_objects, rx_objects, tx_elements, rx_elements, bbcredits_64 in if64_info:
+            for oidend, tx_elements, rx_elements, bbcredits_64 in if64_info:
                 if index == oidend.split(".")[-1]:
                     fcmgmt_portstats = [
-                        _to_int(tx_objects),
-                        _to_int(rx_objects),
-                        int(_to_int(tx_elements) / 4),
-                        int(_to_int(rx_elements) / 4),
-                        _to_int(bbcredits_64),
+                        binstring_to_int(''.join(map(chr, tx_elements))) / 4,
+                        binstring_to_int(''.join(map(chr, rx_elements))) / 4,
+                        binstring_to_int(''.join(map(chr, bbcredits_64))),
                     ]
                     break
             if fcmgmt_portstats:
-                txframes = fcmgmt_portstats[0]
-                rxframes = fcmgmt_portstats[1]
-                txwords = fcmgmt_portstats[2]
-                rxwords = fcmgmt_portstats[3]
-                bbcredits = fcmgmt_portstats[4]
+                txwords = fcmgmt_portstats[0]
+                rxwords = fcmgmt_portstats[1]
+                bbcredits = fcmgmt_portstats[2]
             else:
-                txframes = 0
-                rxframes = 0
                 txwords = 0
                 rxwords = 0
 
-        islspeed = None
-        if index in isl_ports:
-            islspeed = isl_speed_map.get(isl_ports[index])
-
         try:
-            data = {
+            islspeed = None
+            if index in isl_ports:
+                islspeed = isl_speed.get(isl_ports[index])
+
+            parsed.append({
                 "index": int(index),
                 "phystate": int(phystate),
                 "opstate": int(opstate),
@@ -188,19 +177,16 @@ def parse_brocade_fcport(info):
                 "rxencinframes": int(rxencinframes),
                 "rxencoutframes": int(rxencoutframes),
                 "c3discards": int(c3discards),
-                "brocade_speed": _try_int(brocade_speed),
+                "brocade_speed": brocade_speed,
                 "portname": portname,
                 "porttype": porttype,
-                "ifspeed": _try_int(ifspeed),
+                "ifspeed": int(ifspeed),
                 "is_isl": index in isl_ports,
                 "islspeed": islspeed,  # Might be None
                 "bbcredits": bbcredits,  # Might be None
-            }
+            })
         except ValueError:
             continue
-
-        parsed.append(data)
-
     return parsed
 
 
@@ -230,24 +216,6 @@ def inventory_brocade_fcport(parsed):
     return inventory
 
 
-def _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, if_speed, params):
-    # Lookup port speed in ISL table for ISL ports (older switches do not provide this
-    # information in the normal table)
-    if is_isl and isl_speed is not None:
-        return "ISL speed: %.0f Gbit/s", isl_speed
-
-    brocade_speed_value = brocade_fcport_speed.get(brocade_speed, "unknown")
-    if brocade_speed_value not in ("auto-Neg", "unknown") and porttype != "56":
-        return "%.0f Gbit/s", float(brocade_speed_value.replace("Gbit", ""))
-
-    if if_speed:
-        # use actual speed of port if available
-        return "Speed: %g Gbit/s", if_speed / 1000.0
-
-    # let user specify assumed speed via check parameter, default is 2.0
-    return "Assumed speed: %g Gbit/s", params["assumed_speed"]
-
-
 def check_brocade_fcport(item, params, parsed):
     found_entry = None
     for if_entry in parsed:
@@ -272,8 +240,7 @@ def check_brocade_fcport(item, params, parsed):
     is_isl = found_entry["is_isl"]
     isl_speed = found_entry["islspeed"]
     bbcredits = found_entry["bbcredits"]
-    porttype = found_entry["porttype"]
-    speed = found_entry.get("ifspeed")
+    speed = found_entry["ifspeed"]
 
     this_time = time.time()
     average = params.get("average")  # range in minutes
@@ -284,12 +251,30 @@ def check_brocade_fcport(item, params, parsed):
     perfdata = []
     perfaverages = []
 
-    speedmsg, gbit = _get_speed_msg_and_value(is_isl, isl_speed, brocade_speed, porttype, speed,
-                                              params)
-    output.append(speedmsg % gbit)
+    # Lookup port speed in ISL table for ISL ports (older switches do not provide this
+    # information in the normal table)
+    if is_isl and isl_speed is not None:
+        gbit = isl_speed
+        speedmsg = ("ISL speed: %.0f Gbit/s" % isl_speed)
 
-    # convert gbit netto link-rate to Byte/s (8/10 enc) -> 10 bits per byte
-    wirespeed = gbit * 1e8
+    else:  # no ISL port
+        if brocade_fcport_speed.get(brocade_speed, "unknown") in ["auto-Neg", "unknown"]:
+            if speed > 0:
+                # use actual speed of port if available
+                gbit = speed / 1000
+                speedmsg = "Speed: %g Gbit/s" % gbit
+            else:
+                # let user specify assumed speed via check parameter, default is 2.0
+                gbit = params.get("assumed_speed")
+                speedmsg = "Assumed speed: %g Gbit/s" % gbit
+        else:
+            gbit = float(brocade_fcport_speed[brocade_speed].replace("Gbit", ""))
+            speedmsg = "%.0f Gbit/s" % gbit
+
+    output.append(speedmsg)
+
+    # convert gbit netto link-rate to Byte/s (8/10 enc)
+    wirespeed = gbit * 1000000000.0 * 0.8 / 8
     in_bytes = 4 * get_rate("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
     out_bytes = 4 * get_rate("brocade_fcport.txwords.%s" % index, this_time, txwords)
 
@@ -325,7 +310,7 @@ def check_brocade_fcport(item, params, parsed):
             output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
         elif warn_bytes is not None and value >= warn_bytes:
             summarystate = max(1, summarystate)
-            output.append(" >= %s/s(!)" % (get_bytes_human_readable(warn_bytes)))
+            output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
 
     # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
     perfdata.extend(perfaverages)
@@ -361,7 +346,7 @@ def check_brocade_fcport(item, params, parsed):
 
         # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
         if ref > 0 or per_sec > 0:
-            rate = per_sec / (ref + per_sec)  # fixed: true-division
+            rate = per_sec / (ref + per_sec)
         else:
             rate = 0
         text = "%s: %.2f%%" % (descr, rate * 100.0)
@@ -384,16 +369,15 @@ def check_brocade_fcport(item, params, parsed):
             output.append(text)
 
     # P O R T S T A T E
-    for state_key, state_info, warn_states, state_map in [
-        ("phystate", "Physical", (1, 6), brocade_fcport_phystates),
-        ("opstate", "Operational", (1, 3), brocade_fcport_opstates),
-        ("admstate", "Administrative", (0, 1, 3), brocade_fcport_admstates),
+    for dev_state, state_key, state_info, warn_states, state_map in [
+        (found_entry["phystate"], "phystate", "Physical", [1, 6], brocade_fcport_phystates),
+        (found_entry["opstate"], "opstate", "Operational", [1, 3], brocade_fcport_opstates),
+        (found_entry["admstate"], "admstate", "Administrative", [0, 1,
+                                                                 3], brocade_fcport_admstates),
     ]:
-        dev_state = found_entry[state_key]
         errorflag = ""
-        state_value = params.get(state_key)
-        if (state_value is not None and dev_state != state_value and
-                not (isinstance(state_value, list) and dev_state in map(int, state_value))):
+        if params.get(state_key) is not None and dev_state != params[state_key] \
+            and not (isinstance(params[state_key], list) and dev_state in map(int, params[state_key])):
             if dev_state in warn_states:
                 errorflag = "(!)"
                 summarystate = max(summarystate, 1)
@@ -410,61 +394,52 @@ def check_brocade_fcport(item, params, parsed):
 
 
 check_info["brocade_fcport"] = {
-    'parse_function': parse_brocade_fcport,
-    'check_function': check_brocade_fcport,
-    'inventory_function': inventory_brocade_fcport,
-    'service_description': 'Port %s',
-    'has_perfdata': True,
-    'snmp_info': [
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",
-            [
-                1,  # swFCPortIndex
-                3,  # swFCPortPhyState
-                4,  # swFCPortOpStatus
-                5,  # swFCPortAdmStatus
-                11,  # swFCPortTxWords
-                12,  # swFCPortRxWords
-                13,  # swFCPortTxFrames
-                14,  # swFCPortRxFrames
-                20,  # swFCPortNoTxCredits
-                22,  # swFCPortRxCrcs
-                21,  # swFCPortRxEncInFrs
-                26,  # swFCPortRxEncOutFrs
-                28,  # swFCPortC3Discards
-                35,  # swFCPortSpeed, deprecated from at least firmware version 7.2.1
-                36,  # swFCPortName  (not supported by all devices)
-            ]),
+    'parse_function':          parse_brocade_fcport,
+    'check_function':          check_brocade_fcport,
+    'inventory_function':      inventory_brocade_fcport,
+    'service_description':     'Port %s',
+    'has_perfdata':            True,
+    'snmp_info':               [
+        ( ".1.3.6.1.4.1.1588.2.1.1.1.6.2.1",[
+            1,  # swFCPortIndex
+            3,  # swFCPortPhyState
+            4,  # swFCPortOpStatus
+            5,  # swFCPortAdmStatus
+            11, # swFCPortTxWords
+            12, # swFCPortRxWords
+            13, # swFCPortTxFrames
+            14, # swFCPortRxFrames
+            20, # swFCPortNoTxCredits
+            22, # swFCPortRxCrcs
+            21, # swFCPortRxEncInFrs
+            26, # swFCPortRxEncOutFrs
+            28, # swFCPortC3Discards
+            35, # swFCPortSpeed, deprecated from at least firmware version 7.2.1
+            36, # swFCPortName  (not supported by all devices)
+        ]),
 
         # Information about Inter-Switch-Links (contains baud rate of port)
-        (
-            ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1",
-            [
-                2,  # swNbMyPort
-                5,  # swNbBaudRate
-            ]),
+        ( ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1", [
+            2, # swNbMyPort
+            5, # swNbBaudRate
+        ]),
         # new way to get port speed supported by Brocade
-        (
-            ".1.3.6.1.2.1",
-            [
-                OID_END,
-                "2.2.1.3",  # ifType, needed to extract fibre channel ifs only (type 56)
-                "31.1.1.1.15",  # IF-MIB::ifHighSpeed
-            ]),
+        ( ".1.3.6.1.2.1", [
+            OID_END,
+            "2.2.1.3",      # ifType, needed to extract fibre channel ifs only (type 56)
+            "31.1.1.1.15",  # IF-MIB::ifHighSpeed
+        ]),
         # Not every device supports that
-        (
-            ".1.3.6.1.3.94.4.5.1",
-            [
-                OID_END,
-                BINARY("4"),  # FCMGMT-MIB::connUnitPortStatCountTxObjects
-                BINARY("5"),  # FCMGMT-MIB::connUnitPortStatCountRxObjects
-                BINARY("6"),  # FCMGMT-MIB::connUnitPortStatCountTxElements
-                BINARY("7"),  # FCMGMT-MIB::connUnitPortStatCountRxElements
-                BINARY("8"),  # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
-            ]),
+        (".1.3.6.1.3.94.4.5.1", [
+            OID_END,
+            BINARY("6"),    # FCMGMT-MIB::connUnitPortStatCountTxElements
+            BINARY("7"),    # FCMGMT-MIB::connUnitPortStatCountRxElements
+            BINARY("8"),    # FCMGMT-MIB::connUnitPortStatCountBBCreditZero
+        ]),
     ],
-    'snmp_scan_function': lambda oid: (oid(".1.3.6.1.2.1.1.2.0").startswith(
-        ".1.3.6.1.4.1.1588.2.1.1") and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None),
-    'group': 'brocade_fcport',
-    'default_levels_variable': 'brocade_fcport_default_levels',
+    'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
+                                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") is not None,
+    'includes'                  : [ 'brocade.include' ],
+    'group'                     : 'brocade_fcport',
+    'default_levels_variable'   : 'brocade_fcport_default_levels',
 }

@@ -8,7 +8,6 @@
 #include <string>
 #include <string_view>
 
-#include "common/yaml.h"
 #include "cvt.h"
 #include "glob_match.h"
 #include "install_api.h"
@@ -17,6 +16,7 @@
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg::upgrade {
 
@@ -32,14 +32,14 @@ enum class ServiceStartType {
     const std::filesystem::path& tgt) noexcept {
     namespace fs = std::filesystem;
     std::error_code ec;
-    if (cma::tools::IsValidRegularFile(tgt)) fs::remove(tgt, ec);
+    if (cma::tools::IsValidRegularFile(tgt)) cma::ntfs::Remove(tgt, ec);
     if (fs::exists(tgt, ec)) return true;
 
     auto ret = fs::create_directories(tgt, ec);
     // check created or already exists
     if (ret || ec.value() == 0) return true;
 
-    XLOG::l("Can't create '{}' error = [{}]", tgt, ec.value());
+    XLOG::l("Can't create '{}' error = [{}]", tgt.u8string(), ec.value());
     return false;
 }
 
@@ -77,7 +77,7 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
     namespace fs = std::filesystem;
     if (!IsPathProgramData(program_data)) {
         XLOG::d(XLOG_FUNC + " '{}' is bad folder, copy is not possible",
-                program_data);
+                program_data.u8string());
         return 0;
     }
 
@@ -93,16 +93,22 @@ int CopyAllFolders(const std::filesystem::path& legacy_root,
               copy_mode](std::wstring_view sub_folder) {
                  auto src = legacy_root / sub_folder;
                  auto tgt = program_data / sub_folder;
-                 XLOG::l.t("Processing '{}', mode [{}]:", src,
+                 XLOG::l.t("Processing '{}', mode [{}]:", src.u8string(),
                            static_cast<int>(copy_mode));  //
                  if (copy_mode == CopyFolderMode::remove_old)
                      fs::remove_all(tgt);
                  auto folder_exists = CreateFolderSmart(tgt);
                  if (!folder_exists) return;
 
+                 if (IsFileNonCompatible(src)) {
+                     XLOG::l.i("File '{}' is skipped as not compatible",
+                               src.string());
+                     return;
+                 }
+
                  auto c = CopyFolderRecursive(
-                     src, tgt, fs::copy_options::skip_existing, [](fs::path p) {
-                         XLOG::l.i("\tCopy '{}'", p);
+                     src, tgt, fs::copy_options::skip_existing, [](fs::path P) {
+                         XLOG::l.i("\tCopy '{}'", P.u8string());
                          return true;
                      });
                  count += c;
@@ -162,8 +168,8 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
         if (fs::is_directory(p, ec)) continue;
 
         if (details::IsIgnoredFile(p)) {
-            XLOG::l.i("File '{}' in root folder '{}' is ignored", p,
-                      LegacyRoot);
+            XLOG::l.i("File '{}' in root folder '{}' is ignored", p.u8string(),
+                      LegacyRoot.u8string());
             continue;
         }
 
@@ -175,8 +181,8 @@ int CopyRootFolder(const std::filesystem::path& LegacyRoot,
             continue;
         }
 
-        XLOG::l("during copy from '{}' to '{}' error {}", p,
-                wtools::ToUtf8(cma::cfg::GetUserDir()), ec.value());
+        XLOG::l("during copy from '{}' to '{}' error {}", p.u8string(),
+                wtools::ConvertToUTF8(cma::cfg::GetUserDir()), ec.value());
     }
 
     return count;
@@ -190,7 +196,7 @@ int CopyFolderRecursive(
     const std::function<bool(std::filesystem::path)>& predicate) noexcept {
     namespace fs = std::filesystem;
     int count = 0;
-    XLOG::l.t("Copy from '{}' to '{}'", source, target);
+    XLOG::l.t("Copy from '{}' to '{}'", source.u8string(), target.u8string());
 
     try {
         std::error_code ec;
@@ -205,15 +211,10 @@ int CopyFolderRecursive(
                     fs::create_directories(target_parent_path, ec);
                     if (ec.value() != 0) {
                         XLOG::l("Failed create folder '{} error {}",
-                                target_parent_path, ec.value());
+                                target_parent_path.u8string(), ec.value());
                         continue;
                     }
                 } else {
-                    if (IsFileNonCompatible(p)) {
-                        XLOG::l.i("File '{}' is skipped as not compatible", p);
-                        continue;
-                    }
-
                     // Copy to the targetParentPath which we just created.
                     auto ret =
                         fs::copy_file(p, target_parent_path, copy_mode, ec);
@@ -221,8 +222,9 @@ int CopyFolderRecursive(
                         if (ret) count++;
                         continue;
                     }
-                    XLOG::l("during copy from '{}' to '{}' error {}", p,
-                            target_parent_path, ec.value());
+                    XLOG::l("during copy from '{}' to '{}' error {}",
+                            p.u8string(), target_parent_path.u8string(),
+                            ec.value());
                 }
             }
         }
@@ -295,8 +297,8 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
 
     if (nullptr == handle) {
         auto error = ::GetLastError();
-        XLOG::l("OpenService '{}' failed [{}]", wtools::ToUtf8(service_name),
-                error);
+        XLOG::l("OpenService '{}' failed [{}]",
+                wtools::ConvertToUTF8(service_name), error);
         return {manager_handle, handle, error};
     }
 
@@ -384,7 +386,7 @@ static bool TryStopService(SC_HANDLE handle, const std::string& name_to_log,
 }
 
 bool StopWindowsService(std::wstring_view service_name) {
-    auto name_to_log = wtools::ToUtf8(service_name);
+    auto name_to_log = wtools::ConvertToUTF8(service_name);
     XLOG::l.t("Service {} stopping ...", name_to_log);
 
     // Get a handle to the SCM database.
@@ -410,7 +412,7 @@ bool StopWindowsService(std::wstring_view service_name) {
 
 static void LogStartStatus(const std::wstring& service_name,
                            DWORD last_error_code) {
-    auto name = wtools::ToUtf8(service_name);
+    auto name = wtools::ConvertToUTF8(service_name);
     if (last_error_code == 0) {
         XLOG::l.i("Service '{}' started successfully ", name);
         return;
@@ -431,7 +433,7 @@ bool StartWindowsService(const std::wstring& service_name) {
 
     if (nullptr == handle) {
         XLOG::l("Cannot open service '{}' with error [{}]",
-                wtools::ToUtf8(service_name), error);
+                wtools::ConvertToUTF8(service_name), error);
         return false;
     }
 
@@ -471,7 +473,7 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
         OpenService(manager_handle, Name.c_str(), SERVICE_CHANGE_CONFIG);
     if (nullptr == handle) {
         XLOG::l.crit("Cannot open Service {}, error =  {}",
-                     wtools::ToUtf8(Name), GetLastError());
+                     wtools::ConvertToUTF8(Name), GetLastError());
         return false;
     }
     ON_OUT_OF_SCOPE(CloseServiceHandle(handle));
@@ -489,8 +491,8 @@ bool WinServiceChangeStartType(const std::wstring Name, ServiceStartType Type) {
                             nullptr,            // password: no change
                             nullptr);           // display name: no change
     if (0 == result) {
-        XLOG::l("ChangeServiceConfig '{}' failed [{}]", wtools::ToUtf8(Name),
-                GetLastError());
+        XLOG::l("ChangeServiceConfig '{}' failed [{}]",
+                wtools::ConvertToUTF8(Name), GetLastError());
         return false;
     }
 
@@ -746,8 +748,8 @@ bool RunDetachedProcess(const std::wstring& Name) {
         &si,      // Pointer to STARTUPINFO structure
         &pi);     // Pointer to PROCESS_INFORMATION structure
     if (ret != TRUE) {
-        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(Name),
-                GetLastError());
+        XLOG::l("Cant start the process {}, error is {}",
+                wtools::ConvertToUTF8(Name), GetLastError());
     }
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
@@ -812,7 +814,7 @@ bool UpdateProtocolFile(std::wstring_view new_location,
 
     std::error_code ec;
     if (new_protocol_file_exists && old_protocol_file_exists) {
-        fs::remove(ConstructProtocolFileName(old_location), ec);
+        cma::ntfs::Remove(ConstructProtocolFileName(old_location), ec);
         XLOG::d("Manipulation with old protocol file:remove");
         return true;
     }
@@ -838,7 +840,7 @@ std::filesystem::path FindOwnDatFile() {
     auto dat = ConstructDatFileName();
     std::error_code ec;
     if (fs::exists(dat, ec)) return dat;
-    XLOG::l("dat files should be located at '{}'", dat);
+    XLOG::l("dat files should be located at '{}'", dat.u8string());
     return {};
 }
 
@@ -852,25 +854,25 @@ static std::filesystem::path GetHashedIniName() {
     auto old_ini_hash = GetOldHashFromIni(ini);
     if (old_ini_hash.empty()) {
         XLOG::l.t("Hash in INI file '{}' not found, patching is not required",
-                  ini);
+                  ini.u8string());
         return {};
     }
 
-    XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ", ini,
-              old_ini_hash);
+    XLOG::l.t("Patching of the ini '{}' initiated, old hash is '{}' ",
+              ini.u8string(), old_ini_hash);
     return ini;
 }
 
 static std::string GetNewHash() {
     auto dat = FindOwnDatFile();
     if (dat.empty()) {
-        XLOG::l("DAT file '{}' absent, this is bad", dat);
+        XLOG::l("DAT file '{}' absent, this is bad", dat.u8string());
         return {};
     }
 
     auto new_hash = GetNewHash(dat);
     if (new_hash.empty()) {
-        XLOG::l("Hash in DAT file '{} absent, this is bad too", dat);
+        XLOG::l("Hash in DAT file '{} absent, this is bad too", dat.u8string());
         return {};
     }
 
@@ -887,12 +889,12 @@ static std::filesystem::path GetHashedStateName() {
     auto old_state_hash = GetOldHashFromState(state);
     if (old_state_hash.empty()) {
         XLOG::l.t("Hash in State file '{}' not found, patching is not required",
-                  state);
+                  state.u8string());
         return {};
     }
 
-    XLOG::l.t("Patching of the state '{}' initiated, old hash is '{}' ", state,
-              old_state_hash);
+    XLOG::l.t("Patching of the state '{}' initiated, old hash is '{}' ",
+              state.u8string(), old_state_hash);
     return state;
 }
 
@@ -915,22 +917,24 @@ bool PatchOldFilesWithDatHash() {
     {
         auto ret = PatchIniHash(ini, new_hash);
         if (!ret) {
-            XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash, ini);
+            XLOG::l("Failed to patch hash '{}' in INI '{}'", new_hash,
+                    ini.u8string());
             return false;
         }
 
         auto ini_hash = GetOldHashFromIni(ini);
-        XLOG::d.t("Now hash in '{}'is '{}'", ini, ini_hash);
+        XLOG::d.t("Now hash in '{}'is '{}'", ini.u8string(), ini_hash);
     }
     {
         auto ret = PatchStateHash(state, new_hash);
         if (!ret) {
-            XLOG::l("Failed to patch hash '{}' in state '{}'", new_hash, state);
+            XLOG::l("Failed to patch hash '{}' in state '{}'", new_hash,
+                    state.u8string());
             return false;
         }
 
         auto state_hash = GetOldHashFromState(state);
-        XLOG::d.t("Now hash in '{}'is '{}'", state, state_hash);
+        XLOG::d.t("Now hash in '{}'is '{}'", state.u8string(), state_hash);
     }
     return true;
 }
@@ -954,15 +958,15 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
     std::error_code ec;
     if (!fs::is_regular_file(old_state, ec)) {
         XLOG::l.i("Error [{}] accessing'{}', no need to recover, quitting",
-                  ec.value(), old_state);
+                  ec.value(), old_state.u8string());
         return;
     }
 
     fs::path new_path = cma::cfg::GetAuStateDir();
     auto new_state = new_path / files::kAuStateFile;
     if (fs::exists(new_path, ec) && fs::exists(new_state, ec)) {
-        XLOG::l.i("'{}' and '{}' exist: no need to recover", new_path,
-                  new_state);
+        XLOG::l.i("'{}' and '{}' exist: no need to recover",
+                  new_path.u8string(), new_state.u8string());
         return;
     }
 
@@ -974,31 +978,22 @@ void RecoverOldStateFileWithPreemtiveHashPatch() {
 
     if (ec.value()) {
         XLOG::l.i("Error [{}] during copy from '{}' to '{}'", ec.value(),
-                  old_state, new_state);
+                  old_state.u8string(), new_state.u8string());
         return;
     }
-    XLOG::l.i("Recovered '{}'", new_state);
+    XLOG::l.i("Recovered '{}'", new_state.u8string());
 }
 
 // The only API entry DIRECTLY used in production
 bool UpgradeLegacy(Force force_upgrade) {
-    bool force = Force::yes == force_upgrade;
-
-    if (force) {
-        XLOG::d.i("Forced installation, Migration flag check is ignored");
-    } else {
-        if (!cma::install::IsMigrationRequired()) {
-            XLOG::l.i("Migration is disabled in registry by installer");
-            return false;
-        }
-    }
-
     XLOG::l.i("Starting upgrade(migration) process...");
     if (!cma::tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
     }
+
+    bool force = Force::yes == force_upgrade;
 
     InfoOnStdio(force);
 
@@ -1014,7 +1009,7 @@ bool UpgradeLegacy(Force force_upgrade) {
     if (IsProtocolFileExists(protocol_dir) && !force) {
         XLOG::l.i(
             "Protocol File at '{}' exists, upgrade(migration) not required",
-            wtools::ToUtf8(protocol_dir));
+            wtools::ConvertToUTF8(protocol_dir));
         RecoverOldStateFileWithPreemtiveHashPatch();
         return false;
     }
@@ -1024,7 +1019,7 @@ bool UpgradeLegacy(Force force_upgrade) {
         XLOG::l.t("Legacy Agent not found Upgrade is not possible");
         return true;
     }
-    XLOG::l.i("Legacy Agent is found in '{}'", wtools::ToUtf8(path));
+    XLOG::l.i("Legacy Agent is found in '{}'", wtools::ConvertToUTF8(path));
 
     PatchOldFilesWithDatHash();
 
@@ -1056,18 +1051,20 @@ std::optional<YAML::Node> LoadIni(std::filesystem::path File) {
     std::error_code ec;
 
     if (!fs::exists(File, ec)) {
-        XLOG::l.i("File not found '{}', this may be ok", File);
+        XLOG::l.i("File not found '{}', this may be ok", File.u8string());
         return {};
     }
     if (!fs::is_regular_file(File, ec)) {
-        XLOG::l.w("File '{}' is not a regular file, this is wrong", File);
+        XLOG::l.w("File '{}' is not a regular file, this is wrong",
+                  File.u8string());
         return {};
     }
 
     cma::cfg::cvt::Parser p;
     p.prepare();
     if (!p.readIni(File, false)) {
-        XLOG::l.e("File '{}' is not a valid INI file, this is wrong", File);
+        XLOG::l.e("File '{}' is not a valid INI file, this is wrong",
+                  File.u8string());
         return {};
     }
 
@@ -1081,21 +1078,22 @@ bool ConvertLocalIniFile(const std::filesystem::path& LegacyRoot,
     auto local_ini_file = LegacyRoot / local_ini;
     std::error_code ec;
     if (fs::exists(local_ini_file, ec)) {
-        XLOG::l.i("Converting local ini file '{}'", local_ini_file);
-        auto user_yaml_file = wtools::ToUtf8(files::kDefaultMainConfigName);
+        XLOG::l.i("Converting local ini file '{}'", local_ini_file.u8string());
+        auto user_yaml_file =
+            wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
         auto out_file =
             CreateUserYamlFromIni(local_ini_file, ProgramData, user_yaml_file);
         if (!out_file.empty() && fs::exists(out_file, ec)) {
             XLOG::l.i("Local File '{}' was converted as user YML file '{}'",
-                      local_ini_file, out_file);
+                      local_ini_file.u8string(), out_file.u8string());
             return true;
         }
     }
 
     XLOG::l.t(
         "Local INI File was not converted, absent, has no data or other reason",
-        local_ini_file);
+        local_ini_file.u8string());
 
     return false;
 }
@@ -1116,14 +1114,12 @@ bool ConvertUserIniFile(
 
     std::error_code ec;
     if (!fs::exists(user_ini_file, ec)) {
-        XLOG::l.i("User ini File {} is absent", user_ini_file);
+        XLOG::l.i("User ini File {} is absent", user_ini_file.u8string());
         return false;
     }
 
-    XLOG::l.i("User ini File {} to be processed", user_ini_file);
-
     // check_mk.user.yml or check_mk.bakery.yml
-    const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
+    const auto name = wtools::ConvertToUTF8(files::kDefaultMainConfigName);
 
     // generate
     auto out_folder = pdata;
@@ -1141,11 +1137,11 @@ bool ConvertUserIniFile(
     // check
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
-                  user_ini_file, yaml_file);
+                  user_ini_file.u8string(), yaml_file.u8string());
         return true;
     }
 
-    XLOG::l.w("User ini File {} has no useful data", user_ini_file);
+    XLOG::l.w("User ini File {} has no useful data", user_ini_file.u8string());
     return false;
 }
 
@@ -1177,11 +1173,11 @@ bool ConvertIniFiles(const std::filesystem::path& legacy_root,
             ini_file.u8string(),
 
             IsBakeryIni(ini_file) ? "managed by Bakery/WATO" : "user defined",
-            wtools::ToUtf8(cma::cfg::GetBakeryDir()),
-            wtools::ToUtf8(files::kBakeryYmlFile),
-            wtools::ToUtf8(files::kIniFile),
-            wtools::ToUtf8(cma::cfg::GetRootInstallDir()),
-            wtools::ToUtf8(files::kWatoIniFile)
+            wtools::ConvertToUTF8(cma::cfg::GetBakeryDir()),
+            wtools::ConvertToUTF8(files::kBakeryYmlFile),
+            wtools::ConvertToUTF8(files::kIniFile),
+            wtools::ConvertToUTF8(cma::cfg::GetRootInstallDir()),
+            wtools::ConvertToUTF8(files::kWatoIniFile)
             //
         );
 
@@ -1245,7 +1241,7 @@ std::filesystem::path CreateUserYamlFromIni(
     // conversion
     auto yaml = LoadIni(ini_file);
     if (!yaml.has_value() || !yaml.value().IsMap()) {
-        XLOG::l.w("File '{}' is empty, no yaml created", ini_file);
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
         return {};
     }
 
@@ -1262,7 +1258,7 @@ std::filesystem::path CreateUserYamlFromIni(
     yaml_file.replace_extension(files::kDefaultUserExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
-    XLOG::l.i("File '{}' is successfully converted", ini_file);
+    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
 
     return yaml_file;
 }
@@ -1277,7 +1273,7 @@ std::filesystem::path CreateBakeryYamlFromIni(
     // conversion
     auto yaml = LoadIni(ini_file);
     if (!yaml.has_value() || !yaml.value().IsMap()) {
-        XLOG::l.w("File '{}' is empty, no yaml created", ini_file);
+        XLOG::l.w("File '{}' is empty, no yaml created", ini_file.u8string());
         return {};
     }
 
@@ -1305,7 +1301,7 @@ std::filesystem::path CreateBakeryYamlFromIni(
     yaml_file.replace_extension(files::kDefaultBakeryExt);
 
     StoreYaml(yaml_file, yaml.value(), comments);
-    XLOG::l.i("File '{}' is successfully converted", ini_file);
+    XLOG::l.i("File '{}' is successfully converted", ini_file.u8string());
 
     return yaml_file;
 }
@@ -1472,8 +1468,8 @@ bool IsToRemove() {
             "The Legacy Agent is already removed. "
             "To remove the Legacy Agent again, please, "
             "use command line or set registry entry HKLM\\{}\\{} to \"1\"",
-            wtools::ToUtf8(cma::install::registry::GetMsiRegistryPath()),
-            wtools::ToUtf8(cma::install::registry::kMsiRemoveLegacy));
+            wtools::ConvertToUTF8(cma::install::registry::GetMsiRegistryPath()),
+            wtools::ConvertToUTF8(cma::install::registry::kMsiRemoveLegacy));
         return false;
     }
 

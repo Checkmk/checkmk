@@ -1,15 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
 import os
-import pytest  # type: ignore[import]
-
-from cmk.base.check_legacy_includes.cisco_sensor_item import *
+import pytest
 
 pytestmark = pytest.mark.checks
+
+execfile(os.path.join(os.path.dirname(__file__), '../../../checks/cisco_sensor_item.include'))
 
 FALLBACK = '999'
 
@@ -55,4 +49,4 @@ FALLBACK = '999'
     ("Switch 1 - FAN - T1 1, Normal", "Switch 1 - FAN - T1 1"),
 ])
 def test_cisco_sensor_item(status_description, expected_item):
-    assert cisco_sensor_item(status_description, FALLBACK) == expected_item  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    assert cisco_sensor_item(status_description, FALLBACK) == expected_item

@@ -1,25 +1,26 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 import contextlib
 from itertools import chain, repeat
 import math
 import os
 import platform
 import re
-import win32evtlog  # type: ignore
+import win32evtlog
 from local import (actual_output, assert_subprocess, make_yaml_config, user_dir, local_test,
                    wait_agent, write_config, host)
 import sys
 
-import pytest  # type: ignore
-import winreg  # type: ignore
+import pytest
+
+try:
+    import winreg
+except ImportError:
+    if platform.system() == 'Windows':
+        raise
 
 
-class Globals(object):
+class Globals:
     local_statefile = 'eventstate.txt'
     state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
     section = 'logwatch'

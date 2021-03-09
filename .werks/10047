@@ -1,12 +1,11 @@
 Title: Improved validation of incompatible rulespec registration
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b11
 Date: 1568734915
+Class: fix
 
 In case an incompatible rulespec is registered with Checkmk, this
 does not affect the whole Host & service parameters configuration

@@ -32,7 +32,6 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -43,9 +42,6 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
-    gtk-doc \
-    iputils \
-    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -66,9 +62,6 @@ RUN zypper ref -s \
     libuuid-devel \
     libvpx-devel \
     libxml2-devel \
-    xmlsec1-devel \
-    xmlsec1-openssl-devel \
-    libxmlsec1-1 \
     make \
     mysql \
     openldap2-devel \
@@ -86,44 +79,21 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
-    valgrind \
-    vim \
     wget \
     which \
+    chrpath \
+    joe \
+    iputils \
+    vim \
     && zypper clean -a
 
-# Install our standard tool chain for building
-# - gnu-toolchain is needed for compiling all the C++ stuff
-# - cmake is needed for e.g. building re2
-# - openssl is needed by Python 3.7+
-# - python is needed by our build / test chain
-ARG NEXUS_ARCHIVES_URL
-ARG NEXUS_USERNAME
-ARG NEXUS_PASSWORD
-ARG DISTRO
-ARG BRANCH_VERSION
-ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NEXUS_PASSWORD="$NEXUS_PASSWORD" DISTRO="$DISTRO" BRANCH_VERSION="$BRANCH_VERSION"
-
-COPY scripts/* /opt/
-RUN /opt/install-gnu-toolchain.sh
-RUN /opt/install-cmake.sh
-RUN /opt/install-openssl.sh
-RUN /opt/install-python2.sh
-RUN /opt/install-python.sh
-RUN /opt/install-pipenv.sh
-RUN /opt/install-nodejs.sh
-RUN /opt/install-freetds.sh
-RUN /opt/install-cmk-dependencies.sh
-
-# The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
-# using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can
-# simply solve this by pre-creating the empty file here.
-RUN touch /etc/fstab
-
-# Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
-# jobs will be executed as this user in the container
-RUN groupadd -g 1000 jenkins \
-    && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
+ARG ARTIFACT_STORAGE
+COPY bw-build-gnu-toolchain.sh /usr/sbin
+RUN bw-build-gnu-toolchain.sh -r $ARTIFACT_STORAGE -b
+RUN cd /opt \
+    && wget https://github.com/Kitware/CMake/releases/download/v3.16.2/cmake-3.16.2-Linux-x86_64.tar.gz \
+    && tar xf cmake-3.16.2-Linux-x86_64.tar.gz \
+    && ln -s /opt/cmake-3.16.2-Linux-x86_64/bin/* /usr/bin/
 
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt

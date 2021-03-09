@@ -1,24 +1,41 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import cmk.utils.paths
 import cmk.utils.defines as defines
 
 from cmk.gui.valuespec import (
+    DualListChoice,
     Age,
     Dictionary,
-    DropdownChoice,
-    DualListChoice,
-    ListOfStrings,
-    MonitoringState,
-    RegExp,
-    TextAscii,
     Transform,
+    DropdownChoice,
+    TextAscii,
+    MonitoringState,
 )
-
 from cmk.gui.i18n import _
 
 from cmk.gui.plugins.wato import (
@@ -41,7 +58,7 @@ class RulespecGroupInventory(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configuration of the Checkmk Hardware and Software Inventory System")
+        return _("Configuration of the Check_MK Hardware and Software Inventory System")
 
 
 def _valuespec_active_checks_cmk_inv():
@@ -116,7 +133,7 @@ def _valuespec_inv_exports_software_csv():
             ("filename",
              TextAscii(
                  title=_(
-                     "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"),
+                     "Export file to create, containing <tt>&ly;HOST&gt;</tt> for the hostname"),
                  help=_(
                      "Please specify the path to the export file. The text <tt><HOST></tt> "
                      "will be replaced with the host name the inventory has been done for. "
@@ -196,45 +213,4 @@ rulespec_registry.register(
         match_type="dict",
         name="inv_parameters:inv_if",
         valuespec=_valuespec_inv_parameters_inv_if,
-    ))
-
-
-def _valuespec_inv_parameters_lnx_sysctl():
-    return Dictionary(
-        title=_("Inventory of Linux kernel configuration (sysctl)"),
-        help=_("This rule allows for defining regex-patterns for in- and excluding kernel "
-               "configuration parameters in the inventory. By default, no parameters are included. "
-               "Note that some kernel configuration parameters change frequently. Inventorizing "
-               "one of these parameters will lead to frequent changes in the HW/SW inventory, "
-               "which can quickly fill up the temporary file system."),
-        elements=[
-            (
-                "include_patterns",
-                ListOfStrings(
-                    valuespec=RegExp(RegExp.prefix),
-                    title=_("Inclusion patterns"),
-                    help=_("Define patterns for including kernel configuration parameters in the "
-                           "inventory."),
-                ),
-            ),
-            (
-                "exclude_patterns",
-                ListOfStrings(
-                    valuespec=RegExp(RegExp.prefix),
-                    title=_("Exclusion patterns"),
-                    help=_("Define patterns for excluding kernel configuration parameters from the "
-                           "inventory."),
-                ),
-            ),
-        ],
-        optional_keys=False,
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupInventory,
-        match_type="dict",
-        name="inv_parameters:lnx_sysctl",
-        valuespec=_valuespec_inv_parameters_lnx_sysctl,
     ))

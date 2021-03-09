@@ -1,12 +1,32 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import socket
 
-import cmk.utils.version as cmk_version
+import cmk
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.config as config
 from cmk.gui.i18n import _
@@ -14,15 +34,12 @@ from cmk.gui.globals import html
 
 from cmk.gui.valuespec import (
     Age,
-    Alternative,
     CascadingDropdown,
-    DEF_VALUE,
     Dictionary,
     DropdownChoice,
     EmailAddress,
     FixedValue,
     HTTPUrl,
-    Integer,
     IPv4Address,
     ListChoice,
     ListOfStrings,
@@ -39,7 +56,6 @@ from cmk.gui.plugins.wato import (
     NotificationParameter,
     passwordstore_choices,
     HTTPProxyReference,
-    IndividualOrStoredPassword,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -62,7 +78,7 @@ def transform_forth_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
-    k, v = list(p.items())[0]
+    k, v = p.items()[0]
     if k == "automatic":
         return "%s_%s" % (k, v)
 
@@ -70,132 +86,7 @@ def transform_forth_html_mail_url_prefix(p):
 
 
 def local_site_url():
-    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/"
-
-
-def _vs_add_common_mail_elements(elements):
-    header = [
-        ("from",
-         Transform(
-             Dictionary(
-                 title="From",
-                 elements=[
-                     ("address", EmailAddress(
-                         title=_("Email address"),
-                         size=40,
-                         allow_empty=False,
-                     )),
-                     ("display_name",
-                      TextUnicode(
-                          title=_("Display name"),
-                          size=40,
-                          allow_empty=False,
-                      )),
-                 ],
-                 help=_("The email address and visible name used in the From header "
-                        "of notifications messages. If no email address is specified "
-                        "the default address is <tt>OMD_SITE@FQDN</tt> is used. If the "
-                        "environment variable <tt>OMD_SITE</tt> is not set it defaults "
-                        "to <tt>checkmk</tt>."),
-             ),
-             forth=lambda x: x if isinstance(x, dict) else {'address': x},
-         )),
-        ("reply_to",
-         Transform(
-             Dictionary(
-                 title="Reply to",
-                 elements=[
-                     ("address", EmailAddress(
-                         title=_("Email address"),
-                         size=40,
-                         allow_empty=False,
-                     )),
-                     ("display_name",
-                      TextUnicode(
-                          title=_("Display name"),
-                          size=40,
-                          allow_empty=False,
-                      )),
-                 ],
-                 required_keys=["address"],
-                 help=_("The email address and visible name used in the Reply-To header "
-                        "of notifications messages."),
-             ),
-             forth=lambda x: x if isinstance(x, dict) else {'address': x},
-         )),
-        ("host_subject",
-         TextUnicode(
-             title=_("Subject for host notifications"),
-             help=_("Here you are allowed to use all macros that are defined in the "
-                    "notification context."),
-             default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-             size=64,
-         )),
-        ("service_subject",
-         TextUnicode(
-             title=_("Subject for service notifications"),
-             help=_("Here you are allowed to use all macros that are defined in the "
-                    "notification context."),
-             default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-             size=64,
-         )),
-    ]
-
-    footer = [
-        ('bulk_sort_order',
-         DropdownChoice(
-             choices=[
-                 ('oldest_first', _('Oldest first')),
-                 ('newest_first', _('Newest first')),
-             ],
-             help=_(
-                 "With this option you can specify, whether the oldest (default) or "
-                 "the newest notification should get shown at the top of the notification mail."),
-             title=_("Notification sort order for bulk notifications"),
-             default_value="oldest_first",
-         )),
-        ("disable_multiplexing",
-         FixedValue(
-             True,
-             title=_("Send seperate notifications to every recipient"),
-             totext=_("A seperate notification is send to every recipient. Recipients "
-                      "cannot see which other recipients were notified."),
-             help=_("Per default only one notification is generated for all recipients. "
-                    "Therefore, all recipients can see who was notified and reply to "
-                    "all other recipients."),
-         )),
-    ]
-
-    return header + elements + footer
-
-
-def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-
-    return Transform(CascadingDropdown(
-        title=_("URL prefix for links to Checkmk"),
-        help=_("If you use <b>Automatic HTTP/s</b>, the URL prefix for host "
-               "and service links within the notification is filled "
-               "automatically. If you specify an URL prefix here, then "
-               "several parts of the notification are armed with hyperlinks "
-               "to your Check_MK GUI. In both cases, the recipient of the "
-               "notification can directly visit the host or service in "
-               "question in Check_MK. Specify an absolute URL including the "
-               "<tt>.../check_mk/</tt>."),
-        choices=[
-            ("automatic_http", _("Automatic HTTP")),
-            ("automatic_https", _("Automatic HTTPs")),
-            ("manual", _("Specify URL prefix"),
-             TextAscii(
-                 regex="^(http|https)://.*/check_mk/$",
-                 regex_error=_("The URL must begin with <tt>http</tt> or "
-                               "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                 size=64,
-                 default_value=default_choice,
-             )),
-        ],
-        default_value=default_value),
-                     forth=transform_forth_html_mail_url_prefix,
-                     back=transform_back_html_mail_url_prefix)
+    return "http://" + socket.gethostname() + "/" + config.omd_site() + "check_mk/",
 
 
 @notification_parameter_registry.register
@@ -213,7 +104,33 @@ class NotificationParameterMail(NotificationParameter):
         )
 
     def _parameter_elements(self):
-        elements = _vs_add_common_mail_elements([
+        elements = [
+            ("from", EmailAddress(
+                title=_("From: Address"),
+                size=40,
+                allow_empty=False,
+            )),
+            ("reply_to", EmailAddress(
+                title=_("Reply-To: Address"),
+                size=40,
+                allow_empty=False,
+            )),
+            ("host_subject",
+             TextUnicode(
+                 title=_("Subject for host notifications"),
+                 help=_("Here you are allowed to use all macros that are defined in the "
+                        "notification context."),
+                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                 size=64,
+             )),
+            ("service_subject",
+             TextUnicode(
+                 title=_("Subject for service notifications"),
+                 help=_("Here you are allowed to use all macros that are defined in the "
+                        "notification context."),
+                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                 size=64,
+             )),
             ("elements",
              ListChoice(
                  title=_("Information to be displayed in the email body"),
@@ -241,10 +158,35 @@ class NotificationParameterMail(NotificationParameter):
                  rows="auto",
              )),
             ("url_prefix",
-             _get_url_prefix_specs(
-                 "http://" + socket.gethostname() + "/" +
-                 (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                 html.request.is_ssl_request and "automatic_https" or "automatic_http")),
+             Transform(CascadingDropdown(
+                 style="dropdown",
+                 title=_("URL prefix for links to Check_MK"),
+                 help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                        "host and service links within the notification mail "
+                        "is filled automatically. "
+                        "If you specify an URL prefix here, then several parts of the "
+                        "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
+                        "the recipient of the email can directly visit the host or "
+                        "service in question in Check_MK. Specify an absolute URL including "
+                        "the <tt>.../check_mk/</tt>"),
+                 choices=[
+                     ("automatic_http", _("Automatic HTTP")),
+                     ("automatic_https", _("Automatic HTTPs")),
+                     ("manual", _("Specify URL prefix"),
+                      TextAscii(
+                          regex="^(http|https)://.*/check_mk/$",
+                          regex_error=_("The URL must begin with <tt>http</tt> or "
+                                        "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                          size=64,
+                          default_value="http://" + socket.gethostname() + "/" +
+                          (config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                      )),
+                 ],
+                 default_value=html.request.is_ssl_request and "automatic_https" or
+                 "automatic_http",
+             ),
+                       forth=transform_forth_html_mail_url_prefix,
+                       back=transform_back_html_mail_url_prefix)),
             ("no_floating_graphs",
              FixedValue(
                  True,
@@ -254,39 +196,33 @@ class NotificationParameterMail(NotificationParameter):
                         "nearby. You can enable this option to show the graphs among each "
                         "other."),
              )),
-        ])
-
-        if not cmk_version.is_raw_edition():
-            import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
-            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
-
-        elements += [
-            ("graphs_per_notification",
-             Integer(
-                 title=_("Graphs per notification (default: 5)"),
-                 label=_("Show up to"),
-                 unit=_("graphs"),
+            ('bulk_sort_order',
+             DropdownChoice(
+                 choices=[
+                     ('oldest_first', _('Oldest first')),
+                     ('newest_first', _('Newest first')),
+                 ],
                  help=_(
-                     "Sets a limit for the number of graphs that are displayed in a notification."),
-                 default_value=5,
-                 minvalue=0,
-             )),
-            ("notifications_with_graphs",
-             Integer(
-                 title=_("Bulk notifications with graphs (default: 5)"),
-                 label=_("Show graphs for the first"),
-                 unit=_("Notifications"),
-                 help=_(
-                     "Sets a limit for the number of notifications in a bulk for which graphs "
-                     "are displayed. If you do not use bulk notifications this option is ignored. "
-                     "Note that each graph increases the size of the mail and takes time to render"
-                     "on the monitoring server. Therefore, large bulks may exceed the maximum "
-                     "size for attachements or the plugin may run into a timeout so that a failed "
-                     "notification is produced."),
-                 default_value=5,
-                 minvalue=0,
+                     "With this option you can specify, whether the oldest (default) or "
+                     "the newest notification should get shown at the top of the notification mail."
+                 ),
+                 title=_("Notification sort order for bulk notifications"),
+                 default="oldest_first")),
+            ("disable_multiplexing",
+             FixedValue(
+                 True,
+                 title=_("Send seperate notifications to every recipient"),
+                 totext=_("A seperate notification is send to every recipient. Recipients "
+                          "cannot see which other recipients were notified."),
+                 help=_("Per default only one notification is generated for all recipients. "
+                        "Therefore, all recipients can see who was notified and reply to "
+                        "all other recipients."),
              )),
         ]
+
+        if not cmk.is_raw_edition():
+            elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
+
         return elements
 
 
@@ -320,41 +256,33 @@ class NotificationParameterSlack(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-            ],
-        )
-
-
-@notification_parameter_registry.register
-class NotificationParameterCiscoWebexTeams(NotificationParameter):
-    @property
-    def ident(self):
-        return "cisco_webex_teams"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=["url_prefix", "proxy_url"],
-            elements=[
-                ("webhook_url",
-                 CascadingDropdown(
-                     title=_("Webhook-URL"),
-                     help=
-                     _("Webhook URL. Setup Cisco Webex Teams Webhook " +
-                       "<a href=\"https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Check_MK."
-                      ),
-                     choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
-                                                                        allow_empty=False)),
-                              ("store", _("URL from password store"),
-                               DropdownChoice(
-                                   sorted=True,
-                                   choices=passwordstore_choices,
-                               ))],
-                 )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-                ("proxy_url", HTTPProxyReference()),
+                ("url_prefix",
+                 Transform(CascadingDropdown(
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "slack message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -380,7 +308,8 @@ class NotificationParameterVictorOPS(NotificationParameter):
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
-                               HTTPUrl(allow_empty=False,
+                               HTTPUrl(size=80,
+                                       allow_empty=False,
                                        regex=r"^https://alert\.victorops\.com/integrations/.+",
                                        regex_error=_(
                                            "The Webhook-URL must begin with "
@@ -391,7 +320,34 @@ class NotificationParameterVictorOPS(NotificationParameter):
                                    choices=passwordstore_choices,
                                ))],
                  )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix",
+                 Transform(CascadingDropdown(
+                     style="dropdown",
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -421,31 +377,34 @@ class NotificationParameterPagerDuty(NotificationParameter):
                 ("webhook_url",
                  FixedValue("https://events.pagerduty.com/v2/enqueue",
                             title=_("API Endpoint from PagerDuty V2"))),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
-            ],
-        )
-
-
-@notification_parameter_registry.register
-class NotificationParameterSIGNL4(NotificationParameter):
-    @property
-    def ident(self):
-        return "signl4"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=[],
-            elements=[
-                ("password",
-                 IndividualOrStoredPassword(
-                     title=_("Team Secret"),
-                     help=_("The team secret of your SIGNL4 team. That is the last part of "
-                            "your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
-                     allow_empty=False,
-                 )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+                ("url_prefix",
+                 Transform(CascadingDropdown(
+                     style="dropdown",
+                     title=_("URL prefix for links to Check_MK"),
+                     help=_(
+                         "If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                         "host and service links within the notification mail "
+                         "is filled automatically. "
+                         "If you specify an URL prefix here, then several parts of the "
+                         "VictorOPS message are armed with hyperlinks to your Check_MK GUI. In both cases "
+                         "the recipient of the message can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                     choices=[
+                         ("automatic_http", _("Automatic HTTP")),
+                         ("automatic_https", _("Automatic HTTPs")),
+                         ("manual", _("Specify URL prefix"),
+                          TextAscii(
+                              regex="^(http|https)://.*/check_mk/$",
+                              regex_error=_("The URL must begin with <tt>http</tt> or "
+                                            "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                              size=64,
+                              default_value=local_site_url,
+                          )),
+                     ],
+                 ),
+                           forth=transform_forth_html_mail_url_prefix,
+                           back=transform_back_html_mail_url_prefix)),
             ],
         )
 
@@ -458,98 +417,93 @@ class NotificationParameterASCIIMail(NotificationParameter):
 
     @property
     def spec(self):
-        elements = _vs_add_common_mail_elements([
-            ("common_body",
-             TextAreaUnicode(
-                 title=_("Body head for both host and service notifications"),
-                 rows=7,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Host:     $HOSTNAME$
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                ("from", EmailAddress(
+                    title=_("From: Address"),
+                    size=40,
+                    allow_empty=False,
+                )),
+                ("reply_to", EmailAddress(
+                    title=_("Reply-To: Address"),
+                    size=40,
+                    allow_empty=False,
+                )),
+                ("host_subject",
+                 TextUnicode(
+                     title=_("Subject for host notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                     size=64,
+                 )),
+                ("service_subject",
+                 TextUnicode(
+                     title=_("Subject for service notifications"),
+                     help=_("Here you are allowed to use all macros that are defined in the "
+                            "notification context."),
+                     default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                     size=64,
+                 )),
+                ("common_body",
+                 TextAreaUnicode(
+                     title=_("Body head for both host and service notifications"),
+                     rows=7,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Host:     $HOSTNAME$
 Alias:    $HOSTALIAS$
 Address:  $HOSTADDRESS$
 """,
-             )),
-            ("host_body",
-             TextAreaUnicode(
-                 title=_("Body tail for host notifications"),
-                 rows=9,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Event:    $EVENT_TXT$
+                 )),
+                ("host_body",
+                 TextAreaUnicode(
+                     title=_("Body tail for host notifications"),
+                     rows=9,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Event:    $EVENT_TXT$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
 """,
-             )),
-            ("service_body",
-             TextAreaUnicode(
-                 title=_("Body tail for service notifications"),
-                 rows=11,
-                 cols=58,
-                 monospaced=True,
-                 default_value="""Service:  $SERVICEDESC$
+                 )),
+                ("service_body",
+                 TextAreaUnicode(
+                     title=_("Body tail for service notifications"),
+                     rows=11,
+                     cols=58,
+                     monospaced=True,
+                     default_value="""Service:  $SERVICEDESC$
 Event:    $EVENT_TXT$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
 """,
-             )),
-        ])
-        return Dictionary(title=_("Create notification with the following parameters"),
-                          elements=elements)
-
-
-@notification_parameter_registry.register
-class NotificationILert(NotificationParameter):
-    @property
-    def ident(self):
-        return "ilert"
-
-    @property
-    def spec(self):
-        return Dictionary(
-            title=_("Create notification with the following parameters"),
-            optional_keys=[],
-            elements=[
-                ("ilert_api_key",
-                 CascadingDropdown(title=_("iLert alert source API key"),
-                                   help=_("API key for iLert alert server"),
-                                   choices=[(
-                                       "ilert_api_key",
-                                       _("API key"),
-                                       TextAscii(size=80, allow_empty=False),
-                                   ),
-                                            ("store", _("API key from password store"),
-                                             DropdownChoice(sorted=True,
-                                                            choices=passwordstore_choices))])),
-                ("ilert_priority",
+                 )),
+                ('bulk_sort_order',
                  DropdownChoice(
-                     sorted=True,
                      choices=[
-                         ("HIGH", _("High (with escalation)")),
-                         ('LOW', _("Low (without escalation")),
+                         ('oldest_first', _('Oldest first')),
+                         ('newest_first', _('Newest first')),
                      ],
-                     title=
-                     _("Notification priority (This will override the priority configured in the alert source)"
-                      ),
-                     default_value='HIGH')),
-                ("ilert_summary_host",
-                 TextUnicode(
-                     title=_("Custom incident summary for host alerts"),
-                     default_value=
-                     "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
-                     size=64,
+                     help=_(
+                         "With this option you can specify, whether the oldest (default) or "
+                         "the newest notification should get shown at the top of the notification mail."
+                     ),
+                     title=_("Notification sort order for bulk notifications"),
+                     default="oldest_first")),
+                ("disable_multiplexing",
+                 FixedValue(
+                     True,
+                     title=_("Send seperate notifications to every recipient"),
+                     totext=_("A seperate notification is send to every recipient. Recipients "
+                              "cannot see which other recipients were notified."),
+                     help=_("Per default only one notification is generated for all recipients. "
+                            "Therefore, all recipients can see who was notified and reply to "
+                            "all other recipients."),
                  )),
-                ("ilert_summary_service",
-                 TextUnicode(
-                     title=_("Custom incident summary for service alerts"),
-                     default_value=
-                     "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
-                     size=64,
-                 )),
-                ("url_prefix", _get_url_prefix_specs(local_site_url,
-                                                     default_value="automatic_https")),
             ],
         )
 
@@ -811,82 +765,21 @@ $LONGSERVICEOUTPUT$
                             "acknowledgement of the affected host or service problem."),
                      elements=[
                          ("start",
-                          Transform(
-                              Alternative(
-                                  title=_("State of incident if acknowledgement is set"),
-                                  help=_(
-                                      "Here you can define the state of the incident in case of an "
-                                      "acknowledgement of the host or service problem."),
-                                  elements=[
-                                      DropdownChoice(
-                                          title=
-                                          _("State of incident if acknowledgement is set (predefined)"
-                                           ),
-                                          help=_(
-                                              "Please note that the mapping to the numeric "
-                                              "ServiceNow state may be changed at your system "
-                                              "and can differ from our definitions. In this case "
-                                              "use the option below."),
-                                          choices=[
-                                              ("none", _("Don't change state")),
-                                              ("new", _("New")),
-                                              ("progress", _("In Progress")),
-                                              ("hold", _("On Hold")),
-                                              ("resolved", _("Resolved")),
-                                              ("closed", _("Closed")),
-                                              ("canceled", _("Canceled")),
-                                          ],
-                                          default_value="none",
-                                      ),
-                                      Integer(
-                                          title=
-                                          _("State of incident if acknowledgement is set (as integer)"
-                                           ),
-                                          minvalue=0,
-                                      ),
-                                  ]))),
-                     ])),
-                ("recovery_state",
-                 Dictionary(
-                     title=_("Settings for incident state in case of recovery"),
-                     help=_("Here you can define the state of the incident in case of a recovery "
-                            "of the affected host or service problem."),
-                     elements=[
-                         (
-                             "start",
-                             Transform(
-                                 Alternative(
-                                     title=_("State of incident if recovery is set"),
-                                     elements=[
-                                         DropdownChoice(
-                                             title=_(
-                                                 "State of incident if recovery is set (predefined)"
-                                             ),
-                                             help=_(
-                                                 "Please note that the mapping to the numeric "
-                                                 "ServiceNow state may be changed at your system "
-                                                 "and can differ from our definitions. In this case "
-                                                 "use the option below."),
-                                             choices=[
-                                                 ("none", _("Don't change state")),
-                                                 ("new", _("New")),
-                                                 ("progress", _("In Progress")),
-                                                 ("hold", _("On Hold")),
-                                                 ("resolved", _("Resolved")),
-                                                 ("closed", _("Closed")),
-                                                 ("canceled", _("Canceled")),
-                                             ],
-                                             default_value="none",
-                                         ),
-                                         Integer(
-                                             title=_(
-                                                 "State of incident if recovery is set (as integer)"
-                                             ),
-                                             minvalue=0,
-                                         ),
-                                     ],
-                                 )),
-                         ),
+                          DropdownChoice(
+                              title=_("State of incident if acknowledgement is set"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
                      ],
                  )),
                 ("dt_state",
@@ -896,68 +789,37 @@ $LONGSERVICEOUTPUT$
                             "downtime of the affected host or service."),
                      elements=[
                          ("start",
-                          Transform(
-                              Alternative(
-                                  title=_("State of incident if downtime is set"),
-                                  elements=[
-                                      DropdownChoice(
-                                          title=_(
-                                              "State of incident if downtime is set (predefined)"),
-                                          help=_(
-                                              "Please note that the mapping to the numeric "
-                                              "ServiceNow state may be changed at your system "
-                                              "and can differ from our definitions. In this case "
-                                              "use the option below."),
-                                          choices=[
-                                              ("none", _("Don't change state")),
-                                              ("new", _("New")),
-                                              ("progress", _("In Progress")),
-                                              ("hold", _("On Hold")),
-                                              ("resolved", _("Resolved")),
-                                              ("closed", _("Closed")),
-                                              ("canceled", _("Canceled")),
-                                          ],
-                                          default_value="none",
-                                      ),
-                                      Integer(
-                                          title=_(
-                                              "State of incident if downtime is set (as integer)"),
-                                          minvalue=0,
-                                      ),
-                                  ]))),
+                          DropdownChoice(
+                              title=_("State of incident if downtime is set"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
                          ("end",
-                          Transform(
-                              Alternative(
-                                  title=_("State of incident if downtime expires"),
-                                  help=_(
-                                      "Here you can define the state of the incident in case of an "
-                                      "ending acknowledgement of the host or service problem."),
-                                  elements=[
-                                      DropdownChoice(
-                                          title=_(
-                                              "State of incident if downtime expires (predefined)"),
-                                          help=_(
-                                              "Please note that the mapping to the numeric "
-                                              "ServiceNow state may be changed at your system "
-                                              "and can differ from our definitions. In this case "
-                                              "use the option below."),
-                                          choices=[
-                                              ("none", _("Don't change state")),
-                                              ("new", _("New")),
-                                              ("progress", _("In Progress")),
-                                              ("hold", _("On Hold")),
-                                              ("resolved", _("Resolved")),
-                                              ("closed", _("Closed")),
-                                              ("canceled", _("Canceled")),
-                                          ],
-                                          default_value="none",
-                                      ),
-                                      Integer(
-                                          title=_(
-                                              "State of incident if downtime expires (as integer)"),
-                                          minvalue=0,
-                                      ),
-                                  ]))),
+                          DropdownChoice(
+                              title=_("State of incident if downtime expires"),
+                              help=_("Here you can define the state of the incident in case of an "
+                                     "ending acknowledgement of the host or service problem."),
+                              choices=[
+                                  ("none", _("Don't change state")),
+                                  ("new", _("New")),
+                                  ("progress", _("In Progress")),
+                                  ("hold", _("On Hold")),
+                                  ("resolved", _("Resolved")),
+                                  ("closed", _("Closed")),
+                                  ("canceled", _("Canceled")),
+                              ],
+                              default_value="none",
+                          )),
                      ],
                  )),
                 ("timeout",
@@ -1004,8 +866,8 @@ class NotificationParameterOpsgenie(NotificationParameter):
                 ("owner",
                  TextUnicode(
                      title=_("Owner"),
-                     help=("Sets the user of the alert. "
-                           "Display name of the request owner."),
+                     help_=("Sets the user of the alert. "
+                            "Display name of the request owner."),
                      size=100,
                      allow_empty=False,
                  )),
@@ -1017,17 +879,15 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      size=16,
                  )),
                 ('priority',
-                 DropdownChoice(
-                     title=_("Priority"),
-                     choices=[
-                         ('P1', _('P1 - Critical')),
-                         ('P2', _('P2 - High')),
-                         ('P3', _('P3 - Moderate')),
-                         ('P4', _('P4 - Low')),
-                         ('P5', _('P5 - Informational')),
-                     ],
-                     default_value="P3",
-                 )),
+                 DropdownChoice(title=_("Priority"),
+                                choices=[
+                                    ('P1', _('P1 - Critical')),
+                                    ('P2', _('P2 - High')),
+                                    ('P3', _('P3 - Moderate')),
+                                    ('P4', _('P4 - Low')),
+                                    ('P5', _('P5 - Informational')),
+                                ],
+                                default="P3")),
                 ("note_created",
                  TextUnicode(
                      title=_("Note while creating"),
@@ -1155,7 +1015,7 @@ class NotificationParameterSpectrum(NotificationParameter):
     def spec(self):
         return Dictionary(
             title=_("Create notification with the following parameters"),
-            optional_keys=False,
+            optional_keys=None,
             elements=[
                 ("destination",
                  IPv4Address(title=_("Destination IP"),
@@ -1209,7 +1069,7 @@ class NotificationParameterPushover(NotificationParameter):
                  )),
                 ("url_prefix",
                  TextAscii(
-                     title=_("URL prefix for links to Checkmk"),
+                     title=_("URL prefix for links to Check_MK"),
                      help=_("If you specify an URL prefix here, then several parts of the "
                             "email body are armed with hyperlinks to your Check_MK GUI, so "
                             "that the recipient of the email can directly visit the host or "

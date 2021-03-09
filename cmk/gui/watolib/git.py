@@ -1,21 +1,38 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import errno
 import glob
 import os
-from pathlib import Path
 import subprocess
-
-from six import ensure_str
 
 import cmk.utils
 
 import cmk.gui.config as config
-from cmk.gui.globals import g
+from cmk.gui.globals import current_app
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
@@ -27,7 +44,7 @@ def add_message(message):
 
 def _git_messages():
     """Initializes the request global data structure and returns it"""
-    return g.setdefault("wato_git_messages", [])
+    return current_app.g.setdefault("wato_git_messages", [])
 
 
 def do_git_commit():
@@ -47,7 +64,7 @@ def do_git_commit():
         _git_add_files()
         _git_command([
             "commit", "--untracked-files=no", "--author", author, "-m",
-            _("Initialized GIT for Checkmk")
+            _("Initialized GIT for Check_MK")
         ])
 
     if _git_has_pending_changes():
@@ -75,41 +92,39 @@ def _git_add_files():
 
 
 def _git_command(args):
-    command = ["git"] + [ensure_str(a) for a in args]
-    logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
-                 subprocess.list2cmdline(command))
+    command = ["git"] + [a.encode("utf-8") for a in args]
+    logger.debug("GIT: Execute in %s: %s" %
+                 (cmk.utils.paths.default_config_dir, subprocess.list2cmdline(command)))
     try:
         p = subprocess.Popen(command,
                              cwd=cmk.utils.paths.default_config_dir,
                              stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             encoding="utf-8")
+                             stderr=subprocess.STDOUT)
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise MKGeneralException(
                 _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
                 (subprocess.list2cmdline(command), e))
-        raise
+        else:
+            raise
 
     status = p.wait()
     if status != 0:
-        out = u"" if p.stdout is None else ensure_str(p.stdout.read())
         raise MKGeneralException(
             _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-            (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))
+            (subprocess.list2cmdline(command), p.stdout.read().replace("\n", "<br>\n")))
 
 
 def _git_has_pending_changes():
     try:
-        p = subprocess.Popen(["git", "status", "--porcelain"],
-                             cwd=cmk.utils.paths.default_config_dir,
-                             stdout=subprocess.PIPE,
-                             encoding="utf-8")
-        return p.stdout is not None and p.stdout.read() != ""
+        return subprocess.Popen(["git", "status", "--porcelain"],
+                                cwd=cmk.utils.paths.default_config_dir,
+                                stdout=subprocess.PIPE).stdout.read() != ""
     except OSError as e:
         if e.errno == errno.ENOENT:
             return False  # ignore missing git command
-        raise
+        else:
+            raise
 
 
 # TODO: Use cmk.store
@@ -118,25 +133,22 @@ def _write_gitignore_files():
 
     Only files below the "wato" directories should be under git control. The files in
     etc/check_mk/*.mk should not be put under control."""
-    config_dir = Path(cmk.utils.paths.default_config_dir)
+    file(cmk.utils.paths.default_config_dir + "/.gitignore",
+         "w").write("# This file is under control of Check_MK. Please don't modify it.\n"
+                    "# Your changes will be overwritten.\n"
+                    "\n"
+                    "*\n"
+                    "!*.d\n"
+                    "!.gitignore\n"
+                    "*swp\n"
+                    "*.mk.new\n")
 
-    with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-        f.write("# This file is under control of Checkmk. Please don't modify it.\n"
-                "# Your changes will be overwritten.\n"
-                "\n"
-                "*\n"
-                "!*.d\n"
-                "!.gitignore\n"
-                "*swp\n"
-                "*.mk.new\n")
+    for subdir in os.listdir(cmk.utils.paths.default_config_dir):
+        if subdir.endswith(".d"):
+            file(cmk.utils.paths.default_config_dir + "/" + subdir + "/.gitignore",
+                 "w").write("*\n"
+                            "!wato\n")
 
-    for subdir in config_dir.iterdir():
-        if not subdir.name.endswith(".d"):
-            continue
-
-        with subdir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-            f.write("*\n!wato\n")
-
-        if subdir.joinpath("wato").exists():
-            with subdir.joinpath("wato/.gitignore").open("w", encoding="utf-8") as f:
-                f.write("!*\n")
+            if os.path.exists(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato"):
+                file(cmk.utils.paths.default_config_dir + "/" + subdir + "/wato/.gitignore",
+                     "w").write("!*\n")

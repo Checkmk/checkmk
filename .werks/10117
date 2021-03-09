@@ -1,11 +1,12 @@
 Title: Unbreak config generation for raw edition
 Level: 3
 Component: wato
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b11
 Date: 1568714205
-Class: fix
 
 A change introduced for 1.6.0b10 broke the config generation for the raw
 edition, this has been fixed.  Note that enterprise/managed editions were

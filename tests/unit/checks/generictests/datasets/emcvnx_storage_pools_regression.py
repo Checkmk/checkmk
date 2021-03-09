@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 checkname = 'emcvnx_storage_pools'
 
 parsed = {
@@ -127,10 +120,10 @@ checks = {
                     u'State: Ready, Status: OK(0x0), [Phys. capacity] User capacity: 15.04 TB, Consumed capacity: 12.75 TB, Available capacity: 2.29 TB',
                     []
                 ),
-                (1, 'Percent full: 84.76% (warn/crit at 70.00 B/90.00 B)', []),
+                (1, 'Percent full: 84.76% (warn/crit at 70 B/90 B)', []),
                 (
                     0,
-                    '[Virt. capacity] Percent subscribed: 84.76%, Oversubscribed by: 0.00 B, Total subscribed capacity: 12.75 TB',
+                    '[Virt. capacity] Percent subscribed: 84.76%, Oversubscribed by: 0 B, Total subscribed capacity: 12.75 TB',
                     [
                         (
                             'emcvnx_consumed_capacity', 14021409290321.92,
@@ -195,19 +188,19 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move lower: 0.00 B', [
+                    0, 'Move lower: 0 B', [
                         ('emcvnx_targeted_lower', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B',
+                    0, 'Move within: 0 B',
                     [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
         ),
         (
             u'backup Performance', {}, [
-                (0, 'User capacity: 4.30 TB', []),
+                (0, 'User capacity: 4.3 TB', []),
                 (
                     0, 'Consumed capacity: 3.87 TB', [
                         (
@@ -233,7 +226,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move higher: 0.00 B',
+                    0, 'Move higher: 0 B',
                     [('emcvnx_targeted_higher', 0.0, None, None, None, None)]
                 ),
                 (
@@ -245,7 +238,7 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B',
+                    0, 'Move within: 0 B',
                     [('emcvnx_targeted_within', 0.0, None, None, None, None)]
                 )
             ]
@@ -276,12 +269,12 @@ checks = {
                     ]
                 ),
                 (
-                    0, 'Move within: 0.00 B', [
+                    0, 'Move within: 0 B', [
                         ('emcvnx_move_within', 0.0, None, None, None, None)
                     ]
                 ),
                 (
-                    0, 'Movement completed: 102.70 GB', [
+                    0, 'Movement completed: 102.7 GB', [
                         (
                             'emcvnx_move_completed', 110273285324.8, None,
                             None, None, None

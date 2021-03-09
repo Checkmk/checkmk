@@ -6,26 +6,23 @@
 
 # type: ignore
 
-from cmk.base.plugins.agent_based.esx_vsphere_vm import parse_esx_vsphere_vm
-
 checkname = 'esx_vsphere_vm'
 
-parsed = parse_esx_vsphere_vm([
-    ['snapshot.rootSnapshotList', '732', '1594041788', 'poweredOn', 'FransTeil2'],
-    ['time_reference', '1594096464'],
-])
+info = [
+    [u'snapshot.rootSnapshotList', u'732', u'1594041788', u'poweredOn', u'FransTeil2'],
+    [u'time_reference', u'1594096464'],
+]
 
 discovery = {
-    'cpu': [],
-    'datastores': [],
-    'guest_tools': [],
-    'heartbeat': [],
-    'mem_usage': [],
-    'mounted_devices': [],
-    'name': [],
-    'running_on': [],
-    'snapshots': [(None, {})],
-    'snapshots_summary': [(None, {})],
+    u'cpu': [],
+    u'datastores': [],
+    u'guest_tools': [],
+    u'heartbeat': [],
+    u'mem_usage': [],
+    u'mounted_devices': [],
+    u'name': [],
+    u'running_on': [],
+    u'snapshots': [(None, {})]
 }
 
 checks = {
@@ -36,11 +33,11 @@ checks = {
             'age_oldest': (86400, 172800)
         },
         [
-            (0, 'Count: 1', []),
-            (0, 'Powered on: FransTeil2', []),
-            (0, 'Latest: FransTeil2 2020-07-06 15:23:08', []),
-            (0, '', [('age', 54676, 86400.0, 172800.0, None, None)]),
-            (0, '', [('age_oldest', 54676, 86400.0, 172800.0, None, None)]),
+            (0, u'Count: 1', []),
+            (0, u'Powered on: FransTeil2', []),
+            (0, u'Latest: FransTeil2 2020-07-06 15:23:08', []),
+            (0, u'', [(u'age', 54676, 86400.0, 172800.0, None, None)]),
+            (0, u'', [(u'age_oldest', 54676, 86400.0, 172800.0, None, None)]),
         ],
     )],
 }

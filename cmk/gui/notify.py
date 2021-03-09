@@ -1,15 +1,33 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import os
-import subprocess
 import time
-from typing import Any, Dict, List, Tuple
-
-from six import ensure_str
+import subprocess
+from typing import Dict, Any  # pylint: disable=unused-import
 
 import cmk.utils.store as store
 
@@ -18,8 +36,8 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
@@ -28,33 +46,21 @@ from cmk.gui.permissions import (
 )
 from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
 from cmk.gui.valuespec import (
-    AbsoluteDate,
-    CascadingDropdown,
-    CascadingDropdownChoice,
     Dictionary,
-    DualListChoice,
+    TextAreaUnicode,
+    CascadingDropdown,
     ListChoice,
     Optional,
-    TextAreaUnicode,
+    AbsoluteDate,
+    DualListChoice,
 )
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.utils.urls import makeuri
 
 
 def get_gui_messages(user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
-    messages = store.load_object_from_file(path, default=[])
+    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
+    messages = store.load_data_from_file(path, [])
 
     # Delete too old messages
     updated = False
@@ -82,19 +88,20 @@ def delete_gui_message(msg_id):
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
         user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
+    path = config.config_dir + "/" + user_id.encode("utf-8") + '/messages.mk'
     store.mkdir(os.path.dirname(path))
-    store.save_object_to_file(path, messages)
+    store.save_data_to_file(path, messages)
 
 
-def _notify_methods() -> Dict[str, Dict[str, Any]]:
+def _notify_methods():
+    # type: () -> Dict[str, Dict[str, Any]]
     return {
         'gui_popup': {
-            'title': _('Open window in the user interface'),
+            'title': _('Popup Message in the GUI (shows up alert window)'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Show hint in the \'User\' menu'),
+            'title': _('Send hint to message inbox (bottom of sidebar)'),
             'handler': notify_gui_msg,
         },
         'mail': {
@@ -102,21 +109,34 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_mail,
         },
         'dashlet': {
-            'title': _('Show notification in dashboard element \'User notifications\''),
+            'title': _('Send hint to dashlet'),
             'handler': notify_gui_msg,
         },
     }
 
 
-permission_registry.register(
-    Permission(
-        section=PermissionSectionGeneral,
-        name="notify",
-        title=_l("Notify Users"),
-        description=_l("This permissions allows users to send notifications to the users of "
-                       "the monitoring system using the web interface."),
-        defaults=["admin"],
-    ))
+@permission_registry.register
+class NotifyUsersPermission(Permission):
+    @property
+    def section(self):
+        return PermissionSectionGeneral
+
+    @property
+    def permission_name(self):
+        return "notify"
+
+    @property
+    def title(self):
+        return _("Notify Users")
+
+    @property
+    def description(self):
+        return _("This permissions allows users to send notifications to the users of "
+                 "the monitoring system using the web interface.")
+
+    @property
+    def defaults(self):
+        return ["admin"]
 
 
 @cmk.gui.pages.register("notify")
@@ -124,10 +144,11 @@ def page_notify():
     if not config.user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
-    title = _('Notify users')
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
-    menu = _page_menu(breadcrumb)
-    html.header(title, breadcrumb, menu)
+    html.header(_('Notify Users'))
+
+    html.begin_context_buttons()
+    html.context_button(_("Users"), "wato.py?mode=users", "back")
+    html.end_context_buttons()
 
     vs_notify = _vs_notify()
 
@@ -142,42 +163,15 @@ def page_notify():
     html.begin_form("notify", method="POST")
     vs_notify.render_input_as_form("_notify", {})
 
+    html.button("save", _("Send notification"))
+
     html.hidden_fields()
     html.end_form()
     html.footer()
 
 
-def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    menu = make_simple_form_page_menu(_("Users"),
-                                      breadcrumb,
-                                      form_name="notify",
-                                      button_name="save",
-                                      save_title=_("Send notification"))
-
-    menu.dropdowns.insert(
-        1,
-        PageMenuDropdown(
-            name="related",
-            title=_("Related"),
-            topics=[
-                PageMenuTopic(
-                    title=_("Setup"),
-                    entries=[
-                        PageMenuEntry(
-                            title=_("Users"),
-                            icon_name="users",
-                            item=make_simple_link("wato.py?mode=users"),
-                        )
-                    ],
-                ),
-            ],
-        ))
-
-    return menu
-
-
 def _vs_notify():
-    dest_choices: List[CascadingDropdownChoice] = [
+    dest_choices = [
         ('broadcast', _('Everybody (Broadcast)')),
         ('list', _('A list of specific users'),
          DualListChoice(
@@ -187,16 +181,16 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
-        ('online', _('All online users')),
     ]
+
+    if config.save_user_access_times:
+        dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
         elements=[
             ('text',
              TextAreaUnicode(title=_('Text'),
                              help=_('Insert the text to be sent to all reciepents.'),
-                             allow_empty=False,
-                             empty_text=_('You need to provide a text.'),
                              cols=50,
                              rows=10)),
             ('dest',
@@ -209,7 +203,6 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
-                 allow_empty=False,
                  choices=[(k, v['title']) for k, v in _notify_methods().items()],
                  default_value=['popup'],
              )),
@@ -230,17 +223,20 @@ def _vs_notify():
 
 
 def _validate_msg(msg, varprefix):
+    if not msg.get('text'):
+        raise MKUserError('text', _('You need to provide a text.'))
+
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
-    valid_methods = set(_notify_methods().keys())
+    valid_methods = _notify_methods().keys()
     for method in msg['methods']:
         if method not in valid_methods:
             raise MKUserError('methods', _('Invalid notitification method selected.'))
 
     # On manually entered list of users validate the names
     if isinstance(msg['dest'], tuple) and msg['dest'][0] == 'list':
-        existing = set(config.multisite_users.keys())
+        existing = config.multisite_users.keys()
         for user_id in msg['dest'][1]:
             if user_id not in existing:
                 raise MKUserError('dest', _('A user with the id "%s" does not exist.') % user_id)
@@ -250,19 +246,22 @@ def _process_notify_message(msg):
     msg['id'] = utils.gen_id()
     msg['time'] = time.time()
 
+    # construct the list of recipients
+    recipients = []
+
     if isinstance(msg['dest'], str):
         dest_what = msg['dest']
     else:
         dest_what = msg['dest'][0]
 
     if dest_what == 'broadcast':
-        recipients = list(config.multisite_users.keys())
+        recipients = config.multisite_users.keys()
+
     elif dest_what == 'online':
         recipients = userdb.get_online_user_ids()
+
     elif dest_what == 'list':
         recipients = msg['dest'][1]
-    else:
-        recipients = []
 
     num_recipients = len(recipients)
 
@@ -271,7 +270,7 @@ def _process_notify_message(msg):
         num_success[method] = 0
 
     # Now loop all notitification methods to send the notifications
-    errors: Dict[str, List[Tuple]] = {}
+    errors = {}
     for user_id in recipients:
         for method in msg['methods']:
             try:
@@ -285,23 +284,23 @@ def _process_notify_message(msg):
     message += "<table>"
     for method in msg['methods']:
         message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-            (_notify_methods()[method]["title"], num_success[method], num_recipients)
+                        (_notify_methods()[method]["title"], num_success[method], num_recipients)
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (makeuri(request, []), _('Back to previous page'))
-    html.show_message(HTML(message))
+    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+    html.message(HTML(message))
 
     if errors:
-        error_message = HTML()
+        error_message = ""
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s notifications to the following users:") % method
-            table_rows = HTML()
+            table_rows = ''
             for user, exception in method_errors:
-                table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user)) + html.render_td(exception))
+                table_rows += html.render_tr(html.render_td(html.render_tt(user))\
+                                             + html.render_td(exception))
             error_message += html.render_table(table_rows) + html.render_br()
-        html.show_error(error_message)
+        html.show_error(HTML(error_message))
 
 
 #   .--Notify Plugins------------------------------------------------------.
@@ -336,14 +335,12 @@ def notify_mail(user_id, msg):
     if not recipient_name:
         recipient_name = user_id
 
-    if config.user.id is None:
-        raise Exception("no user ID")
     sender_name = users[config.user.id].get('alias')
     if not sender_name:
         sender_name = user_id
 
     # Code mostly taken from notify_via_email() from notify.py module
-    subject = _('Checkmk: Notification')
+    subject = _('Check_MK: Notification')
     body = _('''Greetings %s,
 
 %s sent you a notification:
@@ -362,7 +359,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
+    command = ["mail", "-s", subject.encode("utf-8"), user['email'].encode("utf-8")]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
@@ -382,23 +379,21 @@ def notify_mail(user_id, msg):
             _('No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.'))
 
     try:
-        p = subprocess.Popen(
-            command,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            stdin=subprocess.PIPE,
-            close_fds=True,
-            encoding="utf-8",
-        )
+        p = subprocess.Popen(command,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             stdin=subprocess.PIPE,
+                             close_fds=True)
     except OSError as e:
         raise MKInternalError(
             _('Mail could not be delivered. '
               'Failed to execute command "%s": %s') % (" ".join(command), e))
 
-    stdout, _stderr = p.communicate(input=body)
+    output = p.communicate(body.encode("utf-8"))[0]
     exitcode = p.returncode
     if exitcode != 0:
         raise MKInternalError(
             _('Mail could not be delivered. Exit code of command is %r. '
-              'Output is: %s') % (exitcode, stdout))
-    return True
+              'Output is: %s') % (exitcode, output))
+    else:
+        return True

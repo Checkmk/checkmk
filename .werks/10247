@@ -1,12 +1,10 @@
 Title: CMC performance and server performance snapins were not refreshed
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1570023591
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p3
+Date: 1570023591
+Class: fix
 
 The sidebar snapins were not updated automatically as intended.

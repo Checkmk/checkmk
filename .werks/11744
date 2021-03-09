@@ -1,13 +1,13 @@
 Title: support case-insensitive hostname matching for multiple host match types
-Class: fix
-Compatible: compat
-Component: ec
-Date: 1610979268
-Edition: cre
 Knowledge: doc
 Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
 State: unknown
-Version: 2.1.0i1
+Version: 1.6.0p21
+Date: 1610979268
 
 Hosts are matched to events in the Event Console using different specification
 methods: hostname, IP address, and host alias. In the event that multiple

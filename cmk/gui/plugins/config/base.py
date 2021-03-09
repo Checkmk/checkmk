@@ -510,6 +510,9 @@ bi_packs: _Dict = {}
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
 bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
+default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
+bi_layouts = {"templates": {}, "aggregations": {}}
+
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
 bi_precompile_on_demand = False

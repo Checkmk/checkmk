@@ -1,11 +1,12 @@
 Title: Fixed query/idle timeouts.
 Level: 1
 Component: core
+Class: fix
 Compatible: compat
 Edition: cee
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b8
 Date: 1566999366
-Class: fix
 
 The CMC has two builtin hardwired timeouts regardin Livestatus: If a client
 connects and doesn't send anything for 5 minutes, the CMC closes the

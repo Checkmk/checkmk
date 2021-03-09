@@ -1,4 +1,3 @@
-$CMK_VERSION = "2.1.0i1"
 # check_datacore.ps1
 # Version 0.2
 # Author : Andre Eckstein, Andre.Eckstein@Bechtle.com
@@ -23,8 +22,8 @@ $CMK_VERSION = "2.1.0i1"
 # And just put that file into the following directories:
 # c:\windows\system32\WindowsPowerShell\v1.0\ and c:\windows\sysWOW64\WindowsPowerShell\v1.0\
 #
-# 3. A working Checkmk agent on the monitored host
-# Be sure that the Checkmk agent is working without the sansymphony.ps1 plugin. You can verify this by calling telnet <servername or ip> 6556.
+# 3. A working Check_MK agent on the monitored host
+# Be sure that the Check_MK agent is working without the sansymphony.ps1 plugin. You can verify this by calling telnet <servername or ip> 6556.
 # There should be a lot text output showing the different sections.
 
 #configuration:

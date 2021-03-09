@@ -1,12 +1,11 @@
 Title: Still allow working with old customized builtin tag groups
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b9
 Date: 1567789831
+Class: fix
 
 With 1.4 some sample config tag groups have been changed to be "builtin"
 tag groups. A prominent one is the "agent" tag group. Previous 1.6 releases

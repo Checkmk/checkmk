@@ -1,12 +1,11 @@
 Title: Decreased configuration loading time for setups with large amount of folders
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1566469619
+Class: feature
 
 Monitoring systems with multiple thousand folders had performance problems loading the configuration on the command line.
 This included operations like service discovery, core config generation or simple commands like <tt>cmk -l</tt>.

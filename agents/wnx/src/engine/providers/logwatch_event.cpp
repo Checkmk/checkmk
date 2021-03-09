@@ -4,9 +4,6 @@
 
 #include "providers/logwatch_event.h"
 
-#include <fmt/format.h>
-
-#include <algorithm>
 #include <filesystem>
 #include <limits>
 #include <regex>
@@ -18,6 +15,7 @@
 #include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
 #include "eventlog/eventlogvista.h"
+#include "fmt/format.h"
 #include "logger.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_raii.h"
@@ -26,14 +24,15 @@ namespace cma::provider {
 
 // trivial converter. kOff if LevelValue is not valid
 // safe for nullptr and mixed case
-cma::cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
-    using cma::cfg::EventLevels;
-    if (required_level.data() == nullptr) {
+cma::cfg::EventLevels LabelToEventLevel(std::string_view Level) {
+    using namespace cma::cfg;
+
+    if (Level.data() == nullptr) {
         XLOG::l(XLOG_FUNC + " parameter set to nullptr ");
-        return EventLevels::kOff;
+        return cma::cfg::EventLevels::kOff;
     }
 
-    std::string val(required_level);
+    std::string val(Level);
     cma::tools::StringLower(val);
 
     EventLevels levels[] = {EventLevels::kIgnore, EventLevels::kOff,
@@ -48,20 +47,20 @@ cma::cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
     return EventLevels::kOff;
 }
 
-void LogWatchEntry::init(std::string_view name, std::string_view level_value,
-                         bool context) {
-    name_ = name;
-    context_ = context;
-    level_ = LabelToEventLevel(level_value);
+void LogWatchEntry::init(std::string_view Name, std::string_view LevelValue,
+                         bool Context) {
+    name_ = Name;
+    context_ = Context;
+    level_ = LabelToEventLevel(LevelValue);
 
     loaded_ = true;
 }
 
-namespace {
-std::pair<std::string, std::string> ParseLine(std::string_view line) {
-    auto name_body = cma::tools::SplitString(std::string(line), ":");
+static std::pair<std::string, std::string> ParseLine(
+    std::string_view Line) noexcept {
+    auto name_body = cma::tools::SplitString(std::string(Line), ":");
     if (name_body.empty()) {
-        XLOG::l("Bad entry '{}' in logwatch section ", line);
+        XLOG::l("Bad entry '{}' in logwatch section ", Line);
         return {};
     }
 
@@ -75,7 +74,7 @@ std::pair<std::string, std::string> ParseLine(std::string_view line) {
     if (name.front() == '\"' || name.front() == '\'') name.erase(name.begin());
     cma::tools::AllTrim(name);  // this is intended
     if (name.empty()) {
-        XLOG::d("Skipping empty entry '{}'", line);
+        XLOG::d("Skipping empty entry '{}'", Line);
         return {};
     }
 
@@ -83,45 +82,45 @@ std::pair<std::string, std::string> ParseLine(std::string_view line) {
     cma::tools::AllTrim(body);
     return {name, body};
 }
-}  // namespace
 
-bool LogWatchEntry::loadFromMapNode(const YAML::Node& node) {
-    if (node.IsNull() || !node.IsDefined()) return false;
-    if (!node.IsMap()) return false;
+bool LogWatchEntry::loadFromMapNode(const YAML::Node Node) noexcept {
+    if (Node.IsNull() || !Node.IsDefined()) return false;
+    if (!Node.IsMap()) return false;
     try {
         YAML::Emitter emit;
-        emit << node;
+        emit << Node;
         return loadFrom(emit.c_str());
     } catch (const std::exception& e) {
         XLOG::l(
             "Failed to load logwatch entry from Node exception: '{}' in file '{}'",
-            e.what(), wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
+            e.what(), wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
 }
 // For one-line encoding, example:
 // - 'Application' : crit context
-bool LogWatchEntry::loadFrom(std::string_view line) {
-    using cma::cfg::EventLevels;
-    if (line.data() == nullptr || line.empty()) {
+bool LogWatchEntry::loadFrom(std::string_view Line) noexcept {
+    using namespace cma::cfg;
+    if (Line.data() == nullptr || Line.empty()) {
         XLOG::t("Skipping logwatch entry with empty name");
         return false;
     }
 
     try {
         bool context = false;
-        auto [name, body] = ParseLine(line);
+        auto level = EventLevels::kOff;
+        auto [name, body] = ParseLine(Line);
         if (name.empty()) return false;
 
-        auto table = tools::SplitString(std::string(body), " ");
-        std::string level_string{cfg::vars::kLogWatchEvent_ParamDefault};
-        if (!table.empty()) {
+        auto table = cma::tools::SplitString(std::string(body), " ");
+        std::string level_string{vars::kLogWatchEvent_ParamDefault};
+        if (table.size()) {
             level_string = table[0];
-            tools::AllTrim(level_string);
+            cma::tools::AllTrim(level_string);
             if (table.size() > 1) {
                 auto context_value = table[1];
-                tools::AllTrim(context_value);
-                context = tools::IsEqual(context_value, "context");
+                cma::tools::AllTrim(context_value);
+                context = cma::tools::IsEqual(context_value, "context");
             }
         } else {
             XLOG::d("logwatch entry '{}' has no data, this is not normal",
@@ -133,75 +132,69 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
     } catch (const std::exception& e) {
         XLOG::l(
             "Failed to load logwatch entry '{}' exception: '{}' in file '{}'",
-            std::string(line), e.what(),
-            wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
+            std::string(Line), e.what(),
+            wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
         return false;
     }
 }
 
 // returns count of loaded
 void LogWatchEvent::loadConfig() {
-    using cma::cfg::GetVal;
-    send_all_ = GetVal(cfg::groups::kLogWatchEvent,
-                       cfg::vars::kLogWatchEventSendall, true);
-    evl_type_ = GetVal(cfg::groups::kLogWatchEvent,
-                       cfg::vars::kLogWatchEventVistaApi, true)
-                    ? EvlType::vista
-                    : EvlType::classic;
+    using namespace cma::cfg;
+    send_all_ =
+        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventSendall, true);
+    vista_api_ =
+        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventVistaApi, true);
 
-    max_size_ =
-        GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventMaxSize,
-               cfg::logwatch::kMaxSize);
+    max_size_ = GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxSize,
+                       cma ::cfg::logwatch::kMaxSize);
     max_entries_ =
-        GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventMaxEntries,
-               cfg::logwatch::kMaxEntries);
-    max_line_length_ = GetVal(cfg::groups::kLogWatchEvent,
-                              cfg::vars::kLogWatchEventMaxLineLength,
-                              cfg::logwatch::kMaxLineLength);
-    timeout_ =
-        GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventTimeout,
-               cfg::logwatch::kTimeout);
+        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxEntries,
+               cma ::cfg::logwatch::kMaxEntries);
+    max_line_length_ =
+        GetVal(groups::kLogWatchEvent, vars::kLogWatchEventMaxLineLength,
+               cma ::cfg::logwatch::kMaxLineLength);
+    timeout_ = GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout,
+                      cma ::cfg::logwatch::kTimeout);
 
-    if (evl::g_evt.theModule() == nullptr || evl::g_evt.openLog == nullptr) {
+    if (!cma::evl::g_evt.module() || !cma::evl::g_evt.openLog) {
         XLOG::d(
             "Vista API requested in config, but support in OS is absent. Disabling...");
-        evl_type_ = EvlType::classic;
+        vista_api_ = false;
     }
-    const auto cfg = cfg::GetLoadedConfig();
+    const auto cfg = cma::cfg::GetLoadedConfig();
     int count = 0;
     try {
-        const auto section = cfg[cfg::groups::kLogWatchEvent];
+        const auto section = cfg[groups::kLogWatchEvent];
 
         // sanity checks:
         if (!section) {
-            XLOG::t("'{}' section absent", cfg::groups::kLogWatchEvent);
+            XLOG::t("'{}' section absent", groups::kLogWatchEvent);
             return;
         }
 
         if (!section.IsMap()) {
-            XLOG::l("'{}' is not correct", cfg::groups::kLogWatchEvent);
+            XLOG::l("'{}' is not correct", groups::kLogWatchEvent);
             return;
         }
 
         // get array, on success, return it
-        const auto log_array = section[cfg::vars::kLogWatchEventLogFile];
+        const auto log_array = section[vars::kLogWatchEventLogFile];
         if (!log_array) {
-            XLOG::t("'{}' section has no '{}' member",
-                    cfg::groups::kLogWatchEvent,
-                    cfg::vars::kLogWatchEventLogFile);
+            XLOG::t("'{}' section has no '{}' member", groups::kLogWatchEvent,
+                    vars::kLogWatchEventLogFile);
             return;
         }
 
         if (!log_array.IsSequence()) {
-            XLOG::t("'{}' section has no '{}' member",
-                    cfg::groups::kLogWatchEvent,
-                    cfg::vars::kLogWatchEventLogFile);
+            XLOG::t("'{}' section has no '{}' member", groups::kLogWatchEvent,
+                    vars::kLogWatchEventLogFile);
             return;
         }
 
         entries_.clear();
         bool default_found = false;
-        for (const auto& l : log_array) {
+        for (auto& l : log_array) {
             entries_.push_back(LogWatchEntry());
             entries_.back().loadFromMapNode(l);
             if (entries_.back().loaded()) {
@@ -226,33 +219,34 @@ void LogWatchEvent::loadConfig() {
     } catch (const std::exception& e) {
         XLOG::l(
             "CONFIG for '{}.{}' is seriously not valid, skipping. Exception {}. Loaded {} entries",
-            cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventLogFile,
-            e.what(), count);
+            groups::kLogWatchEvent, vars::kLogWatchEventLogFile, e.what(),
+            count);
     }
 }
 
 namespace details {
 // Example: line = "System|1234" provides {"System", 1234}
 // gtest
-State ParseStateLine(const std::string& line) {
-    auto tbl = cma::tools::SplitString(line, "|");
+State ParseStateLine(const std::string& Line) {
+    auto tbl = cma::tools::SplitString(Line, "|");
 
     if (tbl.size() != 2 || tbl[0].empty() || tbl[1].empty()) {
-        XLOG::l("State Line is not valid {}", line);
+        XLOG::l("State Line is not valid {}", Line);
         return {};
     }
 
     auto pos = cma::tools::ConvertToUint64(tbl[1]);
     if (pos.has_value()) return {tbl[0], pos.value(), false};
 
-    XLOG::l("State Line has no valid pos {}", line);
+    XLOG::l("State Line has no valid pos {}", Line);
     return {};
 }
 
 // build big common state
-StateVector LoadEventlogOffsets(const PathVector& state_files,
-                                bool reset_pos_to_null) {
-    for (const auto& fname : state_files) {
+// gtest [+]
+StateVector LoadEventlogOffsets(const PathVector& statefiles,
+                                bool ResetPosToNull) {
+    for (const auto& fname : statefiles) {
         StateVector states;
         std::ifstream ifs(fname);
         std::string line;
@@ -268,7 +262,7 @@ StateVector LoadEventlogOffsets(const PathVector& state_files,
             // check status
             if (state.name_.empty()) continue;
 
-            if (reset_pos_to_null) state.pos_ = 0;
+            if (ResetPosToNull) state.pos_ = 0;
 
             states.push_back(state);
         }
@@ -286,21 +280,22 @@ StateVector LoadEventlogOffsets(const PathVector& state_files,
     return {};
 }
 
-void SaveEventlogOffsets(const std::string& file_name,
-                         const StateVector& states) {
+void SaveEventlogOffsets(const std::string& FileName,
+                         const StateVector& States) {
     {
-        std::ofstream ofs(file_name);
+        std::ofstream ofs(FileName);
 
         if (!ofs) {
-            XLOG::l("Can't open file '{}' error [{}]", file_name,
-                    ::GetLastError());
+            XLOG::l("Can't open file {} error {}", FileName, GetLastError());
             return;
         }
 
-        for (const auto& state : states) {
+        for (const auto& state : States) {
             if (state.name_ == std::string("*")) continue;
 
             auto pos = state.pos_;
+
+            if (pos == cma::cfg::kInitialPos) pos = 0;
 
             ofs << state.name_ << "|" << pos << std::endl;
         }
@@ -308,8 +303,8 @@ void SaveEventlogOffsets(const std::string& file_name,
 }
 }  // namespace details
 
-constexpr const char* g_event_log_reg_path =
-    R"(SYSTEM\CurrentControlSet\Services\Eventlog)";
+constexpr const char* S_EventLogRegPath =
+    "SYSTEM\\CurrentControlSet\\Services\\Eventlog";
 
 // updates presented flag or add to the States
 void AddLogState(StateVector& states, bool from_config,
@@ -326,22 +321,22 @@ void AddLogState(StateVector& states, bool from_config,
     }
 
     // new added
-    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kFromBegin;
+    uint64_t pos = send_mode == SendMode::all ? 0 : cma::cfg::kInitialPos;
     states.emplace_back(State(log_name, pos, true));
     states.back().in_config_ = from_config;
     XLOG::t("New event log '{}' added with pos {}", log_name, pos);
 }
 
 // main API to add config entries to the engine
-void AddConfigEntry(StateVector& states, const LogWatchEntry& log_entry,
-                    bool reset_to_null) {
-    for (auto& state : states) {
-        if (cma::tools::IsEqual(state.name_, log_entry.name())) {
-            XLOG::t("Old event log '{}' found", log_entry.name());
+void AddConfigEntry(StateVector& States, const LogWatchEntry& Log,
+                    bool ResetToNull) {
+    for (auto& state : States) {
+        if (cma::tools::IsEqual(state.name_, Log.name())) {
+            XLOG::t("Old event log '{}' found", Log.name());
 
             state.setDefaults();
-            state.hide_context_ = !log_entry.context();
-            state.level_ = log_entry.level();
+            state.hide_context_ = !Log.context();
+            state.level_ = Log.level();
             state.in_config_ = true;
             state.presented_ = true;
             return;
@@ -349,20 +344,20 @@ void AddConfigEntry(StateVector& states, const LogWatchEntry& log_entry,
     }
 
     // new added
-    uint64_t pos = reset_to_null ? 0 : cma::cfg::kFromBegin;
-    states.emplace_back(State(log_entry.name(), pos, true));
-    states.back().in_config_ = true;
-    states.back().level_ = log_entry.level();
-    states.back().hide_context_ = !log_entry.context();
-    XLOG::t("New event log '{}' added with pos {}", log_entry.name(), pos);
+    uint64_t pos = ResetToNull ? 0 : cma::cfg::kInitialPos;
+    States.emplace_back(State(Log.name(), pos, true));
+    States.back().in_config_ = true;
+    States.back().level_ = Log.level();
+    States.back().hide_context_ = !Log.context();
+    XLOG::t("New event log '{}' added with pos {}", Log.name(), pos);
 }
 
 // Update States vector with log entries and Send All flags
 // event logs are available
 // returns count of processed Logs entries
-int UpdateEventLogStates(StateVector& states, std::vector<std::string>& logs,
+int UpdateEventLogStates(StateVector& states, std::vector<std::string> logs,
                          SendMode send_mode) {
-    for (const auto& log : logs) {
+    for (auto& log : logs) {
         AddLogState(states, false, log, send_mode);
     };
 
@@ -370,86 +365,41 @@ int UpdateEventLogStates(StateVector& states, std::vector<std::string>& logs,
 }
 
 std::vector<std::string> GatherEventLogEntriesFromRegistry() {
-    return wtools::EnumerateAllRegistryKeys(g_event_log_reg_path);
+    return wtools::EnumerateAllRegistryKeys(S_EventLogRegPath);
 }
 
-bool IsEventLogInRegistry(std::string_view name) {
+bool IsEventLogInRegistry(const std::string Name) {
     auto regs = GatherEventLogEntriesFromRegistry();
-    return std::ranges::any_of(
-        regs, [name](const std::string& r) { return r == name; });
-}
-
-std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name) {
-    if (type == EvlType::classic && !IsEventLogInRegistry(name)) return {};
-
-    auto log =
-        cma::evl::OpenEvl(wtools::ConvertToUTF16(name), type == EvlType::vista);
-
-    if (log && log->isLogValid()) {
-        return log->getLastRecordId();
+    bool found = false;
+    for (auto& r : regs) {
+        if (r == Name) return true;
     }
-
-    return {};
+    return false;
 }
 
-std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase& log,
-                                              const State& state,
-                                              LogWatchLimits lwl) {
-    std::string out;
-    int64_t count = 0;
-    auto start = std::chrono::steady_clock::now();
-    auto pos = cma::evl::PrintEventLog(
-        log, state.pos_, state.level_, state.hide_context_,
-        [&out, lwl, &count, start](const std::string& str) -> bool {
-            if (lwl.max_line_length > 0 &&
-                static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
-                out += str.substr(0, static_cast<size_t>(lwl.max_line_length));
-                out += '\n';
-            } else
-                out += str;
+std::string ReadDataFromLog(bool vista_api, State& state, bool& log_exists,
+                            int64_t max_size) {
+    log_exists = false;
 
-            if (lwl.max_size > 0 &&
-                static_cast<int64_t>(out.length()) >= lwl.max_size) {
-                return false;
-            }
-            ++count;
-            if (lwl.max_entries > 0 && count >= lwl.max_entries) return false;
-
-            if (lwl.timeout > 0) {
-                auto p = std::chrono::steady_clock::now();
-                auto span =
-                    std::chrono::duration_cast<std::chrono::seconds>(p - start);
-                if (span.count() > lwl.timeout) return false;
-            }
-
-            return true;
-        }
-
-    );
-
-    return {pos, out};
-}
-
-std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
-                                           LogWatchLimits lwl) {
-    if (type == EvlType::classic && !IsEventLogInRegistry(state.name_)) {
+    if (!vista_api && !IsEventLogInRegistry(state.name_)) {
         // we have to check registry, Windows always return success for
         // OpenLog for any even not existent log, but opens Application
         XLOG::d("Log '{}' not found in registry, try VistaApi ", state.name_);
         return {};
     }
 
-    auto log = cma::evl::OpenEvl(wtools::ConvertToUTF16(state.name_),
-                                 type == EvlType::vista);
+    auto log =
+        cma::evl::OpenEvl(wtools::ConvertToUTF16(state.name_), vista_api);
 
-    if (!log || !log->isLogValid()) {
-        return {};
-    }
+    if (!log) return {};
 
-    if (state.pos_ == cma::cfg::kFromBegin) {
+    log_exists = log->isLogValid();
+    if (!log_exists) return {};
+
+    if (state.pos_ == cma::cfg::kInitialPos) {
         // We just started monitoring this log.
         state.pos_ = log->getLastRecordId();
-        return "";
+        return {};
     }
 
     // The last processed eventlog record will serve as previous state
@@ -460,62 +410,53 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State& state,
     if (worst_state < state.level_) {
         // nothing to report
         state.pos_ = last_pos;
-        return "";
+        return {};
     }
 
-    auto [pos, out] = DumpEventLog(*log, state, lwl);
+    auto [pos, str] = cma::evl::PrintEventLog(*log, state.pos_, state.level_,
+                                              state.hide_context_, max_size);
 
-    if (provider::config::g_set_logwatch_pos_to_end && last_pos > pos) {
+    if (provider::config::G_SetLogwatchPosToEnd && last_pos > pos) {
         XLOG::l.t("Skipping logwatch pos from [{}] to [{}]", pos, last_pos);
         pos = last_pos;
     }
 
     state.pos_ = pos;
-    return out;
+    return str;
 }
 
 LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
 
-bool LoadFromConfig(State& state, const LogWatchEntryVector& entries) noexcept {
-    for (const auto& config_entry : entries) {
-        if (cma::tools::IsEqual(state.name_, config_entry.name())) {
-            // found, check that param is not off
-            state.hide_context_ = !config_entry.context();
-            state.level_ = config_entry.level();
-            state.in_config_ = true;
-            return true;
-        }
-    }
-
-    // check default entry
-    return false;
-}
-
-void UpdateStatesByConfig(StateVector& states,
-                          const LogWatchEntryVector& entries,
-                          const LogWatchEntry* dflt) {
-    LogWatchEntry default_entry =
-        dflt != nullptr ? *dflt : GenerateDefaultValue();
+void UpdateStatesByConfig(StateVector& States,
+                          const std::vector<LogWatchEntry>& ConfigEntries,
+                          const LogWatchEntry* Default) {
+    LogWatchEntry default_entry = Default ? *Default : GenerateDefaultValue();
 
     // filtering states
-    for (auto& s : states) {
-        if (LoadFromConfig(s, entries)) {
-            continue;
+    for (auto& s : States) {
+        bool found = false;
+
+        for (auto& config_entry : ConfigEntries) {
+            if (cma::tools::IsEqual(s.name_, config_entry.name())) {
+                // found, check that param is not off
+                s.hide_context_ = !config_entry.context();
+                s.level_ = config_entry.level();
+                s.in_config_ = true;
+                found = true;
+                break;
+            }
         }
+
+        // check default entry
+        if (found) continue;
 
         // not found - attempting to load default value
         s.hide_context_ = !default_entry.context();
         s.level_ = default_entry.level();
 
         // if default level isn't off, then we set entry as configured
-        if (s.level_ != cfg::EventLevels::kOff) {
-            s.in_config_ = true;
-        }
+        if (s.level_ != cfg::EventLevels::kOff) s.in_config_ = true;
     }
-}
-
-LogWatchLimits LogWatchEvent::getLogWatchLimits() const noexcept {
-    return {max_size_, max_line_length_, max_entries_, timeout_};
 }
 
 std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
@@ -536,40 +477,56 @@ std::vector<std::filesystem::path> LogWatchEvent::makeStateFilesTable() const {
     return statefiles;
 }
 
-std::string GenerateOutputFromStates(EvlType type, StateVector& states,
-                                     LogWatchLimits lwl) {
+std::string GenerateOutputFromStates(bool vista_api, StateVector& states,
+                                     int64_t max_size) {
     std::string out;
     for (auto& state : states) {
-        switch (state.level_) {
-            case cfg::EventLevels::kOff:
-                // updates position in state file for disabled log too
-                {
-                    auto pos = GetLastPos(type, state.name_);
-                    state.pos_ = pos.has_value() ? *pos : 0;
-                }
-                [[fallthrough]];
-            case cfg::EventLevels::kIgnore:
-                // this is NOT log, just stupid entries in registry
-                continue;
-
-            default:
-                if (state.in_config_) {
-                    auto log_data = ReadDataFromLog(type, state, lwl);
-                    if (log_data.has_value()) {
-                        out += "[[[" + state.name_ + "]]]\n" + *log_data;
-                    } else
-                        out += "[[[" + state.name_ + ":missing]]]\n";
-                } else {
-                    // skipping
-                    XLOG::d("Skipping log {}", state.name_);
-                }
+        if (state.level_ == cma::cfg::EventLevels::kIgnore) {
+            continue;
         }
+        if (state.level_ == cma::cfg::EventLevels::kOff) {
+            // if (state.pos_ == cma::cfg::kInitialPos) {
+            // update pos to last one
+            bool unused = false;
+
+            // updates position in state file for every(!) log presented
+            // even if the log is disabled
+            ReadDataFromLog(vista_api, state, unused, max_size);
+            continue;
+        }
+#if 0
+        // This Legacy Agent mode AB says this is NOT valid approach
+        // left as a temporary reference
+        if (state.presented_) {
+            out += "[[[" + state.name_ + "]]]\n";
+            out += ReadDataFromLog(state);
+        } else {
+            out += "[[[" + state.name_ + ":missing]]]\n";
+        }
+#else
+        // According to AB
+        if (state.in_config_) {
+            bool valid_log = false;
+            auto log_data =
+                ReadDataFromLog(vista_api, state, valid_log, max_size);
+            if (valid_log) {
+                out += "[[[" + state.name_ + "]]]\n" + log_data;
+            } else
+                out += "[[[" + state.name_ + ":missing]]]\n";
+        } else {
+            // skipping
+            XLOG::d("Skipping log {}", state.name_);
+        }
+#endif
     }
 
     return out;
 }
 
 std::string LogWatchEvent::makeBody() {
+    using namespace cma::cfg;
+    namespace fs = std::filesystem;
+
     XLOG::t(XLOG_FUNC + " entering");
 
     // The agent reads from a state file the record numbers
@@ -585,7 +542,7 @@ std::string LogWatchEvent::makeBody() {
 
     // check by registry, which logs are presented
     auto logs = GatherEventLogEntriesFromRegistry();
-    if (logs.empty()) {
+    if (logs.size() == 0) {
         XLOG::l("Registry has nothing to logwatch. This is STRANGE");
     }
     UpdateEventLogStates(states, logs,
@@ -593,7 +550,7 @@ std::string LogWatchEvent::makeBody() {
 
     // 2) Register additional, configured logs that are not in registry.
     //    Note: only supported with vista API enabled.
-    if (evl_type_ == EvlType::vista) {
+    if (vista_api_) {
         for (auto& e : entries_) {
             AddConfigEntry(states, e, send_all_);
         }
@@ -603,7 +560,7 @@ std::string LogWatchEvent::makeBody() {
     UpdateStatesByConfig(states, entries_, defaultEntry());
 
     // make string
-    auto out = GenerateOutputFromStates(evl_type_, states, getLogWatchLimits());
+    std::string out = GenerateOutputFromStates(vista_api_, states, max_size_);
 
     // The offsets are persisted in a statefile.
     // Always use the first available statefile name. In case of a

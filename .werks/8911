@@ -1,11 +1,12 @@
 Title: Fix CRIT criterion for k8s_pod_container
 Level: 1
 Component: checks
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b10
 Date: 1568041019
-Class: fix
 
 Cleanly terminated containers would erroneously mark the
 check CRIT.  Now, the check is only CRIT when a container

@@ -1,12 +1,11 @@
 Title: Fix grouping views by tags
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560240687
+Class: fix
 
 When trying to use tag painters for grouping table views this resulted
 in an exception <tt>TypeError (<lambda>() takes exactly 2 arguments (1 given))</tt>

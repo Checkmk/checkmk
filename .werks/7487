@@ -1,12 +1,11 @@
 Title: mk_logwatch: Consider 'Do not deploy' in bakery
 Level: 1
 Component: checks
-Class: fix
 Compatible: incomp
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560507086
+Class: fix
 
 When setting up a logwatch rule in the agent bakery, you can choose 'Do not deploy the Logwatch plugin'.
 This option has not been effective so far.

@@ -1,13 +1,13 @@
 Title: Windows Agent can configure Windows Firewall
-Class: feature
-Compatible: compat
-Component: checks
-Date: 1573633562
-Edition: cre
 Knowledge: undoc
 Level: 2
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p7
+Date: 1573633562
 
 Previously the Windows Firewall could prevent a connection to the Windows Agent
 (this is the default behavior) thus forcing a system administrator to configure

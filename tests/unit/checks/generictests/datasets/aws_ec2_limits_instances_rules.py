@@ -1,41 +1,32 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 checkname = 'aws_ec2_limits'
 
 info = [
     [
-        '[["running_ondemand_instances_t2.medium",', '"Running',
-        'On-Demand', 't2.medium', 'Instances",', '3,', '3,',
-        '"eu-central-1"],', '["running_ondemand_instances_t2.nano",',
-        '"Running', 'On-Demand', 't2.nano', 'Instances",', '20,', '5,',
-        '"eu-central-1"],', '["running_ondemand_instances_total",',
-        '"Total', 'Running', 'On-Demand', 'Instances",', '20,', '4,',
-        '"eu-central-1"],', '["vpc_elastic_ip_addresses",', '"VPC',
-        'Elastic', 'IP', 'Addresses",', '5,', '0,', '"eu-central-1"],',
-        '["elastic_ip_addresses",', '"Elastic', 'IP', 'Addresses",', '5,',
-        '0,', '"eu-central-1"],', '["spot_inst_requests",', '"Spot',
-        'Instance', 'Requests",', '20,', '0,', '"eu-central-1"],',
-        '["active_spot_fleet_requests",', '"Active', 'Spot', 'Fleet',
-        'Requests",', '1000,', '0,', '"eu-central-1"],',
-        '["spot_fleet_total_target_capacity",', '"Spot', 'Fleet',
-        'Requests', 'Total', 'Target', 'Capacity",', '5000,', '0,',
-        '"eu-central-1"]]'
+        u'[["running_ondemand_instances_t2.medium",', u'"Running',
+        u'On-Demand', u't2.medium', u'Instances",', u'3,', u'3],',
+        u'["running_ondemand_instances_t2.nano",', u'"Running',
+        u'On-Demand', u't2.nano', u'Instances",', u'20,', u'5],',
+        u'["running_ondemand_instances_total",', u'"Total', u'Running',
+        u'On-Demand', u'Instances",', u'20,', u'4],',
+        u'["vpc_elastic_ip_addresses",', u'"VPC', u'Elastic', u'IP',
+        u'Addresses",', u'5,', u'0],', u'["elastic_ip_addresses",',
+        u'"Elastic', u'IP', u'Addresses",', u'5,', u'0],',
+        u'["spot_inst_requests",', u'"Spot', u'Instance', u'Requests",',
+        u'20,', u'0],', u'["active_spot_fleet_requests",', u'"Active',
+        u'Spot', u'Fleet', u'Requests",', u'1000,', u'0],',
+        u'["spot_fleet_total_target_capacity",', u'"Spot', u'Fleet',
+        u'Requests', u'Total', u'Target', u'Capacity",', u'5000,', u'0]]'
     ]
 ]
 
-discovery = {'': [("eu-central-1", {})]}
+discovery = {'': [(None, {})]}
 
 checks = {
     '': [
         (
-            "eu-central-1", {
+            None, {
                 'spot_fleet_total_target_capacity': (None, 80.0, 90.0),
                 'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
                 'if_vpc_sec_group': (None, 80.0, 90.0),
@@ -49,57 +40,51 @@ checks = {
             }, [
                 (
                     2,
-                    'Levels reached: Running On-Demand t2.medium Instances, Running On-Demand '
-                    't2.nano Instances',
+                    u'Levels reached: Running On-Demand t2.medium Instances, Running On-Demand t2.nano Instances',
                     [
                         (
-                            'aws_ec2_running_ondemand_instances_t2.medium', 3,
+                            u'aws_ec2_running_ondemand_instances_t2.medium', 3,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_running_ondemand_instances_t2.nano', 5,
+                            u'aws_ec2_running_ondemand_instances_t2.nano', 5,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_running_ondemand_instances_total', 4,
+                            u'aws_ec2_running_ondemand_instances_total', 4,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
+                            u'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            'aws_ec2_elastic_ip_addresses', 0, None, None,
+                            u'aws_ec2_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            'aws_ec2_spot_inst_requests', 0, None, None, None,
+                            u'aws_ec2_spot_inst_requests', 0, None, None, None,
                             None
                         ),
                         (
-                            'aws_ec2_active_spot_fleet_requests', 0, None,
+                            u'aws_ec2_active_spot_fleet_requests', 0, None,
                             None, None, None
                         ),
                         (
-                            'aws_ec2_spot_fleet_total_target_capacity', 0,
+                            u'aws_ec2_spot_fleet_total_target_capacity', 0,
                             None, None, None, None
                         )
                     ]
                 ),
                 (
                     0,
-                    '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
-                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% '
-                    '(warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
-                    'max. 6), Usage: 83.33% (warn/crit at 80.0%/90.0%)(!)\nSpot Fleet Requests '
-                    'Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. '
-                    '20)\nTotal Running On-Demand Instances: 4 (of max. 20)\nVPC Elastic IP '
-                    'Addresses: 0 (of max. 5)',
+                    u'\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% (warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of max. 6), Usage: 83.33% (warn/crit at 80.0%/90.0%)(!)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. 20)\nTotal Running On-Demand Instances: 4 (of max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)',
+                    []
                 )
             ]
         ),
         (
-            "eu-central-1", {
+            None, {
                 'vpc_elastic_ip_addresses': (None, 80.0, 90.0),
                 'if_vpc_sec_group': (None, 80.0, 90.0),
                 'running_ondemand_instances': [
@@ -289,49 +274,45 @@ checks = {
             }, [
                 (
                     2,
-                    'Levels reached: Running On-Demand t2.medium Instances', [
+                    u'Levels reached: Running On-Demand t2.medium Instances', [
                         (
-                            'aws_ec2_running_ondemand_instances_t2.medium', 3,
+                            u'aws_ec2_running_ondemand_instances_t2.medium', 3,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_running_ondemand_instances_t2.nano', 5,
+                            u'aws_ec2_running_ondemand_instances_t2.nano', 5,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_running_ondemand_instances_total', 4,
+                            u'aws_ec2_running_ondemand_instances_total', 4,
                             None, None, None, None
                         ),
                         (
-                            'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
+                            u'aws_ec2_vpc_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            'aws_ec2_elastic_ip_addresses', 0, None, None,
+                            u'aws_ec2_elastic_ip_addresses', 0, None, None,
                             None, None
                         ),
                         (
-                            'aws_ec2_spot_inst_requests', 0, None, None, None,
+                            u'aws_ec2_spot_inst_requests', 0, None, None, None,
                             None
                         ),
                         (
-                            'aws_ec2_active_spot_fleet_requests', 0, None,
+                            u'aws_ec2_active_spot_fleet_requests', 0, None,
                             None, None, None
                         ),
                         (
-                            'aws_ec2_spot_fleet_total_target_capacity', 0,
+                            u'aws_ec2_spot_fleet_total_target_capacity', 0,
                             None, None, None, None
                         )
                     ]
                 ),
                 (
                     0,
-                    '\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of '
-                    'max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% '
-                    '(warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of '
-                    'max. 20)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000)\nSpot '
-                    'Instance Requests: 0 (of max. 20)\nTotal Running On-Demand Instances: 4 (of '
-                    'max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)',
+                    u'\nActive Spot Fleet Requests: 0 (of max. 1000)\nElastic IP Addresses: 0 (of max. 5)\nRunning On-Demand t2.medium Instances: 3 (of max. 3), Usage: 100% (warn/crit at 80.0%/90.0%)(!!)\nRunning On-Demand t2.nano Instances: 5 (of max. 20)\nSpot Fleet Requests Total Target Capacity: 0 (of max. 5000)\nSpot Instance Requests: 0 (of max. 20)\nTotal Running On-Demand Instances: 4 (of max. 20)\nVPC Elastic IP Addresses: 0 (of max. 5)',
+                    []
                 )
             ]
         )

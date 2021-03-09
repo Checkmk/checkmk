@@ -1,23 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Dict
-from pathlib import Path
-
-from testlib.utils import get_standard_linux_agent_output
-
-import cmk.base.config as config
-import cmk.base.autochecks as autochecks
+import cmk_base.config as config
+import cmk_base.autochecks as autochecks
 import cmk.utils.tags
 
 
-class Scenario:
+class Scenario(object):
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
-        super().__init__()
+        super(Scenario, self).__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
@@ -35,12 +24,7 @@ class Scenario:
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self,
-                 hostname,
-                 tags=None,
-                 host_path="/wato/hosts.mk",
-                 labels=None,
-                 ipaddress=None):
+    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -53,26 +37,7 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
         self.config["host_labels"][hostname] = labels
-
-        if ipaddress is not None:
-            self.config.setdefault("ipaddresses", {})[hostname] = ipaddress
-
         return self
-
-    def fake_standard_linux_agent_output(self, *test_hosts):
-        self.set_ruleset(
-            "datasource_programs",
-            [
-                ("cat %s/<HOST>" % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
-            ],
-        )
-        linux_agent_output = get_standard_linux_agent_output()
-
-        for h in test_hosts:
-            cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
-            cache_path.parent.mkdir(parents=True, exist_ok=True)
-            with cache_path.open("w", encoding="utf-8") as f:
-                f.write(linux_agent_output)
 
     def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
         if tags is None:
@@ -111,8 +76,7 @@ class Scenario:
         }
         tag_config.update(tags)
 
-        # NOTE: tag_config is modified within loop!
-        for tg_id, tag_id in list(tag_config.items()):
+        for tg_id, tag_id in tag_config.items():
             if tg_id == "site":
                 continue
 
@@ -139,26 +103,19 @@ class Scenario:
         self._autochecks[hostname] = services
 
     def apply(self, monkeypatch):
-        check_vars: Dict = {}
         for key, value in self.config.items():
-            if key in config._check_variables:
-                check_vars.setdefault(key, value)
-                continue
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
-        config.set_check_variables(check_vars)
 
         if self._autochecks:
-            # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
             monkeypatch.setattr(self.config_cache._autochecks_manager,
                                 "_raw_autochecks",
-                                dict(self._autochecks.items()),
+                                {e[0]: e[1] for e in self._autochecks.iteritems()},
                                 raising=False)
 
-            monkeypatch.setattr(
-                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
+            monkeypatch.setattr(autochecks.AutochecksManager, "_read_raw_autochecks_of",
+                                lambda self, hostname: self._raw_autochecks.get(hostname, []))
 
         return self.config_cache

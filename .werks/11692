@@ -1,12 +1,13 @@
 Title: agent_aws: fix check_mk discovery UNKN status when configuring the AWS agent
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1606387132
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606387132
 
 The check_mk discovery service returned an UNKN status when the AWS agent was
 configured for monitoring. Example error message:

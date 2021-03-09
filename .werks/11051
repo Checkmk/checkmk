@@ -1,13 +1,11 @@
 Title: crash in notifications if "Exclude Service Groups (regex)" is used
-Class: fix
-Compatible: compat
-Component: notifications
-Date: 1597061167
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p16
+Date: 1597061167
+Class: fix
 
 If a notification rule used the option "Exclude Service Groups (regex)" and
 no service group was defined for a service the notification rule processing

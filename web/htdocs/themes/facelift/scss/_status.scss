@@ -1,24 +1,47 @@
-@charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+tails.  You should have received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+
+*/
 
 /* Styles used for marking up Monitoring data, such as host and
- * service states, Perf-O-Meters und the like.
- *
- * CSS classes for service states:
- * state0 - OK
- * state1 - WARN
- * state2 - CRIT
- * state3 - UNKN
- *
- * CSS classes for host states:
- * hstate0 - UP
- * hstate1 - DOWN
- * hstate2 - UNREACH
- *
- * TODO: Get rid of important styles throughout this style sheet
- */
+   service states, Perf-O-Meters und the like */
+
+/* States */
+
+/* Colors of the five possible host and service states
+  CRIT:    #e2001a
+  UNKNOWN: #f79802
+  WARN:    #e6c908
+  OK:      #41a62a
+*/
+
+/* TODO: Get rid of important styles throughout this style sheet */
+
+.state {
+  box-shadow: none;
+}
 
 .stale .state {
   text-shadow: none !important;
@@ -28,60 +51,43 @@
 
 td.state {
   width: 32px;
-  font-weight: $font-weight-bold;
+  font-weight: bold;
   text-align: center;
 }
 
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
-  color: rgb(136, 136, 136);
+  color: #888;
 }
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
-  color: $lightgrey !important;
-  text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
+  color: $theme-color-lightgrey !important;
+  text-shadow: 0.8px 0.8px 0.8px #f88;
 }
 
-tr.groupheader .state span {
-  padding: 2px 4px 0;
-  border-radius: $theme-border-radius;
-}
-
-tr.data,
-div.tile {
-  td.state,
-  td.hstate {
-    height: 100%;
-    padding: 0 1px;
-
-    span {
-      display: flex;
-      align-items: center;
-      height: 95%;
-      border-radius: 2px;
-    }
-  }
-}
-
-td.state span {
-  justify-content: center;
-}
-
-td.hstate span {
-  padding: 0 5px;
-}
 
 /* OK/UP */
-.bibox_box.state0,
-span.content.state0,
-b.state0,
-.state0 span,
-.hstate0 span {
-  &,
-  a {
-    color: $black !important;
-    background-color: $color-state-success-background !important;
+.state0,
+.hstate0,
+.state0 a,
+.state0 body.main .popup_menu span,
+body.main .popup_menu .state0 span,
+.hstate0 a,
+.hstate0 body.main .popup_menu span,
+body.main .popup_menu .hstate0 span {
+  background-color: $theme-color-state-success-background !important;
+  border-color: $theme-color-state-success-border !important;
+}
+
+/* TODO: Replace class "odd0" with "odd state0" */
+.odd0, .even0 {
+  .state0, .hstate0, .state0 a, .state0 body.main .popup_menu span,
+  body.main .popup_menu & .state0 span, .hstate0 a,
+  .hstate0 body.main .popup_menu span, body.main .popup_menu & .hstate0 span {
+    color: $dark-font-color;
+    background-color: $theme-color-state-success-background !important;
+    border-color: $theme-color-state-success-border !important;
   }
 }
 
@@ -90,64 +96,113 @@ b.state0,
 }
 
 /* WARN */
-.bibox_box.state1,
-span.content.state1,
-b.state1,
-.state1 span {
-  &,
-  a {
-    color: $black !important;
-    background-color: $color-state-1-background !important;
-  }
+.state1,
+.even1 .state1,
+.state1 a,
+.state1 body.main .popup_menu span,
+body.main .popup_menu .state1 span,
+tr.groupheader td.state1 {
+  color: $theme-color-black !important;
+  background-color: $theme-color-state-1-background !important;
+  border-color: $theme-color-state-1-border !important;
+}
+
+.odd0 .state1,
+.odd1 .state1 {
+  background-color: $theme-color-state-1-background !important;
+  border-color: $theme-color-state-1-border !important;
 }
 
 /* CRIT/DOWN */
-.bibox_box.state2,
-span.content.state2,
-b.state2,
-.state2 span,
-.hstate1 span {
-  &,
-  a {
-    color: $white !important;
-    background-color: $color-state-2-background !important;
-  }
+.state2.state2.state2,
+.even0 .state2,
+.even2 .state2,
+.hstate1,
+.state2 a,
+.state2 body.main .popup_menu span,
+body.main .popup_menu .state2 span,
+.hstate2 a,
+.hstate2 body.main .popup_menu span,
+body.main .popup_menu .hstate2 span {
+  color: $theme-color-lightgrey !important;
+  background-color: $theme-color-state-2-background !important;
+  border-color: $theme-color-state-2-border !important;
 }
 
+.odd0 .state2,
+.odd2 .state2 {
+  color: $theme-color-lightgrey !important;
+  background-color: $theme-color-state-2-background !important;
+  border-color: $theme-color-state-2-border !important;
+}
+
+/* TODO: Check whether these are supposed to be .hstate3 selectors not ...2 */
 /* UNKNOWN / UNREACH */
-.bibox_box.state3,
-span.content.state3,
-b.state3,
-.state3 span,
-.hstate2 span {
-  &,
-  a {
-    color: $white !important;
-    background-color: $color-state-3-background !important;
-  }
+.state3,
+.hstate2,
+.state3 a,
+.state3 body.main .popup_menu span,
+body.main .popup_menu .state3 span,
+.hstate2 a,
+.hstate2 body.main .popup_menu span,
+body.main .popup_menu .hstate2 span {
+  color: $theme-color-white !important;
+  background-color: $theme-color-state-3-background !important;
+  border-color: $theme-color-state-3-border !important;
 }
 
-/* PENDING / in DOWNTIME */
+.odd0 .state3,
+.odd3 .state3 {
+  color: $theme-color-white !important;
+  background-color: $theme-color-state-3-background !important;
+  border-color: $theme-color-state-3-border !important;
+}
+
+tr.odd3 {
+  background-color: $tr-odd3-bg-color;
+}
+
+tr.even3 {
+  background-color: $tr-even3-bg-color;
+}
+
+
+/* PENDING */
 .statep,
 .hstatep,
+.statep a,
+.statep body.main .popup_menu span,
+body.main .popup_menu .statep span,
+.hstatep a,
+.hstatep body.main .popup_menu span,
+body.main .popup_menu .hstatep span {
+  color: $theme-color-white !important;
+  background-color: $theme-color-state-4-background !important;
+  border-color: $theme-color-state-4-border !important;
+}
+
+/* in DOWNTIME */
 .stated,
-.hstated {
-  span {
-    &,
-    a {
-      color: $statep-font-color !important;
-      background-color: $color-state-4-background !important;
-    }
-  }
+.hstated,
+.stated a,
+.stated body.main .popup_menu span,
+body.main .popup_menu .stated span,
+.hstated a,
+.hstated body.main .popup_menu span,
+body.main .popup_menu .hstated span {
+  color: $theme-color-white !important;
+  background-color: $theme-color-state-4-background !important;
+  border-color: $theme-color-state-4-border !important;
 }
 
 /* inline state markers in check output */
 b.stmark {
   position: relative;
   top: -1px;
-  padding: 1.5px 3px;
+  padding: 1px 3px;
   margin-left: 2px;
-  font-size: $font-size-small;
+  font-size: 9px;
+  border: 1px solid #666;
   border-radius: 4px;
 }
 
@@ -160,17 +215,40 @@ img.pluginurl {
   vertical-align: middle;
 }
 
+/* *some* problem */
+.states, .hstates {
+  color: #000;
+  background-image: url("images/someproblem.png");
+  background-position: center center;
+  background-repeat: repeat;
+
+  body.main & a, table.data tr.data > & a {
+    &, &:hover, &:link, &:link:hover {
+      color: $grey-7;
+    }
+  }
+}
+
+.states {
+  background-color: $theme-color-nuance-6;
+  background-image: none;
+  transition: background-color .15s ease-in-out;
+}
+
 /* Status of sites in sidebar and in WATO */
 .status_label {
   width: 56px;
   height: 16px;
   padding: 2px;
-  font-size: $font-size-small;
+  font-size: 9px;
   line-height: 12px;
-  color: rgb(255, 255, 255);
+  color: #fff;
   text-align: center;
   cursor: default;
-  border-radius: 8px;
+  border-color: #1b333d #264c18 #1b333d #274141;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 4px;
   box-shadow: none;
   box-sizing: border-box;
 
@@ -185,40 +263,42 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: rgb(178, 178, 178);
-    background-color: rgb(120, 120, 120);
+    color: #b2b2b2;
+    background-color: #787878;
   }
 
-  &.dead {
-    background-color: rgb(185, 30, 29);
+  &.dead     {
+    background-color: #b91e1d;
   }
 
-  &.down {
-    background-color: rgb(246, 0, 0);
+  &.down     {
+    background-color: #f60000;
   }
 
   &.online {
     font-weight: 500;
     color: $hot-font-color !important;
-    background-color: $color-state-success-background;
+    background-color: $theme-color-state-success-background;
+    border-color: $theme-color-state-success-border !important;
   }
 
   &.partial {
-    background-color: rgb(189, 138, 63);
+    background-color: #bd8a3f;
   }
 
-  &.unknown {
-    background-color: rgb(169, 99, 148);
+  &.unknown  {
+    background-color: #a96394;
   }
 
-  &.unreach {
-    background-color: rgb(239, 123, 8);
+  &.unreach  {
+    background-color: #ef7b08;
   }
 
-  &.waiting {
-    background-color: rgb(53, 116, 194);
+  &.waiting  {
+    background-color: #3574c2;
   }
 }
+
 
 /* Performeter styling */
 
@@ -237,7 +317,7 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     overflow: hidden;
-    border: 1px solid $color-table-border;
+    border: 1px solid $theme-color-table-border;
     filter: saturate(50%);
   }
 
@@ -246,9 +326,10 @@ table.data tr.data > td.perfometer {
     width: 100%;
     padding: 0;
     margin: 0;
-    font-weight: $font-weight-bold;
+    font-size: $theme-font-size-main;
+    font-weight: $theme-font-weight-bold;
     letter-spacing: 0;
-    color: $color-perfometer-title;
+    color: $theme-color-perfometer-title;
   }
 
   .glass {
@@ -262,7 +343,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: rgb(0, 0, 0);
+    color: #000;
     text-decoration: none;
   }
 
@@ -308,7 +389,7 @@ td.perfometer {
     height: 24px;
     padding: 0;
     margin: 0;
-    border: 1px solid rgb(170, 170, 170);
+    border: 1px solid #aaa;
     border-spacing: 0;
   }
 }
@@ -336,47 +417,47 @@ table.data td.perfometer {
   }
 }
 
+td.statex {  /* zero count */
+  color: #ccc;
+}
+
 /* Row coloring in case of the different states */
 tr[class*="odd"] {
   background-color: $odd-tr-bg-color;
 
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
   }
 }
 
 tr[class*="even"] {
   background-color: $even-tr-bg-color;
 
-  td:not(.count).state1,
-  td:not(.count).state3 {
-    a,
-    span {
-      color: $dark-font-color;
-    }
+  &:last-child {
+    border-bottom: none;
+  }
+
+  td.state0 a, td.state1 a, td.state3 a {
+    color: $dark-font-color;
   }
 }
 
 .data div.hostdown {
   padding-right: 3px;
   padding-left: 3px;
-  background-color: $danger;
-  border: 2px solid rgb(0, 0, 0);
+  background-color: #f22;
+  border: 2px solid #000;
   border-radius: 4px;
 }
 
 table.data {
   td.age {
-    color: $table-secondary-font-color;
+    color: $age-font-color;
     white-space: nowrap;
 
     &.staletime {
       font-weight: bold;
-      color: $danger;
+      color: #f00;
     }
 
     &.recent {
@@ -385,19 +466,27 @@ table.data {
     }
   }
 
-  .state2 *,
-  .state3 * {
-    color: $white;
+  .state2 *, .state3 * {
+    color: #fff;
+  }
+
+  td.state {
+    border-top: none;
+  }
+
+  tr.data td.states {
+    background-color: $theme-color-nuance-6;
+    color: $states-font-color;
   }
 }
 
-td.badflag span {
+td.badflag {
   font-weight: bold;
-  background-color: rgb(255, 102, 68);
+  background-color: #f64;
 }
 
 td.goodflag {
-  color: $success !important;
+  color: #080;
 }
 
 td.icons {
@@ -405,6 +494,7 @@ td.icons {
   white-space: nowrap;
 
   img {
+    height: 20px;
     margin-right: 0;
   }
 }
@@ -421,6 +511,7 @@ img.tabicon {
   height: 16px;
   vertical-align: middle;
 }
+
 
 /* Styles used by specific painters. These should be modularized later ... */
 /* TODO: Reproduce this html element */
@@ -439,7 +530,7 @@ table.data div.objectlist div {
 img.siteicon {
   width: 24px;
   height: 24px;
-  border: 1px solid rgb(102, 102, 102);
+  border: 1px solid #666;
 }
 
 /* TODO: Reproduce table.customvars */
@@ -453,7 +544,7 @@ table.data tr.data td table.customvars td {
 
   &:last-child {
     padding-left: 5px;
-    border-left: 1px solid rgb(187, 187, 187);
+    border-left: 1px solid #bbb;
   }
 }
 
@@ -461,53 +552,30 @@ td.matchgroups span {
   padding: 0 3px;
   margin-right: 3px;
   font-family: monospace;
-  background-color: rgb(255, 255, 255);
-  border: 1px solid rgb(238, 238, 238);
+  background-color: #fff;
+  border: 1px solid #eee;
   border-radius: 3px;
-  box-shadow: 0 0 1px rgb(136, 136, 136);
-}
-
-table.allhosts,
-table.hostmatrix,
-table.timeline {
-  .state0 {
-    background-color: $color-state-success-background;
-  }
-
-  .state1 {
-    background-color: $color-state-1-background;
-  }
-
-  .state2 {
-    background-color: $color-state-2-background;
-  }
-
-  .state3 {
-    background-color: $color-state-3-background;
-  }
+  box-shadow: 0 0 1px #888;
 }
 
 table.data.availability tr.even0 td {
-  &.state0,
-  &.state1,
-  &.state2,
-  &.state3 {
-    color: $black;
-  }
-
   &.state0 {
-    background-color: $lightened-state0-bg-color;
+    background-color: $lightened-state0-bg-color !important;
   }
 
   &.state1 {
-    background-color: $lightened-state1-bg-color;
+    background-color: $lightened-state1-bg-color !important;
   }
 
   &.state2 {
-    background-color: $lightened-state2-bg-color;
+    background-color: $lightened-state2-bg-color !important;
   }
 
   &.state3 {
-    background-color: $lightened-state3-bg-color;
+    background-color: $lightened-state3-bg-color !important;
   }
+}
+
+div.tile td.hstate0 {
+  color: $dark-font-color;
 }

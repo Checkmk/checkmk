@@ -1,12 +1,11 @@
 Title: Fix Remove spurious perfdata in IF checks
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1564985713
+Class: fix
 
 Remove repeated in & out perf data values
 Remove perfdata for averaged average

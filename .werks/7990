@@ -1,11 +1,10 @@
 Title: Allow report PDFs to be opened inline (shown in browser)
 Level: 1
 Component: reporting
-Class: feature
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1564304481
+Class: feature
 
 

@@ -1,11 +1,10 @@
 Title: Virtual Host Tree: Fixed sorting by topic
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1559814378
+Class: fix
 
 

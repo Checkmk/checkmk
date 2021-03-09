@@ -1,12 +1,13 @@
 Title: AWS RDS
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1589199945
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1589199945
 
 This werk fixes several issues with the AWS RDS monitoring:
 
@@ -32,5 +33,5 @@ The following services are affected by the change described
 in the last point above: aws_rds_summary.db_status, aws_rds,
 aws_rds.cpu_credits, aws_rds.network_io, aws_rds.bin_log_usage,
 aws_rds.transaction_logs_usage, aws_rds.replication_slot_usage,
-aws_rds.disk_io, aws_rds.connections, aws_rds.agent_jobs, 
+aws_rds.disk_io, aws_rds.connections, aws_rds.agent_jobs,
 aws_rds.replica_lag.

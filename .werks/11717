@@ -1,12 +1,13 @@
 Title: oracle_dataguard_stats: Issue warning about missing apply lag
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1605885715
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1605885715
 
 This change addresses the error "Apply lag has NULL value in v$dataguard_stats"
 that can occur when checking the DataGuard configuration status and that results

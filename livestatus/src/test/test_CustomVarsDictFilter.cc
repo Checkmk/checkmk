@@ -1,15 +1,7 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
-
+#include <cstddef>
 #include <iomanip>
-#include <map>
-#include <memory>
 #include <sstream>
 #include <string>
-
-#include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
@@ -21,8 +13,6 @@
 #include "nagios.h"
 #include "opids.h"
 #include "test_utilities.h"
-class Comment;
-class Downtime;
 
 namespace {
 std::string b16encode(const std::string& str) {
@@ -38,22 +28,14 @@ std::string b16encode(const std::string& str) {
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
-            "name", "description", ColumnOffsets{}.add([](Row r) {
-                return &r.rawData<host>()->custom_variables;
-            }),
-            &core, kind};
+            "name", "description", -1, -1, -1, offsetof(host, custom_variables),
+            &core,  kind};
         CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
                                     RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, {}, {});
     }
 
-    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
-    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
-    NagiosCore core{downtimes_,
-                    comments_,
-                    NagiosPaths{},
-                    NagiosLimits{},
-                    NagiosAuthorization{},
+    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
                     Encoding::utf8};
 
     TestHost test_host{
@@ -75,7 +57,7 @@ TEST_F(CustomVarsDictFilterTest, empty) {
     EXPECT_FALSE(accepts(AttributeKind::tags, "GUT '' "));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedKinds) {
+TEST_F(CustomVarsDictFilterTest, unquoted_kinds) {
     EXPECT_TRUE(accepts(AttributeKind::custom_variables, "GUT Mies"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "GUT foo"));
@@ -83,27 +65,27 @@ TEST_F(CustomVarsDictFilterTest, UnquotedKinds) {
     EXPECT_FALSE(accepts(AttributeKind::label_sources, "GUT bart"));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedSplitting) {
+TEST_F(CustomVarsDictFilterTest, unquoted_splitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT Guten Tag!"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     GUT    Guten Tag!"));
     EXPECT_FALSE(accepts(AttributeKind::tags, "    GUT    Guten Tag!    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, UnquotedUTF8) {
+TEST_F(CustomVarsDictFilterTest, unquoted_utf8) {
     EXPECT_TRUE(accepts(AttributeKind::labels, "GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ Góðan dag!"));
     EXPECT_TRUE(accepts(AttributeKind::labels, "     GÓÐ    Góðan dag!"));
     EXPECT_FALSE(accepts(AttributeKind::labels, "    GÓÐ    Góðan dag!   "));
 }
 
-TEST_F(CustomVarsDictFilterTest, QuotedSplitting) {
+TEST_F(CustomVarsDictFilterTest, quoted_splitting) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT' 'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "     'GUT'    'Guten Tag!'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "    'GUT'    'Guten Tag!'    "));
 }
 
-TEST_F(CustomVarsDictFilterTest, QuotedEscape) {
+TEST_F(CustomVarsDictFilterTest, quoted_escape) {
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll'"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rock''n' 'Rock''n Roll"));
     EXPECT_TRUE(accepts(AttributeKind::tags, "'Rollin' 'Rock''n Rollin'''"));

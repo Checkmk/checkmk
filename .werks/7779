@@ -1,12 +1,11 @@
 Title: LDAP sync: Fix exception when syncing only password changes for users
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560325557
+Class: fix
 
 The LDAP sync failed with an exception like this in 1.6.0b1 when only the password
 for users was changed in a distributed Checkmk setup:

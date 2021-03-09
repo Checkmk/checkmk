@@ -1,12 +1,10 @@
 Title: Graph Tunings: Added temperature graph
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1580847744
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 1.6.0p9
+Date: 1580847744
+Class: fix
 
 

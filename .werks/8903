@@ -1,11 +1,12 @@
 Title: apache_status: Optional path to X.509 cert
 Level: 1
 Component: checks
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b7
 Date: 1565958716
-Class: feature
 
 
 The GUI now lets the user specify the path to an X.509

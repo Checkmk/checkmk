@@ -3,9 +3,11 @@ Level: 1
 Component: checks
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1562857079
 Class: fix
+
 
 This werk fixes the problem of chrony check not be able to detect when no NTP server is reachable.
 

@@ -1,13 +1,11 @@
 Title: check_http: don't set virtual host if not necessary
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1573114215
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p7
+Date: 1573114215
+Class: fix
 
 Since version 1.6 the active check check_http automatically
 set the HTTP Host header and used HTTP/1.1 instead of HTTP/1.0

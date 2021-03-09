@@ -1,13 +1,11 @@
 Title: Fixed listing of plugins in view Agents and Plugins
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1580207614
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580207614
+Class: fix
 
 The plugin "win_license.bat" was missing, rstcli.bat and storcli.bat where not
 shown correctly. This has been fixed.

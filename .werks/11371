@@ -1,13 +1,11 @@
 Title: mk_oracle: Fixed failed login with specific credentials
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1597993736
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p17
+Date: 1597993736
+Class: fix
 
 With werk #10850 we introduced a fix for possible problems with upper and
 lower case instances in 1.6.0p15. It made a match possible where the process

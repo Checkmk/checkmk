@@ -1,11 +1,10 @@
 Title: Fix broken graph loading image
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1566398817
+Class: fix
 
 

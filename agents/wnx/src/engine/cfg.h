@@ -1,7 +1,3 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
 
 #pragma once
 
@@ -11,11 +7,17 @@
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
 #include "logger.h"
 #include "on_start.h"
 #include "onlyfrom.h"
 #include "tools/_misc.h"
+#include "yaml-cpp/yaml.h"
+
+namespace cma {
+// set only when executable works as a service
+bool IsService();
+bool IsTest();
+}  // namespace cma
 
 namespace cma::cfg {
 constexpr std::string_view kBuildHashValue = "DEFADEFADEFA";
@@ -42,8 +44,6 @@ constexpr const wchar_t* kDefaultMainConfig = L"check_mk.yml";
 
 constexpr const wchar_t* kCapFile = L"plugins.cap";
 constexpr const wchar_t* kIniFile = L"check_mk.ini";
-constexpr const wchar_t* kInstallYmlFileW = L"check_mk.install.yml";
-constexpr const char* kInstallYmlFileA = "check_mk.install.yml";
 constexpr const wchar_t* kWatoIniFile = L"check_mk.ini";
 constexpr const wchar_t* kAuStateFile = L"cmk-update-agent.state";
 
@@ -59,6 +59,7 @@ constexpr const wchar_t* kDefaultUserExt = L".user.yml";
 // special
 constexpr std::string_view kUpgradeProtocol = "upgrade.protocol";
 constexpr std::string_view kInstallProtocol = "install.protocol";
+constexpr std::string_view kAgentUpdater = "cmk-update-agent.exe";
 
 // located in test_files/config
 // constexpr const wchar_t* kDefaultDevConfig = L"check_mk_dev.yml";
@@ -66,8 +67,6 @@ constexpr const wchar_t* kDefaultDevConfigUTF16 = L"check_mk_dev_utf16.yml";
 constexpr const wchar_t* kDefaultDevMinimum = L"check_mk_dev_minimum.yml";
 
 constexpr const wchar_t* kDefaultDevUt = L"check_mk_dev_unit_testing.yml";
-
-constexpr const wchar_t* kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 
 }  // namespace files
 
@@ -83,7 +82,7 @@ constexpr const wchar_t* kAgentUpdaterPython = L"cmk_update_agent.checkmk.py";
 bool FindAndPrepareWorkingFolders(AppType Type);
 
 // 2. Prepare List of possible config names
-std::vector<std::wstring> DefaultConfigArray();
+std::vector<std::wstring> DefaultConfigArray(AppType Type);
 
 // 3.
 // must be called o program start.
@@ -119,8 +118,8 @@ std::wstring GetPathOfBakeryConfig() noexcept;
 std::wstring GetPathOfUserConfig() noexcept;
 
 // deprecated
-std::wstring GetPathOfLoadedConfig();
-std::string GetPathOfLoadedConfigAsString();
+std::wstring GetPathOfLoadedConfig() noexcept;
+std::string GetPathOfLoadedConfigAsString() noexcept;
 
 // official
 std::wstring GetUserPluginsDir() noexcept;
@@ -129,10 +128,9 @@ std::wstring GetRootDir() noexcept;
 std::wstring GetRootInstallDir() noexcept;  // for cap, ini and dat
 std::wstring GetRootUtilsDir() noexcept;
 std::wstring GetUserDir() noexcept;
-std::wstring GetUpgradeProtocolDir();
+std::wstring GetUpgradeProtocolDir() noexcept;
 std::wstring GetBakeryDir() noexcept;
-std::wstring GetUserModulesDir() noexcept;
-std::filesystem::path GetBakeryFile();
+std::filesystem::path GetBakeryFile() noexcept;
 std::wstring GetLocalDir() noexcept;
 std::wstring GetStateDir() noexcept;
 std::wstring GetAuStateDir() noexcept;
@@ -146,11 +144,14 @@ std::string GetHostName() noexcept;
 std::wstring GetWorkingDir() noexcept;
 std::wstring GetMsiExecPath() noexcept;
 
+int GetBackupLogMaxCount() noexcept;
+size_t GetBackupLogMaxSize() noexcept;
+
 bool IsLoadedConfigOk() noexcept;
 
-bool StoreUserYamlToCache();
+bool StoreUserYamlToCache() noexcept;
 
-std::wstring StoreFileToCache(const std::filesystem::path& file_name);
+std::wstring StoreFileToCache(const std::filesystem::path& Filename) noexcept;
 
 int RemoveInvalidNodes(YAML::Node node);
 
@@ -166,70 +167,73 @@ enum ErrorCode {
     kNotCheckMK = 4  // missing critical parts
 };
 
-enum class FallbackPolicy {
-    kNone,      // do not fallback at all
-    kStandard,  // load Last Good, if not, generate Default
-    kLastGoodOnly,
+enum FallbackPolicy {
+    kNone = 0,      // do not fallback at all
+    kStandard = 1,  // load Last Good, if not, generate Default
+    kLastGoodOnly = 2,
     kGenerateDefault
 };
 
 // YAML API is here
-YAML::Node LoadAndCheckYamlFile(const std::wstring& file_name,
-                                FallbackPolicy fallback_policy,
-                                int* error_code_ptr = nullptr);
-YAML::Node LoadAndCheckYamlFile(const std::wstring& file_name,
-                                int* error_code_ptr = nullptr);
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName, int Fallback,
+                                int* ErrorCodePtr = nullptr) noexcept;
+YAML::Node LoadAndCheckYamlFile(const std::wstring& FileName,
+                                int* ErrorCodePtr = nullptr) noexcept;
 
 // ***********************************************************
 // API:
 // ***********************************************************
 // usage auto x = GetVal("global", "name", false);
 template <typename T>
-T GetVal(std::string_view section_name, std::string_view key,
-         T Default) noexcept {
+T GetVal(std::string Section, std::string Name, T Default,
+         int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) return Default;
-
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return Default;
+    }
     try {
-        auto section = yaml[section_name];
-        auto val = section[key];
+        auto section = yaml[Section];
+        auto val = section[Name];
         if (val.IsScalar()) return val.as<T>();
+        if (val.IsNull()) return {};
         return Default;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }
     return Default;
 }
 
 // usage auto x = GetVal("global", "name");
-inline YAML::Node GetNode(std::string_view section_name,
-                          std::string_view key) noexcept {
+inline YAML::Node GetNode(const std::string& Section, const std::string& Name,
+                          int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
-    if (yaml.size() == 0) return {};
-
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return {};
+    }
     try {
-        auto section = yaml[section_name];
-        return section[key];
+        auto section = yaml[Section];
+        return section[Name];
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name, key,
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }
     return {};
 }
 
 // usage auto x = GetVal("global", "name");
-inline std::optional<YAML::Node> GetGroup(
-    const YAML::Node& yaml, std::string_view section_name) noexcept {
-    if (yaml.size() == 0) return {};
+inline std::optional<YAML::Node> GetGroup(const YAML::Node& Yaml,
+                                          const std::string& Section) noexcept {
+    if (Yaml.size() == 0) return {};
 
     try {
-        return yaml[section_name];
+        return Yaml[Section];
     } catch (const std::exception& e) {
-        XLOG::d("Absent '{}' in YAML, exception is '{}'", section_name,
-                e.what());
+        XLOG::d("Absent {} in YAML exception is '{}'", Section, e.what());
     }
     return {};
 }
@@ -240,13 +244,13 @@ inline std::optional<YAML::Node> GetGroupLoaded(const std::string& Section) {
 
 // safe method yo extract value from the yaml
 template <typename T>
-T GetVal(const YAML::Node& yaml, std::string_view name, T dflt,
-         int* error_out = nullptr) noexcept {
+T GetVal(const YAML::Node& yaml, const std::string& name, T dflt,
+         int* ErrorOut = nullptr) noexcept {
+    if (yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return dflt;
+    }
     try {
-        if (yaml.size() == 0) {
-            if (error_out) *error_out = Error::kEmpty;
-            return dflt;
-        }
         auto val = yaml[name];
         if (!val.IsDefined()) return dflt;
 
@@ -255,21 +259,21 @@ T GetVal(const YAML::Node& yaml, std::string_view name, T dflt,
         return dflt;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), name, e.what());
     }
     return dflt;
 }
 
-inline YAML::Node GetNode(const YAML::Node& yaml, std::string_view name,
-                          int* error_out = nullptr) noexcept {
+inline YAML::Node GetNode(const YAML::Node& Yaml, std::string Name,
+                          int* ErrorOut = nullptr) noexcept {
     try {
-        YAML::Node val = yaml[name];
+        YAML::Node val = Yaml[Name];
         if (!val.IsDefined()) return {};
         if (val.IsNull()) return {};
         return val;
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml node in file {} with {} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
     }
     return {};
 }
@@ -333,7 +337,7 @@ inline StringPairArray ConvertNode2StringPairArray(
 }
 
 template <typename T>
-std::vector<T> GetArray(std::string_view Section, std::string_view Name,
+std::vector<T> GetArray(const std::string& Section, const std::string& Name,
                         int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -351,7 +355,7 @@ std::vector<T> GetArray(std::string_view Section, std::string_view Name,
                   val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), Section, Name,
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
                 e.what());
     }
     return {};
@@ -360,8 +364,8 @@ std::vector<T> GetArray(std::string_view Section, std::string_view Name,
 // used to convert arrays of maps into string pairs
 // special case for more simple version of YAML when we are using
 // sequences of maps  '- name: value'
-inline StringPairArray GetPairArray(std::string_view section_name,
-                                    std::string_view value_name,
+inline StringPairArray GetPairArray(const std::string& Section,
+                                    const std::string& Name,
                                     int* ErrorOut = nullptr) noexcept {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
@@ -370,67 +374,68 @@ inline StringPairArray GetPairArray(std::string_view section_name,
         return {};
     }
     try {
-        auto section = yaml[section_name];
-        auto val = section[value_name];
+        auto section = yaml[Section];
+        auto val = section[Name];
         if (val.IsDefined() && val.IsSequence())
             return ConvertNode2StringPairArray(val);
 
         // this is OK when nothing inside
-        XLOG::d.t("Absent/Empty node {}.{} type is {}", section_name,
-                  value_name, val.Type());
+        XLOG::d.t("Absent/Empty node {}.{} type is {}", Section, Name,
+                  val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {}.{} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), section_name,
-                value_name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Section, Name,
+                e.what());
     }
     return {};
 }
 
 // gets string from the yaml and split it in table using space as divider
-std::vector<std::string> GetInternalArray(std::string_view section_name,
-                                          std::string_view value_name,
-                                          int* error_out = nullptr);
+std::vector<std::string> GetInternalArray(const std::string& Section,
+                                          const std::string& Name,
+                                          int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
-void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
-                      std::vector<std::string>& arr);
+void PutInternalArray(YAML::Node Yaml, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
 
 // opposite operation for the GetInternalArray
 // used ONLY for testing
-void PutInternalArray(std::string_view section, std::string_view name,
-                      std::vector<std::string>& arr, int* error_out = nullptr);
+void PutInternalArray(const std::string& Section, const std::string& Name,
+                      std::vector<std::string>& Arr,
+                      int* ErrorOut = nullptr) noexcept;
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(const YAML::Node& yaml_node,
-                                          std::string_view name);
+                                          const std::string& name) noexcept;
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node& yaml, std::string_view node_name,
-                        int* error_out = nullptr) {
+std::vector<T> GetArray(const YAML::Node& Yaml, const std::string& Name,
+                        int* ErrorOut = nullptr) noexcept {
+    if (Yaml.size() == 0) {
+        if (ErrorOut) *ErrorOut = Error::kEmpty;
+        return {};
+    }
     try {
-        if (yaml.size() == 0) {
-            if (error_out) *error_out = Error::kEmpty;
-            return {};
-        }
-        auto val = yaml[node_name];
+        auto val = Yaml[Name];
         if (val.IsSequence()) return ConvertNode2Sequence<T>(val);
 
         if (!val.IsDefined() || val.IsNull())
-            XLOG::t("Node '{}' is not defined/empty,return empty array",
-                    node_name);
+            XLOG::t("Node '{}' is not defined/empty,return empty array", Name);
         else
-            XLOG::d("Node '{}' has bad type [{}]", node_name, val.Type());
+            XLOG::d("Node '{}' has bad type [{}]", Name, val.Type());
     } catch (const std::exception& e) {
         XLOG::l("Cannot read yml file {} with {} code:{}",
-                wtools::ToUtf8(GetPathOfLoadedConfig()), node_name, e.what());
+                wtools::ConvertToUTF8(GetPathOfLoadedConfig()), Name, e.what());
     }
     return {};
 }
 
-void LogNodeAsBad(const YAML::Node& node, std::string_view comment);
+void LogNodeAsBad(YAML::Node node, std::string_view comment);
 
 template <typename T>
-std::vector<T> GetArray(const YAML::Node& node) {
+std::vector<T> GetArray(YAML::Node node) noexcept {
     try {
         if (node.IsDefined() && node.IsSequence())
             return ConvertNode2Sequence<T>(node);
@@ -447,14 +452,14 @@ std::vector<T> GetArray(const YAML::Node& node) {
 // string_view Merges sequence target_group[name] <--- source_group[name] if
 // name exists in target no action
 bool MergeStringSequence(YAML::Node target_group, YAML::Node source_group,
-                         const std::string& name);
+                         const std::string& name) noexcept;
 // Merges map target_group[name] <--- source_group[name] using key
 // if entry with key exists in target no action
 bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
-                      const std::string& name, const std::string& key);
+                      const std::string& name, const std::string& key) noexcept;
 // ***********************************************************
 
-std::string GetMapNodeName(const YAML::Node& node);
+std::string GetMapNodeName(YAML::Node node);
 
 namespace details {
 void KillDefaultConfig();
@@ -810,16 +815,6 @@ public:
         return timeout_;
     }
 
-    auto isFork() const {
-        std::lock_guard lk(lock_);
-        return fork_;
-    }
-
-    auto isTrace() const {
-        std::lock_guard lk(lock_);
-        return trace_;
-    }
-
     // gtest [+]
     std::wstring buildCmdLine() const;
 
@@ -831,8 +826,6 @@ private:
     std::string exe_name_;
     std::string prefix_;
     int timeout_;
-    bool fork_{true};
-    bool trace_{false};
 };
 
 /*
@@ -878,12 +871,12 @@ timeout.
 std::string ReplacePredefinedMarkers(std::string_view work_path);
 
 // replaces one value with other
-bool ReplaceInString(std::string& in_out, std::string_view marker,
-                     std::string_view value);
+bool ReplaceInString(std::string& InOut, std::string_view Marker,
+                     std::string_view Replace);
 
-bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
-                       std::string_view key_name, std::string_view subkey_name,
-                       std::string_view marker);
+bool PatchRelativePath(YAML::Node Yaml, const std::string& group_name,
+                       const std::string& key_name,
+                       std::string_view subkey_name, std::string_view marker);
 class PluginInfo {
 public:
     PluginInfo() {}
@@ -911,14 +904,6 @@ public:
     int retry() const noexcept { return retry_; }
     bool defined() const noexcept { return defined_; }
 
-    void extend(std::string_view group, std::string_view user) noexcept {
-        group_ = group;
-        user_ = user;
-    }
-
-    std::string user() const noexcept { return user_; }
-    std::string group() const noexcept { return group_; }
-
 protected:
     // used only during testing
     void debugInit(bool async_value, int timeout_value, int cache_age,
@@ -931,19 +916,13 @@ protected:
     }
 
     bool defined_ = false;
+    bool async_ = false;
 
-    bool async_ = false;                   // from the config
-    int timeout_ = kDefaultPluginTimeout;  // from the config, #TODO chrono
-    int cache_age_ = 0;                    // from the config, #TODO chrono
-    int retry_ = 0;                        // from the config
+    int timeout_ =
+        kDefaultPluginTimeout;  // from the config file, #TODO use chrono
+    int cache_age_ = 0;         // from the config file, #TODO use chrono
 
-    std::string user_;   // from the config
-    std::string group_;  // from the config
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class PluginTest;
-    FRIEND_TEST(PluginTest, PluginInfoCheck);
-#endif
+    int retry_ = 0;
 };
 
 template <typename T>
@@ -1009,12 +988,8 @@ public:
         }
 
         auto pattern() const noexcept { return pattern_; }
-        auto group() const noexcept { return group_; }
-        auto user() const noexcept { return user_; }
         auto run() const noexcept { return run_; }
         void assign(const YAML::Node& node) noexcept;
-        void assignGroup(std::string_view group) noexcept;
-        void assignUser(std::string_view user) noexcept;
         void apply(std::string_view filename, const YAML::Node& node) noexcept;
         const YAML::Node source() const noexcept { return source_; }
         const std::string sourceText() const noexcept { return source_text_; }
@@ -1025,8 +1000,6 @@ public:
             cache_age_ = 0;
             retry_ = 0;
             run_ = true;
-            group_.clear();
-            user_.clear();
         }
 
     private:
@@ -1044,8 +1017,6 @@ public:
 
         std::string pattern_;
         std::string source_text_;
-        std::string group_;
-        std::string user_;
         bool run_ = true;
         YAML::Node source_;
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -1062,7 +1033,7 @@ public:
     Plugins() : max_wait_(kDefaultPluginTimeout), async_start_(true) {}
 
     // API:
-    void loadFromMainConfig(std::string_view GroupName);
+    void loadFromMainConfig(const std::string& GroupName);
 
     // relative high level API to build intermediate data structures
     // from raw data inside the class
@@ -1127,8 +1098,7 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
 void SetupPluginEnvironment();
 
 void ProcessPluginEnvironment(
-    const std::function<void(std::string_view name, std::string_view value)>&
-        func);
+    std::function<void(std::string_view name, std::string_view value)>);
 
 // called on every connect from monitoring site.
 void SetupRemoteHostEnvironment(const std::string& IpAddress);
@@ -1149,27 +1119,23 @@ namespace cma::cfg {
 constexpr std::string_view kIniFromInstallMarker =
     "# Created by Check_MK Agent Installer";
 
+bool IsIniFileFromInstaller(const std::filesystem::path& filename);
+
 enum class InstallationType { packaged, wato, unknown };
-
-/// \brief returns the type of installation
-///
-/// possible values wato or packaged, where packaged returned only if the
-/// check_mk.install.yml exists and ["global"]["install"] == "no"
-InstallationType DetermineInstallationType();
-
+InstallationType DetermineInstallationType() noexcept;
 void SetTestInstallationType(cma::cfg::InstallationType installation_type);
 std::filesystem::path ConstructInstallFileName(
-    const std::filesystem::path& dir);
+    const std::filesystem::path& dir) noexcept;
 std::string ConstructTimeString();
 
 namespace products {
 constexpr std::string_view kLegacyAgent = "Check_mk Agent";
 }
 
-std::string CreateWmicCommand(std::string_view product_name);
+std::string CreateWmicCommand(std::string_view product_name) noexcept;
 bool UninstallProduct(std::string_view name);
 std::filesystem::path CreateWmicUninstallFile(
-    const std::filesystem::path& temp_dir, std::string_view product_name);
+    std::filesystem::path temp_dir, std::string_view product_name) noexcept;
 }  // namespace cma::cfg
 
 #include "cfg_details.h"

@@ -1,12 +1,13 @@
 Title: emcvnx_storage_pools: Crash upon missing auto-tiering info
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1571225986
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p6
+Date: 1571225986
 
 The plugin crashed with a KeyError if no auto-tiering is not available for the system.
 This has been fixed.

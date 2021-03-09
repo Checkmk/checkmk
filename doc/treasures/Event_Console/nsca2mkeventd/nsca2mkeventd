@@ -1,19 +1,10 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+#!/usr/bin/python
+# encoding: utf-8
 # Reads all incoming commands from it's own command pipe. Those
 # commands are sent by NSCA to the command pipe. Forwards these
 # events to the local event console daemon.
 
-import getopt
-import os
-import socket
-import sys
-import time
-import traceback
+import os, sys, getopt, traceback, time, socket
 
 opt_debug = False
 opt_verbose = False
@@ -41,11 +32,11 @@ def bail_out(reason):
 
 def open_logfile():
     global g_logfile
-    g_logfile = open(g_logfile_path, "a")
+    g_logfile = file(g_logfile_path, "a")
 
 
 def log(text):
-    if isinstance(text, str):
+    if type(text) == unicode:
         text = text.encode("utf-8")
     try:
         g_logfile.write('[%.6f] %s\n' % (time.time(), text))
@@ -103,7 +94,7 @@ def daemonize(user=0, group=0):
         if pid > 0:
             # exit first parent
             sys.exit(0)
-    except OSError as e:
+    except OSError, e:
         sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -125,7 +116,7 @@ def daemonize(user=0, group=0):
         pid = os.fork()
         if pid > 0:
             sys.exit(0)
-    except OSError as e:
+    except OSError, e:
         sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
         sys.exit(1)
 
@@ -176,7 +167,7 @@ def create_pipe():
 
     if not os.path.exists(g_pipe_path):
         os.mkfifo(g_pipe_path)
-    os.chmod(g_pipe_path, 0o660)
+    os.chmod(g_pipe_path, 0660)
     log("Created pipe '%s' for receiving commands from nsca" % g_pipe_path)
 
 
@@ -224,22 +215,22 @@ def main():
 
     while True:
         try:
-            for line in open(g_pipe_path):
+            for line in file(g_pipe_path):
                 try:
                     verbose('<= %r' % line.rstrip())
                     parsed = parse_line(line.rstrip())
                     forward_line(parsed)
-                except Exception as e:
+                except Exception, e:
                     log('EXCEPTION while processing line "%s" (%s). Skipping...' %
                         (line.rstrip(), e))
                     if opt_debug:
                         raise
 
-        except MKSignalException as e:
+        except MKSignalException, e:
             log("Signalled to death by signal %d" % e._signum)
             break
 
-        except Exception as e:
+        except Exception, e:
             log("EXCEPTION in main thread:\n%s" % traceback.format_exc())
             if opt_debug:
                 raise
@@ -305,7 +296,7 @@ try:
     log("Successfully shut down.")
     sys.exit(0)
 
-except Exception as e:
+except Exception, e:
     if opt_debug:
         raise
     bail_out(e)

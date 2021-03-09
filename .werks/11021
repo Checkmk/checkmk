@@ -1,13 +1,11 @@
 Title: Fixed validation of regex filter
-Class: fix
-Compatible: incomp
-Component: multisite
-Date: 1587469375
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p12
+Date: 1587469375
+Class: fix
 
 If you use invalid regex or lookaheads in views filter like "service", this
 could lead to timeouts and the possibility that you can not edit the view any

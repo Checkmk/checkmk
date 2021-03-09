@@ -1,0 +1,12 @@
+Title: cmcdump: fixed exception when parsing ipv4 address
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1599639112
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 1.6.0p18
+
+An exception was raised during config generation if the ipv4 address field was not an actual address, e.g. a dns resovable name.
+This error only happened for hosts provided by the cmcdump mechanism.

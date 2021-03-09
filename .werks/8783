@@ -1,12 +1,11 @@
 Title: bulk notifications did not produce failed notifications
 Level: 2
 Component: notifications
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1563961368
+Class: fix
 
 If a notification script returned a non-zero exit code and was
 configured for bulk notifications no failed notifications were

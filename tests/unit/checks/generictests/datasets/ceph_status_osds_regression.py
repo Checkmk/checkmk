@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -26,8 +26,8 @@ checks = {
             None, {
                 'epoch': (1, 3, 30)
             }, [
-                (0, 'Health: OK', []),
-                (0, 'Epoch rate (30 m average): 0.00', [])
+                (0, 'Status: OK', []),
+                (0, 'Epoch: 0/30 m', [])
             ]
         )
     ],
@@ -38,7 +38,7 @@ checks = {
                 'num_out_osds': (7.0, 5.0),
                 'num_down_osds': (7.0, 5.0)
             }, [
-                (0, 'Epoch rate (15 m average): 0.00', []),
+                (0, 'Epoch: 0/15 m', []),
                 (0, 'OSDs: 32, Remapped PGs: 0', []),
                 (0, 'OSDs out: 0, 0%', []), (0, 'OSDs down: 0, 0%', [])
             ]

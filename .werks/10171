@@ -1,12 +1,11 @@
 Title: Discovery: Fix triggering of discovery service after changing services
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1569223148
+Class: fix
 
 When editing services on the service discovery page it is intended that the
 "Check_MK Discovery" service of the current host is retriggered to immediately

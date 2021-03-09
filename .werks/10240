@@ -1,13 +1,11 @@
 Title: Removed checks could make discovery page fail
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1569574749
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p3
+Date: 1569574749
+Class: fix
 
 In case a host had services configured where the Checkmk check was removed from
 an installation, e.g. by uninstalling an MKP, this could break the service

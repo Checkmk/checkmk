@@ -1,0 +1,13 @@
+Title: LDAP: Fixed default user attribute 'customer' on remote sites
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.6.0p12
+Date: 1588606943
+Class: fix
+
+Prevously, the attribute 'customer' of the default user profile of remote sites was set to the customer of the central site.
+Only way to change this, was to change the default user attribute setting within the site specific global configuration of the site.
+
+From now on, the customer of the remote site is used as default on remote sites.

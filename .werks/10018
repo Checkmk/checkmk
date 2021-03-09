@@ -1,11 +1,12 @@
 Title: hp_msa_psu: Do not discover services with invalid data
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b11
 Date: 1568490416
-Class: fix
 
 Some fields are deprecated in HP MSA 1050/2050 devices. In this case we no
 longer discover the services "Power Supply Voltage" and "Temperature Power Supply".

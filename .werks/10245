@@ -1,13 +1,11 @@
 Title: Fix thread leak triggered by unstable site connections
-Class: fix
-Compatible: compat
-Component: liveproxy
-Date: 1569940279
-Edition: cee
-Knowledge: undoc
 Level: 2
-State: unknown
-Version: 2.0.0i1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.6.0p3
+Date: 1569940279
+Class: fix
 
 The livestatus proxy normally keeps open several connections to the remote
 livestatus server and uses them in the moment a livestatus query is made

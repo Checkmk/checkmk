@@ -6,8 +6,7 @@ Date: 1592312803
 Edition: cee
 Knowledge: doc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p14
 
 The liveproxyd (which handles the HW/SW data synchronization) only reliably
 synchronized the HW/SW inventory data from remote sites upon restart/reload.

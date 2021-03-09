@@ -1,12 +1,11 @@
 Title: Fix empty service views in mobile GUI
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1563282637
+Class: fix
 
 An exception like this was shown in all mobile service views:
 

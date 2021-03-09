@@ -1,13 +1,11 @@
 Title: Hostname search: Host bulk actions affected all hosts (1.6.0p4 regression)
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1572617559
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572617559
+Class: fix
 
 When using the WATO host search to filter hosts by a host name pattern, the
 resulting page showed the correctly matched hosts. When performing a bulk

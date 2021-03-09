@@ -1,12 +1,13 @@
 Title: Cisco CPU checks: relax SNMP scan function
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1587118270
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1587118270
 
 The Cisco CPU checks discovery ordering from Werk 7458 is revisited.
 

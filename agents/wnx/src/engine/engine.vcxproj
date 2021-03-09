@@ -23,20 +23,20 @@
     <ProjectGuid>{343045B4-F20A-4E48-AB2F-83E1C22C9710}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>engine</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -44,14 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <SpectreMitigation>false</SpectreMitigation>
@@ -80,11 +80,6 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
-    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
-    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
-    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -92,11 +87,6 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
-    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
-    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
-    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -104,11 +94,6 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
-    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
-    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
-    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -116,11 +101,6 @@
     <IntDir>../../build/engine\$(Platform)\$(Configuration)\obj\</IntDir>
     <TargetName>engine</TargetName>
     <CustomBuildBeforeTargets>Run</CustomBuildBeforeTargets>
-    <CodeAnalysisRuleSet>cpp-all.ruleset</CodeAnalysisRuleSet>
-    <RunCodeAnalysis>false</RunCodeAnalysis>
-    <EnableMicrosoftCodeAnalysis>false</EnableMicrosoftCodeAnalysis>
-    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
-    <ClangTidyChecks>-hicpp-signed-bitwise;-google-readability-braces-around-statements,-readability-braces-around-statements,-hicpp-braces-around-statements,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-hicpp-no-array-decay,-cppcoreguidelines-pro-bounds-pointer-arithmetic</ClangTidyChecks>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -128,27 +108,23 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
-      <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..\..
-scripts\unpack_packs.cmd 
-cd $(ProjectDir)</Command>
+      <Command>unpack_packs.cmd watest</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -161,27 +137,23 @@ cd $(ProjectDir)</Command>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
-      <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>cd ..\..
-scripts\unpack_packs.cmd 
-cd $(ProjectDir)</Command>
+      <Command>unpack_packs.cmd watest</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -196,17 +168,15 @@ cd $(ProjectDir)</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
-      <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -215,8 +185,7 @@ cd $(ProjectDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>unpack_packs.cmd watest</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -231,17 +200,15 @@ cd $(ProjectDir)</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SOLUTION_DIR=uR"($(SolutionDir))";PROJECT_DIR_CMK_ENGINE=uR"($(ProjectDir))";NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir);../../include;..;.;../../extlibs/asio/include;../../extlibs/yaml-cpp/include;../../extlibs/fmt/include;../../extlibs/simpleini</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <ShowIncludes>
       </ShowIncludes>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <DisableSpecificWarnings>26444</DisableSpecificWarnings>
-      <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -250,8 +217,7 @@ cd $(ProjectDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>unpack_packs.cmd watest</Command>
     </PreBuildEvent>
     <CustomBuildStep>
       <Command>
@@ -264,21 +230,15 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="..\..\include\tools\_process.h" />
     <ClInclude Include="..\..\include\tools\_raii.h" />
     <ClInclude Include="..\..\include\tools\_tgt.h" />
-    <ClInclude Include="..\..\include\tools\_win.h" />
     <ClInclude Include="..\..\include\tools\_xdbg.h" />
     <ClInclude Include="..\..\include\tools\_xlog.h" />
     <ClInclude Include="..\common\cfg_info.h" />
     <ClInclude Include="..\common\cfg_yaml.h" />
-    <ClInclude Include="..\common\cma_yml.h" />
-    <ClInclude Include="..\common\fmt_ext.h" />
     <ClInclude Include="..\common\mailslot_transport.h" />
-    <ClInclude Include="..\common\object_repo.h" />
     <ClInclude Include="..\common\stop_watch.h" />
     <ClInclude Include="..\common\version.h" />
     <ClInclude Include="..\common\wnx_version.h" />
     <ClInclude Include="..\common\wtools.h" />
-    <ClInclude Include="..\common\wtools_user_control.h" />
-    <ClInclude Include="..\common\yaml.h" />
     <ClInclude Include="..\lwa\Configurable.h" />
     <ClInclude Include="..\lwa\Configuration.h" />
     <ClInclude Include="..\lwa\SettingsCollector.h" />
@@ -297,10 +257,10 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="eventlog\eventlogbase.h" />
     <ClInclude Include="eventlog\eventlogstd.h" />
     <ClInclude Include="eventlog\eventlogvista.h" />
+    <ClInclude Include="file_encryption.h" />
     <ClInclude Include="firewall.h" />
     <ClInclude Include="install_api.h" />
     <ClInclude Include="logger.h" />
-    <ClInclude Include="modules.h" />
     <ClInclude Include="onlyfrom.h" />
     <ClInclude Include="on_start.h" />
     <ClInclude Include="providers\check_mk.h" />
@@ -331,7 +291,6 @@ cd $(ProjectDir)</Command>
     <ClInclude Include="targetver.h" />
     <ClInclude Include="upgrade.h" />
     <ClInclude Include="windows_service_api.h" />
-    <ClInclude Include="zip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\extlibs\yaml-cpp\src\binary.cpp">
@@ -502,12 +461,7 @@ cd $(ProjectDir)</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="..\common\cma_yml.cpp" />
-    <ClCompile Include="..\common\object_repo.cpp" />
     <ClCompile Include="..\common\wtools.cpp" />
-    <ClCompile Include="..\common\wtools_service.cpp" />
-    <ClCompile Include="..\common\wtools_user_control.cpp" />
-    <ClCompile Include="..\common\wtools_runas.cpp" />
     <ClCompile Include="..\lwa\Configuration.cpp" />
     <ClCompile Include="..\lwa\stringutil.cpp" />
     <ClCompile Include="..\lwa\types.cc" />
@@ -524,11 +478,11 @@ cd $(ProjectDir)</Command>
     <ClCompile Include="eventlog\eventlogstd.cpp" />
     <ClCompile Include="eventlog\eventlogvista.cpp" />
     <ClCompile Include="external_port.cpp" />
+    <ClCompile Include="file_encryption.cpp" />
     <ClCompile Include="firewall.cpp" />
     <ClCompile Include="groups.cpp" />
     <ClCompile Include="install_api.cpp" />
     <ClCompile Include="logger.cpp" />
-    <ClCompile Include="modules.cpp" />
     <ClCompile Include="onlyfrom.cpp" />
     <ClCompile Include="on_start.cpp" />
     <ClCompile Include="providers\check_mk.cpp" />
@@ -566,7 +520,6 @@ cd $(ProjectDir)</Command>
     </ClCompile>
     <ClCompile Include="upgrade.cpp" />
     <ClCompile Include="windows_service_api.cpp" />
-    <ClCompile Include="zip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\test_files\config\check_mk.example.ini" />
@@ -574,13 +527,9 @@ cd $(ProjectDir)</Command>
     <None Include="..\..\test_files\config\check_mk_dev_default.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_minimum.yml" />
     <None Include="..\..\test_files\config\check_mk_dev_unit_testing.yml" />
-    <None Include=".clang-tidy" />
     <None Include="unpack_packs.cmd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
-  <PropertyGroup Condition="'$(Language)'=='C++'">
-    <CAExcludePath>..\..\extlibs;$(CAExcludePath)</CAExcludePath>
-  </PropertyGroup>
 </Project>

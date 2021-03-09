@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import json
 
@@ -24,7 +44,7 @@ def _get_services_config(services):
     #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
     service_args = []
-    for service_name, service_config in services.items():
+    for service_name, service_config in services.iteritems():
         if service_config is None:
             continue
 
@@ -33,10 +53,7 @@ def _get_services_config(services):
 
         selection = service_config.get('selection')
         if not isinstance(selection, tuple):
-            # Here: value of selection is 'all' which means there's no
-            # restriction (names or tags) to the instances of a specific
-            # AWS service. The commandline option already includes this
-            # service '--services SERVICE1 SERVICE2 ...' (see below).
+            # 'all' is handled by services.keys()
             continue
 
         selection_type, selection_values = selection
@@ -52,41 +69,12 @@ def _get_services_config(services):
     return service_args
 
 
-def _get_proxy_args_and_secrets(details):
-    proxy_args = ["--proxy-host", details["proxy_host"]]
-
-    proxy_port = details.get("proxy_port")
-    if proxy_port:
-        proxy_args += ["--proxy-port", str(proxy_port)]
-
-    proxy_secrets = {}
-    for secret in ("proxy_user", "proxy_password"):
-        if secret in details:
-            proxy_secrets[secret] = str(details[secret])
-    return proxy_args, proxy_secrets
-
-
 def agent_aws_arguments(params, hostname, ipaddress):
     secrets = {
         "access_key_id": params["access_key_id"],
         "secret_access_key": passwordstore_get_cmdline("%s", params["secret_access_key"]),
     }
     args = []
-
-    if "proxy_details" in params:
-        proxy_args, proxy_secrets = _get_proxy_args_and_secrets(params["proxy_details"])
-        args += proxy_args
-        secrets.update(proxy_secrets)
-
-    if params.get("assume_role"):
-        args += ["--assume-role"]
-        role_arn_id = params.get("assume_role").get("role_arn_id")
-        if role_arn_id:
-            if role_arn_id[0]:
-                args += ["--role-arn", role_arn_id[0]]
-            if role_arn_id[1]:
-                args += ["--external-id", role_arn_id[1]]
-
     regions = params.get("regions")
     if regions:
         args.append("--regions")
@@ -97,34 +85,25 @@ def agent_aws_arguments(params, hostname, ipaddress):
         args.append("--global-services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        args += sorted(global_services)
+        args += sorted(global_services.keys())
 
     services = params.get("services", {})
-
-    # for backwards compatibility
-    if 'cloudwatch' in services:
-        services['cloudwatch_alarms'] = services['cloudwatch']
-        del services['cloudwatch']
-
     if services:
         args.append("--services")
         # We need to sort the inner services-as-a-dict-params
         # in order to create reliable tests
-        args += sorted(services)
+        args += sorted(services.keys())
         args += _get_services_config(services)
 
     if 'requests' in services.get('s3', {}):
         args += ["--s3-requests"]
 
-    alarms = services.get('cloudwatch_alarms', {}).get('alarms')
+    alarms = services.get('cloudwatch', {}).get('alarms')
     if alarms:
         # {'alarms': 'all'} is handled by no additionally specified names
         args += ["--cloudwatch-alarms"]
         if isinstance(alarms, tuple):
             args += alarms[1]
-
-    if 'cloudfront' in services.get('wafv2', {}):
-        args += ["--wafv2-cloudfront"]
 
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
     args += _get_tag_options(params.get('overall_tags', []), 'overall')
@@ -132,9 +111,8 @@ def agent_aws_arguments(params, hostname, ipaddress):
         "--hostname",
         hostname,
     ]
-    # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.config
-    return cmk.base.config.SpecialAgentConfiguration(args, json.dumps(secrets))
+    import cmk_base.data_sources.programs
+    return cmk_base.data_sources.programs.SpecialAgentConfiguration(args, json.dumps(secrets))
 
 
 special_agent_info['aws'] = agent_aws_arguments

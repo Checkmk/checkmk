@@ -1,13 +1,11 @@
 Title: Fix Service rediscovery for ucd_cpu_util
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1580898052
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580898052
+Class: fix
 
 With werk 6952, ucd_cpu_util default configuration changed. However, your
 checkmk configuration might still rely on our old default values. Service

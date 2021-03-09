@@ -1,12 +1,11 @@
 Title: mk_logwatch: optimize regex search
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561447860
+Class: feature
 
 For regular expressions in a logwatch section leading or trailing '.*' portions can be
 a performance desaster. With long log lines, it can virtually render your system paralyzed.

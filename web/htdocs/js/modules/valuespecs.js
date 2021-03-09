@@ -1,6 +1,26 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails.  You should have received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
 
 import $ from "jquery";
 import * as utils from "utils";
@@ -8,7 +28,6 @@ import * as popup_menu from "popup_menu";
 import * as ajax from "ajax";
 import * as forms from "forms";
 import * as colorpicker from "colorpicker";
-import * as d3 from "d3";
 
 //#   +--------------------------------------------------------------------+
 //#   | Functions needed by HTML code from ValueSpec (valuespec.py)        |
@@ -16,20 +35,26 @@ import * as d3 from "d3";
 
 export function toggle_option(oCheckbox, divid, negate) {
     var oDiv = document.getElementById(divid);
-    if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate)) oDiv.style.display = "";
-    else oDiv.style.display = "none";
+    if ((oCheckbox.checked && !negate) || (!oCheckbox.checked && negate))
+        oDiv.style.display = "";
+    else
+        oDiv.style.display = "none";
 }
 
 export function toggle_dropdown(oDropdown, divid) {
     var oDiv = document.getElementById(divid);
-    if (oDropdown.value == "other") oDiv.style.display = "";
-    else oDiv.style.display = "none";
+    if (oDropdown.value == "other")
+        oDiv.style.display = "";
+    else
+        oDiv.style.display = "none";
 }
 
 export function toggle_tag_dropdown(oDropdown, divid) {
     var oDiv = document.getElementById(divid);
-    if (oDropdown.value == "ignore") oDiv.style.display = "none";
-    else oDiv.style.display = "";
+    if (oDropdown.value == "ignore")
+        oDiv.style.display = "none";
+    else
+        oDiv.style.display = "";
 }
 
 /* This function is called after the table with of input elements
@@ -39,12 +64,12 @@ export function toggle_tag_dropdown(oDropdown, divid) {
 export function list_of_strings_init(divid, split_on_paste, split_separators) {
     var container = document.getElementById(divid);
     var children = container.getElementsByTagName("div");
-    var last_input = children[children.length - 1].getElementsByTagName("input")[0];
+    var last_input = children[children.length-1].getElementsByTagName("input")[0];
     list_of_strings_add_event_handlers(last_input, split_on_paste, split_separators);
 }
 
 function list_of_strings_add_event_handlers(input, split_on_paste, split_separators) {
-    var handler_func = function () {
+    var handler_func = function() {
         if (this.value != "") {
             return list_of_strings_extend(this, split_on_paste, split_separators);
         }
@@ -54,26 +79,26 @@ function list_of_strings_add_event_handlers(input, split_on_paste, split_separat
     input.oninput = handler_func;
 
     if (split_on_paste) {
-        input.onpaste = function (e) {
+        input.onpaste = function(e) {
             // Get pasted data via clipboard API
             var clipboard_data = e.clipboardData || window.clipboardData;
             var pasted = clipboard_data.getData("Text");
 
-            if (this.value != "") return true; // The field had a value before: Don't do custom stuff
+            if (this.value != "")
+                return true; // The field had a value before: Don't do custom stuff
 
             // When pasting a string, trim separators and then split by the given separators
-            var stripped = pasted.replace(
-                new RegExp("^[" + split_separators + "]+|[" + split_separators + "]+$", "g"),
-                ""
-            );
-            if (stripped == "") return true; // Only separators in clipboard: Don't do custom stuff
-            var splitted = stripped.split(new RegExp("[" + split_separators + "]+"));
+            var stripped = pasted.replace(new RegExp("^["+split_separators+"]+|["+split_separators+"]+$", "g"), "");
+            if (stripped == "")
+                return true; // Only separators in clipboard: Don't do custom stuff
+            var splitted = stripped.split(new RegExp("["+split_separators+"]+"));
 
             // Add splitted parts to the input fields
             var last_input = this;
             for (var i = 0; i < splitted.length; i++) {
                 // Put the first item to the current field
-                if (i != 0) last_input = list_of_strings_add_new_field(last_input);
+                if (i != 0)
+                    last_input = list_of_strings_add_new_field(last_input);
 
                 last_input.value = splitted[i];
             }
@@ -106,14 +131,15 @@ function list_of_strings_extend(input, split_on_paste, split_separators) {
     list_of_strings_remove_event_handlers(input);
 }
 
-export function list_of_strings_add_new_field(input) {
+
+function list_of_strings_add_new_field(input) {
     /* The input field has a unique name like "extra_emails_2" for the field with
        the index 2. We need to convert this into "extra_emails_3". */
 
     var old_name = input.name;
     var splitted = old_name.split("_");
-    var num = 1 + parseInt(splitted[splitted.length - 1]);
-    splitted[splitted.length - 1] = "" + num;
+    var num = 1 + parseInt(splitted[splitted.length-1]);
+    splitted[splitted.length-1] = "" + num;
     var new_name = splitted.join("_");
 
     /* Now create a new <div> element as a copy from the current one and
@@ -127,14 +153,13 @@ export function list_of_strings_add_new_field(input) {
     var container = div.parentNode;
 
     var new_div = document.createElement("DIV");
-    new_div.innerHTML = div.innerHTML.replace('"' + old_name + '"', '"' + new_name + '"');
+    new_div.innerHTML = div.innerHTML.replace("\"" + old_name + "\"", "\"" + new_name + "\"");
     // IE7 does not have quotes in innerHTML, trying to workaround this here.
     new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + " ", "=" + new_name + " ");
     new_div.innerHTML = new_div.innerHTML.replace("=" + old_name + ">", "=" + new_name + ">");
     container.appendChild(new_div);
 
     // In case there was some TextAsciiAutocomplete popup menu cloned, remove it!
-    d3.select(new_div).select("input.text").attr("placeholder", null);
     var popup_menus = new_div.getElementsByClassName("vs_autocomplete");
     for (var i = 0; i < popup_menus.length; i++) {
         popup_menus[i].parentNode.removeChild(popup_menus[i]);
@@ -152,21 +177,18 @@ export function add_cascading_sub_valuespec_parameters(varprefix, parameters) {
 export function cascading_change(oSelect, varprefix, count) {
     var nr = parseInt(oSelect.value);
 
-    for (var i = 0; i < count; i++) {
+    for (var i=0; i<count; i++) {
         var vp = varprefix + "_" + i;
         var container = document.getElementById(vp + "_sub");
-        if (!container) continue;
+        if (!container)
+            continue;
 
-        container.style.display = nr == i ? "" : "none";
+        container.style.display = (nr == i) ? "" : "none";
 
         // In case the rendering has been postponed for this cascading
         // valuespec ask the configured AJAX page for rendering the sub
         // valuespec input elements
-        if (
-            nr == i &&
-            container.childElementCount == 0 &&
-            cascading_sub_valuespec_parameters.hasOwnProperty(vp)
-        ) {
+        if (nr == i && container.childElementCount == 0 && cascading_sub_valuespec_parameters.hasOwnProperty(vp)) {
             show_cascading_sub_valuespec(vp, cascading_sub_valuespec_parameters[vp]);
         }
     }
@@ -178,7 +200,7 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
     ajax.call_ajax(parameters["page_name"] + ".py", {
         method: "POST",
         post_data: post_data,
-        response_handler: function (handler_data, ajax_response) {
+        response_handler: function(handler_data, ajax_response) {
             var response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log("Error [" + response.result_code + "]: " + response.result); // eslint-disable-line
@@ -190,6 +212,7 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
 
             utils.execute_javascript_by_object(container);
             forms.enable_dynamic_form_elements(container);
+
         },
         handler_data: {
             varprefix: varprefix,
@@ -197,11 +220,13 @@ function show_cascading_sub_valuespec(varprefix, parameters) {
     });
 }
 
-export function textarea_resize(oArea) {
-    oArea.style.height = oArea.scrollHeight - 6 + "px";
+export function textarea_resize(oArea)
+{
+    oArea.style.height = (oArea.scrollHeight - 6) + "px";
 }
 
-export function listof_add(varprefix, magic, style) {
+export function listof_add(varprefix, magic, style)
+{
     var count_field = document.getElementById(varprefix + "_count");
     var count = parseInt(count_field.value);
     var str_count = "" + (count + 1);
@@ -228,7 +253,8 @@ export function listof_add(varprefix, magic, style) {
     listof_update_indices(varprefix);
 }
 
-function listof_get_new_entry_html_code(varprefix, magic, str_count) {
+function listof_get_new_entry_html_code(varprefix, magic, str_count)
+{
     var oPrototype = document.getElementById(varprefix + "_prototype");
     var html_code = oPrototype.innerHTML;
     // replace the magic
@@ -247,19 +273,23 @@ export function listof_delete(varprefix, nr) {
     listof_update_indices(varprefix);
 }
 
-export function listof_drop_handler(handler_args) {
+export function listof_drop_handler(handler_args)
+{
     var varprefix = handler_args.varprefix;
     var cur_index = handler_args.cur_index;
 
     var indexof = document.getElementsByName(varprefix + "_indexof_" + cur_index);
-    if (indexof.length == 0) throw "Failed to find the indexof_fied";
+    if (indexof.length == 0)
+        throw "Failed to find the indexof_fied";
     indexof = indexof[0];
 
     // Find the tbody parent of the given tag type
     var tbody = indexof;
-    while (tbody && tbody.tagName != "TBODY") tbody = tbody.parentNode;
+    while (tbody && tbody.tagName != "TBODY")
+        tbody = tbody.parentNode;
 
-    if (!tbody) throw "Failed to find the tbody element of " + indexof;
+    if (!tbody)
+        throw "Failed to find the tbody element of " + indexof;
 
     listof_update_indices(varprefix);
 }
@@ -268,15 +298,12 @@ export function listof_sort(varprefix, magic, sort_by) {
     var tbody = document.getElementById(varprefix + "_container");
     var rows = tbody.rows;
 
-    var entries = [],
-        i,
-        td,
-        sort_field_name,
-        fields;
+    var entries = [], i, td, sort_field_name, fields;
     for (i = 0; i < rows.length; i++) {
         // Find the index of this row
         td = rows[i].cells[0]; /* TD with buttons */
-        if (td.children.length == 0) continue;
+        if(td.children.length == 0)
+            continue;
         var index = td.getElementsByClassName("orig_index")[0].value;
 
         sort_field_name = varprefix + "_" + index + "_" + sort_by;
@@ -289,8 +316,8 @@ export function listof_sort(varprefix, magic, sort_by) {
         }
 
         entries.push({
-            sort_value: fields[0].value,
-            row_node: rows[i],
+            sort_value : fields[0].value,
+            row_node   : rows[i]
         });
     }
 
@@ -327,19 +354,20 @@ export function listof_update_indices(varprefix) {
         if (index.value === "") {
             // initialization of recently added row
             var orig_index = child_node.getElementsByClassName("orig_index")[0];
-            orig_index.value = "" + (i + 1);
+            orig_index.value = "" + (i+1);
         }
-        index.value = "" + (i + 1);
+        index.value = "" + (i+1);
     }
 }
 
 export function list_choice_toggle_all(varprefix) {
     var tbl = document.getElementById(varprefix + "_tbl");
     var checkboxes = tbl.getElementsByTagName("input");
-    if (!checkboxes) return;
+    if (!checkboxes)
+        return;
 
     // simply use state of first texbox as base
-    var state = !checkboxes[0].checked;
+    var state = ! checkboxes[0].checked;
     for (var i = 0; i < checkboxes.length; i++) {
         checkboxes[i].checked = state;
     }
@@ -359,25 +387,28 @@ export function rule_comment_prefix_date_and_user(img, text) {
     textarea.setSelectionRange(text.length, text.length);
 }
 
+
 export function passwordspec_randomize(img) {
-    var a,
-        c,
-        password = "";
+    var a, c, password = "";
     while (password.length < 8) {
         a = parseInt(Math.random() * 128);
-        if ((a >= 97 && a <= 122) || (a >= 65 && a <= 90) || (a >= 48 && a <= 57)) {
+        if ((a >= 97 && a <= 122) ||
+            (a >= 65 && a <= 90) ||
+            (a >= 48 && a <= 57))  {
             c = String.fromCharCode(a);
             password += c;
         }
     }
     var oInput = img.previousElementSibling;
-    if (oInput.tagName != "INPUT") oInput = oInput.children[0]; // in complain mode
+    if (oInput.tagName != "INPUT")
+        oInput = oInput.children[0]; // in complain mode
     oInput.value = password;
 }
 
 export function toggle_hidden(img) {
     var oInput = img;
-    while (oInput.tagName != "INPUT") oInput = oInput.previousElementSibling;
+    while (oInput.tagName != "INPUT")
+        oInput = oInput.previousElementSibling;
     if (oInput.type == "text") {
         oInput.type = "password";
     } else {
@@ -397,7 +428,8 @@ export function duallist_enlarge(field_suffix, varprefix) {
     }
 
     var other_field = document.getElementById(other_id);
-    if (!other_field) return;
+    if (!other_field)
+        return;
 
     utils.remove_class(other_field, "large");
     utils.add_class(other_field, "small");
@@ -419,20 +451,22 @@ export function duallist_switch(field_suffix, varprefix, keeporder) {
     }
 
     var other_field = document.getElementById(other_id);
-    if (!other_field) return;
+    if (!other_field)
+        return;
 
     var helper = document.getElementById(varprefix);
-    if (!helper) return;
+    if (!helper)
+        return;
 
     // Move the selected options to the other select field
-    var selected = [],
-        i;
+    var selected = [], i;
     for (i = 0; i < field.options.length; i++) {
         if (field.options[i].selected) {
             selected.push(field.options[i]);
         }
     }
-    if (selected.length == 0) return; // when add/remove clicked, but none selected
+    if (selected.length == 0)
+        return; // when add/remove clicked, but none selected
 
     // Now loop over all selected elements and add them to the other field
     for (i = 0; i < selected.length; i++) {
@@ -463,9 +497,8 @@ export function duallist_switch(field_suffix, varprefix, keeporder) {
 }
 
 function sort_select(select, cmp_func) {
-    var choices = [],
-        i;
-    for (i = 0; i < select.options.length; i++) {
+    var choices = [], i;
+    for (i = 0; i < select.options.length;i++) {
         choices[i] = [];
         choices[i][0] = select.options[i].text;
         choices[i][1] = select.options[i].value;
@@ -476,7 +509,7 @@ function sort_select(select, cmp_func) {
         select.options[0] = null;
     }
 
-    for (i = 0; i < choices.length; i++) {
+    for (i = 0; i < choices.length;i++) {
         var op = new Option(choices[i][0], choices[i][1]);
         select.options[i] = op;
     }
@@ -486,13 +519,13 @@ function sort_select(select, cmp_func) {
 
 export function iconselector_select(event, varprefix, value) {
     // set value of valuespec
-    const obj = document.getElementById(varprefix + "_value");
+    var obj = document.getElementById(varprefix + "_value");
     obj.value = value;
 
-    const src_img = document.getElementById(varprefix + "_i_" + value);
+    var src_img = document.getElementById(varprefix + "_i_" + value);
 
     // Set the new choosen icon in the valuespecs image
-    let img = document.getElementById(varprefix + "_img");
+    var img = document.getElementById(varprefix + "_img");
     img.src = src_img.src;
 
     popup_menu.close_popup();
@@ -500,50 +533,46 @@ export function iconselector_select(event, varprefix, value) {
 
 export function iconselector_toggle(varprefix, category_name) {
     // Update the navigation
-    var nav_links = document.getElementsByClassName(varprefix + "_nav");
+    var nav_links = document.getElementsByClassName(varprefix+"_nav");
     var i;
     for (i = 0; i < nav_links.length; i++) {
-        if (nav_links[i].id == varprefix + "_" + category_name + "_nav")
+        if (nav_links[i].id == varprefix+"_"+category_name+"_nav")
             utils.add_class(nav_links[i].parentNode, "active");
-        else utils.remove_class(nav_links[i].parentNode, "active");
+        else
+            utils.remove_class(nav_links[i].parentNode, "active");
     }
 
     // Now update the category containers
-    var containers = document.getElementsByClassName(varprefix + "_container");
+    var containers = document.getElementsByClassName(varprefix+"_container");
     for (i = 0; i < containers.length; i++) {
-        if (containers[i].id == varprefix + "_" + category_name + "_container")
+        if (containers[i].id == varprefix+"_"+category_name+"_container")
             containers[i].style.display = "";
-        else containers[i].style.display = "none";
+        else
+            containers[i].style.display = "none";
     }
 }
 
 export function iconselector_toggle_names(event, varprefix) {
-    var icons = document.getElementById(varprefix + "_icons");
-    if (utils.has_class(icons, "show_names")) utils.remove_class(icons, "show_names");
-    else utils.add_class(icons, "show_names");
+    var icons = document.getElementById(varprefix+"_icons");
+    if (utils.has_class(icons, "show_names"))
+        utils.remove_class(icons, "show_names");
+    else
+        utils.add_class(icons, "show_names");
 }
 
-export function listofmultiple_add(varprefix, choice_page_name, page_request_vars, trigger) {
-    let ident;
-    if (trigger) {
-        // trigger given: Special case for ViewFilterList style choice rendering
-        ident = trigger.id.replace(varprefix + "_add_", "");
-        utils.add_class(trigger, "disabled");
-    } else {
-        let choice = document.getElementById(varprefix + "_choice");
-        ident = choice.value;
+export function listofmultiple_add(varprefix, choice_page_name, page_request_vars) {
+    var choice = document.getElementById(varprefix + "_choice");
+    var ident = choice.value;
 
-        if (ident == "") return;
+    if (ident == "")
+        return;
 
-        trigger = choice.options[choice.selectedIndex];
-
-        // disable this choice in the "add choice" select field
-        trigger.disabled = true;
-    }
+    // disable this choice in the "add choice" select field
+    choice.options[choice.selectedIndex].disabled = true;
 
     var request = {
-        varprefix: varprefix,
-        ident: ident,
+        "varprefix": varprefix,
+        "ident": ident,
     };
 
     // Add given valuespec specific request vars
@@ -558,13 +587,12 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
     ajax.call_ajax(choice_page_name + ".py", {
         method: "POST",
         post_data: post_data,
-        handler_data: {
-            trigger: trigger,
-            ident: ident,
-        },
-        response_handler: function (handler_data, ajax_response) {
+        response_handler: function(handler_data, ajax_response) {
             var table = document.getElementById(varprefix + "_table");
             var tbody = table.getElementsByTagName("tbody")[0];
+
+            var choice = document.getElementById(varprefix + "_choice");
+            var ident = choice.value;
 
             var response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
@@ -572,15 +600,11 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 return;
             }
 
-            let ident = handler_data.ident;
             // Update select2 to make the disabled attribute be recognized by the dropdown
             // (See https://github.com/select2/select2/issues/3347)
-            let choice = document.getElementById(varprefix + "_choice");
-            if (choice) {
-                let choice_select2 = $(choice).select2();
-                // Unselect the chosen option
-                choice_select2.val(null).trigger("change");
-            }
+            var choice_select2 = $(choice).select2();
+            // Unselect the choosen option
+            choice_select2.val(null).trigger("change");
 
             var tmp_container = document.createElement("tbody");
             tmp_container.innerHTML = response.result.html_code;
@@ -590,23 +614,21 @@ export function listofmultiple_add(varprefix, choice_page_name, page_request_var
                 return;
             }
 
-            tbody.insertBefore(new_row, tbody.firstChild);
+            tbody.appendChild(new_row);
             forms.enable_dynamic_form_elements(new_row);
             utils.execute_javascript_by_object(new_row);
 
             // Add it to the list of active elements
             var active = document.getElementById(varprefix + "_active");
-            if (active.value != "") active.value += ";" + ident;
-            else active.value = ident;
+            if (active.value != "")
+                active.value += ";"+ident;
+            else
+                active.value = ident;
 
             // Put in a line break following the table if the added row is the first
             if (tbody.childNodes.length == 1)
                 table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
-
-            // Enable the reset button
-            let reset_button = document.getElementById(varprefix + "_reset");
-            if (reset_button) reset_button.disabled = false;
-        },
+        }
     });
 }
 
@@ -618,19 +640,14 @@ export function listofmultiple_del(varprefix, ident) {
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + "_choice");
-    if (choice) {
-        var i;
-        for (i = 0; i < choice.options.length; i++)
-            if (choice.options[i].value == ident) choice.options[i].disabled = false;
+    var i;
+    for (i = 0; i < choice.children.length; i++)
+        if (choice.children[i].value == ident)
+            choice.children[i].disabled = false;
 
-        // Update select2 to make the disabled attribute be recognized by the dropdown
-        // (See https://github.com/select2/select2/issues/3347)
-        $(choice).select2();
-    } else {
-        // trigger given: Special case for ViewFilterList style choice rendering
-        choice = document.getElementById(varprefix + "_add_" + ident);
-        utils.remove_class(choice, "disabled");
-    }
+    // Update select2 to make the disabled attribute be recognized by the dropdown
+    // (See https://github.com/select2/select2/issues/3347)
+    $(choice).select2();
 
     // Remove it from the list of active elements
     var active = document.getElementById(varprefix + "_active");
@@ -647,63 +664,40 @@ export function listofmultiple_del(varprefix, ident) {
     if (tbody.childNodes.length == 0) {
         var table = document.getElementById(varprefix + "_table");
         var br = table.nextSibling;
-        if (br.nodeName == "BR") br.parentNode.removeChild(br);
+        if (br.nodeName == "BR")
+            br.parentNode.removeChild(br);
     }
-
-    // Enable the reset button
-    let reset_button = document.getElementById(varprefix + "_reset");
-    if (reset_button) reset_button.disabled = false;
 }
 
-export function listofmultiple_init(varprefix, was_submitted) {
+export function listofmultiple_init(varprefix) {
     var table = document.getElementById(varprefix + "_table");
     var tbody = table.getElementsByTagName("tbody")[0];
 
-    let choice_field = document.getElementById(varprefix + "_choice");
-    if (choice_field) choice_field.value = "";
-
+    document.getElementById(varprefix + "_choice").value = "";
     listofmultiple_disable_selected_options(varprefix);
     // Put in a line break following the table if it's not empty
     if (tbody.childNodes.length >= 1)
         table.parentNode.insertBefore(document.createElement("br"), table.nextSibling);
-
-    // Disable the reset button if the form was not submitted yet
-    let reset_button = document.getElementById(varprefix + "_reset");
-    if (reset_button && !was_submitted) {
-        reset_button.disabled = true;
-    }
 }
 
-// The <option> elements in the <select> field of the currently chosen
+// The <option> elements in the <select> field of the currently choosen
 // elements need to be disabled.
-function listofmultiple_disable_selected_options(varprefix) {
-    let active = document.getElementById(varprefix + "_active");
-    if (active.value == "") {
-        return;
-    }
+function listofmultiple_disable_selected_options(varprefix)
+{
+    var active_choices = document.getElementById(varprefix + "_active").value.split(";");
 
-    let active_choices = active.value.split(";");
-    let choice_field = document.getElementById(varprefix + "_choice");
-    let i;
-    if (choice_field) {
-        for (i = 0; i < choice_field.options.length; i++) {
-            if (active_choices.indexOf(choice_field.options[i].value) !== -1) {
-                choice_field.options[i].disabled = true;
-            }
-        }
-    } else {
-        // trigger given: Special case for ViewFilterList style choice rendering
-        let choice;
-        for (i = 0; i < active_choices.length; i++) {
-            choice = document.getElementById(varprefix + "_add_" + active_choices[i]);
-            utils.add_class(choice, "disabled");
+    var choice_field = document.getElementById(varprefix + "_choice");
+    for (var i = 0; i < choice_field.children.length; i++) {
+        if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
+            choice_field.children[i].disabled = true;
         }
     }
 }
 
 var g_autocomplete_ajax = null;
 
-export function autocomplete(input, completion_ident, completion_params, on_change) {
+export function autocomplete(input, completion_ident, completion_params, on_change)
+{
     // TextAscii does not set the id attribute on the input field.
     // Set the id to the name of the field here.
     input.setAttribute("id", input.name);
@@ -713,139 +707,86 @@ export function autocomplete(input, completion_ident, completion_params, on_chan
         g_autocomplete_ajax.abort();
     }
 
-    var post_data =
-        "request=" +
-        encodeURIComponent(
-            JSON.stringify({
-                ident: completion_ident,
-                params: completion_params,
-                value: input.value,
-            })
-        );
-
-    g_autocomplete_ajax = ajax.call_ajax("ajax_vs_autocomplete.py", {
-        response_handler: autocomplete_handle_response,
-        error_handler: autocomplete_handle_error,
-        handler_data: [input.id, on_change],
-        method: "POST",
-        post_data: post_data,
-        add_ajax_id: false,
+    g_autocomplete_ajax = ajax.call_ajax("ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident), {
+        response_handler : autocomplete_handle_response,
+        error_handler    : autocomplete_handle_error,
+        handler_data     : [ input.id, on_change ],
+        method           : "POST",
+        post_data        : "params="+encodeURIComponent(JSON.stringify(completion_params))
+                          +"&value="+encodeURIComponent(input.value)
+                          +"&_plain_error=1",
+        add_ajax_id      : false
     });
 }
 
-export function transfer_context_onchange(from, to) {
-    let source_field = $(`input[name=${from}]`);
-    let target_field = $(`input[name=${to}]`);
-    target_field.val(source_field.val());
-    source_field.on("change", () => target_field.val(source_field.val()));
-}
+function autocomplete_handle_response(handler_data, response_text)
+{
+    var input_id = handler_data[0];
+    var on_change = handler_data[1];
 
-function autocomplete_handle_response(handler_data, ajax_response) {
-    let input_id = handler_data[0];
-    let on_change = handler_data[1];
-
-    let response = JSON.parse(ajax_response);
-    if (response.result_code != 0) {
-        autocomplete_show_error(input_id, response.result + " (" + response.result_code + ")");
+    try {
+        var response = eval(response_text);
+    } catch(e) {
+        autocomplete_show_error(input_id, response_text);
         return;
     }
 
-    let choices = response.result.choices;
-
-    if (choices.length == 0) {
+    if (response.length == 0) {
         autocomplete_close(input_id);
-    } else {
+    }
+    else {
         // When only one result and values equal, hide the menu
         var input = document.getElementById(input_id);
-        if (choices.length == 1 && input && choices[0][0] == input.value) {
+        if (response.length == 1
+            && input
+            && response[0][0] == input.value) {
             autocomplete_close(input_id);
             return;
         }
 
-        autocomplete_show_choices(input_id, on_change, choices);
+        autocomplete_show_choices(input_id, on_change, response);
     }
 }
 
-function autocomplete_handle_error(handler_data, status_code, error_msg) {
+function autocomplete_handle_error(handler_data, status_code, error_msg)
+{
     var input_id = handler_data[0];
 
-    if (status_code == 0) return; // aborted (e.g. by subsequent call)
+    if (status_code == 0)
+        return; // aborted (e.g. by subsequent call)
     autocomplete_show_error(input_id, error_msg + " (" + status_code + ")");
 }
 
-function autocomplete_show_choices(input_id, on_change, choices) {
-    var select = $("<select>", {
-        id: input_id + "_select",
-        onchange: on_change,
-    });
+function autocomplete_show_choices(input_id, on_change, choices)
+{
+    var code = "<ul>";
+    for(var i = 0; i < choices.length; i++) {
+        var value = choices[i][0];
+        var label = choices[i][1];
 
-    // empty option as first entry so no input is possible
-    choices.sort();
-    choices.unshift([" ", " "]);
-
-    choices.forEach(function (choice) {
-        select.append(
-            $("<option>", {
-                value: choice[0],
-                text: choice[1],
-            })
-        );
-    });
-
-    autocomplete_show(input_id, select);
-}
-
-function autocomplete_show(input_id, select) {
-    var input = $(`#${input_id}`);
-    input.parent().append(select);
-    // make sure select is at the correct position
-    select.insertBefore(input);
-    // hide original input field
-    input.hide();
-
-    // initialize select to be select2 instance
-    select.select2({
-        width: input.outerWidth(),
-        tags: true,
-        allowClear: true,
-        selectOnClose: true,
-    });
-
-    select.on("select2:open", function (e) {
-        var value = input.val();
-        var search_field = $("input.select2-search__field");
-        search_field.closest(".select2-container").addClass("vs_autocomplete");
-        search_field.prop("value", value);
-        // IE does not automatically set the cursor to the end of the input element
-        search_field.focus();
-        search_field[0].setSelectionRange(value.length, value.length);
-    });
-
-    select.on("select2:close", function (e) {
-        autocomplete_close(input_id);
-        input.trigger("change");
-    });
-
-    select.select2("open");
-}
-
-function autocomplete_close(input_id) {
-    // update and show original input field
-    var input = $(`#${input_id}`);
-    var select = $(`#${input_id}_select`);
-    if (select.length != 0) {
-        // if the input is empty/nothing, make sure to remove whitespaces
-        var value = select.val().trim();
-        input.val(value);
+        code += "<li onclick=\"cmk.valuespecs.autocomplete_choose('"
+                    + input_id + "', '" + value + "');"
+                    + on_change + "\">" + label + "</li>";
     }
-    input.show();
+    code += "</ul>";
 
-    // close and remove select-input
-    select.select2("destroy");
-    select.remove();
+    autocomplete_show(input_id, code);
 }
 
-function autocomplete_show_error(input_id, msg) {
+export function autocomplete_choose(input_id, value)
+{
+    var input = document.getElementById(input_id);
+    input.value = value;
+    autocomplete_close(input_id);
+}
+
+function autocomplete_show_error(input_id, msg)
+{
+    autocomplete_show(input_id, "<div class=error>ERROR: " + msg + "</div>");
+}
+
+function autocomplete_show(input_id, inner_html)
+{
     var popup = document.getElementById(input_id + "_popup");
     if (!popup) {
         var input = document.getElementById(input_id);
@@ -858,7 +799,8 @@ function autocomplete_show_error(input_id, msg) {
         popup.style.minWidth = input.clientWidth + "px";
     }
 
-    popup.innerHTML = "<div class=error>ERROR: " + msg + "</div>";
+    popup.innerHTML = inner_html;
+
     // Register some unfocus handlers for hiding
     autocomplete_hide_on_unrelated_events(popup);
 }
@@ -889,17 +831,22 @@ export function autocomplete_hide_on_unrelated_events(origin_element) {
     origin_element.addEventListener("blur", outside_click_listener);
 }
 
+function autocomplete_close(input_id)
+{
+    var popup = document.getElementById(input_id + "_popup");
+    if (popup)
+        popup.parentNode.removeChild(popup);
+}
+
+
 var vs_color_pickers = [];
 
 export function add_color_picker(varprefix, value) {
-    vs_color_pickers[varprefix] = colorpicker.ColorPicker(
-        document.getElementById(varprefix + "_picker"),
-        function (hex) {
-            update_color_picker(varprefix, hex, false);
-        }
-    );
+    vs_color_pickers[varprefix] = colorpicker.ColorPicker(document.getElementById(varprefix + "_picker"), function(hex) {
+        update_color_picker(varprefix, hex, false);
+    });
 
-    document.getElementById(varprefix + "_input").oninput = function () {
+    document.getElementById(varprefix+"_input").oninput = function() {
         update_color_picker(varprefix, this.value, true);
     };
 
@@ -907,62 +854,13 @@ export function add_color_picker(varprefix, value) {
 }
 
 function update_color_picker(varprefix, hex, update_picker) {
-    if (!/^#[0-9A-F]{6}$/i.test(hex)) return; // skip invalid/unhandled colors
+    if (!/^#[0-9A-F]{6}$/i.test(hex))
+        return; // skip invalid/unhandled colors
 
     document.getElementById(varprefix + "_input").value = hex;
     document.getElementById(varprefix + "_value").value = hex;
     document.getElementById(varprefix + "_preview").style.backgroundColor = hex;
 
-    if (update_picker) vs_color_pickers[varprefix].setHex(hex);
-}
-
-export function visual_filter_list_reset(varprefix, page_request_vars, page_name, reset_ajax_page) {
-    let request = {
-        varprefix: varprefix,
-        page_request_vars: page_request_vars,
-        page_name: page_name,
-    };
-    const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
-
-    ajax.call_ajax(reset_ajax_page + ".py", {
-        method: "POST",
-        post_data: post_data,
-        handler_data: {
-            varprefix: varprefix,
-        },
-        response_handler: function (handler_data, ajax_response) {
-            let response = JSON.parse(ajax_response);
-            const filters_html = response.result.filters_html;
-            let filter_list = document.getElementById(varprefix + "_popup_filter_list_selected");
-            filter_list.getElementsByClassName("simplebar-content")[0].innerHTML = filters_html;
-            utils.add_simplebar_scrollbar(varprefix + "_popup_filter_list");
-            listofmultiple_disable_selected_options(varprefix);
-            forms.enable_dynamic_form_elements();
-        },
-    });
-
-    // Disable the reset button
-    let reset_button = document.getElementById(varprefix + "_reset");
-    reset_button.disabled = true;
-}
-
-export function update_unit_selector(selectbox, metric_prefix) {
-    let change_unit_to_match_metric = metric => {
-        const post_data = "request=" + encodeURIComponent(JSON.stringify({metric: metric}));
-        ajax.call_ajax("ajax_vs_unit_resolver.py", {
-            method: "POST",
-            post_data: post_data,
-            response_handler: (_indata, response) => {
-                let json_data = JSON.parse(response);
-                // Error handling is: If request failed do nothing
-                if (json_data.result_code == 0)
-                    $("#" + selectbox + "_sel")
-                        .val(json_data.result.option_place)
-                        .trigger("change");
-            },
-        });
-    };
-    let metric_selector = $("#" + metric_prefix);
-    change_unit_to_match_metric(metric_selector.val());
-    metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
+    if (update_picker)
+        vs_color_pickers[varprefix].setHex(hex);
 }

@@ -1,13 +1,11 @@
 Title: heartbeat_crm: fix vanished services for Pacemaker >= 2.0
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1589286306
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1589286306
+Class: fix
 
 In Pacemaker 2.0 the cluster controller process was renamed
 from crmd to pacemaker-controld. Therefore, heartbeat_crm

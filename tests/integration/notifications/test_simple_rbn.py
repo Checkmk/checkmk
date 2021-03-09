@@ -1,33 +1,16 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+# pylint: disable=redefined-outer-name
 
 import time
-import os
-import pytest  # type: ignore[import]
+import pytest  # type: ignore
 
-from testlib import WatchLog
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from testlib import web, WatchLog  # pylint: disable=unused-import
 
 
-@pytest.fixture(name="fake_sendmail")
-def fake_sendmail_fixture(site):
-    site.write_file("local/bin/sendmail", "#!/bin/bash\n"
-                    "set -e\n"
-                    "echo \"sendmail called with: $@\"\n")
-    os.chmod(site.path("local/bin/sendmail"), 0o775)
-    yield
-    site.delete_file("local/bin/sendmail")
-
-
-@pytest.fixture(name="test_log",
-                params=[
-                    ("nagios", "var/log/nagios.log"),
-                    ("cmc", "var/check_mk/core/history"),
-                ])
-def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.fixture(params=[
+    ("nagios", "var/log/nagios.log"),
+    ("cmc", "var/check_mk/core/history"),
+])
+def test_log(request, web, site):
     core, log = request.param
     site.set_config("CORE", core, with_restart=True)
 
@@ -40,7 +23,7 @@ def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint:
         },
     }
 
-    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
+    expected_users = set(["cmkadmin", "automation"] + users.keys())
     web.add_htpasswd_users(users)
     all_users = web.get_all_users()
     assert not expected_users - set(all_users.keys())
@@ -60,7 +43,7 @@ def test_log_fixture(request, web, site, fake_sendmail):  # noqa: F811 # pylint:
     site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
     web.delete_host("notify-test")
-    web.delete_htpasswd_users(list(users.keys()))
+    web.delete_htpasswd_users(users.keys())
     web.activate_changes()
 
 

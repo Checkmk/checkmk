@@ -1,12 +1,11 @@
 Title: Dashboard: Static text dashlet only allows limited HTML
 Level: 1
 Component: multisite
-Class: security
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b6
 Date: 1565787135
+Class: security
 
 The "static text" dashlet is meant to add some static text information to dashboards.
 In the past it was possible to add arbitrary HTML code to it, which could be useful

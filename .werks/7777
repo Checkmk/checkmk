@@ -1,0 +1,12 @@
+Title: Fix problem in legacy WATO plugin conversion
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0b2
+Date: 1560244521
+Class: fix
+
+When using 3rd party extensions that register WATO rulesets in the pre 1.6
+logic (by using thre register_rule()) method, this may result in an error like
+this on the package management page <tt>TypeError: type() argument 1 must be string, not unicode</tt>.

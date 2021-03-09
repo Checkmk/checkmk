@@ -1,12 +1,10 @@
 Title: Fix "KeyError: name" in PDF exports of e.g. "Events of monitored host" views
-Class: fix
-Compatible: compat
-Component: reporting
-Date: 1571141468
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.6.0p5
+Date: 1571141468
+Class: fix
 
 

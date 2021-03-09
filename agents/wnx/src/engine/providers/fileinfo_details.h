@@ -1,7 +1,3 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
 
 // provides basic api to start and stop service
 
@@ -30,21 +26,21 @@ namespace cma::provider::details {
 // Scanners:
 // ------------------------------------------------------
 void GatherMatchingFilesRecursive(
-    const std::filesystem::path &search_path,   // dir from which we begin
-                                                // funny recursive search
-    const std::filesystem::path &file_pattern,  // full mask from yaml
-                                                // fileinfo.path
-    PathVector &Files);                         // input and output
+    const std::filesystem::path &SearchPath,   // dir from which we begin
+                                               // funny recursive search
+    const std::filesystem::path &FilePattern,  // full mask from yaml
+                                               // fileinfo.path
+    PathVector &Files) noexcept;               // input and output
 
 void GatherMatchingFilesAndDirs(
-    const std::filesystem::path &search_dir,    // c:\windows
-    const std::filesystem::path &dir_pattern,   // c:\windows\L*
-    const std::filesystem::path &file_pattern,  // c:\windows\L*\*.log
-    PathVector &files_found,                    // output
-    PathVector &dirs_found);
+    const std::filesystem::path &SearchDir,    // c:\windows
+    const std::filesystem::path &DirPattern,   // c:\windows\L*
+    const std::filesystem::path &FilePattern,  // c:\windows\L*\*.log
+    PathVector &FilesFound,                    // output
+    PathVector &DirsFound);
 
 // MAIN API C ALL
-PathVector FindFilesByMask(const std::wstring &mask);
+PathVector FindFilesByMask(const std::wstring &Mask);
 
 // ------------------------------------------------------
 // Globs:
@@ -52,10 +48,10 @@ PathVector FindFilesByMask(const std::wstring &mask);
 enum class GlobType { kNone, kSimple, kRecursive };
 
 // check for presense *, ? or *
-GlobType DetermineGlobType(const std::wstring &input);
+GlobType DetermineGlobType(const std::wstring &Input);
 
 // Build correct string for output
-std::string MakeFileInfoString(const std::filesystem::path &file_path,
+std::string MakeFileInfoString(const std::filesystem::path &FilePath,
                                FileInfo::Mode mode);
 std::string MakeFileInfoStringMissing(const std::filesystem::path &file_name,
                                       FileInfo::Mode mode);
@@ -65,29 +61,31 @@ std::string MakeFileInfoStringPresented(const std::filesystem::path &file_name,
 // ------------------------------------------------------
 // Specials:
 // ------------------------------------------------------
-std::filesystem::path GetOsPathWithCase(const std::filesystem::path &file_path);
+std::filesystem::path GetOsPathWithCase(
+    const std::filesystem::path &filePath) noexcept;
 
-/// Split the file path into two parts head and body.
-//
-// c:\path\to       -> [c:\]       + [path\to]
+// ------------------------------------------------------
+// Splitters:
+// ------------------------------------------------------
+// split the file path into two parts head and body
+// c:\path\to -> [c:\] + [path\to]
 // \\SRV_01\path\to -> [\\SRV_01\] + [path\to]
-// supported only full path 'c:path\to' do not supported, for example
+// supported only full path c:path\to do not supported, for example
 // returns both empty if something is wrong
-inline auto SplitFileInfoPathSmart(const std::filesystem::path &file_path) {
+inline auto SplitFileInfoPathSmart(const std::filesystem::path &FilePath) {
     try {
-        auto root_name = file_path.root_name();
-        auto root_dir = file_path.root_directory();
-        auto relative_path = file_path.relative_path();
-
-        if (root_name.u8string().empty() ||  //
-            root_dir.u8string().empty() ||   //
-            relative_path.u8string().empty()) {
-            XLOG::d("Path '{}' is not suitable", file_path);
+        auto root_name = FilePath.root_name();
+        auto root_dir = FilePath.root_directory();
+        auto relative_path = FilePath.relative_path();
+        if (root_name.u8string().empty() ||      // must be present
+            root_dir.u8string().empty() ||       // must be present
+            relative_path.u8string().empty()) {  // must be present
+            XLOG::d("Path {} is not suitable", FilePath.u8string());
         } else
             return std::make_tuple(root_name / root_dir, relative_path);
     } catch (...) {
-        XLOG::l("'{}' cannot be split correctly",
-                file_path.empty() ? "" : file_path.u8string());
+        XLOG::l("{} cannot be split correctly",
+                FilePath.empty() ? "" : FilePath.u8string());
     }
     return std::make_tuple(std::filesystem::path(), std::filesystem::path());
 }

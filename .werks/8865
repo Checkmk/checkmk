@@ -1,12 +1,11 @@
 Title: DCD: Add host deletion grace time after site initialization
 Level: 1
 Component: core
-Class: feature
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1566283700
+Class: feature
 
 The hosts created with the DCD are based on the piggyback data produced by a
 source host.

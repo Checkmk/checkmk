@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -43,7 +63,7 @@ def _item_help_logwatch_rules():
 def _valuespec_logwatch_rules():
     return Transform(
         Dictionary(
-            title=_('Logfile patterns'),
+            title=_('Logwatch Patterns'),
             elements=[
                 ("reclassify_patterns",
                  ListOf(
@@ -208,6 +228,7 @@ def _parameter_valuespec_logwatch_ec():
         help=_("Instead of using the regular logwatch check all lines received by logwatch can "
                "be forwarded to a Check_MK event console daemon to be processed. The target event "
                "console can be configured for each host in a separate rule."),
+        style="dropdown",
         elements=[
             FixedValue(
                 "",
@@ -222,6 +243,7 @@ def _parameter_valuespec_logwatch_ec():
                         Transform(
                             # TODO: Clean this up to some CascadingDropdown()
                             Alternative(
+                                style="dropdown",
                                 title=_("Forwarding Method"),
                                 elements=[
                                     FixedValue(
@@ -245,10 +267,11 @@ def _parameter_valuespec_logwatch_ec():
                                         totext=_("Spool to Event Console"),
                                     ),
                                     Transform(
-                                        TextAscii(allow_empty=False,),
+                                        TextAscii(),
                                         title=
                                         _("Local: Spooling - Send events to local Event Console into given spool directory"
                                          ),
+                                        allow_empty=False,
                                         forth=lambda x: x[6:],
                                         # remove prefix
                                         back=lambda x: "spool:" + x,  # add prefix
@@ -269,6 +292,7 @@ def _parameter_valuespec_logwatch_ec():
                                                         ("port",
                                                          Integer(
                                                              title=_("Port"),
+                                                             allow_empty=False,
                                                              default_value=514,
                                                              minvalue=1,
                                                              maxvalue=65535,
@@ -332,6 +356,7 @@ def _parameter_valuespec_logwatch_ec():
                                                      ("port",
                                                       Integer(
                                                           title=_("Port"),
+                                                          allow_empty=False,
                                                           default_value=514,
                                                           minvalue=1,
                                                           maxvalue=65535,

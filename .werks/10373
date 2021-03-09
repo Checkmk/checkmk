@@ -1,13 +1,11 @@
 Title: Fix distributed update issue related to missing theme directory
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1571822317
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571822317
+Class: fix
 
 In a distributed environment, where the central site is based on 1.5 and a remote site
 has already been migrated to 1.6, the configuration synchronization to the 1.6 site

@@ -1,0 +1,11 @@
+--- dest/kubernetes-8.0.0.orig/kubernetes/client/models/v1_role.py
++++ dest/kubernetes-8.0.0/kubernetes/client/models/v1_role.py
+@@ -153,7 +153,7 @@ class V1Role(object):
+         :type: list[V1PolicyRule]
+         """
+         if rules is None:
+-            raise ValueError("Invalid value for `rules`, must not be `None`")
++            rules = []
+ 
+         self._rules = rules
+ 

@@ -1,13 +1,11 @@
 Title: mssql_counters.file_sizes: return performance data for warn/crit values in bytes
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1611054218
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p21
+Date: 1611054218
+Class: fix
 
 The mssql_counters.file_sizes check allows the user to configure upper
 warn/crit levels for database log files in percent: "MSSQL Log and Data File

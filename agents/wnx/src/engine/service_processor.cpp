@@ -3,9 +3,6 @@
 
 #include "service_processor.h"
 
-#include <fcntl.h>
-#include <io.h>
-#include <sensapi.h>
 #include <shlobj_core.h>
 
 #include <chrono>
@@ -14,19 +11,15 @@
 #include "commander.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "common/wtools_service.h"
-#include "common/yaml.h"
 #include "external_port.h"
-#include "install_api.h"
-#include "providers/perf_counters_cl.h"
 #include "realtime.h"
 #include "tools/_process.h"
 #include "upgrade.h"
-#include "windows_service_api.h"
+#include "yaml-cpp/yaml.h"
 
 namespace cma::srv {
-extern bool g_global_stop_signaled;  // semi-hidden global variable for global
-                                     // status #TODO ???
+extern bool global_stop_signaled;  // semi-hidden global variable for global
+                                   // status #TODO ???
 
 // Implementation of the Windows signals
 
@@ -59,7 +52,7 @@ void ServiceProcessor::startServiceAsLegacyTest() {
 
 void ServiceProcessor::stopService() {
     XLOG::l.i("Stop Service called");
-    cma::srv::g_global_stop_signaled = true;
+    cma::srv::global_stop_signaled = true;
     {
         std::lock_guard lk(lock_stopper_);
         stop_requested_ = true;  // against spurious wake up
@@ -95,15 +88,19 @@ void ServiceProcessor::stopTestingMainThread() {
     thread_.join();
 }
 
-namespace {
-std::string FindWinPerfExe() {
-    auto exe_name = cfg::groups::winperf.exe();
-    if (tools::IsEqual(exe_name, "agent")) {
+void ServiceProcessor::kickWinPerf(const AnswerId Tp, const std::string& Ip) {
+    using namespace cma::cfg;
+
+    auto cmd_line = groups::winperf.buildCmdLine();
+    if (Ip.size())
+        cmd_line = L"ip:" + wtools::ConvertToUTF16(Ip) + L" " + cmd_line;
+    auto exe_name = groups::winperf.exe();
+    if (cma::tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
         namespace fs = std::filesystem;
-        fs::path f = cfg::GetRootDir();
-        std::vector<fs::path> names{
-            f / cfg::kDefaultAppFileName  // on install
+        fs::path f = cma::cfg::GetRootDir();
+        std::vector<fs::path> names = {
+            f / cma::cfg::kDefaultAppFileName  // on install
 
         };
 
@@ -123,60 +120,23 @@ std::string FindWinPerfExe() {
         }
         if (exe_name.empty()) {
             XLOG::l.crit("In folder '{}' not found binaries to exec winperf");
-            return {};
+            return;
         }
     } else {
         XLOG::d.i("Looking for agent '{}'", exe_name);
     }
-    return exe_name;
-}
+    auto wide_exe_name = wtools::ConvertToUTF16(exe_name);
+    auto prefix = groups::winperf.prefix();
+    auto timeout = groups::winperf.timeout();
+    auto wide_prefix = wtools::ConvertToUTF16(prefix);
 
-std::wstring GetWinPerfLogFile() {
-    return cfg::groups::winperf.isTrace()
-               ? (std::filesystem::path{cfg::GetLogDir()} / "winperf.log")
-                     .wstring()
-               : L"";
-}
-}  // namespace
-
-void ServiceProcessor::kickWinPerf(const AnswerId answer_id,
-                                   const std::string& ip_addr) {
-    using cfg::groups::winperf;
-
-    auto cmd_line = winperf.buildCmdLine();
-    if (!ip_addr.empty()) {
-        // we may need IP info and using for this pseudo-counter
-        cmd_line = L"ip:" + wtools::ConvertToUTF16(ip_addr) + L" " + cmd_line;
-    }
-
-    auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
-    auto timeout = winperf.timeout();
-    auto prefix = wtools::ConvertToUTF16(winperf.prefix());
-
-    if (winperf.isFork() && !exe_name.empty()) {
-        vf_.emplace_back(kickExe(true,                   // async ???
-                                 exe_name,               // perf_counter.exe
-                                 answer_id,              // answer id
-                                 this,                   // context
-                                 prefix,                 // for section
-                                 timeout,                // in seconds
-                                 cmd_line,               // counters
-                                 GetWinPerfLogFile()));  // log file
-    } else {
-        // NOTE: This part is for debug/testing only.
-        // NOT TESTED with Automatic tests
-        XLOG::d("No forking to get winperf data: may lead to handle leak.");
-        vf_.emplace_back(std::async(
-            std::launch::async, [prefix, this, answer_id, timeout, cmd_line]() {
-                auto cs = tools::SplitString(cmd_line, L" ");
-                std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
-                return provider::RunPerf(prefix,
-                                         wtools::ConvertToUTF16(internal_port_),
-                                         AnswerIdToWstring(answer_id), timeout,
-                                         std::vector<std::wstring_view>{
-                                             cs.begin(), cs.end()}) == 0;
-            }));
-    }
+    vf_.emplace_back(kickExe(true,           // async ???
+                             wide_exe_name,  // perf_counter.exe
+                             Tp,             // answer id
+                             this,           // context
+                             wide_prefix,    // for section
+                             timeout,        // in seconds
+                             cmd_line));     // counters
     answer_.newTimeout(timeout);
 }
 
@@ -272,7 +232,6 @@ void ServiceProcessor::preLoadConfig() {
 
     cma::FilterPathByExtension(files, execute);
     cma::RemoveDuplicatedNames(files);
-    cma::RemoveForbiddenNames(files);
 
     auto yaml_units = GetArray<YAML::Node>(cma::cfg::groups::kPlugins,
                                            cma::cfg::vars::kPluginsExecution);
@@ -288,7 +247,6 @@ void ServiceProcessor::preStartBinaries() {
     ohm_started_ = conditionallyStartOhm();
 
     auto& plugins = plugins_provider_.getEngine();
-    plugins.registerOwner(this);
     plugins.preStart();
     plugins.detachedStart();
 
@@ -320,7 +278,7 @@ void ServiceProcessor::resetOhm() noexcept {
     auto cmd_line = powershell_exe;
     cmd_line += L" ";
     cmd_line += std::wstring(cma::provider::ohm::kResetCommand);
-    XLOG::l.i("I'm going to execute '{}'", wtools::ToUtf8(cmd_line));
+    XLOG::l.i("I'm going to execute '{}'", wtools::ConvertToUTF8(cmd_line));
 
     cma::tools::RunStdCommand(cmd_line, true);
 }
@@ -357,7 +315,7 @@ bool ServiceProcessor::conditionallyStartOhm() noexcept {
 
     auto ohm_exe = cma::provider::GetOhmCliPath();
     if (!IsValidRegularFile(ohm_exe)) {
-        XLOG::d("OHM file '{}' is not found", ohm_exe);
+        XLOG::d("OHM file '{}' is not found", ohm_exe.u8string());
         stopRunningOhmProcess();
         return false;
     }
@@ -458,7 +416,6 @@ void ServiceProcessor::sendDebugData() {
     auto started = startProviders(tp.value(), "");
     auto block = getAnswer(started);
     block.emplace_back('\0');  // yes, we need this for printf
-    _setmode(_fileno(stdout), _O_BINARY);
     auto count = printf("%s", block.data());
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);
@@ -486,7 +443,7 @@ void ServiceProcessor::prepareAnswer(const std::string& ip_from,
 cma::ByteVector ServiceProcessor::generateAnswer(const std::string& ip_from) {
     auto tp = openAnswer(ip_from);
     if (tp) {
-        XLOG::d.i("Id is [{}] ", AnswerIdToNumber(tp.value()));
+        XLOG::d.i("Id is [{}] ", tp.value().time_since_epoch().count());
         auto count_of_started = startProviders(tp.value(), ip_from);
 
         return getAnswer(count_of_started);
@@ -516,8 +473,6 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
     auto ipv6 = groups::global.ipv6();
     auto port = groups::global.port();
     auto uniq_cfg_id = GetCfg().uniqId();
-    ProcessServiceConfiguration(kServiceName);
-
     while (1) {
         using namespace std::chrono;
 
@@ -541,57 +496,22 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop() {
             XLOG::l.t("Stop request is set");
             break;  // signaled stop
         }
-
-        if (SERVICE_DISABLED ==
-            wtools::WinService::ReadUint32(cma::srv::kServiceName,
-                                           wtools::WinService::kRegStart)) {
-            XLOG::l("Service is disabled in config, leaving...");
-
-            cma::tools::RunDetachedCommand(std::string("net stop ") +
-                                           wtools::ToUtf8(kServiceName));
-            break;
-        }
-
         restartBinariesIfCfgChanged(uniq_cfg_id);
     }
     XLOG::l.t("main Wait Loop END");
     return Signal::quit;
 }
 
-namespace {
-
-void WaitForNetwork(std::chrono::seconds period) {
-    using namespace std::chrono;
-    DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
-    for (int i = 0; i < period.count(); i += 2) {
-        auto ret = ::IsNetworkAlive(&networks);
-        auto error = ::GetLastError();
-        if (error == 0 && ret == TRUE) {
-            XLOG::l.i("The network is available");
-            break;
-        }
-
-        XLOG::l.i("Check network failed [{}] {}", error, ret);
-        std::this_thread::sleep_for(2s);
-    }
-}
-}  // namespace
-
 // <HOSTING THREAD>
 // ex_port may be nullptr(command line test, for example)
 // makes a mail slot + starts IO on TCP
 void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
+    using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
-    using namespace std::chrono;
     using namespace cma::cfg;
     auto mailslot_name = cma::IsService() ? kServiceMailSlot : kTestingMailSlot;
 
-    if (cma::IsService()) {
-        auto wait_period = GetVal(groups::kSystem, vars::kWaitNetwork,
-                                  defaults::kServiceWaitNetwork);
-        WaitForNetwork(seconds{wait_period});
-    }
 #if 0
     // ARtificial memory allocator in thread
     std::vector<std::string> z;
@@ -625,17 +545,6 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any
-
-        // module commander loading(and install if service)
-        if (cma::IsService()) {
-            mc_.InstallDefault(cma::cfg::modules::InstallMode::normal);
-        } else
-            mc_.LoadDefault();
-
-        if (cma::IsService()) {
-            cma::install::ClearPostInstallFlag();
-        }
-
         preStartBinaries();
         // *******************
 
@@ -760,8 +669,7 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
             std::string cmd(static_cast<const char*>(dt->data()),
                             static_cast<size_t>(dt->length()));
             std::string peer(cma::commander::kMainPeer);
-            auto rcp = cma::commander::ObtainRunCommandProcessor();
-            if (rcp) rcp(peer, cmd);
+            cma::commander::RunCommand(peer, cmd);
 
             break;
         }
@@ -781,7 +689,7 @@ HANDLE CreateDevNull() {
 // This Function is safe
 bool TheMiniProcess::start(const std::wstring& exe_name) {
     std::unique_lock lk(lock_);
-    if (!wtools::IsInvalidHandle(process_handle_)) {
+    if (process_handle_ != INVALID_HANDLE_VALUE) {
         // check status and reset handle if required
         DWORD exit_code = STILL_ACTIVE;
         if (!::GetExitCodeProcess(process_handle_,
@@ -791,11 +699,11 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
                 XLOG::l.i("Finished with {} code", exit_code);
             }
             CloseHandle(process_handle_);
-            process_handle_ = wtools::InvalidHandle();
+            process_handle_ = INVALID_HANDLE_VALUE;
         }
     }
 
-    if (wtools::IsInvalidHandle(process_handle_)) {
+    if (process_handle_ == INVALID_HANDLE_VALUE) {
         auto null_handle = CreateDevNull();
         STARTUPINFO si{0};
         si.cb = sizeof(STARTUPINFO);
@@ -806,14 +714,14 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
         PROCESS_INFORMATION pi{0};
         if (!::CreateProcess(exe_name.c_str(), nullptr, nullptr, nullptr, TRUE,
                              0, nullptr, nullptr, &si, &pi)) {
-            XLOG::l("Failed to run {}", wtools::ToUtf8(exe_name));
+            XLOG::l("Failed to run {}", wtools::ConvertToUTF8(exe_name));
             return false;
         }
         process_handle_ = pi.hProcess;
         process_id_ = pi.dwProcessId;
         CloseHandle(pi.hThread);  // as in LA
 
-        process_name_ = wtools::ToUtf8(exe_name);
+        process_name_ = wtools::ConvertToUTF8(exe_name);
         XLOG::d.i("Started '{}' wih pid [{}]", process_name_, process_id_);
     }
 
@@ -823,7 +731,7 @@ bool TheMiniProcess::start(const std::wstring& exe_name) {
 // returns true when killing occurs
 bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);
-    if (wtools::IsInvalidHandle(process_handle_)) return false;
+    if (process_handle_ == INVALID_HANDLE_VALUE) return false;
 
     auto name = process_name_;
     auto pid = process_id_;
@@ -832,7 +740,7 @@ bool TheMiniProcess::stop() {
     process_id_ = 0;
     process_name_.clear();
     CloseHandle(handle);
-    process_handle_ = wtools::InvalidHandle();
+    process_handle_ = INVALID_HANDLE_VALUE;
 
     // check status and reset handle if required
     DWORD exit_code = STILL_ACTIVE;
@@ -848,10 +756,13 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        if (wtools::kProcessTreeKillAllowed) wtools::KillProcessTree(pid);
+        if (wtools::kProcessTreeKillAllowed) {
+            // we do not kill tree, this is dangerous on older OS's
+            wtools::KillProcessTreeUnsafe(pid);
+        }
 
-        wtools::KillProcess(pid, 99);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
+        wtools::KillProcessUnsafe(pid);
         return true;
     }
 

@@ -1,10 +1,11 @@
 Title: ucd: Add support for Bomgar Appliances
 Level: 1
 Component: checks
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1563873152
-Class: feature
 
 

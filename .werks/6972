@@ -1,11 +1,12 @@
 Title: Support SQL-style quoting for filtering dict-valued columns
 Level: 1
 Component: livestatus
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b2
 Date: 1559898561
-Class: feature
 
 Some Livestatus columns do not contain a simple value or a list of such values,
 they contain a dictionary of key/value pairs. More concretely, the

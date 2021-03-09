@@ -6,8 +6,7 @@ Date: 1582552465
 Edition: cee
 Knowledge: doc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p10
 
 The Checkmk RRD helper is used whenever the microcore tries to create a new rrd file.
 During this process the RRD helper tries to parse the autochecks file for the host in question.

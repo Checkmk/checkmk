@@ -1,13 +1,11 @@
 Title: Pipe symbols in notifications are no longer replaced by a light vertical bar
-Class: fix
-Compatible: compat
-Component: notifications
-Date: 1581952164
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1581952164
+Class: fix
 
 If a check output contains pipe characters they are replaced by
 "Light vertical bars" (U+2758) before a check result is submitted

@@ -1,12 +1,13 @@
 Title: Fix piggyback path traversal
-Class: security
-Compatible: incomp
-Component: core
-Date: 1597405643
-Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.0.0i1
+Component: core
+Class: security
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p16
+Date: 1597405643
 
 In previous versions it was possible to create files in the querying Checkmk
 site by modifying or extending an agent on a monitored system.

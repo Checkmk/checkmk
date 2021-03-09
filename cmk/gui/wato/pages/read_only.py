@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 """WATO can be set into read only mode manually using this mode"""
 
 import time
@@ -14,11 +34,6 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    make_simple_form_page_menu,
-)
 
 from cmk.gui.valuespec import (
     Tuple,
@@ -32,11 +47,8 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
-    flash,
-    redirect,
-    mode_url,
+    global_buttons,
 )
 
 
@@ -57,20 +69,17 @@ class ModeManageReadOnly(WatoMode):
     def title(self):
         return _("Manage configuration read only mode")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Mode"),
-                                          breadcrumb,
-                                          form_name="read_only",
-                                          button_name="_save")
+    def buttons(self):
+        global_buttons()
+        html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "globalvars")]),
+                            "back")
 
-    def action(self) -> ActionResult:
+    def action(self):
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
         self._settings = settings
 
         self._save()
-        flash(_("Saved read only settings"))
-        return redirect(mode_url("read_only"))
 
     def _save(self):
         store.save_to_mk_file(watolib.multisite_dir() + "read_only.mk",
@@ -85,6 +94,7 @@ class ModeManageReadOnly(WatoMode):
               "read only can disable it again when another permitted user enabled it before."))
         html.begin_form("read_only", method="POST")
         self._vs().render_input("_read_only", self._settings)
+        html.button('_save', _('Save'), 'submit')
         html.hidden_fields()
         html.end_form()
 
@@ -95,6 +105,7 @@ class ModeManageReadOnly(WatoMode):
                           elements=[
                               ("enabled",
                                Alternative(title=_("Enabled"),
+                                           style="dropdown",
                                            elements=[
                                                FixedValue(
                                                    False,

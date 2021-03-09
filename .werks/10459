@@ -1,13 +1,11 @@
 Title: Show miniature graphs in mobile GUI
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1573573252
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1573573252
+Class: fix
 
 The mobile GUI now shows miniature graphs with the
 smallest available graph timerange. Previously the

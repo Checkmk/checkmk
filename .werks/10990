@@ -1,12 +1,13 @@
 Title: mk_logwatch: Fixed state file name if REMOTE_HOST variable contains extended IPv4 address
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1590571863
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p13
+Date: 1590571863
 
 In the logwatch.cfg a cluster configuration may be of the form
 C:+

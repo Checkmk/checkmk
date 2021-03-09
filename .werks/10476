@@ -1,12 +1,13 @@
 Title: azure_agent_info: Add option to pin down monitored resources
-Class: feature
-Compatible: incomp
-Component: checks
-Date: 1574674404
-Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: feature
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1574674404
 
 Since werk 10475 services no longer go to UNKNOWN if data is missing.
 If you want to strictly monitor the resources found for monitoring,

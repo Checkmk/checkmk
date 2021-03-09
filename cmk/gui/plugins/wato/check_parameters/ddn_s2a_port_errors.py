@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -19,78 +39,78 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_ddn_s2a_port_errors() -> Dictionary:
+def _parameter_valuespec_ddn_s2a_port_errors():
     return Dictionary(elements=[
         ("link_failure_errs",
          Tuple(
-             title=_("Link failure errors"),
+             title=_(u"Link failure errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("lost_sync_errs",
          Tuple(
-             title=_("Lost synchronization errors"),
+             title=_(u"Lost synchronization errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("loss_of_signal_errs",
          Tuple(
-             title=_("Loss of signal errors"),
+             title=_(u"Loss of signal errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("prim_seq_errs",
          Tuple(
-             title=_("PrimSeq erros"),
+             title=_(u"PrimSeq erros"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("crc_errs",
          Tuple(
-             title=_("CRC errors"),
+             title=_(u"CRC errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("receive_errs",
          Tuple(
-             title=_("Receive errors"),
+             title=_(u"Receive errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("ctio_timeouts",
          Tuple(
-             title=_("CTIO timeouts"),
+             title=_(u"CTIO timeouts"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("ctio_xmit_errs",
          Tuple(
-             title=_("CTIO transmission errors"),
+             title=_(u"CTIO transmission errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
         ("ctio_other_errs",
          Tuple(
-             title=_("other CTIO errors"),
+             title=_(u"other CTIO errors"),
              elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
+                 Integer(title=_(u"Warning at")),
+                 Integer(title=_(u"Critical at")),
              ],
          )),
     ],)
@@ -103,5 +123,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title="Port index"),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ddn_s2a_port_errors,
-        title=lambda: _("DDN S2A port errors"),
+        title=lambda: _("Port errors of DDN S2A devices"),
     ))

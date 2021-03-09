@@ -1,0 +1,15 @@
+Title: LIVESTATUS_TCP_ONLY_FROM: Allow IPv6 addresses to be configured
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0p15
+Date: 1595930491
+Class: fix
+
+The previous versions prevented IPv6 addreses from being configured,
+terminating a configuration change with a validation error. This is
+now possible.
+
+In addition a more helpful text has been added to the config dialog
+to explain the different allowed formats.

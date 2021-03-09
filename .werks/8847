@@ -1,12 +1,11 @@
 Title: Service discovery: Print warning instead of failing on discovery errors
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1564734854
+Class: fix
 
 The service discovery page of WATO was terminating the service discovery on the
 first error, independent of which discovery function raised the error. In this

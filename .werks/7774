@@ -1,12 +1,11 @@
 Title: Fix installation issue on older debian based distros
 Level: 2
 Component: omd
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560157400
+Class: fix
 
 The werk #7344 introduced compatibility issues with Linux setups that don't
 support linux capabilities (for different reasons). One reason may be a kernel

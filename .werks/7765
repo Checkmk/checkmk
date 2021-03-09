@@ -1,12 +1,11 @@
 Title: Fix parent scan when no gateway was found
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1559760294
+Class: fix
 
 When the parent scan found not gateway, e.g. because the
 scanned host is the local host, then an exception like

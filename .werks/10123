@@ -1,12 +1,13 @@
 Title: Fixed race condition when changing host check command.
-Class: fix
-Compatible: compat
-Component: cmc
-Date: 1576490948
-Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.0.0i1
+Component: cmc
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p8
+Date: 1576490948
 
 When the kind of a host check command was changed, e.g. from an active check
 to smart ping, there was a small time window for scheduling to go wrong.

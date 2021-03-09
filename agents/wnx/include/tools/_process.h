@@ -1,13 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
-
 // Assorted process management routines
 #pragma once
 
-#include <Windows.h>
-#include <shlobj.h>
+#define WIN32_LEAN_AND_MEAN
+#include <shlobj.h>  // known path
+#include <windows.h>
 
 #include <fstream>
 #include <string>
@@ -18,39 +14,32 @@
 #include "tools/_xlog.h"
 
 namespace cma::tools {
-inline bool RunCommandAndWait(const std::wstring& command,
-                              const std::wstring& work_dir) {
+inline bool RunCommandAndWait(const std::wstring& Command) {
     STARTUPINFOW si{0};
-    ::memset(&si, 0, sizeof(si));
+    memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags |= STARTF_USESTDHANDLES;  // SK: not sure with this flag
 
     PROCESS_INFORMATION pi{nullptr};
-    ::memset(&pi, 0, sizeof(pi));
+    memset(&pi, 0, sizeof(pi));
     // CREATE_NEW_CONSOLE
 
-    auto working_folder = work_dir.empty() ? nullptr : work_dir.data();
-
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.c_str()),  // win32!
-                         nullptr,         // security attribute
-                         nullptr,         // thread attribute
-                         FALSE,           // no handle inheritance
-                         0,               // Creation Flags
-                         nullptr,         // environment
-                         working_folder,  // current directory
+                         const_cast<wchar_t*>(Command.c_str()),  // win32!
+                         nullptr,  // security attribute
+                         nullptr,  // thread attribute
+                         FALSE,    // no handle inheritance
+                         0,        // Creation Flags
+                         nullptr,  // environment
+                         nullptr,  // current directory
                          &si, &pi)) {
-        ::WaitForSingleObject(pi.hProcess, INFINITE);
-        ::CloseHandle(pi.hProcess);
-        ::CloseHandle(pi.hThread);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
         return true;
     }
     return false;
-}
-
-inline bool RunCommandAndWait(const std::wstring& command) {
-    std::wstring path{L""};
-    return RunCommandAndWait(command, path);
 }
 
 inline bool RunDetachedCommand(const std::string& Command) {
@@ -79,41 +68,41 @@ inline bool RunDetachedCommand(const std::string& Command) {
     return false;
 }
 
-// NOTE: LAST and BEST attempt to have standard windows starter
-// Returns process id on success
-/// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
+// LAST and BEST attempt to have standard windows starter
+// returns process id
+// used during auto update
 inline uint32_t RunStdCommand(
-    std::wstring_view command,    // full command with arguments
-    bool wait_for_end,            // important flag! set false when you are sure
-    BOOL inherit_handle = FALSE,  // recommended option
-    HANDLE stdio_handle = 0,      // when we want to catch output
-    HANDLE stderr_handle = 0,     // same
-    DWORD creation_flags = 0,     // never checked this
-    DWORD start_flags = 0) {
+    std::wstring_view Command,   // full command with arguments
+    bool Wait,                   // important flag! set false  when you are sure
+    BOOL InheritHandle = FALSE,  // not optimal, but default
+    HANDLE Stdio = 0,            // when we want to catch output
+    HANDLE Stderr = 0,           // same
+    DWORD CreationFlags = 0,     // never checked this
+    DWORD StartFlags = 0) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = start_flags;
-    si.hStdOutput = stdio_handle;
-    si.hStdError = stderr_handle;
-    if (inherit_handle)
+    si.dwFlags = StartFlags;
+    si.hStdOutput = Stdio;
+    si.hStdError = Stderr;
+    if (InheritHandle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
 
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(command.data()),  // win32!
-                         nullptr,         // security attribute
-                         nullptr,         // thread attribute
-                         inherit_handle,  // handle inheritance
-                         creation_flags,  // Creation Flags
-                         nullptr,         // environment
-                         nullptr,         // current directory
+                         const_cast<wchar_t*>(Command.data()),  // win32!
+                         nullptr,        // security attribute
+                         nullptr,        // thread attribute
+                         InheritHandle,  // handle inheritance
+                         CreationFlags,  // Creation Flags
+                         nullptr,        // environment
+                         nullptr,        // current directory
                          &si, &pi)) {
         auto process_id = pi.dwProcessId;
-        if (wait_for_end) WaitForSingleObject(pi.hProcess, INFINITE);
+        if (Wait) WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         return process_id;
@@ -190,13 +179,27 @@ inline bool IsElevated() {
     return false;
 }
 
-inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) noexcept {
+inline std::wstring GetSomeSystemFolder(const KNOWNFOLDERID& rfid) {
     wchar_t* str = nullptr;
     if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
         !str)  // probably impossible case when executed ok, but str is nullptr
         return {};
 
     std::wstring path = str;
+    if (str) CoTaskMemFree(str);  // win32
+    return path;
+}
+
+// ASCIIZ Version
+inline std::string GetSomeSystemFolderA(const KNOWNFOLDERID& rfid) {
+    wchar_t* str = nullptr;
+    if (SHGetKnownFolderPath(rfid, KF_FLAG_DEFAULT, NULL, &str) != S_OK ||
+        !str)  // probably impossible case when executed ok, but str is nullptr
+        return {};
+
+    std::string path;
+    auto end = str + wcslen(str);
+    path.assign(str, end);
     if (str) CoTaskMemFree(str);  // win32
     return path;
 }

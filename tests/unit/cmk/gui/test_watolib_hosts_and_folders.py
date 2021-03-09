@@ -1,19 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-import datetime
-import time
-
-import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
-
-from testlib import on_time
+import pytest  # type: ignore
+from freezegun import freeze_time  # type: ignore
 import cmk.gui.watolib as watolib
 
 
+@freeze_time("2018-01-10 02:00:00", tz_offset=+1)
 @pytest.mark.parametrize("allowed,last_end,next_time", [
     (((0, 0), (24, 0)), None, 1515549600.0),
     (
@@ -43,22 +33,4 @@ def test_next_network_scan_at(allowed, last_end, next_time):
                                 }
                             })
 
-    with on_time("2018-01-10 02:00:00", "CET"):
-        assert folder.next_network_scan_at() == next_time
-
-
-def test_folder_times(register_builtin_html):
-    root = watolib.Folder.root_folder()
-
-    with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
-        current = time.time()
-        folder = watolib.Folder('test', parent_folder=root)
-        folder.save()
-
-    folder = watolib.Folder("test", "")
-    meta_data = folder.attributes()['meta_data']
-    assert int(meta_data['created_at']) == int(current)
-    assert int(meta_data['updated_at']) == int(current)
-
-    folder.persist_instance()
-    assert int(meta_data['updated_at']) > int(current)
+    assert folder.next_network_scan_at() == next_time

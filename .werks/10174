@@ -1,12 +1,11 @@
 Title: Add Web-API calls for Checkmk Grafana datasource 1.1.0
 Level: 2
 Component: metrics
-Class: feature
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p1
 Date: 1569248499
+Class: feature
 
 The upcoming version 1.1.0 of the Checkmk Grafana datasource
 (https://github.com/tribe29/grafana-checkmk-datasource/)

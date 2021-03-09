@@ -1,11 +1,12 @@
 Title: statgrab_cpu: Fixed parsing CPU values; Some values may be missing
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b2
 Date: 1560329083
-Class: fix
 
 Some of the following CPU values may be missing:
 user, nice, system, idle, iowait

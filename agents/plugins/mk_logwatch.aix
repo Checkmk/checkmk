@@ -1,0 +1,49 @@
+#!/usr/bin/ksh
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+VERSION="2.0.0b5"
+
+# Logfile monitoring for AIX via errpt
+#
+# This plugin will send all new lines reported by
+# errpt to the monitoring server in the form of a
+# logwatch section.
+# On the monitoring server side this will appear to
+# be a monitored logfile by the name 'errorlog'.
+# Every encoutered line will be reported as 'CRIT'
+#
+
+## Output of errpt looks like this, newest first
+## (timestamp is month-day-hour-minute-year):
+# IDENTIFIER TIMESTAMP  T C RESOURCE_NAME  DESCRIPTION
+# 8650BE3F   0820122810 I H ent2           ETHERCHANNEL RECOVERY
+# F3846E13   0820122510 P H ent2           ETHERCHANNEL FAILOVER
+# 8650BE3F   0820104410 I H ent2           ETHERCHANNEL RECOVERY
+# F3846E13   0820093810 P H ent2           ETHERCHANNEL FAILOVER
+# 8650BE3F   0820090910 I H ent2           ETHERCHANNEL RECOVERY
+#
+
+MK_LOGWATCH_AIX_STATE="$MK_VARDIR/mk_logwatch_aix.last_reported"
+
+
+echo "<<<logwatch>>>"
+echo "[[[errorlog]]]"
+
+# the last line we already reported (may be empty)
+LINE=$(tail -n1 "$MK_LOGWATCH_AIX_STATE" 2> /dev/null)
+
+if [ "$LINE" ]; then  # get rid of all lines after that:
+    OUT=$(errpt | awk -v line="$LINE" '($0 == line) {exit}; ($0 != line) && (NR>1) {printf "C %s\n", $0}')
+else  # LINE is empty -> report all
+    OUT=$(errpt | awk '(NR>1) {printf "C %s\n", $0}')
+fi
+
+if [ "$OUT" ]; then
+    # output data; if successful, remember most recent
+    echo "$OUT" && echo "$OUT" | head -n1 | sed 's/^C\ //' > "$MK_LOGWATCH_AIX_STATE"
+fi
+

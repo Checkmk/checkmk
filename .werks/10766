@@ -1,0 +1,12 @@
+Title: Fix custom graphs designer fraction
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0p8
+Date: 1578407968
+Class: fix
+
+Custom graphs allows to compose metrics through an operation. Fraction,
+that is the ratio between 2 metrics, was not recognized by the GUI
+editor. This werk fixes the issue.

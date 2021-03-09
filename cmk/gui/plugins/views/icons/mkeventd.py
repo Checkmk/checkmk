@@ -6,6 +6,8 @@
 
 import re
 
+import re
+
 import cmk.gui.config as config
 from cmk.gui.globals import html
 from cmk.gui.i18n import _

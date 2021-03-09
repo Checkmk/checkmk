@@ -1,12 +1,11 @@
 Title: docker_container_mem: Plugin no longer requires agent in container
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b9
 Date: 1567448802
+Class: feature
 
 The memory service corresponding to the plugin docker_container_mem no longer
 requires the Checkmk agent to be installed on the monitored container.

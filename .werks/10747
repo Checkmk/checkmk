@@ -1,13 +1,11 @@
 Title: ibm_svc_mdisk: don't crash on discovery
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1582551977
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1582551977
+Class: fix
 
 On devices that do not support the lsmdisk command the check plugin
 ibm_svc_mdisk failed so that the "Check_MK Discovery" service showed

@@ -1,13 +1,33 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 """When the user wants to scan the services of multiple hosts at once
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast, Type, Optional
+from typing import List  # pylint: disable=unused-import
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -16,9 +36,6 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
-from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -29,7 +46,6 @@ from cmk.gui.watolib.bulk_discovery import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    ActionResult,
     mode_registry,
     get_hostnames_from_checkboxes,
 )
@@ -44,10 +60,6 @@ class ModeBulkDiscovery(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts", "services"]
-
-    @classmethod
-    def parent_mode(cls) -> Optional[Type[WatoMode]]:
-        return ModeFolder
 
     def _from_vars(self):
         self._start = bool(html.request.var("_start"))
@@ -65,48 +77,27 @@ class ModeBulkDiscovery(WatoMode):
             vs_bulk_discovery().validate_value(bulk_discover_params, "bulkinventory")
             self._bulk_discovery_params.update(bulk_discover_params)
 
-        # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._recurse, self._only_failed, self._only_failed_invcheck,
-         self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
-                                     self._bulk_discovery_params["selection"])
-
-        self._do_scan, self._bulk_size = self._get_performance_params()
+        self._recurse, self._only_failed, self._only_failed_invcheck, \
+            self._only_ok_agent = self._bulk_discovery_params["selection"]
+        self._use_cache, self._do_scan, self._bulk_size = \
+            self._bulk_discovery_params["performance"]
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
-
-    def _get_performance_params(self) -> Tuple[bool, int]:
-        performance_params = self._bulk_discovery_params["performance"]
-        assert isinstance(performance_params, tuple)
-
-        if len(performance_params) == 3:
-            # In previous Checkmk versions (< 2.0) there was a third performance parameter:
-            # 'use_cache' in the first place.
-            do_scan, bulk_size = performance_params[1:]
-        else:
-            do_scan, bulk_size = performance_params
-
-        assert isinstance(do_scan, bool)
-        assert isinstance(bulk_size, int)
-        return do_scan, bulk_size
 
     def title(self):
         return _("Bulk discovery")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Discovery"),
-                                          breadcrumb,
-                                          form_name="bulkinventory",
-                                          button_name="_start",
-                                          save_title=_("Start"))
+    def buttons(self):
+        html.context_button(_("Folder"), Folder.current().url(), "back")
 
-    def action(self) -> ActionResult:
+    def action(self):
         config.user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
             html.check_transaction()
-            self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
+            self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()
         except Exception as e:
@@ -124,7 +115,7 @@ class ModeBulkDiscovery(WatoMode):
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():
-            html.show_message(
+            html.message(
                 _("Bulk discovery currently running in <a href=\"%s\">background</a>.") %
                 self._job.detail_url())
             return
@@ -147,9 +138,7 @@ class ModeBulkDiscovery(WatoMode):
             msgs.append(
                 _("You have selected <b>%d</b> hosts for bulk discovery.") %
                 len(self._get_hosts_to_discover()))
-            # The cast is needed for the moment, because mypy does not understand our data structure here
-            selection = cast(Tuple[bool, bool, bool, bool],
-                             self._bulk_discovery_params["selection"])
+            selection = self._bulk_discovery_params["selection"]
             self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
         msgs.append(
@@ -160,10 +149,12 @@ class ModeBulkDiscovery(WatoMode):
         vs.render_input("bulkinventory", self._bulk_discovery_params)
         forms.end()
 
+        html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()
 
-    def _get_hosts_to_discover(self) -> List[DiscoveryHost]:
+    def _get_hosts_to_discover(self):
+        # type: () -> List[DiscoveryHost]
         if self._only_failed_invcheck:
             restrict_to_hosts = self._find_hosts_with_failed_discovery_check()
         else:
@@ -217,7 +208,7 @@ class ModeBulkDiscovery(WatoMode):
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
-            for subfolder in folder.subfolders():
+            for subfolder in folder.all_subfolders().values():
                 entries += self._recurse_hosts(subfolder)
         return entries
 

@@ -1,0 +1,209 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Check_MK-Agent-Plugin - Apache Server Status
+#
+# Fetches the server-status page from detected or configured apache
+# processes to gather status information about this apache process.
+#
+# To make this agent plugin work you have to load the status_module
+# into your apache process. It is also needed to enable the "server-status"
+# handler below the URL "/server-status".
+#
+# By default this plugin tries to detect all locally running apache processes
+# and to monitor them. If this is not good for your environment you might
+# create an apache_status.cfg file in MK_CONFDIR and populate the servers
+# list to prevent executing the detection mechanism.
+#
+# It is also possible to override or extend the ssl_ports variable to make the
+# check contact other ports than 443 with HTTPS requests.
+
+import os
+import re
+import socket
+import sys
+import urllib2
+
+# We have to deal with socket timeouts. Python > 2.6
+# supports timeout parameter for the urllib2.urlopen method
+# but we are on a python 2.5 system here which seem to use the
+# default socket timeout.
+socket.setdefaulttimeout(5.0)
+
+
+def get_config():
+    config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
+    config_file = config_dir + "/apache_status.conf"
+
+    if not os.path.exists(config_file):
+        config_file = config_dir + "/apache_status.cfg"
+
+    # None or tuple of ((proto, cacert), ipaddress, port, instance_name).
+    #  - proto is 'http' or 'https'
+    #  - cacert is a path to a CA certificate, or None
+    #  - port may be None
+    #  - instance_name may be the empty string
+    config = {
+        "servers": None,
+        "ssl_ports": [443],
+    }
+    if os.path.exists(config_file):
+        execfile(config_file, config)
+    return config
+
+
+def try_detect_servers(ssl_ports):
+    results = []
+
+    for netstat_line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+        parts = netstat_line.split()
+        # Skip lines with wrong format
+        if len(parts) < 7 or '/' not in parts[6]:
+            continue
+
+        pid, proc = parts[6].split('/', 1)
+        to_replace = re.compile('^.*/')
+        proc = to_replace.sub('', proc)
+
+        procs = [
+            'apache2',
+            'httpd',
+            'httpd-prefork',
+            'httpd2-prefork',
+            'httpd2-worker',
+            'httpd.worker',
+            'fcgi-pm',
+        ]
+        # the pid/proc field length is limited to 19 chars. Thus in case of
+        # long PIDs, the process names are stripped of by that length.
+        # Workaround this problem here
+        procs = [p[:19 - len(pid) - 1] for p in procs]
+
+        # Skip unwanted processes
+        if proc not in procs:
+            continue
+
+        server_address, server_port = parts[3].rsplit(':', 1)
+        server_port = int(server_port)
+
+        # Use localhost when listening globally
+        if server_address == '0.0.0.0':
+            server_address = '127.0.0.1'
+        elif server_address == '::':
+            server_address = '[::1]'
+        elif ':' in server_address:
+            server_address = '[%s]' % server_address
+
+        # Switch protocol if port is SSL port. In case you use SSL on another
+        # port you would have to change/extend the ssl_port list
+        if server_port in ssl_ports:
+            scheme = 'https'
+        else:
+            scheme = 'http'
+
+        results.append((scheme, server_address, server_port))
+
+    return results
+
+
+def _unpack(config):
+    if isinstance(config, tuple):
+        if len(config) == 3:
+            # Append empty instance name.
+            config += ("",)
+        if not isinstance(config[0], tuple):
+            # Set cacert option.
+            config = ((config[0], None),) + config[1:]
+        return config + ("server-status",)
+    return ((config['protocol'], config.get('cafile', None)), config['address'], config['port'],
+            config.get("instance", ""), config.get('page', 'server-status'))
+
+
+def get_ssl_no_verify_context():
+    import ssl
+    context = ssl.create_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    return context
+
+
+def get_response(proto, cafile, address, portspec, page):
+    url = '%s://%s%s/%s?auto' % (proto, address, portspec, page)
+    request = urllib2.Request(url, headers={"Accept": "text/plain"})
+    is_local = address in ("127.0.0.1", "[::1]", "localhost")
+    # Try to fetch the status page for each server
+    try:
+        if proto == "https" and cafile:
+            return urllib2.urlopen(request, cafile=cafile)
+        elif proto == "https" and is_local:
+            return urllib2.urlopen(request, context=get_ssl_no_verify_context())
+        return urllib2.urlopen(request)
+    except urllib2.URLError, exc:
+        if 'unknown protocol' in str(exc):
+            # HACK: workaround misconfigurations where port 443 is used for
+            # serving non ssl secured http
+            url = 'http://%s%s/server-status?auto' % (address, portspec)
+            return urllib2.urlopen(url)
+        raise
+
+
+def main():
+    config = get_config()
+    servers = config["servers"]
+    ssl_ports = config["ssl_ports"]
+
+    if servers is None:
+        servers = try_detect_servers(ssl_ports)
+
+    if not servers:
+        return 0
+
+    sys.stdout.write('<<<apache_status:sep(124)>>>\n')
+    for server in servers:
+        (proto, cafile), address, port, name, page = _unpack(server)
+        portspec = ':%d' % port if port else ''
+
+        try:
+            response = get_response(proto, cafile, address, portspec, page)
+            for line in response.read().split('\n'):
+                if not line.strip():
+                    continue
+                if line.lstrip()[0] == '<':
+                    # Seems to be html output. Skip this server.
+                    break
+
+                sys.stdout.write("%s|%s|%s|%s\n" % (address, port, name, line))
+        except urllib2.HTTPError, exc:
+            sys.stderr.write('HTTP-Error (%s%s): %s %s\n' % (address, portspec, exc.code, exc))
+
+        except Exception, exc:  # pylint: disable=broad-except
+            sys.stderr.write('Exception (%s%s): %s\n' % (address, portspec, exc))
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

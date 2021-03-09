@@ -1,13 +1,11 @@
 Title: Fix broken "Start livestatus proxy" global setting after update from CRE to CEE
-Class: fix
-Compatible: compat
-Component: omd
-Date: 1570646144
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: omd
+Compatible: compat
+Edition: cee
+Version: 1.6.0p5
+Date: 1570646144
+Class: fix
 
 The global setting "Start livestatus proxy" is used to enable the livestatus proxy
 daemon in Checkmk sites. It is a "omd config" setting which can also be set using

@@ -1,13 +1,11 @@
 Title: jira_issues: Fixed possible multiple creation of issues
-Class: fix
-Compatible: compat
-Component: notifications
-Date: 1585324537
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.6.0p11
+Date: 1585324537
+Class: fix
 
 If the same Host/Service ID occurs, e.g. if you replay a notification, an issue
 for the same problem could be created again. This has been fixed.

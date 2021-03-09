@@ -1,15 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
 
 // provides basic api to start and stop service
 
 #pragma once
 #ifndef service_processor_h__
 #define service_processor_h__
-
-#include <fmt/format.h>
 
 #include <chrono>      // timestamps
 #include <cstdint>     // wchar_t when compiler options set weird
@@ -26,8 +20,8 @@
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
 #include "external_port.h"
+#include "fmt/format.h"
 #include "logger.h"
-#include "modules.h"
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/fileinfo.h"
@@ -45,13 +39,16 @@
 #include "providers/wmi.h"
 #include "read_file.h"
 #include "realtime.h"
-#include "tools/_win.h"
+#include "tools/_xlog.h"
 
 namespace cma::srv {
 // mini processes of the global type
 class TheMiniProcess {
 public:
-    TheMiniProcess() = default;
+    TheMiniProcess()
+        : process_handle_(INVALID_HANDLE_VALUE)
+        , thread_handle_(INVALID_HANDLE_VALUE)
+        , process_id_(0) {}
 
     TheMiniProcess(const TheMiniProcess&) = delete;
     TheMiniProcess& operator=(const TheMiniProcess&) = delete;
@@ -68,9 +65,9 @@ public:
 
 private:
     mutable std::mutex lock_;
-    HANDLE process_handle_{wtools::InvalidHandle()};
-    HANDLE thread_handle_{wtools::InvalidHandle()};
-    uint32_t process_id_{0};
+    HANDLE process_handle_;
+    HANDLE thread_handle_;
+    uint32_t process_id_;
     std::string process_name_;  // for debug purposes
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
@@ -87,7 +84,6 @@ bool SystemMailboxCallback(const cma::MailSlot*, const void* data, int len,
 
 class ServiceProcessor;
 
-//
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
@@ -110,21 +106,19 @@ public:
         const AnswerId Tp,            // expected id
         ServiceProcessor* processor   // hosting object
     ) {
-        engine_.registerOwner(processor);
         engine_.loadConfig();
-
         section_expected_timeout_ = engine_.timeout();
         return std::async(
             mode,
             [this](const std::string CommandLine,  //
                    const AnswerId Tp,              //
                    const ServiceProcessor* Proc) {
-                engine_.updateSectionStatus();  // actual data gathering is
-                                                // here for plugins and local
+                engine_.updateSectionStatus();  // actual data gathering is here
+                                                // for plugins and local
 
                 engine_.registerCommandLine(CommandLine);
                 auto port_name = Proc->getInternalPort();
-                auto id = AnswerIdToNumber(Tp);
+                auto id = Tp.time_since_epoch().count();
                 XLOG::d.t(
                     "Provider '{}' is about to be started, id '{}' port [{}]",
                     provider_uniq_name_, id, port_name);
@@ -151,7 +145,7 @@ public:
         section_expected_timeout_ = engine_.timeout();
         engine_.updateSectionStatus();
         engine_.registerCommandLine(cmd_line);
-        auto id = AnswerIdToNumber(timestamp);
+        auto id = timestamp.time_since_epoch().count();
         XLOG::d.t("Provider '{}' is direct called, id '{}' port [{}]",
                   provider_uniq_name_, id, port_name);
         goGoGo(std::string(section::kUseEmbeddedName), cmd_line, port_name, id);
@@ -177,7 +171,7 @@ protected:
         auto cmd_line =
             std::to_string(Marker) + " " + SectionName + " " + CommandLine;
 
-        engine_.startExecution(Port, cmd_line);
+        engine_.startSynchronous(Port, cmd_line);
         auto us_count = engine_.stopWatchStop();
         XLOG::d.i("perf: Section '{}' took [{}] milliseconds",
                   provider_uniq_name_, us_count / 1000);
@@ -242,14 +236,6 @@ public:
     static void resetOhm() noexcept;
     bool isOhmStarted() const noexcept { return ohm_started_; }
 
-    cma::cfg::modules::ModuleCommander& getModuleCommander() noexcept {
-        return mc_;
-    }
-    const cma::cfg::modules::ModuleCommander& getModuleCommander()
-        const noexcept {
-        return mc_;
-    }
-
 private:
     std::vector<uint8_t> makeTestString(const char* Text) {
         const std::string answer_test = Text;
@@ -260,8 +246,6 @@ private:
 
     // controlled exclusively by mainThread
     std::string internal_port_;
-
-    cma::cfg::modules::ModuleCommander mc_;
 
     // called by external port BEFORE starting context run
     // on this phase we are starting our async plugins
@@ -334,8 +318,10 @@ private:
 
         // answer may be reused
         answer_.dropAnswer();
-        answer_.prepareAnswer(ip_addr);
-        return answer_.getId();
+        answer_.prepareAnswer(ip_addr);  // is temporary
+        auto tp = answer_.getId();
+
+        return tp;
     }
 
     //
@@ -401,7 +387,7 @@ private:
         return true;
     }
 
-    void kickWinPerf(const AnswerId answer_id, const std::string& ip_addr);
+    void kickWinPerf(const AnswerId Tp, const std::string& Ip);
     void kickPlugins(const AnswerId Tp, const std::string& Ip);
 
     template <typename T>
@@ -463,8 +449,9 @@ private:
                   answer_.getStopWatch().getUsCount() / 1000);
     }
 
-    // We wait here for all answers from all providers, internal and
-    // external. The call is *blocking* #TODO break waiting
+    // We wait here for all answers from all providers, internal and external.
+    // The call is *blocking*
+    // #TODO break waiting
     cma::srv::AsyncAnswer::DataBlock getAnswer(int Count) {
         using namespace std::chrono;
         XLOG::t.i("waiting futures(only start)");
@@ -536,27 +523,22 @@ private:
 
     class SectionProviderFile {
     public:
-        SectionProviderFile(const std::string name, const std::wstring filename)
-            : name_(name), file_name_(filename) {}
+        SectionProviderFile(const std::string Name, const std::wstring FileName)
+            : name_(Name), file_name_(FileName) {}
 
-        std::future<bool> kick(const AnswerId answer_id,
-                               ServiceProcessor* service_processor) {
+        std::future<bool> kick(const AnswerId Tp, ServiceProcessor* Proc) {
             return std::async(
                 std::launch::async,
-                [this](const AnswerId answer_id,
-                       ServiceProcessor* service_processor) {
+                [this](const AnswerId Tp, ServiceProcessor* Proc) {
                     auto block = gatherData();
-                    if (!block) {
+                    xlog::l("Provider %s added answer", name_.c_str());
+                    if (block)
+                        return Proc->addSectionToAnswer(name_, Tp, *block);
+                    else
                         return false;
-                    }
-
-                    XLOG::l.i("Provider '{}' added answer to file '{}'", name_,
-                              wtools::ToUtf8(file_name_));
-                    return service_processor->addSectionToAnswer(
-                        name_, answer_id, *block);
                 },
-                answer_id,         // param 1
-                service_processor  // param 2
+                Tp,   // param 1
+                Proc  // param 2
 
             );
         }
@@ -565,92 +547,65 @@ private:
         std::string name_;
         std::wstring file_name_;
         std::optional<std::vector<uint8_t>> gatherData() {
-            auto f = cfg::FindExeFileOnPath(file_name_);
-            return tools::ReadFileInVector(file_name_.c_str());
+            auto f = cma::cfg::FindExeFileOnPath(file_name_);
+            return cma::tools::ReadFileInVector(file_name_.c_str());
         }
     };
-
-    void logExeNotFound(std::wstring_view exe_name) {
-        std::string path_string;
-        auto paths = cfg::GetExePaths();
-        for (const auto& dir : paths) {
-            path_string += dir.u8string() + "\n";
-        }
-
-        XLOG::l("File '{}' not found on the path '{}'",
-                wtools::ToUtf8(exe_name), path_string);
-    }
 
     // starting executable(any!) with valid command line
     // API to start exe
     std::future<bool> kickExe(
-        bool async_mode,                      // controlled from the config
-        const std::wstring exe_name,          //
-        AnswerId answer_id,                   //
-        ServiceProcessor* service_processor,  // host
-        const std::wstring& segment_name,     // identifies exe
-        int timeout,                          // for exe
-        const std::wstring& command_line,     //
-        const std::wstring& log_file) {       // this is optional
+        bool Async,  // controlled from the config
+        const std::wstring ExeName, const AnswerId Tp,
+        ServiceProcessor* Proc,           // host
+        const std::wstring& SegmentName,  // identifies exe
+        int Timeout,                      // for exe
+        const std::wstring& CommandLine) {
         return std::async(
-            async_mode ? std::launch::async : std::launch::deferred,
-            [this, exe_name, log_file](
-                AnswerId answer_id, ServiceProcessor* service_processor,
-                const std::wstring& segment_name, int timeout,
-                const std::wstring& command_line) {
-                // finding and checking
-                XLOG::d.i("Exec '{}' for '{}' to be started",
-                          wtools::ToUtf8(exe_name),
-                          wtools::ToUtf8(segment_name));
+            Async ? std::launch::async : std::launch::deferred,
+            [this, ExeName](const AnswerId Tp, ServiceProcessor* Proc,
+                            const std::wstring& SegmentName, int Timeout,
+                            const std::wstring& CommandLine) {
+                XLOG::l.i("Exec {} for {} started",
+                          wtools::ConvertToUTF8(ExeName),
+                          wtools::ConvertToUTF8(SegmentName));
 
-                auto full_path = cfg::FindExeFileOnPath(exe_name);
+                auto full_path = cma::cfg::FindExeFileOnPath(ExeName);
                 if (full_path.empty()) {
-                    logExeNotFound(exe_name);
+                    std::string path_string = "";
+                    auto paths = cma::cfg::GetExePaths();
+                    for (const auto& dir : paths) {
+                        path_string += dir.u8string() + "\n";
+                    }
+                    XLOG::l("File {} not found on the path {}",
+                            wtools::ConvertToUTF8(ExeName), path_string);
                     return false;
                 }
 
                 // make command line
-                auto port = wtools::ConvertToUTF16(
-                    service_processor->getInternalPort());
+                auto port = wtools::ConvertToUTF16(Proc->getInternalPort());
                 auto cmd_line =
-                    fmt::format(L"\"{}\" -runonce {}{} {} id:{} timeout:{} {}",
-                                full_path,  // exe
-                                log_file.empty() ? L"" : L"@" + log_file + L" ",
-                                segment_name,                 //
-                                port,                         //
-                                AnswerIdToNumber(answer_id),  // answer id
-                                timeout, command_line);
+                    fmt::format(L"\"{}\" -runonce {} {} id:{} timeout:{} {}",
+                                full_path,    // exe
+                                SegmentName,  // name of peer
+                                port,         // port to communicate
+                                Tp.time_since_epoch().count(),  // answer id
+                                Timeout, CommandLine);
 
-                // execution
-                XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
-                auto ret = tools::RunStdCommand(cmd_line, false);
-                if (ret == 0) {
-                    XLOG::l("Exec is failed with error [{}]", ::GetLastError());
-                    return false;
-                }
+                XLOG::d.i("async RunStdCmd: {}",
+                          wtools::ConvertToUTF8(cmd_line));
+                cma::tools::RunStdCommand(cmd_line, false);
 
                 return true;
             },
-            answer_id,          // param 1
-            service_processor,  // param 2
-            segment_name,       // section name
-            timeout,            //
-            command_line
+            Tp,           // param 1
+            Proc,         // param 2
+            SegmentName,  // section name
+            Timeout, CommandLine
 
         );
     }
 
-    std::future<bool> kickExe(
-        bool async,                           // controlled from the config
-        const std::wstring exe_name,          //
-        const AnswerId answer_id,             //
-        ServiceProcessor* service_processor,  // host
-        const std::wstring& segment_name,     // identifies exe
-        int timeout,                          // for exe
-        const std::wstring& command_line) {
-        return kickExe(async, exe_name, answer_id, service_processor,
-                       segment_name, timeout, command_line, {});
-    }
 #if 0
     SectionProviderText txt_provider_{"Text", "<<<IAMSECTIONTOO>>>"};
     SectionProviderFile file_provider_{

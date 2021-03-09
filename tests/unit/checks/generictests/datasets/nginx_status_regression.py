@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 
 
 checkname = 'nginx_status'
@@ -50,7 +43,7 @@ checks = {'': [('127.0.0.1:80',
                    ('writing', 5, None, None, None, None),
                    ('waiting', 0, None, None, None, None)]),
                  (0,
-                  'Requests: 0.05/s (7.69/Connection)',
+                  'Requests: 0.05/s (7.00/Connection)',
                   [('requests', 0.045080251221214236, None, None, None, None)]),
                  (0, 'Accepted: 0.00/s', [('accepted', 23, None, None, None, None)]),
                  (0, 'Handled: 0.01/s', [('handled', 42, None, None, None, None)])])]}

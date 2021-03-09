@@ -1,12 +1,11 @@
 Title: Result of moving tags was not immediately displayed
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1564045757
+Class: fix
 
 When changing the sorting of the tags the result was not correctly displayed to
 the user. Instead of the new order the resulting page displayed the previous

@@ -6,8 +6,7 @@ Date: 1586157312
 Edition: cre
 Knowledge: doc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 
 The event console messages created from SNMP traps can contain a list of
 OID/value pairs.  These pairs were separated by " , " previously, now they

@@ -1,12 +1,11 @@
 Title: Check hosts with PING: Fix broken custom service descriptions
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561230625
+Class: fix
 
 A custom service description can be configured for the active checks
 configured with the ruleset "Check hosts with PING" to override the

@@ -1,0 +1,16 @@
+Title: Send scheduled reports to all specified recipients
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p8
+Date: 1576146308
+
+Scheduled reports sent via email were only sent to the owner
+of the report and not to the recipients specified in the field
+"Email-Addresses to mail PDF reports to". This is fixed.
+
+Reports that were executed manually by a user were not affected
+by this issue.

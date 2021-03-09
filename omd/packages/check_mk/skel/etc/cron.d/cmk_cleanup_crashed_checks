@@ -1,0 +1,2 @@
+# Once a day, at 00:10, cleanup crashed checks folders older than 90 days
+10 0 * * * find ~/var/check_mk/crashed_checks/*/* -maxdepth 0 -type d -mtime +90 -exec rm -rf {} \; 2>/dev/null || true

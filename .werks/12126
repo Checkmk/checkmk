@@ -1,12 +1,10 @@
-Title: Availability: Limit processed data of 0 means unlimited
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1613127031
-Edition: cre
-Knowledge: doc
+Title: NagVis: Updated to 1.9.25
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0p22
+Date: 1614007841
+Class: fix
 
 

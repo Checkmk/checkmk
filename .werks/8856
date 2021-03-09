@@ -1,12 +1,11 @@
 Title: Fix autocheck conversion of old if64 checks
 Level: 1
 Component: core
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1565796788
+Class: fix
 
 When a site used very old autocheck files which were created with Checkmk older
 than 1.2.x, this resulted in an exception during the autochecks conversion

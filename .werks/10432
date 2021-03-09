@@ -1,12 +1,13 @@
 Title: cmk-update-agent.exe: Fix security issue on Windows
-Class: security
-Compatible: compat
-Component: agents
-Date: 1579075205
-Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.0.0i1
+Component: agents
+Class: security
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p9
+Date: 1579075205
 
 Recently, a vulnerability of PyInstaller, that we use to compile
 the cmk-update-agent.exe executable on windows to one file, has been

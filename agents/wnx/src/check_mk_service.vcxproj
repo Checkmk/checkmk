@@ -285,6 +285,8 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="main\check_mk_cmdline.h" />
+    <ClInclude Include="main\check_mk_service.h" />
     <ClInclude Include="main\pch.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -292,6 +294,7 @@
     <Text Include="engine\readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="main\check_mk_cmdline.cpp" />
     <ClCompile Include="main\check_mk_service.cpp" />
     <ClCompile Include="main\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

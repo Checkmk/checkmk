@@ -1,14 +1,34 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from collections import namedtuple
 import argparse
 import sys
 import requests
-import urllib3  # type: ignore[import]
+import urllib3  # type: ignore
 import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -17,9 +37,7 @@ cmk.utils.password_store.replace_passwords()
 Section = namedtuple('Section', ['name', 'uri', 'handler'])
 
 
-def main(argv=None):
-    if argv is None:
-        argv = sys.argv[1:]
+def main():
     # Sections to query
     # https://docs.splunk.com/Documentation/Splunk/7.2.6/RESTREF/RESTlicense#licenser.2Fpools
     sections = [
@@ -55,7 +73,7 @@ def main(argv=None):
         ),
     ]
 
-    args = parse_arguments(argv)
+    args = parse_arguments()
 
     sys.stdout.write("<<<check_mk>>>\n")
 
@@ -97,7 +115,9 @@ def handle_request(args, sections):
             section.handler(value)
 
 
-def parse_arguments(argv):
+def parse_arguments(argv=None):
+    if argv is None:
+        argv = sys.argv[1:]
 
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
@@ -128,7 +148,7 @@ def parse_arguments(argv):
                         metavar="HOSTNAME",
                         help="Name of the splunk instance to query.")
 
-    return parser.parse_args(argv)
+    return parser.parse_args()
 
 
 def handle_license_state(value):
@@ -181,11 +201,11 @@ def handle_jobs(value):
 def handle_health(value):
     sys.stdout.write("Overall_state %s\n" % value[0].get("content", {}).get("health"))
 
-    for func, state in value[0]["content"]["features"].items():
+    for func, state in value[0]["content"]["features"].iteritems():
         func_name = "%s%s" % (func[0].upper(), func[1:].lower())
         sys.stdout.write("%s %s\n" % (func_name.replace(" ", "_"), state.get("health", {})))
 
-        for feature, status in state["features"].items():
+        for feature, status in state["features"].iteritems():
             feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())
             sys.stdout.write(
                 "%s %s %s\n" %

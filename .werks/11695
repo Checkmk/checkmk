@@ -1,12 +1,13 @@
 Title: agent_azure: fixed Section Name error when configuring Azure special agent
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1606409656
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0b1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606409656
 
 Running the Azure special agent caused some errors in relation to the section
 names. Example error message:

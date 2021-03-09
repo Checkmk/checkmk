@@ -1,43 +1,64 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import os
-from pathlib import Path
-from typing import Dict
+from typing import Dict, Text  # pylint: disable=unused-import
 
-from six import ensure_str
+import pathlib2 as pathlib
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
-from passlib.context import CryptContext  # type: ignore[import]
-from passlib.hash import sha256_crypt  # type: ignore[import]
+from passlib.context import CryptContext  # type: ignore
+from passlib.hash import sha256_crypt  # type: ignore
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.userdb import UserConnector, user_connector_registry, CheckCredentialsResult
+from . import UserConnector, user_connector_registry
 
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",
-    # Kept for compatibility with Checkmk < 1.6
+    # Kept for compatibility with Check_MK < 1.6
     "md5_crypt",
     "apr_md5_crypt",
     "des_crypt",
 ])
 
 
-class Htpasswd:
+class Htpasswd(object):
     """Thin wrapper for loading and saving the htpasswd file"""
-    def __init__(self, path: Path) -> None:
+    def __init__(self, path):
+        # type: (pathlib.Path) -> None
         super(Htpasswd, self).__init__()
         self._path = path
 
-    def load(self) -> Dict[str, str]:
+    def load(self):
+        # type: () -> Dict[Text, Text]
         """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
         entries = {}
 
@@ -51,18 +72,19 @@ class Htpasswd:
 
         return entries
 
-    def exists(self, user_id: str) -> bool:
+    def exists(self, user_id):
+        # type: (Text) -> bool
         """Whether or not a user exists according to the htpasswd file"""
         return user_id in self.load()
 
-    def save(self, entries: Dict[str, str]) -> None:
+    def save(self, entries):
+        # type: (Dict[Text, Text]) -> None
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = u"\n".join(u"%s:%s" % (ensure_str(e[0]), ensure_str(e[1]))
-                            for e in sorted(entries.items())) + u"\n"
-        store.save_text_to_file("%s" % self._path, output)
+        output = "\n".join("%s:%s" % entry for entry in sorted(entries.iteritems())) + "\n"
+        store.save_file("%s" % self._path, output.encode("utf-8"))
 
 
-# Checkmk supports different authentication frontends for verifying the
+# Check_MK supports different authentication frontends for verifying the
 # local credentials:
 #
 # a) basic authentication
@@ -102,10 +124,7 @@ class HtpasswdUserConnector(UserConnector):
     # USERDB API METHODS
     #
 
-    def is_enabled(self):
-        return True
-
-    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
+    def check_credentials(self, user_id, password):
         users = self._get_htpasswd().load()
         if user_id not in users:
             return None  # not existing user, skip over
@@ -118,12 +137,12 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) +
+        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + user_id.encode("utf-8") +
                               "/automation.secret")
 
     # Validate hashes taken from the htpasswd file. For the moment this function
     # needs to be able to deal with des_crypt and apr-md5 hashes which were used
-    # by installations till Checkmk 1.6. The current algorithm also needs to be
+    # by installations till Check_MK 1.6. The current algorithm also needs to be
     # handled: sha256_crypt.
     def _password_valid(self, pwhash, password):
         try:
@@ -154,4 +173,4 @@ class HtpasswdUserConnector(UserConnector):
         self._get_htpasswd().save(entries)
 
     def _get_htpasswd(self):
-        return Htpasswd(Path(cmk.utils.paths.htpasswd_file))
+        return Htpasswd(pathlib.Path(cmk.utils.paths.htpasswd_file))

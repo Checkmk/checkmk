@@ -1,10 +1,10 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
 #
 # User Check MK configuration file
 #
+
+# ********************************
+# Copyright Mathias Kettner GmbH
+# ********************************
 
 # The Agent will accept YML-File as a valid configuration file
 # only when the section global is presented
@@ -15,35 +15,35 @@
 # $CUSTOM_LOCAL_PATH$    -> is ProgramData/checkmk/agent/local
 
 # 1. use http://www.yamllint.com/ for example to validate your yamllint
-# 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows' 
+# 2. Windows filenames contains backslash \, ergo you have to write either "c:\\windows" or 'c:\windows'
 
 # To disable any feature you may use two methods
 # 1. commenting out with '#' recommended to use with one line declarations
 # 2. renaming. Recommended to disable big parts of YAML tree
 #   Most useful is adding _ at the beginning of name
 #
-# example 
+# example
 #         _logging: # <----- this structure is fully ignored by agent
 #         logging:  # <----- this structure is accepted by agent
 
 # Overriding values from the bakery( or defauts )
 # For example we want to change sections set in output
 
-# 1. All sections are included:
-# sections: []  # <--- this is accepted as FULL list of sections, agent sends all data. To save your keystrokes
+# 1. No sections at all:
+# sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
 
 # 2a. Two sections:
 # sections: [check_mk, systemtime]  # <--- this is accepted as list of two sections
 
 # 2b. One section:
-# sections: [plugins]  # <--- this is accepted as list of one section
+# sections: [plugins]  # <--- this is accepted as list of two sections
 
 # 3. We want to return back(Use values combined from default and bakery if present)
-# 3a. 
+# 3a.
 # sections: ~   # <--- this line is skipped, this value is estimated as undefined
 
-# 3a. 
-# _sections: [plugins]   # <--- this name, '_sections' is unknown and will be ignored too
+# 3a.
+# _sections: ~   # <--- this name, '_sections' is unknown and will be silently ignored
 
 
 global:
@@ -70,54 +70,44 @@ global:
     # password
     # passphrase: secret
 
-    # Allowed file extensions. The agent launches the program(script) only 
-    # when its extension is on the list of allowed ones. 
-    # execute: [exe, bat, vbs, cmd, ps1] # Supported: vbs, ps1, py, pl, exe, cmd, bat
+    # Do only execute programs and scripts with
+    # the following suffixes (in local and plugins).
+    # Per default all extensions except txt and dir
+    # are being executed.
+    # execute: exe bat vbs cmd ps1
 
     # Run sync scripts in parallel (to each other). Default is "yes"
     # async: yes
 
     # Just output certain sections
-
-    # Include all possible sections:
-    # sections: []
-
-    # Valid example, but section is renamed to _sections and wil be ignored
-    _sections: 
-        - check_mk 
-        - mrpe 
-        - skype 
-        - spool 
+    _sections:
+        - check_mk
+        - mrpe
+        - skype
+        - spool
         - plugins
         - local
-        - winperf 
-        - uptime 
-        - systemtime 
-        - df 
-        - mem 
-        - services 
+        - winperf
+        - uptime
+        - systemtime
+        - df
+        - mem
+        - services
         - msexch
         - dotnet_clrmemory
         - wmi_webservices
         - wmi_cpuload
-        - ps 
-        - fileinfo 
-        - logwatch 
-        - openhardwaremonitor 
+        - ps
+        - fileinfo
+        - logwatch
+        - openhardwaremonitor
 
     # Useful example
     # sections: ~   # <--- this line is skipped as undefined
-    # sections: []  # <--- this is accepted as FULL list of sections, agent send data from all sections
+    # sections: []  # <--- this is accepted as empty list of sections, agent does not send any data
 
-    # To disable section you have enumerate disabled section explicitly
-    # To disable ps and fileinfo:
-    _disabled_sections: [ps, fileinfo]
-    
-    # To ignore disabled_sections, you can use ~:
-    # _disabled_sections: ~
-    
-    # In this case disabled_sections will be ignored too
-    # disabled_sections: []
+    # forced to not use
+    _disabled_sections: []
 
     #realtime data description
     # to control section manually change name from _realtime to realtime.
@@ -132,30 +122,30 @@ global:
         # no matter if this timeout is "too high" or how many monitoring
         # systems are querying the agent.
         timeout: 90
-    
+
         port: 6559
-        # enable/disable encryption of regular agent output (default: no) 
+        # enable/disable encryption of regular agent output (default: no)
         encrypted: no
-    
+
         # passphrase for encrypted communication.
         passphrase: this is my password
         # which sections are realtime, those three are by default
-        run: 
+        run:
             - mem
             - df
             - winperf_processor
 
     # In seconds. Windows may be slow during WMI, increase the value when you have problems
-    # wmi_timeout: 3 
+    # wmi_timeout: 3
 
-    # -------------------------------------------------------------- 
+    # --------------------------------------------------------------
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
     _logging:
         # folder with log file, empty is default which means '$CUSTOM_AGENT_PATH$\log'
-        location: 
+        location:
         # name of file log, default is check_mk.log
-        file : 
+        file :
         # log in file also internal debug messages, recommended when we have problems
         # allowed no, yes and all. Default yes!
         debug: yes
@@ -168,7 +158,7 @@ global:
 ps:
     # enabled: yes
     # use_wmi: yes
-    # full_path: yes # This value has effect only when use_wmi is set
+    # full_path: yes
 
 winperf:
     # enabled: yes
@@ -176,22 +166,14 @@ winperf:
     # changes only section name winperf_******
     # prefix: winperf
 
-    # no - nothing(default), yes output trace to the log/winperf.log
-    #trace: no
-
-    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
-    #fork: yes
-    
-
-
     # default value,  increase for heavy loaded machine
     # timeout: 10
-    
+
     # Select counters to extract. The following counters
     # are needed by checks shipped with check_mk.
     # Format:
     # - id:name
-    # where id is OS counter and name is part of CHECK_MK Header 
+    # where id is OS counter and name is part of CHECK_MK Header
     counters:
         #- 638: tcp_conn
         #- Terminal Services: ts_sessions
@@ -216,7 +198,7 @@ fileinfo:
 
 logwatch:
     # enabled: yes
-    
+
     # sendall: no   # this is MANDATORY
     # vista_api: no # this is RECOMMENDED
     # max_size: 500000 # default value
@@ -233,7 +215,7 @@ plugins:
     # enabled: yes
 
     # max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
-                 # this is useful to terminate badly written or hanging plugins   
+                 # this is useful to terminate badly written or hanging plugins
 
 
     # async_start: yes # start plugins asynchronous, this is default
@@ -248,7 +230,7 @@ plugins:
         # patterns 1. Absolute path: 'c:\Windows\*.exe' or '$CUSTOM_PLUGINS_PATH$\win_license.bat'
         #          2. Only Filename: 'mk_*.exe' or win_license.bat
         #             IMPORTANT: if you use relative path, then Agent takes only filename
-        #                        'win_license.bat' and 'include\win_license.bat' are the same    
+        #                        'win_license.bat' and 'include\win_license.bat' are the same
         #
         # PRIORITY:
         # Most important is top-most pattern:
@@ -257,7 +239,7 @@ plugins:
         # DUPLICATED Plugins:
         # Plugins with Duplicated names will not be executed:
         # if you have '$CUSTOM_PLUGINS_PATH$\winstat_an.bat' and '$BUILTIN_PLUGINS_PATH$\winstat_an.bat'
-        # to execute only first one will run ^^^^^^^^^^^^^^                              xxxxxxxxxxxxxx 
+        # to execute only first one will run ^^^^^^^^^^^^^^                              xxxxxxxxxxxxxx
         #
         # *********************************************************************************************
         # execution pattern for  windows-updates.vbs:
@@ -267,22 +249,11 @@ plugins:
         #  async       : yes                 # agent will not wait for async plugins. Normally you will get data later.
         #  timeout     : 120                 # after 120 seconds process will be killed.
         #  cache_age   : 3600                # only combined with async, upto 3600 seconds we may reuse plugin output
-                                             # default value is 0. Minimum positive value is 120.
-        #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts 
+    #                                        # default value is 0. Minimum positive value is 120.
+        #  retry_count : 3                   # failure on start plugin, before stopping, default 0 which means never stop attempts
         #  cmd_line    : ''                  # reserved for future use
-        #
-        #- pattern     : '$CUSTOM_PLUGINS_PATH$\mk_scansql.vbs'    # Plugin name or absolute path . * and ? are allowed
-        #  user       : 'sql_user sql_secret' # user name(domain is allowed) and password separated with one space
-        #  run         : yes                 # execute this plugin if plugin found
-        #  
-        #- pattern     : '$CUSTOM_PLUGINS_PATH$\network_access.bat'   # Plugin requires access to the Network.
-        #  group       : 'Users'             # run plugin from the Internal Agent User belonging the this group
-        #  run         : yes
-        #  
-        #- pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
-        #  run         : No                  # do not run plugin even if found
-
-
+        #  pattern     : '$CUSTOM_PLUGINS_PATH$\win_license.bat'   # Plugin name. * and ? are allowed
+        #  run         : no                  # do not execute this plugin even if plugin found
 
         - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # in the ProgramData folder. DO NOT REMOVE THIS ENTRY
           timeout     : 30                  # after 30 seconds process will be killed. 60 sec is default in check_mk.yml
@@ -300,13 +271,13 @@ local:
     # enabled: yes
 
     # max_wait: 60 # max timeout for every sync plugin. Agen will gather plugins data no more than max_wait time.
-                   # this is useful to terminate badly written or hanging plugins   
+                   # this is useful to terminate badly written or hanging plugins
 
 
-    # async_start: true # start plugins asynchronous, this is normal mode. 
+    # async_start: true # start plugins asynchronous, this is normal mode.
 
-    # patterns will be scanned up down, 
-    # configuration is assigned to the first found file matching the pattern 
+    # patterns will be scanned up down,
+    # configuration is assigned to the first found file matching the pattern
     _execution:
         - pattern     : 'test_me.bat'   # Plugin name. * and ? are allowed
           #async: no                    # default is no
@@ -330,24 +301,6 @@ mrpe:
         # Path below is equal to '$CUSTOM_AGENT_PATH$\plugins\your_check.com'
         # - check = Console 'plugins\your_check.com' CON CP /STATUS
         # - check = Console 'c:\windows\system32\mode.com' CON CP /STATUS
-        # Special case with cache time and add or not cache time info to the output
-        #       Description (max_age:add_info) command line  
-        # - check = Checker (100:yes) 'c:\windows\system32\mode.com' 
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
-system:
-    enabled: yes
-
-    #firewall:
-    #    mode: configure # allowed none, remove, configure
-    #    port: auto # allowed all or auto
-
-    #cleanup_uninstall: smart # allowed none, smart and all
-
-    #service:
-    #    restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
-    #                           # no may be used if you have serious problems with crasghing and starting
-    #    error_mode: log        # ignore or log
-    #    start_mode: auto       # Possible values are: auto - service starts with boot, demand - requires manual starting
-    #                           # disabled - service cannot be started manually and should be enabled

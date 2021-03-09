@@ -1,13 +1,11 @@
 Title: mk_logwatch: Explicitly specify encoding of logfiles
-Class: feature
-Compatible: compat
-Component: checks
-Date: 1569482228
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569482228
+Class: feature
 
 mk_logwatch tries its best to determine the correct encoding of a file,
 and to recover from errors if it is wrong.

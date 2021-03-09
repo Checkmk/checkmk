@@ -1,7 +1,5 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
+
+// provides basic api to start and stop service
 
 #pragma once
 #ifndef plugins_h__
@@ -15,12 +13,14 @@
 #include "providers/internal.h"
 #include "section_header.h"
 
-namespace cma::provider {
+namespace cma {
+
+namespace provider {
 namespace config {
 // set behavior of the output
 // i future may be controlled using yml
-extern bool g_local_no_send_if_empty_body;
-extern bool g_local_send_empty_at_end;
+extern bool G_LocalNoSendIfEmptyBody;
+extern bool G_LocalSendEmptyAtEnd;
 };  // namespace config
 
 enum class PluginType { normal, local };
@@ -42,24 +42,19 @@ public:
         cfg_name_ = cma::cfg::groups::kPlugins;
     }
 
-    void loadConfig() override;
+    virtual void loadConfig();
 
-    void updateSectionStatus() override;
+    virtual void updateSectionStatus();
 
-    bool isAllowedByCurrentConfig() const override;
+    virtual bool isAllowedByCurrentConfig() const override;
 
-    void preStart() override;
+    void preStart() noexcept override;
 
-    void detachedStart();
+    void detachedStart() noexcept;
 
-    void updateCommandLine();
-
-    void updateTimeout();
+    void updateTimeout() noexcept;
 
 protected:
-    std::vector<std::string> gatherAllowedExtensions() const;
-    static void UpdatePluginMapCmdLine(PluginMap& pm,
-                                       cma::srv::ServiceProcessor* sp);
     void gatherAllData(std::string& Out);
     std::string cfg_name_;
     bool local_;
@@ -69,9 +64,8 @@ protected:
     std::string makeBody() override;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class PluginTest;
-    FRIEND_TEST(PluginTest, ModulesCmdLine);
-    FRIEND_TEST(PluginTest, AllowedExtensions);
+    friend class FileInfoTest;
+    FRIEND_TEST(FileInfoTest, Base);
 #endif
 };
 
@@ -87,6 +81,8 @@ public:
 enum class PluginMode { all, sync, async };
 int FindMaxTimeout(const cma::PluginMap& pm, PluginMode type);
 
-}  // namespace cma::provider
+}  // namespace provider
+
+};  // namespace cma
 
 #endif  // plugins_h__

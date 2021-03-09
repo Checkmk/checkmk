@@ -1,13 +1,11 @@
 Title: NagVis backends now work with encrypted Livestatus
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1571914004
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571914004
+Class: fix
 
 WATO automatically configures backends in NagVis on the central site of a
 distributed WATO setup. When the livestatus proxy was not used, the backends

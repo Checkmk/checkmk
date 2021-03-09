@@ -1,9 +1,28 @@
-$CMK_VERSION = "2.1.0i1"
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# Checkmk agent plugin for monitoring ORACLE databases
+# Check_MK agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns, Andrew Lacy
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking, Andrew for the powershell...
@@ -184,19 +203,50 @@ set echo on
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
-
-Function get_dbversion_database ($ORACLE_HOME) {
-     # The output of this command contains -- among others -- the version
-     $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
-     debug_echo "xx $version_str xx"
-
-
+Function get_dbversion_software {
+     # Get the database version
+     # variable res contains the banner including the version number
+     $version_str = (sqlplus -v)
      # The output string can have arbitrary content. We rely on the assumption that the first
      # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
      # so we take the third element separated by a whitespace as the version number and remove
      # all dots resulting in: 121020
      (([string]$version_str).split(' '))[3] -replace '\D+', ''
 }
+
+
+Function get_dbversion_database {
+     # Get the database version from the database itself.
+     $THE_SQL = @'
+whenever sqlerror exit failure rollback;
+whenever oserror exit failure rollback;
+SET TRIMOUT ON
+SET TRIMSPOOL ON
+set linesize 1024
+set heading off
+set echo off
+set termout off
+set pagesize 0
+set feedback off
+select replace(version,'.','') from v$instance;
+exit;
+'@
+     $ERROR_FOUND = 0
+     $res = (sqlcall -sql_message "SQL_Version" -sqltext "$THE_SQL" -delayed 0 -sqlsid $inst_name)
+     # debug_echo "output from get_dbversion_database ${res}"
+     # avoid further errors if the instance is not available
+     # as a workaround we silently continue for this section of code
+     $ErrorActionPreference = "SilentlyContinue"
+     if ($ERROR_FOUND -eq 0) {
+          $res = [string]$res
+          $res = $res.trim()
+          $res = [int]$res
+          $res
+     }
+     # now we set our action on error back to our normal value
+     $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
+}
+
 
 
 
@@ -1638,7 +1688,7 @@ Function sql_instance {
 '@
      }
      else {
-          if ($DBVERSION -gt 121010) {
+          if ($DBVERSION -gt 121000) {
                $query_instance = @'
                prompt <<<oracle_instance:sep(124)>>>;
                select upper(instance_name)
@@ -2119,6 +2169,10 @@ $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size (512, 150
 $NO_SID = "NO_SID"
 
 
+$DBVERSION = get_dbversion_software
+debug_echo "value of DBVERSION software= xxx${DBVERSION}xx"
+
+
 if ( $SYNC_SECTIONS.count -gt 0) {
      foreach ($section in $SYNC_SECTIONS) {
           echo "<<<oracle_${section}>>>"
@@ -2153,17 +2207,11 @@ if ($the_count -gt 0) {
           $inst.name = $inst.name.replace("OracleService", "")
           $inst_name = $inst.name.replace("OracleASMService", "")
           $ORACLE_SID = $inst_name
-          $key = 'HKLM:\SYSTEM\CurrentControlSet\services\OracleService' + $ORACLE_SID
-          $val = (Get-ItemProperty -Path $key).ImagePath
-          $ORACLE_HOME = $val.SubString(0, $val.LastIndexOf('\') - 4)
-
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
-
-          $DBVERSION = get_dbversion_database($ORACLE_HOME)
-          debug_echo "value of inst_name= ${inst_name}"
-          debug_echo "value of ORACLE_HOME= ${ORACLE_HOME}"
-          debug_echo "value of DBVERSION database= ${DBVERSION}"
+          $DBVERSION = get_dbversion_database
+          debug_echo "value of inst_name= xxx${inst_name}xx"
+          debug_echo "value of DBVERSION database= xxx${DBVERSION}xx"
           # if this is an ASM instance, then switch sections to ASM
           $ASM_FIRST_CHAR = "+"
           $CHECK_FIRST_CHAR = $inst_name.Substring(0, 1)

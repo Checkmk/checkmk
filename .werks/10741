@@ -1,13 +1,11 @@
 Title: lparstat_aix.cpu_util: display the correct physical CPU consumption
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1580455142
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580455142
+Class: fix
 
 The physical CPU consumption for uncapped partitions is now taken directly
 from the output of the lparstat command. Previously it was calculated based

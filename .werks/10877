@@ -1,13 +1,11 @@
 Title: Fix "cmk" call with more than two -v arguments
-Class: fix
-Compatible: compat
-Component: core
-Date: 1585921947
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1585921947
+Class: fix
 
 When calling the cmk command with more than two "-v" arguments, this resulted
 in a NotImplementedError trace. The error handling has now been improved by

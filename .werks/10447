@@ -1,13 +1,11 @@
 Title: agent_kubernetes: use new API versions
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1572266070
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p6
+Date: 1572266070
+Class: fix
 
 The Kubernetes release <a href="https://kubernetes.io/blog/2019/07/18/api-deprecations-in-1-16/">1.16</a>
 deprecated two API endpoints. To honor these deprecations

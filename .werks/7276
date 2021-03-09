@@ -1,12 +1,11 @@
 Title: check_smtp: WATO GUI was unable to display integer based reponse time
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1568819488
+Class: fix
 
 Earlier versions stored the response time levels as integer value. Later versions required a float value.
 The result was a warning box in the edit rule page, stating that the default settings would be used again.

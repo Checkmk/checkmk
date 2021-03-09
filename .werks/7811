@@ -1,11 +1,10 @@
 Title: check_mail_loop: Fix "Unhandled exception: 'module' object has no attribute 'text'" error
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560338904
+Class: fix
 
 

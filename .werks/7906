@@ -1,11 +1,10 @@
 Title: Fix possible AttributeError "'NoneType' has no attribute 'delete_session'" on SNMP hosts
 Level: 1
 Component: inline-snmp
-Class: fix
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1562150183
+Class: fix
 
 

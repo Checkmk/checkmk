@@ -1,21 +1,39 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-from logging import Logger
 import os
 import subprocess
 import time
-from typing import Any, Dict, Optional, Set
 
+import six
+
+import cmk
 import cmk.utils.debug
 import cmk.utils.defines
-from cmk.utils.log import VERBOSE
 import livestatus
-
-from .settings import Settings
 
 #.
 #   .--Actions-------------------------------------------------------------.
@@ -31,8 +49,7 @@ from .settings import Settings
 #   '----------------------------------------------------------------------'
 
 
-def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                     event_server: Any, event_columns: Any, rule: Any, event: Any) -> None:
+def event_has_opened(history, settings, config, logger, event_server, event_columns, rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -57,9 +74,8 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                     event_server: Any, event_columns: Any, actions: Any, event: Any,
-                     is_cancelling: bool) -> None:
+def do_event_actions(history, settings, config, logger, event_server, event_columns, actions, event,
+                     is_cancelling):
     for aname in actions:
         if aname == "@NOTIFY":
             do_notify(event_server, logger, event, is_cancelling=is_cancelling)
@@ -78,8 +94,7 @@ def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], l
 # not hang for more than a couple of ms.
 
 
-def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                    event_columns: Any, action: Any, event: Any, user: Any) -> None:
+def do_event_action(history, settings, config, logger, event_columns, action, event, user):
     if action["disabled"]:
         logger.info("Skipping disabled action %s." % action["id"])
         return
@@ -112,21 +127,20 @@ def do_event_action(history: Any, settings: Settings, config: Dict[str, Any], lo
         logger.exception("Error during execution of action %s" % action["id"])
 
 
-def _escape_null_bytes(s: Any) -> Any:
+def _escape_null_bytes(s):
     return s.replace("\000", "\\000")
 
 
-def _get_quoted_event(event: Any, logger: Logger) -> Any:
-    new_event: Dict[str, Any] = {}
+def _get_quoted_event(event, logger):
+    new_event = {}
     fields_to_quote = ["application", "match_groups", "text", "comment", "contact"]
-    for key, value in event.items():
+    for key, value in event.iteritems():
         if key not in fields_to_quote:
             new_event[key] = value
         else:
             try:
-                new_value: Any = None
                 if isinstance(value, list):
-                    new_value = list(map(quote_shell_string, value))
+                    new_value = map(quote_shell_string, value)
                 elif isinstance(value, tuple):
                     new_value = value
                 else:
@@ -140,17 +154,17 @@ def _get_quoted_event(event: Any, logger: Logger) -> Any:
     return new_event
 
 
-def _substitute_event_tags(event_columns: Any, text: Any, event: Any) -> Any:
-    for key, value in _get_event_tags(event_columns, event).items():
+def _substitute_event_tags(event_columns, text, event):
+    for key, value in _get_event_tags(event_columns, event).iteritems():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
 
-def quote_shell_string(s: Any) -> Any:
+def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger: Logger) -> bool:
+def _send_email(config, to, subject, body, logger):
     command_utf8 = [
         "mail", "-S", "sendcharsets=utf-8", "-s",
         subject.encode("utf-8"),
@@ -160,37 +174,34 @@ def _send_email(config: Dict[str, Any], to: Any, subject: Any, body: Any, logger
     if config["debug_rules"]:
         logger.info("  Executing: %s" % " ".join(command_utf8))
 
-    p = subprocess.Popen(
-        command_utf8,
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        encoding="utf-8",
-    )
+    p = subprocess.Popen(command_utf8,
+                         close_fds=True,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
     # notify.py, this one, ...)
-    stdout, stderr = p.communicate(input=body)
+    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
 
     logger.info('  Exitcode: %d' % exitcode)
     if exitcode != 0:
         logger.info("  Error: Failed to send the mail.")
-        for line in (stdout + stderr).splitlines():
+        for line in (stdout_txt + stderr_txt).splitlines():
             logger.info("  Output: %s" % line.rstrip())
         return False
 
     return True
 
 
-def _execute_script(event_columns: Any, body: Any, event: Any, logger: Any) -> None:
+def _execute_script(event_columns, body, event, logger):
     script_env = os.environ.copy()
 
-    for key, value in _get_event_tags(event_columns, event).items():
-        if isinstance(key, str):
+    for key, value in _get_event_tags(event_columns, event).iteritems():
+        if isinstance(key, unicode):
             key = key.encode("utf-8")
-        if isinstance(value, str):
+        if isinstance(value, unicode):
             value = value.encode("utf-8")
         script_env["CMK_" + key.upper()] = value
 
@@ -203,15 +214,14 @@ def _execute_script(event_columns: Any, body: Any, event: Any, logger: Any) -> N
         stderr=subprocess.STDOUT,
         close_fds=True,
         env=script_env,
-        encoding="utf-8",
     )
-    stdout, _stderr = p.communicate(input=body)
+    output = p.communicate(body.encode('utf-8'))[0]
     logger.info('  Exit code: %d' % p.returncode)
-    if stdout:
-        logger.info('  Output: \'%s\'' % stdout)
+    if output:
+        logger.info('  Output: \'%s\'' % output)
 
 
-def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
+def _get_event_tags(event_columns, event):
     substs = [
         ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
     ]
@@ -220,8 +230,8 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 
-    def to_string(v: Any) -> str:
-        if isinstance(v, str):
+    def to_string(v):
+        if isinstance(v, six.string_types):
             return v
         return "%s" % v
 
@@ -246,7 +256,7 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 #   |        |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  EC create Checkmk native notifications via cmk --notify.           |
+#   |  EC create Check_MK native notifications via cmk --notify.           |
 #   '----------------------------------------------------------------------'
 
 # Es fehlt:
@@ -257,22 +267,18 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 # - Das muss sich in den Hilfetexten wiederspiegeln
 
 
-# This function creates a Checkmk Notification for a locally running Checkmk.
+# This function creates a Check_MK Notification for a locally running Check_MK.
 # We simulate a *service* notification.
-def do_notify(event_server: Any,
-              logger: Logger,
-              event: Any,
-              username: Optional[bool] = None,
-              is_cancelling: bool = False) -> None:
+def do_notify(event_server, logger, event, username=None, is_cancelling=False):
     if _core_has_notifications_disabled(event, logger):
         return
 
     context = _create_notification_context(event_server, event, username, is_cancelling, logger)
 
-    if logger.isEnabledFor(VERBOSE):
-        logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
-        for varname, value in sorted(context.items()):
-            logger.log(VERBOSE, "  %-25s: %s", varname, value)
+    if logger.is_verbose():
+        logger.verbose("Sending notification via Check_MK with the following context:")
+        for varname, value in sorted(context.iteritems()):
+            logger.verbose("  %-25s: %s" % (varname, value))
 
     if context["HOSTDOWNTIME"] != "0":
         logger.info("Host %s is currently in scheduled downtime. "
@@ -280,34 +286,32 @@ def do_notify(event_server: Any,
         return
 
     # Send notification context via stdin.
-    context_string = "".join(
-        ["%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items()])
+    context_string = to_utf8("".join([
+        "%s=%s\n" % (varname, value.replace("\n", "\\n"))
+        for (varname, value) in context.iteritems()
+    ]))
 
-    p = subprocess.Popen(
-        ["cmk", "--notify", "stdin"],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        close_fds=True,
-        encoding="utf-8",
-    )
-    stdout, _stderr = p.communicate(input=context_string)
+    p = subprocess.Popen(["cmk", "--notify", "stdin"],
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.STDOUT,
+                         close_fds=True)
+    response = p.communicate(input=context_string)[0]
     status = p.returncode
     if status:
-        logger.error("Error notifying via Check_MK: %s" % stdout.strip())
+        logger.error("Error notifying via Check_MK: %s" % response.strip())
     else:
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(event_server: Any, event: Any, username: Any, is_cancelling: bool,
-                                 logger: Logger) -> Any:
+def _create_notification_context(event_server, event, username, is_cancelling, logger):
     context = _base_notification_context(event, username, is_cancelling)
     _add_infos_from_monitoring_host(event_server, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
     return context
 
 
-def _base_notification_context(event: Any, username: Any, is_cancelling: bool) -> Dict[str, Any]:
+def _base_notification_context(event, username, is_cancelling):
     return {
         "WHAT": "SERVICE",
         "CONTACTNAME": "check-mk-notify",
@@ -358,8 +362,8 @@ def _base_notification_context(event: Any, username: Any, is_cancelling: bool) -
 
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
-def _add_infos_from_monitoring_host(event_server: Any, context: Any, event: Any) -> None:
-    def _add_artificial_context_info() -> None:
+def _add_infos_from_monitoring_host(event_server, context, event):
+    def _add_artificial_context_info():
         context.update({
             "HOSTNAME": event["host"],
             "HOSTALIAS": event["host"],
@@ -391,13 +395,13 @@ def _add_infos_from_monitoring_host(event_server: Any, context: Any, event: Any)
     })
 
     # Add custom variables to the notification context
-    for key, val in host_config["custom_variables"].items():
+    for key, val in host_config["custom_variables"].iteritems():
         context["HOST_%s" % key] = val
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
-def _add_contacts_from_rule(context: Any, event: Any, logger: Logger) -> None:
+def _add_contacts_from_rule(context, event, logger):
     # Add contact information from the rule, but only if the
     # host is unknown or if contact groups in rule have precedence
 
@@ -409,19 +413,18 @@ def _add_contacts_from_rule(context: Any, event: Any, logger: Logger) -> None:
         _add_contact_information_to_context(context, event["contact_groups"], logger)
 
 
-def _add_contact_information_to_context(context: Any, contact_groups: Any, logger: Any) -> None:
+def _add_contact_information_to_context(context, contact_groups, logger):
     contact_names = _rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    logger.log(VERBOSE, "Setting %d contacts %s resulting from rule contact groups %s",
-               len(contact_names), ",".join(contact_names), ",".join(contact_groups))
+    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" %
+                   (len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
 
 
 # NOTE: This function is an exact copy from modules/notify.py. We need
-# to move all this Checkmk-specific livestatus query stuff to a helper
+# to move all this Check_MK-specific livestatus query stuff to a helper
 # module in lib some day.
-# NOTE: Typing chaos ahead!
-def _rbn_groups_contacts(groups: Any) -> Any:
+def _rbn_groups_contacts(groups):
     if not groups:
         return {}
     query = "GET contactgroups\nColumns: members\n"
@@ -430,7 +433,7 @@ def _rbn_groups_contacts(groups: Any) -> Any:
     query += "Or: %d\n" % len(groups)
 
     try:
-        contacts: Set[str] = set()
+        contacts = set([])
         for contact_list in livestatus.LocalConnection().query_column(query):
             contacts.update(contact_list)
         return contacts
@@ -444,7 +447,7 @@ def _rbn_groups_contacts(groups: Any) -> Any:
         return []
 
 
-def _core_has_notifications_disabled(event: Any, logger: Logger) -> bool:
+def _core_has_notifications_disabled(event, logger):
     try:
         notifications_enabled = livestatus.LocalConnection().query_value(
             "GET status\nColumns: enable_notifications")
@@ -455,4 +458,11 @@ def _core_has_notifications_disabled(event: Any, logger: Logger) -> bool:
     except Exception as e:
         logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." %
                     e)
+
     return False
+
+
+def to_utf8(x):
+    if isinstance(x, unicode):
+        return x.encode("utf-8")
+    return x

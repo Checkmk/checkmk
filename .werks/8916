@@ -1,11 +1,12 @@
 Title: Fix HTML link parser
 Level: 1
 Component: wato
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568724375
-Class: fix
 
 The HTML links from the context help texts were not always
 parsed correctly.  This fixes the parser.

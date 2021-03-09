@@ -1,12 +1,13 @@
 Title: Update AWS EC2 Limits to use new vCPU-based instance limits
-Class: feature
-Compatible: compat
-Component: checks
-Date: 1576594687
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1576594687
 
 Amazon EC2 transitioned from On-Demand instance limits from instance
 count-based limits to new vCPU-based limits. Checkmk now imitates that

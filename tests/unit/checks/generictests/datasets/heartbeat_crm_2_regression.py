@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -40,19 +40,11 @@ checks = {
     '': [
         (
             None, {
-                'max_age': 600,
-                'num_nodes': None,
-                'num_resources': None
-            }, [(0, 'DC: ha02', [])]
-        ),
-        (
-            None, {
                 'max_age': 60,
                 'num_nodes': 2,
                 'num_resources': 3
             }, [
-                (0, 'DC: ha02', []), (0, 'Nodes: 2', []),
-                (0, 'Resources: 3', [])
+                (0, 'DC: ha02, Nodes: 2, Resources: 3', []),
             ]
         )
     ]

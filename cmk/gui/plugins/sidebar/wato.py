@@ -1,154 +1,75 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-)
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import cmk.gui.config as config
+import cmk.gui.wato as wato
 import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
 import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML, Choices
-from cmk.gui.i18n import _, _l
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-    match_item_generator_registry,
-)
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
+    iconlink,
     footnotelinks,
-    make_topic_menu,
-    show_topic_menu,
-    search,
-)
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainModuleTopic,
-    main_module_registry,
+    visuals_by_topic,
 )
 
 
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write_text(_("Setup is disabled."))
+        html.write_text(_("WATO is disabled."))
         return False
-    if not config.user.may("wato.use"):
-        html.write_text(_("You are not allowed to use the setup."))
+    elif not config.user.may("wato.use"):
+        html.write_text(_("You are not allowed to use Check_MK's web configuration GUI."))
         return False
-
-    menu = get_wato_menu_items()
 
     if mini:
-        for topic in menu:
-            for item in topic.items:
-                html.icon_button(url=item.url,
-                                 class_="show_more_mode" if item.is_show_more else None,
-                                 title=item.title,
-                                 icon=item.icon or "wato",
-                                 target="main")
+        html.icon_button("wato.py", _("Main Menu"), "home", target="main")
     else:
-        show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
+        iconlink(_("Main Menu"), "wato.py", "home")
+
+    for module in wato.get_modules():
+        if not module.may_see():
+            continue
+
+        url = module.get_url()
+        if mini:
+            html.icon_button(url, module.title, module.icon, target="main")
+        else:
+            iconlink(module.title, url, module.icon)
 
     pending_info = watolib.get_pending_changes_info()
     if pending_info:
         footnotelinks([(pending_info, "wato.py?mode=changelog")])
         html.div('', class_="clear")
-
-
-def get_wato_menu_items() -> List[TopicMenuTopic]:
-    by_topic: Dict[MainModuleTopic, TopicMenuTopic] = {}
-    for module_class in main_module_registry.values():
-        module = module_class()
-
-        if not module.may_see():
-            continue
-
-        topic = by_topic.setdefault(
-            module.topic,
-            TopicMenuTopic(
-                name=module.topic.name,
-                title=module.topic.title,
-                icon=module.topic.icon_name,
-                items=[],
-            ))
-        topic.items.append(
-            TopicMenuItem(
-                name=module.mode_or_url,
-                title=module.title,
-                url=module.get_url(),
-                sort_index=module.sort_index,
-                is_show_more=module.is_show_more,
-                icon=module.icon,
-            ))
-
-    # Sort the items of all topics
-    for topic in by_topic.values():
-        topic.items.sort(key=lambda i: (i.sort_index, i.title))
-
-    # Return the sorted topics
-    return [v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index, e[0].title))]
-
-
-mega_menu_registry.register(
-    MegaMenu(
-        name="setup",
-        title=_l("Setup"),
-        icon="main_setup",
-        sort_index=15,
-        topics=get_wato_menu_items,
-        search=search.SetupSearch("setup_search"),
-    ))
-
-
-class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
-    def __init__(
-        self,
-        name: str,
-        topic_generator: Callable[[], Iterable[TopicMenuTopic]],
-    ) -> None:
-        super().__init__(name)
-        self._topic_generator = topic_generator
-
-    def generate_match_items(self) -> MatchItems:
-        yield from (MatchItem(
-            title=topic_menu_item.title,
-            topic=_("Setup"),
-            url=topic_menu_item.url,
-            match_texts=[topic_menu_item.title],
-        )
-                    for topic_menu_topic in self._topic_generator()
-                    for topic_menu_item in topic_menu_topic.items)
-
-    @staticmethod
-    def is_affected_by_change(_change_action_name: str) -> bool:
-        return False
-
-    @property
-    def is_localization_dependent(self) -> bool:
-        return True
-
-
-match_item_generator_registry.register(
-    MatchItemGeneratorSetupMenu(
-        "setup",
-        mega_menu_registry["setup"].topics,
-    ))
 
 
 @snapin_registry.register
@@ -159,15 +80,11 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Setup")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
+        return _("WATO - Configuration")
 
     @classmethod
     def description(cls):
-        return _("Direct access to the setup menu")
+        return _("Direct access to WATO - the web administration GUI of Check_MK")
 
     @classmethod
     def allowed_roles(cls):
@@ -190,15 +107,11 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Quick setup")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
+        return _("WATO - Quickaccess")
 
     @classmethod
     def description(cls):
-        return _("Access to the setup menu with only icons (saves space)")
+        return _("Access to WATO modules with only icons (saves space)")
 
     @classmethod
     def allowed_roles(cls):
@@ -220,6 +133,7 @@ def compute_foldertree():
             "Columns: filename"
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
+    hosts.sort()
 
     def get_folder(path, num=0):
         folder = watolib.Folder.folder(path)
@@ -236,7 +150,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all childs for each folder
     user_folders = {}
-    for _site, filename, num in sorted(hosts):
+    for _site, filename, num in hosts:
         # Remove leading /wato/
         wato_folder_path = filename[6:]
 
@@ -275,7 +189,7 @@ def compute_foldertree():
     def reduce_tree(folders):
         for folder_path, folder in folders.items():
             if len(folder['.folders']) == 1 and folder['.num_hosts'] == 0:
-                child_path, child_folder = list(folder['.folders'].items())[0]
+                child_path, child_folder = folder['.folders'].items()[0]
                 folders[child_path] = child_folder
                 del folders[folder_path]
 
@@ -290,6 +204,8 @@ def compute_foldertree():
 # We fetch the information via livestatus - not from WATO.
 def render_tree_folder(tree_id, folder, js_func):
     subfolders = folder.get(".folders", {}).values()
+    subfolders.sort(cmp=lambda f1, f2: cmp(f1["title"].lower(), f2["title"].lower()))
+
     is_leaf = len(subfolders) == 0
 
     # Suppress indentation for non-emtpy root folder
@@ -304,15 +220,8 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(
-            tree_id,
-            "/" + folder[".path"],
-            False,
-            HTML(title),
-            icon="foldable_sidebar",
-            padding=6,
-        )
-        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
+        html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
+        for subfolder in subfolders:
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
     else:
@@ -351,47 +260,43 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         selected_topic, selected_target = config.user.load_file("foldertree",
                                                                 (_('Hosts'), 'allhosts'))
 
-        # Apply some view specific filters
-        views_to_show = [(name, view)
-                         for name, view in views.get_permitted_views().items()
-                         if (not config.visible_views or name in config.visible_views) and
-                         (not config.hidden_views or name not in config.hidden_views)]
-
-        visuals_to_show = [("views", e) for e in views_to_show]
-        visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
-
-        topics = make_topic_menu(visuals_to_show)
-        topic_choices: Choices = [(topic.title, topic.title) for topic in topics]
+        dashboard.load_dashboards()
+        topic_views = visuals_by_topic(views.get_permitted_views().items() +
+                                       dashboard.permitted_dashboards().items())
+        topics = [(t, t) for t, _s in topic_views]
 
         html.open_table()
         html.open_tr()
+        html.td(_('Topic:'), class_="label")
         html.open_td()
         html.dropdown("topic",
-                      topic_choices,
+                      topics,
                       deflt=selected_topic,
                       onchange='cmk.sidebar.wato_tree_topic_changed(this)')
         html.close_td()
         html.close_tr()
 
         html.open_tr()
+        html.td(_("View:"), class_="label")
         html.open_td()
 
-        for topic in topics:
-            targets: Choices = []
-            for item in topic.items:
-                if item.url and item.url.startswith("dashboard.py"):
-                    name = 'dashboard|' + item.name
-                else:
-                    name = item.name
-                targets.append((name, item.title))
+        for topic, view_list in topic_views:
+            targets = []
+            for t, title, name, is_view in view_list:
+                if config.visible_views and name not in config.visible_views:
+                    continue
+                if config.hidden_views and name in config.hidden_views:
+                    continue
+                if t == topic:
+                    if not is_view:
+                        name = 'dashboard|' + name
+                    targets.append((name, title))
 
-            if topic.title != selected_topic:
-                default = ''
-                style: Optional[str] = 'display:none'
+            if topic != selected_topic:
+                default, style = '', 'display:none'
             else:
-                default = selected_target
-                style = None
-            html.dropdown("target_%s" % topic.title,
+                default, style = selected_target, None
+            html.dropdown("target_%s" % topic,
                           targets,
                           deflt=default,
                           onchange='cmk.sidebar.wato_tree_target_changed(this)',
@@ -404,7 +309,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Now render the whole tree
         if user_folders:
             render_tree_folder("wato-hosts",
-                               list(user_folders.values())[0], 'cmk.sidebar.wato_tree_click')
+                               user_folders.values()[0], 'cmk.sidebar.wato_tree_click')
 
 
 @snapin_registry.register
@@ -428,4 +333,4 @@ class SidebarSnapinWATOFolders(SidebarSnapin):
         user_folders = compute_foldertree()
         if user_folders:
             render_tree_folder("wato-folders",
-                               list(user_folders.values())[0], 'cmk.sidebar.wato_folders_clicked')
+                               user_folders.values()[0], 'cmk.sidebar.wato_folders_clicked')

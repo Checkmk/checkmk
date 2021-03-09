@@ -1,12 +1,11 @@
 Title: Fix deletion of user notification rules with missing plugins
 Level: 1
 Component: notifications
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561360998
+Class: fix
 
 In previous 1.6 releases the user notification rules that are associated with
 notification plugins that were removed could not be deleted anymore using

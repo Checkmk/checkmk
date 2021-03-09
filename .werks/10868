@@ -1,13 +1,11 @@
 Title: Tags: Custom "Agent type" tag group cleanup is now easier
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1583270573
-Edition: cre
-Knowledge: undoc
 Level: 2
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p10
+Date: 1583270573
+Class: fix
 
 Werk #5535 introduced with Checkmk moved the "Agent type" tag group from
 a tag group that could be customized to a builtin tag group.

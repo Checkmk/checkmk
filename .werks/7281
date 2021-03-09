@@ -1,13 +1,11 @@
 Title: legacy local plugins: added missing register_hook call
-Class: fix
-Compatible: compat
-Component: core
-Date: 1571660419
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571660419
+Class: fix
 
 Legacy local web plugins failed to load if they used some register_hook call.
 

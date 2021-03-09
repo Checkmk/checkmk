@@ -1,11 +1,12 @@
 Title: mail: don't escape state markers in emails
 Level: 1
 Component: notifications
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b3
 Date: 1561453142
-Class: fix
 
 Since version 1.5.0p14 state markers in HTML emails were escaped
 and not interpreted as HTML but shown as text. The state marker

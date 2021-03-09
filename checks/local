@@ -1,0 +1,256 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# 0 Service_FOO V=1 This Check is OK
+# 1 Bar_Service - This is WARNING and has no performance data
+# 2 NotGood V=120;50;100;0;1000 A critical check
+# P Some_other_Service value1=10;30;50|value2=20;10:20;0:50;0;100 Result is computed from two values
+# P This_is_OK foo=18;20;50
+# P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
+# P Has-no-var - This has no variable
+# P No-Text hirn=-8;-20
+
+
+def float_ignore_uom(value):
+    '''16MB -> 16.0'''
+    while value:
+        try:
+            return float(value)
+        except ValueError:
+            value = value[:-1]
+    return 0.0
+
+
+def _try_convert_to_float(value):
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _parse_cache(line, now):
+    """add cache info, if found"""
+    if not line or not line[0].startswith("cached("):
+        return None, line
+
+    cache_raw, stripped_line = line[0], line[1:]
+    time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
+    age = now - time
+
+    # make sure max(..) will give the oldest/most outdated case
+    return (age, 100.0 * age / interval, interval), stripped_line
+
+
+def _is_valid_line(line):
+    return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
+
+
+def _sanitize_state(state):
+    try:
+        state = int(state)
+    except ValueError:
+        pass
+    if state not in ('P', 0, 1, 2, 3):
+        return 3, "Invalid plugin status %r. " % state
+    return state, ""
+
+
+def _parse_perfentry(entry):
+    '''parse single perfdata entry
+
+    return a named tuple containing check_levels compatible levels field, as well as
+    cmk_base compatible perfdata 6-tuple.
+
+    This function may raise Index- or ValueErrors.
+    '''
+    Perfdata = collections.namedtuple("Perfdata", ("name", "value", "levels", "tuple"))
+
+    entry = entry.rstrip(";")
+    name, raw = entry.split('=', 1)
+    raw = raw.split(";")
+    value = float_ignore_uom(raw[0])
+
+    # create a check_levels compatible levels quadruple
+    levels = [None] * 4
+    if len(raw) >= 2:
+        warn = raw[1].split(':', 1)
+        levels[0] = _try_convert_to_float(warn[-1])
+        if len(warn) > 1:
+            levels[2] = _try_convert_to_float(warn[0])
+    if len(raw) >= 3:
+        crit = raw[2].split(':', 1)
+        levels[1] = _try_convert_to_float(crit[-1])
+        if len(crit) > 1:
+            levels[3] = _try_convert_to_float(crit[0])
+
+    # only the critical level can be set, in this case warning will be equal to critical
+    if levels[0] is None and levels[1] is not None:
+        levels[0] = levels[1]
+
+    # create valid perfdata 6-tuple
+    min_ = float(raw[3]) if len(raw) >= 4 else None
+    max_ = float(raw[4]) if len(raw) >= 5 else None
+    tuple_ = (name, value, levels[0], levels[1], min_, max_)
+
+    # check_levels won't handle crit=None, if warn is present.
+    if levels[0] is not None and levels[1] is None:
+        levels[1] = float('inf')
+    if levels[2] is not None and levels[3] is None:
+        levels[3] = float('-inf')
+
+    return Perfdata(name, value, tuple(levels), tuple_)
+
+
+def _parse_perftxt(string):
+    if string == '-':
+        return [], ""
+
+    perfdata = []
+    msg = []
+    for entry in string.split('|'):
+        try:
+            perfdata.append(_parse_perfentry(entry))
+        except (ValueError, IndexError):
+            msg.append(entry)
+    if msg:
+        return perfdata, "Invalid performance data: %r. " % "|".join(msg)
+    return perfdata, ""
+
+
+def parse_local(info):
+    LocalResult = collections.namedtuple("LocalResult",
+                                         ("node", "cached", "item", "state", "text", "perfdata"))
+
+    now = time.time()
+    parsed = {}
+    for line in info:
+        node, stripped_line = line[0], line[1:]
+        cached, stripped_line = _parse_cache(stripped_line, now)
+        if not _is_valid_line(stripped_line):
+            # just pass on the line, to report the offending ouput
+            parsed.setdefault(None, []).append(" ".join(stripped_line))
+            continue
+
+        state, state_msg = _sanitize_state(stripped_line[0])
+        item = stripped_line[1]
+        perfdata, perf_msg = _parse_perftxt(stripped_line[2])
+        # convert escaped newline chars
+        # (will be converted back later individually for the different cores)
+        text = " ".join(stripped_line[3:]).replace("\\n", "\n")
+        if state_msg or perf_msg:
+            state = 3
+            text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
+        parsed.setdefault(item, []).append(LocalResult(node, cached, item, state, text, perfdata))
+
+    return parsed
+
+
+# Compute state according to warn/crit levels contained in the
+# performance data.
+def local_compute_state(perfdata):
+    return [(check_levels(entry.value, entry.name, entry.levels, infoname=entry.name)[:2]) +
+            ([entry.tuple],) for entry in perfdata]
+
+
+def inventory_local(parsed):
+    if None in parsed:
+        output = parsed[None][0]
+        raise MKGeneralException("Invalid line in agent section <<<local>>>: %r" % (output,))
+
+    return [(key, {}) for key in parsed]
+
+
+# Some helper functions
+def _parse_local_line(result):
+
+    if result.state != 'P':
+        return [(result.state, result.text, [p.tuple for p in result.perfdata])]
+
+    computed_results = local_compute_state(result.perfdata)
+    if not result.text:
+        return computed_results
+
+    if not computed_results:
+        return [(0, result.text, [])]
+
+    pstate, ptext, pmetric = computed_results[0]
+    return [(pstate, "%s, %s" % (result.text, ptext), pmetric)] + computed_results[1:]
+
+
+def _calculate_local_best_state(collected_stats):
+    states, infotexts, perfdata = zip(*_iterate_all_check_results(collected_stats))
+
+    return min(states), ", ".join(infotexts), sum(perfdata, [])
+
+
+def _iterate_all_check_results(collected_stats):
+    for nodename, attrs in collected_stats.items():
+        for entry in attrs.itervalues():
+            for ent, (state, output, perfdata) in enumerate(entry):
+                if ent == 0 and nodename is not None:
+                    output = "On node %s: %s" % (nodename, output)
+                yield state, output, perfdata
+
+
+@get_parsed_item_data
+def check_local(_no_item, params, data):
+    cache_infos = [result.cached for result in data if result.cached is not None]
+    # We try to mimic the behaviour of cached agent sections.
+    # Problem here: We need this info on a per-service basis, so we cannot use the section header.
+    # Solution: Just add an informative message with the same wording as in cmk/gui/plugins/views/utils.py
+
+    collected_stats = {}
+
+    for result in data:
+        node_dict = collected_stats.setdefault(result.node, {})
+        node_dict.setdefault(result.item, _parse_local_line(result))
+
+    if params is not None and params.get("outcome_on_cluster", "worst") == "best":
+        yield _calculate_local_best_state(collected_stats)
+    else:
+        for res in _iterate_all_check_results(collected_stats):
+            yield res
+
+    if cache_infos:
+        cache_info = max(cache_infos)
+        infotext = "Cache generated %s ago, cache interval: %s, elapsed cache lifespan: %s" % (
+            get_age_human_readable(cache_info[0]),
+            get_age_human_readable(cache_info[2]),
+            get_percent_human_readable(cache_info[1]),
+        )
+        yield 0, infotext
+
+
+check_info["local"] = {
+    'parse_function': parse_local,
+    'inventory_function': inventory_local,
+    'check_function': check_local,
+    'service_description': '%s',
+    'has_perfdata': True,
+    'node_info': True,
+    'group': 'local',
+}

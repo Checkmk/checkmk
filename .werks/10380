@@ -1,13 +1,11 @@
 Title: Fix view action menu in dashlets
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1572699369
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572699369
+Class: fix
 
 When clicking on the action dropdown menu of views embedded in dashlets, this
 opened a new window. Clicking on "Reschedule ..." did also open a new window.

@@ -1,12 +1,13 @@
 Title: Windows Agent: additional protection of the working directories
-Class: security
-Compatible: compat
-Component: checks
-Date: 1601452258
-Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.0.0i1
+Component: checks
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1601452258
 
 With this fix some deirectories used by windows Agent are protected from 
 any access of Windows Standart User:

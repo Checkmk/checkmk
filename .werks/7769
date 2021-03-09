@@ -1,12 +1,11 @@
 Title: Fix broken computation of host contact groups in some cases
 Level: 2
 Component: core
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1559912216
+Class: fix
 
 The core config creation was broken in 1.6.0b1 when using the WATO
 folder hierarchy for assigning contact groups to hosts.

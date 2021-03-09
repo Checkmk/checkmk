@@ -1,4 +1,4 @@
-title: Kubernetes: Replicas (set)
+title: Kubernetes replicas
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

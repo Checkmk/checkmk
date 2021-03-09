@@ -1,22 +1,23 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 from builtins import range
 from builtins import object
-
-import sys
+try:
+    # Use iter version of filter
+    from future_builtins import filter
+except ImportError:
+    # Python 3 compatibility tweak
+    pass
 import os
 import platform
-from typing import List
-import pytest  # type: ignore
-from local import (make_yaml_config, local_test, run_subprocess, write_config, main_exe)
+import pytest
+from local import (actual_output, make_yaml_config, local_test, run_subprocess, write_config,
+                   main_exe)
+import sys
 
 
 class Globals(object):
-    param: List[str] = []
+    param = None
 
 
 @pytest.fixture
@@ -48,7 +49,7 @@ def actual_output(request, write_config):
                 sys.stdout.write(_stdout.decode(encoding='cp1252'))
             if _stderr:
                 sys.stderr.write(_stderr.decode(encoding='cp1252'))
-            expected_code = 13 if Globals.param[0] == 'bad' else 0
+            expected_code = 2 if Globals.param[0] == 'bad' else 0
             assert expected_code == exit_code
             # Usage is written to stderr, actual cmd output to stdout.
             work_load = _stdout.decode(encoding='cp1252')
@@ -88,7 +89,6 @@ def expected_output(request, testconfig):
             r'# MK_SPOOLDIR=\.?',
             r'# MK_INSTALLDIR=\.?',
             r'# MK_MSI_PATH=\.?',
-            r'# MK_MODULESDIR=\.?',
             r'# Loaded Config Files:',
             r'# system: \.?',
             r'# bakery: \.?',

@@ -1,11 +1,12 @@
 Title: email: don't escape email subject and addresses
 Level: 1
 Component: notifications
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b3
 Date: 1561547352
-Class: fix
 
 Since version 1.5.0p14 the subject and addresses of HTML emails
 were escaped, i.e. the characters '&lt;', '&gt;' and '&amp;'

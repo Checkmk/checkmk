@@ -1,7 +1,28 @@
-@charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+tails.  You should have received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+*/
 
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
@@ -26,33 +47,60 @@ table.filterform {
 }
 
 div.floatfilter {
-  width: 333px;
+  float: left;
+  width: 310px;
+  height: 53px;
   padding: 4px;
-  padding-left: 10px;
-  margin: 0 5px 5px 0;
+  margin: 0 4px 3px 0;
   color: $primary-font-color;
-  background-color: $bg-color-secondary;
+  background-color: rgba(160, 181, 190, 0.6);
+  border-color: #acc #22404d #22414d #8ab;
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 5px;
+  box-shadow: 0.5px 0.5px 1px #444;
 
-  .legend {
-    width: 100%;
-    height: 17px;
-    padding: 5px 8px;
-    padding-left: 0;
-    font-weight: bold;
-    color: $font-color;
-    background-color: $floatfilter-bg-color;
+  &.double {
+    display: table-cell;
+    height: 120.5px;
 
-    span {
-      padding-bottom: 3px;
-      border-bottom: $floatfilter-legend-border;
+    .content {
+      height: 82px;
     }
   }
 
-  .content {
+  input[type=text] {
     width: 100%;
-    height: auto;
-    padding: 0;
-    margin: 0;
+    box-sizing: border-box;
+
+    &.number {
+      text-align: center;
+    }
+
+    &.neg {
+      width: 229px;
+    }
+  }
+
+  .legend {
+    width: 300px;
+    height: 17px;
+    padding: 3px 5px 0;
+    //margin-bottom: 1px;
+    font-size: 10px;
+    color: #fff;
+    background-color: $floatfilter-bg-color;
+    border-radius: 5px 5px 0 0;
+  }
+
+  .content {
+    display: table-cell;
+    width: 311px;
+    //height: 30px;
+    padding-top: 5px;
+    padding-left: 4px;
+    margin-top: 0;
+    margin-left: 0;
     text-align: left;
 
     > select {
@@ -84,118 +132,42 @@ div.floatfilter {
     .filtertime select {
       width: 136px;
     }
-
-    select {
-      box-sizing: border-box;
-    }
-
-    .checkbox {
-      display: inline-block;
-      margin: 3px 0;
-
-      &:not(:last-of-type) {
-        margin-right: 8px;
-      }
-    }
-
-    input,
-    select,
-    textarea,
-    #mk_side_search_field {
-      margin-bottom: 0;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      box-sizing: border-box;
-
-      &.number {
-        text-align: center;
-      }
-
-      &.neg {
-        width: 229px;
-      }
-    }
-
-    input.neg[type="text"] {
-      position: relative;
-      top: -1px;
-      width: 237px;
-    }
-
-    input[type^="radio"],
-    select[type^="radio"],
-    textarea[type^="radio"],
-    [type^="radio"]#mk_side_search_field {
-      width: auto;
-      margin-bottom: 0;
-    }
-
-    input[type="radio"] {
-      margin-left: 5px;
-    }
-
-    .radiobutton_group {
-      display: inline-block;
-
-      input[type="radio"] {
-        margin-left: 0;
-      }
-
-      &:not(:last-of-type) label {
-        margin-right: 5px;
-      }
-    }
-
-    .valuespec_tuple {
-      width: 100%;
-      border-spacing: 2px 2px;
-    }
-
-    nobr {
-      margin-left: 4px;
-    }
-
-    table {
-      border-spacing: 0;
-
-      td {
-        padding: 0 4px 4px 0;
-      }
-    }
   }
 
-  &.service_custom_variable,
-  &.host_custom_variable {
+  &.service_custom_variable, &.host_custom_variable {
     .select2-container {
       max-width: 55%;
     }
 
-    input[type="text"] {
+    input, select {
       display: inline-block;
-      width: 43%;
-      margin-left: 4px;
+      width: 45%;
+    }
+
+    select {
+      margin-right: 10px;
     }
   }
 
   table.vs_duallist {
     width: 300px;
-    border-spacing: 0 3px;
+    border-spacing: 0px 3px !important;
 
     a.control {
-      padding: 0 6px;
+      padding: 0px 6px;
     }
 
+    /* TODO: Get rid of these important styles */
     select {
-      height: 43px;
-      padding: 0;
-      margin-bottom: 0;
+      height: 43px !important; /* Is hardcoded to 48px in generated HTML code.
+                                  This is bad but we cannot break compatibility
+                                  with the classic theme for the while. */
+      padding: 0 !important;
+      margin-bottom: 0 !important;
     }
   }
 
-  &.invswpac_version,
-  &.invswpac_package_version {
+  &.invswpac_version, &.invswpac_package_version {
     input.text {
       margin-left: 4px;
     }
@@ -214,34 +186,45 @@ div.floatfilter {
   &.downtimes span.checkbox {
     white-space: normal;
   }
+}
 
-  span.select2 {
-    position: relative;
-  }
+.filterform > tbody > tr > td div.floatfilter {
+  position: relative;
+  width: 326px;
+  height: auto;
+  margin-right: 5px;
+  margin-bottom: 5px;
+  overflow: auto;
+  background: $secondary-bg-color;
+  border: 1px solid $theme-color-table-border;
+  box-shadow: none;
+  box-sizing: border-box;
 
-  > div.content > span.select2:last-child {
-    width: 100%;
+
+  &.single {
+    height: 60px;
   }
 
   &.double {
-    &.log_class .content,
-    &.log_state .content {
+    height: 125px;
+
+    &.log_class .content, &.log_state .content {
       table {
-        border-spacing: 6px 0;
+	border-spacing: 6px 0;
 
-        &.alertstatefilter {
-          td {
-            vertical-align: top;
-          }
+	&.alertstatefilter {
+	  td {
+	    vertical-align: top;
+	  }
 
-          .checkbox {
-            margin: 3px 3px 0 0;
-          }
-        }
+	  .checkbox {
+	    margin: 3px 3px 0 0;
+	  }
+	}
       }
 
       .checkbox {
-        margin-bottom: 4px;
+	margin-bottom: 4px;
       }
     }
 
@@ -254,8 +237,77 @@ div.floatfilter {
     }
   }
 
-  &.svchardstate .content,
-  &.svcstate .content {
+  .legend {
+    width: 100%;
+    height: auto;
+    padding: 5px 8px;
+    color: $secondary-font-color;
+    text-transform: uppercase;
+    box-sizing: border-box;
+  }
+
+  .content {
+    display: block;
+    width: 100%;
+    padding: 2px 6px;
+    box-sizing: border-box;
+
+    select {
+      box-sizing: border-box;
+    }
+
+    .checkbox {
+      margin: 3px 0;
+      display: inline-block;
+
+      &:not(:last-of-type) {
+	margin-right: 8px;
+      }
+    }
+
+    input, select, textarea, #mk_side_search_field {
+      margin-bottom: 0;
+    }
+
+    input[type^=radio],
+    select[type^=radio],
+    textarea[type^=radio],
+    [type^=radio]#mk_side_search_field {
+      width: auto;
+      margin-bottom: 0;
+    }
+
+    input[type=radio] {
+      margin-left: 5px;
+    }
+
+    .radiobutton_group {
+      display: inline-block;
+
+      input[type=radio] {
+	margin-left: 0;
+      }
+
+      &:not(:last-of-type) label {
+	margin-right: 5px;
+      }
+    }
+
+    .valuespec_tuple {
+      width: 100%;
+      border-spacing: 2px 2px;
+    }
+
+    nobr {
+      margin-left: 4px;
+    }
+  }
+
+  &.host_tags .content table {
+    border-spacing: 4px 0;
+  }
+
+  &.svchardstate .content, &.svcstate .content {
     .checkbox:not(:last-of-type) {
       margin-right: 8px;
     }
@@ -273,7 +325,8 @@ div.floatfilter {
     height: 22px;
   }
 
-  .select2-container--default .select2-selection--single .select2-selection__rendered {
+  .select2-container--default .select2-selection--single
+  .select2-selection__rendered {
     line-height: 20px;
   }
 
@@ -281,66 +334,40 @@ div.floatfilter {
     border-color: $select2-border-color;
   }
 
-  &.rangespec table.valuespec_tuple {
-    width: 100%;
-
-    span.title {
-      top: 7px;
-    }
-
-    input {
-      padding: 3px;
-    }
+  &.single span.select2 {
+    position: relative;
   }
 
-  &.address_families {
-    span.radiobutton_group {
-      margin-bottom: 4px;
-    }
+  /* TODO: Get rid of this important style */
+  &.single > div.content > span.select2:last-child {
+    width: 100% !important;
   }
 
-  &.host_address,
-  &.host_ipv4_address,
-  &.host_ipv6_address {
-    input[type="text"] {
-      margin-bottom: 8px;
-    }
-  }
-
-  &.invswpac {
-    div.content > input[type="text"] {
-      margin-bottom: 8px;
-    }
-
-    span.min_max_row {
-      display: inline-block;
-      margin: 8px 0;
-    }
+  &.single input.neg[type=text] {
+    position: relative;
+    top: -2px;
+    width: 237px;
   }
 }
 
-/* Specific styling for side popup floatfilters that are contained in a ListOf() */
-div.side_popup_content table.valuespec_listof.filter {
-  td.vlof_buttons {
-    width: 0;
+/* Improving styling of floatfilters that are contained in a ListOf() */
+table.valuespec_listof.filter {
+  *.filter {
+    width: 300px;
+    border-spacing: 0;
+  }
 
-    a.delete_button img {
-      position: absolute;
-      top: 4px;
-      right: $spacing;
-      z-index: 5;
-      width: 12px;
-      height: 12px;
+  td {
+    &.vlof_content {
+      width: 1px;
+      border-style: none;
     }
-  }
 
-  td.vlof_content {
-    position: relative;
-    left: -4px;
-  }
-
-  > tbody > tr {
-    position: relative;
+    &.vlof_buttons {
+      width: 1px;
+      vertical-align: top;
+      border-style: none;
+    }
   }
 }
 
@@ -355,13 +382,12 @@ table.nform table.valuespec_listof {
     vertical-align: middle;
   }
 
-  .vlof_content,
-  .vlof_buttons {
+  .vlof_content, .vlof_buttons {
     border-bottom: 1px solid $nform-vlof-border-color;
   }
 
   .vlof_content {
-    padding: $spacing-half 0 0;
+    padding: 8px 0;
     vertical-align: top;
 
     .valuespec_tuple {
@@ -375,25 +401,100 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_buttons {
-    width: 44px;
-    min-width: 44px;
-    padding-right: $spacing-half;
-    text-align: center;
+    width: 1px;
+    padding-top: 14px;
+    padding-bottom: 26px;
     vertical-align: middle;
+  }
 
-    img {
-      width: 12px;
-      height: 15px;
+  &.filter {
+    .vlof_content .floatfilter {
+      width: 400px;
+      height: auto;
+      background-color: $theme-color-white;
+      border: 1px solid $theme-color-table-border;
+      box-shadow: none;
+
+      .legend {
+        padding: 16px 0 0 16px;
+        font-size: $theme-font-size-global;
+        letter-spacing: $theme-letter-spacing-table;
+        color: $secondary-font-color;
+        text-transform: uppercase;
+      }
+
+      .content {
+        width: 100%;
+        padding: 16px;
+
+        table {
+          border-spacing: 8px 4px;
+        }
+      }
     }
 
-    a:not(:last-child) {
-      margin-right: $spacing-half;
+    .vlof_buttons.filter img {
+      top: 8px;
+      left: -40px;
     }
   }
 }
 
 table.filtertime td {
   vertical-align: middle;
+}
+
+div.optiondial {
+  &, &.num_columns, &.refresh {
+    top: 0;
+    width: 80.5px;
+    height: 28px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    color: $theme-color-text;
+    background: $secondary-bg-color;
+    border: 1px solid $theme-color-table-border;
+    box-shadow: none;
+    box-sizing: border-box;
+
+
+    div {
+      padding: 0;
+      line-height: 27px;
+    }
+  }
+
+  & {
+    position: relative;
+    float: left;
+    margin-top: 0;
+    margin-left: 0;
+    overflow: hidden;
+    color: #222;
+    text-shadow: 0 0.5px 0.5px #fff;
+    cursor: pointer;
+    border-radius: $primary-border-radius;
+    box-shadow: 0 0 3px #123;
+  }
+
+  &.num_columns {
+    margin-right: 0;
+    border-right: none;
+    border-radius: $first-child-border-radius;
+  }
+
+  &.refresh {
+    margin-left: -6px;
+    border-radius: $last-child-border-radius;
+  }
+
+  div {
+    position: relative;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+  }
 }
 
 div.view_form {
@@ -411,9 +512,19 @@ div.view_form {
 | Styles used by layouts of the views (plugins/views/layouts.py)           |
 '-------------------------------------------------------------------------*/
 
-td.gap,
-table.data .checkbox_hover.gap {
+
+table.data tr.data > td.gap,
+table.data tr > td.last_col,
+table.data tr > th.last_col {
+  border-right: none;
+}
+
+td.gap, table.data .checkbox_hover.gap {
   width: 5px;
+  /* #TODO: Check whether these background styles are needed */
+  background-attachment: fixed;
+  background-image: url("images/contentframe_background.jpg");
+  background-repeat: repeat;
 }
 
 /* boxed layout */
@@ -421,12 +532,11 @@ table.boxlayout {
   border-spacing: 0;
 
   td.boxcolumn {
-    padding-right: $spacing;
-    vertical-align: top;
+    padding-right: 20px;
+  }
 
-    &:last-child {
-      padding-right: 0;
-    }
+  tr > td {
+    vertical-align: top;
   }
 
   &.graph table.data tr.data {
@@ -435,11 +545,19 @@ table.boxlayout {
 }
 
 /* tiled layout */
+table.tiled td {
+  border-style: none;
+}
+
 .tile {
   float: left;
   width: 180px;
   margin-right: 6px;
   margin-bottom: 6px;
+  background-color: #ccc;
+  border: 1px solid #000;
+  border-radius: 0;
+  box-shadow: 1px 1px 3px #000;
 
   img.icon {
     width: 16px;
@@ -452,16 +570,14 @@ table.boxlayout {
   }
 
   td {
-    font-size: $font-size-small;
+    font-size: 9px;
     border-style: none;
 
-    &.tl,
-    &.bl {
+    &.tl, &.bl {
       text-align: left;
     }
 
-    &.tr,
-    &.br {
+    &.tr, &.br {
       text-align: right;
     }
 
@@ -469,20 +585,15 @@ table.boxlayout {
       vertical-align: middle;
     }
 
-    &.center,
-    &.cont {
+    &.center, &.cont {
       text-align: center;
     }
 
-    &.bl,
-    &.br {
+    &.bl, &.br {
       vertical-align: bottom;
     }
 
-    &.bl,
-    &.br,
-    &.tl,
-    &.tr {
+    &.bl, &.br, &.tl, &.tr {
       height: 20px;
     }
   }
@@ -494,7 +605,8 @@ table.data.tiled td.tiles {
   div.tile {
     width: 240px;
     padding: 4px;
-    background: $bg-color-secondary;
+    background: $secondary-bg-color;
+    border: 1px solid $theme-color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -504,19 +616,14 @@ table.data.tiled td.tiles {
       td {
         padding: 8px;
 
-        &.state {
-          height: 30px;
-          padding: 0;
-        }
-
         &.states {
           border-radius: $theme-border-radius;
         }
 
-        &.center {
-          white-space: break-spaces;
-          overflow-wrap: anywhere;
-        }
+	&.center {
+	  white-space: break-spaces;
+	  word-wrap: anywhere;
+	}
       }
     }
 
@@ -541,6 +648,7 @@ table.data.single {
 
   tr.data {
     > td {
+      height: 16px;
       padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
@@ -548,8 +656,8 @@ table.data.single {
     }
 
     td.left {
-      width: 1%;
-      padding: 2px 20px 2px 16px;
+      width: 10%;
+      padding: $td-single-left-padding;
       white-space: nowrap;
     }
 
@@ -559,20 +667,25 @@ table.data.single {
 
     td.invtree table {
       margin: 8px 0 12px;
-      border: 1px solid $color-table-border;
+      border: 1px solid $theme-color-table-border;
       box-shadow: none;
 
-      th,
-      td {
-        height: 14px;
-        padding: 2px 6px;
-        background-color: $invtree-td-bg-color;
-        border: 1px solid $color-table-border;
+      th, td {
+	height: 14px;
+	padding: 2px 6px;
+	background-color: $invtree-td-bg-color;
+	border: 1px solid $theme-color-table-border;
       }
 
       th {
-        color: $font-color;
-        background-color: $invtree-th-bg-color;
+	color: $theme-color-text;
+	background-color: $invtree-th-bg-color;
+      }
+    }
+
+    &.odd0, &.even0 {
+      .state, .svcstate:not(.statex), .badflag {
+	padding-left: 16px;
       }
     }
   }
@@ -580,12 +693,14 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: 2px;
+    padding: $table-data-single-padding;
+    background-color: $td-single-bg-color;
     border-radius: 0;
 
     &.left {
-      font-weight: $font-weight-bold;
-      transition: 0.15s ease-in-out;
+      font-weight: $theme-font-weight-bold;
+      border-right: $td-single-left-border-right;
+      transition: .15s ease-in-out;
     }
 
     &.perfometer {
@@ -619,16 +734,22 @@ table.data.matrix {
   tbody > tr.data {
     > td {
       padding: 8px;
+      border: 1px solid $theme-color-table-border;
+      border-left: none;
 
       &.left {
-        font-weight: $font-weight-bold;
-        background-color: $bg-color-secondary;
-        transition: 0.15s ease-in-out;
+        font-weight: $theme-font-weight-bold;
+        background-color: $theme-color-white;
+        transition: .15s ease-in-out;
+
+	&:not(.state) {
+	  border-right: 1px solid $theme-color-table-border;
+	  border-left: 1px solid $theme-color-table-border;
+	}
       }
 
       &.cell td.perfometer {
-        div.title,
-        div.content {
+        div.title, div.content {
           padding: 0;
         }
       }
@@ -638,37 +759,35 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-        letter-spacing: $letter-spacing-table;
-        text-transform: uppercase;
+	font-size: $theme-font-size-global;
+	letter-spacing: $theme-letter-spacing-table;
+	text-transform: uppercase;
       }
     }
   }
 
   td.minority {
-    &,
-    a,
-    a:link {
+    &, a, a:link {
       color: $minority-font-color;
     }
   }
 
   tr.even0 {
     td.left.minority {
-      background-color: rgb(187, 221, 221);
+      background-color: #bdd;
     }
   }
 
   tr.odd0 {
     td.left.minority {
-      background-color: rgb(204, 238, 238);
+      background-color: #cee;
     }
   }
 
-  tr.even0,
-  tr.odd0 {
+  tr.even0, tr.odd0 {
     tbody & td.matrixhead {
-      font-weight: $font-weight-bold;
-      color: $font-color;
+      font-weight: $theme-font-weight-bold;
+      color: $theme-color-text;
     }
   }
 
@@ -683,11 +802,11 @@ table.data.matrix {
 }
 
 .even0 .minority {
-  background-color: rgb(204, 255, 255);
+  background-color: #cff;
 }
 
 .odd0 .minority {
-  background-color: rgb(221, 255, 255);
+  background-color: #dff;
 }
 
 /*-------------------------------------------------------------------------.
@@ -709,6 +828,7 @@ input#try {
   float: left;
 }
 
+
 /*-------------------------------------------------------------------------.
 |       _     _     _            __         _                              |
 |      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
@@ -728,11 +848,10 @@ table.views {
   border-collapse: collapse;
   empty-cells: show;
 
-  td,
-  th {
+  td, th{
     padding: 2px 1ex;
-    color: rgb(255, 255, 255);
-    border: 1px solid rgb(68, 68, 68);
+    color: #fff;
+    border: 1px solid #444;
   }
 
   td {
@@ -740,66 +859,74 @@ table.views {
     padding-top: 3px;
 
     &.legend {
-      color: rgb(255, 255, 255);
-      background-color: rgb(142, 174, 184);
+      color: #fff;
+      background-color: #8eaeb8;
     }
 
     &.content {
-      color: rgb(255, 255, 255);
-      background-color: rgb(158, 190, 200);
+      color: #fff;
+      background-color: #9ebec8;
     }
 
     &.edit {
       text-align: center;
-      background-color: rgb(102, 170, 187);
+      background-color: #6ab;
     }
 
     &.buttons {
       padding: 3px;
       vertical-align: middle;
-      background-color: rgb(142, 174, 184);
+      background-color: #8eaeb8;
     }
   }
 
   th {
-    background-color: rgb(112, 154, 165);
+    background-color: #709aa5;
   }
 }
 
 /* Availability */
 table.data.availability {
+  width: 100%;
+  border: $availability-data-table-border;
+  box-shadow: $availability-data-table-box-shadow;
+
   td.number {
     width: 60px;
   }
 
   td.unused {
-    color: rgb(136, 136, 136);
+    color: #888;
   }
 
   tr.summary td {
+    padding-top: 1px;
+    padding-bottom: 1px;
     font-weight: bold;
+    border-top: 1px solid $theme-color-table-border;
+    border-bottom-style: none;
   }
 
   tr.odd0 td.number.stats {
-    opacity: 0.5;
+    opacity: .5;
+  }
+
+  td {
+    border-color: $theme-color-table-border !important;
+  }
+
+  th {
+    background: $availability-data-th-bg-color;
   }
 }
 
-table.data td.flapping,
-table.timeline td.flapping,
-div.avlegend.timeline div.state.flapping {
-  background-color: rgb(255, 0, 255);
+table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
+  background-color: #f0f;
 }
-
-table.data td.downtime,
-table.timeline td.downtime,
-div.avlegend.timeline div.state.downtime {
-  background-color: rgb(0, 170, 255);
+table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
+  background-color: #0af;
 }
-
-table.data tr.data > td.hostdown,
-table.timeline td.hostdown,
-div.avlegend.timeline div.state.hostdown {
+table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
   color: $white;
   background-color: $hostdown-bg-color;
 }
@@ -821,11 +948,22 @@ table.data.availability tr.even0 td {
   }
 }
 
-table.timeline td.ooservice,
-div.avlegend.timeline div.state.ooservice {
-  background-color: rgb(202, 202, 202);
+table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
+  background-color: #cacaca;
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
+}
+
+div.floatfilter.rangespec table.valuespec_tuple {
+  width: 100%;
+
+  span.title {
+    top: 7px;
+  }
+
+  input {
+    padding: 3px;
+  }
 }
 
 /* #TODO: Reproduce this html element */
@@ -858,22 +996,21 @@ table.timeline {
   &.inline {
     width: 500px;
     border-style: none;
-    box-shadow: 0 0 1px rgb(85, 85, 85) inset;
+    box-shadow: 0 0 1px #555 inset;
   }
 
   td {
     padding: 0;
     border-style: none;
 
-    &.hilite,
-    &.hilite.state2 {
+    &.hilite, &.hilite.state2 {
       padding: 0;
       border: $timeline-hilite-border;
       filter: brightness(80%);
     }
 
     &.chaos {
-      background-color: rgb(136, 68, 255);
+      background-color: #84f;
     }
   }
 }
@@ -895,7 +1032,7 @@ div.timelinerange {
       top: 0;
       width: 5px;
       height: 30px;
-      border-color: rgb(102, 102, 102);
+      border-color: #666;
       border-style: none none none solid;
       border-width: 0 0 0 1px;
     }
@@ -913,24 +1050,41 @@ div.timelinerange {
 
 table.timelineevents {
   width: 800px;
+  border: $wato-data-table-border;
+  box-shadow: $wato-data-table-box-shadow;
+
+  th{
+    background: $timelineevents-data-th-bg-color;
+  }
 }
 
 table.data.oddeven.timelineevents > tbody > tr.hilite {
-  background-color: $timetable-hilite-bg-color;
+  filter: $timetable-hilite-filter;
+
+  &[class*="even"] {
+    background-color: $timetable-hilite-even-bg-color;
+  }
+
+  &[class*="odd"] {
+    background-color: $timetable-hilite-odd-bg-color;
+  }
 }
 
-.timelinerange .from,
-.timelinerange .until {
+.timelinerange .from, .timelinerange .until {
   display: inline-block;
   margin-top: 8px;
   margin-bottom: 4px;
-  font-size: $font-size-small;
-  letter-spacing: $letter-spacing-table;
-  color: $darkgrey;
+  font-size: $theme-font-size-small;
+  letter-spacing: $theme-letter-spacing-table;
+  color: $theme-color-darkgrey;
 }
 
 .timelinerange .timeline {
   box-shadow: none;
+
+  &.standalone td {
+    border: 1px solid $theme-color-table-border;
+  }
 }
 
 /* #TODO: Reproduce this html element */
@@ -948,7 +1102,8 @@ div.avlegend {
 
   h3 {
     margin-top: 0;
-    color: rgb(0, 0, 0);
+    font-size: 13px;
+    color: #000;
   }
 
   div {
@@ -959,6 +1114,7 @@ div.avlegend {
 
     &.state {
       padding: 2px 0;
+      font-size: 12px;
       text-align: center;
     }
 
@@ -969,17 +1125,18 @@ div.avlegend {
 
   &.levels div.level {
     margin-right: 15px;
-    color: rgb(0, 0, 0);
+    color: #000;
   }
 
   &.timeline div.state {
     width: 75px;
 
     &.ooservice {
-      color: rgb(0, 0, 0);
+      color: #000;
     }
   }
 }
+
 
 /*--Inventory--------------------------------------------------------------.
 |            ___                      _                                    |
@@ -998,7 +1155,7 @@ td.invtree {
   /* TODO: Reproduce this html element */
   b.treeangle.title {
     font-weight: normal;
-    color: rgb(0, 0, 0);
+    color: #000;
   }
 
   ul.treeangle {
@@ -1011,11 +1168,10 @@ td.invtree {
     border-collapse: collapse;
   }
 
-  table td,
-  table th {
+  table td, table th {
     height: 14px;
     padding: 1px 5px;
-    border: 1px solid rgb(136, 136, 136);
+    border: 1px solid #888;
   }
 
   table th {
@@ -1023,20 +1179,17 @@ td.invtree {
   }
 
   table td {
-    background-color: rgb(255, 255, 255);
+    background-color: #fff;
   }
 }
 
 /* TODO: Reproduce this html element */
-td.invtree span.invold,
-span.invold table.data {
-  color: rgb(255, 0, 0);
+td.invtree span.invold, span.invold table.data {
+  color: #ff0000;
 }
-
 /* TODO: Reproduce this html element */
-td.invtree span.invnew,
-span.invnew table.data {
-  color: rgb(0, 191, 0);
+td.invtree span.invnew, span.invnew table.data {
+  color: #00bf00;
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
@@ -1056,33 +1209,36 @@ table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
     color: $if-state-up-font-color;
-    background-color: $color-state-success-background;
+    background-color: $theme-color-state-success-background;
   }
 
   &.if_state_down {
-    background-color: $color-state-2-background;
+    background-color: $theme-color-state-2-background;
   }
 
   &.if_state_other {
-    background-color: $color-state-9-background;
+    background-color: $theme-color-state-9-background;
   }
 
   &.if_available {
-    color: $black;
-    background-color: $color-state-success-background;
+    color: $theme-color-black;
+    background-color: $theme-color-state-success-background;
   }
 
   &.if_not_available {
-    color: $black;
-    background-color: $color-state-4-background;
+    color: $theme-color-black;
+    background-color: $theme-color-state-4-background;
   }
 }
 
 /* #TODO: Reproduce all .sla elements */
 table.data.headerleft.sla {
+  margin-bottom: 20px;
+
   th {
     width: 130px;
     padding: 4px 5px;
+    text-align: left;
 
     &.sla_state {
       width: 30px;
@@ -1114,7 +1270,7 @@ table.data.headerleft.sla {
   }
 
   a {
-    color: rgb(255, 255, 255);
+    color: #fff;
     text-decoration: underline;
   }
 }
@@ -1125,7 +1281,7 @@ table.timeline {
 
     td {
       padding: 0;
-      border: none solid rgb(68, 68, 68);
+      border: none solid #444;
     }
 
     &.period {
@@ -1135,28 +1291,36 @@ table.timeline {
   }
 
   td.state0.even {
-    background-color: rgb(0, 187, 51);
+    background-color: #0b3;
   }
 
   td.state0.odd {
-    background-color: rgb(0, 153, 34);
+    background-color: #092;
   }
 
   td.state2.even {
-    background-color: rgb(255, 0, 0);
+    background-color: #f00;
   }
 
   td.state2.odd {
-    background-color: rgb(153, 0, 0);
+    background-color: #900;
   }
 }
 
 div.sla_details {
-  background-color: rgb(115, 161, 180);
+  background-color: #73a1b4;
 }
 
 td.sla > div.foldable > b {
-  color: rgb(0, 0, 0);
+  color: #000;
+}
+
+h2.sla {
+  margin-bottom: 3px;
+}
+
+h3.sla {
+  margin-top: 3px;
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
@@ -1164,7 +1328,7 @@ table.data tr.sla_horizontal_line > td.sla_horizontal_line {
 
   &.black {
     height: 1px;
-    border-bottom: 1px solid rgb(0, 0, 0);
+    border-bottom: 1px solid #000;
   }
 }
 
@@ -1189,8 +1353,7 @@ div.timelinerange.sla {
 table.data.headerleft.sla {
   tbody tr {
     td {
-      &,
-      &.sla {
+      &, &.sla {
         padding: 4px 8px;
       }
 
@@ -1215,12 +1378,15 @@ table.data.headerleft.sla {
           padding-left: 0;
           margin: 0;
           vertical-align: baseline;
+          border: none;
+          box-shadow: none;
 
           &.title {
             display: table-cell;
             width: 280px;
-            font-weight: $font-weight-bold;
-            color: $font-color;
+            font-weight: $theme-font-weight-bold;
+            color: $theme-color-text;
+            background: transparent;
           }
 
           table {
@@ -1245,7 +1411,7 @@ table.data.headerleft.sla {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $font-color;
+    color: $theme-color-text;
   }
 }
 
@@ -1267,7 +1433,7 @@ td.agent_config table.rulesets table,
 table.data tr.ac_test_details table,
 table.data tr.notification_context table {
   margin-top: 3px;
-  border: 0.5px solid $color-table-border;
+  border: 0.5px solid $theme-color-table-border;
   border-collapse: collapse;
   box-shadow: $primary-box-shadow;
 }
@@ -1275,9 +1441,7 @@ table.data tr.notification_context table {
 table.data tr.ac_test_details td {
   padding: 8px;
 
-  p,
-  ul,
-  table {
+  p, ul, table {
     margin: 8px 0;
 
     &:first-child:not(:last-child) {
@@ -1290,6 +1454,7 @@ table.data tr.ac_test_details td {
   }
 }
 
+td.sla_spec table td,
 td.agent_config table.rulesets table td,
 td.agent_config table.rulesets table td.title,
 table.data tr.ac_test_details table td,
@@ -1298,7 +1463,7 @@ table.data tr.notification_context table th,
 td.rule_conditions table td {
   height: 14px;
   padding: 1px 5px;
-  border: 1px solid $color-table-border;
+  border: 1px solid $theme-color-table-border;
 }
 
 table.data tr.ac_test_details table td {
@@ -1311,17 +1476,19 @@ table.data tr.notification_context table th {
   text-align: left;
 }
 
+td.sla_spec table td,
 td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-  background-color: $bg-color;
+  background-color: $primary-bg-color;
 }
 
+td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
-  background-color: $color-table-background;
+  background-color: $theme-color-table-background;
 }
 
 table.agents tbody > tr.data > td {
@@ -1339,6 +1506,9 @@ td.agent_config table.rulesets td {
   vertical-align: top;
 
   table {
+    border: none solid;
+    box-shadow: none;
+
     td {
       padding: 4px 8px;
       vertical-align: top;

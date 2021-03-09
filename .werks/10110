@@ -1,10 +1,11 @@
 Title: ps discovery: GUI configuration changed. Fix default value of per-process details.
 Level: 1
 Component: wato
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568883638
-Class: fix
 
 

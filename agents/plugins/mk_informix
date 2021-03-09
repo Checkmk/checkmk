@@ -1,17 +1,29 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
-# entire script.
-:
-
-# Disable unused variable error (needed to keep track of version)
-# shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
-
 # Informix
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
 # Make ENV-VARs avail for subshells
 set -a
 
@@ -25,7 +37,7 @@ set -a
 #   '----------------------------------------------------------------------'
 
 
-do_check() {
+function do_check () {
     # $1:section, $2:excludelist
     if echo "$2" | grep -qe "${1}"; then
         return 1
@@ -35,15 +47,16 @@ do_check() {
 }
 
 
-sql() {
+function sql () {
     db="sysmaster"
     sqltxt="$1"
+    dbaccess_par=
     export DBDELIMITER="|"
     echo "$sqltxt" | dbaccess ${db}
 }
 
 
-set_excludes() {
+function set_excludes () {
     excludes=""
     if [ "$EXCLUDES" = "ALL" ]; then
         excludes="$all_sections"
@@ -80,7 +93,7 @@ set_excludes() {
 all_sections="sessions locks tabextents dbspaces logusage"
 
 
-informix_status(){
+function informix_status(){
     echo "<<<informix_status:sep(58)>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
@@ -92,7 +105,7 @@ informix_status(){
 }
 
 
-informix_sessions(){
+function informix_sessions(){
     echo "<<<informix_sessions>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
@@ -100,7 +113,7 @@ informix_sessions(){
 }
 
 
-informix_locks(){
+function informix_locks(){
     echo "<<<informix_locks>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     # don't count our own session
@@ -108,7 +121,7 @@ informix_locks(){
 }
 
 
-informix_tabextents(){
+function informix_tabextents(){
     echo "<<<informix_tabextents>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select first 10
@@ -126,7 +139,7 @@ informix_tabextents(){
 }
 
 
-informix_dbspaces(){
+function informix_dbspaces(){
     echo "<<<informix_dbspaces>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select
@@ -150,7 +163,7 @@ informix_dbspaces(){
 }
 
 
-informix_logusage(){
+function informix_logusage(){
     echo "<<<informix_logusage>>>"
     echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
     sql "select 'LOGUSAGE',

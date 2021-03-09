@@ -1,12 +1,13 @@
 Title: cmk-update-agent: Make insecure HTTPS warnings less verbose
-Class: fix
-Compatible: compat
-Component: agents
-Date: 1571814798
-Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p6
+Date: 1571814798
 
 Prevously, an insecure HTTPS setup for the Agent Updater would lead to multiple warnings like
 

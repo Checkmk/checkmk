@@ -92,8 +92,8 @@ checks = {
             None, {
                 'epoch': (1, 3, 30)
             }, [
-                (1, 'Health: warning', []),
-                (0, 'Epoch rate (30 m average): 0.00', [])
+                (1, 'Status: warning', []),
+                (0, 'Epoch: 0/30 m', [])
             ]
         )
     ],
@@ -104,7 +104,7 @@ checks = {
                 'num_out_osds': (7.0, 5.0),
                 'num_down_osds': (7.0, 5.0)
             }, [
-                (0, 'Epoch rate (15 m average): 0.00', []),
+                (0, 'Epoch: 0/15 m', []),
                 (0, 'OSDs: 90, Remapped PGs: 0', []),
                 (0, 'OSDs out: 0, 0%', []), (0, 'OSDs down: 0, 0%', [])
             ]

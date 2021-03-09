@@ -1,13 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-
+import pytest
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     RDSDescribeDBInstancesIB,
@@ -47,7 +40,7 @@ class Paginator:
         }
 
 
-class FakeRDSClient:
+class FakeRDSClient(object):
     def __init__(self):
         self.exceptions = Exceptions()
 
@@ -143,7 +136,6 @@ def test_agent_aws_rds_limits(get_rds_sections, names, tags, found_instances):
     rds_limits_results = rds_limits.run().results
 
     assert rds_limits.cache_interval == 300
-    assert rds_limits.period == 600
     assert rds_limits.name == "rds_limits"
 
     assert len(rds_limits_results) == 1
@@ -159,9 +151,7 @@ def test_agent_aws_rds_summary(get_rds_sections, names, tags, found_instances):
     rds_summary_results = rds_summary.run().results
 
     assert rds_summary.cache_interval == 300
-    assert rds_summary.period == 600
     assert rds_summary.name == "rds_summary"
-
     if found_instances:
         assert len(rds_summary_results) == 1
         rds_summary_result = rds_summary_results[0]
@@ -178,7 +168,6 @@ def test_agent_aws_rds(get_rds_sections, names, tags, found_instances):
     rds_results = rds.run().results
 
     assert rds.cache_interval == 300
-    assert rds.period == 600
     assert rds.name == "rds"
 
     if found_instances:

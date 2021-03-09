@@ -1,0 +1,11 @@
+Title: Check_MK Service: Fix "'ascii' codec can't decode byte" while collecting service results
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p13
+Date: 1591174910
+
+This may happen if service results contain non-ASCII characters.

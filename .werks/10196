@@ -1,13 +1,11 @@
 Title: All text file of the Windows Agent now have Windows style line endings
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1573134908
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573134908
+Class: fix
 
 Previously text files, like check_mk.user.ymk in Windows Agent installation
 had got Unix-style line endings. This error had made it almost impossible to 

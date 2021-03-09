@@ -1,41 +1,51 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import ast
 import json
 import os
 import shutil
 import time
-import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Optional
-from pathlib import Path
+import xml.dom.minidom
 
-import dicttoxml  # type: ignore[import]
+import dicttoxml
+from pathlib2 import Path
 
 import livestatus
 
 import cmk.utils.paths
 from cmk.utils.structured_data import StructuredDataTree, Container, Numeration, Attributes
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
-import cmk.utils.store as store
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
-from cmk.gui.exceptions import (
-    MKAuthException,
-    MKUserError,
-)
+from cmk.gui.globals import html, current_app
+from cmk.gui.exceptions import MKException, MKGeneralException, MKAuthException, MKUserError, RequestTimeout
 
 
 def get_inventory_data(inventory_tree, tree_path):
@@ -64,7 +74,7 @@ def parse_tree_path(tree_path):
     # .software.packages:        (list) => path = ["software", "packages"],     key = []
     if tree_path.endswith(":"):
         path = tree_path[:-1].strip(".").split(".")
-        attribute_keys: Optional[List[str]] = []
+        attribute_keys = []
     elif tree_path.endswith("."):
         path = tree_path[:-1].strip(".").split(".")
         attribute_keys = None
@@ -103,7 +113,7 @@ def sort_children(children):
     return sorted(children, key=lambda x: ordering[type(x)])
 
 
-def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
+def load_filtered_inventory_tree(hostname):
     """Loads the host inventory tree from the current file and returns the filtered tree"""
     return _filter_tree(_load_inventory_tree(hostname))
 
@@ -173,7 +183,7 @@ def get_history_deltas(hostname, search_timestamp=None):
             previous_timestamp = all_timestamps[new_timestamp_idx - 1]
             required_timestamps = [search_timestamp]
 
-    tree_lookup: Dict[str, Any] = {}
+    tree_lookup = {}
 
     def get_tree(timestamp):
         if timestamp is None:
@@ -201,7 +211,7 @@ def get_history_deltas(hostname, search_timestamp=None):
 
         cached_data = None
         try:
-            cached_data = store.load_object_from_file(cached_delta_path)
+            cached_data = cmk.utils.store.load_data_from_file(cached_delta_path)
         except MKGeneralException:
             pass
 
@@ -219,11 +229,11 @@ def get_history_deltas(hostname, search_timestamp=None):
             delta_data = current_tree.compare_with(previous_tree)
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
-                store.save_file(
-                    cached_delta_path,
-                    repr((new, changed, removed, delta_tree.get_raw_tree())),
-                )
+                cmk.utils.store.save_file(cached_delta_path,
+                                          repr((new, changed, removed, delta_tree.get_raw_tree())))
                 delta_history.append((timestamp, delta_data))
+        except RequestTimeout:
+            raise
         except LoadStructuredDataError:
             corrupted_history_files.append(
                 str(get_short_inventory_history_filepath(hostname, timestamp)))
@@ -270,34 +280,33 @@ class LoadStructuredDataError(MKException):
     pass
 
 
-def _load_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
-    """Load data of a host, cache it in the current HTTP request"""
+def _load_inventory_tree(hostname):
+    # Load data of a host, cache it in the current HTTP request
     if not hostname:
-        return None
+        return
 
-    inventory_tree_cache = g.setdefault("inventory", {})
+    inventory_tree_cache = current_app.g.setdefault("inventory", {})
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
         if '/' in hostname:
             # just for security reasons
-            return None
+            return
         cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
         try:
             inventory_tree = StructuredDataTree().load_from(cache_path)
         except Exception as e:
             if config.debug:
-                html.show_warning("%s" % e)
+                html.show_warning(e)
             raise LoadStructuredDataError()
         inventory_tree_cache[hostname] = inventory_tree
     return inventory_tree
 
 
-def _create_tree_from_raw_tree(raw_tree: bytes) -> Optional[StructuredDataTree]:
+def _create_tree_from_raw_tree(raw_tree):
     if raw_tree:
-        return StructuredDataTree().create_tree_from_raw_tree(
-            ast.literal_eval(raw_tree.decode("utf-8")))
-    return None
+        return StructuredDataTree().create_tree_from_raw_tree(ast.literal_eval(raw_tree))
+    return
 
 
 def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
@@ -312,9 +321,9 @@ def _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree):
     return inventory_tree
 
 
-def _filter_tree(struct_tree: Optional[StructuredDataTree]) -> Optional[StructuredDataTree]:
+def _filter_tree(struct_tree):
     if struct_tree is None:
-        return None
+        return
     return struct_tree.get_filtered_tree(_get_permitted_inventory_paths())
 
 
@@ -323,13 +332,14 @@ def _get_permitted_inventory_paths():
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    if 'permitted_inventory_paths' in g:
-        return g.permitted_inventory_paths
+    cache_varname = "permitted_inventory_paths"
+    if cache_varname in current_app.g:
+        return current_app.g[cache_varname]
 
-    user_groups = [] if config.user.id is None else userdb.contactgroups_of_user(config.user.id)
+    user_groups = userdb.contactgroups_of_user(config.user.id)
 
     if not user_groups:
-        g.permitted_inventory_paths = None
+        current_app.g[cache_varname] = None
         return None
 
     forbid_whole_tree = False
@@ -338,14 +348,14 @@ def _get_permitted_inventory_paths():
         inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
-            g.permitted_inventory_paths = None
+            current_app.g[cache_varname] = None
             return None
 
         if inventory_paths == "allow_all":
-            g.permitted_inventory_paths = None
+            current_app.g[cache_varname] = None
             return None
 
-        if inventory_paths == "forbid_all":
+        elif inventory_paths == "forbid_all":
             forbid_whole_tree = True
             continue
 
@@ -359,10 +369,10 @@ def _get_permitted_inventory_paths():
             permitted_paths.append((parsed, entry.get("attributes")))
 
     if forbid_whole_tree and not permitted_paths:
-        g.permitted_inventory_paths = []
+        current_app.g[cache_varname] = []
         return []
 
-    g.permitted_inventory_paths = permitted_paths
+    current_app.g[cache_varname] = permitted_paths
     return permitted_paths
 
 
@@ -390,8 +400,8 @@ def page_host_inv_api():
         hosts = request.get("hosts")
         if hosts:
             result = {}
-            for a_host_name in hosts:
-                result[a_host_name] = inventory_of_host(a_host_name, request)
+            for host_name in hosts:
+                result[host_name] = inventory_of_host(host_name, request)
 
         else:
             host_name = request.get("host")
@@ -479,7 +489,7 @@ def _write_python(response):
     html.write(repr(response))
 
 
-class InventoryHousekeeping:
+class InventoryHousekeeping(object):
     def __init__(self):
         super(InventoryHousekeeping, self).__init__()
         self._inventory_path = Path(cmk.utils.paths.var_dir) / "inventory"
@@ -487,22 +497,20 @@ class InventoryHousekeeping:
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
+        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(  # pylint: disable=no-member
         ):
             return
 
         last_cleanup = self._inventory_delta_cache_path / "last_cleanup"
         # TODO: remove with pylint 2
-        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:
+        if last_cleanup.exists() and time.time() - last_cleanup.stat().st_mtime < 3600 * 12:  # pylint: disable=no-member
             return
 
         # TODO: remove with pylint 2
-        inventory_archive_hosts = {
-            x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()
-        }
-        inventory_delta_cache_hosts = {
-            x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()
-        }
+        inventory_archive_hosts = set(
+            [x.name for x in self._inventory_archive_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
+        inventory_delta_cache_hosts = set(
+            [x.name for x in self._inventory_delta_cache_path.iterdir() if x.is_dir()])  # pylint: disable=no-member
 
         folders_to_delete = inventory_delta_cache_hosts - inventory_archive_hosts
         for foldername in folders_to_delete:
@@ -527,10 +535,10 @@ class InventoryHousekeeping:
                     (self._inventory_delta_cache_path / hostname / filename).unlink()
 
         # TODO: remove with pylint 2
-        last_cleanup.touch()
+        last_cleanup.touch()  # pylint: disable=no-member
 
     def _get_timestamps_for_host(self, hostname):
-        timestamps = {"None"}  # 'None' refers to the histories start
+        timestamps = set(["None"])  # 'None' refers to the histories start
         try:
             timestamps.add("%d" % (self._inventory_path / hostname).stat().st_mtime)
         except OSError:

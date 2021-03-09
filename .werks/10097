@@ -1,10 +1,11 @@
 Title: ibm_svc_enclosure: Do not crash if old-style parameters (None) where discovered
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568884812
-Class: fix
 
 

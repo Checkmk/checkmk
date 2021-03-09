@@ -1,8 +1,6 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
+// test-section-providers.cpp
 
+//
 #include "pch.h"
 
 #include "cfg.h"
@@ -27,21 +25,6 @@
 namespace cma::provider {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
-
-class Empty : public Synchronous {
-public:
-    Empty() : Synchronous("empty") {}
-    std::string makeBody() override { return "****"; }
-};
-
-TEST(SectionProviders, Basic) {
-    Empty e;
-
-    EXPECT_TRUE(e.getHostSp() == nullptr);
-    cma::srv::ServiceProcessor sp;
-    e.host_sp_ = &sp;
-    EXPECT_EQ(e.getHostSp(), &sp);
-}
 
 TEST(SectionProviders, Construction) {
     PluginsProvider plugins;
@@ -99,21 +82,22 @@ TEST(SectionProviders, BasicDf) {
     }
 }
 
-TEST(SectionProviders, SystemTime) {
-    auto seconds_since_epoch = tools::SecondsSinceEpoch();
-    srv::SectionProvider<SystemTime> system_time_provider;
-    auto& engine = system_time_provider.getEngine();
+TEST(SectionProviders, BasicSystemTime) {
+    using namespace cma::section;
+    using namespace cma::provider;
 
-    EXPECT_EQ(engine.getUniqName(), section::kSystemTime);
+    cma::srv::SectionProvider<SystemTime> system_time_provider;
+    EXPECT_EQ(system_time_provider.getEngine().getUniqName(), kSystemTime);
 
-    auto system_time = engine.generateContent(section_name);
+    auto& e4 = system_time_provider.getEngine();
+    auto system_time = e4.generateContent(section_name);
+    ASSERT_TRUE(!system_time.empty());
     EXPECT_EQ(system_time.back(), '\n');
-
-    auto result = tools::SplitString(system_time, "\n");
-    ASSERT_EQ(result.size(), 2);
+    auto result = cma::tools::SplitString(system_time, "\n");
+    EXPECT_EQ(result.size(), 2);
     EXPECT_EQ(result[0], "<<<systemtime>>>");
-    auto value = std::stoll(result[1]);
-    EXPECT_GE(value, seconds_since_epoch);
+    auto value = result[1].find_first_not_of("0123456789");
+    EXPECT_EQ(value, std::string::npos);
 }
 
 TEST(SectionProviders, BasicCheckMk) {
@@ -208,32 +192,23 @@ TEST(SectionProviders, BasicCheckMkOnlyFrom) {
     }
 }
 
-class SectionProvidersFixture : public ::testing::Test {
-public:
-    Services& getEngine() { return services_provider.getEngine(); }
+TEST(SectionProviders, BasicServices) {
+    using namespace cma::section;
+    using namespace cma::provider;
 
-private:
-    srv::SectionProvider<Services> services_provider;
-};
+    cma::srv::SectionProvider<Services> services_provider;
+    EXPECT_EQ(services_provider.getEngine().getUniqName(), kServices);
 
-TEST_F(SectionProvidersFixture, ServicesCtor) {
-    EXPECT_EQ(getEngine().getUniqName(), section::kServices);
-}
-TEST_F(SectionProvidersFixture, ServicesIntegration) {
-    auto content = getEngine().generateContent(section_name);
-
-    // Validate content is presented and correct
-    ASSERT_TRUE(!content.empty());
-    auto result = tools::SplitString(content, "\n");
+    auto& e5 = services_provider.getEngine();
+    auto sp = e5.generateContent(section_name);
+    ASSERT_TRUE(!sp.empty());
+    auto result = cma::tools::SplitString(sp, "\n");
     EXPECT_TRUE(result.size() > 20);
-
-    // Validate Header
     EXPECT_EQ(result[0], "<<<services>>>");
 
-    // Validate Body
     auto count = result.size();
     for (size_t i = 1; i < count; ++i) {
-        auto values = tools::SplitString(result[i], " ", 2);
+        auto values = cma::tools::SplitString(result[i], " ", 2);
         EXPECT_FALSE(values[0].empty());
         EXPECT_FALSE(values[1].empty());
         EXPECT_FALSE(values[2].empty());
@@ -267,7 +242,7 @@ TEST(SectionHeaders, All) {
     EXPECT_EQ(ret, "<<<>>>\n");
 
     ret = cma::section::MakeLocalHeader();
-    EXPECT_EQ(ret, "<<<local:sep(0)>>>\n");
+    EXPECT_EQ(ret, "<<<local>>>\n");
 }
 
 }  // namespace cma::provider

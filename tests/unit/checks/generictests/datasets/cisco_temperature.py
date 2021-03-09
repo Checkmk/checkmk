@@ -7,7 +7,6 @@
 # yapf: disable
 # type: ignore
 
-
 checkname = 'cisco_temperature'
 
 info = [

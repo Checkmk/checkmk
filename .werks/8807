@@ -1,11 +1,12 @@
 Title: hp_proliant_temp: crash if temp device is not known
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b8
 Date: 1566978133
-Class: fix
 
 The used MIB to match a device code to a human readable value has not been
 complete, which led into a crash in the service discovery.

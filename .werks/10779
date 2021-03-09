@@ -1,0 +1,8 @@
+Title: Fix sorting by WATO folder
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1587559528
+Class: fix

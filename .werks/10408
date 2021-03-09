@@ -1,13 +1,11 @@
 Title: Don't discover lparstat service on host without util info
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1573221386
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p6
+Date: 1573221386
+Class: fix
 
 After update to 1.6 you might find a lparstat service with UNKN status on
 your AIX hosts. This service should have not been discovered as no data is

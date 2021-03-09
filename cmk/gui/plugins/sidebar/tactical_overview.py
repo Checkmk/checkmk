@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from collections import namedtuple
 
@@ -12,13 +32,13 @@ import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
-from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.globals import html
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
-from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
-from cmk.gui.utils.urls import makeuri_contextless
-from typing import List, Dict, Tuple
-from functools import reduce
+# Things imported here are used by pre legacy (pre 1.6) cron plugins)
+from . import (  # pylint: disable=unused-import
+    CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
+)
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -33,24 +53,7 @@ def get_context_url_variables(context):
     add_vars = {}
     for filter_vars in context.values():
         add_vars.update(filter_vars)
-    return list(add_vars.items())
-
-
-def map_site_state(state: str) -> str:
-    if state in ('online', 'waiting'):
-        return 'ok'
-    if state == 'disabled':
-        return 'disabled'
-    return 'error'
-
-
-def group_by_state(
-    acc: Dict[str, List[str]],
-    id_and_state: Tuple[str, str],
-) -> Dict[str, List[str]]:
-    id_, state = id_and_state
-    acc[state].append(id_)
-    return acc
+    return add_vars.items()
 
 
 @snapin_registry.register
@@ -61,11 +64,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Overview")
-
-    @classmethod
-    def has_show_more_items(cls):
-        return True
+        return _("Tactical Overview")
 
     @classmethod
     def description(cls):
@@ -116,11 +115,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                  title=_("Show failed notifications"),
                  default_value=True,
              )),
-            ("show_sites_not_connected",
-             Checkbox(
-                 title=_("Display a message if sites are not connected"),
-                 default_value=True,
-             )),
         ]
 
     @classmethod
@@ -128,7 +122,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         return {
             "show_stale": True,
             "show_failed_notifications": True,
-            "show_sites_not_connected": True,
             "rows": [{
                 "query": ("hosts", {}),
                 "title": u"Hosts"
@@ -144,7 +137,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     def show(self):
         self._show_rows()
         self._show_failed_notifications()
-        self._show_site_status()
 
     def _show_rows(self):
         rows = self._get_rows()
@@ -153,7 +145,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.center(_("No data from any site"))
             return
 
-        html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
+        html.open_table(class_=["content_center", "tacticaloverview"],
+                        cellspacing=2,
+                        cellpadding=0,
+                        border=0)
 
         show_stales = self.parameters()["show_stale"] and config.user.may(
             "general.see_stales_in_tactical_overview")
@@ -174,10 +169,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             html.open_tr()
             html.th(row.title)
-            html.th(_("Problems"), class_="show_more_mode")
-            html.th(
-                html.render_span(_("Unhandled"), class_="more") +
-                html.render_span(_("Unhandled p."), class_="less"))
+            html.th(_("Problems"))
+            html.th(_("Unhandled"))
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
             html.close_tr()
@@ -185,31 +178,22 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             td_class = 'col4' if has_stale_objects else 'col3'
 
             html.open_tr()
-            url = makeuri_contextless(request, row.views.total + context_vars, filename="view.py")
+            url = html.makeuri_contextless(row.views.total + context_vars, filename="view.py")
             html.open_td(class_=["total", td_class])
             html.a("%s" % amount, href=url, target="main")
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
-                url = makeuri_contextless(
-                    request,
-                    getattr(row.views, ty) + context_vars,
-                    filename="view.py",
-                )
-                html.open_td(class_=[
-                    td_class, "states prob" if value != 0 else None, "show_more_mode" if ty ==
-                    "handled" else "basic"
-                ])
+                url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
+                                               filename="view.py")
+                html.open_td(class_=[td_class, "states prob" if value != 0 else None])
                 link(str(value), url)
                 html.close_td()
 
             if show_stales and has_stale_objects:
                 if row.views.stale:
-                    url = makeuri_contextless(
-                        request,
-                        row.views.stale + context_vars,
-                        filename="view.py",
-                    )
+                    url = html.makeuri_contextless(row.views.stale + context_vars,
+                                                   filename="view.py")
                     html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
                     link(str(stales), url)
                     html.close_td()
@@ -258,7 +242,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
             )
 
-        if what == "services":
+        elif what == "services":
             return ViewURLParams(
                 total=[
                     ("view_name", "allservices"),
@@ -275,7 +259,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
             )
 
-        if what == "events":
+        elif what == "events":
             return ViewURLParams(
                 total=[
                     ("view_name", "ec_events"),
@@ -296,8 +280,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 ],
                 stale=None,
             )
-
-        raise NotImplementedError()
+        else:
+            raise NotImplementedError()
 
     def _get_stats(self, what, context):
         if what == "hosts":
@@ -332,21 +316,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_host_stats_query(self, context_filters):
         return ("GET hosts\n"
-                # Total
                 "Stats: state >= 0\n"
-
-                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
-
-                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "StatsAnd: 3\n"
-
-                # Stale
                 "Stats: host_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
@@ -354,25 +331,18 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_service_stats_query(self, context_filters):
         return ("GET services\n"
-                # Total
                 "Stats: state >= 0\n"
-
-                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 4\n"
-
-                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 5\n"
-
-                # Stale
                 "Stats: service_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: service_scheduled_downtime_depth = 0\n"
@@ -383,10 +353,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
-            ec_filters = (  #
-                "Filter: event_contact_groups != \n"
-                "Filter: host_name != \n"
-                "Or: 2\n")
+            ec_filters = ("Filter: event_contact_groups != \n" "Filter: host_name != \n" "Or: 2\n")
 
         event_query = (
             # "Events" column
@@ -406,10 +373,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: event_host_in_downtime != 1\n"
             "StatsAnd: 3\n" + ec_filters + context_filters)
 
-        # Do not mark the site as dead in case the Event Console is not available.
-        return livestatus.Query(event_query,
-                                suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
-                                                     livestatus.MKLivestatusBadGatewayError))
+        return event_query
 
     def _execute_stats_query(self, query, auth_domain="read", only_sites=None, deflt=None):
         try:
@@ -435,14 +399,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_div(class_="spacertop")
         html.open_div(class_="tacticalalert")
 
-        confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
+        confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
         html.icon_button(confirm_url, _("Confirm failed notifications"), "delete", target="main")
 
-        view_url = makeuri_contextless(
-            request,
-            [("view_name", "failed_notifications")],
-            filename="view.py",
-        )
+        view_url = html.makeuri_contextless([("view_name", "failed_notifications")],
+                                            filename="view.py")
 
         html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
         html.close_div()
@@ -456,55 +417,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             )[0]
         except livestatus.MKLivestatusNotFoundError:
             return None
-
-    def _show_site_status(self):
-        if not self.parameters().get("show_sites_not_connected"):
-            return
-
-        site_states: Dict[str, List[str]] = reduce(
-            group_by_state,
-            [(id_, map_site_state(info["state"])) for id_, info in sites.states().items()],
-            {
-                'ok': [],
-                'disabled': [],
-                'error': []
-            },
-        )
-
-        if site_states["disabled"]:
-            self._create_status_box(site_states["disabled"], "tacticalinfo", _("disabled"))
-
-        if not site_states["error"]:
-            return
-
-        self._create_status_box(site_states["error"], "tacticalalert", _("disconnected"))
-
-    def _create_status_box(
-        self,
-        site_ids: List[str],
-        css_class: str,
-        site_status: str,
-    ):
-        html.open_div(class_="spacertop")
-        html.open_div(class_=css_class)
-        message_template = ungettext("%d site is %s.", "%d sites are %s.", len(site_ids))
-        message = message_template % (len(site_ids), site_status)
-        tooltip_template = ungettext(
-            "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The %s site is %s.",
-            "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The %s sites are %s.", len(site_ids))
-        tooltip = tooltip_template % (site_status, ', '.join(site_ids))
-
-        if config.user.may("wato.sites"):
-            url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
-            html.icon_button(url, tooltip, "sites", target="main")
-            html.a(message, target="main", href=url)
-        else:
-            html.icon("sites", tooltip)
-            html.write_text(message)
-        html.close_div()
-        html.close_div()
 
     @classmethod
     def allowed_roles(cls):

@@ -1,13 +1,11 @@
 Title: lnx_if: Fixed confusion of interface state UNKNOWN, DOWN if ethtool output is missing
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1573314997
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1573314997
+Class: fix
 
 If the command {{ethtool}} provides information about interfaces the
 operational state of an interfaces is UP if ethtool outputs

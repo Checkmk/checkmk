@@ -1,30 +1,43 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-from typing import Any, Dict, List, Optional
-
-from cmk.utils import aws_constants
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato import (
-    HostRulespec,
     IndividualOrStoredPassword,
+    RulespecGroup,
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
-    RulespecGroup,
-    RulespecSubGroup,
+    HostRulespec,
 )
-from cmk.gui.plugins.wato.utils import PasswordFromStore
 from cmk.gui.valuespec import (
-    Age,
+    ID,
     Alternative,
     CascadingDropdown,
     Checkbox,
@@ -32,9 +45,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
-    Hostname,
     HTTPUrl,
-    ID,
     Integer,
     ListChoice,
     ListOf,
@@ -48,159 +59,9 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-
-
-def connection_set(options: Optional[List[str]] = None,
-                   auth_option: Optional[str] = None) -> List[Any]:
-    """Standard connection elements set
-
-    A set of frequently used connection configuration options.
-    Using the listed elements here allows to use additional helper functions
-    in base/check_legacy_includes/agent_helper & in cmk/special_agents/utils.py which serve
-    to facilitate the API connection setup from the special_agent side
-
-    Args:
-        options:
-            list of strings specifying which connection elements to include. If empty
-            then all connection elements will be included
-        auth_option:
-            string which specify which connection authentication element to include
-
-    Returns:
-        list of WATO connection elements
-
-    """
-    connection_options: List[Any] = []
-    if options is None:
-        all_options = True
-        options = []
-    else:
-        all_options = False
-
-    if "connection_type" in options or all_options:
-        connection_options.append(
-            ("connection",
-             CascadingDropdown(
-                 choices=[
-                     ("host_name", _("Host name")),
-                     ("ip_address", _("IP Address")),
-                     ("url_custom", _("Custom URL"),
-                      Dictionary(
-                          elements=[("url_address",
-                                     TextAscii(
-                                         title=_("Custom URL server address"),
-                                         help=_("Specify a custom URL to connect to "
-                                                "your server. Do not include the "
-                                                "protocol. This option overwrites "
-                                                "all available options such as port and "
-                                                "other URL prefixes."),
-                                         allow_empty=False,
-                                     ))],
-                          optional_keys=[],
-                      )),
-                 ],
-                 title=_("Connection option"),
-             )))
-
-    if "port" in options or all_options:
-        connection_options.append(("port",
-                                   Integer(title=_('TCP port number'),
-                                           help=_('Port number that server is listening on.'),
-                                           default_value=4223,
-                                           minvalue=1,
-                                           maxvalue=65535)))
-
-    if "protocol" in options or all_options:
-        connection_options.append(("protocol",
-                                   DropdownChoice(title=_("Protocol"),
-                                                  choices=[
-                                                      ("http", "HTTP"),
-                                                      ("https", "HTTPS"),
-                                                  ])))
-
-    if "url_prefix" in options or all_options:
-        connection_options.append(
-            ("url-prefix",
-             HTTPUrl(title=_("Custom URL prefix"),
-                     help=_(
-                         "Specifies a URL prefix which is prepended to the path in calls to "
-                         "the API. This is e.g. useful if you use the ip address or the hostname "
-                         "as base address but require some additional prefix to make the correct "
-                         "API call. Use the custom URL option if you need to specify a more "
-                         "complex API url."),
-                     allow_empty=False)))
-
-    if "path_prefix" in options or all_options:
-        connection_options.append(
-            ("path-prefix",
-             TextAscii(
-                 title=_("Custom path prefix"),
-                 help=_("Specifies an URL path suffix which is appended to the path in calls "
-                        "to the API. This is e.g. useful if you use the ip address or the hostname "
-                        "as base address and require to specify a path URL in order to make the "
-                        "correct API calls. Do not prepend or append your custom path with \"/\". "
-                        "Use the custom URL option if you need to specify a "
-                        "more complex API URL"),
-                 allow_empty=False)))
-
-    if "ssl_verify" in options or all_options:
-        connection_options.append(
-            ("no-cert-check",
-             Alternative(title=_("SSL certificate verification"),
-                         elements=[
-                             FixedValue(False, title=_("Verify the certificate"), totext=""),
-                             FixedValue(True,
-                                        title=_("Ignore certificate errors (unsecure)"),
-                                        totext=""),
-                         ],
-                         default_value=False)))
-
-    if auth_option:
-        connection_options.extend(_auth_option(auth_option))
-
-    return connection_options
-
-
-def _auth_option(option: str) -> List[Any]:
-    auth: List[Any] = []
-    if option == "basic":
-        auth.append(
-            ('auth_basic',
-             Dictionary(elements=[
-                 ('username', TextAscii(
-                     title=_('Login username'),
-                     allow_empty=False,
-                 )),
-                 ("password", IndividualOrStoredPassword(
-                     title=_("Password"),
-                     allow_empty=False,
-                 )),
-             ],
-                        optional_keys=[],
-                        title=_("Basic authentication"))))
-
-    elif option == "token":
-        auth.append(("token", TextAscii(
-            title=_("API key/token"),
-            allow_empty=False,
-            size=70,
-        )))
-    return auth
-
-
-@rulespec_group_registry.register
-class RulespecGroupVMCloudContainer(RulespecGroup):
-    @property
-    def name(self):
-        return "vm_cloud_container"
-
-    @property
-    def title(self):
-        return _("VM, Cloud, Container")
-
-    @property
-    def help(self):
-        return _("Integrate with VM, cloud or container platforms")
+from cmk.gui.plugins.wato.utils import (
+    PasswordFromStore,)
+from cmk.utils import aws_constants
 
 
 @rulespec_group_registry.register
@@ -211,115 +72,11 @@ class RulespecGroupDatasourcePrograms(RulespecGroup):
 
     @property
     def title(self):
-        return _("Other integrations")
+        return _("Datasource Programs")
 
     @property
     def help(self):
-        return _("Integrate platforms using special agents, e.g. SAP R/3")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsOS(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "os"
-
-    @property
-    def title(self):
-        return _("Operating systems")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsApps(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "apps"
-
-    @property
-    def title(self):
-        return _("Applications")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsCloud(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "cloud"
-
-    @property
-    def title(self):
-        return _("Cloud based environments")
-
-
-class RulespecGroupDatasourceProgramsContainer(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "container"
-
-    @property
-    def title(self):
-        return _("Containerization")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsCustom(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "custom"
-
-    @property
-    def title(self):
-        return _("Custom integrations")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsHardware(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "hw"
-
-    @property
-    def title(self):
-        return _("Hardware")
-
-
-@rulespec_group_registry.register
-class RulespecGroupDatasourceProgramsTesting(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupDatasourcePrograms
-
-    @property
-    def sub_group_name(self):
-        return "testing"
-
-    @property
-    def title(self):
-        return _("Testing")
+        return _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3")
 
 
 def _valuespec_datasource_programs():
@@ -332,7 +89,7 @@ def _valuespec_datasource_programs():
                "via SSH.") + monitoring_macro_help() +
         _("This option can only be used with the permission \"Can add or modify executables\"."),
         label=_("Command line to execute"),
-        empty_text=_("Access Checkmk Agent via TCP"),
+        empty_text=_("Access Check_MK Agent via TCP"),
         size=80,
         attrencode=True,
     )
@@ -340,7 +97,7 @@ def _valuespec_datasource_programs():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsCustom,
+        group=RulespecGroupDatasourcePrograms,
         name="datasource_programs",
         valuespec=_valuespec_datasource_programs,
     ))
@@ -349,126 +106,21 @@ rulespec_registry.register(
 def _valuespec_special_agents_ddn_s2a():
     return Dictionary(
         elements=[
-            ("username", TextAscii(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            ("port", Integer(title=_("Port"), default_value=8008)),
+            ("username", TextAscii(title=_(u"Username"), allow_empty=False)),
+            ("password", Password(title=_(u"Password"), allow_empty=False)),
+            ("port", Integer(title=_(u"Port"), default_value=8008)),
         ],
         optional_keys=["port"],
-        title=_("DDN S2A"),
+        title=_(u"DDN S2A"),
     )
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:ddn_s2a",
         valuespec=_valuespec_special_agents_ddn_s2a,
     ))
-
-
-def _valuespec_special_agents_proxmox_ve():
-    return Dictionary(
-        elements=[
-            ("username", TextAscii(title=_("Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
-            ("port", Integer(title=_("Port"), default_value=8006)),
-            ("no-cert-check",
-             FixedValue(
-                 True,
-                 title=_("Disable SSL certificate validation"),
-                 totext=_("SSL certificate validation is disabled"),
-             )),
-            ("timeout",
-             Integer(
-                 title=_("Connect Timeout"),
-                 help=_("The network timeout in seconds"),
-                 default_value=60,
-                 minvalue=1,
-                 unit=_("seconds"),
-             )),
-            ("log-cutoff-weeks",
-             Integer(
-                 title=_("Maximum log age"),
-                 help=_("Age in weeks of log data to fetch"),
-                 default_value=2,
-                 unit=_("weeks"),
-             )),
-        ],
-        title=_("Proxmox VE"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox_ve",
-        valuespec=_valuespec_special_agents_proxmox_ve,
-    ))
-
-
-def _valuespec_special_agents_cisco_prime():
-    return Dictionary(
-        elements=[
-            ("basicauth",
-             Tuple(
-                 title=_("BasicAuth settings (optional)"),
-                 help=_("The credentials for api calls with authentication."),
-                 elements=[
-                     TextAscii(title=_("Username"), allow_empty=False),
-                     PasswordFromStore(title=_("Password of the user"), allow_empty=False)
-                 ],
-             )),
-            ("port", Integer(title=_("Port"), default_value=8080)),
-            ("no-tls",
-             FixedValue(
-                 True,
-                 title=_("Don't use TLS/SSL/Https (unsecure)"),
-                 totext=_("TLS/SSL/Https disabled"),
-             )),
-            ("no-cert-check",
-             FixedValue(
-                 True,
-                 title=_("Disable SSL certificate validation"),
-                 totext=_("SSL certificate validation is disabled"),
-             )),
-            ("timeout",
-             Integer(
-                 title=_("Connect Timeout"),
-                 help=_("The network timeout in seconds"),
-                 default_value=60,
-                 minvalue=1,
-                 unit=_("seconds"),
-             )),
-        ],
-        title=_("Cisco Prime"),
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsOS,
-        name="special_agents:cisco_prime",
-        valuespec=_valuespec_special_agents_cisco_prime,
-    ))
-
-
-def _transform_kubernetes_connection_params(value):
-    '''Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
-    Note that keys are removed from the parameters dictionary!
-    '''
-    if 'url-prefix' in value:
-        # it is theoretically possible that a customer has split up the custom URL into
-        # base URL, port and path prefix in their rule.
-        url_suffix = ''
-        port = value.pop('port', None)
-        if port:
-            url_suffix += f':{port}'
-        path_prefix = value.pop('path-prefix', None)
-        if path_prefix:
-            url_suffix += f'/{path_prefix}'
-        return 'url_custom', value.pop('url-prefix') + url_suffix
-
-    return 'ipaddress', {k: value.pop(k) for k in ['port', 'path-prefix'] if k in value}
 
 
 def _special_agents_kubernetes_transform(value):
@@ -476,69 +128,13 @@ def _special_agents_kubernetes_transform(value):
         value['infos'] = ['nodes']
     if 'no-cert-check' not in value:
         value['no-cert-check'] = False
-    if 'namespaces' not in value:
-        value['namespaces'] = False
-
-    if 'api-server-endpoint' in value:
-        return value
-
-    value['api-server-endpoint'] = _transform_kubernetes_connection_params(value)
-
     return value
-
-
-def _kubernetes_connection_elements():
-    return [
-        ("port",
-         Integer(title=_("Port"),
-                 help=_("If no port is given, a default value of 443 will be used."),
-                 default_value=443)),
-        ("path-prefix",
-         TextAscii(title=_("Custom path prefix"),
-                   help=_("Specifies a URL path prefix, which is prepended to API calls "
-                          "to the Kubernetes API. This is a useful option for Rancher "
-                          "installations (more information can be found in the manual). "
-                          "If this option is not relevant for your installation, "
-                          "please leave it unchecked."),
-                   allow_empty=False)),
-    ]
 
 
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
             elements=[
-                (
-                    "api-server-endpoint",
-                    CascadingDropdown(
-                        choices=[
-                            (
-                                "hostname",
-                                _("Hostname"),
-                                Dictionary(elements=_kubernetes_connection_elements()),
-                            ),
-                            (
-                                "ipaddress",
-                                _("IP address"),
-                                Dictionary(elements=_kubernetes_connection_elements()),
-                            ),
-                            (
-                                "url_custom",
-                                _("Custom URL"),
-                                TextAscii(
-                                    allow_empty=False,
-                                    size=80,
-                                ),
-                            ),
-                        ],
-                        orientation='horizontal',
-                        title=_("API server endpoint"),
-                        help=
-                        _("The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
-                          "or the \"IP Address\" options are selected, the DNS hostname or IP address and "
-                          "a secure protocol (HTTPS) are used."),
-                    ),
-                ),
                 ("token", IndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
@@ -552,55 +148,49 @@ def _valuespec_special_agents_kubernetes():
                                             totext=""),
                              ],
                              default_value=False)),
-                (
-                    "namespaces",
-                    Alternative(
-                        title=_("Namespace prefix for hosts"),
-                        elements=[
-                            FixedValue(False, title=_("Don't use a namespace prefix"), totext=""),
-                            FixedValue(True, title=_("Use a namespace prefix"), totext=""),
-                        ],
-                        help=
-                        _("If a cluster uses multiple namespaces you need to activate this option. "
-                          "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                          "name of their namespace. This makes Kubernetes resources in different "
-                          "namespaces that have the same name distinguishable, but results in "
-                          "longer hostnames."),
-                        default_value=False),
-                ),
                 ("infos",
                  ListChoice(choices=[
                      ("nodes", _("Nodes")),
                      ("services", _("Services")),
-                     ("ingresses", _("Ingresses")),
                      ("deployments", _("Deployments")),
                      ("pods", _("Pods")),
-                     ("endpoints", _("Endpoints")),
                      ("daemon_sets", _("Daemon sets")),
                      ("stateful_sets", _("Stateful sets")),
-                     ("jobs", _("Job")),
                  ],
                             default_value=[
                                 "nodes",
-                                "endpoints",
-                                "ingresses",
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
+                ("port",
+                 Integer(title=_(u"Port"),
+                         help=_("If no port is given a default value of 443 will be used."),
+                         default_value=443)),
+                ("url-prefix",
+                 HTTPUrl(title=_("Custom URL prefix"),
+                         help=_("Defines the scheme (either HTTP or HTTPS) and host part "
+                                "of Kubernetes API calls like e.g. \"https://example.com\". "
+                                "If no prefix is specified HTTPS together with the IP of "
+                                "the host will be used."),
+                         allow_empty=False)),
+                ("path-prefix",
+                 TextAscii(
+                     title=_("Custom path prefix"),
+                     help=_(
+                         "Specifies a URL path prefix which is prepended to the path in calls "
+                         "to the Kubernetes API. This is e.g. useful if Rancher is used to "
+                         "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
+                     allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
-            title=_("Kubernetes"),
-            help=
-            _("This rule selects the Kubenetes special agent for an existing Checkmk host. "
-              "If you want to monitor multiple Kubernetes clusters "
-              "we strongly recommend to set up "
-              "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
-              "to avoid name collisions. Otherwise e.g. Pods with the same name in "
-              "different Kubernetes clusters cannot be distinguished.<br>"
-              "Please additionally keep in mind, that not every Kubernetes API is compatible with "
-              "every version of the official Kubernetes Python client. E.g. client v11 is only "
-              "with the API v1.15 fully compatible. Please check if the latest client version "
-              "supports your Kubernetes API version."),
+            title=_(u"Kubernetes"),
+            help=_(
+                "This rule selects the Kubenetes special agent for an existing Checkmk host. "
+                "If you want to monitor multiple Kubernetes clusters "
+                "we strongly recommend to set up "
+                "<a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Piggyback translation rules</a> "
+                "to avoid name collisions. Otherwise e.g. Pods with the same name in "
+                "different Kubernetes clusters cannot be distinguished."),
         ),
         forth=_special_agents_kubernetes_transform,
     )
@@ -608,382 +198,10 @@ def _valuespec_special_agents_kubernetes():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupVMCloudContainer,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:kubernetes",
         valuespec=_valuespec_special_agents_kubernetes,
     ))
-
-
-def _check_not_empty_exporter_dict(value, _varprefix):
-    if not value:
-        raise MKUserError("dict_selection", _("Please select at least one element"))
-
-
-def _valuespec_generic_metrics_prometheus():
-    namespace_element = (
-        "prepend_namespaces",
-        DropdownChoice(
-            title=_("Prepend namespace prefix for hosts"),
-            help=_("If a cluster uses multiple namespaces you need to activate this option. "
-                   "Hosts for namespaced Kubernetes objects will then be prefixed with the "
-                   "name of their namespace. This makes Kubernetes resources in different "
-                   "namespaces that have the same name distinguishable, but results in "
-                   "longer hostnames."),
-            choices=[
-                ("use_namespace", _("Use a namespace prefix")),
-                ("omit_namespace", _("Don't use a namespace prefix")),
-            ],
-        ))
-
-    filter_namespace_element = ("namespace_include_patterns",
-                                ListOf(
-                                    RegExp(mode=RegExp.complete, title=_("Pattern")),
-                                    title=_("Filter namespaces"),
-                                    add_label=_("Add new pattern"),
-                                    allow_empty=False,
-                                    help=_(
-                                        "If your cluster has multiple namespaces, you can specify "
-                                        "a list of regex patterns. Only matching namespaces will "
-                                        "be monitored. Note that this concerns everything which "
-                                        "is part of the matching namespaces such as pods for "
-                                        "example."),
-                                ))
-    return Dictionary(
-        elements=[
-            ("connection",
-             CascadingDropdown(
-                 choices=[
-                     ("ip_address", _("IP Address")),
-                     ("host_name", _("Host name")),
-                     ("url_custom", _("Custom URL"),
-                      Dictionary(
-                          elements=[("url_address",
-                                     TextAscii(
-                                         title=_("Custom URL server address"),
-                                         help=_("Specify a custom URL to connect to "
-                                                "your server. Do not include the "
-                                                "protocol. This option overwrites "
-                                                "all available options such as port and "
-                                                "other URL prefixes."),
-                                         allow_empty=False,
-                                     ))],
-                          optional_keys=[],
-                      )),
-                 ],
-                 title=_("Prometheus connection option"),
-             )),
-            ("port", Integer(
-                title=_('Prometheus web port'),
-                default_value=9090,
-            )),
-            ('auth_basic',
-             Dictionary(elements=[
-                 ('username', TextAscii(
-                     title=_('Login username'),
-                     allow_empty=False,
-                 )),
-                 ("password", IndividualOrStoredPassword(
-                     title=_("Password"),
-                     allow_empty=False,
-                 )),
-             ],
-                        optional_keys=[],
-                        title=_("Basic authentication"))),
-            ("protocol",
-             DropdownChoice(title=_("Protocol"), choices=[
-                 ("http", "HTTP"),
-                 ("https", "HTTPS"),
-             ])),
-            ("exporter",
-             ListOf(
-                 CascadingDropdown(choices=[
-                     ("node_exporter", _("Node Exporter"),
-                      Dictionary(
-                          elements=[
-                              ("host_mapping",
-                               Hostname(
-                                   title=_('Explicitly map Node Exporter host'),
-                                   allow_empty=True,
-                                   help=
-                                   _("Per default, Checkmk tries to map the underlying Checkmk host "
-                                     "to the Node Exporter host which contains either the Checkmk "
-                                     "hostname, host address or \"localhost\" in its endpoint address. "
-                                     "The created services of the mapped Node Exporter will "
-                                     "be assigned to the Checkmk host. A piggyback host for each "
-                                     "Node Exporter host will be created if none of the options are "
-                                     "valid. "
-                                     "This option allows you to explicitly map one of your Node "
-                                     "Exporter hosts to the underlying Checkmk host. This can be "
-                                     "used if the default options do not apply to your setup."),
-                               )),
-                              (
-                                  "entities",
-                                  ListChoice(
-                                      choices=[
-                                          ("df", _("Filesystems")),
-                                          ("diskstat", _("Disk IO")),
-                                          ("mem", _("Memory")),
-                                          ("kernel", _("CPU utilization & Kernel performance")),
-                                      ],
-                                      default_value=["df", "diskstat", "mem", "kernel"],
-                                      allow_empty=False,
-                                      title=_("Retrieve information about..."),
-                                      help=
-                                      _("For your respective kernel select the hardware or OS entity "
-                                        "you would like to retrieve information about.")),
-                              ),
-                          ],
-                          title=_("Node Exporter metrics"),
-                          optional_keys=["host_mapping"],
-                      )),
-                     ("kube_state", _("Kube-state-metrics"),
-                      Dictionary(
-                          elements=[
-                              ("cluster_name",
-                               Hostname(
-                                   title=_('Cluster name'),
-                                   allow_empty=False,
-                                   help=
-                                   _("You must specify a name for your Kubernetes cluster. The provided name"
-                                     " will be used to create a piggyback host for the cluster related services."
-                                    ),
-                               )),
-                              namespace_element,
-                              filter_namespace_element,
-                              ("entities",
-                               ListChoice(
-                                   choices=[
-                                       ("cluster", _("Cluster")),
-                                       ("nodes", _("Nodes")),
-                                       ("services", _("Services")),
-                                       ("pods", _("Pods")),
-                                       ("daemon_sets", _("Daemon sets")),
-                                   ],
-                                   default_value=[
-                                       "cluster", "nodes", "services", "pods", "daemon_sets"
-                                   ],
-                                   allow_empty=False,
-                                   title=_("Retrieve information about..."),
-                                   help=
-                                   _("For your Kubernetes cluster select for which entity levels "
-                                     "you would like to retrieve information about. Piggyback hosts "
-                                     "for the respective entities will be created."))),
-                          ],
-                          title=_("Kube state metrics"),
-                          optional_keys=["namespace_include_patterns"],
-                      )),
-                     ("cadvisor", _("cAdvisor"),
-                      Dictionary(
-                          elements=[
-                              ("entity_level",
-                               CascadingDropdown(
-                                   title=_("Entity level used to create Checkmk piggyback hosts"),
-                                   help=
-                                   _("The retrieved information from the cAdvisor will be aggregated according"
-                                     " to the selected entity level. Resulting services will be allocated to the created"
-                                     " Checkmk piggyback hosts."),
-                                   choices=[
-                                       ("container",
-                                        _("Container - Display the information on container level"),
-                                        Dictionary(
-                                            elements=
-                                            [("container_id",
-                                              DropdownChoice(
-                                                  title=_("Host name used for containers"),
-                                                  help=
-                                                  _("For Containers - Choose which identifier is used for the monitored containers."
-                                                    " This will affect the name used for the piggyback host"
-                                                    " corresponding to the container, as well as items for"
-                                                    " services created on the node for each container."
-                                                   ),
-                                                  choices=[
-                                                      ("short",
-                                                       _("Short - Use the first 12 characters of the docker container ID"
-                                                        )),
-                                                      ("long",
-                                                       _("Long - Use the full docker container ID")
-                                                      ),
-                                                      ("name",
-                                                       _("Name - Use the containers' name")),
-                                                  ],
-                                              ))],
-                                            optional_keys=[],
-                                        )),
-                                       ("pod", _("Pod - Display the information for pod level"),
-                                        Dictionary(elements=[namespace_element])),
-                                       ("both",
-                                        _("Both - Display the information for both, pod and container, levels"
-                                         ),
-                                        Dictionary(
-                                            elements=
-                                            [("container_id",
-                                              DropdownChoice(
-                                                  title=_("Host name used for containers"),
-                                                  help=
-                                                  _("For Containers - Choose which identifier is used for the monitored containers."
-                                                    " This will affect the name used for the piggyback host"
-                                                    " corresponding to the container, as well as items for"
-                                                    " services created on the node for each container."
-                                                   ),
-                                                  choices=[
-                                                      ("short",
-                                                       _("Short - Use the first 12 characters of the docker container ID"
-                                                        )),
-                                                      ("long",
-                                                       _("Long - Use the full docker container ID")
-                                                      ),
-                                                      ("name",
-                                                       _("Name - Use the containers' name")),
-                                                  ],
-                                              )), namespace_element],
-                                            optional_keys=[],
-                                        )),
-                                   ],
-                               )),
-                              filter_namespace_element,
-                              (
-                                  "entities",
-                                  ListChoice(
-                                      choices=[
-                                          ("diskio", _("Disk IO")),
-                                          ("cpu", _("CPU utilization")),
-                                          ("df", _("Filesystem")),
-                                          ("if", _("Network")),
-                                          ("memory", _("Memory")),
-                                      ],
-                                      default_value=["diskio", "cpu", "df", "if", "memory"],
-                                      allow_empty=False,
-                                      title=_("Retrieve information about..."),
-                                      help=
-                                      _("For your respective kernel select the hardware or OS entity "
-                                        "you would like to retrieve information about.")),
-                              ),
-                          ],
-                          title=_("CAdvisor"),
-                          validate=_check_not_empty_exporter_dict,
-                          optional_keys=[
-                              "diskio", "cpu", "df", "if", "memory", "namespace_include_patterns"
-                          ],
-                      )),
-                 ]),
-                 add_label=_("Add new Scrape Target"),
-                 title=
-                 _("Prometheus Scrape Targets (include Prometheus Exporters) to fetch information from"
-                  ),
-                 help=_("You can specify which Scrape Targets including Exporters "
-                        "are connected to your Prometheus instance. The Prometheus "
-                        "Special Agent will automatically generate services for the "
-                        "selected monitoring information. You can create your own "
-                        "defined services with the custom PromQL query option below "
-                        "if one of the Scrape Target types are not listed here."),
-             )),
-            ("promql_checks",
-             ListOf(
-                 Dictionary(elements=[
-                     ("service_description", TextUnicode(
-                         title=_('Service name'),
-                         allow_empty=False,
-                     )),
-                     ("host_name",
-                      Hostname(
-                          title=_('Assign service to following host'),
-                          allow_empty=False,
-                          help=_("Specify the host to which the resulting "
-                                 "service will be assigned to. The host "
-                                 "should be configured to allow Piggyback "
-                                 "data."),
-                      )),
-                     ("metric_components",
-                      ListOf(
-                          Dictionary(
-                              title=_('PromQL query'),
-                              elements=[
-                                  ("metric_label",
-                                   TextAscii(
-                                       title=_('Metric label'),
-                                       allow_empty=False,
-                                       help=_(
-                                           "The metric label is displayed alongside the "
-                                           "queried value in the status detail the resulting service. "
-                                           "The metric name will be taken as label if "
-                                           "nothing was specified."),
-                                   )),
-                                  ("metric_name", MetricName()),
-                                  ("promql_query",
-                                   TextAscii(
-                                       title=_('PromQL query (only single return value permitted)'),
-                                       allow_empty=False,
-                                       size=80,
-                                       help=_("Example PromQL query: up{job=\"node_exporter\"}"))),
-                                  ("levels",
-                                   Dictionary(
-                                       elements=[
-                                           ("lower_levels",
-                                            Tuple(title=_("Lower levels"),
-                                                  elements=[
-                                                      Float(title=_("Warning below")),
-                                                      Float(title=_("Critical below")),
-                                                  ])),
-                                           ("upper_levels",
-                                            Tuple(
-                                                title=_("Upper levels"),
-                                                elements=[
-                                                    Float(title=_("Warning at")),
-                                                    Float(title=_("Critical at"))
-                                                ],
-                                            )),
-                                       ],
-                                       title="Metric levels",
-                                       validate=_verify_prometheus_empty,
-                                       help=
-                                       _("Specify upper and/or lower levels for the queried PromQL value. This option "
-                                         "should be used for simple cases where levels are only required once. You "
-                                         "should use the Prometheus custom services monitoring rule if you want to "
-                                         "specify a rule which applies to multiple Prometheus custom services at once. "
-                                         "The custom rule always has priority over the rule specified here "
-                                         "if the two overlap."),
-                                   )),
-                              ],
-                              optional_keys=["metric_name", "levels"],
-                          ),
-                          title=_('PromQL queries for Service'),
-                          add_label=_("Add new PromQL query"),
-                          allow_empty=False,
-                          magic='@;@',
-                          validate=_validate_prometheus_service_metrics,
-                      )),
-                 ],
-                            optional_keys=["host_name"]),
-                 title=_("Service creation using PromQL queries"),
-                 add_label=_("Add new Service"),
-             )),
-        ],
-        title=_("Prometheus"),
-        optional_keys=["auth_basic"],
-    )
-
-
-def _verify_prometheus_empty(value, varprefix):
-    if not value:
-        raise MKUserError(varprefix, _("Please specify at least one type of levels"))
-
-
-def _validate_prometheus_service_metrics(value, _varprefix):
-    used_metric_names = []
-    for metric_details in value:
-        metric_name = metric_details.get("metric_name")
-        if not metric_name:
-            continue
-        if metric_name in used_metric_names:
-            raise MKUserError(metric_name, _("Each metric must be unique for a service"))
-        used_metric_names.append(metric_name)
-
-
-rulespec_registry.register((HostRulespec(
-    group=RulespecGroupVMCloudContainer,
-    name="special_agents:prometheus",
-    valuespec=_valuespec_generic_metrics_prometheus,
-)))
 
 
 def _factory_default_special_agents_vsphere():
@@ -991,31 +209,14 @@ def _factory_default_special_agents_vsphere():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
-def _transform_agent_vsphere(params):
-    params.setdefault("skip_placeholder_vms", True)
-    params.setdefault("ssl", False)
-    params.setdefault("use_pysphere", False)
-    params.setdefault("spaces", "underscore")
-
-    if "snapshots_on_host" not in params:
-        params["snapshots_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
-
-    return params
-
-
 def _valuespec_special_agents_vsphere():
-    return Transform(Dictionary(
-        title=_("VMWare ESX via vSphere"),
-        help=_(
-            "This rule selects the vSphere agent instead of the normal Check_MK Agent and allows "
-            "monitoring of VMWare ESX via the vSphere API. You can configure your connection "
-            "settings here.",),
+    return Transform(valuespec=Dictionary(
         elements=[
             ("user", TextAscii(
                 title=_("vSphere User name"),
                 allow_empty=False,
             )),
-            ("secret", IndividualOrStoredPassword(
+            ("secret", Password(
                 title=_("vSphere secret"),
                 allow_empty=False,
             )),
@@ -1025,11 +226,11 @@ def _valuespec_special_agents_vsphere():
                  choices=[
                      (True, _("Queried host is a host system")),
                      ("hostsystem_agent",
-                      _("Queried host is a host system with Checkmk Agent installed")),
+                      _("Queried host is a host system with Check_MK Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Checkmk Agent installed")),
+                     ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
                  ],
-                 default_value=True,
+                 default=True,
              )),
             ("tcp_port",
              Integer(
@@ -1064,6 +265,16 @@ def _valuespec_special_agents_vsphere():
                  minvalue=1,
                  unit=_("seconds"),
              )),
+            ("use_pysphere",
+             Checkbox(
+                 title=_("Compatibility mode"),
+                 label=_("Support ESX 4.1 (using slower PySphere implementation)"),
+                 true_label=_("Support 4.1"),
+                 false_label=_("fast"),
+                 help=_("The current very performant implementation of the ESX special agent "
+                        "does not support older ESX versions than 5.0. Please use the slow "
+                        "compatibility mode for those old hosts."),
+             )),
             ("infos",
              Transform(
                  ListChoice(
@@ -1090,8 +301,7 @@ def _valuespec_special_agents_vsphere():
                  help=
                  _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
                    "virtual machines in case the default vm is unable to start. This option tells the "
-                   "vsphere agent to exclude placeholder vms in its output."),
-             )),
+                   "vsphere agent to exclude placeholder vms in its output."))),
             ("host_pwr_display",
              DropdownChoice(
                  title=_("Display ESX Host power state on"),
@@ -1100,7 +310,7 @@ def _valuespec_special_agents_vsphere():
                      ("esxhost", _("The ESX Host")),
                      ("vm", _("The Virtual Machine")),
                  ],
-                 default_value=None,
+                 default=None,
              )),
             ("vm_pwr_display",
              DropdownChoice(
@@ -1115,18 +325,22 @@ def _valuespec_special_agents_vsphere():
                      ("esxhost", _("The ESX Host")),
                      ("vm", _("The Virtual Machine")),
                  ],
-                 default_value=None,
+                 default=None,
              )),
-            ("snapshots_on_host",
-             Checkbox(
-                 title=_("VM snapshot summary"),
-                 label=_("Display snapshot summary on ESX hosts"),
-                 default_value=False,
-                 help=_(
-                     "By default the snapshot summary service is displayed on the vCenter. "
-                     "Users who run an ESX host on its own or do not include their vCenter in the "
-                     "monitoring can choose to display the snapshot summary on the ESX host itself."
-                 ),
+            ("snapshot_display",
+             DropdownChoice(
+                 title=_("<i>Additionally</i> display snapshots on"),
+                 help=_("The created snapshots can be displayed additionally either "
+                        "on the ESX host or the vCenter. This will result in services "
+                        "for <i>both</i> the queried system and the ESX host / vCenter. "
+                        "By disabling the unwanted services it is then possible "
+                        "to configure where the services are displayed."),
+                 choices=[
+                     (None, _("The Virtual Machine")),
+                     ("esxhost", _("The ESX Host")),
+                     ("vCenter", _("The queried ESX system (vCenter / Host)")),
+                 ],
+                 default=None,
              )),
             ("vm_piggyname",
              DropdownChoice(
@@ -1136,7 +350,7 @@ def _valuespec_special_agents_vsphere():
                      ("hostname",
                       _("Use the VMs hostname if set, otherwise fall back to ESX name")),
                  ],
-                 default_value="alias",
+                 default="alias",
              )),
             ("spaces",
              DropdownChoice(
@@ -1145,7 +359,7 @@ def _valuespec_special_agents_vsphere():
                      ("cut", _("Cut everything after first space")),
                      ("underscore", _("Replace with underscores")),
                  ],
-                 default_value="underscore",
+                 default="underscore",
              )),
         ],
         optional_keys=[
@@ -1153,17 +367,24 @@ def _valuespec_special_agents_vsphere():
             "timeout",
             "vm_pwr_display",
             "host_pwr_display",
+            "snapshot_display",
             "vm_piggyname",
         ],
-        ignored_keys=["use_pysphere"],
     ),
-                     forth=_transform_agent_vsphere)
+                     title=_("Check state of VMWare ESX via vSphere"),
+                     help=_(
+                         "This rule selects the vSphere agent instead of the normal Check_MK Agent "
+                         "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
+                         "your connection settings here."),
+                     forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
+                                           ("use_pysphere", False),
+                                           ("spaces", "underscore")] + a.items()))
 
 
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vsphere(),
-        group=RulespecGroupVMCloudContainer,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:vsphere",
         valuespec=_valuespec_special_agents_vsphere,
     ))
@@ -1182,7 +403,7 @@ def _valuespec_special_agents_hp_msa():
             )),
         ],
         optional_keys=False,
-        title=_("HP MSA via Web Interface"),
+        title=_("Check HP MSA via Web Interface"),
         help=_("This rule selects the Agent HP MSA instead of the normal Check_MK Agent "
                "which collects the data through the HP MSA web interface"),
     )
@@ -1190,7 +411,7 @@ def _valuespec_special_agents_hp_msa():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:hp_msa",
         valuespec=_valuespec_special_agents_hp_msa,
     ))
@@ -1257,23 +478,22 @@ def _special_agents_ipmi_sensors_vs_ipmitool():
 
 
 def _valuespec_special_agents_ipmi_sensors():
-    return Transform(
-        CascadingDropdown(
-            choices=[
-                ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
-                ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
-            ],
-            title=_("IPMI Sensors via Freeipmi or IPMItool"),
-            help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
-                   "which collects the data through the FreeIPMI resp. IPMItool command"),
-        ),
-        forth=_special_agents_ipmi_sensors_transform_ipmi_sensors,
-    )
+    return Transform(CascadingDropdown(
+        choices=[
+            ("freeipmi", _("Use FreeIPMI"), _special_agents_ipmi_sensors_vs_freeipmi()),
+            ("ipmitool", _("Use IPMItool"), _special_agents_ipmi_sensors_vs_ipmitool()),
+        ],
+        required_keys=["username", "password", "privilege_lvl"],
+        title=_("Check IPMI Sensors via Freeipmi or IPMItool"),
+        help=_("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "
+               "which collects the data through the FreeIPMI resp. IPMItool command"),
+    ),
+                     forth=_special_agents_ipmi_sensors_transform_ipmi_sensors)
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsOS,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:ipmi_sensors",
         valuespec=_valuespec_special_agents_ipmi_sensors,
     ))
@@ -1301,7 +521,7 @@ def _valuespec_special_agents_netapp():
                      "This can save quite a lot of CPU load on larger systems."),
              )),
         ],
-        title=_("NetApp via WebAPI"),
+        title=_("Check NetApp via WebAPI"),
         help=_(
             "This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
             "and allows monitoring via the NetApp Web API. To access the data the "
@@ -1310,12 +530,12 @@ def _valuespec_special_agents_netapp():
             "<tt>~/share/check_mk/agents/special</tt>."),
         optional_keys=False,
     ),
-                     forth=lambda x: dict([("skip_elements", [])] + list(x.items())))
+                     forth=lambda x: dict([("skip_elements", [])] + x.items()))
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:netapp",
         valuespec=_valuespec_special_agents_netapp,
     ))
@@ -1323,8 +543,6 @@ rulespec_registry.register(
 
 def _special_agents_activemq_transform_activemq(value):
     if not isinstance(value, tuple):
-        if "protocol" not in value:
-            value["protocol"] = "http"
         return value
     new_value = {}
     new_value["servername"] = value[0]
@@ -1341,15 +559,9 @@ def _factory_default_special_agents_activemq():
 def _valuespec_special_agents_activemq():
     return Transform(
         Dictionary(elements=[
-            ("servername", TextAscii(
-                title=_("Server Name"),
-                allow_empty=False,
-            )), ("port", Integer(title=_("Port Number"), default_value=8161)),
-            ("protocol",
-             DropdownChoice(title=_("Protocol"), choices=[
-                 ("http", "HTTP"),
-                 ("https", "HTTPS"),
-             ])), ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+            ("servername", TextAscii(title=_("Server Name"))),
+            ("port", Integer(title=_("Port Number"), default_value=8161)),
+            ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
             ("basicauth",
              Tuple(title=_("BasicAuth settings (optional)"),
                    elements=[TextAscii(title=_("Username")),
@@ -1364,7 +576,7 @@ def _valuespec_special_agents_activemq():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_activemq(),
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:activemq",
         valuespec=_valuespec_special_agents_activemq,
     ))
@@ -1377,7 +589,7 @@ def _factory_default_special_agents_emcvnx():
 
 def _valuespec_special_agents_emcvnx():
     return Dictionary(
-        title=_("EMC VNX storage systems"),
+        title=_("Check state of EMC VNX storage systems"),
         help=_("This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
                "and allows monitoring of EMC VNX storage systems by calling naviseccli "
                "commandline tool locally on the monitoring system. Make sure it is installed "
@@ -1433,7 +645,7 @@ def _valuespec_special_agents_emcvnx():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_emcvnx(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:emcvnx",
         valuespec=_valuespec_special_agents_emcvnx,
     ))
@@ -1446,7 +658,7 @@ def _factory_default_special_agents_ibmsvc():
 
 def _valuespec_special_agents_ibmsvc():
     return Dictionary(
-        title=_("IBM SVC / V7000 storage systems"),
+        title=_("Check state of IBM SVC / V7000 storage systems"),
         help=_(
             "This rule set selects the <tt>ibmsvc</tt> agent instead of the normal Check_MK Agent "
             "and allows monitoring of IBM SVC / V7000 storage systems by calling "
@@ -1511,7 +723,7 @@ def _valuespec_special_agents_ibmsvc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_ibmsvc(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:ibmsvc",
         valuespec=_valuespec_special_agents_ibmsvc,
     ))
@@ -1535,7 +747,7 @@ def _valuespec_special_agents_random():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_random(),
-        group=RulespecGroupDatasourceProgramsTesting,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:random",
         valuespec=_valuespec_special_agents_random,
     ))
@@ -1549,7 +761,7 @@ def _factory_default_special_agents_acme_sbc():
 def _valuespec_special_agents_acme_sbc():
     return FixedValue(
         {},
-        title=_("ACME Session Border Controller"),
+        title=_("Check ACME Session Border Controller"),
         help=_("This rule activates an agent which connects "
                "to an ACME Session Border Controller (SBC). This agent uses SSH, so "
                "you have to exchange an SSH key to make a passwordless connect possible."),
@@ -1560,7 +772,7 @@ def _valuespec_special_agents_acme_sbc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_acme_sbc(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:acme_sbc",
         valuespec=_valuespec_special_agents_acme_sbc,
     ))
@@ -1573,7 +785,7 @@ def _factory_default_special_agents_fritzbox():
 
 def _valuespec_special_agents_fritzbox():
     return Dictionary(
-        title=_("Fritz!Box Devices"),
+        title=_("Check state of Fritz!Box Devices"),
         help=_("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
                "about configuration and connection status information."),
         elements=[
@@ -1595,7 +807,7 @@ def _valuespec_special_agents_fritzbox():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_fritzbox(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:fritzbox",
         valuespec=_valuespec_special_agents_fritzbox,
     ))
@@ -1620,7 +832,7 @@ def _valuespec_special_agents_innovaphone():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_innovaphone(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:innovaphone",
         valuespec=_valuespec_special_agents_innovaphone,
     ))
@@ -1643,7 +855,7 @@ def _valuespec_special_agents_hivemanager():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:hivemanager",
         valuespec=_valuespec_special_agents_hivemanager,
     ))
@@ -1686,14 +898,14 @@ def _valuespec_special_agents_hivemanager_ng():
                 allow_empty=False,
             )),
         ],
-        optional_keys=False,
+        optional_keys=None,
     )
 
 
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_hivemanager_ng(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:hivemanager_ng",
         valuespec=_valuespec_special_agents_hivemanager_ng,
     ))
@@ -1706,7 +918,7 @@ def _factory_default_special_agents_allnet_ip_sensoric():
 
 def _valuespec_special_agents_allnet_ip_sensoric():
     return Dictionary(
-        title=_("ALLNET IP Sensoric Devices"),
+        title=_("Check state of ALLNET IP Sensoric Devices"),
         help=_("This rule selects the ALLNET IP Sensoric agent, which fetches "
                "/xml/sensordata.xml from the device by HTTP and extracts the "
                "needed monitoring information from this file."),
@@ -1728,7 +940,7 @@ def _valuespec_special_agents_allnet_ip_sensoric():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_allnet_ip_sensoric(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:allnet_ip_sensoric",
         valuespec=_valuespec_special_agents_allnet_ip_sensoric,
     ))
@@ -1736,7 +948,7 @@ rulespec_registry.register(
 
 def _valuespec_special_agents_ucs_bladecenter():
     return Dictionary(
-        title=_("UCS Bladecenter"),
+        title=_("Check state of UCS Bladecenter"),
         help=_("This rule selects the UCS Bladecenter agent instead of the normal Check_MK Agent "
                "which collects the data through the UCS Bladecenter Web API"),
         elements=[
@@ -1761,14 +973,14 @@ def _valuespec_special_agents_ucs_bladecenter():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:ucs_bladecenter",
         valuespec=_valuespec_special_agents_ucs_bladecenter,
     ))
 
 
 def _special_agents_siemens_plc_validate_siemens_plc_values(value, varprefix):
-    valuetypes: Dict[Any, Any] = {}
+    valuetypes = {}
     for index, (_db_number, _address, _datatype, valuetype, ident) in enumerate(value):
         valuetypes.setdefault(valuetype, [])
         if ident in valuetypes[valuetype]:
@@ -1944,7 +1156,7 @@ def _valuespec_special_agents_siemens_plc():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_siemens_plc(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:siemens_plc",
         valuespec=_valuespec_special_agents_siemens_plc,
     ))
@@ -1958,42 +1170,29 @@ def _valuespec_special_agents_ruckus_spot():
                  title=_("Server Address"),
                  help=_("Here you can set a manual address if the server differs from the host"),
                  elements=[
-                     FixedValue(
-                         True,
-                         title=_("Use host address"),
-                         totext="",
-                     ),
-                     TextAscii(title=_("Enter address"),)
+                     FixedValue(True, title=_("Use host address"), totext=""),
+                     TextAscii(title=_("Enter address"))
                  ],
                  default_value=True)),
-            ("port", Integer(
-                title=_("Port"),
-                default_value=8443,
-            )),
+            ("port", Integer(title=_("Port"), allow_empty=False, default_value=8443)),
             ("venueid", TextAscii(
                 title=_("Venue ID"),
                 allow_empty=False,
             )),
-            ("api_key", TextAscii(
-                title=_("API key"),
-                allow_empty=False,
-                size=70,
-            )),
+            ("api_key", TextAscii(title=_("API key"), allow_empty=False, size=70)),
             ("cmk_agent",
-             Dictionary(
-                 title=_("Also contact Checkmk agent"),
-                 help=_("With this setting, the special agent will also contact the "
-                        "Check_MK agent on the same system at the specified port."),
-                 elements=[
-                     ("port", Integer(
-                         title=_("Port"),
-                         default_value=6556,
-                     )),
-                 ],
-                 optional_keys=[],
-             )),
+             Dictionary(title=_("Also contact Check_MK agent"),
+                        help=_("With this setting, the special agent will also contact the "
+                               "Check_MK agent on the same system at the specified port."),
+                        elements=[("port",
+                                   Integer(
+                                       title=_("Port"),
+                                       default_value=6556,
+                                       allow_empty=False,
+                                   ))],
+                        optional_keys=[])),
         ],
-        title=_("Ruckus Spot"),
+        title=_("Agent for Ruckus Spot"),
         help=_("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
                "which collects the data through the Ruckus Spot web interface"),
         optional_keys=["cmk_agent"])
@@ -2001,7 +1200,7 @@ def _valuespec_special_agents_ruckus_spot():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:ruckus_spot",
         valuespec=_valuespec_special_agents_ruckus_spot,
     ))
@@ -2062,7 +1261,7 @@ def _valuespec_special_agents_appdynamics():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_appdynamics(),
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:appdynamics",
         valuespec=_valuespec_special_agents_appdynamics,
     ))
@@ -2125,7 +1324,7 @@ def _valuespec_special_agents_jolokia():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_jolokia(),
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:jolokia",
         valuespec=_valuespec_special_agents_jolokia,
     ))
@@ -2156,7 +1355,7 @@ def _valuespec_special_agents_tinkerforge():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:tinkerforge",
         valuespec=_valuespec_special_agents_tinkerforge,
     ))
@@ -2180,22 +1379,21 @@ def _valuespec_special_agents_prism():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsOS,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:prism",
         valuespec=_valuespec_special_agents_prism,
     ))
 
 
-def _special_agents_3par_transform(v):
+def _special_agents_3par_transform_3par_add_verify_cert(v):
     v.setdefault("verify_cert", False)
-    v.setdefault("port", 8080)
     return v
 
 
 def _valuespec_special_agents_3par():
     return Transform(
         Dictionary(
-            title=_("3PAR Configuration"),
+            title=_("Agent 3PAR Configuration"),
             elements=[
                 ("user", TextAscii(
                     title=_("Username"),
@@ -2205,14 +1403,6 @@ def _valuespec_special_agents_3par():
                     title=_("Password"),
                     allow_empty=False,
                 )),
-                ("port",
-                 Integer(
-                     title=_('TCP port number'),
-                     help=_('Port number that 3par is listening on. The default is 8080.'),
-                     default_value=8080,
-                     minvalue=1,
-                     maxvalue=65535,
-                 )),
                 ("verify_cert",
                  DropdownChoice(
                      title=_("SSL certificate verification"),
@@ -2233,7 +1423,7 @@ def _valuespec_special_agents_3par():
             ],
             optional_keys=["values"],
         ),
-        forth=_special_agents_3par_transform,
+        forth=_special_agents_3par_transform_3par_add_verify_cert,
     )
 
 
@@ -2241,16 +1431,16 @@ def _valuespec_special_agents_3par():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:3par",
-        title=lambda: _("3PAR Configuration"),
+        title=lambda: _("Agent 3PAR Configuration"),
         valuespec=_valuespec_special_agents_3par,
     ))
 
 
 def _valuespec_special_agents_storeonce():
     return Dictionary(
-        title=_("HPE StoreOnce"),
+        title=_("Check HPE StoreOnce"),
         help=_("This rule set selects the special agent for HPE StoreOnce Applainces "
                "instead of the normal Check_MK agent and allows monitoring via Web API. "),
         optional_keys=["cert"],
@@ -2269,43 +1459,15 @@ def _valuespec_special_agents_storeonce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:storeonce",
         valuespec=_valuespec_special_agents_storeonce,
     ))
 
 
-def _valuespec_special_agents_storeonce4x():
-    return Dictionary(
-        title=_("HPE StoreOnce via REST API 4.x"),
-        help=_("This rule set selects the special agent for HPE StoreOnce Appliances "
-               "instead of the normal Check_MK agent and allows monitoring via REST API v4.x or "
-               "higher. "),
-        optional_keys=["cert"],
-        elements=[
-            ("user", TextAscii(title=_("Username"), allow_empty=False)),
-            ("password", Password(title=_("Password"), allow_empty=False)),
-            ("cert",
-             DropdownChoice(title=_("SSL certificate verification"),
-                            choices=[
-                                (True, _("Activate")),
-                                (False, _("Deactivate")),
-                            ])),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsHardware,
-        name="special_agents:storeonce4x",
-        valuespec=_valuespec_special_agents_storeonce4x,
-    ))
-
-
 def _valuespec_special_agents_salesforce():
     return Dictionary(
-        title=_("Salesforce"),
+        title=_("Check Salesforce"),
         help=_("This rule selects the special agent for Salesforce."),
         elements=[
             ("instances", ListOfStrings(
@@ -2319,10 +1481,10 @@ def _valuespec_special_agents_salesforce():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         help_func=lambda: _("This rule selects the special agent for Salesforce."),
         name="special_agents:salesforce",
-        title=lambda: _("Salesforce"),
+        title=lambda: _("Check Salesforce"),
         valuespec=_valuespec_special_agents_salesforce,
     ))
 
@@ -2445,19 +1607,19 @@ def _valuespec_special_agents_azure():
                  ],
              )),
         ],
-        optional_keys=["subscription", "piggyback_vms", "sequential"],
+        optional_keys=["piggyback_vms", "sequential"],
     )
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupVMCloudContainer,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:azure",
         valuespec=_valuespec_special_agents_azure,
     ))
 
 
-class MultisiteBiDatasource:
+class MultisiteBiDatasource(object):
     def get_valuespec(self):
         return Dictionary(
             elements=self._get_dynamic_valuespec_elements(),
@@ -2570,7 +1732,7 @@ class MultisiteBiDatasource:
 def _valuespec_special_agents_bi():
     return ListOf(
         MultisiteBiDatasource().get_valuespec(),
-        title=_("BI Aggregations"),
+        title=_("Check state of BI Aggregations"),
         help=_(
             "This rule allows you to check multiple BI aggregations from multiple sites at once. "
             "You can also assign aggregations to specific hosts through the piggyback mechanism."),
@@ -2579,7 +1741,7 @@ def _valuespec_special_agents_bi():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:bi",
         valuespec=_valuespec_special_agents_bi,
     ))
@@ -2659,18 +1821,8 @@ def _vs_element_aws_limits():
                        totext=_("Monitor service limits")))
 
 
-def _transform_aws(d):
-    services = d['services']
-    if 'cloudwatch' in services:
-        services['cloudwatch_alarms'] = services['cloudwatch']
-        del services['cloudwatch']
-    if 'assume_role' not in d:
-        d['assume_role'] = {}
-    return d
-
-
 def _valuespec_special_agents_aws():
-    return Transform(Dictionary(
+    return Dictionary(
         title=_('Amazon Web Services (AWS)'),
         elements=[
             ("access_key_id",
@@ -2684,50 +1836,15 @@ def _valuespec_special_agents_aws():
                  title=_("The secret access key for your AWS account"),
                  allow_empty=False,
              )),
-            ("proxy_details",
-             Dictionary(
-                 title=_("Proxy server details"),
-                 elements=[
-                     ("proxy_host", TextAscii(title=_("Proxy host"), allow_empty=False)),
-                     ("proxy_port", Integer(title=_("Port"))),
-                     ("proxy_user", TextAscii(
-                         title=_("Username"),
-                         size=32,
-                     )),
-                     ("proxy_password", TextAscii(title=_("Password"))),
-                 ],
-                 optional_keys=["proxy_port", "proxy_user", "proxy_password"],
-             )),
-            ("assume_role",
-             Dictionary(
-                 title=_("Assume a different IAM role"),
-                 elements=[(
-                     "role_arn_id",
-                     Tuple(
-                         title=_("Use STS AssumeRole to assume a different IAM role"),
-                         elements=[
-                             TextAscii(
-                                 title=_("The ARN of the IAM role to assume"),
-                                 size=50,
-                                 help=_("The Amazon Resource Name (ARN) of the role to assume.")),
-                             TextAscii(
-                                 title=_("External ID (optional)"),
-                                 size=50,
-                                 help=
-                                 _("A unique identifier that might be required when you assume a role in another "
-                                   +
-                                   "account. If the administrator of the account to which the role belongs provided "
-                                   +
-                                   "you with an external ID, then provide that value in the External ID parameter. "
-                                  ))
-                         ]))])),
             ("global_services",
              Dictionary(
                  title=_("Global services to monitor"),
-                 elements=[("ce",
-                            FixedValue(None,
-                                       totext=_("Monitor costs and usage"),
-                                       title=_("Costs and usage (CE)")))],
+                 elements=[
+                     ("ce",
+                      FixedValue(None,
+                                 totext=_("Monitor costs and usage"),
+                                 title=_("Costs and usage (CE)"))),
+                 ],
              )),
             ("regions",
              ListChoice(
@@ -2776,16 +1893,6 @@ def _valuespec_special_agents_aws():
                           optional_keys=["limits", "requests"],
                           default_keys=["limits"],
                       )),
-                     ("glacier",
-                      Dictionary(
-                          title=_("Amazon S3 Glacier (Glacier)"),
-                          elements=[
-                              _vs_element_aws_service_selection(),
-                              _vs_element_aws_limits(),
-                          ],
-                          optional_keys=["limits"],
-                          default_keys=["limits"],
-                      )),
                      ("elb",
                       Dictionary(
                           title=_("Classic Load Balancing (ELB)"),
@@ -2816,9 +1923,9 @@ def _valuespec_special_agents_aws():
                           optional_keys=["limits"],
                           default_keys=["limits"],
                       )),
-                     ("cloudwatch_alarms",
+                     ("cloudwatch",
                       Dictionary(
-                          title=_("CloudWatch Alarms"),
+                          title=_("Cloudwatch"),
                           elements=[
                               ('alarms',
                                CascadingDropdown(title=_("Selection of alarms"),
@@ -2832,50 +1939,19 @@ def _valuespec_special_agents_aws():
                           optional_keys=["alarms", "limits"],
                           default_keys=["alarms", "limits"],
                       )),
-                     ("dynamodb",
-                      Dictionary(
-                          title=_("DynamoDB"),
-                          elements=[
-                              _vs_element_aws_service_selection(),
-                              _vs_element_aws_limits(),
-                          ],
-                          optional_keys=["limits"],
-                          default_keys=["limits"],
-                      )),
-                     ("wafv2",
-                      Dictionary(
-                          title=_("Web Application Firewall (WAFV2)"),
-                          elements=[
-                              _vs_element_aws_service_selection(),
-                              _vs_element_aws_limits(),
-                              ("cloudfront",
-                               FixedValue(
-                                   None,
-                                   totext=_("Monitor CloudFront WAFs"),
-                                   title=_("CloudFront WAFs"),
-                                   help=_("Include WAFs in front of CloudFront resources in the "
-                                          "monitoring"))),
-                          ],
-                          optional_keys=["limits", "cloudfront"],
-                          default_keys=["limits", "cloudfront"],
-                      )),
                  ],
-                 default_keys=[
-                     "ec2", "ebs", "s3", "glacier", "elb", "elbv2", "rds", "cloudwatch_alarms",
-                     "dynamodb", "wafv2"
-                 ],
+                 default_keys=["ec2", "ebs", "s3", "elb", "elbv2", "rds", "cloudwatch"],
              )),
             ("overall_tags",
              _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
-        optional_keys=["overall_tags", "proxy_details"],
-    ),
-                     forth=_transform_aws)
+        optional_keys=["overall_tags"],
+    )
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupVMCloudContainer,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:aws",
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,
@@ -2889,7 +1965,7 @@ def _factory_default_special_agents_vnx_quotas():
 
 def _valuespec_special_agents_vnx_quotas():
     return Dictionary(
-        title=_("VNX quotas and filesystems"),
+        title=_("Check VNX quotas and filesystems"),
         elements=[
             ("user", TextAscii(title=_("NAS DB user name"))),
             ("password", Password(title=_("Password"))),
@@ -2902,7 +1978,7 @@ def _valuespec_special_agents_vnx_quotas():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_vnx_quotas(),
-        group=RulespecGroupDatasourceProgramsHardware,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:vnx_quotas",
         valuespec=_valuespec_special_agents_vnx_quotas,
     ))
@@ -2916,7 +1992,7 @@ def _factory_default_special_agents_elasticsearch():
 def _valuespec_special_agents_elasticsearch():
     return Dictionary(
         optional_keys=["user", "password"],
-        title=_("Elasticsearch"),
+        title=_("Check state of Elasticsearch"),
         help=_("Requests data about Elasticsearch clusters, nodes and indices."),
         elements=[
             ("hosts",
@@ -2934,21 +2010,20 @@ def _valuespec_special_agents_elasticsearch():
                 title=_("Password of the user"),
                 allow_empty=False,
             )),
-            (
-                "protocol",
-                DropdownChoice(title=_("Protocol"),
-                               choices=[
-                                   ("http", "HTTP"),
-                                   ("https", "HTTPS"),
-                               ],
-                               default_value="https"),
-            ),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"),
+                            choices=[
+                                ("http", "HTTP"),
+                                ("https", "HTTPS"),
+                            ],
+                            default_value="https")),
             ("port",
              Integer(
                  title=_("Port"),
                  help=_(
                      "Use this option to query a port which is different from standard port 9200."),
                  default_value=9200,
+                 allow_empty=False,
              )),
             (
                 "infos",
@@ -2972,7 +2047,7 @@ def _valuespec_special_agents_elasticsearch():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_elasticsearch(),
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:elasticsearch",
         valuespec=_valuespec_special_agents_elasticsearch,
     ))
@@ -2985,7 +2060,7 @@ def _factory_default_special_agents_splunk():
 
 def _valuespec_special_agents_splunk():
     return Dictionary(
-        title=_("Splunk"),
+        title=_("Check state of Splunk"),
         help=_("Requests data from a Splunk instance."),
         optional_keys=["instance", "port"],
         elements=[
@@ -3002,21 +2077,20 @@ def _valuespec_special_agents_splunk():
                 title=_("Password of the user"),
                 allow_empty=False,
             )),
-            (
-                "protocol",
-                DropdownChoice(title=_("Protocol"),
-                               choices=[
-                                   ("http", "HTTP"),
-                                   ("https", "HTTPS"),
-                               ],
-                               default_value="https"),
-            ),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"),
+                            choices=[
+                                ("http", "HTTP"),
+                                ("https", "HTTPS"),
+                            ],
+                            default_value="https")),
             ("port",
              Integer(
                  title=_("Port"),
                  help=_(
                      "Use this option to query a port which is different from standard port 8089."),
                  default_value=8089,
+                 allow_empty=False,
              )),
             ("infos",
              ListChoice(
@@ -3046,536 +2120,7 @@ def _valuespec_special_agents_splunk():
 rulespec_registry.register(
     HostRulespec(
         factory_default=_factory_default_special_agents_splunk(),
-        group=RulespecGroupDatasourceProgramsApps,
+        group=RulespecGroupDatasourcePrograms,
         name="special_agents:splunk",
         valuespec=_valuespec_special_agents_splunk,
-    ))
-
-
-def _factory_default_special_agents_jenkins():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _transform_jenkins_infos(value):
-    if "infos" in value:
-        value["sections"] = value.pop("infos")
-    return value
-
-
-def _valuespec_special_agents_jenkins():
-    return Transform(Dictionary(
-        title=_("Jenkins jobs and builds"),
-        help=_("Requests data from a jenkins instance."),
-        optional_keys=["port"],
-        elements=[
-            ("instance",
-             TextAscii(
-                 title=_("Jenkins instance to query."),
-                 help=_("Use this option to set which instance should be "
-                        "checked by the special agent. Please add the "
-                        "hostname here, eg. my_jenkins.com."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("user",
-             TextAscii(
-                 title=_("Username"),
-                 help=_("The username that should be used for accessing the "
-                        "jenkins API. Has to have read permissions at least."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("password",
-             PasswordFromStore(
-                 help=_("The password or API key of the user."),
-                 title=_("Password of the user"),
-                 allow_empty=False,
-             )),
-            (
-                "protocol",
-                DropdownChoice(title=_("Protocol"),
-                               choices=[
-                                   ("http", "HTTP"),
-                                   ("https", "HTTPS"),
-                               ],
-                               default_value="https"),
-            ),
-            ("port",
-             Integer(
-                 title=_("Port"),
-                 help=_(
-                     "Use this option to query a port which is different from standard port 8080."),
-                 default_value=443,
-             )),
-            ("sections",
-             ListChoice(
-                 title=_("Informations to query"),
-                 help=_("Defines what information to query. You can choose "
-                        "between the instance state, job states, node states "
-                        "and the job queue."),
-                 choices=[
-                     ("instance", _("Instance state")),
-                     ("jobs", _("Job state")),
-                     ("nodes", _("Node state")),
-                     ("queue", _("Queue info")),
-                 ],
-                 default_value=["instance", "jobs", "nodes", "queue"],
-                 allow_empty=False,
-             )),
-        ],
-    ),
-                     forth=_transform_jenkins_infos)
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_jenkins(),
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:jenkins",
-        valuespec=_valuespec_special_agents_jenkins,
-    ))
-
-
-def _factory_default_special_agents_zerto():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_zerto():
-    return Dictionary(
-        elements=[
-            ("authentication",
-             DropdownChoice(title=_('Authentication method'),
-                            choices=[
-                                ('windows', _('Windows authentication')),
-                                ('vcenter', _('VCenter authentication')),
-                            ],
-                            help=_("Default is Windows authentication"))),
-            ('username', TextAscii(title=_('Username'), allow_empty=False)),
-            ('password', TextAscii(
-                title=_('Password'),
-                allow_empty=False,
-            )),
-        ],
-        title=_("Zerto"),
-        help=_("This rule selects the Zerto special agent for an existing Checkmk host"))
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:zerto",
-        valuespec=_valuespec_special_agents_zerto,
-    ))
-
-
-def _factory_default_special_agents_graylog():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_graylog():
-    return Dictionary(
-        title=_("Graylog"),
-        help=_("Requests node, cluster and indice data from a Graylog "
-               "instance."),
-        optional_keys=["port"],
-        elements=[
-            ("instance",
-             TextAscii(
-                 title=_("Graylog instance to query"),
-                 help=_("Use this option to set which instance should be "
-                        "checked by the special agent. Please add the "
-                        "hostname here, eg. my_graylog.com."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("user",
-             TextAscii(
-                 title=_("Username"),
-                 help=_("The username that should be used for accessing the "
-                        "Graylog API. Has to have read permissions at least."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("password", PasswordFromStore(
-                title=_("Password of the user"),
-                allow_empty=False,
-            )),
-            ("protocol",
-             DropdownChoice(
-                 title=_("Protocol"),
-                 choices=[
-                     ("http", "HTTP"),
-                     ("https", "HTTPS"),
-                 ],
-                 default_value="https",
-             )),
-            ("port",
-             Integer(
-                 title=_("Port"),
-                 help=_(
-                     "Use this option to query a port which is different from standard port 443."),
-                 default_value=443,
-             )),
-            ("since",
-             Age(
-                 title=_("Time for coverage of failures"),
-                 help=_("If you choose to query for failed index operations, use "
-                        "this option to set the timeframe in which failures "
-                        "should be covered. The check will output the total "
-                        "number of failures and the number of failures in this "
-                        "given timeframe."),
-                 default_value=1800,
-             )),
-            ("sections",
-             ListChoice(
-                 title=_("Information to query"),
-                 help=_("Defines what information to query."),
-                 choices=[
-                     ("alerts", _("Alarms")),
-                     ("cluster_stats", _("Cluster statistics")),
-                     ("cluster_traffic", _("Cluster traffic statistics")),
-                     ("failures", _("Failed index operations")),
-                     ("jvm", _("JVM heap size")),
-                     ("license", _("License state")),
-                     ("messages", _("Message count")),
-                     ("nodes", _("Nodes")),
-                     ("sidecars", _("Sidecars")),
-                     ("sources", _("Sources")),
-                     ("streams", _("Streams")),
-                 ],
-                 default_value=[
-                     "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license",
-                     "messages", "nodes", "sidecars", "sources", "streams"
-                 ],
-                 allow_empty=False,
-             )),
-            ("display_node_details",
-             DropdownChoice(
-                 title=_("Display node details on"),
-                 help=_("The node details can be displayed either on the "
-                        "queried host or the Graylog node."),
-                 choices=[
-                     ("host", _("The queried Graylog host")),
-                     ("node", _("The Graylog node")),
-                 ],
-                 default_value="host",
-             )),
-            ("display_sidecar_details",
-             DropdownChoice(
-                 title=_("Display sidecar details on"),
-                 help=_("The sidecar details can be displayed either on the "
-                        "queried host or the sidecar host."),
-                 choices=[
-                     ("host", _("The queried Graylog host")),
-                     ("sidecar", _("The sidecar host")),
-                 ],
-                 default_value="host",
-             )),
-            ("display_source_details",
-             DropdownChoice(
-                 title=_("Display source details on"),
-                 help=_("The source details can be displayed either on the "
-                        "queried host or the source host."),
-                 choices=[
-                     ("host", _("The queried Graylog host")),
-                     ("source", _("The source host")),
-                 ],
-                 default_value="host",
-             )),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_graylog(),
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:graylog",
-        valuespec=_valuespec_special_agents_graylog,
-    ))
-
-
-def _valuespec_special_agents_couchbase():
-    return Dictionary(
-        title=_("Couchbase servers"),
-        help=_("This rule allows to select a Couchbase server to monitor as well as "
-               "configure buckets for further checks"),
-        elements=[
-            ("buckets",
-             ListOfStrings(title=_("Bucket names"), help=_("Name of the Buckets to monitor."))),
-            ("timeout",
-             Integer(title=_("Timeout"),
-                     default_value=10,
-                     help=_("Timeout for requests in seconds."))),
-            ("port",
-             Integer(title=_("Port"),
-                     default_value=8091,
-                     help=_("The port that is used for the api call."))),
-            ("authentication",
-             Tuple(title=_("Authentication"),
-                   help=_("The credentials for api calls with authentication."),
-                   elements=[
-                       TextAscii(title=_("Username"), allow_empty=False),
-                       PasswordFromStore(title=_("Password of the user"), allow_empty=False)
-                   ])),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=watolib.Rulespec.FACTORY_DEFAULT_UNUSED,
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:couchbase",
-        valuespec=_valuespec_special_agents_couchbase,
-    ))
-
-
-def _factory_default_special_agents_jira():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _vs_jira_projects(title):
-    return ListOf(
-        Tuple(
-            orientation="horizontal",
-            elements=[
-                TextAscii(
-                    title=_("Project"),
-                    help=_('Enter the full name of the '
-                           'project here. You can find '
-                           'the name in Jira within '
-                           '"Projects" - "View all '
-                           'projects" - column: "Project". '
-                           'This field is case '
-                           'insensitive'),
-                    allow_empty=False,
-                    regex="^[^']*$",
-                    regex_error=_("Single quotes are not allowed here."),
-                ),
-                ListOfStrings(
-                    title=_("Workflows"),
-                    help=_('Enter the workflow name for the project here. E.g. "in progress".'),
-                    valuespec=TextAscii(
-                        allow_empty=False,
-                        regex="^[^']*$",
-                        regex_error=_("Single quotes are not allowed here."),
-                    ),
-                    orientation="horizontal",
-                ),
-            ],
-        ),
-        add_label=_("Add new project"),
-        movable=False,
-        title=title,
-        validate=_validate_aws_tags,
-    )
-
-
-def _valuespec_special_agents_jira():
-    return Dictionary(
-        title=_("Jira statistics"),
-        help=_("Use Jira Query Language (JQL) to get statistics out of your "
-               "Jira instance."),
-        elements=[
-            ("instance",
-             TextAscii(
-                 title=_("Jira instance to query"),
-                 help=_("Use this option to set which instance should be "
-                        "checked by the special agent. Please add the "
-                        "hostname here, eg. my_jira.com. If not set, the "
-                        "assigned host is used as instance."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("user",
-             TextAscii(
-                 title=_("Username"),
-                 help=_("The username that should be used for accessing the "
-                        "Jira API."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("password", PasswordFromStore(
-                title=_("Password of the user"),
-                allow_empty=False,
-            )),
-            ("protocol",
-             DropdownChoice(
-                 title=_("Protocol"),
-                 choices=[
-                     ("http", "HTTP"),
-                     ("https", "HTTPS"),
-                 ],
-                 default_value="https",
-             )),
-            (
-                "project_workflows",
-                _vs_jira_projects(
-                    _("Monitor the number of issues for given projects and their "
-                      "workflows. This results in a service for each project with "
-                      "the number of issues per workflow."),),
-            ),
-            ("jql",
-             ListOf(Dictionary(
-                 elements=[
-                     ("service_description",
-                      TextAscii(
-                          title=_('Service description: '),
-                          help=_("The resulting service will get this entry as "
-                                 "service description"),
-                          allow_empty=False,
-                      )),
-                     (
-                         "query",
-                         TextAscii(
-                             title=_('JQL query: '),
-                             help=_('E.g. \'project = my_project and result = '
-                                    '\"waiting for something\"\''),
-                             allow_empty=False,
-                             size=80,
-                         ),
-                     ),
-                     ("result",
-                      CascadingDropdown(
-                          title=_("Type of result"),
-                          help=_("Here you can define, what search result "
-                                 "should be used. You can show the number of search "
-                                 "results (count) or the summed up or average values "
-                                 "of a given numeric field."),
-                          choices=[
-                              ('count', _("Number of "
-                                          "search results")),
-                              ('sum', _("Summed up values of "
-                                        "the following numeric field:"),
-                               Tuple(elements=[
-                                   TextAscii(
-                                       title=_("Field Name: "),
-                                       allow_empty=False,
-                                   ),
-                                   Integer(
-                                       title=_("Limit number of processed search results"),
-                                       help=_("Here you can define, how many search results "
-                                              "should be processed. The max. internal limit "
-                                              "of Jira is 1000 results. If you want to "
-                                              "ignore any limit, set -1 here. Default is 50."),
-                                       default_value=50,
-                                   ),
-                               ],)),
-                              ('average', _("Average value "
-                                            "of the following numeric field: "),
-                               Tuple(elements=[
-                                   TextAscii(
-                                       title=_("Field Name: "),
-                                       allow_empty=False,
-                                   ),
-                                   Integer(
-                                       title=_("Limit number of processed search results"),
-                                       default_value=50,
-                                   ),
-                               ],)),
-                          ],
-                          sorted=False,
-                      )),
-                 ],
-                 optional_keys=[],
-             ),
-                    title=_('Custom search query'))),
-        ],
-        optional_keys=[
-            "jql",
-            "project_workflows",
-            "instance",
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_jira(),
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:jira",
-        valuespec=_valuespec_special_agents_jira,
-    ))
-
-
-def _factory_default_special_agents_rabbitmq():
-    # No default, do not use setting if no rule matches
-    return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
-
-
-def _valuespec_special_agents_rabbitmq():
-    return Dictionary(
-        title=_("RabbitMQ"),
-        help=_("Requests data from a RabbitMQ instance."),
-        elements=[
-            ("instance",
-             TextAscii(
-                 title=_("RabbitMQ instance to query"),
-                 help=_("Use this option to set which instance should be "
-                        "checked by the special agent. Please add the "
-                        "hostname here, eg. my_rabbitmq.com. If not set, the "
-                        "assigned host is used as instance."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("user",
-             TextAscii(
-                 title=_("Username"),
-                 help=_("The username that should be used for accessing the "
-                        "RabbitMQ API."),
-                 size=32,
-                 allow_empty=False,
-             )),
-            ("password", PasswordFromStore(
-                title=_("Password of the user"),
-                allow_empty=False,
-            )),
-            ("protocol",
-             DropdownChoice(
-                 title=_("Protocol"),
-                 choices=[
-                     ("http", "HTTP"),
-                     ("https", "HTTPS"),
-                 ],
-                 default_value="https",
-             )),
-            ("port",
-             Integer(
-                 title=_("Port"),
-                 default_value=15672,
-                 help=_("The port that is used for the api call."),
-             )),
-            ("sections",
-             ListChoice(
-                 title=_("Informations to query"),
-                 help=_("Defines what information to query. You can choose "
-                        "between the cluster, nodes, vhosts and queues."),
-                 choices=[
-                     ("cluster", _("Clusterwide")),
-                     ("nodes", _("Nodes")),
-                     ("vhosts", _("Vhosts")),
-                     ("queues", _("Queues")),
-                 ],
-                 default_value=["cluster", "nodes", "vhosts", "queues"],
-                 allow_empty=False,
-             )),
-        ],
-        optional_keys=[
-            "instance",
-            "port",
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        factory_default=_factory_default_special_agents_rabbitmq(),
-        group=RulespecGroupDatasourceProgramsApps,
-        name="special_agents:rabbitmq",
-        valuespec=_valuespec_special_agents_rabbitmq,
     ))

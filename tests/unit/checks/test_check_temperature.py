@@ -1,19 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
 # coding=utf-8
 # yapf: disable
 import collections
-from testlib import Check  # type: ignore[import]
 import datetime as dt
 
-import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import freezegun
+import pytest
 
-from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
+from checktestlib import MockItemState
 
 
 @pytest.mark.parametrize(
@@ -23,21 +16,21 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
         # as no levels are checked, or the levels are OK.
         ((5, {}, "Foo"),
          {},
-         (0, u'5 \xb0C', [('temp', 5, None, None)])),
+         (0, u'5 \xb0C', [('temp', 5)])),
 
         ((5, {'device_levels_handling': 'best'}, "Foo"),
          {'dev_status': 1},
-         (0, u'5 \xb0C', [('temp', 5, None, None)])),
+         (0, u'5 \xb0C', [('temp', 5)])),
 
         ((5, {"device_levels_handling": "dev"}, "Foo"),
          {},
-         (0, u'5 \xb0C', [('temp', 5, None, None)])),
+         (0, u'5 \xb0C', [('temp', 5)])),
 
         ((5, {"device_levels_handling": "dev"}, "Foo"),
          {
              'dev_levels_lower': (None, None)
          },
-         (0, u'5 \xb0C', [('temp', 5, None, None)])),
+         (0, u'5 \xb0C', [('temp', 5)])),
 
         ((5, {"device_levels_handling": "dev"}, "Foo"),
          {'dev_levels_lower': (0, 0)},
@@ -57,7 +50,7 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
         # First, the device says it's borked.
         ((5, {}, "Foo"),
          {'dev_status': 1, 'dev_status_name': 'Borked'},
-         (1, u'5 \xb0C, Borked', [('temp', 5, None, None)])),
+         (1, u'5 \xb0C, Borked', [('temp', 5)])),
 
         # Then the device says its borked but in a different mode.
         ((5,
@@ -68,7 +61,7 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
           },
           "Foo"),
          {'dev_status': 1},
-         (1, u'5 \xb0C', [('temp', 5, None, None)])),
+         (1, u'5 \xb0C', [('temp', 5)])),
 
         # Now it fails and the levels fail in various modes.
         ((5,
@@ -136,7 +129,7 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
 
         ((5, {'device_levels_handling': 'worst'}, "Foo"),
          {'dev_status': 1},
-         (1, u'5 \xb0C', [('temp', 5, None, None)])),
+         (1, u'5 \xb0C', [('temp', 5)])),
 
         ((5, {"device_levels_handling": "dev"}, "Foo"),
          {'dev_levels': (4, 4)},
@@ -163,11 +156,11 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(params, kwargs, expected):
-    check = Check('acme_temp')
+def test_check_temperature(check_manager, params, kwargs, expected):
+    check = check_manager.get_check('acme_temp')
     check_temperature = check.context['check_temperature']
     result = check_temperature(*params, **kwargs)
-    assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
+    assert result == expected
 
 
 def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
@@ -175,7 +168,7 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
 
 
 Entry = collections.namedtuple(
-    'Entry',
+    'TestEntry',
     [
         'reading',
         'growth',
@@ -241,8 +234,8 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(test_case):
-    check = Check('acme_temp')
+def test_check_temperature_trend(check_manager, test_case):
+    check = check_manager.get_check('acme_temp')
     check_trend = check.context['check_temperature_trend']
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
@@ -259,43 +252,4 @@ def test_check_temperature_trend(test_case):
                                  100,  # crit, don't boil
                                  0,  # crit_lower, don't freeze over
                                  'foo')
-            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
-
-
-@pytest.mark.parametrize(
-    "test_case",
-    [
-        Entry(
-            reading=5,
-            growth=0.5,
-            seconds_elapsed=10 * 60,
-            wato_dict=_WATO_DICT,
-            expected=(0, u'5.5 \xb0C, rate: +0.2/5 min', [('temp', 5.5, 100.0, 100.0)]),
-        ),
-    ]
-)
-def test_check_temperature_called(test_case):
-    check = Check('acme_temp')
-    check_temperature = check.context['check_temperature']
-    time = dt.datetime(2014, 1, 1, 0, 0, 0)
-
-    state = {
-        'temp.foo.delta': (unix_ts(time), test_case.reading),
-        'temp.foo.trend': (0, 0)
-    }
-
-    with MockItemState(state):
-        with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
-            # Assuming atmospheric pressure...
-            result = check_temperature(
-                test_case.reading + test_case.growth,
-                {
-                    'device_level_handling': 'dev',
-                    'trend_compute': test_case.wato_dict,
-                },
-                'foo',
-                dev_unit='c',
-                dev_levels=(100, 100),  # don't boil
-                dev_levels_lower=(0, 0),  # don't freeze over
-            )
-            assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
+            assert test_case.expected == result

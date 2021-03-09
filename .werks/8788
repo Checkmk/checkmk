@@ -1,12 +1,11 @@
 Title: "Periodic service discovery" breaks Nagios config generation
 Level: 1
 Component: core
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b8
 Date: 1566565860
+Class: fix
 
 A rule in the ruleset "Periodic service discovery" that is configured
 with the option "Do not perform service discovery check" resulted in

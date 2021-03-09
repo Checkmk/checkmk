@@ -1,24 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 
 def parse_emka_modules(info):
@@ -77,7 +81,7 @@ def parse_emka_modules(info):
     for oidend, module_link, value, mode in info[1]:
         table = map_component_types[oidend.split(".", 1)[0]]
         location = ".".join(module_link.split(".")[-2:])
-        for entry, attrs in list(parsed.get(table, {}).items()):
+        for entry, attrs in parsed.get(table, {}).items():
             item_location = attrs["_location_"]
             if item_location != location:
                 continue
@@ -93,7 +97,7 @@ def parse_emka_modules(info):
         else:
             ty = "levels"
 
-        for entry, attrs in list(parsed.get("sensor", {}).items()):
+        for entry, attrs in parsed.get("sensor", {}).items():
             if attrs["_location_"].startswith("%s." % location):
                 attrs[ty] = (threshold, threshold)
 
@@ -145,8 +149,8 @@ def parse_emka_modules(info):
                 parsed[sensor_ty].setdefault(
                     sensor, {
                         "value": scale_f(attrs["value"]),
-                        "levels": list(map(scale_f, attrs["levels"])),
-                        "levels_lower": list(map(scale_f, attrs["levels_lower"])),
+                        "levels": map(scale_f, attrs["levels"]),
+                        "levels_lower": map(scale_f, attrs["levels_lower"]),
                     })
                 break
 
@@ -278,7 +282,7 @@ check_info["emka_modules.alarm"] = {
 
 
 def inventory_emka_modules_handle(parsed):
-    for entry, spec in parsed.get("handle", {}).items():
+    for entry, spec in parsed.get("handle", {}).iteritems():
         if 'value' in spec:
             yield entry, None
 
@@ -322,7 +326,7 @@ def inventory_emka_modules_sensor_volt(parsed):
 def check_emka_modules_sensor_volt(item, params, parsed):
     if item in parsed.get("sensor_volt", {}):
         attrs = parsed["sensor_volt"][item]
-        value = attrs["value"] / 1000.0
+        value = attrs["value"] / 1000
         return check_elphase(item, params, {item: {"voltage": value}})
 
 
@@ -330,6 +334,7 @@ check_info["emka_modules.sensor_volt"] = {
     "inventory_function": inventory_emka_modules_sensor_volt,
     "check_function": check_emka_modules_sensor_volt,
     "service_description": "Phase %s",
+    "includes": ["elphase.include"],
     "group": "el_inphase",
     "has_perfdata": True,
 }
@@ -365,6 +370,7 @@ check_info["emka_modules.sensor_temp"] = {
     "inventory_function": inventory_emka_modules_sensor_temp,
     "check_function": check_emka_modules_sensor_temp,
     "service_description": "Temperature %s",
+    "includes": ["temperature.include"],
     "group": "temperature",
     "has_perfdata": True,
 }
@@ -396,6 +402,7 @@ check_info["emka_modules.sensor_humid"] = {
     "inventory_function": inventory_emka_modules_sensor_humid,
     "check_function": check_emka_modules_sensor_humid,
     "service_description": "Humidity %s",
+    "includes": ["humidity.include"],
     "group": "humidity",
     "has_perfdata": True,
 }

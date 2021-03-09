@@ -1,11 +1,12 @@
 Title: Improved the handling of host checks via service status in CMC.
 Level: 1
 Component: cmc
+Class: feature
 Compatible: compat
 Edition: cee
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568895722
-Class: feature
 
 Previously the CMC used an active check (check_lql_service) for this,
 querying itself via Livestatus.  This is quite inefficient and convoluted:

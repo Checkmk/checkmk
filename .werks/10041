@@ -1,12 +1,11 @@
 Title: Reduce apache memory usage + Change check parameters API
 Level: 2
 Component: wato
-Class: fix
 Compatible: incomp
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b10
 Date: 1568368223
+Class: fix
 
 We recognized that the 1.6 check parameter (ruleset) plugin mechanism (which
 was based on classes and using the python abc module) consumed a lot more

@@ -3,8 +3,10 @@ Level: 1
 Component: checks
 Compatible: compat
 Edition: cre
-Version: 1.6.0b12
+Version: 1.6.0
 Date: 1568879516
-Class: feature
+Class: fix
 
-Since now Windows Agent uses newest versions of those plugins
+The linux and windows agent plugins were not in sync. The mk_logwatch.exe and
+mk_jolokia.exe have been updated.  Since now Windows Agent uses newest versions
+of those plugins.

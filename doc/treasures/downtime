@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# encoding: utf-8
 
-# Sets/Removes downtimes via Checkmk Multisite Webservice
+# Sets/Removes downtimes via Check_MK Multisite Webservice
 # Before you can use this script, please read:
 # http://mathias-kettner.de/checkmk_multisite_automation.html
 # And create an automation user - best with the name 'automation'
@@ -83,7 +80,7 @@ if omd_site:
     opt_url = "http://localhost/" + omd_site + "/check_mk/"
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError as err:
+except getopt.GetoptError, err:
     sys.stderr.write("%s\n\n" % err)
     usage()
     sys.exit(1)
@@ -116,9 +113,9 @@ for o, a in opts:
 
 if omd_site and not opt_secret:
     try:
-        opt_secret = open(omd_root + "/var/check_mk/web/" + opt_user +
+        opt_secret = file(omd_root + "/var/check_mk/web/" + opt_user +
                           "/automation.secret").read().strip()
-    except Exception as e:
+    except Exception, e:
         bail_out("Cannot read automation secret from user %s: %s" % (opt_user, e))
 
 elif not omd_site and not opt_secret:
@@ -167,7 +164,7 @@ def set_downtime(variables, add_vars):
         for line in lines:
             for error in re.findall('<div class="error">([^<]+)', line):
                 bail_out(error)
-    except Exception as e:
+    except Exception, e:
         bail_out("Cannot call Multisite URL: %s" % e)
 
 

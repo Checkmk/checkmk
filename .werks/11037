@@ -1,13 +1,11 @@
 Title: Fixed NoneType error in case of missing permissions
-Class: fix
-Compatible: compat
-Component: notifications
-Date: 1591179437
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.6.0p13
+Date: 1591179437
+Class: fix
 
 If the user, used for login, has to few permissions in servicenow, the
 notification could fail with:

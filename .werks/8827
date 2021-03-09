@@ -1,12 +1,11 @@
 Title: mk_oracle: Fixed saving agent plugin rule "ORACLE Databases"
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1566208335
+Class: fix
 
 If {{Sections - data to collect}} was selected in the agent plugin rule
 {{ORACLE Databases (Linux, Solaris, AIX)}} the error message

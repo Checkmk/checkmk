@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -16,11 +36,32 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
-    check_metrics, darken_color, G, GB, graph_info, indexed_color, K, KB, lighten_color, m, M,
-    MAX_CORES, MAX_NUMBER_HOPS, MB, metric_info, MONITORING_STATUS_COLORS, P, parse_color,
-    parse_color_into_hexrgb, PB, perfometer_info, render_color, scalar_colors, scale_symbols,
-    skype_mobile_devices, T, TB, unit_info,
+from cmk.gui.plugins.metrics.utils import (
+    unit_info,
+    metric_info,
+    check_metrics,
+    perfometer_info,
+    graph_info,
+    scalar_colors,
+    parse_color,
+    render_color,
+    darken_color,
+    lighten_color,
+    KB,
+    MB,
+    GB,
+    TB,
+    PB,
+    m,
+    K,
+    M,
+    G,
+    T,
+    P,
+    scale_symbols,
+    parse_color_into_hexrgb,
+    MAX_CORES,
+    indexed_color,
 )
 
 #.

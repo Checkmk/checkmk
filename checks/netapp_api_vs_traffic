@@ -1,14 +1,29 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
 # lif:vserver        instance_uuid 16        instance_name vsFS        sent_errors 0        recv_errors 0        ..
@@ -20,97 +35,116 @@ from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildc
 
 
 def inventory_netapp_api_vs_traffic(parsed):
-    vservers = {x.split(".", 1)[1] for x in parsed}
+    vservers = {x.split(".", 1)[1] for x in parsed.keys()}
     for vserver in vservers:
         yield vserver, {}
 
 
-def check_netapp_api_vs_traffic(item, _no_params, parsed):
-    protocol_map = {
-        "lif:vserver": (
-            "Ethernet",
+PROTOCOL_MAP = {
+    "lif:vserver": (
+        "Ethernet",
+        [
             # ( what         perfname        perftext      scale     format_func)
-            [("recv_data", "if_in_octets", "received data", 1, get_bytes_human_readable),
-             ("sent_data", "if_out_octets", "sent data", 1, get_bytes_human_readable),
-             ("recv_errors", "if_in_errors", "received errors", 1, int),
-             ("sent_errors", "if_out_errors", "sent errors", 1, int),
-             ("recv_packet", "if_in_pkts", "received packets", 1, int),
-             ("sent_packet", "if_out_pkts", "sent packets", 1, int)]),
-        "fcp_lif:vserver": (
-            "FCP",
-            [("fcp_read_latency", "fcp_read_latency", "avg. Read latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("fcp_write_latency", "fcp_write_latency", "avg. Write latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
-             ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable)],
-        ),
-        "cifs:vserver": (
-            "CIFS",
-            [("cifs_read_latency", "cifs_read_latency", "read latency", 0.000000001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("cifs_write_latency", "cifs_write_latency", "write latency", 0.000000001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("cifs_read_ops", "cifs_read_ios", "read OPs", 1, int),
-             ("cifs_write_ops", "cifs_write_ios", "write OPs", 1, int)],
-        ),
-        "iscsi_lif:vserver": (
-            "iSCSI",
-            [("iscsi_read_latency", "iscsi_read_latency", "avg. Read latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("iscsi_write_latency", "iscsi_write_latency", "avg. Write latency", 0.001,
-              lambda x: "%.2f ms" % (x * 1000)),
-             ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
-             ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable)],
-        ),
-        "nfsv3": (
-            "NFS",
-            [("nfsv3_read_ops", "nfs_read_ios", "read OPs", 1, int),
-             ("nfsv3_write_ops", "nfs_write_ios", "write OPs", 1, int),
-             ("nfsv3_read_throughput", "nfs_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv3_write_throughput", "nfs_write_throughput", "write throughput",
-              1, lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv3_ops", "nfs_ios", "OPs", 1, int)],
-        ),
-        "nfsv4": (
-            "NFSv4",
-            [("nfsv4_read_ops", "nfsv4_read_ios", "read OPs", 1, int),
-             ("nfsv4_write_ops", "nfsv4_write_ios", "write OPs", 1, int),
-             ("nfs4_read_throughput", "nfsv4_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfs4_write_throughput", "nfsv4_write_throughput", "write throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfsv4_ops", "nfsv4_ios", "OPs", 1, int)],
-        ),
-        "nfsv4_1": (
-            "NFSv4.1",
-            [("nfsv4_1_ops", "nfsv4_1_ios", "OPs", 1, int),
-             ("nfs41_read_throughput", "nfsv4_1_read_throughput", "read throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s"),
-             ("nfs41_write_throughput", "nfsv4_1_write_throughput", "write throughput", 1,
-              lambda x: get_bytes_human_readable(x) + "/s")],
-        )
-    }
+            ("recv_data", "if_in_octets", "received data", 1, get_bytes_human_readable),
+            ("sent_data", "if_out_octets", "sent data", 1, get_bytes_human_readable),
+            ("recv_errors", "if_in_errors", "received errors", 1, int),
+            ("sent_errors", "if_out_errors", "sent errors", 1, int),
+            ("recv_packet", "if_in_pkts", "received packets", 1, int),
+            ("sent_packet", "if_out_pkts", "sent packets", 1, int),
+        ],
+    ),
+    "fcp_lif:vserver": (
+        "FCP",
+        [
+            ("read_data", "fcp_read_data", "read data", 1, get_bytes_human_readable),
+            ("fcp_read_latency", "fcp_read_latency", "avg. read latency", 0.001,
+             lambda x: "%.2f ms" % (x * 1000)),
+            ("write_data", "fcp_write_data", "write data", 1, get_bytes_human_readable),
+            ("fcp_write_latency", "fcp_write_latency", "avg. write latency", 0.001,
+             lambda x: "%.2f ms" % (x * 1000)),
+        ],
+    ),
+    "cifs:vserver": (
+        "CIFS",
+        [
+            ("cifs_read_ops", "cifs_read_ios", "read OPs", 1, int),
+            ("cifs_read_latency", "cifs_read_latency", "read latency", 0.000000001,
+             lambda x: "%.2f ms" % (x * 1000)),
+            ("cifs_write_ops", "cifs_write_ios", "write OPs", 1, int),
+            ("cifs_write_latency", "cifs_write_latency", "write latency", 0.000000001,
+             lambda x: "%.2f ms" % (x * 1000)),
+        ],
+    ),
+    "iscsi_lif:vserver": (
+        "iSCSI",
+        [
+            ("read_data", "iscsi_read_data", "read data", 1, get_bytes_human_readable),
+            ("iscsi_read_latency", "iscsi_read_latency", "avg. read latency", 0.001,
+             lambda x: "%.2f ms" % (x * 1000)),
+            ("write_data", "iscsi_write_data", "write data", 1, get_bytes_human_readable),
+            ("iscsi_write_latency", "iscsi_write_latency", "avg. write latency", 0.001,
+             lambda x: "%.2f ms" % (x * 1000)),
+        ],
+    ),
+    "nfsv3": (
+        "NFS",
+        [
+            ("nfsv3_read_ops", "nfs_read_ios", "read OPs", 1, int),
+            ("nfsv3_read_throughput", "nfs_read_throughput", "read throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+            ("nfsv3_write_ops", "nfs_write_ios", "write OPs", 1, int),
+            ("nfsv3_write_throughput", "nfs_write_throughput", "write throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+            ("nfsv3_ops", "nfs_ios", "OPs", 1, int),
+        ],
+    ),
+    "nfsv4": (
+        "NFSv4",
+        [
+            ("nfsv4_read_ops", "nfsv4_read_ios", "read OPs", 1, int),
+            ("nfs4_read_throughput", "nfsv4_read_throughput", "read throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+            ("nfsv4_write_ops", "nfsv4_write_ios", "write OPs", 1, int),
+            ("nfs4_write_throughput", "nfsv4_write_throughput", "write throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+            ("nfsv4_ops", "nfsv4_ios", "OPs", 1, int),
+        ],
+    ),
+    "nfsv4_1": (
+        "NFSv4.1",
+        [
+            ("nfsv4_1_ops", "nfsv4_1_ios", "OPs", 1, int),
+            ("nfs41_read_throughput", "nfsv4_1_read_throughput", "read throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+            ("nfs41_write_throughput", "nfsv4_1_write_throughput", "write throughput", 1,
+             lambda x: get_bytes_human_readable(x) + "/s"),
+        ],
+    )
+}
 
-    def get_ref(what, data):
-        # According to "NetApp® Unified Storage Performance Management",
-        # latency calculation is a function of the number of ops.
-        refname = {
-            "iscsi_read_latency": "iscsi_read_ops",
-            "iscsi_write_latency": "iscsi_write_ops",
-            "fcp_read_latency": "fcp_read_ops",
-            "fcp_write_latency": "fcp_write_ops",
-            "cifs_read_latency": "cifs_read_ops",
-            "cifs_write_latency": "cifs_write_ops",
-        }.get(what)
-        try:
-            return int(data[refname])
-        except KeyError:
-            return None
 
+def _get_reference_and_onwrap(what, data, now):
+    # According to "NetApp® Unified Storage Performance Management",
+    # latency calculation is a function of the number of ops.
+    # If the number of ops has not changed, we need to raise
+    # the wrap, and deal with it.
+    refname = {
+        "iscsi_read_latency": "iscsi_read_ops",
+        "iscsi_write_latency": "iscsi_write_ops",
+        "fcp_read_latency": "fcp_read_ops",
+        "fcp_write_latency": "fcp_write_ops",
+        "cifs_read_latency": "cifs_read_ops",
+        "cifs_write_latency": "cifs_write_ops",
+    }.get(what)
+    try:
+        return int(data[refname]), RAISE
+    except KeyError:
+        return now, SKIP
+
+
+def check_netapp_api_vs_traffic(item, _no_params, parsed):
     now = time.time()
-    for protocol, (protoname, values) in protocol_map.items():
+    for protocol, (protoname, values) in PROTOCOL_MAP.items():
         data = parsed.get("%s.%s" % (protocol, item))
         if not data:
             continue
@@ -119,16 +153,22 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             if what not in data:
                 continue
 
-            ref = get_ref(what, data)
-            if ref is None:
-                ref = now
+            counter_name = '%s.%s' % (protocol, what)
+            value = int(data[what]) * scale
+            ref, onwrap = _get_reference_and_onwrap(what, data, now)
+            infoname = "%s %s" % (protoname, perftext)
 
-            rate = get_rate('%s.%s' % (protocol, what), ref, int(data[what]) * scale)
-            yield 0, "%s %s: %s" % (
-                protoname,
-                perftext,
-                format_func(rate),  # pylint: disable=not-callable
-            ), [(perfname, rate)]
+            try:
+                rate = get_rate(counter_name, ref, value, onwrap=onwrap)
+            except MKCounterWrapped:
+                # means we're dealig with latency
+                yield 0, "%s: N/A" % infoname
+            else:
+                yield check_levels(rate,
+                                   perfname,
+                                   None,
+                                   infoname=infoname,
+                                   human_readable_func=format_func)
 
 
 check_info["netapp_api_vs_traffic"] = {
@@ -138,4 +178,5 @@ check_info["netapp_api_vs_traffic"] = {
     'check_function': check_netapp_api_vs_traffic,
     'service_description': 'Traffic vServer %s',
     'has_perfdata': True,
+    'includes': ["netapp_api.include"]
 }

@@ -1,11 +1,12 @@
 Title: Support for Red Hat 8 / CentOS 8
-Class: feature
-Compatible: compat
-Component: distros
-Date: 1570537226
-Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.0.0i1
+Component: distros
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p5
+Date: 1570537226
 
 

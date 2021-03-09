@@ -1,13 +1,11 @@
 Title: Fix possible AttributeError exception on "Parameters of service" page
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1570648586
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p5
+Date: 1570648586
+Class: fix
 
 When trying to view the parameters of a "Number of threads" service while
 having locally configured rules that were saved with Checkmk before version

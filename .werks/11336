@@ -1,0 +1,25 @@
+Title: mkp_prometheus: addition of mkp version 1.3
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p17
+Date: 1597824054
+Class: feature
+
+This change updates the optional extension package for the Prometheus suite.
+The version 1.3 introduces a new connection option using the host name instead of the IP address.
+Furthermore, it also introduces a new default check: the Prometheus Build check.
+This check outputs general information concerning the Prometheus server itself. Furthermore,
+it also helps to resolve previous stale problems with Piggyback information.
+
+If the Prometheus package v1 was already in use, you should perform a Tabula Rasa
+after upgrading to the package v1.3. In addition, you also may have to reconfigure
+your existing Prometheus rules for correct behavior. For a first installation, you
+can find this package in the Extension packages page. The Prometheus package is listed
+as an optional extension package and becomes available to your site after performing
+the "Install this package" action.
+
+Note that before installing this extension, you should remove any installed previous versions
+to avoid conflicts.
+

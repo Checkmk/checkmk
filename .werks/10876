@@ -1,0 +1,12 @@
+Title: Fix 1.6.0p10 check scheduling regression
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.6.0p11
+Date: 1585820931
+Class: fix
+
+The version 1.6.0p10 introduced an issue with the Microcore scheduler which
+might result in stale services in some cases. Users of the Checkmk Raw Edition
+are not affected by this issue.

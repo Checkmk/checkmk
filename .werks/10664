@@ -1,0 +1,14 @@
+Title: Cleanup piggyback: Do not throw exception if piggyback folders are missing
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576677657
+Class: fix
+
+The piggyback folders {{tmp/check_mk/piggyback}} and
+{{tmp/check_mk/piggyback_sources}} may be missing. In this case the cleanup
+meachnism {{cmk --cleanup-piggyback}} throughs an exception and aborts. Now if
+above directories do not exist the cleanup mechanism terminates immediately
+wihtout any errors.

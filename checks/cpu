@@ -1,0 +1,140 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Output is taken from /proc/loadavg plus the number of cores:
+# 0.26 0.47 0.52 2/459 19531 4
+
+#   .--Load----------------------------------------------------------------.
+#   |                       _                    _                         |
+#   |                      | |    ___   __ _  __| |                        |
+#   |                      | |   / _ \ / _` |/ _` |                        |
+#   |                      | |__| (_) | (_| | (_| |                        |
+#   |                      |_____\___/ \__,_|\__,_|                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+cpuload_default_levels = (5.0, 10.0)
+
+
+def inventory_cpu_load(info):
+    if len(info) >= 1 and len(info[0]) >= 5:
+        return [(None, "cpuload_default_levels")]
+
+
+def check_cpu_load(item, params, info):
+    if not info:
+        return None
+
+    if len(info[0]) >= 6:
+        # There have been broken AIX agents for a long time which produced data like follows.
+        # Newer agents deal with this, but to be nice to old agents: deal with it.
+        # <<<cpu>>>
+        # 0.00 0.00 0.00 1/97 8913088 aixxyz configuration: @lcpu=8 @mem=24576MB @ent=0.20
+        line = " ".join(info[0])
+        if "lcpu=" in line:
+            for part in info[0]:
+                if "lcpu=" in part:
+                    num_cpus = int(part.split("=", 1)[1])
+                    break
+        else:
+            num_cpus = int(info[0][5])
+    else:
+        num_cpus = 1
+
+    load = map(float, info[0][0:3])
+    return check_cpu_load_generic(params, load, num_cpus)
+
+
+check_info["cpu.loads"] = {
+    "check_function": check_cpu_load,
+    "inventory_function": inventory_cpu_load,
+    "service_description": "CPU load",
+    "has_perfdata": True,
+    "group": "cpu_load",
+    "includes": ["cpu_load.include"],
+    "handle_real_time_checks": True,
+}
+
+#.
+#   .--Threads-------------------------------------------------------------.
+#   |                _____ _                        _                      |
+#   |               |_   _| |__  _ __ ___  __ _  __| |___                  |
+#   |                 | | | '_ \| '__/ _ \/ _` |/ _` / __|                 |
+#   |                 | | | | | | | |  __/ (_| | (_| \__ \                 |
+#   |                 |_| |_| |_|_|  \___|\__,_|\__,_|___/                 |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+threads_default_levels = {}  # legacy default levels variable
+
+factory_settings["cpu_threads_default_levels"] = {
+    "levels": (2000, 4000),
+}
+
+
+def inventory_cpu_threads(info):
+    if len(info) >= 1 and len(info[0]) >= 5:
+        return [(None, {})]
+
+
+def check_cpu_threads(item, params, info):
+    if isinstance(params, tuple):
+        params = {'levels': params}
+
+    try:
+        num_threads = int(info[0][3].split('/')[1])
+    except:
+        yield (3, "invalid output from plugin")
+        return
+
+    absolute_levels = params.get("levels", (None, None))
+    yield check_levels(num_threads,
+                       'threads',
+                       absolute_levels,
+                       unit="threads",
+                       human_readable_func=lambda x: "%.f" % x,
+                       infoname="Count")
+
+    if len(info) > 1:
+        max_threads = int(info[1][0])
+        thread_usage = 100.0 * num_threads / max_threads
+        relative_levels = params.get("levels_percent", (None, None))
+        yield check_levels(thread_usage,
+                           'thread_usage',
+                           relative_levels,
+                           human_readable_func=get_percent_human_readable,
+                           infoname="Usage")
+
+
+check_info["cpu.threads"] = {
+    "check_function": check_cpu_threads,
+    "inventory_function": inventory_cpu_threads,
+    "service_description": "Number of threads",
+    "has_perfdata": True,
+    "group": "threads",
+    "default_levels_variable": "cpu_threads_default_levels",
+    "handle_real_time_checks": True,
+}

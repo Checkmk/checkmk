@@ -7,11 +7,9 @@
 # yapf: disable
 # type: ignore
 
-from cmk.base.plugins.agent_based.systemtime import parse_systemtime
-
 checkname = 'systemtime'
 
-parsed = parse_systemtime([['1593509210.123', '1593509209.34534']])
+info = [['1593509210.123', '1593509209.34534']]
 
 discovery = {'': [(None, {})]}
 

@@ -1,7 +1,28 @@
-@charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+/*
++------------------------------------------------------------------+
+|             ____ _               _        __  __ _  __           |
+|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+|           | |___| | | |  __/ (__|   <    | |  | | . \            |
+|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+|                                                                  |
+| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
++------------------------------------------------------------------+
+
+This file is part of Check_MK.
+The official homepage is at http://mathias-kettner.de/check_mk.
+
+check_mk is free software;  you can redistribute it and/or modify it
+under the  terms of the  GNU General Public License  as published by
+the Free Software Foundation in version 2.  check_mk is  distributed
+in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+tails.  You should have received  a copy of the  GNU  General Public
+License along with GNU Make; see the file  COPYING.  If  not,  write
+to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+Boston, MA 02110-1301 USA.
+*/
 
 /*-------------------------------------------------------------------------.
 |                 ____  _     _      _                                     |
@@ -14,146 +35,65 @@
 | Styling for the sidebar and its snapins.                                 |
 '-------------------------------------------------------------------------*/
 
+
 body.side {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   padding: 0;
   margin: 0;
   overflow: hidden;
-  font-family: $font-family-default;
-  font-weight: $font-weight-default;
-  background: $navigation-bg-color;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 14px;
+  font-weight: $theme-font-weight-global;
+  background: $body-side-bg-color;
 
   p {
-    color: $darkgrey;
+    color: $theme-color-darkgrey;
+  }
+
+  .link {
+    color: $theme-color-lightgrey;
+  }
+
+  .title {
+    color: $theme-color-lightgrey;
   }
 
   &.screenshotmode {
     background-image: url("");
   }
 
-  b.treeangle.title {
-    color: $font-color-sidebar;
+  img.treeangle {
+    filter: $treeangle-img-filter-sidebar;
   }
-}
-
-#check_mk_navigation {
-  display: flex;
-  flex-direction: column;
-  float: left;
-  width: 64px;
-  height: 100%;
-
-  &.min {
-    width: 48px;
-  }
-}
-
-#check_mk_sidebar {
-  display: flex;
-  flex-direction: column;
-  float: right;
-  width: 280px;
-  height: 100%;
-  padding-top: $spacing;
-
-  &.folded {
-    display: none;
-  }
-
-  &.left {
-    float: left;
-    border-left: 1px solid $sidebar-border-color;
-  }
-
-  div.shortcuts {
-    display: flex;
-    padding: $spacing $spacing (0.5 * $spacing);
-    border-bottom: 1px solid $sidebar-border-color;
-
-    a {
-      flex: 1 0 auto;
-      font-size: $font-size-small;
-      line-height: 1.7;
-      color: $font-color-sidebar;
-      text-align: center;
-      text-decoration: none;
-
-      &:hover img {
-        opacity: 0.5;
-      }
-
-      &:visited {
-        color: $font-color-sidebar;
-      }
-
-      &.min {
-        font-size: 0;
-
-        img {
-          width: 24px;
-          height: 24px;
-        }
-      }
-    }
-
-    img {
-      margin-bottom: 6px;
-    }
-  }
-
-  #side_content {
-    height: 100%;
-    overflow: auto;
-    color: rgb(0, 0, 0);
-
-    & > .snapin {
-      margin-top: 0;
-    }
-  }
-
-  // needed to place the add_snapin button always at the bottom
-  .simplebar-content {
-    display: flex;
-    flex-direction: column;
-    min-height: 100%;
-  }
-}
-
-#content_area {
-  width: auto;
-  height: 100%;
-  overflow: hidden;
-  background: $bg-color;
-}
-
-#content_area iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
 }
 
 /* Top logo part */
 #side_header {
-  height: 58px;
+  position: relative;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  height: 64px;
+  margin: 0;
+  background: $theme-color-sidebar-background;
+  border: none;
+  border-bottom: 1px solid $theme-color-sidebar-border;
+  border-radius: 0;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 
-  a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  > a {
+    display: block;
     width: 100%;
     height: 100%;
+    margin: 0;
     text-decoration: none;
-    outline: none;
-  }
-
-  img {
-    width: 48px;
-    height: auto;
-  }
-
-  .min & img {
-    width: 45px;
+    background-image: url("images/mk-logo.png");
+    background-position: 16px center;
+    background-repeat: no-repeat;
+    background-size: auto 30px;
   }
 }
 
@@ -167,89 +107,181 @@ body.main .popup_menu #side_header > span {
   background-size: auto 30px;
 }
 
+#side_bg {
+  display: none;
+}
+
 #side_fold {
-  margin: $spacing 0;
-  font-size: $font-size-small;
-  color: $font-color-sidebar;
-  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 15;
+  width: 10px;
+  height: 100%;
   cursor: pointer;
 
-  &:not(.folded) {
-    color: $success;
-  }
-
-  img {
-    margin-bottom: 8px;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-
-  &:not(.folded) img.folded {
-    display: none;
-  }
-
-  &.folded img:not(.folded) {
-    display: none;
+  &:hover {
+    background-image: url("images/side_fold.png");
+    background-position: 5% 65%;
+    background-repeat: no-repeat;
   }
 }
 
 #side_version {
-  margin: $spacing;
-  font-size: $font-size-small;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-table;
-  color: $font-color-sidebar;
-  text-align: center;
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  z-index: 54;
+  max-width: 150px;
+  font-size: 11px;
+  color: $primary-sidebar-font-color;
+  text-align: right;
 
   a {
+    font-size: 8px;
+    font-weight: $theme-font-weight-bold;
+    line-height: 1;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-text-light;
     text-decoration: none;
     text-rendering: optimizeLegibility;
+    background: none;
 
     &:hover {
       text-decoration: underline;
     }
-
-    &:visited {
-      color: $font-color-sidebar;
-    }
   }
 
   span.unack_werks {
+    position: absolute;
+    top: 5px;
+    right: -12px;
+    z-index: 15;
     padding: 2px;
-    margin-left: 2px;
-    color: $font-color;
+    color: $primary-sidebar-font-color;
     cursor: pointer;
-    background-color: rgb(255, 0, 0);
-    border-radius: 6px;
+    background-color: #f00;
+    border-radius: 10px;
   }
+}
+
+/* Scrolling part with snapins */
+#side_content {
+  position: absolute;
+  z-index: 5;
+  width: 100%;
+  padding-left: 0;
+  overflow: hidden;
+  color: #000;
+
+  &.scroll {
+    overflow-y: scroll;
+  }
+}
+
+/* Only put in a top offset when on the sidebar - not for dashlets */
+#side_header + #side_content {
+  top: $side-content-top;
+}
+
+/* The footer of the sidebar */
+#side_footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  height: 48px;
+  padding: 4px 16px;
+  margin: 0;
+  background: $theme-color-sidebar-background;
+  border: none;
+  border-top: 1px solid $theme-color-sidebar-border;
+  border-radius: 0;
+  box-shadow: none;
+  box-sizing: border-box;
+
+  img.iconbutton {
+
+    position: relative;
+    top: 4px;
+    left: 0;
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    margin-right: 5px;
+    font-size: 9px;
+    background-color: $sidebar-iconbutton-bg-color;
+    border: 1px solid $sidebar-iconbutton-border-color;
+    border-radius: 5px;
+    box-shadow: none;
+  }
+
+  div.copyright {
+    position: relative;
+    top: 13px;
+    right: 0;
+    bottom: 5px;
+    float: right;
+    font-size: $theme-font-size-small;
+    font-weight: $theme-font-weight-bold;
+    letter-spacing: $theme-letter-spacing-table;
+    color: $theme-color-text-light;
+    text-align: right;
+    text-transform: uppercase;
+  }
+}
+
+#side_footer div.copyright a,
+/* TODO: Reproduce these two html elements */
+#side_footer div.copyright body.main .popup_menu span,
+body.main .popup_menu #side_footer div.copyright span {
+  color: $theme-color-text-light;
+  text-decoration: none;
+}
+
+span#msg_label {
+  position: relative;
+  top: -6px;
+  left: -10px;
+  z-index: 15;
+  padding: 1px;
+  font-size: $theme-font-size-global;
+  color: #f00;
+  background-color: #fff;
+  border-radius: 5px;
 }
 
 /* General layout of snapins */
-body.side div.snapin,
-div.add_snapin div.snapin {
+body.side div.snapin, div.add_snapin div.snapin  {
   width: 100%;
-  padding: (0.75 * $spacing) (2 * $spacing);
+  padding: 0;
+  margin: $snapin-margin;
   overflow: hidden;
-  background: $navigation-bg-color;
-  border-radius: 4px;
+  background: $theme-color-sidebar-background;
+  border: $snapin-border;
+  border-top: $snapin-border-top;
+  border-bottom: $snapin-border-bottom;
+  border-radius: 0;
   box-shadow: none;
   box-sizing: border-box;
+
+  &:first-child {
+    margin-top: $sidebar-ends-margin;
+  }
+
+  &:last-of-type {
+    margin-bottom: $sidebar-ends-margin;
+  }
 }
 
 div.snapin {
-  &.dragging {
-    position: absolute;
-    z-index: 200;
-  }
-
   /* Header of the snapin */
   div.head {
-    position: relative;
     height: auto;
+    padding: 8px;
     line-height: 10px; /* affects height of snapin title bar */
-    color: $font-color-sidebar;
+    color: $theme-color-text-light;
     text-align: left;
     background: transparent;
 
@@ -258,113 +290,97 @@ div.snapin {
     }
 
     b.heading {
-      padding-bottom: 3px;
-      font-weight: $font-weight-bold;
-      line-height: 16px;
-      letter-spacing: $letter-spacing-table;
+      font-size: $theme-font-size-main;
+      font-weight: 500;
+      letter-spacing: $theme-letter-spacing-table;
+      text-transform: uppercase;
     }
 
-    &.closed span.minisnapin {
-      background-image: url("images/icon_maxisnapin.svg");
-    }
-
-    span.minisnapin {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      margin-left: 6px;
-      line-height: 0;
-      cursor: pointer;
-      background: no-repeat center / 100% url("images/icon_minisnapin.svg");
+    &.closed div.minisnapin {
+      background-image: url("images/icon_maxisnapin.png");
     }
   }
 
-  div.snapin_buttons {
+  div.closesnapin {
     position: absolute;
     right: 5px;
-    opacity: 0;
-    transition: opacity 50ms ease-in 50ms;
-  }
-
-  &:hover div.snapin_buttons {
-    opacity: 1;
-    transition: opacity 0s;
-  }
-
-  span.moresnapin {
-    display: inline-block;
-    width: 16px; /* FIXME: get rid of the animation that uses 4 images */
-    height: 16px;
-    margin-right: 4px;
-    vertical-align: middle;
+    width: 8px;
+    height: 2px; /* vertical position of close button */
+    padding: 0;
+    margin-top: 2px;
+    margin-right: 6px;
+    line-height: 0;
 
     img {
-      width: 16px;
-      height: 16px;
-      padding: 0;
+      width: 8px;
+      height: 8px;
     }
   }
 
-  span.closesnapin {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    vertical-align: middle;
-
-    img {
-      width: 12px;
-      height: 12px;
-      padding: 0;
-    }
+  div.minisnapin {
+    position: absolute;
+    right: 15px;
+    width: 8px;
+    height: 8px;
+    margin: 2px 6px 0 0; /* vertical position of minimize button */
+    line-height: 0;
+    cursor: pointer;
+    background-image: url("images/icon_minisnapin.png");
   }
 
   div.content {
     top: 64px;
     width: 100%;
-    padding: $spacing 0;
-    color: $font-color-sidebar;
-    border-bottom: 1px solid $snapin-heading-border-color;
+    padding: 8px; /* Invisible spacing around hole snapin content */
+    color: $primary-sidebar-font-color;
+    background-color: $theme-color-sidebar-background;
     box-sizing: border-box;
   }
 
   select {
     width: 100%;
-    height: 24px;
+    height: 100%;
+    padding: 8px;
+    font-size: 11px;
+    color: $theme-color-text;
+    background-color: $primary-bg-color;
     background-image: none;
-    border-radius: $popup-filters-border-radius;
+    border: $primary-border;
+    border-radius: $theme-border-radius;
     box-shadow: none;
   }
 
   /*
    * General styles for snapin contents
    */
+  .content_center {
+    margin-right: auto;
+    margin-left:  auto;
+  }
 
   td {
-    color: $font-color-sidebar;
+    color: $primary-sidebar-font-color;
   }
 
   h3 {
     margin: 2px 0;
-    color: $font-color;
+    font-size: 100%;
+    color: $primary-sidebar-font-color;
   }
 
   /* Normal link in snapins */
   a {
     font-weight: normal;
-    color: $font-color-sidebar;
+    color: $primary-sidebar-font-color;
     text-decoration: none;
 
     &:hover {
+      color: $snapin-link-hover-color;
       text-decoration: underline;
     }
 
-    &.iconlink img:not(.emblem) {
-      margin-right: 5px;
-    }
-
     &.iconlink img {
-      width: 10px;
-      height: 12px;
+      margin-right: 8px;
     }
   }
 
@@ -376,7 +392,7 @@ div.snapin {
   }
 
   li {
-    padding-left: 0;
+    padding-left: 1px;
     color: $snapin-list-color;
 
     &.sidebar {
@@ -399,33 +415,32 @@ div.snapin {
   div.snapinexception {
     width: 220px;
     padding: 3px;
-    background-color: rgb(255, 136, 136);
-    border: 1px solid rgb(255, 0, 0);
+    background-color: #f88;
+    border: 1px solid #f00;
     border-radius: 4px;
 
     h2 {
       margin-top: 0;
-      color: rgb(255, 0, 0);
+      font-size: 12px;
+      color: #f00;
     }
 
     p {
-      color: rgb(136, 0, 0);
+      color: #800;
     }
   }
 
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
-    margin-top: 0;
-    text-align: left;
+    margin-top: 0px;
+    text-align: right;
 
     a {
-      border-radius: $spacing;
+      border-radius: 5px;
     }
 
     a:hover {
-      /* TODO: create a better hover effect */
       text-decoration: none;
-      opacity: 0.5;
     }
   }
 
@@ -451,35 +466,27 @@ div.snapin {
   /* state bullets at problem host or all hosts snapin */
   div.statebullet {
     float: left;
-    width: 5px;
-    height: 5px;
-    border-radius: 5px;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    margin-left: 0;
+    border: 1px solid #123a4a;
+    box-shadow: 0 0 1px #123a4a;
   }
 }
 
-#add_snapin {
-  margin: auto 0 $spacing;
-  text-align: center;
-
-  a {
-    display: block;
-    padding: $spacing 0;
-    text-decoration: none;
-
-    img {
-      width: 28px;
-      height: 28px;
-    }
-
-    div.description {
-      margin-top: 6px;
-      color: #5a6782;
-    }
-  }
+div.snapin div.content div.foldable a.iconlink,
+/* TODO: Reproduce these two html elements */
+div.snapin div.content div.foldable body.main .popup_menu span.iconlink,
+body.main .popup_menu div.snapin div.content div.foldable span.iconlink {
+  padding: 4px 0px;
 }
 
-div.snapin div.content div.foldable ul.treeangle a.iconlink {
-  padding: 0;
+div.snapin div.content div.foldable a.iconlink:last-of-type,
+/* TODO: Reproduce these two html elements */
+div.snapin div.content div.foldable body.main .popup_menu span.iconlink:last-of-type,
+body.main .popup_menu div.snapin div.content div.foldable span.iconlink:last-of-type {
+  padding-bottom: 12px;
 }
 
 div.snapin table.allhosts td a.link,
@@ -494,25 +501,26 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 2px 7px;
-  margin: 5px 10px 0 0;
-  height: 11px;
-  font-size: $font-size-small;
-  font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-table;
+  padding: 0 0;
+  margin-right: 16px;
+  margin-left: 0;
+  font-size: $theme-font-size-small;
+  font-weight: $theme-font-weight-bold;
+  letter-spacing: $theme-letter-spacing-table;
   color: $footnote-link-color;
-  background: $footnote-bg-color;
+  text-transform: uppercase;
+  background: transparent;
   border: none;
   box-shadow: none;
 }
 
-//div.snapin div.footnotelink a.link::before,
+div.snapin div.footnotelink a.link::before,
 /* TODO: Reproduce these two html elements */
-/*div.snapin div.footnotelink body.main .popup_menu span.link::before,
+div.snapin div.footnotelink body.main .popup_menu span.link::before,
 body.main .popup_menu div.snapin div.footnotelink span.link::before {
   margin-right: 8px;
   content: "···";
-}*/
+}
 
 /* TODO: Reproduce this html element */
 div#snapinDragIndicator {
@@ -523,10 +531,11 @@ div#snapinDragIndicator {
   margin: 0 0 0 11px;
   font-size: 1px;
   line-height: 1px;
-  background-color: rgb(255, 255, 255);
+  background-color: #fff;
   border-radius: 3px;
-  box-shadow: 0 0 3px rgb(255, 255, 255);
+  box-shadow: 0 0 3px #fff;
 }
+
 
 /*-------------------------------------------------------------------------.
 |          _       _     _                         _                       |
@@ -541,21 +550,21 @@ div#snapinDragIndicator {
 
 div.add_snapin {
   div.snapinadder {
-    &,
-    &:hover {
+    &, &:hover {
       float: left;
       width: 270px;
       height: 220px;
       padding: 8px;
       margin: 0 16px 16px 0;
-      background-color: $snapin-bg-color;
-      border: 1px solid $snapin-bg-color;
+      background-color: $theme-color-sidebar-background;
+      border: 1px solid $theme-color-table-border-dark;
       border-radius: 5px;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
+      transition: box-shadow .15s 0s ease-in-out;
     }
 
-    *,
-    &:hover * {
-      color: $font-color-sidebar;
+    *, &:hover * {
+      color: $theme-color-lightgrey;
     }
 
     &:hover {
@@ -563,23 +572,45 @@ div.add_snapin {
     }
 
     div.description {
-      padding: $spacing;
-      border-top: 1px solid $snapin-heading-border-color;
+      padding: 16px;
+      font-size: $theme-font-size-small;
+      font-weight: $theme-font-weight-global;
+      line-height: 1.333;
+      letter-spacing: $theme-letter-spacing-table;
+      color: $theme-color-nuance-8;
+      text-rendering: optimizeLegibility;
     }
 
     div.snapin {
       height: 116px;
       padding-top: 0;
+      background-color: $theme-color-sidebar-background;
       border: none;
+      border-bottom: 1px solid $theme-color-table-border-dark;
       border-radius: 0;
     }
 
     .head {
+      height: auto;
       padding: 8px;
+      color: $theme-color-text-light;
+      text-align: left;
+      background: transparent;
+
+      b.heading {
+        font-size: $theme-font-size-main;
+        font-weight: 500;
+        letter-spacing: $theme-letter-spacing-table;
+        text-transform: uppercase;
+      }
+    }
+
+    .snapin b, .head b {
+      font-weight: $theme-font-weight-bold;
     }
 
     .content {
-      border-bottom: none;
+        color: $theme-color-text;
     }
   }
 
@@ -602,6 +633,7 @@ div.add_snapin {
   }
 }
 
+
 /*-Popup Msg-----------------------------------------------------------.
 |           ____                           __  __                      |
 |          |  _ \ ___  _ __  _   _ _ __   |  \/  |___  __ _            |
@@ -619,7 +651,7 @@ div.popup_msg {
   left: 20px;
   width: 200px;
   padding: 3px;
-  background-color: rgb(36, 68, 82);
+  background-color: #244452;
 
   .close {
     display: block;
@@ -627,10 +659,11 @@ div.popup_msg {
   }
 }
 
-div.head {
+span#msg_label {
   position: relative;
-
-  a.more img {
-    top: 0;
-  }
+  z-index: 15;
+  padding: 1px;
+  color: #ff0000;
+  background-color: #fff;
+  border-radius: 5px;
 }

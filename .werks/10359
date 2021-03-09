@@ -1,13 +1,11 @@
 Title: mk_oracle: better support for mounted databases
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1571912027
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p6
+Date: 1571912027
+Class: fix
 
 The plugin {{mk_oracle}} showed multiple lines with errors when a database was not
 opened. That created some problems in oracle_jobs, which have been fixed.

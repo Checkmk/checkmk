@@ -1,13 +1,11 @@
 Title: Servicenow: Notification plugin
-Class: feature
-Compatible: compat
-Component: notifications
-Date: 1552645826
-Edition: cee
-Knowledge: undoc
 Level: 2
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.6.0b1
+Date: 1552645826
+Class: feature
 
 Check_MK now supports integration with Servicenow.
 You can create, update and close incidents for Host and Service Problems.

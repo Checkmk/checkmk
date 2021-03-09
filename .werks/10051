@@ -1,12 +1,11 @@
 Title: Background jobs: Make output of background jobs immediately visible
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1568877204
+Class: fix
 
 The log output of background jobs was not always immediately visible in the job
 progress dialog. Some jobs showed the full output after completion while they

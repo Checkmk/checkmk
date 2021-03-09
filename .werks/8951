@@ -1,11 +1,12 @@
 Title: HW/SW inventory: Fixed active service state if software/packages information is missing
 Level: 1
 Component: inv
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b8
 Date: 1566557076
-Class: fix
 
 Within the ruleset {{Do hardware/software Inventory}} you can set the
 service state if software packages info is missing. This had no effect.

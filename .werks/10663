@@ -1,13 +1,11 @@
 Title: HW/SW Inventory: Fixed "Cannot update tree" on clusters
-Class: fix
-Compatible: compat
-Component: inv
-Date: 1576669884
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576669884
+Class: fix
 
 A real host may have several data sources like SNMP, agent or other programs.
 If all data sources of these hosts fail related the {{HW/SW Inventory}}

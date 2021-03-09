@@ -1,12 +1,11 @@
 Title: Disable CLUSTER sections in sample logwatch.cfg
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1569059666
+Class: fix
 
 The uncommented CLUSTER sections in the logwatch.cfg could lead to unexpected
 results when starting to configure logwatch using the sample configuration.

@@ -1,19 +1,17 @@
 Title: Windows Agent: Fix possible update / downgrade problems
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1569511775
-Edition: cre
-Knowledge: undoc
 Level: 2
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569511775
+Class: fix
 
-Previously Windows Agent used only the file timestamp to determine whether 
-the file have to be reinstalled. 
-This may lead to impossibility to update the file if for some reason the 
+Previously Windows Agent used only the file timestamp to determine whether
+the file have to be reinstalled.
+This may lead to impossibility to update the file if for some reason the
 file timestamp was wrong(downgrade, invalid time).
 
-Now Windows Agent compares file content too. If content mismatches, 
+Now Windows Agent compares file content too. If content mismatches,
 then the file should be installed even if timestamp is ok.
 

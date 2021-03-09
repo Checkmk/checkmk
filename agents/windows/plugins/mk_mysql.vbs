@@ -1,12 +1,31 @@
-' Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-' This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-' conditions defined in the file COPYING, which is part of this source code package.
+' +------------------------------------------------------------------+
+' |             ____ _               _        __  __ _  __           |
+' |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+' |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+' |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+' |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+' |                                                                  |
+' | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+' +------------------------------------------------------------------+
+'
+' This file is part of Check_MK.
+' The official homepage is at http://mathias-kettner.de/check_mk.
+'
+' check_mk is free software;  you can redistribute it and/or modify it
+' under the  terms of the  GNU General Public License  as published by
+' the Free Software Foundation in version 2.  check_mk is  distributed
+' in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+' out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+' PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+' ails.  You should have  received  a copy of the  GNU  General Public
+' License along with GNU Make; see the file  COPYING.  If  not,  write
+' to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+' Boston, MA 02110-1301 USA.
 
 ' This agent plugin is meant to be used on a windows server which
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
-Const CMK_VERSION = "2.1.0i1"
 
 Dim SHO, FSO, WMI, PROC
 Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd
@@ -24,7 +43,7 @@ cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 '
 
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE (Name LIKE '%MySQL%' or Name LIKE '%MariaDB') and State = 'Running'")
+Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE Name LIKE '%MySQL%' and State = 'Running'")
 For Each service in service_list
     ' add the internal service name as key and the launch command line as value
     instances.add service.Name, service.PathName

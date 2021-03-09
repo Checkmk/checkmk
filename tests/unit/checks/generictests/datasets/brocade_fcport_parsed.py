@@ -932,7 +932,7 @@ checks = {
         'rxencoutframes': (3.0, 20.0)
     }, [(
         0,
-        'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+        'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
         [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
          ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
          ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None, None),
@@ -951,7 +951,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -971,7 +971,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -991,7 +991,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1011,7 +1011,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1031,7 +1031,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1051,7 +1051,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1071,7 +1071,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1091,7 +1091,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1111,7 +1111,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 4 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 4 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 400000000.0), ('out', 0.0, None, None, 0, 400000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1131,7 +1131,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1151,7 +1151,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1171,7 +1171,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1191,7 +1191,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1211,7 +1211,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1231,7 +1231,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1251,7 +1251,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1271,7 +1271,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1291,7 +1291,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1311,7 +1311,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1331,7 +1331,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1351,7 +1351,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'Speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'Speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1371,7 +1371,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1391,7 +1391,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1411,7 +1411,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,
@@ -1431,7 +1431,7 @@ checks = {
              'rxencoutframes': (3.0, 20.0)
          },
           [(0,
-            'ISL speed: 8 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, Physical: in sync, Operational: online, Administrative: online',
+            'ISL speed: 8 Gbit/s, In: 0 B/s, Out: 0 B/s, Physical: in sync, Operational: online, Administrative: online',
             [('in', 0.0, None, None, 0, 800000000.0), ('out', 0.0, None, None, 0, 800000000.0),
              ('rxframes', 0.0, None, None, None, None), ('txframes', 0.0, None, None, None, None),
              ('rxcrcs', 0.0, None, None, None, None), ('rxencoutframes', 0.0, None, None, None,

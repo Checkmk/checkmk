@@ -1,13 +1,12 @@
 Title: mk_postgres: Fixed query "Last vaccum"
+Level: 1
+Component: checks
 Class: fix
 Compatible: compat
-Component: checks
-Date: 1592210174
 Edition: cre
-Knowledge: undoc
-Level: 1
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p14
+Date: 1592210174
 
 The query take the access time from a wrong instance. This may lead to
 wrong service results.

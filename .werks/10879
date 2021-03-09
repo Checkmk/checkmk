@@ -1,12 +1,13 @@
 Title: View CSV export: Add titles of icons to exported columns
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1584902019
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p11
+Date: 1584902019
 
 In previous versions, the CSV export completely removed the HTML code of icons
 from the cells, which resulted in some cells containing only icons being

@@ -1,11 +1,12 @@
 Title: Pagerduty notification host identifier to hostname when IP address is uknown
 Level: 1
 Component: notifications
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b3
 Date: 1560864676
-Class: fix
 
 Pagerduty requires a host identifier to assign an event to the troubled
 host. This was the IP address of the host, but in some cases like cloud

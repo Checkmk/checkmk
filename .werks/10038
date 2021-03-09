@@ -1,12 +1,11 @@
 Title: Fix cmk/check_mk_server:yes label related issues
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b10
 Date: 1568215697
+Class: fix
 
 This label was detected based on the asynchronously created agent section
 '<<<omd_status>>>'. Because this section is not immediately available on the

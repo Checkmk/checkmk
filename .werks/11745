@@ -1,13 +1,11 @@
 Title: mssql_counters.file_sizes: convert all performance data to bytes
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1611052094
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p21
+Date: 1611052094
+Class: fix
 
 Performance data of the "Used size of log files" metric in the
 mssql_counters.file_sizes check was not scaled correctly in the corresponding

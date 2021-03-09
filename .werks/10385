@@ -1,13 +1,11 @@
 Title: Do not expose download credentials to the image history
-Class: fix
-Compatible: compat
-Component: packages
-Date: 1573056050
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1573056050
+Class: fix
 
 The previous "docker build" mechanism was using docker build arguments for
 handing over the Checkmk enterprise download credentials to the docker image

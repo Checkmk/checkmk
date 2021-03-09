@@ -1,13 +1,11 @@
 Title: HW/SW Inventory tree: Show error message if HW/SW inventory tree cannot be loaded instead of breaking the whole page
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1580741505
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1580741505
+Class: fix
 
 Previously if inventory trees of hosts could not be loaded (eg. caused by
 corrupt data) various views which use the inventory data were broken and only

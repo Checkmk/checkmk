@@ -1,12 +1,13 @@
 Title: Windows agent sets access rights also after clean installation
-Class: security
-Compatible: compat
-Component: checks
-Date: 1599753271
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p18
+Date: 1599753271
 
 Windows agent didn't set correct access rights when installed from the scratch.
 

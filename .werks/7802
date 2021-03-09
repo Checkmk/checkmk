@@ -1,11 +1,12 @@
 Title: oracle_asm_diskgroup: Fixed calculation of voting files
 Level: 1
 Component: checks
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b2
 Date: 1560421592
-Class: fix
 
 Previously the calculation of voting files for failgroups if more than one
 disk is in such a fail group with a voting disk.

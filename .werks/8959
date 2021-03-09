@@ -1,11 +1,12 @@
 Title: Piggybacked hosts: 'Check_MK' service shows more detailed information
 Level: 1
 Component: checks
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b10
 Date: 1568098675
-Class: feature
 
 Piggybacked hosts get their data from source hosts. The source hosts save the
 piggyback data to files. There's also a status file written by the source

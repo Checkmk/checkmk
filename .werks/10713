@@ -1,13 +1,13 @@
 Title: Fix additional rule analyzation issue on service object parameter page
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1581107982
-Edition: cre
 Knowledge: doc
 Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p9
+Date: 1581107982
 
 Werk #10696, which was shipped with 1.6.0p8, already fixed issues on the
 "service object parameter page" that lead to wrong effective settings being

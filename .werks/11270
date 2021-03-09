@@ -1,13 +1,11 @@
 Title: oracle_instance: Fix missing uptime column if status data inventory is enabled
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1600091295
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600091295
+Class: fix
 
 If {{Status data inventory}} is enabled via the rule {{Do hardware/software inventory}}
 then {{HW/SW inventory data}} and {{status data}} are inventorized and merged in the

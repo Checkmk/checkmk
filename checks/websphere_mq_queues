@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # <<<websphere_mq_queues>>>
 # 0 CD.ISS.CATSOS.REPLY.C000052 5000
@@ -51,22 +71,23 @@ def parse_websphere_mq_queues(info):
         except ValueError:
             continue
 
-        inst = parsed.setdefault(line[1], {})
-        inst.setdefault('cur_depth', cur_depth)
+        queue_name = line[1]
+        parsed.setdefault(queue_name, {})
+        parsed[queue_name].setdefault('cur_depth', cur_depth)
 
         if len(line) >= 3:
             if line[2].isdigit():
-                inst.setdefault('max_depth', int(line[2]))
+                parsed[queue_name].setdefault('max_depth', int(line[2]))
 
             if len(line) > 3:
                 for what in "".join(line[3:-1]).replace(" ", "").split(')'):
                     if "(" in what:
                         key, val = what.split('(')
-                        inst.setdefault(key, val)
+                        parsed[queue_name].setdefault(key, val)
 
                 try:
-                    inst.setdefault("time_on_client",
-                                    time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
+                    parsed[queue_name].setdefault(
+                        "time_on_client", time.mktime(time.strptime(line[-1], "%Y_%m_%d-%H_%M_%S")))
                 except ValueError:
                     pass
 
@@ -79,60 +100,92 @@ def inventory_websphere_mq_queues(parsed):
 
 
 def check_websphere_mq_queues(item, params, parsed):
-    data = parsed.get(item)
-    if data is None:
+    if item in parsed:
+        if isinstance(params, tuple):
+            params = {
+                'message_count': params,
+                'message_count_perc': websphere_mq_queues_default_levels["message_count_perc"]
+            }
+
+        data = parsed[item]
+        cur_depth = data['cur_depth']
+        infotext = "%d" % cur_depth
+
+        max_depth = None
+        if data.get('max_depth'):
+            state_perc = 0
+            max_depth = data['max_depth']
+            infotext += "/%d" % max_depth
+
+            used_perc = float(cur_depth) / max_depth * 100
+            info_perc = "%.1f%%" % used_perc
+
+            if params.get("message_count_perc"):
+                warn_perc, crit_perc = params['message_count_perc']
+                if used_perc >= crit_perc:
+                    state_perc = 2
+                elif used_perc >= warn_perc:
+                    state_perc = 1
+
+        state = 0
+        infotext += " messages in queue"
+        perfdata = [("queue", cur_depth, None, None, None, max_depth)]
+
+        if params.get("message_count"):
+            warn, crit = params['message_count']
+            if cur_depth >= crit:
+                state = 2
+            elif cur_depth >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
+
+            perfdata = [("queue", cur_depth, warn, crit, None, max_depth)]
+
+        yield state, infotext, perfdata
+
+        if max_depth is not None:
+            if state_perc:
+                info_perc += " (warn/crit at %s%%/%s%%)" % (warn_perc, crit_perc)
+
+            yield state_perc, info_perc
+
+        if data.get("time_on_client") and \
+           "LGETDATE" in data and "LGETTIME" in data:
+
+            params = params.get("messages_not_processed", {})
+
+            if cur_depth and data["LGETDATE"] and data["LGETTIME"]:
+                time_str = "%s %s" % (data['LGETDATE'], data['LGETTIME'])
+                time_diff  = data["time_on_client"] - \
+                    time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
+                state_diff = 0
+                info_diff = "Messages not processed since %s" % get_age_human_readable(time_diff)
+
+                if 'age' in params:
+                    warn_diff, crit_diff = params['age']
+
+                    if time_diff >= crit_diff:
+                        state_diff = 2
+                    elif time_diff >= warn_diff:
+                        state_diff = 1
+
+                    if state_diff:
+                        info_diff += " (warn/crit at %s/%s)" % \
+                                       (get_age_human_readable(warn_diff),
+                                        get_age_human_readable(crit_diff))
+
+                yield state_diff, info_diff
+
+            elif cur_depth:
+                yield params.get("state", 0), "No age of %d message%s not processed" % \
+                      (cur_depth, cur_depth > 1 and "s" or "")
+
+            else:
+                yield 0, "Messages processed"
+
+    else:
         raise MKCounterWrapped("Login into database failed")
-
-    if isinstance(params, tuple):
-        params = {
-            'message_count': params,
-            'message_count_perc': websphere_mq_queues_default_levels["message_count_perc"]
-        }
-
-    cur_depth = data['cur_depth']
-    yield check_levels(cur_depth,
-                       "queue",
-                       params.get("message_count", (None, None)),
-                       human_readable_func=lambda x: "%d" % x,
-                       infoname="Messages in queue")
-
-    max_depth = data.get('max_depth')
-    if max_depth:
-        # Just for ordering:
-        # 1. message count
-        # 2. message count percent
-        used_perc = float(cur_depth) / max_depth * 100
-        yield check_levels(used_perc,
-                           None,
-                           params.get("message_count_perc", (None, None)),
-                           human_readable_func=get_percent_human_readable,
-                           infoname="Of max. %d messages" % max_depth)
-
-    if data.get("time_on_client") and "LGETDATE" in data and "LGETTIME" in data:
-        lgetdate = data["LGETDATE"]
-        lgettime = data["LGETTIME"]
-
-        params = params.get("messages_not_processed", {})
-
-        if cur_depth and lgetdate and lgettime:
-            time_str = "%s %s" % (lgetdate, lgettime)
-            time_diff  = data["time_on_client"] - \
-                time.mktime(time.strptime(time_str, "%Y-%m-%d %H.%M.%S"))
-
-            diff_state, diff_info, _diff_perf = check_levels(
-                time_diff,
-                None,
-                params.get("age", (None, None)),
-                human_readable_func=get_age_human_readable)
-
-            yield diff_state, "Messages not processed since %s" % diff_info
-
-        elif cur_depth:
-            yield params.get("state", 0), "No age of %d message%s not processed" % \
-                  (cur_depth, cur_depth > 1 and "s" or "")
-
-        else:
-            yield 0, "Messages processed"
 
 
 check_info["websphere_mq_queues"] = {

@@ -1,12 +1,11 @@
 Title: Fix "Periodic service discovery" disabling rules breaking config
 Level: 2
 Component: core
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1559914784
+Class: fix
 
 In 1.6.0b1 a rule in the ruleset "Periodic service discovery" that is
 configured with the option "Do not perform service discovery check" resulted

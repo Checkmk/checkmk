@@ -1,12 +1,13 @@
 Title: mk_oracle.ps1: Fixed missing sqls in rman section
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1594799498
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594799498
 
 For Oracle databases with version lower than 12.1 there has been some missing
 sqls in the plugin for Windows. This has been fixed with this werk. To

@@ -1,12 +1,13 @@
 Title: Error on windows agent update in case of a numerical agent hash
-Class: fix
-Compatible: compat
-Component: agents
-Date: 1612519179
-Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.1.0i1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p21
+Date: 1612519179
 
 After an (automatic) windows agent update took place,
 the agent updater checks for a correct agent hash on the next call.

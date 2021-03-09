@@ -1,0 +1,126 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<omd_status>>>
+# [kaputt]
+# apache 1
+# rrdcached 1
+# npcd 1
+# nagios 1
+# crontab 1
+# OVERALL 1
+# [test]
+# apache 1
+# rrdcached 1
+# npcd 0
+# nagios 1
+# crontab 1
+# OVERALL 2
+
+
+def inventory_omd_status(info):
+    for site in info.keys():
+        yield site, None
+    if info:
+        yield HostLabel(u"cmk/check_mk_server", u"yes")
+
+
+def parse_omd_status(info):
+    active = False
+    parsed = {}
+
+    for line in info:
+        if line[1][0] == '[':
+            item = line[1][1:-1]
+            # items may appear several times in clusters
+            # so dont overwrite the previous node result
+            if item not in parsed:
+                parsed[item] = {}
+            node = line[0]
+            parsed[item][node] = {}
+            parsed[item][node]["stopped"] = []
+            active = True
+        elif active and line[1] == 'OVERALL':
+            if line[2] == '0':
+                parsed[item][node]["overall"] = "running"
+            elif line[2] == '1':
+                parsed[item][node]["overall"] = "stopped"
+            active = False
+        elif active and line[2] != '0':
+            parsed[item][node]["stopped"].append(line[1])
+            parsed[item][node]["overall"] = "partially"
+
+    return parsed
+
+
+def check_omd_status(item, _no_params, parsed):
+    if item not in parsed:
+        return
+
+    parsed_site = parsed[item]
+    number_nodes = len(parsed_site)
+    stopped_nodes = 0
+
+    for node, services in parsed_site.iteritems():
+        if "overall" in services and services["overall"] == "stopped":
+            stopped_nodes += 1
+
+    # stopped sites are only CRIT when all are stopped
+    if stopped_nodes == number_nodes:
+        state = 2
+    else:
+        state = 0
+
+    for node, services in parsed_site.iteritems():
+        if node:
+            node_text = " on %s" % node
+        else:
+            node_text = ""
+        if "overall" not in services:
+            infotext = "defective installation%s" % node_text
+            yield 2, infotext
+        elif services["overall"] == "running":
+            infotext = "running%s" % node_text
+            # running sites are always OK
+            yield 0, infotext
+        elif services["overall"] == "stopped":
+            infotext = "stopped%s" % node_text
+            # stopped sites are only CRIT when all are stopped
+            yield state, infotext
+        else:
+            infotext = "partially running%s, stopped services: " % node_text
+            infotext += ", ".join(services["stopped"])
+            # partially running sites are always CRIT
+            yield 2, infotext
+
+
+check_info["omd_status"] = {
+    'check_function': check_omd_status,
+    'inventory_function': inventory_omd_status,
+    'parse_function': parse_omd_status,
+    'service_description': 'OMD %s status',
+    'node_info': True,
+}

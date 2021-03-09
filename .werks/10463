@@ -1,13 +1,11 @@
 Title: cisco_power: discover unique items in one edge case
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1574771202
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p7
+Date: 1574771202
+Class: fix
 
 For some sensor descriptions the cisco_power check discovered items
 that were not unique. One description was e.g. "Sw1, PSA Normal"

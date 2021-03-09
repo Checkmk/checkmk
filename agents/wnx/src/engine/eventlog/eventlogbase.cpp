@@ -8,62 +8,77 @@
 #include "logger.h"
 
 namespace cma::evl {
-std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &name,
-                                                bool vista_api) {
-    if (vista_api && g_evt.close)
-        return std::unique_ptr<EventLogBase>(new EventLogVista(name));
+std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &Name,
+                                                bool VistaApi) {
+    if (VistaApi && g_evt.close)
+        return std::unique_ptr<EventLogBase>(new EventLogVista(Name));
 
-    return std::unique_ptr<EventLogBase>(new EventLog(name));
+    return std::unique_ptr<EventLogBase>(new EventLog(Name));
 }
 
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
-    EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level) {
+    EventLogBase &log, uint64_t previouslyReadId, cma::cfg::EventLevels level) {
     // we must seek past the previously read event - if there was one
-    const auto seek_pos = choosePos(pos);
+    const uint64_t seekPosition =
+        previouslyReadId + (cma::cfg::kInitialPos == previouslyReadId ? 0 : 1);
 
-    auto worst_state = cma::cfg::EventLevels::kAll;
-    auto last_pos = pos;
+    cma::cfg::EventLevels worstState = cma::cfg::EventLevels::kAll;
+    uint64_t lastRecordId = previouslyReadId;
 
-    log.seek(seek_pos);
+    // WARNING:
+    // seek implementations for pre-Vista and post-Vista are completely
+    // different.
+    // seek *must not* return any value as it is different between pre/post
+    // Vista.
+    log.seek(seekPosition);
     while (1) {
         auto record = log.readRecord();
         if (record == nullptr) break;
         ON_OUT_OF_SCOPE(delete record);
 
-        last_pos = record->recordId();
+        lastRecordId = record->recordId();
         auto calculated = record->calcEventLevel(level);
-        worst_state = std::max(worst_state, calculated);
+        worstState = std::max(worstState, calculated);
     }
 
-    return {last_pos, worst_state};
+    return {lastRecordId, worstState};
 }
 
-// return any(!) positive number or 0.
-// usually this is positive, because Windows keeps numbers very long
-// and do not drop first entry id to 0 even after reset
-uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cma::cfg::EventLevels level, bool hide_context,
-                       EvlProcessor processor) {
+std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
+                                               uint64_t previouslyReadId,
+                                               cma::cfg::EventLevels level,
+                                               bool HideContext,
+                                               int64_t max_size) {
     // we must seek past the previously read event - if there was one
-    const auto seek_pos = choosePos(from_pos);
+    const uint64_t seekPosition =
+        previouslyReadId + (cma::cfg::kInitialPos == previouslyReadId ? 0 : 1);
 
-    auto last_pos = from_pos;
+    uint64_t lastRecordId = previouslyReadId;
 
-    log.seek(seek_pos);
-
+    // WARNING:
+    // seek implementations for pre-Vista and post-Vista are completely
+    // different.
+    // seek *must not* return any value as it is different between pre/post
+    // Vista.
+    log.seek(seekPosition);
+    std::string out;
     while (1) {
         auto record = log.readRecord();
 
         if (record == nullptr) break;
         ON_OUT_OF_SCOPE(delete record);
 
-        last_pos = record->recordId();
-        auto str = record->stringize(level, hide_context);
-        if (!str.empty())
-            if (!processor(str)) break;
+        lastRecordId = record->recordId();
+        auto str = record->stringize(level, HideContext);
+        if (!str.empty()) out += str;
+
+        if (max_size > 0 && out.size() > static_cast<size_t>(max_size)) {
+            XLOG::d("Logwatch size have exceeded limit [{}]", max_size);
+            break;
+        }
     }
 
-    return last_pos;
-}
+    return {lastRecordId, out};
+}  // namespace cma::evl
 
 }  // namespace cma::evl

@@ -1,13 +1,11 @@
 Title: omd: Fix possible stopped system apache after removing a site
-Class: fix
-Compatible: compat
-Component: omd
-Date: 1572522994
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1572522994
+Class: fix
 
 Fixed an unlikely error which could lead to a stopped system apache
 process. This could happen when the system apache is reloaded / restarted

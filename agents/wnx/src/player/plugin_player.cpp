@@ -133,7 +133,8 @@ int MainTest(int argc, wchar_t const* argv[]) {
     using namespace std;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallback, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallback, 20, &S_Storage,
+                            wtools::SecurityLevel::standard);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     // prepare parameters

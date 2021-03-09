@@ -6,8 +6,7 @@ Date: 1585143007
 Edition: cre
 Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p11
 
 The WATO rule search is now faster for rulesets with lots of
 <ul>

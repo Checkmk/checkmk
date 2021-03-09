@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,6 @@
 
 import pytest  # type: ignore[import]
 
-from testlib import Check  # type: ignore[import]
 from checktestlib import (
     assertDiscoveryResultsEqual,
     DiscoveryResult,
@@ -93,11 +92,11 @@ pytestmark = pytest.mark.checks
         ],
     ),
 ])
-def test_hr_ps_discovery(info, discovery_params, expected_discovery_result):
+def test_hr_ps_discovery(check_manager, info, discovery_params, expected_discovery_result):
     '''Test that the hr_ps check returns the correct discovery results given different
     discovery parameters.
     '''
-    check = Check('hr_ps')
+    check = check_manager.get_check('hr_ps')
 
     with MockHostExtraConf(check, discovery_params, 'host_extra_conf'):
         actual_discovery_result = check.run_discovery(check.run_parse(info))

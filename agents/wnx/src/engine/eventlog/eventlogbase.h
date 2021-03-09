@@ -1,20 +1,14 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
-
 #ifndef EventLogBase_h
 #define EventLogBase_h
 
-#include <fmt/format.h>
 #include <time.h>
 
-#include <functional>
 #include <memory>
 #include <string>
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
+#include "fmt/format.h"
 
 namespace cma::evl {
 class EventLogRecordBase {
@@ -53,7 +47,7 @@ public:
         strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
         // source is the application that produced the event
-        std::string source_name = wtools::ToUtf8(source());
+        std::string source_name = wtools::ConvertToUTF8(source());
         std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
         return fmt::format("{} {} {}.{} {} {}\n",
@@ -62,7 +56,7 @@ public:
                            eventQualifiers(),  //
                            eventId(),          //
                            source_name,        //
-                           wtools::ToUtf8(makeMessage()));
+                           wtools::ConvertToUTF8(makeMessage()));
     }
 
     // for output in port
@@ -157,16 +151,12 @@ std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &Name,
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
     EventLogBase &log, uint64_t previouslyReadId, cma::cfg::EventLevels level);
 
-using EvlProcessor = std::function<bool(const std::string &)>;
-
 // third call
-uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cma::cfg::EventLevels level, bool hide_context,
-                       EvlProcessor processor);
-// internal
-inline uint64_t choosePos(uint64_t last_read_pos) {
-    return cma::cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;
-}
+std::pair<uint64_t, std::string> PrintEventLog(EventLogBase &log,
+                                               uint64_t previouslyReadId,
+                                               cma::cfg::EventLevels level,
+                                               bool HideContext,
+                                               int64_t max_size);
 
 }  // namespace cma::evl
 #endif  // EventLogBase_h

@@ -1,14 +1,33 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
-    DropdownChoice,
     Integer,
     TextAscii,
     Transform,
@@ -25,7 +44,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_heartbeat_crm_rules():
     return Dictionary(
-        title=_("Heartbeat CRM discovery"),
+        title=_("Heartbeat CRM Discovery"),
         elements=[
             ("naildown_dc",
              Checkbox(
@@ -60,10 +79,8 @@ rulespec_registry.register(
 
 def _heartbeat_crm_transform_heartbeat_crm(params):
     if isinstance(params, dict):
-        _params = params.copy()
-        _params.setdefault('show_failed_actions', False)
-        return _params
-    par_dict = {'max_age': params[0], 'show_failed_actions': False}
+        return params
+    par_dict = {'max_age': params[0]}
     if params[1]:
         par_dict['dc'] = params[1]
     if params[2] > -1:
@@ -91,30 +108,19 @@ def _parameter_valuespec_heartbeat_crm():
              )),
             ("num_nodes",
              Integer(
-                 minvalue=0,
+                 min_value=0,
                  default_value=2,
                  title=_("Number of Nodes"),
                  help=_("The expected number of nodes in the cluster"),
              )),
             ("num_resources",
              Integer(
-                 minvalue=0,
+                 min_value=0,
                  title=_("Number of Resources"),
                  help=_("The expected number of resources in the cluster"),
              )),
-            ("show_failed_actions",
-             DropdownChoice(
-                 title=_('Show "Failed Actions"'),
-                 choices=[
-                     (False, _('Don\'t show or warn if "Failed Actions" are present (default)')),
-                     (True, _('Show "Failed Actions" and warn if any is present')),
-                 ],
-                 default_value=False,
-                 help=_('If activated, any "Failed Action" entry will be shown in the main check '
-                        'and the check will go to the WARN state.'),
-             )),
         ],
-        optional_keys=["dc", "num_nodes", "num_resources", "show_failed_actions"],
+        optional_keys=["dc", "num_nodes", "num_resources"],
     ),
                      forth=_heartbeat_crm_transform_heartbeat_crm)
 

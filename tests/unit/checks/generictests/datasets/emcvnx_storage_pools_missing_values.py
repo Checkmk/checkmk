@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 checkname = 'emcvnx_storage_pools'
 
 info = [
@@ -126,7 +119,7 @@ checks = {
                 ), (0, 'Percent full: 56.13%', []),
                 (
                     0,
-                    '[Virt. capacity] Percent subscribed: 56.13%, Oversubscribed by: 0.00 B, Total subscribed capacity: 9.41 TB',
+                    '[Virt. capacity] Percent subscribed: 56.13%, Oversubscribed by: 0 B, Total subscribed capacity: 9.41 TB',
                     [
                         (
                             'emcvnx_consumed_capacity', 10343115546165.248,

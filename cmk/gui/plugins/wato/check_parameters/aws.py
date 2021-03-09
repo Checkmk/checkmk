@@ -1,14 +1,31 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-from typing import Type, Optional, List
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    ValueSpec,
-    DictionaryEntry,
     Alternative,
     Dictionary,
     Integer,
@@ -21,7 +38,6 @@ from cmk.gui.valuespec import (
     Filesize,
     ListOf,
     CascadingDropdown,
-    Transform,
 )
 from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersApplications,
@@ -40,23 +56,7 @@ from cmk.utils.aws_constants import (
 def _vs_s3_buckets():
     return ('bucket_size_levels',
             Alternative(title=_("Upper levels for the bucket size"),
-                        elements=[
-                            Tuple(title=_("Set levels"),
-                                  elements=[
-                                      Filesize(title=_("Warning at")),
-                                      Filesize(title=_("Critical at")),
-                                  ]),
-                            Tuple(title=_("No levels"),
-                                  elements=[
-                                      FixedValue(None, totext=""),
-                                      FixedValue(None, totext=""),
-                                  ]),
-                        ]))
-
-
-def _vs_glacier_vaults():
-    return ('vault_size_levels',
-            Alternative(title=_("Upper levels for the vault size"),
+                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -74,6 +74,7 @@ def _vs_glacier_vaults():
 def _vs_burst_balance():
     return ('burst_balance_levels_lower',
             Alternative(title=_("Lower levels for burst balance"),
+                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -91,6 +92,7 @@ def _vs_burst_balance():
 def _vs_cpu_credits_balance():
     return ('balance_levels_lower',
             Alternative(title=_("Lower levels for CPU balance"),
+                        style="dropdown",
                         elements=[
                             Tuple(title=_("Set levels"),
                                   elements=[
@@ -105,18 +107,27 @@ def _vs_cpu_credits_balance():
                         ]))
 
 
-def _vs_elements_http_errors(http_err_codes, title_add=lambda http_err_code: ""):
-    return [('levels_http_%s_perc' % http_err_code,
-             Tuple(
-                 title=_("Upper percentual levels for HTTP %s errors" % http_err_code.upper() +
-                         title_add(http_err_code)),
-                 help=_("Specify levels for HTTP %s errors in percent "
-                        "which refer to the total number of requests." % http_err_code.upper()),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ],
-             )) for http_err_code in http_err_codes]
+def _vs_elements_http_errors():
+    return [
+        ('levels_http_4xx_perc',
+         Tuple(
+             title=_("Upper percentual levels for HTTP 400 errors"),
+             help=_("Specify levels for HTTP 400 errors in percentage "
+                    "which refer to the total number of requests"),
+             elements=[
+                 Percentage(title=_("Warning at")),
+                 Percentage(title=_("Critical at")),
+             ],
+         )),
+        ('levels_http_5xx_perc',
+         Tuple(title=_("Upper percentual levels for HTTP 500 errors"),
+               help=_("Specify levels for HTTP 500 errors in percentage "
+                      "which refer to the total number of requests"),
+               elements=[
+                   Percentage(title=_("Warning at")),
+                   Percentage(title=_("Critical at")),
+               ])),
+    ]
 
 
 def _vs_latency():
@@ -130,113 +141,35 @@ def _vs_latency():
             ))
 
 
-def _item_spec_aws_limits_generic():
-    return TextAscii(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
-
-
-def _vs_limits(resource: str,
-               default_limit: int,
-               vs_limit_cls: Optional[Type[Filesize]] = None,
-               unit: str = "",
-               title_default: str = "Limit from AWS API") -> Alternative:
-
+def _vs_limits(resource, default_limit, vs_limit_cls=None):
     if vs_limit_cls is None:
-        vs_limit = Integer(
-            title=_("%s" % resource),
-            unit=_("%s" % unit),
-            minvalue=1,
-            default_value=default_limit,
-        )
+        vs_limit = Integer(unit=_("%s" % resource), min_value=1, default_value=default_limit)
     else:
-        vs_limit = vs_limit_cls(
-            title=_("%s" % resource),
-            minvalue=1,
-            default_value=default_limit,
-        )
+        vs_limit = vs_limit_cls(min_value=1, default_value=default_limit)
 
     if resource:
-        title: Optional[str] = _("Set limit and levels for %s" % resource)
+        title = _("Set limit and levels for %s" % resource)
     else:
         title = None
+    return Alternative(
+        title=title,
+        style="dropdown",
+        elements=[
+            Tuple(
+                title=_("Set levels"),
+                elements=[
+                    Alternative(elements=[FixedValue(None, totext="Limit from AWS API"), vs_limit]),
+                    Percentage(title=_("Warning at"), default_value=80.0),
+                    Percentage(title=_("Critical at"), default_value=90.0),
+                ]),
+            Tuple(title=_("No levels"),
+                  elements=[
+                      FixedValue(None, totext=""),
+                      FixedValue(None, totext=""),
+                      FixedValue(None, totext=""),
+                  ]),
+        ])
 
-    return Alternative(title=title,
-                       elements=[
-                           Tuple(title=_("Set levels"),
-                                 elements=[
-                                     Alternative(orientation="horizontal",
-                                                 elements=[
-                                                     FixedValue(
-                                                         None,
-                                                         title=_(title_default),
-                                                         totext="",
-                                                     ),
-                                                     vs_limit,
-                                                 ]),
-                                     Percentage(title=_("Warning at"), default_value=80.0),
-                                     Percentage(title=_("Critical at"), default_value=90.0),
-                                 ]),
-                           Tuple(title=_("No levels"),
-                                 elements=[
-                                     FixedValue(None, totext=""),
-                                     FixedValue(None, totext=""),
-                                     FixedValue(None, totext=""),
-                                 ]),
-                       ])
-
-
-#.
-#   .--Glacier-------------------------------------------------------------.
-#   |                    ____ _            _                               |
-#   |                   / ___| | __ _  ___(_) ___ _ __                     |
-#   |                  | |  _| |/ _` |/ __| |/ _ \ '__|                    |
-#   |                  | |_| | | (_| | (__| |  __/ |                       |
-#   |                   \____|_|\__,_|\___|_|\___|_|                       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _item_spec_aws_glacier_vault_archives():
-    return TextAscii(title=_("The vault name"))
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_glacier_vault_archives",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_glacier_vault_archives,
-        match_type="dict",
-        parameter_valuespec=lambda: Dictionary(elements=[_vs_glacier_vaults()]),
-        title=lambda: _("AWS/Glacier Vault Objects"),
-    ))
-
-
-def _parameter_valuespec_aws_glacier_vaults():
-    return Dictionary(elements=[_vs_glacier_vaults()])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="aws_glacier_vaults",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_glacier_vaults,
-        title=lambda: _("AWS/Glacier Vaults"),
-    ))
-
-
-def _parameter_valuespec_aws_glacier_limits():
-    return Dictionary(elements=[('number_of_vaults', _vs_limits("Vaults", 1000))])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_glacier_limits",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_glacier_limits,
-        title=lambda: _("AWS/Glacier Limits"),
-    ))
 
 #.
 #   .--S3------------------------------------------------------------------.
@@ -249,15 +182,15 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _item_spec_aws_s3_buckets():
-    return TextAscii(title=_("Bucket name"))
+def _item_spec_aws_s3_buckets_objects():
+    return TextAscii(title=_("The bucket name"))
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_buckets_objects",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_buckets,
+        item_spec=_item_spec_aws_s3_buckets_objects,
         match_type="dict",
         parameter_valuespec=lambda: Dictionary(elements=[_vs_s3_buckets()]),
         title=lambda: _("AWS/S3 Bucket Objects"),
@@ -278,10 +211,15 @@ rulespec_registry.register(
     ))
 
 
+def _item_spec_aws_s3_requests():
+    return TextAscii(title=_("The bucket name"))
+
+
 def _parameter_valuespec_aws_s3_requests():
     return Dictionary(elements=[
         ('get_requests_perc',
          Alternative(title=_("Upper percentual levels for GET requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -296,6 +234,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('put_requests_perc',
          Alternative(title=_("Upper percentual levels for PUT requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -310,6 +249,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('delete_requests_perc',
          Alternative(title=_("Upper percentual levels for DELETE requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -324,6 +264,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('head_requests_perc',
          Alternative(title=_("Upper percentual levels for HEAD requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -338,6 +279,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('post_requests_perc',
          Alternative(title=_("Upper percentual levels for POST requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -352,6 +294,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('select_requests_perc',
          Alternative(title=_("Upper percentual levels for SELECT requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -366,6 +309,7 @@ def _parameter_valuespec_aws_s3_requests():
                      ])),
         ('list_requests_perc',
          Alternative(title=_("Upper percentual levels for LIST requests"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -385,64 +329,39 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_requests",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_buckets,
+        item_spec=_item_spec_aws_s3_requests,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_s3_requests,
         title=lambda: _("AWS/S3 Bucket Requests"),
     ))
 
 
-def _parameter_valuespec_aws_s3_latency():
-    return Dictionary(title=_("Levels on latency"),
-                      elements=[("levels_seconds",
-                                 Tuple(title=_("Upper levels on total request latency"),
-                                       elements=[
-                                           Float(title=_("Warning at"), unit='ms'),
-                                           Float(title=_("Critical at"), unit='ms')
-                                       ]))])
+def _item_spec_aws_s3_latency():
+    return TextAscii(title=_("The bucket name"))
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="aws_s3_latency",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_buckets,
+        item_spec=_item_spec_aws_s3_latency,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_s3_latency,
+        parameter_valuespec=lambda: Dictionary(elements=[_vs_latency()]),
         title=lambda: _("AWS/S3 Latency"),
     ))
 
 
 def _parameter_valuespec_aws_s3_limits():
-    return Dictionary(
-        elements=[('buckets',
-                   _vs_limits("Buckets", 100, title_default="Default limit set by AWS"))])
+    return Dictionary(elements=[('buckets', _vs_limits("Buckets", 100))])
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_s3_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_s3_limits,
         title=lambda: _("AWS/S3 Limits"),
-    ))
-
-
-def _parameter_valuespec_aws_s3_http_erros():
-    return Dictionary(title=_("Upper levels for HTTP errors"),
-                      elements=_vs_elements_http_errors(['4xx', '5xx']))
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_s3_http_errors",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_s3_buckets,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_s3_http_erros,
-        title=lambda: _("AWS/S3 HTTP Errors"),
     ))
 
 #.
@@ -499,8 +418,8 @@ def _parameter_valuespec_aws_ec2_limits():
     return Dictionary(elements=[
         ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
         ('elastic_ip_addresses', _vs_limits("Elastic IP Addresses", 5)),
-        ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 120)),
-        ('vpc_sec_groups', _vs_limits("VPC security groups", 2500)),
+        ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 50)),
+        ('vpc_sec_groups', _vs_limits("Security Groups of VPC", 500)),
         ('if_vpc_sec_group', _vs_limits("VPC security groups of elastic network interface", 5)),
         ('spot_inst_requests', _vs_limits("Spot Instance Requests", 20)),
         ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),
@@ -514,10 +433,9 @@ def _parameter_valuespec_aws_ec2_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_ec2_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_ec2_limits,
         title=lambda: _("AWS/EC2 Limits"),
@@ -578,20 +496,16 @@ def _parameter_valuespec_aws_elb_statistics():
          Tuple(
              title=_("Upper levels for surge queue length"),
              elements=[
-                 Integer(title=_("Warning at"), default_value=1024),
-                 Integer(title=_("Critical at"), default_value=1024),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
         ('levels_spillover',
          Tuple(
              title=_("Upper levels for the number of requests that were rejected (spillover)"),
              elements=[
-                 Float(title=_("Warning at"), display_format="%.3f", default_value=0.001,
-                       unit='/s'),
-                 Float(title=_("Critical at"),
-                       display_format="%.3f",
-                       default_value=0.001,
-                       unit='/s'),
+                 Integer(title=_("Warning at")),
+                 Integer(title=_("Critical at")),
              ],
          )),
     ],)
@@ -621,35 +535,8 @@ rulespec_registry.register(
     ))
 
 
-def _transform_aws_elb_http(p):
-
-    if "levels_load_balancers" in p:
-        return p
-    p_trans = {"levels_load_balancers": p, "levels_backend_targets": {}}
-
-    for http_err_code in ['4xx', '5xx']:
-        levels_key = "levels_http_%s_perc" % http_err_code
-        if levels_key in p:
-            p_trans["levels_backend_targets"][levels_key] = p[levels_key]
-
-    return p_trans
-
-
 def _parameter_valuespec_aws_elb_http():
-    return Transform(Dictionary(
-        title=_("Upper levels for HTTP errors"),
-        elements=[(
-            "levels_load_balancers",
-            Dictionary(
-                title=_("Upper levels for Load Balancers"),
-                elements=_vs_elements_http_errors(
-                    ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
-                    title_add=lambda http_err_code: ""
-                    if http_err_code in ['4xx', '5xx'] else " (Application Load Balancers only)"))),
-                  ("levels_backend_targets",
-                   Dictionary(title=_("Upper levels for Backend"),
-                              elements=_vs_elements_http_errors(['2xx', '3xx', '4xx', '5xx'])))]),
-                     forth=_transform_aws_elb_http)
+    return Dictionary(elements=_vs_elements_http_errors())
 
 
 rulespec_registry.register(
@@ -694,8 +581,8 @@ def _parameter_valuespec_aws_elb_backend_connection_errors():
         Tuple(
             title=_("Upper levels for backend connection errors per second"),
             elements=[
-                Float(title=_("Warning at"), unit='/s'),
-                Float(title=_("Critical at"), unit='/s'),
+                Float(title=_("Warning at")),
+                Float(title=_("Critical at")),
             ],
         ),
     )],)
@@ -721,10 +608,9 @@ def _parameter_valuespec_aws_elb_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_elb_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elb_limits,
         title=lambda: _("AWS/ELB Limits"),
@@ -760,10 +646,9 @@ def _parameter_valuespec_aws_elbv2_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_elbv2_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elbv2_limits,
         title=lambda: _("AWS/ELBv2 Limits"),
@@ -788,39 +673,6 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_elbv2_lcu,
         title=lambda: _("AWS/ELBv2 LCU"),
-    ))
-
-
-def _parameter_valuespec_aws_elbv2_application_target_errors():
-    return Dictionary(title=_("Upper levels for HTTP & Lambda user errors"),
-                      elements=[("levels_http",
-                                 Dictionary(title=_("Upper levels for HTTP errors"),
-                                            elements=_vs_elements_http_errors(
-                                                ['2xx', '3xx', '4xx', '5xx']))),
-                                ("levels_lambda",
-                                 Tuple(
-                                     title=_("Upper percentual levels for Lambda user errors"),
-                                     help=_("Specify levels for Lambda user errors in percent "
-                                            "which refer to the total number of requests."),
-                                     elements=[
-                                         Percentage(title=_("Warning at")),
-                                         Percentage(title=_("Critical at")),
-                                     ],
-                                 ))])
-
-
-def _item_spec_aws_elbv2_target_errors():
-    return TextAscii(title=_("Target group name"))
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_elbv2_target_errors",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_elbv2_target_errors,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_elbv2_application_target_errors,
-        title=lambda: _("AWS/ELBApplication Target Errors"),
     ))
 
 #.
@@ -868,10 +720,9 @@ def _parameter_valuespec_aws_ebs_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_ebs_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_ebs_limits,
         title=lambda: _("AWS/EBS Limits"),
@@ -892,7 +743,7 @@ def _item_spec_aws_rds():
     return TextAscii(
         title=_("Instance identifier & region"),
         help="Identfier of the DB instance and the name of the region in square brackets, e.g. "
-        "'db-instance-1 \\[eu-central-1\\]'.")
+        "'db-instance-1 \[eu-central-1\]'.")  # pylint: disable=anomalous-backslash-in-string
 
 
 rulespec_registry.register(
@@ -911,6 +762,7 @@ def _parameter_valuespec_aws_rds_disk_usage():
     return Dictionary(elements=[
         ('levels',
          Alternative(title=_("Upper levels for disk usage"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -941,6 +793,7 @@ def _parameter_valuespec_aws_rds_connections():
     return Dictionary(elements=[
         ('levels',
          Alternative(title=_("Upper levels for connections in use"),
+                     style="dropdown",
                      elements=[
                          Tuple(title=_("Set levels"),
                                elements=[
@@ -970,17 +823,35 @@ rulespec_registry.register(
 def _parameter_valuespec_aws_rds_replica_lag():
     return Dictionary(elements=[
         ('lag_levels',
-         Tuple(title=_("Upper levels on the replica lag"),
-               elements=[
-                   Float(title=_("Warning at"), unit='s', display_format="%.3f"),
-                   Float(title=_("Critical at"), unit='s', display_format="%.3f")
-               ])),
+         Alternative(title=_("Upper levels replica lag"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(title=_("Set levels"),
+                               elements=[
+                                   Age(title=_("Warning at")),
+                                   Age(title=_("Critical at")),
+                               ]),
+                         Tuple(title=_("No levels"),
+                               elements=[
+                                   FixedValue(None, totext=""),
+                                   FixedValue(None, totext=""),
+                               ]),
+                     ])),
         ('slot_levels',
-         Tuple(title=_("Upper levels on the oldest replication slot lag"),
-               elements=[
-                   Filesize(title=_("Warning at")),
-                   Filesize(title=_("Critical at")),
-               ])),
+         Alternative(title=_("Upper levels the oldest replication slot lag"),
+                     style="dropdown",
+                     elements=[
+                         Tuple(title=_("Set levels"),
+                               elements=[
+                                   Filesize(title=_("Warning at")),
+                                   Filesize(title=_("Critical at")),
+                               ]),
+                         Tuple(title=_("No levels"),
+                               elements=[
+                                   FixedValue(None, totext=""),
+                                   FixedValue(None, totext=""),
+                               ]),
+                     ])),
     ])
 
 
@@ -1017,10 +888,9 @@ def _parameter_valuespec_aws_rds_limits():
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_rds_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_rds_limits,
         title=lambda: _("AWS/RDS Limits"),
@@ -1039,211 +909,15 @@ rulespec_registry.register(
 
 def _parameter_valuespec_aws_cloudwatch_alarms_limits():
     return Dictionary(elements=[
-        ('cloudwatch_alarms', _vs_limits("CloudWatch Alarms", 5000)),
+        ('cloudwatch_alarms', _vs_limits("Cloudwatch Alarms", 5000)),
     ])
 
 
 rulespec_registry.register(
-    CheckParameterRulespecWithItem(
+    CheckParameterRulespecWithoutItem(
         check_group_name="aws_cloudwatch_alarms_limits",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_cloudwatch_alarms_limits,
-        title=lambda: _("AWS/CloudWatch Alarms Limits"),
-    ))
-
-#.
-#   .--DynamoDB------------------------------------------------------------.
-#   |         ____                                    ____  ____           |
-#   |        |  _ \ _   _ _ __   __ _ _ __ ___   ___ |  _ \| __ )          |
-#   |        | | | | | | | '_ \ / _` | '_ ` _ \ / _ \| | | |  _ \          |
-#   |        | |_| | |_| | | | | (_| | | | | | | (_) | |_| | |_) |         |
-#   |        |____/ \__, |_| |_|\__,_|_| |_| |_|\___/|____/|____/          |
-#   |               |___/                                                  |
-#   '----------------------------------------------------------------------'
-
-
-def _parameter_valuespec_aws_dynamodb_limits():
-    return Dictionary(elements=[
-        ('number_of_tables',
-         _vs_limits(
-             "Number of tables", 256, unit='tables', title_default="Default limit set by AWS")),
-        ('read_capacity', _vs_limits("Read capacity", 80000, unit='RCU')),
-        ('write_capacity', _vs_limits("Write capacity", 80000, unit='WCU')),
-    ])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_dynamodb_limits",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_limits_generic,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_dynamodb_limits,
-        title=lambda: _("AWS/DynamoDB Limits"),
-    ))
-
-
-def _vs_aws_dynamodb_capacity(title, unit):
-
-    elements_extr: List[ValueSpec] = [
-        Float(title=_("Warning at"), unit=unit),
-        Float(title=_("Critical at"), unit=unit),
-    ]
-
-    # mypy is unhappy without splitting into elements_avg and elements_single_minmmax
-    elements_avg: List[DictionaryEntry] = [
-        ('levels_average',
-         Dictionary(
-             title=_("Levels on average usage"),
-             elements=[
-                 (
-                     "limit",
-                     Integer(title=_("Limit at (otherwise from AWS API for provisioned tables)"),
-                             unit=unit,
-                             minvalue=1,
-                             default_value=1,
-                             help=_(
-                                 "Specify the limit value against which the average consumption is "
-                                 "compared to compute the average usage. If not set, the limit "
-                                 "will be fetched from the AWS API. However, this is not possible "
-                                 "for on-demand tables. Therefore, no average usage can be "
-                                 "computed for these tables if this value is not specified.")),
-                 ),
-                 ("levels_upper",
-                  Tuple(title=_("Upper levels in percentage of limit"),
-                        elements=[
-                            Percentage(title=_("Warning at"), default_value=80),
-                            Percentage(title=_("Critical at"), default_value=90),
-                        ])),
-                 ("levels_lower",
-                  Tuple(title=_("Lower levels in percentage of limit"),
-                        elements=[
-                            Percentage(title=_("Warning at")),
-                            Percentage(title=_("Critical at")),
-                        ])),
-             ])),
-    ]
-
-    elements_single_minmmax: List[DictionaryEntry] = [
-        ('levels_%s' % extr,
-         Dictionary(title=_("Levels on %s single-request consumption" % extr),
-                    elements=[
-                        ("levels_upper", Tuple(title=_("Upper levels"), elements=elements_extr)),
-                        ("levels_lower", Tuple(title=_("Lower levels"), elements=elements_extr)),
-                    ])) for extr in ['minimum', 'maximum']
-    ]
-
-    return Dictionary(title=_(title), elements=elements_avg + elements_single_minmmax)
-
-
-def _parameter_valuespec_aws_dynamodb_capacity():
-    return Dictionary(title=_("Levels on Read/Write Capacity"),
-                      elements=[('levels_read',
-                                 _vs_aws_dynamodb_capacity('Levels on read capacity', 'RCU')),
-                                ('levels_write',
-                                 _vs_aws_dynamodb_capacity('Levels on write capacity', 'WCU'))])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="aws_dynamodb_capacity",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_dynamodb_capacity,
-        title=lambda: _("AWS/DynamoDB Read/Write Capacity"),
-    ))
-
-
-def _parameter_valuespec_aws_dynamodb_latency():
-    return Dictionary(title=_("Levels on latency"),
-                      elements=[
-                          ("levels_seconds_%s_%s" % (operation.lower(), statistic),
-                           Tuple(title=_("Upper levels on %s latency of successful %s requests" %
-                                         (statistic, operation)),
-                                 elements=[
-                                     Float(title=_("Warning at"), unit='ms'),
-                                     Float(title=_("Critical at"), unit='ms'),
-                                 ]))
-                          for operation in ['Query', 'GetItem', 'PutItem']
-                          for statistic in ['average', 'maximum']
-                      ])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="aws_dynamodb_latency",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_dynamodb_latency,
-        title=lambda: _("AWS/DynamoDB Latency"),
-    ))
-
-#.
-#   .--WAFV2---------------------------------------------------------------.
-#   |                __        ___    _______     ______                   |
-#   |                \ \      / / \  |  ___\ \   / /___ \                  |
-#   |                 \ \ /\ / / _ \ | |_   \ \ / /  __) |                 |
-#   |                  \ V  V / ___ \|  _|   \ V /  / __/                  |
-#   |                   \_/\_/_/   \_\_|      \_/  |_____|                 |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _item_spec_aws_wafv2_limits():
-    return TextAscii(title=_("Region name"),
-                     help=_("An AWS region name such as 'eu-central-1' or 'CloudFront' for WAFs in "
-                            "front of CloudFront resources"))
-
-
-def _parameter_valuespec_aws_wafv2_limits():
-    return Dictionary(title=_('Limits and levels'),
-                      elements=[
-                          ('web_acls',
-                           _vs_limits("Web ACLs", 100, title_default="Default limit set by AWS")),
-                          ('rule_groups',
-                           _vs_limits("Rule groups", 100,
-                                      title_default="Default limit set by AWS")),
-                          ('ip_sets',
-                           _vs_limits("IP sets", 100, title_default="Default limit set by AWS")),
-                          ('regex_pattern_sets',
-                           _vs_limits("Regex sets", 10, title_default="Default limit set by AWS")),
-                          ('web_acl_capacity_units',
-                           _vs_limits("Web ACL capacity units (WCUs)",
-                                      1500,
-                                      title_default="Default limit set by AWS")),
-                      ])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="aws_wafv2_limits",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_aws_wafv2_limits,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_wafv2_limits,
-        title=lambda: _("AWS/WAFV2 Limits"),
-    ))
-
-
-def _parameter_valuespec_aws_wafv2_web_acl():
-    return Dictionary(title=_('Levels on Web ACL requests'),
-                      elements=[
-                          ("%s_requests_perc" % action,
-                           Tuple(title=_("Upper levels on percentage of %s requests" % action),
-                                 elements=[
-                                     Percentage(title=_("Warning at")),
-                                     Percentage(title=_("Critical at")),
-                                 ])) for action in ['allowed', 'blocked']
-                      ])
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="aws_wafv2_web_acl",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_aws_wafv2_web_acl,
-        title=lambda: _("AWS/WAFV2 Web ACL Requests"),
+        title=lambda: _("AWS/Cloudwatch Alarms Limits"),
     ))

@@ -1,13 +1,11 @@
 Title: Deal with RRD sources which are not updated anymore in multiline graphs
-Class: fix
-Compatible: compat
-Component: metrics
-Date: 1572530912
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0p6
+Date: 1572530912
+Class: fix
 
 The metrics "Guest operating systems" and "CPU time stolen by other
 operating systems" that appear on the CPU utilization service Check for

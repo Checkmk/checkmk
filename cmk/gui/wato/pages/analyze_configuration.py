@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 """
 Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
@@ -10,37 +30,29 @@ checks and tells the user what could be improved.
 
 import time
 import multiprocessing
+import Queue
 import traceback
 import ast
-from typing import Any, Dict, Tuple
-import queue
-
-from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
-import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.log as log
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.globals import html
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-)
 
-from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry
+from cmk.gui.plugins.wato import (
+    WatoMode,
+    mode_registry,
+)
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
+from cmk.gui.watolib.changes import activation_site_ids
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
     ACResultOK,
@@ -75,36 +87,13 @@ class ModeAnalyzeConfig(WatoMode):
     def title(self):
         return _("Analyze configuration")
 
-    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(
-            dropdowns=[
-                PageMenuDropdown(
-                    name="related",
-                    title=_("Related"),
-                    topics=[
-                        PageMenuTopic(
-                            title=_("Configure"),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Support diagnostics"),
-                                    icon_name="diagnostics",
-                                    item=make_simple_link("wato.py?mode=diagnostics"),
-                                ),
-                            ],
-                        ),
-                    ],
-                ),
-            ],
-            breadcrumb=breadcrumb,
-        )
-
-    def action(self) -> ActionResult:
+    def action(self):
         if not html.check_transaction():
-            return None
+            return
 
         test_id = html.request.var("_test_id")
         site_id = html.request.var("_site_id")
-        status_id = html.request.get_integer_input_mandatory("_status_id", 0)
+        status_id = html.get_integer_input("_status_id", 0)
 
         if not test_id:
             raise MKUserError("_ack_test_id", _("Needed variable missing"))
@@ -113,7 +102,7 @@ class ModeAnalyzeConfig(WatoMode):
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
-            if site_id not in config.activation_sites():
+            if site_id not in activation_site_ids():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
         if html.request.var("_do") == "ack":
@@ -131,18 +120,16 @@ class ModeAnalyzeConfig(WatoMode):
         else:
             raise NotImplementedError()
 
-        return None
-
     def page(self):
-        if not self._analyze_sites():
-            html.show_message(
+        if not self._analyze_site_ids():
+            html.show_info(
                 _("Analyze configuration can only be used with the local site and "
                   "distributed WATO slave sites. You currently have no such site configured."))
             return
 
         results_by_category = self._perform_tests()
 
-        site_ids = sorted(self._analyze_sites())
+        site_ids = sorted(self._analyze_site_ids())
 
         for category_name, results_by_test in sorted(results_by_category.items(),
                                                      key=lambda x: ACTestCategories.title(x[0])):
@@ -259,7 +246,7 @@ class ModeAnalyzeConfig(WatoMode):
                     continue
 
                 html.open_tr()
-                html.td(escaping.escape_attribute(site_id))
+                html.td(html.attrencode(site_id))
                 html.td("%s: %s" % (result.status_name(), result.text))
                 html.close_tr()
             html.close_table()
@@ -268,24 +255,23 @@ class ModeAnalyzeConfig(WatoMode):
         table.row(class_="hidden")
 
     def _perform_tests(self):
-        test_sites = self._analyze_sites()
+        test_site_ids = self._analyze_site_ids()
 
-        self._logger.debug("Executing tests for %d sites" % len(test_sites))
+        self._logger.debug("Executing tests for %d sites" % len(test_site_ids))
         results_by_site = {}
 
         # Results are fetched simultaneously from the remote sites
-        result_queue: multiprocessing.Queue[Tuple[SiteId, str]] = multiprocessing.JoinableQueue()
+        result_queue = multiprocessing.JoinableQueue()
 
         processes = []
-        site_id = SiteId("unknown_site")
-        for site_id in test_sites:
+        for site_id in test_site_ids:
             process = multiprocessing.Process(target=self._perform_tests_for_site,
                                               args=(site_id, result_queue))
             process.start()
             processes.append((site_id, process))
 
         # Now collect the results from the queue until all processes are finished
-        while any(p.is_alive() for site_id, p in processes):
+        while any([p.is_alive() for site_id, p in processes]):
             try:
                 site_id, results_data = result_queue.get_nowait()
                 result_queue.task_done()
@@ -294,7 +280,7 @@ class ModeAnalyzeConfig(WatoMode):
                 if result["state"] == 1:
                     raise MKGeneralException(result["response"])
 
-                if result["state"] == 0:
+                elif result["state"] == 0:
                     test_results = []
                     for result_data in result["response"]:
                         result = ACResult.from_repr(result_data)
@@ -311,7 +297,7 @@ class ModeAnalyzeConfig(WatoMode):
                 else:
                     raise NotImplementedError()
 
-            except queue.Empty:
+            except Queue.Empty:
                 time.sleep(0.5)  # wait some time to prevent CPU hogs
 
             except Exception as e:
@@ -320,12 +306,12 @@ class ModeAnalyzeConfig(WatoMode):
                 result.site_id = site_id
                 results_by_site[site_id] = [result]
 
-                logger.exception("error analyzing configuration for site %s", site_id)
+                logger.exception()
 
         self._logger.debug("Got test results")
 
         # Group results by category in first instance and then then by test
-        results_by_category: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        results_by_category = {}
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})
@@ -341,13 +327,12 @@ class ModeAnalyzeConfig(WatoMode):
 
         return results_by_category
 
-    def _analyze_sites(self):
-        return config.activation_sites()
+    def _analyze_site_ids(self):
+        return activation_site_ids()
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
-    def _perform_tests_for_site(self, site_id: SiteId,
-                                result_queue: 'multiprocessing.Queue[Tuple[SiteId, str]]') -> None:
+    def _perform_tests_for_site(self, site_id, result_queue):
         self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't
@@ -425,7 +410,7 @@ class ModeAnalyzeConfig(WatoMode):
         self._enable_test(test_id, False)
 
     def _save_acknowledgements(self, acknowledged_werks):
-        store.save_object_to_file(self._ack_path, acknowledged_werks)
+        store.save_data_to_file(self._ack_path, acknowledged_werks)
 
     def _load_acknowledgements(self, lock=False):
-        return store.load_object_from_file(self._ack_path, default={}, lock=lock)
+        return store.load_data_from_file(self._ack_path, {}, lock=lock)

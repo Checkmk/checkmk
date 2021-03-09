@@ -1,13 +1,13 @@
 Title: Prevent tgz packages from modifying existing directories
-Class: fix
-Compatible: compat
-Component: agents
-Date: 1573543149
-Edition: cee
 Knowledge: doc
 Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p7
+Date: 1573543149
 
 This is a regression since Werk <a href=https://checkmk.com/check_mk-werks.php?werk_id=6711>#6711</a>.
 

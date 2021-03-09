@@ -1,0 +1,19 @@
+Title: check_sql: Encoding error in "Check SQL Database" rule
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1612361420
+
+This is a regression since Checkmk 1.6.0p19 / Werk #11542.
+
+When entering an SQL query/statement containing non-ASCII characters within the
+"Check SQL Database" rule, this will result in a crash, showing the error
+<tt>UnicodeEncodeError ('ascii' codec can't encode character u'\xf6'
+in position 15: ordinal not in range(128))</tt>.
+
+This is fixed now.

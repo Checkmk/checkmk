@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -10,6 +30,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Dictionary,
     Integer,
+    Optional,
     Percentage,
     Tuple,
     Transform,
@@ -37,11 +58,11 @@ cpu_util_common_dict = Dictionary(
                  Age(title=_("Warning after "), default_value=5 * 60),
                  Age(title=_("Critical after "), default_value=15 * 60),
              ],
-             help=
-             _("With this configuration, check_mk will alert if the actual (not averaged) total CPU is "
-               "exceeding a utilization threshold over an extended period of time. "
-               "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
-              ))),
+             help=_(
+                 "With this configuration, check_mk will alert if the total CPU is "
+                 "exceeding a utilization threshold over an extended period of time. "
+                 "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
+             ))),
         ("core_util_time",
          Tuple(title=_("Levels over an extended time period on a single core CPU utilization"),
                elements=[
@@ -65,46 +86,6 @@ cpu_util_common_dict = Dictionary(
              minvalue=1,
              default_value=15,
              label=_("Compute average over last "),
-         )),
-        ("average_single",
-         Dictionary(
-             title=_("Averaging for single cores"),
-             help=_("Compute averaged single-core CPU utilizations. Note that this option only has "
-                    "an effect if at least one of the sub-options 'Apply single-core levels' or "
-                    "'Graphs for averaged single-core utilizations' is enabled."),
-             elements=[
-                 ("time_average",
-                  Integer(
-                      title=_("Time frame"),
-                      unit=_("minutes"),
-                      minvalue=1,
-                      default_value=15,
-                      label=_("Compute average over last "),
-                  )),
-                 ("apply_levels",
-                  DropdownChoice(
-                      title=_("Apply single-core levels defined in 'Levels on single cores'"),
-                      help=_("Apply the levels for single cores to the averaged instead of the "
-                             "instantaneous utilizations."),
-                      choices=[
-                          (True, _("Enable")),
-                          (False, _("Disable")),
-                      ],
-                      default_value=False,
-                  )),
-                 ("show_graph",
-                  DropdownChoice(
-                      title=_("Graphs for averaged single-core utilizations"),
-                      help=_("Create a separate graph showing the averaged single-core CPU "
-                             "utilizations."),
-                      choices=[
-                          (True, _("Enable")),
-                          (False, _("Disable")),
-                      ],
-                      default_value=False,
-                  )),
-             ],
-             optional_keys=False,
          )),
         ("util",
          Levels(
@@ -214,30 +195,16 @@ rulespec_registry.register(
     ))
 
 
-def _transform_cpu_utilization(params):
-    if params is None:
-        return {}
-    if isinstance(params, tuple):
-        return {"util": params}
-    return params
-
-
 def _parameter_valuespec_cpu_utilization():
-    return Transform(
-        Dictionary(elements=[
-            ("util",
-             Tuple(elements=[
-                 Percentage(title=_("Warning at a utilization of")),
-                 Percentage(title=_("Critical at a utilization of"))
-             ],
-                   title=_("Alert on too high CPU utilization"),
-                   help=_("The CPU utilization sums up the percentages of CPU time that is used "
-                          "for user processes and kernel routines over all available cores within "
-                          "the last check interval. The possible range is from 0% to 100%"),
-                   default_value=(90.0, 95.0))),
-        ]),
-        forth=_transform_cpu_utilization,
-    )
+    return Optional(Tuple(elements=[
+        Percentage(title=_("Warning at a utilization of")),
+        Percentage(title=_("Critical at a utilization of"))
+    ]),
+                    label=_("Alert on too high CPU utilization"),
+                    help=_("The CPU utilization sums up the percentages of CPU time that is used "
+                           "for user processes and kernel routines over all available cores within "
+                           "the last check interval. The possible range is from 0% to 100%"),
+                    default_value=(90.0, 95.0))
 
 
 rulespec_registry.register(

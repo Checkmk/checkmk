@@ -1,12 +1,13 @@
 Title: Extension packages: Checkmk can now ship optional packages
-Class: feature
-Compatible: compat
-Component: core
-Date: 1575286103
-Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i1
+Component: core
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1575286103
 
 Checkmk can now ship optional extension packages. This feature has been introduced to
 be able to provide feature previews in stable versions. Instead of introducing backported

@@ -1,12 +1,11 @@
 Title: BI aggregations: Introduced aggregation ID
 Level: 1
 Component: bi
-Class: feature
 Compatible: incomp
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1563197753
+Class: feature
 
 In previous versions aggregation templates were identified by the pack name and an automatic index number.
 The index number however did not work well when multiple users modify aggregations at the same time.

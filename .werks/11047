@@ -1,13 +1,11 @@
 Title: mknotifyd, mknotifyd.connection: resolve wrong warnings
-Class: fix
-Compatible: compat
-Component: notifications
-Date: 1594388811
-Edition: cee
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.6.0p14
+Date: 1594388811
+Class: fix
 
 If another process tried to connect to the mknotifyd via TCP the
 notification spooler service returned CRIT together with the

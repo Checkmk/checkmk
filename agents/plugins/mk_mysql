@@ -1,21 +1,33 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
-# entire script.
-:
-
-# Disable unused variable error (needed to keep track of version)
-# shellcheck disable=SC2034
-CMK_VERSION="2.1.0i1"
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # gets optional socket as argument
-do_query() {
+function do_query() {
 
   # we use the sockets full name as instance name:
-  INSTANCE_HEADER="[[$2]]"
+  INSTANCE_HEADER="[[$1]]"
 
   # Check if mysqld is running and root password setup
   echo "<<<mysql_ping>>>"
@@ -43,19 +55,14 @@ do_query() {
 if type mysqladmin >/dev/null
 then
   mysql_sockets=$(fgrep -h socket "$MK_CONFDIR"/mysql{.local,}.cfg | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
-  alias=$(fgrep -h alias "$MK_CONFDIR"/mysql{.local,}.cfg | cut -d \" -f2)
   if [ -z "$mysql_sockets" ] ; then
     mysql_sockets=$(ps -fww -C mysqld | grep "socket" | sed -ne 's/.*socket=\([^ ]*\).*/\1/p')
   fi
   if [ -z "$mysql_sockets" ] ; then
-    do_query "" "$alias"
+    do_query ""
   else
     for socket in $mysql_sockets ; do
-      if [ -z "$alias" ] ; then
-        do_query "$socket" "$socket"
-      else
-        do_query "$socket" "$alias"
-      fi
+      do_query "$socket"
     done
   fi
 

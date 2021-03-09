@@ -1,11 +1,12 @@
 Title: Management Boards: Use DNS cache while looking up IP address
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1594285201
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594285201
 
 

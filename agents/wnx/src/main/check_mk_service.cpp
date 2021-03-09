@@ -5,13 +5,11 @@
 #include "pch.h"
 // system C
 // system C++
-#include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <string>
-#include <thread>
 
-#include "common/yaml.h"
+#include "yaml-cpp/yaml.h"
 
 // Project
 #include "common/cmdline_info.h"
@@ -20,10 +18,13 @@
 
 // Personal
 #include "cfg.h"
+#include "check_mk_cmdline.h"
 #include "check_mk_service.h"
 #include "cma_core.h"
 #include "logger.h"
 #include "providers/perf_counters_cl.h"
+
+std::filesystem::path G_ProjectPath = PROJECT_DIR_CMK_SERVICE;
 
 namespace cma::cmdline {
 
@@ -49,19 +50,6 @@ void PrintMain() {
             // first Row
             kLegacyTestParam, kVersionParam, kReloadConfigParam,
             kRemoveLegacyParam, kHelpParam);
-    });
-}
-
-void PrintAgentUpdater() {
-    using namespace xlog::internal;
-    PrintBlock("Agent Updater Usage:\n", Colors::green, []() {
-        return fmt::format(
-            "\t{1} <{2}|{3}> [args]\n"
-            "\t{2}|{3:<{0}} - register Agent using plugins\\cmk_update_agent.checmk.py\n",
-            kParamShift,
-            kServiceExeName,  // service name from the project definitions
-            // first Row
-            kUpdaterParam, kCmkUpdaterParam);
     });
 }
 
@@ -223,7 +211,7 @@ void PrintCap() {
     using namespace xlog::internal;
 
     PrintBlock(
-        "Install Bakery Files and plugins.cap in install folder:\n",
+        "Install Bakery Files, plugins.cap and check_mk.ini, in install folder:\n",
         Colors::pink, []() {
             return fmt::format(
                 "\t{0} {1}\n",
@@ -260,12 +248,12 @@ static void ServiceUsage(std::wstring_view comment) {
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::setup::DuplicateOnStdio(true);
     if (!comment.empty()) {
-        xlog::sendStringToStdio(wtools::ToUtf8(comment).data(), Colors::red);
+        xlog::sendStringToStdio(wtools::ConvertToUTF8(comment).data(),
+                                Colors::red);
     }
 
     try {
         PrintMain();
-        PrintAgentUpdater();
         PrintSelfCheck();
         PrintAdHoc();
         PrintRealtimeTesting();
@@ -282,17 +270,17 @@ static void ServiceUsage(std::wstring_view comment) {
         XLOG::l("Exception is '{}'", e.what());  //
     }
 
-    // undocumented
+    // undocummneted
     // -winnperf ....... command line for runperf
 }
 
 namespace cma {
 namespace details {
-extern bool g_is_service;
+extern bool G_Service;
 }
 
 AppType AppDefaultType() {
-    return details::g_is_service ? AppType::srv : AppType::exe;
+    return details::G_Service ? AppType::srv : AppType::exe;
 }
 
 template <typename T>
@@ -335,7 +323,7 @@ auto ToUint(const T W, uint32_t Dflt = 0) noexcept {
 int CheckMainService(const std::wstring &What, int Interval) {
     using namespace std::chrono;
 
-    auto what = wtools::ToUtf8(What);
+    auto what = wtools::ConvertToUTF8(What);
 
     if (what == cma::cmdline::kCheckParamMt) return cma::srv::TestMt();
     if (what == cma::cmdline::kCheckParamIo) return cma::srv::TestIo();
@@ -359,7 +347,7 @@ int RunService(std::wstring_view app_name) {
     using namespace std::chrono;
     using namespace cma::cfg;
 
-    cma::details::g_is_service = true;  // we know that we are service
+    cma::details::G_Service = true;  // we know that we are service
 
     auto ret = cma::srv::ServiceAsService(app_name, 1000ms, [](const void *) {
         // optional commands listed here
@@ -367,16 +355,16 @@ int RunService(std::wstring_view app_name) {
         // 1. Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
         // scripting is possible but complicated
-        auto [command, ret] = CheckForUpdateFile(
+        auto [command, install] = CheckForUpdateFile(
             kDefaultMsiFileName,     // file we are looking for
             GetUpdateDir(),          // dir where file we're searching
             UpdateProcess::execute,  // start update when file found
             GetUserInstallDir());    // dir where file to backup
 
-        if (ret) {
+        if (install) {
             XLOG::l.i(
                 "Install process with command '{}' was initiated - waiting for restart",
-                wtools::ToUtf8(command));
+                wtools::ConvertToUTF8(command));
         }
 
         return true;
@@ -387,69 +375,6 @@ int RunService(std::wstring_view app_name) {
     return ret == 0 ? 0 : 1;
 }
 }  // namespace srv
-
-namespace {
-void WaitForPostInstall() {
-    using namespace std::chrono_literals;
-    if (!cma::install::IsPostInstallRequired()) return;
-
-    std::cout << "Finalizing installation, please wait";
-    int count = 0;
-
-    do {
-        std::this_thread::sleep_for(1s);
-        std::cout << ".";
-        ++count;
-        if (count > 240) {
-            std::cout << "Service is failed or nor running";
-            ::exit(73);
-        }
-    } while (cma::install::IsPostInstallRequired());
-}
-
-}  // namespace
-
-namespace {
-int ProcessWinperf(const std::vector<std::wstring> &args) {
-    // @file winperf file:a.txt id:12345 timeout:20 238:processor
-    //       winperf file:a.txt id:12345 timeout:20 238:processor
-    int offset = 0;
-    if (args[0][0] == '@') {
-        try {
-            std::filesystem::path p{args[0].c_str() + 1};
-            XLOG::setup::ChangeLogFileName(p.u8string());
-            XLOG::setup::EnableDebugLog(true);
-            XLOG::setup::EnableTraceLog(true);
-            XLOG::d.i("winperf started");
-            offset++;
-        } catch (const std::exception & /*e*/) {
-            return 1;
-        }
-    };
-
-    auto [error_val, name, id_val, timeout_val] =
-        exe::cmdline::ParseExeCommandLine({args.begin() + offset, args.end()});
-
-    if (error_val != 0) {
-        XLOG::l("Invalid parameters in command line [{}]", error_val);
-        return 1;
-    }
-
-    std::wstring prefix = name;
-    std::wstring port = args[offset + 1];
-    std::wstring id = id_val;
-    std::wstring timeout = timeout_val;
-    std::vector<std::wstring_view> counters;
-    for (size_t i = 4 + offset; i < args.size(); i++) {
-        if (std::wstring(L"#") == args[i]) {
-            break;
-        }
-        counters.emplace_back(args[i]);
-    }
-
-    return provider::RunPerf(prefix, port, id, ToInt(timeout, 20), counters);
-}
-}  // namespace
 
 // #TODO Function is over complicated
 // we want to test main function too.
@@ -466,22 +391,54 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::RunService(Argv[0]);
     }
 
-    WaitForPostInstall();
-
     std::wstring param(Argv[1]);
-    if (param == exe::cmdline::kRunOnceParam) {
-        // NO READING FROM CONFIG. This is intentional
-        //
-        // -runonce @file winperf file:a.txt id:12345 timeout:20 238:processor
+    if (param == cma::exe::cmdline::kRunOnceParam) {
+        // to test
         // -runonce winperf file:a.txt id:12345 timeout:20 238:processor
-        std::vector<std::wstring> args;
-        for (int i = 2; i < argc; i++) {
-            args.emplace_back(Argv[i]);
+        // NO READING FROM CONFIG. This is intentional
+
+        auto [error_val, name, id_val, timeout_val] =
+            cma::exe::cmdline::ParseExeCommandLine(argc - 2, Argv + 2);
+
+        if (error_val != 0) {
+            XLOG::l("Invalid parameters in command line [{}]", error_val);
+            return 1;
         }
-        return ProcessWinperf(args);
+
+        std::wstring prefix = name;
+        std::wstring port = Argv[3];
+        std::wstring id = id_val;
+        std::wstring timeout = timeout_val;
+        std::vector<std::wstring_view> counters;
+        for (int i = 6; i < argc; i++) {
+            if (std::wstring(L"#") == Argv[i]) break;
+            counters.push_back(Argv[i]);
+        }
+
+        return cma::provider::RunPerf(prefix, id, port, ToInt(timeout, 20),
+                                      counters);
+    }
+
+    if (0) {
+        // this code is enabled only during testing and debugging
+        auto path = G_ProjectPath;
+        for (;;) {
+            auto yml_test_file =
+                G_ProjectPath / "data" / "check_mk.example.yml";
+            try {
+                YAML::Node config = YAML::LoadFile(yml_test_file.u8string());
+            } catch (const std::exception &e) {
+                XLOG::l(XLOG_FLINE + " exception %s", e.what());
+            } catch (...) {
+                XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
+            }
+        }
     }
 
     using namespace cma::cmdline;
+
+    auto [hidden, code] = HiddenCommandProcessor(argc, Argv);
+    if (hidden) return code;
 
     cma::OnStartApp();  // path from EXE
 
@@ -542,23 +499,13 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecVersion();
     }
 
-    if (param == wtools::ConvertToUTF16(kUpdaterParam) ||
-        param == wtools::ConvertToUTF16(kCmkUpdaterParam)) {
-        std::vector<std::wstring> params;
-        for (int k = 2; k < argc; k++) {
-            params.emplace_back(Argv[k]);
-        }
-
-        return cma::srv::ExecCmkUpdateAgent(params);
-    }
-
     if (param == wtools::ConvertToUTF16(kPatchHashParam)) {
         return cma::srv::ExecPatchHash();
     }
 
     if (param == wtools::ConvertToUTF16(kShowConfigParam)) {
         std::wstring second_param = argc > 2 ? Argv[2] : L"";
-        return cma::srv::ExecShowConfig(wtools::ToUtf8(second_param));
+        return cma::srv::ExecShowConfig(wtools::ConvertToUTF8(second_param));
     }
 
     if (param == wtools::ConvertToUTF16(kUpgradeParam)) {
@@ -619,20 +566,8 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         return cma::srv::ExecSection(section, delay, diag);
     }
 
-    if (param == wtools::ConvertToUTF16(kCapExtractParam) && argc > 3) {
-        std::wstring file = Argv[2];
-        std::wstring to = Argv[3];
-        return cma::srv::ExecExtractCap(file, to);
-    }
-
     if (param == wtools::ConvertToUTF16(kReloadConfigParam)) {
         cma::srv::ExecReloadConfig();
-        return 0;
-    }
-
-    if (param == wtools::ConvertToUTF16(kUninstallAlert)) {
-        XLOG::l.i("UNINSTALL ALERT");
-        cma::srv::ExecUninstallAlert();
         return 0;
     }
 
@@ -650,7 +585,7 @@ int MainFunction(int argc, wchar_t const *Argv[]) {
         std::wstring(L"Provided Parameter \"") + param + L"\" is not allowed\n";
 
     ServiceUsage(text);
-    return 13;
+    return 2;
 }
 }  // namespace cma
 

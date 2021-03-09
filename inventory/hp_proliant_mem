@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inv_hp_proliant_mem(info):
+    map_mem_types = {
+        "1": 'other',
+        "2": 'board',
+        "3": 'cpqSingleWidthModule',
+        "4": 'cpqDoubleWidthModule',
+        "5": 'simm',
+        "6": 'pcmcia',
+        "7": 'compaq-specific',
+        "8": 'DIMM',
+        "9": 'smallOutlineDimm',
+        "10": 'RIMM',
+        "11": 'SRIMM',
+        "12": 'FB-DIMM',
+        "13": 'DIMM DDR',
+        "14": 'DIMM DDR2',
+        "15": 'DIMM DDR3',
+        "16": 'DIMM FBD2',
+        "17": 'FB-DIMM DDR2',
+        "18": 'FB-DIMM DDR3',
+    }
+
+    node = inv_tree_list("hardware.memory.arrays:")
+
+    infos = {}
+    for _board_index, module_index, module_size_str, module_type, \
+        _module_status, _module_condition, module_serial, cpu_num in info:
+        infos.setdefault(
+            (int(cpu_num) - 1, module_index), {
+                "serial": module_serial,
+                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+            })
+
+    # From dmidecode in case of dual host config we have to proof
+    # if there's already an existing devices table
+    try:
+        for (cpu_num, module_index), module_info in infos.items():
+            for entry in node[cpu_num].get("devices", []):
+                if entry["set"] == module_index:
+                    entry.update(module_info)
+    except:
+        array = {"devices": []}
+        for _board_index, module_index, module_size_str, module_type, \
+            _module_status, _module_condition, module_serial, cpu_num in info:
+
+            array["devices"].append({
+                "size": float(module_size_str) * 1024,
+                "serial": module_serial,
+                "type": map_mem_types.get(module_type, "unknown(%s)" % module_type),
+                "set": module_index,
+                "locator": cpu_num
+            })
+
+        node.append(array)
+
+
+inv_info['hp_proliant_mem'] = {
+    'inv_function': inv_hp_proliant_mem,
+}

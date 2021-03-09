@@ -1,13 +1,11 @@
 Title: heartbeat_crm: strict activation in agent
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1599659189
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1599659189
+Class: fix
 
 After werk #11042 pacemaker-controld is a target process required to
 trigger the heartbeat_crm section in Linux and openwrt agents. The way such

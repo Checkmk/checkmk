@@ -1,0 +1,13 @@
+Title: Activate changes: Ensure housekeeping, always cleanup obsolete files
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1588516441
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p12
+
+Due to request timeouts there was a chance that the housekeeping jobs never ran.
+As a result the omd tmpfs directory could grow full, causing other errors.
+This has been fixed.

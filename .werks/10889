@@ -1,12 +1,10 @@
 Title: Web API: site_login call did not work (regression since #6929)
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1586877046
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586877046
+Class: fix
 
 

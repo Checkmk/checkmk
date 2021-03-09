@@ -1,11 +1,12 @@
 Title: df: Filesystems of type devtmpfs are now ignored completely
 Level: 1
 Component: checks
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1560519317
-Class: fix
 
 Previously only the mountpoint /dev has been ignored explicitly by the check
 plugin. Now all mountpoints are ignored, that has the type devtmpfs. There

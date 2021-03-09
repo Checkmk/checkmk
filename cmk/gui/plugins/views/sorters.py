@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import abc
 import time
@@ -62,8 +82,7 @@ class SorterSvcstate(Sorter):
         return ['service_state', 'service_has_been_checked']
 
     def cmp(self, r1, r2):
-        return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) <
-                                                              cmp_state_equiv(r2))
+        return cmp(cmp_state_equiv(r1), cmp_state_equiv(r2))
 
 
 @sorter_registry.register
@@ -81,8 +100,7 @@ class SorterHoststate(Sorter):
         return ['host_state', 'host_has_been_checked']
 
     def cmp(self, r1, r2):
-        return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (cmp_host_state_equiv(r1) <
-                                                                        cmp_host_state_equiv(r2))
+        return cmp(cmp_host_state_equiv(r1), cmp_host_state_equiv(r2))
 
 
 @sorter_registry.register
@@ -100,8 +118,7 @@ class SorterSiteHost(Sorter):
         return ['site', 'host_name']
 
     def cmp(self, r1, r2):
-        return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
-            "host_name", r1, r2)
+        return cmp(r1["site"], r2["site"]) or cmp_num_split("host_name", r1, r2)
 
 
 @sorter_registry.register
@@ -137,11 +154,12 @@ class SorterSitealias(Sorter):
         return ['site']
 
     def cmp(self, r1, r2):
-        return (config.site(r1["site"])["alias"] > config.site(r2["site"])["alias"]) - (config.site(
-            r1["site"])["alias"] < config.site(r2["site"])["alias"])
+        return cmp(config.site(r1["site"])["alias"], config.site(r2["site"])["alias"])
 
 
-class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
+class ABCTagSorter(Sorter):
+    __metaclass__ = abc.ABCMeta
+
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -149,7 +167,7 @@ class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
     def cmp(self, r1, r2):
         tag_groups_1 = sorted(get_tag_groups(r1, self.object_type).items())
         tag_groups_2 = sorted(get_tag_groups(r2, self.object_type).items())
-        return (tag_groups_1 > tag_groups_2) - (tag_groups_1 < tag_groups_2)
+        return cmp(tag_groups_1, tag_groups_2)
 
 
 @sorter_registry.register
@@ -190,7 +208,9 @@ class SorterServiceTags(ABCTagSorter):
         return ["service_tags"]
 
 
-class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
+class ABCLabelSorter(Sorter):
+    __metaclass__ = abc.ABCMeta
+
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -198,7 +218,7 @@ class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
     def cmp(self, r1, r2):
         labels_1 = sorted(get_labels(r1, self.object_type).items())
         labels_2 = sorted(get_labels(r2, self.object_type).items())
-        return (labels_1 > labels_2) - (labels_1 < labels_2)
+        return cmp(labels_1, labels_2)
 
 
 @sorter_registry.register
@@ -258,9 +278,8 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return ((cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) -
-            (cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])) or
-            cmp_num_split(column, r1, r2))
+    return cmp(cmp_service_name_equiv(r1[column]), cmp_service_name_equiv(r2[column])) or \
+           cmp_num_split(column, r1, r2)
 
 
 #                      name                      title                              column                       sortfunction
@@ -276,12 +295,6 @@ declare_simple_sorter("stateage", _("Service state age"), "service_last_state_ch
                       cmp_simple_number)
 declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
 declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
-
-# Alerts
-declare_1to1_sorter("alert_stats_crit", cmp_simple_number, reverse=True)
-declare_1to1_sorter("alert_stats_unknown", cmp_simple_number, reverse=True)
-declare_1to1_sorter("alert_stats_warn", cmp_simple_number, reverse=True)
-declare_1to1_sorter("alert_stats_problem", cmp_simple_number, reverse=True)
 
 # Service
 declare_1to1_sorter("svc_check_command", cmp_simple_string)
@@ -323,10 +336,8 @@ class PerfValSorter(Sorter):
         return ['service_perf_data']
 
     def cmp(self, r1, r2):
-        return ((utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)) > utils.savefloat(
-            get_perfdata_nth_value(r2, self._num - 1, True))) -
-                (utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)) < utils.savefloat(
-                    get_perfdata_nth_value(r2, self._num - 1, True))))
+        return cmp(utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)),
+                   utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True)))
 
 
 @sorter_registry.register
@@ -438,11 +449,11 @@ class SorterHostIpv4Address(Sorter):
         def split_ip(ip):
             try:
                 return tuple(int(part) for part in ip.split('.'))
-            except ValueError:
+            except:
                 return ip
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
-        return (v1 > v2) - (v1 < v2)
+        return cmp(v1, v2)
 
 
 @sorter_registry.register
@@ -460,12 +471,9 @@ class SorterNumProblems(Sorter):
         return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
 
     def cmp(self, r1, r2):
-        return ((r1["host_num_services"] - r1["host_num_services_ok"] -
-                 r1["host_num_services_pending"] > r2["host_num_services"] -
-                 r2["host_num_services_ok"] - r2["host_num_services_pending"]) -
-                (r1["host_num_services"] - r1["host_num_services_ok"] -
-                 r1["host_num_services_pending"] < r2["host_num_services"] -
-                 r2["host_num_services_ok"] - r2["host_num_services_pending"]))
+        return cmp(
+            r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],
+            r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"])
 
 
 # Hostgroup
@@ -520,7 +528,6 @@ declare_simple_sorter("downtime_entry_time", _("Downtime entry time"), "downtime
 declare_1to1_sorter("log_plugin_output", cmp_simple_string)
 declare_1to1_sorter("log_attempt", cmp_simple_string)
 declare_1to1_sorter("log_state_type", cmp_simple_string)
-declare_1to1_sorter("log_state_info", cmp_simple_string)
 declare_1to1_sorter("log_type", cmp_simple_string)
 declare_1to1_sorter("log_contact_name", cmp_simple_string)
 declare_1to1_sorter("log_time", cmp_simple_number)
@@ -528,13 +535,13 @@ declare_1to1_sorter("log_lineno", cmp_simple_number)
 
 
 def cmp_log_what(col, a, b):
-    return (log_what(a[col]) > log_what(b[col])) - (log_what(a[col]) < log_what(b[col]))
+    return cmp(log_what(a[col]), log_what(b[col]))
 
 
 def log_what(t):
     if "HOST" in t:
         return 1
-    if "SERVICE" in t or "SVC" in t:
+    elif "SERVICE" in t or "SVC" in t:
         return 2
     return 0
 
@@ -554,7 +561,7 @@ def cmp_date(column, r1, r2):
     # simply calculating with 86400 does not work because of timezone problems
     r1_date = get_day_start_timestamp(r1[column])
     r2_date = get_day_start_timestamp(r2[column])
-    return (r2_date > r1_date) - (r2_date < r1_date)
+    return cmp(r2_date, r1_date)
 
 
 declare_1to1_sorter("log_date", cmp_date)
@@ -572,6 +579,3 @@ declare_simple_sorter("alerts_problem", _("Number of problem alerts"), "log_aler
 # Aggregations
 declare_simple_sorter("aggr_name", _("Aggregation name"), "aggr_name", cmp_simple_string)
 declare_simple_sorter("aggr_group", _("Aggregation group"), "aggr_group", cmp_simple_string)
-
-# Crash reports
-declare_simple_sorter("crash_time", _("Crash time"), "crash_time", cmp_simple_number)

@@ -1,11 +1,10 @@
 Title: Fix duplicate "24x7 - always" selection in timeperiod dropdowns
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561374706
+Class: fix
 
 

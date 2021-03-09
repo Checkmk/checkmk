@@ -1,13 +1,11 @@
 Title: watchdog_sensors: support Vertiv Geist Watchdog 15 firmware update
-Class: feature
-Compatible: compat
-Component: checks
-Date: 1614612765
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1614612765
+Class: feature
 
 A firmware update in the Vertiv Geist Watchdog 15 sensor required an update to
 the watchdog_sensors check, so that the services of this device could be

@@ -1,13 +1,11 @@
 Title: Fix processing of custom global settings
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1575904885
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1575904885
+Class: fix
 
 When working with GUI plugins that are registering custom
 global settings by creating a plugin for the default setting

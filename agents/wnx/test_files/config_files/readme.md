@@ -1,6 +1,6 @@
 ### Description
-1. Different Configs for plugins
+1. Different Configs and files for plugins
 2. Scripts: 
-	1. mk_logwatch is python 3 compatible version to quick test algorytnms
+	1. mk_logwatch.py is to quick test algorytnms
 3. Test files:
-	1. for mk_logwatch
+	1. logwatch.cfg to test Windows files

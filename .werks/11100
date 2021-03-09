@@ -1,0 +1,10 @@
+Title: veeam_tapejobs: Fix crash upon deprecation warning
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1588596401
+Class: fix
+
+

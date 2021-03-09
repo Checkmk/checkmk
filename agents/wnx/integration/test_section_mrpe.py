@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+#!/usr/bin/env python
+# -*- coding: utf-8; py-indent-offset: 4 -*-
 import os
 import platform
-import pytest  # type: ignore
+import pytest
 import re
 import shutil
 from local import (actual_output, assert_subprocess, make_yaml_config, src_exec_dir, local_test,

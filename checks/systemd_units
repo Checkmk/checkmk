@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # <<<systemd_units>>>
 #   UNIT                                   LOAD   ACTIVE SUB    DESCRIPTION
@@ -154,7 +174,8 @@ def discovery_systemd_units_services(parsed):
             if entry.startswith("~"):
                 if regex(entry[1:]).match(name):
                     return True
-                continue
+                else:
+                    continue
             elif entry == name:
                 return True
         return False
@@ -247,7 +268,7 @@ def _check_non_ok_services(systemd_services, params, output_string):
     for service in systemd_services:
         servicenames_by_status.setdefault(service.active, []).append(service.name)
 
-    for status, service_names in sorted(servicenames_by_status.items()):
+    for status, service_names in sorted(servicenames_by_status.iteritems()):
         state = params["states"].get(status, params["states_default"])
         if state == 0:
             continue
@@ -262,43 +283,28 @@ def _check_non_ok_services(systemd_services, params, output_string):
 def check_systemd_units_services_summary(_no_item, params, parsed):
     services = parsed.get('service', {}).values()
     blacklist = params.get('ignored', [])
-    yield 0, "Total: %d" % len(services)
+    yield 0, "%d services in total" % len(services)
 
     services_organised = _services_split(services, blacklist)
-
-    yield 0, "Disabled: %d" % len(services_organised["disabled"])
-    # some of the failed ones might be ignored, so this is OK:
-    yield 0, "Failed: %d" % sum(s.active == "failed" for s in services)
-
-    long_output = []
 
     included_template = "%d service%s %s (%s)"
     for subresult in _check_non_ok_services(services_organised["included"], params,
                                             included_template):
-        if subresult[0]:
-            yield subresult
-        else:
-            long_output.append(subresult)
+        yield subresult
 
     static_template = "%d static service%s %s (%s)"
     for subresult in _check_non_ok_services(services_organised["static"], params, static_template):
-        if subresult[0]:
-            yield subresult
-        else:
-            long_output.append(subresult)
+        yield subresult
 
     for temporary_type in ("activating", "reloading"):
         for subresult in _check_temporary_state(services_organised[temporary_type], params,
                                                 temporary_type):
-            if subresult[0]:
-                yield subresult
-            else:
-                long_output.append(subresult)
+            yield subresult
 
     if services_organised["excluded"]:
-        yield 0, "\nIgnored: %d" % len(services_organised["excluded"])
-
-    yield from long_output
+        yield 0, "%d ignored services" % len(services_organised["excluded"])
+    if services_organised["disabled"]:
+        yield 0, "%d disabled services" % len(services_organised["disabled"])
 
 
 check_info['systemd_units.services_summary'] = {

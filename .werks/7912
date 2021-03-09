@@ -1,12 +1,11 @@
 Title: Fix host tag update problem
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1562326499
+Class: fix
 
 With 1.6 the data structure of tag definitions has been changed
 and also moved to another file. WATO is now saving the tags in

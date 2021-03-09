@@ -1,0 +1,10 @@
+Title: agent_hp_msa: no longer crashes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0b9
+Date: 1567762428
+Class: fix
+
+The special agent was broken in verison 1.6.b8.

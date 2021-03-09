@@ -1,8 +1,3 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
-
 // Configuration Parameters for whole Agent
 // Engine independent parameters
 // No C++ file
@@ -13,17 +8,9 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
-#include <string_view>
 
 #include "common/cfg_yaml.h"
-#include "common/yaml.h"
-
-namespace cma {
-// set only when executable works as a service
-bool IsService();
-bool IsTest();
-}  // namespace cma
-
+#include "yaml-cpp/yaml.h"
 namespace XLOG {
 
 // windows specific Event Log
@@ -59,7 +46,7 @@ constexpr uint32_t kMaxOhmErrorsBeforeRestart = 3;
 
 constexpr int kDefaultLogLevel = kLogBase;
 
-// Windows Wmi API timeout, decision from LWA
+// #TODO CONFIRM VALUE:
 constexpr int kDefaultWmiTimeout = 3;  // seconds, this is Windows FAIL
 
 // data will be send to peer during this interval
@@ -76,9 +63,8 @@ constexpr uint16_t kMainPort = 6556;
 // Default timeout for any plugin
 constexpr int kDefaultPluginTimeout = 60;  // seconds
 
-constexpr int kDefaultWinPerfTimeout = 10;  // seconds
-constexpr bool kDefaultWinPerfFork = true;
-constexpr bool kDefaultWinPerfTrace = false;
+// Windows Wmi API timeout, decision from LWA
+constexpr int kDefaultWinPerfTimeout = 3;  // seconds
 
 // #TODO Probably deprecated
 constexpr int kDefaultAgentMaxWait = 15;  // max time agent waits for a sections
@@ -105,11 +91,11 @@ constexpr const KNOWNFOLDERID& kPublicFolderId = FOLDERID_Public;
 constexpr const KNOWNFOLDERID& kWindowsFolderId = FOLDERID_Windows;
 
 // gtest [+] everywhere
-std::string GetCurrentLogFileName();
-int GetCurrentDebugLevel();
+const std::string GetCurrentLogFileName();
+const int GetCurrentDebugLevel();
 XLOG::EventLevel GetCurrentEventLevel();  // fixed at the moment on Critical
-bool GetCurrentWinDbg();
-bool GetCurrentEventLog();
+const bool GetCurrentWinDbg();
+const bool GetCurrentEventLog();
 
 // gtest [+] everywhere
 inline const std::wstring GetDefaultPrefixName() {
@@ -121,15 +107,38 @@ inline const std::wstring GetDefaultPrefixName() {
 }
 
 // where you can find executables
-std::vector<std::wstring>& ExternalCommandPaths();
+const std::vector<std::wstring>& ExternalCommandPaths();
 
 // API to find a file on exe path
-std::wstring FindExeFileOnPath(const std::wstring& file_name);
-std::wstring FindConfigFile(const std::filesystem::path& dir_name,
-                            const std::wstring& file_name);
+const std::wstring FindExeFileOnPath(const std::wstring& File);
+const std::wstring FindConfigFile(const std::filesystem::path& Dir,
+                                  const std::wstring& File);
 
 // API for testing and logging
 std::vector<std::filesystem::path> GetExePaths();
+
+// below described the structure of the solution folder:
+// solution root <--- Use SOLUTION_DIR define
+//    \--- test_files
+//            \--- unit_tests <--- MakePathToUnitTestFiles(SolutionRoot)
+//            \--- config     <--- MakePathToConfigTestFiles(SolutionRoot)
+inline const std::wstring kSolutionTestFilesFolderName(L"test_files");
+inline const std::wstring kSolutionUnitTestsFolderName(L"unit_test");
+inline const std::wstring kSolutionConfigTestFilesFolderName(L"config");
+
+inline std::filesystem::path MakePathToUnitTestFiles(std::wstring Root) {
+    namespace fs = std::filesystem;
+    fs::path r = Root;
+    r = r / kSolutionTestFilesFolderName / kSolutionUnitTestsFolderName;
+    return r.lexically_normal();
+}
+
+inline std::filesystem::path MakePathToConfigTestFiles(std::wstring Root) {
+    namespace fs = std::filesystem;
+    fs::path r = Root;
+    r = r / kSolutionTestFilesFolderName / kSolutionConfigTestFilesFolderName;
+    return r.lexically_normal();
+}
 
 // Directories
 namespace dirs {
@@ -142,17 +151,15 @@ constexpr const wchar_t* kFileInstallDir = L"install";    // from here!
 // ProgramData/checkmk/agent
 constexpr const wchar_t* kUserBin = L"bin";  // owned by agent legacy for OHM
 
-constexpr const wchar_t* kBackup = L"backup";             // owned by agent
-constexpr const wchar_t* kUserPlugins = L"plugins";       // owned by user
-constexpr const wchar_t* kLocal = L"local";               // owned by user
-constexpr const wchar_t* kAgentMrpe = L"mrpe";            // owned by user
-constexpr const wchar_t* kInstall = L"install";           // owned by agent
-constexpr const wchar_t* kUserInstallDir = L"install";    // owned by agent
-constexpr const wchar_t* kBakery = L"bakery";             // owned by site
-constexpr const wchar_t* kState = L"state";               // owned by plugins
-constexpr const wchar_t* kPluginConfig = L"config";       // owned by plugins
-constexpr const wchar_t* kUserModules = L"modules";       // owned by agent
-constexpr const wchar_t* kInstalledModules = L"modules";  // owned by agent
+constexpr const wchar_t* kBackup = L"backup";           // owned by agent
+constexpr const wchar_t* kUserPlugins = L"plugins";     // owned by user
+constexpr const wchar_t* kLocal = L"local";             // owned by user
+constexpr const wchar_t* kAgentMrpe = L"mrpe";          // owned by user
+constexpr const wchar_t* kInstall = L"install";         // owned by agent
+constexpr const wchar_t* kUserInstallDir = L"install";  // owned by agent
+constexpr const wchar_t* kBakery = L"bakery";           // owned by site
+constexpr const wchar_t* kState = L"state";             // owned by plugins
+constexpr const wchar_t* kPluginConfig = L"config";     // owned by plugins
 
 constexpr const wchar_t* kAuStateLocation = kPluginConfig;  // owned by plugins
 
@@ -166,19 +173,18 @@ constexpr const wchar_t* kLog = L"log";        // owned by agent
 namespace envs {
 
 // to inform plugins where place state file
-constexpr std::string_view kMkStateDirName{"MK_STATEDIR"};
-constexpr std::string_view kMkConfDirName{"MK_CONFDIR"};
-constexpr std::string_view kMkLocalDirName{"MK_LOCALDIR"};
-constexpr std::string_view kMkTempDirName{"MK_TEMPDIR"};
-constexpr std::string_view kMkSpoolDirName{"MK_SPOOLDIR"};
-constexpr std::string_view kMkPluginsDirName{"MK_PLUGINSDIR"};
-constexpr std::string_view kMkLogDirName{"MK_LOGDIR"};
-constexpr std::string_view kRemoteHost{"REMOTE_HOST"};
-constexpr std::string_view kRemote{"REMOTE"};
+constexpr const char* const kMkStateDirName = "MK_STATEDIR";
+constexpr const char* const kMkConfDirName = "MK_CONFDIR";
+constexpr const char* const kMkLocalDirName = "MK_LOCALDIR";
+constexpr const char* const kMkTempDirName = "MK_TEMPDIR";
+constexpr const char* const kMkSpoolDirName = "MK_SPOOLDIR";
+constexpr const char* const kMkPluginsDirName = "MK_PLUGINSDIR";
+constexpr const char* const kMkLogDirName = "MK_LOGDIR";
+constexpr const char* const kRemoteHost = "REMOTE_HOST";
+constexpr const char* const kRemote = "REMOTE";
 
-constexpr std::string_view kMkInstallDirName{"MK_INSTALLDIR"};
-constexpr std::string_view kMkModulesDirName{"MK_MODULESDIR"};
-constexpr std::string_view kMkMsiPathName{"MK_MSI_PATH"};
+constexpr std::string_view kMkInstallDirName = "MK_INSTALLDIR";
+constexpr std::string_view kMkMsiPathName = "MK_MSI_PATH";
 
 };  // namespace envs
 
@@ -206,7 +212,7 @@ constexpr const char* const ConvertLogWatchLevelToString(EventLevels Lvl) {
     return vars::kLogWatchEvent_ParamWords[0];
 }
 
-constexpr auto kFromBegin = std::numeric_limits<uint64_t>::max();
+constexpr auto kInitialPos = std::numeric_limits<uint64_t>::max();
 inline const std::chrono::seconds G_DefaultDelayOnFail(3600);
 
 // Prefixes of mailslots' names

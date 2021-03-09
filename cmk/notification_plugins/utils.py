@@ -1,66 +1,65 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-from email.utils import formataddr
-from html import escape as html_escape
 import os
-from quopri import encodestring
 import re
-import socket
 import subprocess
 import sys
-from typing import Dict, List, Tuple, NamedTuple
+from typing import (  # pylint: disable=unused-import
+    AnyStr, Dict, List, Optional, Text, Tuple)
 
-from http.client import responses as http_responses
 import requests
 
+try:
+    # First try python3
+    # suppress missing import error from mypy
+    from html import escape as html_escape  # type: ignore
+except ImportError:
+    # Default to python2
+    from cgi import escape as html_escape
+
 from cmk.utils.notify import find_wato_folder
-import cmk.utils.paths
 import cmk.utils.password_store
 
 
-def collect_context() -> Dict[str, str]:
+def collect_context():
+    # type: () -> Dict[str, Text]
     return {
-        var[7:]: value  #
-        for var, value in os.environ.items()
+        var[7:]: value.decode("utf-8")
+        for (var, value) in os.environ.items()
         if var.startswith("NOTIFY_")
     }
 
 
-def format_link(template: str, url: str, text: str) -> str:
+def format_link(template, url, text):
+    # type: (AnyStr, AnyStr, AnyStr) -> AnyStr
     return template % (url, text) if url else text
 
 
-def format_address(display_name: str, email_address: str) -> str:
-    """
-    Returns an email address with an optional display name suitable for an email header like From or Reply-To.
-    The function handles the following cases:
-
-      * If an empty display name is given, only the email address is returned.
-      * If a display name is given a, string of the form "display_name <email_address>" is returned.
-      * If the display name contains non ASCII characters, it is converted to an encoded word (see RFC2231).
-      * If the display_name contains special characters like e.g. '.' the display string is enclosed in quotes.
-      * If the display_name contains backslashes or quotes, a backslash is prepended before these characters.
-    """
-    if not email_address:
-        return ''
-
-    try:
-        display_name.encode('ascii')
-    except UnicodeEncodeError:
-        display_name = u'=?utf-8?q?%s?=' % encodestring(
-            display_name.encode('utf-8')).decode('ascii')
-    return formataddr((display_name, email_address))
-
-
-def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
-
-
-def _base_url(context: Dict[str, str]) -> str:
+def _base_url(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
@@ -75,12 +74,14 @@ def _base_url(context: Dict[str, str]) -> str:
     return re.sub('/check_mk/?', '', url_prefix, count=1)
 
 
-def host_url_from_context(context: Dict[str, str]) -> str:
+def host_url_from_context(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
     base = _base_url(context)
     return base + context['HOSTURL'] if base else ''
 
 
-def service_url_from_context(context: Dict[str, str]) -> str:
+def service_url_from_context(context):
+    # type: (Dict[str, AnyStr]) -> AnyStr
     base = _base_url(context)
     return base + context['SERVICEURL'] if base and context['WHAT'] == 'SERVICE' else ''
 
@@ -123,7 +124,7 @@ def html_escape_context(context):
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    for variable, value in context.items():
+    for variable, value in context.iteritems():
         if variable not in unescaped_variables:
             context[variable] = html_escape(value)
 
@@ -131,7 +132,8 @@ def html_escape_context(context):
 def add_debug_output(template, context):
     ascii_output = ""
     html_output = "<table class=context>\n"
-    elements = sorted(context.items())
+    elements = context.items()
+    elements.sort()
     for varname, value in elements:
         ascii_output += "%s=%s\n" % (varname, value)
         html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
@@ -180,21 +182,17 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
 
 
 def send_mail_sendmail(m, target, from_address):
-    cmd = [_sendmail_path()]
+    cmd = ["/usr/sbin/sendmail"]
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
-    cmd += ["-i", target]
+    cmd += ["-i", target.encode("utf-8")]
 
     try:
-        p = subprocess.Popen(
-            cmd,
-            stdin=subprocess.PIPE,
-            encoding="utf-8",
-        )
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     except OSError:
         raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
-    p.communicate(input=m.as_string())
+    p.communicate(m.as_string())
     if p.returncode != 0:
         raise Exception("sendmail returned with exit code: %d" % p.returncode)
 
@@ -202,20 +200,8 @@ def send_mail_sendmail(m, target, from_address):
     return 0
 
 
-def _sendmail_path() -> str:
-    # We normally don't deliver the sendmail command, but our notification integration tests
-    # put some fake sendmail command into the site to prevent actual sending of mails.
-    for path in [
-            "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
-            "/usr/sbin/sendmail",
-    ]:
-        if os.path.exists(path):
-            return path
-
-    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
-
-
-def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
+def read_bulk_contexts():
+    # type: () -> Tuple[Dict[str, str], List[Dict[str, str]]]
     parameters = {}
     contexts = []
     in_params = True
@@ -225,7 +211,7 @@ def read_bulk_contexts() -> Tuple[Dict[str, str], List[Dict[str, str]]]:
         line = line.strip()
         if not line:
             in_params = False
-            context: Dict[str, str] = {}
+            context = {}  # type: Dict[str, str]
             contexts.append(context)
         else:
             try:
@@ -289,70 +275,16 @@ def retrieve_from_passwordstore(parameter):
     return value
 
 
-def post_request(message_constructor, url=None, headers=None):
+def post_request(message_constructor, success_code=200):
     context = collect_context()
 
-    if not url:
-        url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
-    proxy_url = context.get("PARAMETER_PROXY_URL")
-    proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
+    url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
 
-    try:
-        response = requests.post(url=url,
-                                 json=message_constructor(context),
-                                 proxies=proxies,
-                                 headers=headers)
-    except requests.exceptions.ProxyError:
-        sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
-        sys.exit(2)
+    r = requests.post(url=url, json=message_constructor(context))
 
-    return response
-
-
-def process_by_status_code(response: requests.models.Response, success_code: int = 200):
-    status_code = response.status_code
-    summary = f"{status_code}: {http_responses[status_code]}"
-
-    if status_code == success_code:
-        sys.stderr.write(summary)
+    if r.status_code == success_code:
         sys.exit(0)
-    elif 500 <= status_code <= 599:
-        sys.stderr.write(summary)
-        sys.exit(1)  # Checkmk gives a retry if exited with 1. Makes sense in case of a server error
     else:
-        sys.stderr.write(f"Failed to send notification.\nResponse: {response.text}\n{summary}")
+        sys.stderr.write("Failed to send notification. Status: %i, Response: %s\n" %
+                         (r.status_code, r.text))
         sys.exit(2)
-
-
-StateInfo = NamedTuple('StateInfo', [('state', int), ('type', str), ('title', str)])
-StatusCodeRange = Tuple[int, int]
-
-
-def process_by_result_map(response: requests.models.Response, result_map: Dict[StatusCodeRange,
-                                                                               StateInfo]):
-    def get_details_from_json(json_response, what):
-        for key, value in json_response.items():
-            if key == what:
-                return value
-            if isinstance(value, dict):
-                result = get_details_from_json(value, what)
-                if result:
-                    return result
-
-    status_code = response.status_code
-    summary = f"{status_code}: {http_responses[status_code]}"
-    details = ""
-
-    for status_code_range, state_info in result_map.items():
-        if status_code_range[0] <= status_code <= status_code_range[1]:
-            if state_info.type == 'json':
-                details = response.json()
-                details = get_details_from_json(details, state_info.title)
-            elif state_info.type == 'str':
-                details = response.text
-
-            sys.stderr.write(f"{state_info.title}: {details}\n{summary}\n")
-            sys.exit(state_info.state)
-
-    sys.stderr.write(f"Details for Status Code are not defined\n{summary}\n")
-    sys.exit(3)

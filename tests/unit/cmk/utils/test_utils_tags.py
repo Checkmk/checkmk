@@ -1,12 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# encoding: utf-8
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+import pytest  # type: ignore
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -243,7 +238,7 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg):
 
 
 def test_tag_config_get_tag_ids(test_cfg):
-    assert test_cfg.get_tag_ids() == {
+    assert test_cfg.get_tag_ids() == set([
         None,
         'none_val',
         'bla',
@@ -254,11 +249,11 @@ def test_tag_config_get_tag_ids(test_cfg):
         'prod',
         'test',
         'wan',
-    }
+    ])
 
 
 def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
-    assert test_cfg.get_tag_ids_by_group() == {
+    assert test_cfg.get_tag_ids_by_group() == set([
         ('bla', 'bla'),
         ('criticality', 'critical'),
         ('criticality', 'offline'),
@@ -269,7 +264,7 @@ def test_tag_config_get_tag_ids_with_group_prefix(test_cfg):
         ('networking', 'wan'),
         ('none_choice', None),
         ('none_choice', 'none_val'),
-    }
+    ])
 
 
 def test_tag_config_get_tag_or_aux_tag(test_cfg):

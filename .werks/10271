@@ -1,12 +1,13 @@
 Title: Selecting the files header could crash the mkp manager
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1571321459
-Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p6
+Date: 1571321459
 
 In WATO, clicking on the "FILES" header of the "Extension
 Packages - Unpackaged Files" could result in a traceback.

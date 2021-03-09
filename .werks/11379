@@ -1,13 +1,11 @@
 Title: mk_oracle.ps1: Fixed missing escaping of single quotes and error handling
-Class: fix
-Compatible: incomp
-Component: checks
-Date: 1605795616
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0b1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p20
+Date: 1605795616
+Class: fix
 
 Some sql requests have not been updated to escaped single quotes. Additionally
 the error that has been thrown was not useful. Both have been fixed with

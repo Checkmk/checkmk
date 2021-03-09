@@ -1,11 +1,10 @@
 Title: kernel.util, lparstat_aix.cpu_util: Remove duplicate CPU utilization graph
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1562676917
+Class: fix
 
 

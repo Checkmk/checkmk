@@ -2,11 +2,11 @@ Title: Report headers: Improve handling of titles with dynamic lengths
 Class: fix
 Compatible: compat
 Component: reporting
-Date: 1584191660
+Date: 1585733162
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.0.0i1
+Version: 1.6.0p11
 
 In previous versions of Checkmk the title of reports could only be set to a
 fixed size. Especially with generic reports, like host or service reports, this

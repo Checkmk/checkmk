@@ -1,0 +1,11 @@
+Title: diskspace cleanup: fixed race condition which could cause loss of monitored services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600865034
+Class: fix
+
+There was a risk of service loss when the diskspace cleanup cronjob started during an activate changes config rollout.
+This service loss could only happen on remote sites, during the unpackaging of the new configuration snapshot.

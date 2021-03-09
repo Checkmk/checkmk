@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
-
 
 
 checkname = 'f5_bigip_vserver'
@@ -71,7 +64,7 @@ checks = {
                 ('if_total_octets', 0.0, None, None, None, None),
                 ('if_total_pkts', 0.0, None, None, None, None),
             ]),
-            (1, 'Incoming bytes: 0.00 B/sec (warn/crit at -23.00 B/sec/42.00 B/sec)', []),
+            (1, 'Incoming bytes: 0 B/sec (warn/crit at -23 B/sec/42 B/sec)', []),
             (2, 'Total packets: 0.0/sec (warn/crit below 100.0/sec/200.0/sec)', []),
         ]),
     ],

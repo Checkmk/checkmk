@@ -1,15 +1,34 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
+// +------------------------------------------------------------------+
+// |             ____ _               _        __  __ _  __           |
+// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                                                  |
+// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+// +------------------------------------------------------------------+
+//
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
+//
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// tails. You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
 
 #include "AttributeListAsIntColumn.h"
-
 #include <bitset>
 #include <cctype>
 #include <map>
+#include <memory>
 #include <utility>
-
+#include "Filter.h"
 #include "IntFilter.h"
 #include "Logger.h"
 #include "Row.h"
@@ -17,7 +36,7 @@
 
 namespace {
 // see MODATTR_FOO in nagios/common.h
-const std::map<std::string, unsigned long> known_attributes = {
+std::map<std::string, unsigned long> known_attributes = {
     {"notifications_enabled", 0},    {"active_checks_enabled", 1},
     {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
     {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},
@@ -40,7 +59,7 @@ std::string refValueFor(const std::string &value, Logger *logger) {
     char *scan = &value_vec[0];
 
     modified_atttibutes values;
-    for (const char *t = nullptr; (t = next_token(&scan, ',')) != nullptr;) {
+    for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
             Informational(logger)
@@ -56,38 +75,28 @@ std::string refValueFor(const std::string &value, Logger *logger) {
 std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<IntFilter>(
-        kind, name(),
-        [this](Row row, const contact *auth_user) {
-            return this->getValue(row, auth_user);
-        },
-        relOp, refValueFor(value, logger()));
+    return std::make_unique<IntFilter>(kind, *this, relOp,
+                                       refValueFor(value, logger()));
 }
 
 int32_t AttributeListAsIntColumn::getValue(
     Row row, const contact * /*auth_user*/) const {
-    if (const auto *p = columnData<unsigned long>(row)) {
+    if (auto p = columnData<unsigned long>(row)) {
         return static_cast<int32_t>(*p);
     }
     return 0;
 }
 
-// static
-std::vector<std::string> AttributeListAsIntColumn::decode(unsigned long mask) {
+std::vector<std::string> AttributeListAsIntColumn::getAttributes(
+    Row row) const {
     std::vector<std::string> attributes;
-    modified_atttibutes values(mask);
-    for (const auto &entry : known_attributes) {
-        if (values[entry.second]) {
-            attributes.push_back(entry.first);
+    if (auto p = columnData<unsigned long>(row)) {
+        modified_atttibutes values(*p);
+        for (const auto &entry : known_attributes) {
+            if (values[entry.second]) {
+                attributes.push_back(entry.first);
+            }
         }
     }
     return attributes;
-}
-
-std::vector<std::string> AttributeListAsIntColumn::getAttributes(
-    Row row) const {
-    if (const auto *p = columnData<unsigned long>(row)) {
-        return decode(*p);
-    }
-    return {};
 }

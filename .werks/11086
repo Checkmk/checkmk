@@ -1,13 +1,11 @@
 Title: Docker container: Fix usage behind reverse proxies
-Class: fix
-Compatible: compat
-Component: core
-Date: 1594072998
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1594072998
+Class: fix
 
 The Checkmk container was not operating as expected in different scenarios
 where it's user interface was accessed through a reverse proxy, for example

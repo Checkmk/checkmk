@@ -1,13 +1,11 @@
 Title: Store the site settings of sidebar snapins
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1578685237
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1578685237
+Class: fix
 
 Sometimes the configured site of the sidebar snapins "Micro Core Statistics",
 "Server Performance" and "Event Console Performance" was not saved. As a

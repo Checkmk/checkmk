@@ -1,0 +1,13 @@
+Title: Fix possible issue with custom GUI config plugins since #10565
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p8
+Date: 1576570287
+Class: fix
+
+Werk #10565 slightly changed the way the GUI is working with custom
+configuration variables. It could now happen that imports in custom
+GUI configuration files were treated as configured settings and could
+result in exceptions like "TypeError: cannot deepcopy this object".

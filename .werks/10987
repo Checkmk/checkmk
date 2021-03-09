@@ -1,13 +1,12 @@
 Title: HW/SW Inventory Service: Fix "State when inventory fails"
+Level: 1
+Component: inv
 Class: fix
 Compatible: compat
-Component: inv
-Date: 1588754222
 Edition: cre
-Knowledge: undoc
-Level: 1
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p12
+Date: 1588754222
 
 The state of the HW/SW Inventory service can be determined by
 {{State when inventory fails}} in the ruleset {{Do hardware/software Inventory}}.

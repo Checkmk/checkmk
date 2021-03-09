@@ -1,12 +1,11 @@
 Title: Rulesets: Multiple tags of a tag group can be ORed
 Level: 2
 Component: wato
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560451480
+Class: feature
 
 It's now possible to configure a list of alternative matching tag IDs of a
 single tag group in one rule. The selected tag IDs are ORed.  This reduces some

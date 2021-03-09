@@ -1,11 +1,12 @@
 Title: Fixed handling of old event console configurations
 Level: 1
 Component: ec
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1562931695
-Class: fix
 
 If SNMP trap translation is enabled and the Checkmk installation is upgraded
 to 1.6.0 or later, an "invalid SNMP trap translation" exception could

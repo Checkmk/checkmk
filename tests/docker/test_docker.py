@@ -1,21 +1,40 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # pylint: disable=redefined-outer-name
 
 import sys
 import os
 import subprocess
-import pytest  # type: ignore[import]
+import pytest  # type: ignore
 import requests
-import requests.exceptions
-import docker  # type: ignore[import]
+from requests.exceptions import ConnectionError
+import docker  # type: ignore
 
 import testlib
-import testlib.utils
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
@@ -24,7 +43,7 @@ branch_name = os.environ.get("BRANCH", "master")
 
 def build_version():
     return testlib.CMKVersion(
-        version_spec=testlib.CMKVersion.DAILY,
+        version=testlib.CMKVersion.DAILY,
         edition=testlib.CMKVersion.CEE,
         branch=branch_name,
     )
@@ -51,14 +70,14 @@ def _prepare_build():
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
-    print("Starting helper container for build secrets")
+    print "Starting helper container for build secrets"
     secret_container = client.containers.run(
         image="busybox",
         command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
         detach=True,
         remove=True,
         volumes={
-            testlib.utils.get_cmk_download_credentials_file(): {
+            testlib.get_cmk_download_credentials_file(): {
                 "bind": "/files/secret",
                 "mode": "ro"
             }
@@ -66,18 +85,17 @@ def _build(request, client, version, add_args=None):
     )
     request.addfinalizer(lambda: secret_container.remove(force=True))
 
-    print("Building docker image: %s" % _image_name(version))
+    print "Building docker image: %s" % _image_name(version)
     try:
-        image, build_logs = client.images.build(
-            path=build_path,
-            tag=_image_name(version),
-            network_mode="container:%s" % secret_container.id,
-            buildargs={
-                "CMK_VERSION": version.version,
-                "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
-            },
-        )
+        image, build_logs = client.images.build(path=build_path,
+                                                tag=_image_name(version),
+                                                network_mode="container:%s" % secret_container.id,
+                                                buildargs={
+                                                    "CMK_VERSION": version.version,
+                                                    "CMK_EDITION": version.edition(),
+                                                    "CMK_DL_CREDENTIALS": ":".join(
+                                                        testlib.get_cmk_download_credentials()),
+                                                })
     except docker.errors.BuildError as e:
         sys.stdout.write("= Build log ==================\n")
         for entry in e.build_log:
@@ -126,11 +144,8 @@ def _build(request, client, version, add_args=None):
     # 2018-11-14: 900 -> 920
     # 2018-11-22: 920 -> 940
     # 2019-04-10: 940 -> 950
-    # 2019-07-12: 950 -> 1040 (python3)
-    # 2019-07-27: 1040 -> 1054 (numpy)
-    # 2019-11-15: Temporarily disabled because of Python2 => Python3 transition
-    #    assert attrs["Size"] < 1110955410.0, \
-    #        "Docker image size increased: Please verify that this is intended"
+    assert attrs["Size"] < 950 * 1024 * 1024, \
+        "Docker image size increased: Please verify that this is intended"
 
     assert len(attrs["RootFS"]["Layers"]) == 6
 
@@ -141,7 +156,7 @@ def _pull(client, version):
     if version.edition() != "raw":
         raise Exception("Can only fetch raw edition at the moment")
 
-    print("Downloading docker image: checkmk/check-mk-raw:%s" % version.version)
+    print "Downloading docker image: checkmk/check-mk-raw:%s" % version.version
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
@@ -156,11 +171,11 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             # In case the given version is not the current branch version, don't
             # try to build it. Download it instead!
             _image = _pull(client, version)
-    except requests.exceptions.ConnectionError as e:
+    except ConnectionError:
         raise Exception(
             "Failed to access docker socket (Permission denied). You need to be member of the "
             "docker group to get access to the socket (e.g. use \"make -C docker setup\") to "
-            "fix this, then restart your computer and try again.") from e
+            "fix this, then restart your computer and try again.")
 
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
 
@@ -169,9 +184,8 @@ def _start(request, client, version=None, is_update=False, **kwargs):
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: _exec_run(c, ["omd", "status"], user=site_id)[0] == 0,
-                           timeout=120)
-        output = c.logs().decode("utf-8")
+        testlib.wait_until(lambda: c.exec_run(["omd", "status"], user=site_id)[0] == 0, timeout=120)
+        output = c.logs()
 
         if not is_update:
             assert "Created new site" in output
@@ -183,14 +197,9 @@ def _start(request, client, version=None, is_update=False, **kwargs):
         assert "STARTING SITE" in output
         assert "### CONTAINER STARTED" in output
     finally:
-        sys.stdout.write("Log so far: %s\n" % c.logs().decode("utf-8"))
+        print "Log so far: %s" % c.logs()
 
     return c
-
-
-def _exec_run(c, *args, **kwargs):
-    exit_code, output = c.exec_run(*args, **kwargs)
-    return exit_code, output.decode("utf-8")
 
 
 # TODO: Test with all editions (daily for enterprise + last stable for raw/managed)
@@ -212,7 +221,7 @@ def test_start_simple(request, client, edition):
     assert "/usr/lib/postfix/sbin/master" not in cmds
 
     # Check omd standard config
-    exit_code, output = _exec_run(c, ["omd", "config", "show"], user="cmk")
+    exit_code, output = c.exec_run(["omd", "config", "show"], user="cmk")
     assert "TMPFS: off" in output
     assert "APACHE_TCP_ADDR: 0.0.0.0" in output
     assert "APACHE_TCP_PORT: 5000" in output
@@ -224,8 +233,8 @@ def test_start_simple(request, client, edition):
         assert "CORE: nagios" in output
 
     # check sites uid/gid
-    assert _exec_run(c, ["id", "-u", "cmk"])[1].rstrip() == "1000"
-    assert _exec_run(c, ["id", "-g", "cmk"])[1].rstrip() == "1000"
+    assert c.exec_run(["id", "-u", "cmk"])[1].rstrip() == "1000"
+    assert c.exec_run(["id", "-g", "cmk"])[1].rstrip() == "1000"
 
     assert exit_code == 0
 
@@ -235,11 +244,11 @@ def test_start_cmkadmin_passsword(request, client):
         "CMK_PASSWORD": "blabla",
     })
 
-    assert _exec_run(
-        c, ["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blabla"])[0] == 0
+    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
+                       "blabla"])[0] == 0
 
-    assert _exec_run(c,
-                     ["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blub"])[0] == 3
+    assert c.exec_run(["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin",
+                       "blub"])[0] == 3
 
 
 def test_start_custom_site_id(request, client):
@@ -247,7 +256,7 @@ def test_start_custom_site_id(request, client):
         "CMK_SITE_ID": "xyz",
     })
 
-    assert _exec_run(c, ["omd", "status"], user="xyz")[0] == 0
+    assert c.exec_run(["omd", "status"], user="xyz")[0] == 0
 
 
 def test_start_enable_livestatus(request, client):
@@ -255,7 +264,7 @@ def test_start_enable_livestatus(request, client):
         "CMK_LIVESTATUS_TCP": "on",
     })
 
-    exit_code, output = _exec_run(c, ["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
+    exit_code, output = c.exec_run(["omd", "config", "show", "LIVESTATUS_TCP"], user="cmk")
     assert exit_code == 0
     assert output == "on\n"
 
@@ -263,15 +272,14 @@ def test_start_enable_livestatus(request, client):
 def test_start_execute_custom_command(request, client):
     c = _start(request, client)
 
-    exit_code, output = _exec_run(c, ["echo", "1"], user="cmk")
+    exit_code, output = c.exec_run(["echo", "1"], user="cmk")
     assert exit_code == 0
     assert output == "1\n"
 
 
 def test_start_with_custom_command(request, client, version):
     image, _build_logs = _build(request, client, version)
-    output = client.containers.run(image=image.id, detach=False, command=["bash", "-c",
-                                                                          "echo 1"]).decode("utf-8")
+    output = client.containers.run(image=image.id, detach=False, command=["bash", "-c", "echo 1"])
 
     assert "Created new site" in output
     assert output.endswith("1\n")
@@ -279,8 +287,7 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
-    pkg_path = os.path.join(build_path, package_name)
+    pkg_path = os.path.join(build_path, version.package_name_of_distro("stretch"))
     try:
         with open(pkg_path, "w") as f:
             f.write("")
@@ -294,10 +301,7 @@ def test_build_using_local_deb(request, client, version):
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(request, client, version):
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
-    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
     try:
-        os.rename(pkg_path, pkg_path_sav)
-
         with open(pkg_path, "w") as f:
             f.write("")
 
@@ -305,7 +309,6 @@ def test_build_using_local_gpg_pubkey(request, client, version):
             _build(request, client, version)
     finally:
         os.unlink(pkg_path)
-        os.rename(pkg_path_sav, pkg_path)
 
 
 def test_start_enable_mail(request, client):
@@ -321,24 +324,23 @@ def test_start_enable_mail(request, client):
     assert "syslogd" in cmds
     assert "/usr/lib/postfix/sbin/master" in cmds
 
-    assert _exec_run(c, ["which", "mail"], user="cmk")[0] == 0
+    assert c.exec_run(["which", "mail"], user="cmk")[0] == 0
 
-    assert _exec_run(c, ["postconf", "myorigin"])[1].rstrip() == "myorigin = myhost.mydomain.com"
-    assert _exec_run(c,
-                     ["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
+    assert c.exec_run(["postconf", "myorigin"])[1].rstrip() == "myorigin = myhost.mydomain.com"
+    assert c.exec_run(["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
 
 
 def test_http_access_base_redirects_work(request, client):
     c = _start(request, client)
 
-    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in _exec_run(
-        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000"])[-1]
-    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in _exec_run(
-        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/"])[-1]
-    assert "Location: http://127.0.0.1:5000/cmk/check_mk/\r\n" in _exec_run(
-        c, ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
-    assert "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n" in _exec_run(
-        c, ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in c.exec_run(
+        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/\r\n" in c.exec_run(
+        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/"])[-1]
+    assert "Location: http://127.0.0.1:5000/cmk/check_mk/\r\n" in c.exec_run(
+        ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
+    assert "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n" in c.exec_run(
+        ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
 
 
 # Would like to test this from the outside of the container, but this is not possible
@@ -347,18 +349,18 @@ def test_redirects_work_with_standard_port(request, client):
     c = _start(request, client)
 
     # Use no explicit port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(c, [
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
         "curl", "-D", "-", "-s", "--connect-to", "127.0.0.1:80:127.0.0.1:5000", "http://127.0.0.1"
     ])[-1]
 
     # Use explicit standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(c, [
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
         "curl", "-D", "-", "-s", "--connect-to", "127.0.0.1:80:127.0.0.1:5000",
         "http://127.0.0.1:80"
     ])[-1]
 
     # Use explicit host header with standard port
-    assert "Location: http://127.0.0.1/cmk/\r\n" in _exec_run(c, [
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
         "curl", "-D", "-", "-s", "-H", "Host: 127.0.0.1:80", "--connect-to",
         "127.0.0.1:80:127.0.0.1:5000", "http://127.0.0.1"
     ])[-1]
@@ -402,21 +404,19 @@ def test_redirects_work_with_custom_port(request, client):
 def test_http_access_login_screen(request, client):
     c = _start(request, client)
 
-    assert "Location: \r\n" not in _exec_run(
-        c,
+    assert "Location: \r\n" not in c.exec_run(
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
-    assert "name=\"_login\"" in _exec_run(
-        c,
+    assert "name=\"_login\"" in c.exec_run(
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]
 
 
 def test_container_agent(request, client):
     c = _start(request, client)
     # Is the agent installed and executable?
-    assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
+    assert c.exec_run(["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
+    assert "0.0.0.0:6556" in c.exec_run(["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):
@@ -425,7 +425,7 @@ def test_update(request, client, version):
     # Pick a random old version that we can use to the setup the initial site with
     # Later this site is being updated to the current daily build
     old_version = testlib.CMKVersion(
-        version_spec="1.5.0p5",
+        version="1.5.0p5",
         branch="1.5.0",
         edition=testlib.CMKVersion.CRE,
     )
@@ -435,7 +435,8 @@ def test_update(request, client, version):
                     client,
                     version=old_version,
                     name=container_name,
-                    volumes=["/omd/sites"])
+                    volumes=["/omd/sites"],
+                    tmpfs=["/omd/sites/cmk/tmp"])
     assert c_orig.exec_run(["touch", "pre-update-marker"], user="cmk",
                            workdir="/omd/sites/cmk")[0] == 0
 
@@ -470,7 +471,6 @@ def test_update(request, client, version):
                    volumes_from=c_orig.id)
 
     # 5. verify result
-    _exec_run(c_new, ["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
-    assert _exec_run(c_new, ["test", "-f", "pre-update-marker"],
-                     user="cmk",
-                     workdir="/omd/sites/cmk")[0] == 0
+    c_new.exec_run(["omd", "version"], user="cmk")[1].endswith("%s\n" % version.omd_version())
+    assert c_new.exec_run(["test", "-f", "pre-update-marker"], user="cmk",
+                          workdir="/omd/sites/cmk")[0] == 0

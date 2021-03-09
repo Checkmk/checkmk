@@ -1,12 +1,11 @@
 Title: mk_logwatch: process new files from the beginning
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1562570170
+Class: feature
 
 If a new logfile is found we usually skip to its end to avoid processing ancient log messages.
 You can now configure mk_logwatch to start processing the file from the beginning and see all

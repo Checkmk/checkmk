@@ -1,12 +1,11 @@
 Title: Fix wrong rule match analyse in WATO
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561534805
+Class: fix
 
 The rule matching analyse functionality of the rule list did not work
 correctly when matching hosts and rules in different folder levels.

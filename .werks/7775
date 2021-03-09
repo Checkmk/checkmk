@@ -1,12 +1,11 @@
 Title: Fix some NagVis maps snapin tree rendering issues
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b2
 Date: 1560191150
+Class: fix
 
 The NagVis maps snapin can be configured to be rendered as tree
 (by configuring the global setting "multisite_snapin_layout" in NagVis).

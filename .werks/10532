@@ -6,8 +6,7 @@ Date: 1583483756
 Edition: cee
 Knowledge: doc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p10
 
 When using the <tt>Parallelize core config creation feature</tt> option (defaults to ON), there was
 a risk of losing services in the configuration. The risk was increased when the system had lots of CPUs

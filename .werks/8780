@@ -1,11 +1,12 @@
 Title: mknotifyd: fix race condition in distributed setups
 Level: 2
 Component: notifications
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1562589556
-Class: fix
 
 In a distributed setup a slave site may try to deliver
 notifications locally during an activate changes even

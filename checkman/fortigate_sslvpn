@@ -1,4 +1,4 @@
-title: FortiGate Firewalls: Status of SSL VPN Tunnels
+title: FortiGate firewalls: Status of SSL VPN Tunnels
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL
@@ -9,9 +9,6 @@ description:
  hence there is one service per domain.
  This check can be configured via a WATO rule concerning the number of vpn tunnels.
 
-item:
- Name of the SSL VPN tunnel
-
 inventory:
- One service is created for each virtual domain.
+ One service per virtual domain will be created
 

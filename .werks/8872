@@ -1,11 +1,10 @@
 Title: Label filters: Add filter info to page title
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b7
 Date: 1566459373
+Class: fix
 
 

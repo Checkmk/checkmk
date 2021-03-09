@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 
 def _sanitize_mac(string):
@@ -11,10 +31,8 @@ def _sanitize_mac(string):
 
 
 def parse_cisco_secure(info):
-
     parsed = []
-    # l[1] = Name, l[2] = Portstate
-    names = {l[0]: (l[1], l[2]) for l in info[0]}
+    names = {num: (name, portstate) for num, name, portstate in info[0]}
     for num, is_enabled, status, violation_count, lastmac in info[1]:
         mac = _sanitize_mac(lastmac)
         enabled_txt = {'1': 'yes', '2': 'no'}.get(is_enabled)
@@ -22,14 +40,22 @@ def parse_cisco_secure(info):
             status_int = int(status)
         except ValueError:
             status_int = None
+
+        name, portstate = names.get(num, (num, None))
+        try:
+            portstate = int(portstate)
+        except (TypeError, ValueError):
+            pass
         # violationCount is initialized with 0 when security is enabled. When not, the
         # value is reported as empty string. saveint() makes life easier here.
-        if num in names:
-            parsed.append((names[num][0], int(names[num][1]), enabled_txt, status_int,
-                           saveint(violation_count), mac))
-        else:
-            parsed.append((num, 0, enabled_txt, status_int, saveint(violation_count), mac))
-
+        parsed.append((
+            name,
+            portstate,
+            enabled_txt,
+            status_int,
+            saveint(violation_count),
+            mac,
+        ))
     return parsed
 
 

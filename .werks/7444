@@ -1,11 +1,12 @@
 Title: Rename metric name in Filesystem checks from mount point to fs_used
 Level: 3
 Component: core
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1562765663
-Class: fix
 
 Filesystem Nagios check plug-in stored the filesystem usage of every mount
 points in the RRD databases under the path of each mount point. Checkmk

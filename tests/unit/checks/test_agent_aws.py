@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,9 +6,8 @@
 
 import json
 import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
 
-from cmk.base.sources.programs import SpecialAgentConfiguration
+from cmk_base.data_sources.programs import SpecialAgentConfiguration
 
 pytestmark = pytest.mark.checks
 
@@ -20,12 +19,6 @@ pytestmark = pytest.mark.checks
             {
                 'access_key_id': 'strawberry',
                 'secret_access_key': ('password', 'strawberry098'),
-                'proxy_details': {
-                    'proxy_host': '1.1.1',
-                    'proxy_port': 22,
-                    'proxy_user': 'banana',
-                    'proxy_password': 'banana123',
-                },
                 'assume_role': {},
                 'global_services': {
                     'ce': None,
@@ -45,10 +38,6 @@ pytestmark = pytest.mark.checks
             },
             SpecialAgentConfiguration(
                 [
-                    "--proxy-host",
-                    "1.1.1",
-                    "--proxy-port",
-                    "22",
                     "--global-services",
                     "ce",
                     "--services",
@@ -63,15 +52,14 @@ pytestmark = pytest.mark.checks
                 json.dumps({
                     'access_key_id': 'strawberry',
                     'secret_access_key': 'strawberry098',
-                    'proxy_user': 'banana',
-                    'proxy_password': 'banana123',
-                }),
+                },),
             ),
         ),
     ],
 )
-def test_aws_argument_parsing(params, expected_args):
+def test_aws_argument_parsing(check_manager, params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_aws')
+    agent = check_manager.get_special_agent("agent_aws")
     arguments = agent.argument_func(params, "testhost", "address")
-    assert arguments == expected_args
+    assert sorted(arguments[0]) == sorted(expected_args[0])
+    assert arguments[1] == expected_args[1]

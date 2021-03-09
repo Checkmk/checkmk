@@ -45,11 +45,11 @@ rules:
   - daemonsets
   - deployments
   - replicasets
-  - ingresses
   - statefulsets
   - cronjobs
   - jobs
   - horizontalpodautoscalers
+  - ingresses
   verbs: ["get", "list"]
 - apiGroups:
   - custom.metrics.k8s.io

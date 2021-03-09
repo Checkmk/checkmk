@@ -1,11 +1,12 @@
 Title: systemd: Fixed possible memory leak related to KillMode in unit file
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0p5
 Date: 1569396481
-Class: fix
 
 We have seen cases in which the parameter "KillMode=process" of the unit file
 "check_mk@.service" causes a memory leak. This was first seen on Debian Buster

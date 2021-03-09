@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.gui.plugins.wato.active_checks import check_icmp_params
 
@@ -75,7 +95,7 @@ rulespec_registry.register(
 
 def _valuespec_inventory_sap_values():
     return Dictionary(
-        title=_('SAP R/3 single value discovery'),
+        title=_('SAP R/3 Single Value Inventory'),
         elements=[
             (
                 'match',
@@ -156,10 +176,10 @@ def _valuespec_sap_value_groups():
             ],
         ),
         add_label=_("Add pattern group"),
-        title=_('SAP value discovery'),
+        title=_('SAP Value Grouping Patterns'),
         help=_(
             'The check <tt>sap.value</tt> normally creates one service for each SAP value. '
-            'By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. '
+            'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
             'That check monitors a list of SAP values at once.'),
     )
 
@@ -175,7 +195,7 @@ rulespec_registry.register(
 
 def _valuespec_inventory_fujitsu_ca_ports():
     return Dictionary(
-        title=_("Fujtsu storage CA port discovery"),
+        title=_("Discovery of Fujtsu storage CA ports"),
         elements=[
             ("indices", ListOfStrings(title=_("CA port indices"))),
             ("modes",
@@ -187,7 +207,7 @@ def _valuespec_inventory_fujitsu_ca_ports():
                      ("CARA", _("CARA")),
                      ("Initiator", _("Initiator")),
                  ],
-                 rows=4,
+                 row=4,
                  size=30,
              )),
         ],

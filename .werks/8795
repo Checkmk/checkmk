@@ -1,12 +1,11 @@
 Title: mknotifyd: fix file descriptor leak
 Level: 1
 Component: notifications
-Class: fix
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1568902712
+Class: fix
 
 Before the mknotifyd reloads its configuration it
 tries to aquire the Checkmk configuration lock.

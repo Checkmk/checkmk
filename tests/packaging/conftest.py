@@ -1,24 +1,23 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
 import os
-import pytest  # type: ignore[import]
+import pytest
 
 
-# TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
+# Packaging tests should not be executed in site.
+# -> Disabled site fixture for them
+@pytest.fixture(scope="session")
+def site(request):
+    pass
+
+
 @pytest.fixture(scope="module")
-def package_path():
-    path = os.environ.get("PACKAGE_PATH")
+def version_path():
+    path = os.environ.get("VERSION_PATH")
     if not path:
-        raise Exception("PACKAGE_PATH environment variable pointing to the package "
-                        "to be tested is missing")
+        raise Exception("VERSION_PATH environment variable pointing to the version "
+                        "directory (e.g. /bauwelt/download/2016.12.22) is missing")
     return path
 
 
-# TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
 def cmk_version():
     version = os.environ.get("VERSION")

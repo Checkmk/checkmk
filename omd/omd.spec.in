@@ -1,9 +1,9 @@
-Summary:        Checkmk
+Summary:        Check_MK
 Name:           check-mk-%{edition}-%{pkg_version}
 Version:        SET BY MAKEFILE
 Release:        SET BY MAKEFILE
 License:        GPL
-URL:            https://checkmk.com
+URL:            http://mathias-kettner.com
 Group:          Application/System
 Source:         check-mk-%{edition}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
@@ -27,9 +27,16 @@ Requires:
 %endif
 
 %description
-Checkmk - Best-in-class infrastructure & application monitoring
+Check_MK is a full featured system monitoring
+solution. This package ships with Check_MK, Nagios,
+the Nagios plugins, Livestatus, Multisite,
+PNP4Nagios, NagVis, and other addons. Please visit
+http://mathias-kettner.com/.
 
-%install
+%prep
+%setup -q -n check-mk-%{edition}-%{version}
+
+%build
 # Avoid the annobin chaos on CentOS 8, part 2:
 # Empty the already existing spec file, it is referenced by various system stuff, e.g. Perl.
 if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
@@ -37,13 +44,16 @@ if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
     touch /usr/lib/rpm/redhat/redhat-annobin-cc1
 fi
 
-# This target compiles and installs everything needed into our DESTDIR
-make -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install
+cd omd
+make -j 4
+make pack
 
+%install
+mkdir -p $RPM_BUILD_ROOT
+tar xzf omd/check-mk-%{edition}-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
 # Remove all global symbolic links from package. They are shared
 # among all versions and must be handled in %post und %postun
 # in order to avoid RPM conflicts
-# TODO: Synchronize with omd/debian/rules
 rm -f $RPM_BUILD_ROOT/opt/omd/versions/default
 rm -f $RPM_BUILD_ROOT/omd
 rm -f $RPM_BUILD_ROOT/usr/bin/omd
@@ -104,6 +114,41 @@ IS_SYSTEMD=0
 if [ -d /usr/lib/systemd ] && which systemctl >/dev/null 2>&1; then
     IS_SYSTEMD=1
 fi
+
+# Decoding files using omd python and omd script
+# We have obfuscated pyinstaller binaries to avoid false positives
+# from anti-virus software. On this stage we de-obfuscate those binaries.
+
+# setup "root" path in the same manner as in DEB package
+BASE_PATH=/omd/versions/%{version}
+
+# names
+CMK_DECODED_DIR_NAME=decoded
+CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+DECODING_SCRIPT_NAME=obfuscation.py
+
+# folder
+OMD_UTILS_DIR=$BASE_PATH/lib/python/cmk/utils
+CMK_PLUGINS_DIR=$BASE_PATH/share/check_mk/agents/windows/plugins
+CMK_DECODED_DIR=$CMK_PLUGINS_DIR/$CMK_DECODED_DIR_NAME
+
+# files
+DECODING_SCRIPT_PATH=$OMD_UTILS_DIR/$DECODING_SCRIPT_NAME
+CMK_ENCODED_EXE_PATH=$CMK_PLUGINS_DIR/$CMK_UPDATE_EXE_NAME
+CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
+
+# python executable
+CMK_PYTHON=$BASE_PATH/bin/python
+
+# cmk-update-agent.exe:
+if test -f $CMK_ENCODED_EXE_PATH && test -f $DECODING_SCRIPT_PATH ; then
+    echo "Decoding '$CMK_ENCODED_EXE_PATH' using '$DECODING_SCRIPT_PATH' to '$CMK_DECODED_EXE_PATH'"
+    mkdir -p $CMK_DECODED_DIR
+    echo "Calling internal python '$CMK_PYTHON'"
+    $CMK_PYTHON $DECODING_SCRIPT_PATH decrypt $CMK_ENCODED_EXE_PATH $CMK_DECODED_EXE_PATH
+fi
+
+
 
 # Detect whether or not manage startup through systemd or SysV
 if [ $IS_SYSTEMD -eq 1 ]; then

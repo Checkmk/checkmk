@@ -1,11 +1,12 @@
 Title: Agent AWS: Let EC2 services become stale if the instance was terminated
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568646984
-Class: fix
 
 The EC2 piggybacked hostname contains the value of the field 'PrivateIpAddress'.
 If an EC2 instance terminates then this field is missing. In this case we skip

@@ -1,12 +1,11 @@
 Title: agent_vsphere: Collect performance counters from vCenter
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1563965515
+Class: feature
 
 Previously some counters could only be fetched from the ESX host directly.
 We now provide the counters when connecting to the vCenter as well.

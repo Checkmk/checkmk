@@ -1,13 +1,12 @@
 Title: mgmt_ipmi_sensors: Missing service details for IPMI sensors services
+Level: 1
+Component: checks
 Class: fix
 Compatible: incomp
-Component: checks
-Date: 1571218996
 Edition: cre
-Knowledge: undoc
-Level: 1
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p5
+Date: 1571218996
 
 Some IPMI sensors reported null bytes within their name. This resulted in various problems,
 including an empty page when trying to view the services' details.

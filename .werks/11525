@@ -1,13 +1,11 @@
 Title: lnx_if: Treat only interfaces with UP and LOWER_UP (bracket info from ip address) as UP
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1610640335
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p21
+Date: 1610640335
+Class: fix
 
 Previously we only checked {{<...,UP>}} in the bracket info and treated this
 interface as {{UP}} if and only if no output of ethtool is available.

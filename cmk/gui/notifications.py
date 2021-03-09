@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import time
 
@@ -22,20 +42,9 @@ from cmk.gui.permissions import (
     PermissionSection,
     declare_permission,
 )
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_javascript_link,
-)
-from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
-from cmk.gui.utils.urls import make_confirm_link
-from cmk.gui.main_menu import mega_menu_registry
 
 g_acknowledgement_time = {}
-g_modified_time = 0.0
+g_modified_time = 0
 g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
 
 
@@ -68,8 +77,7 @@ def load_plugins(force):
 
 def acknowledge_failed_notifications(timestamp):
     g_acknowledgement_time[config.user.id] = timestamp
-    config.user.acknowledged_notifications = int(g_acknowledgement_time[config.user.id])
-    set_modified_time()
+    save_acknowledgements()
 
 
 def set_modified_time():
@@ -77,18 +85,26 @@ def set_modified_time():
     g_modified_time = time.time()
 
 
+def save_acknowledgements():
+    config.user.save_file("acknowledged_notifications", int(g_acknowledgement_time[config.user.id]))
+    set_modified_time()
+
+
 def acknowledged_time():
     if g_acknowledgement_time.get(config.user.id) is None or\
             config.user.file_modified("acknowledged_notifications") > g_modified_time:
-        g_acknowledgement_time[config.user.id] = config.user.acknowledged_notifications
-        set_modified_time()
-        if g_acknowledgement_time[config.user.id] == 0:
-            # when this timestamp is first initialized, save the current timestamp as the acknowledge
-            # date. This should considerably reduce the number of log files that have to be searched
-            # when retrieving the list
-            acknowledge_failed_notifications(time.time())
-
+        load_acknowledgements()
     return g_acknowledgement_time[config.user.id]
+
+
+def load_acknowledgements():
+    g_acknowledgement_time[config.user.id] = config.user.load_file("acknowledged_notifications", 0)
+    set_modified_time()
+    if g_acknowledgement_time[config.user.id] == 0:
+        # when this timestamp is first initialized, save the current timestamp as the acknowledge
+        # date. This should considerably reduce the number of log files that have to be searched
+        # when retrieving the list
+        acknowledge_failed_notifications(time.time())
 
 
 def load_failed_notifications(before=None, after=None, stat_only=False, extra_headers=None):
@@ -125,14 +141,14 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
             horizon = 86400
         query.append("Filter: time > %d" % (int(time.time()) - horizon))
 
-    query_txt = "\n".join(query)
+    query = "\n".join(query)
 
     if extra_headers is not None:
-        query_txt += extra_headers
+        query += extra_headers
 
     if stat_only:
         try:
-            result = sites.live().query_summed_stats(query_txt)
+            result = sites.live().query_summed_stats(query)
         except MKLivestatusNotFoundError:
             result = [0]  # Normalize the result when no site answered
 
@@ -143,12 +159,14 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
 
         return result
 
-    return sites.live().query(query_txt)
+    else:
+        return sites.live().query(query)
 
 
 def render_notification_table(failed_notifications):
     with table_element() as table:
-        header = {name: idx for idx, name in enumerate(g_columns)}
+        header = dict([(name, idx) for idx, name in enumerate(g_columns)])
+
         for row in failed_notifications:
             table.row()
             table.text_cell(_("Time"),
@@ -161,45 +179,18 @@ def render_notification_table(failed_notifications):
 
 
 # TODO: We should really recode this to use the view and a normal view command / action
-def render_page_confirm(acktime, failed_notifications):
-    title = _("Confirm failed notifications")
-    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+def render_page_confirm(acktime, prev_url, failed_notifications):
+    html.header(_("Confirm failed notifications"))
 
-    confirm_url = make_confirm_link(
-        url=html.makeactionuri_contextless([
-            ("mode", "clear_failed_notifications"),
-            ("acktime", str(acktime)),
-            ("_confirm", "1"),
-        ]),
-        message=_("Do you really want to acknowledge all failed notifications up to %s?") %
-        cmk.utils.render.date_and_time(acktime),
-    )
-
-    page_menu = PageMenu(
-        dropdowns=[
-            PageMenuDropdown(
-                name="actions",
-                title=_("Actions"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Actions"),
-                        entries=[
-                            PageMenuEntry(
-                                title=_("Confirm"),
-                                icon_name="save",
-                                item=make_javascript_link(confirm_url),
-                                is_shortcut=True,
-                                is_suggested=True,
-                                is_enabled=failed_notifications,
-                            ),
-                        ],
-                    ),
-                ],
-            ),
-        ],
-        breadcrumb=breadcrumb,
-    )
-    html.header(title, breadcrumb, page_menu)
+    if failed_notifications:
+        html.open_div(class_="really")
+        html.write_text(_("Do you really want to acknowledge all failed notifications up to %s?") %\
+                   cmk.utils.render.date_and_time(acktime))
+        html.begin_form("confirm", method="GET", action=prev_url)
+        html.hidden_field('acktime', acktime)
+        html.button('_confirm', _("Yes"))
+        html.end_form()
+        html.close_div()
 
     render_notification_table(failed_notifications)
 
@@ -208,26 +199,23 @@ def render_page_confirm(acktime, failed_notifications):
 
 @cmk.gui.pages.register("clear_failed_notifications")
 def page_clear():
-    acktime = html.request.get_float_input_mandatory('acktime', time.time())
+    acktime = html.request.var('acktime')
+    if acktime is None:
+        acktime = time.time()
+    else:
+        acktime = float(acktime)
+
+    prev_url = html.get_url_input('prev_url', '')
     if html.request.var('_confirm'):
         acknowledge_failed_notifications(acktime)
 
         if config.user.authorized_login_sites():
-            watolib.init_wato_datastructures(with_wato_lock=True)
-
-            title = _('Replicate user profile')
-            breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
-            html.header(title, breadcrumb)
-
-            for message in get_flashed_messages():
-                html.show_message(message)
             # This local import is needed for the moment
             import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
-            cmk.gui.wato.user_profile.user_profile_async_replication_page(
-                back_url="clear_failed_notifications.py")
+            cmk.gui.wato.user_profile.user_profile_async_replication_page()
             return
 
     failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
-    render_page_confirm(acktime, failed_notifications)
+    render_page_confirm(acktime, prev_url, failed_notifications)
     if html.request.var('_confirm'):
-        html.reload_whole_page()
+        html.reload_sidebar()

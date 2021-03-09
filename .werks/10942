@@ -1,0 +1,10 @@
+Title: agent_graylog: Updated mkp of feature pack to version 1.1
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p11
+Date: 1584909539
+Class: fix
+
+MKP includes werk # 10941 now (Fixed usage of password store).

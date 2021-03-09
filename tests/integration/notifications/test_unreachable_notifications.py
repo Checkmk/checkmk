@@ -1,24 +1,18 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# encoding: utf-8
 
 import errno
-import os
 import time
-from typing import Optional
-
-import pytest  # type: ignore[import]
-
-from testlib import web, WatchLog, wait_until  # noqa: F401 # pylint: disable=unused-import
+import os
+import pytest
+from testlib import web, WatchLog, wait_until  # pylint: disable=unused-import
 
 STATE_UP = 0
 STATE_DOWN = 1
 STATE_UNREACHABLE = 2
 
 
-class Scenario:
+class Scenario(object):
     @classmethod
     def get_test_id(cls, scenario):
         if scenario.unreachable_enabled:
@@ -33,15 +27,14 @@ class Scenario:
         self.unreachable_enabled = unreachable_enabled
 
         if core == "cmc":
-            self.log: Optional[str] = "var/check_mk/core/history"
+            self.log = "var/check_mk/core/history"
         elif core == "nagios":
             self.log = "var/nagios/nagios.log"
         else:
             self.log = None
 
 
-@pytest.fixture(name="scenario",
-                scope="module",
+@pytest.fixture(scope="module",
                 params=[
                     Scenario(core="nagios", unreachable_enabled=True),
                     Scenario(core="cmc", unreachable_enabled=True),
@@ -49,13 +42,13 @@ class Scenario:
                     Scenario(core="cmc", unreachable_enabled=False),
                 ],
                 ids=Scenario.get_test_id)
-def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+def scenario(request, web, site):
     core = request.param.core
     unreachable_enabled = request.param.unreachable_enabled
     site.set_core(core)
 
     try:
-        print("Applying test config")
+        print "Applying test config"
 
         web.add_host("notify-test-parent", attributes={
             "ipaddress": "127.0.0.1",
@@ -99,7 +92,7 @@ def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefi
         #
         # Cleanup code
         #
-        print("Cleaning up default config")
+        print "Cleaning up default config"
 
         site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
@@ -113,8 +106,8 @@ def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefi
         web.activate_changes()
 
 
-@pytest.fixture(name="initial_state", scope="function")
-def initial_state_fixture(site, scenario):
+@pytest.fixture(scope="function")
+def initial_state(site, scenario):
     # Before each test: Set to initial state: Both UP
     site.send_host_check_result("notify-test-child", 0, "UP")
     site.send_host_check_result("notify-test-parent", 0, "UP")
@@ -131,7 +124,8 @@ def initial_state_fixture(site, scenario):
             except OSError as e:
                 if e.errno == errno.ENOENT:
                     return False
-                raise e
+                else:
+                    raise e
 
         wait_until(rotated_log, timeout=10)
     else:
@@ -529,5 +523,5 @@ def test_down_child_becomes_unreachable_then_up(scenario, site, initial_state):
         #   nagios: UP notification
         _send_child_recovery(scenario, site, log)
 
-        # - Set parent up, expect UP notification
+        ## - Set parent up, expect UP notification
         _send_parent_recovery(scenario, site, log)

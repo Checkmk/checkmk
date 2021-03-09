@@ -1,13 +1,11 @@
 Title: Windows tasks check-plugin now deals with long named scheduled tasks
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1595855911
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p15
+Date: 1595855911
+Class: fix
 
 Long named windows tasks are written over many lines in the agent
 output. The check-pluging is now able to join these lines to use the entire

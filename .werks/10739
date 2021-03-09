@@ -1,13 +1,12 @@
 Title: send notifications chronologically
+Level: 1
+Component: notifications
 Class: fix
 Compatible: compat
-Component: notifications
-Date: 1579867437
 Edition: cee
-Knowledge: undoc
-Level: 1
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p9
+Date: 1579867437
 
 Due to a bug in the notification spooler new spoolfiles were processed before
 old spoolfiles. This may lead to suprising results. If e.g. a host goes DOWN

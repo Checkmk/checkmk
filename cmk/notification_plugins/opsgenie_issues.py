@@ -1,28 +1,44 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 import sys
-from typing import Optional
-
-from six import ensure_str
-from opsgenie.swagger_client import AlertApi  # type: ignore[import]  # pylint: disable=import-error
-from opsgenie.swagger_client import configuration  # pylint: disable=import-error
-from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore[import] # pylint: disable=import-error
-from opsgenie.swagger_client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
-from opsgenie.swagger_client.models import CloseAlertRequest  # pylint: disable=import-error
-from opsgenie.swagger_client.models import CreateAlertRequest  # pylint: disable=import-error
-from opsgenie.swagger_client.models import TeamRecipient  # pylint: disable=import-error
-
+from opsgenie.swagger_client import AlertApi  # type: ignore
+from opsgenie.swagger_client import configuration  # type: ignore
+from opsgenie.swagger_client.models import AcknowledgeAlertRequest  # type: ignore
+from opsgenie.swagger_client.rest import ApiException  # type: ignore
+from opsgenie.swagger_client.models import CloseAlertRequest  # type: ignore
+from opsgenie.swagger_client.models import CreateAlertRequest  # type: ignore
+from opsgenie.swagger_client.models import TeamRecipient  # type: ignore
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
 
 
 def main():
     context = utils.collect_context()
-    priority: Optional[str] = u'P3'
+    priority = 'P3'
     teams_list = []
     tags_list = None
     action_list = None
@@ -42,10 +58,10 @@ def main():
     proxy_url = context.get("PARAMETER_PROXY_URL")
 
     if context.get('PARAMETER_TAGSS'):
-        tags_list = None or context.get('PARAMETER_TAGSS', u'').split(" ")
+        tags_list = None or context.get('PARAMETER_TAGSS').split(" ")
 
     if context.get('PARAMETER_ACTIONSS'):
-        action_list = None or context.get('PARAMETER_ACTIONSS', u'').split(" ")
+        action_list = None or context.get('PARAMETER_ACTIONSS').split(" ")
 
     if context.get('PARAMETER_TEAMSS'):
         for team in context['PARAMETER_TEAMSS'].split(" "):
@@ -104,8 +120,7 @@ $LONGSERVICEOUTPUT$
     elif context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
         handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url, proxy_url)
     else:
-        sys.stdout.write(
-            ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
+        sys.stdout.write('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE']))
         return 0
 
 
@@ -119,24 +134,24 @@ def configure_authorization(key, host_url, proxy_url):
 
 
 def handle_alert_creation(
-    key,
-    note_created,
-    action_list,
-    desc,
-    alert_source,
-    msg,
-    priority,
-    teams_list,
-    tags_list,
-    alias,
-    owner,
-    entity_value,
-    host_url,
-    proxy_url,
+        key,
+        note_created,
+        action_list,
+        desc,
+        alert_source,
+        msg,
+        priority,
+        teams_list,
+        tags_list,
+        alias,
+        owner,
+        entity_value,
+        host_url,
+        proxy_url,
 ):
     configure_authorization(key, host_url, proxy_url)
 
-    body = CreateAlertRequest(
+    body = CreateAlertRequest(  # type: ignore
         note=note_created,
         actions=action_list,
         description=desc,
@@ -182,7 +197,7 @@ def handle_alert_deletion(key, owner, alias, alert_source, note_closed, host_url
 def handle_alert_ack(key, ack_author, ack_comment, alias, alert_source, host_url, proxy_url):
     configure_authorization(key, host_url, proxy_url)
 
-    body = AcknowledgeAlertRequest(
+    body = AcknowledgeAlertRequest(  # type: ignore
         source=alert_source,
         user=ack_author,
         note=ack_comment,

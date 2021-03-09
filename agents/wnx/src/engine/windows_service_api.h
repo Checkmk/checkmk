@@ -1,7 +1,3 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the
-// terms and conditions defined in the file COPYING, which is part of this
-// source code package.
 
 // provides basic api to start and stop service
 
@@ -15,7 +11,6 @@
 #include <cstdint>  // wchar_t when compiler options set weird
 #include <functional>
 
-#include "common/wtools_service.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 
@@ -40,42 +35,30 @@ int ExecMainService(StdioLog stdio_log);   // on exec
 int ExecStartLegacy();                     // on start_legacy
 int ExecStopLegacy();                      // on stop_legacy
 int ExecCap();                             // on cap
-
-int ExecCmkUpdateAgent(const std::vector<std::wstring>& params);  // updater
-
 int ExecVersion();                         // on version
 int ExecPatchHash();                       // on patch_hash
 int ExecShowConfig(std::string_view sec);  // on showconfig
-int ExecUpgradeParam(bool force_upgrade);  // om upgrade
+int ExecUpgradeParam(bool Force);          // om upgrade
 
 int ExecSkypeTest();  // on skype :hidden
 int ExecResetOhm();   // on resetohm :hidden
 
 int ExecReloadConfig();
-int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
-void ExecUninstallClean();
 
-int ExecRealtimeTest(bool print);  // on rt
+int ExecRealtimeTest(bool Print);  // on rt
 int ExecCvtIniYaml(std::filesystem::path IniFile,
                    std::filesystem::path YamlFile,
                    StdioLog stdio_log);  // on cvt
-int ExecExtractCap(std::wstring_view cap_file,
-                   std::wstring_view to);  //
 int ExecSection(const std::wstring& SecName,
                 int RepeatPause,      // if 0 no repeat
                 StdioLog stdio_log);  // on section
 int ServiceAsService(std::wstring_view app_name,
-                     std::chrono::milliseconds delay,
-                     const std::function<bool(const void* some_context)>&
-                         internal_callback);  // service execution
+                     std::chrono::milliseconds Delay,
+                     std::function<bool(const void* Processor)>
+                         InternalCallback) noexcept;  // service execution
 
 void ProcessFirewallConfiguration(std::wstring_view app_name);
-[[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
-
-// Converter API from YML language to wtools
-wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view text);
-wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
 constexpr const wchar_t* kServiceName = L"CheckMkService";
@@ -88,8 +71,8 @@ constexpr const wchar_t* kServiceDependencies = L"";
 constexpr const wchar_t* kServiceAccount = L"NT AUTHORITY\\LocalService";
 constexpr const wchar_t* kServicePassword = nullptr;
 
-constexpr std::wstring_view kSrvFirewallRuleName = L"Checkmk Agent";
-constexpr std::wstring_view kAppFirewallRuleName = L"Checkmk Agent application";
+constexpr std::wstring_view kSrvFirewallRuleName = L"CheckMk Service Rule";
+constexpr std::wstring_view kAppFirewallRuleName = L"CheckMk Application Rule";
 
 // service configuration
 // main call

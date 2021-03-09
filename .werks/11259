@@ -1,13 +1,11 @@
 Title: Fix host "Save & Test" action showing "API error" for all tests
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1598277435
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p17
+Date: 1598277435
+Class: fix
 
 The host diagnostic page was initially showing the message "API Error: The text
 None is not a valid integer number." after adding or editing a host and

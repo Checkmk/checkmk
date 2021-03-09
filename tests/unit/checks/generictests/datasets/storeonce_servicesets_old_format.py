@@ -1,67 +1,57 @@
-#!/usr/bin/env python3
-# -*- encoding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
+# -*- encoding: utf-8
 # yapf: disable
-# type: ignore
+
+
 checkname = 'storeonce_servicesets'
 
-freeze_time = '2020-01-02 13:41:00'
 
-info = [
-    ['[1]'], ['ServiceSet ID', '1'], ['ServiceSet Name', '', 'Service Set 1'],
-    ['ServiceSet Alias', 'SET1'], ['Serial Number', 'CZ25132LTD01'],
-    ['Software Version', '3.15.1-1636.1'],
-    ['Product Class', 'HPE StoreOnce 4700 Backup'],
-    ['Capacity in bytes', '75952808613643'],
-    ['Free Space in bytes', '53819324528395'],
-    ['User Data Stored in bytes', '305835970141743'],
-    ['Size On Disk in bytes', '19180587585836'],
-    ['Deduplication Ratio', '15.945078260668'],
-    ['ServiceSet Health Level', '1'], ['ServiceSet Health', 'OK'],
-    ['ServiceSet Status', 'Running'], ['Replication Health Level', '1'],
-    ['Replication Health', 'OK'], ['Replication Status', 'Running'],
-    ['Overall Health Level', '1'], ['Overall Health', 'OK'],
-    ['Overall Status', 'Running'], ['Housekeeping Health Level', '1'],
-    ['Housekeeping Health', 'OK'], ['Housekeeping Status', 'Running'],
-    ['Primary Node', 'hpcz25132ltd'], ['Secondary Node', 'None'],
-    ['Active Node', 'hpcz25132ltd']
-]
+info = [[u'[1]'],
+        [u'ServiceSet ID', u'1'],
+        [u'ServiceSet Name', u'', u'Service Set 1'],
+        [u'ServiceSet Alias', u'SET1'],
+        [u'Serial Number', u'CZ25132LTD01'],
+        [u'Software Version', u'3.15.1-1636.1'],
+        [u'Product Class', u'HPE StoreOnce 4700 Backup'],
+        [u'Capacity in bytes', u'75952808613643'],
+        [u'Free Space in bytes', u'53819324528395'],
+        [u'User Data Stored in bytes', u'305835970141743'],
+        [u'Size On Disk in bytes', u'19180587585836'],
+        [u'Deduplication Ratio', u'15.945078260668'],
+        [u'ServiceSet Health Level', u'1'],
+        [u'ServiceSet Health', u'OK'],
+        [u'ServiceSet Status', u'Running'],
+        [u'Replication Health Level', u'1'],
+        [u'Replication Health', u'OK'],
+        [u'Replication Status', u'Running'],
+        [u'Overall Health Level', u'1'],
+        [u'Overall Health', u'OK'],
+        [u'Overall Status', u'Running'],
+        [u'Housekeeping Health Level', u'1'],
+        [u'Housekeeping Health', u'OK'],
+        [u'Housekeeping Status', u'Running'],
+        [u'Primary Node', u'hpcz25132ltd'],
+        [u'Secondary Node', u'None'],
+        [u'Active Node', u'hpcz25132ltd']]
 
-discovery = {'': [('1', {})], 'capacity': [('1', {})]}
 
-checks = {
-    '': [
-        (
-            '1', {}, [
-                (0, 'Alias: SET1', []),
-                (0, 'Overall Status: Running, Overall Health: OK', [])
-            ]
-        )
-    ],
-    'capacity': [
-        (
-            '1', {}, [
-                (
-                    0, '29.14% used (20.13 of 69.08 TB)', [
-                        (
-                            'fs_used', 21108135.3046875, 57947394.26700058,
-                            65190818.550375655, 0, 72434242.83375072
-                        ),
-                        ('fs_size', 72434242.83375072, None, None, None, None),
-                        (
-                            'fs_used_percent', 29.14110022953421, None, None,
-                            None, None
-                        )
-                    ]
-                ),
-                (
-                    0, 'Dedup ratio: 15.95',
-                    [('dedup_rate', 15.945078260668, None, None, None, None)]
-                )
-            ]
-        )
-    ]
-}
+discovery = {'': [(u'1', {})], 'capacity': [(u'1', {})]}
+
+
+checks = {'': [(u'1',
+                {},
+                [(0, u'Alias: SET1', []),
+                 (0, u'Overall Status: Running, Overall Health: OK', [])])],
+          'capacity': [(u'1',
+                        {},
+                        [(0,
+                          '29.14% used (10.07 of 34.54 PB), trend: 0 B / 24 hours',
+                          [(u'1',
+                            10807365276.0,
+                            29669065864.704296,
+                            33377699097.792336,
+                            0,
+                            37086332330.88037),
+                           ('fs_size', 37086332330.88037, None, None, None, None),
+                           ('growth', 0.0, None, None, None, None),
+                           ('trend', 0, None, None, 0, 1545263847.1200154)]),
+                         (0, 'Dedup ratio: 15.95', [])])]}

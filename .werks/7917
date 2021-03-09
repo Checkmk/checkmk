@@ -1,10 +1,11 @@
 Title: aws_costs_and_usage: Fixed missing service condition in related parameter set
 Level: 1
 Component: checks
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b4
 Date: 1562163793
-Class: fix
 
 This is an incompatible change which means that you have to adapted your rules.

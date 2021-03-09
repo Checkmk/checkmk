@@ -1,13 +1,11 @@
 Title: MKPs: Set extraction time as mtime on files extracted from MKPs
-Class: fix
-Compatible: compat
-Component: core
-Date: 1569484156
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p2
+Date: 1569484156
+Class: fix
 
 For some check related caches it is important that the files installed by MKPs set
 a new modification time in the moment the files are extracted. This makes it possible

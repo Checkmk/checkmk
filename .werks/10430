@@ -1,12 +1,13 @@
 Title: Follow rule "match site" at agent updates host selection
-Class: fix
-Compatible: compat
-Component: agents
-Date: 1574674471
-Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p7
+Date: 1574674471
 
 Previously, the "match sites" selection within the agent updates
 host selection configuration got ignored completely, i.e. updates

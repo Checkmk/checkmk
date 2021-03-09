@@ -1,11 +1,10 @@
 Title: Add missing "Dissolve icon" in custom graph editor
 Level: 1
 Component: metrics
-Class: fix
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1562076823
+Class: fix
 
 

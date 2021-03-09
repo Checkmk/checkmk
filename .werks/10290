@@ -1,13 +1,13 @@
 Title: Temperature check GUI: fix rendering crash when rules are set
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1572871306
-Edition: cre
 Knowledge: undoc
 Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
 State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p7
+Date: 1572871306
 
 10290 FIX Temperature check: fix rendering crash and reporting mismatch
 

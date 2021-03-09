@@ -1,23 +1,37 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-from typing import List, Tuple as _Tuple
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
-    Age,
-    Checkbox,
     Dictionary,
-    Filesize,
-    Integer,
-    ListOf,
-    RegExpUnicode,
-    TextAscii,
-    TextUnicode,
     Tuple,
-    ValueSpec,
+    Integer,
+    TextAscii,
+    Age,
+    Filesize,
 )
 
 from cmk.gui.plugins.wato import (
@@ -25,73 +39,6 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-
-file_size_age_elements: List[_Tuple[str, ValueSpec]] = [
-    ("minage_oldest",
-     Tuple(
-         title=_("Minimal age of oldest file"),
-         elements=[
-             Age(title=_("Warning if younger than")),
-             Age(title=_("Critical if younger than")),
-         ],
-     )),
-    ("maxage_oldest",
-     Tuple(
-         title=_("Maximal age of oldest file"),
-         elements=[
-             Age(title=_("Warning if older than")),
-             Age(title=_("Critical if older than")),
-         ],
-     )),
-    ("minage_newest",
-     Tuple(
-         title=_("Minimal age of newest file"),
-         elements=[
-             Age(title=_("Warning if younger than")),
-             Age(title=_("Critical if younger than")),
-         ],
-     )),
-    ("maxage_newest",
-     Tuple(
-         title=_("Maximal age of newest file"),
-         elements=[
-             Age(title=_("Warning if older than")),
-             Age(title=_("Critical if older than")),
-         ],
-     )),
-    ("minsize_smallest",
-     Tuple(
-         title=_("Minimal size of smallest file"),
-         elements=[
-             Filesize(title=_("Warning if below")),
-             Filesize(title=_("Critical if below")),
-         ],
-     )),
-    ("maxsize_smallest",
-     Tuple(
-         title=_("Maximal size of smallest file"),
-         elements=[
-             Filesize(title=_("Warning if above")),
-             Filesize(title=_("Critical if above")),
-         ],
-     )),
-    ("minsize_largest",
-     Tuple(
-         title=_("Minimal size of largest file"),
-         elements=[
-             Filesize(title=_("Warning if below")),
-             Filesize(title=_("Critical if below")),
-         ],
-     )),
-    ("maxsize_largest",
-     Tuple(
-         title=_("Maximal size of largest file"),
-         elements=[
-             Filesize(title=_("Warning if above")),
-             Filesize(title=_("Critical if above")),
-         ],
-     )),
-]
 
 
 def _item_spec_filestats():
@@ -103,7 +50,71 @@ def _item_spec_filestats():
 
 def _parameter_valuespec_filestats():
     return Dictionary(
-        elements=file_size_age_elements + [
+        elements=[
+            ("minage_oldest",
+             Tuple(
+                 title=_("Minimal age of oldest file"),
+                 elements=[
+                     Age(title=_("Warning if younger than")),
+                     Age(title=_("Critical if younger than")),
+                 ],
+             )),
+            ("maxage_oldest",
+             Tuple(
+                 title=_("Maximal age of oldest file"),
+                 elements=[
+                     Age(title=_("Warning if older than")),
+                     Age(title=_("Critical if older than")),
+                 ],
+             )),
+            ("minage_newest",
+             Tuple(
+                 title=_("Minimal age of newest file"),
+                 elements=[
+                     Age(title=_("Warning if younger than")),
+                     Age(title=_("Critical if younger than")),
+                 ],
+             )),
+            ("maxage_newest",
+             Tuple(
+                 title=_("Maximal age of newest file"),
+                 elements=[
+                     Age(title=_("Warning if older than")),
+                     Age(title=_("Critical if older than")),
+                 ],
+             )),
+            ("minsize_smallest",
+             Tuple(
+                 title=_("Minimal size of smallest file"),
+                 elements=[
+                     Filesize(title=_("Warning if below")),
+                     Filesize(title=_("Critical if below")),
+                 ],
+             )),
+            ("maxsize_smallest",
+             Tuple(
+                 title=_("Maximal size of smallest file"),
+                 elements=[
+                     Filesize(title=_("Warning if above")),
+                     Filesize(title=_("Critical if above")),
+                 ],
+             )),
+            ("minsize_largest",
+             Tuple(
+                 title=_("Minimal size of largest file"),
+                 elements=[
+                     Filesize(title=_("Warning if below")),
+                     Filesize(title=_("Critical if below")),
+                 ],
+             )),
+            ("maxsize_largest",
+             Tuple(
+                 title=_("Maximal size of largest file"),
+                 elements=[
+                     Filesize(title=_("Warning if above")),
+                     Filesize(title=_("Critical if above")),
+                 ],
+             )),
             ("mincount",
              Tuple(
                  title=_("Minimal file count"),
@@ -120,51 +131,11 @@ def _parameter_valuespec_filestats():
                      Integer(title=_("Critical if above")),
                  ],
              )),
-            (
-                "show_all_files",
-                Checkbox(
-                    title=_("Show files in service details"),
-                    label=("Show files"),
-                    help=_(
-                        "Display all files that have reached a WARN or a CRIT status in the "
-                        "service details. Note: displaying the files leads to a performance loss "
-                        "for large numbers of files within the file group. Please enable this feature "
-                        "only if it is needed."),
-                ),
-            ),
-            (
-                "additional_rules",
-                ListOf(
-                    Tuple(elements=[
-                        TextUnicode(
-                            title=_("Display name"),
-                            help=_(
-                                "Specify a user-friendly name that will be displayed in the service "
-                                "details, along with the pattern to match."),
-                        ),
-                        RegExpUnicode(
-                            title=_("Filename/- expression"),
-                            mode="case_sensitive",
-                            size=70,
-                        ),
-                        Dictionary(elements=file_size_age_elements),
-                    ],),
-                    title=_("Additional rules for outliers"),
-                    help=_("This feature is to apply different rules to files that are "
-                           "inconsistent with the files expected in this file group. "
-                           "This means that the rules set for the file group are overwritten. "
-                           "You can specify a filename or a regular expresion, and additional "
-                           "rules that are applied to the matching files. In case of multiple "
-                           "matching rules, the first matching rule is applied. "
-                           "Note: this feature is intended for outliers, and is therefore not "
-                           "suitable to configure subgroups. "),
-                ),
-            ),
         ],
-        help=_("Here you can impose various levels on the results reported by the"
+        help=_("Here you can impose various levels the results reported by the"
                " mk_filstats plugin. Note that some levels only apply to a matching"
-               " output format (e.g. max/min count levels are not applied if only the"
-               " smallest, largest, oldest and newest file is reported). In order to"
+               " putput format (e.g. max/min count levels are not applied if only the"
+               " smallest, largest, oldes and newest file is reported). In order to"
                " receive the required data, you must configure the plugin mk_filestats."),
     )
 

@@ -1,19 +1,9 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+# encoding: utf-8
 
-import pytest  # type: ignore[import]
-from werkzeug.test import create_environ
+import pytest
 
 import cmk.utils.paths
-import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
-import cmk.gui.htmllib as htmllib
-from cmk.gui.http import Request
-from cmk.gui.globals import AppContext, RequestContext
-from testlib.utils import DummyApplication
 
 
 @pytest.fixture(autouse=True)
@@ -27,16 +17,13 @@ def patch_config_paths(monkeypatch, tmp_path):
     (gui_confd / "wato").mkdir(parents=True)
 
 
-def test_load_group_information_empty(tmp_path):
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ))):
-        assert groups.load_contact_group_information() == {}
-        assert gui_groups.load_host_group_information() == {}
-        assert gui_groups.load_service_group_information() == {}
+def test_load_group_information_empty(tmp_path, register_builtin_html):
+    assert groups.load_contact_group_information() == {}
+    assert groups.load_host_group_information() == {}
+    assert groups.load_service_group_information() == {}
 
 
-def test_load_group_information(tmp_path):
+def test_load_group_information(tmp_path, register_builtin_html):
     with open(cmk.utils.paths.check_mk_config_dir + "/wato/groups.mk", "w") as f:
         f.write("""# encoding: utf-8
 
@@ -75,47 +62,44 @@ multisite_contactgroups = {
 }
 """)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
-        assert groups.load_group_information() == {
-            'contact': {
-                'all': {
-                    'alias': u'Everything',
-                    "d!ng": "dong",
-                }
-            },
-            'host': {
-                'all_hosts': {
-                    'alias': u'All hosts :-)',
-                    "ding": "dong",
-                }
-            },
-            'service': {
-                'all_services': {
-                    'alias': u'All s\xe4rvices',
-                    "d1ng": "dong",
-                }
-            },
-        }
-
-        assert groups.load_contact_group_information() == {
+    assert groups._load_group_information() == {
+        'contact': {
             'all': {
                 'alias': u'Everything',
                 "d!ng": "dong",
             }
-        }
-
-        assert gui_groups.load_host_group_information() == {
+        },
+        'host': {
             'all_hosts': {
                 'alias': u'All hosts :-)',
                 "ding": "dong",
             }
-        }
-
-        assert gui_groups.load_service_group_information() == {
+        },
+        'service': {
             'all_services': {
                 'alias': u'All s\xe4rvices',
                 "d1ng": "dong",
             }
+        },
+    }
+
+    assert groups.load_contact_group_information() == {
+        'all': {
+            'alias': u'Everything',
+            "d!ng": "dong",
         }
+    }
+
+    assert groups.load_host_group_information() == {
+        'all_hosts': {
+            'alias': u'All hosts :-)',
+            "ding": "dong",
+        }
+    }
+
+    assert groups.load_service_group_information() == {
+        'all_services': {
+            'alias': u'All s\xe4rvices',
+            "d1ng": "dong",
+        }
+    }

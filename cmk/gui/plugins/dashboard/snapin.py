@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -24,11 +44,11 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def title(cls):
-        return _("Sidebar element")
+        return _("Sidebar Snapin")
 
     @classmethod
     def description(cls):
-        return _("Allows you to use a sidebar element in the dashboard.")
+        return _("Displays a sidebar snapin.")
 
     @classmethod
     def sort_index(cls):
@@ -47,33 +67,34 @@ class SnapinDashlet(IFrameDashlet):
         return [
             ("snapin",
              DropdownChoice(
-                 title=_("Sidebar element"),
-                 help=_("Choose the sidebar element you would like to show."),
+                 title=_("Snapin"),
+                 help=_("Choose the snapin you would like to show."),
                  choices=cls._snapin_choices,
              )),
         ]
 
     @classmethod
     def _snapin_choices(cls):
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
+        import cmk.gui.sidebar as sidebar
         return sorted([(k, v.title()) for k, v in sidebar.snapin_registry.items()],
                       key=lambda x: x[1])
 
-    def default_display_title(self) -> str:
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
-        return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
+    def display_title(self):
+        import cmk.gui.sidebar as sidebar
+        title = sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
+        return self._dashlet_spec.get("title", title)
 
     def update(self):
-        import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
+        import cmk.gui.sidebar as sidebar
         dashlet = self._dashlet_spec
         snapin = sidebar.snapin_registry.get(self._dashlet_spec['snapin'])
         if not snapin:
-            raise MKUserError(None, _('The configured element does not exist.'))
+            raise MKUserError(None, _('The configured snapin does not exist.'))
         snapin_instance = snapin()
 
         html.set_browser_reload(self.refresh_interval())
-        html.html_head(_('Sidebar element'))
-        html.open_body(class_="side", data_theme=html.get_theme())
+        html.html_head(_('Snapin Dashlet'))
+        html.open_body(class_="side")
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")
         html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")

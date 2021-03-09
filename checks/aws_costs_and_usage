@@ -1,14 +1,29 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 AWSCostAndUageMetrics = [
     ("Unblended", "UnblendedCost", "unblended"),
 ]
@@ -20,7 +35,7 @@ def parse_aws_costs_and_usage(info):
         timeperiod = row['TimePeriod']['Start']
         for group in row.get('Groups', []):
             service_name = " ".join(group['Keys'])
-            for metric_name, metrics in group['Metrics'].items():
+            for metric_name, metrics in group['Metrics'].iteritems():
                 try:
                     costs = float(metrics['Amount'])
                     unit = metrics['Unit']
@@ -49,12 +64,12 @@ def inventory_aws_costs_and_usage_summary(parsed):
 
 def check_aws_costs_and_usage_summary(item, params, parsed):
     amounts_by_metrics = collections.defaultdict(float)
-    for (timeperiod, _service_name), metrics in parsed.items():
+    for (timeperiod, _service_name), metrics in parsed.iteritems():
         for title, metric_name, key, in AWSCostAndUageMetrics:
             costs, unit = metrics[metric_name]
             amounts_by_metrics[(timeperiod, title, unit, key)] += costs
 
-    for (timeperiod, title, unit, key), costs in amounts_by_metrics.items():
+    for (timeperiod, title, unit, key), costs in amounts_by_metrics.iteritems():
         yield check_levels(costs,
                            "aws_costs_%s" % key,
                            params.get('levels_%s' % key, (None, None)),
@@ -66,6 +81,7 @@ check_info['aws_costs_and_usage'] = {
     'inventory_function': inventory_aws_costs_and_usage_summary,
     'check_function': check_aws_costs_and_usage_summary,
     'service_description': 'AWS/CE %s',
+    'includes': ['aws.include'],
     'group': 'aws_costs_and_usage',
     'has_perfdata': True,
 }
@@ -82,14 +98,14 @@ check_info['aws_costs_and_usage'] = {
 
 
 def inventory_aws_costs_and_usage_per_service(parsed):
-    for (_timeperiod, service_name) in parsed:
+    for (_timeperiod, service_name) in parsed.iterkeys():
         yield service_name, {}
 
 
 def check_aws_costs_and_usage_per_service(item, params, parsed):
     data = None
     timeperiod = None
-    for (timeperiod, service_name), metrics in parsed.items():
+    for (timeperiod, service_name), metrics in parsed.iteritems():
         if item == service_name:
             data = metrics
             break

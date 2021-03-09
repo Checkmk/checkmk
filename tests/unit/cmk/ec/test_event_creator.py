@@ -1,25 +1,18 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=redefined-outer-name
-import logging
-import pytest  # type: ignore[import]
-from testlib import on_time
-import cmk.ec.export as ec
-import cmk.ec.main
+import time
+import pytest
+import cmk.utils.log
+import cmk.ec.defaults
+import cmk.ec.main as main
 
 
 @pytest.fixture
 def event_creator():
-    logger = logging.getLogger("cmk.mkeventd")
+    logger = cmk.utils.log.get_logger("mkeventd")
 
-    config = ec.default_config()
+    config = cmk.ec.defaults.default_config()
     config["debug_rules"] = True
 
-    return cmk.ec.main.EventCreator(logger, config)
+    return main.EventCreator(logger, config)
 
 
 @pytest.mark.parametrize(
@@ -37,7 +30,7 @@ def event_creator():
                 'host_in_downtime': False,
                 'application': 'CRON',
                 'host': 'Klapprechner',
-                'time': 1558871101.0,
+                'time': 1558874701.0,
                 'ipaddress': '127.0.0.1',
             },
         ),
@@ -69,7 +62,7 @@ def event_creator():
                 'pid': '8046',
                 'priority': 6,
                 'text': 'message',
-                'time': 1558871101.0
+                'time': 1558874701.0
             },
         ),
         (
@@ -238,6 +231,16 @@ def event_creator():
         ),
     ])
 def test_create_event_from_line(event_creator, monkeypatch, line, expected):
+    monkeypatch.setattr(
+        time,
+        'time',
+        lambda: 1550000000.0,
+    )
+    monkeypatch.setattr(
+        time,
+        'localtime',
+        lambda: time.struct_time((2019, 2, 12, 20, 33, 20, 1, 43, 0)),
+    )
+
     address = ("127.0.0.1", 1234)
-    with on_time(1550000000.0, "CET"):
-        assert event_creator.create_event_from_line(line, address) == expected
+    assert event_creator.create_event_from_line(line, address) == expected

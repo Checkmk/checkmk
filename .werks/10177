@@ -1,12 +1,11 @@
 Title: Host autocompletion: Hide completion dropdown when using other elements
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p1
 Date: 1569336254
+Class: fix
 
 The text autocompletion dropdown, which is e.g. used for the "Explicit host name"
 input for editing host names, is now hidden when clicking outside of the dropdown

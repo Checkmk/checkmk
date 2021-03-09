@@ -1,10 +1,11 @@
 Title: docker_container_status.uptime: Add uptime service for containers w/o checkmk agent
 Level: 1
 Component: checks
+Class: feature
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0
 Date: 1568877240
-Class: feature
 
 

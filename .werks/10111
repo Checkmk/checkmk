@@ -1,11 +1,10 @@
 Title: APT: Fix service discovery when getting unexpected output from apt
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0
 Date: 1569225628
+Class: fix
 
 

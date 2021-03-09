@@ -10,7 +10,7 @@ Class: feature
 Check_MK now supports integration with Jira.
 You can create issues for Host an Service Problems and optional set a resolution on recovery notifications.
 
-In Jira you have to add two custom fields to your project screen as described <a href "https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html">here</a>.
+In Jira you have to add two custom fields to your project screen as described <a href="https://confluence.atlassian.com/adminjiraserver/adding-a-custom-field-938847222.html">here</a>.
 
 In Check_MK, under "WATO - Notifications", create a new notification rule and select Jira.
 

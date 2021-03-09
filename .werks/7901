@@ -1,11 +1,10 @@
 Title: Ruleset "Service labels" had no effect
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1561964334
+Class: fix
 
 The labels are now added to their services as expected.

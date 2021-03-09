@@ -1,12 +1,11 @@
 Title: Fix possible AttributeError "function" has no attribute "get" exception during checking
 Level: 1
 Component: core
-Class: fix
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1562760919
+Class: fix
 
 In the moment a check timeout occured while checking a host when using the Microcore an exception
 like this could occur in all previous 1.6 releases:

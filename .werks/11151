@@ -1,12 +1,13 @@
 Title: Correct handling of unsorted time periods for availability timelines
-Class: fix
-Compatible: compat
-Component: livestatus
-Date: 1589986006
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p13
+Date: 1589986006
 
 Checkmk now handles unsorted time periods correctly when displaying
 availability timelines. For example, before, the time period

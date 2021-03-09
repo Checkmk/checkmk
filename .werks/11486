@@ -1,12 +1,13 @@
 Title: LDAP: Fixed updating of attribute "Disabled Notifications"
-Class: fix
-Compatible: compat
-Component: multisite
-Date: 1602673951
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1602673951
 
 Werk #11481 fixed the usage of the attribute but did not take care, that the
 attribute was updated, once it was enabled.

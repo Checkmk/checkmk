@@ -1,12 +1,13 @@
 Title: hacmp_resources.py: allowing to save the any node option in the WATO configuration
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1576746724
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p8
+Date: 1576746724
 
  The current version only allowed to save the "first node" option
  for the "Expect resource to be online on" rule configuration

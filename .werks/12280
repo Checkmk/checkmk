@@ -1,13 +1,11 @@
 Title: Fix XSS on host / folder properties page
-Class: security
-Compatible: compat
-Component: wato
-Date: 1614674454
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.1.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1614674454
+Class: security
 
 A user with permissions to edit tag groups could trigger a stored XSS issue on
 the host and folder properties pages. This may lead to javascript code being

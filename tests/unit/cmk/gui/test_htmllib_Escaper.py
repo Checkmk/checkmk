@@ -1,18 +1,16 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/env python
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.gui.htmllib as htmllib
-from cmk.gui import escaping
+from cmk.gui.globals import html
 
 
 def test_htmllib_integration(register_builtin_html):
-    assert escaping.escape_attribute("") == ""
-    assert escaping.escape_text("") == ""
+    assert type(html.escaper) == htmllib.Escaper
+
+    assert html.attrencode("") == ""
+    assert html.permissive_attrencode("") == ""
 
 
 @pytest.mark.parametrize("inp,out", [
@@ -22,10 +20,10 @@ def test_htmllib_integration(register_builtin_html):
     (htmllib.HTML("\">alert(1)"), "\">alert(1)"),
     (1.1, "1.1"),
     ("<", "&lt;"),
-    ("'", "&#x27;"),
+    ("'", "'"),
 ])
 def test_escape_attribute(inp, out):
-    assert escaping.escape_attribute(inp) == out
+    assert htmllib.Escaper().escape_attribute(inp) == out
 
 
 @pytest.mark.parametrize("inp,out", [
@@ -33,7 +31,7 @@ def test_escape_attribute(inp, out):
     ("&lt;", "<"),
 ])
 def test_unescape_attribute(inp, out):
-    assert escaping.unescape_attributes(inp) == out
+    assert htmllib.Escaper().unescape_attributes(inp) == out
 
 
 @pytest.mark.parametrize(
@@ -84,4 +82,4 @@ def test_unescape_attribute(inp, out):
 def test_escape_text(inp, out):
     if out is None:
         out = inp
-    assert escaping.escape_text(inp) == out
+    assert htmllib.Escaper().escape_text(inp) == out

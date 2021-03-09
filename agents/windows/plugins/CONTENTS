@@ -1,0 +1,7 @@
+
+# This file is read by the WATO page "Unpackaged Agents". It assigns
+# titles to the various files in this directory or hides them.
+.gitattributes                           (hide)
+decoded/cmk-update-agent.exe             Windows update plugin
+cmk-update-agent.exe                     (hide)
+

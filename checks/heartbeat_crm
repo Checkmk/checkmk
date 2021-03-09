@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
@@ -49,8 +69,6 @@ factory_settings["heartbeat_crm_default_levels"] = {
     "max_age": heartbeat_crm_default_max_age,
 }
 
-_FAILED_ACTIONS_KEY = '__failed_actions__'
-
 
 def heartbeat_crm_parse_general(info):
     last_updated = None
@@ -93,7 +111,7 @@ def heartbeat_crm_parse_general(info):
             # pacemaker version = 2.0.3:  3 resource instances configured
             num_resources = int(line[0])
 
-    return last_updated, dc, num_nodes, num_resources
+    return (last_updated, dc, num_nodes, num_resources)
 
 
 #   .--CRM-----------------------------------------------------------------.
@@ -135,10 +153,8 @@ def inventory_heartbeat_crm(info):
 
 def _transform_heartbeat_crm(params):
     if isinstance(params, dict):
-        _params = params.copy()
-        _params.setdefault('show_failed_actions', False)
-        return _params
-    par_dict = {'max_age': params[0], 'show_failed_actions': False}
+        return params
+    par_dict = {'max_age': params[0]}
     if params[1]:
         par_dict['dc'] = params[1]
     if params[2] > -1:
@@ -150,15 +166,14 @@ def _transform_heartbeat_crm(params):
 
 def check_heartbeat_crm(_no_item, params, info):
     if not info:
-        return
+        return None
 
-    first_line = u' '.join(info[0])
+    first_line = ' '.join(info[0])
     if first_line.lower().startswith(
         ("critical", "error:")) or 'connection to cluster failed' in first_line.lower():
-        yield 2, first_line
-        return
+        return 2, first_line
 
-    last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
+    last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
 
     # Convert old tuple params (pre 1.5.0p14)
     params = _transform_heartbeat_crm(params)
@@ -169,36 +184,35 @@ def check_heartbeat_crm(_no_item, params, info):
     now = time.time()
     delta = now - dt
     if delta > params['max_age']:
-        yield 2, u'Ignoring reported data (Status output too old: %s)' % (
-            get_age_human_readable(delta),)
-        return
+        return 2, 'Ignoring reported data (Status output too old: %s)' % get_age_human_readable(
+            delta)
+
+    status, output = 0, ''
 
     # Check for correct DC when enabled
     if params.get('dc') is None or dc == params['dc']:
-        yield 0, u'DC: %s' % (dc,)
+        output += 'DC: %s, ' % dc
     else:
-        yield 2, u'DC: %s (Expected %s)' % (dc, params['dc'])
+        output += 'DC: %s (Expected %s (!!)), ' % (dc, params['dc'])
+        status = 2
 
     # Check for number of nodes when enabled
-    if params['num_nodes'] is not None and num_nodes is not None:
-        if num_nodes == params['num_nodes']:
-            yield 0, u'Nodes: %d' % (num_nodes,)
+    if params['num_nodes'] is not None and numNodes is not None:
+        if numNodes == params['num_nodes']:
+            output += 'Nodes: %d, ' % numNodes
         else:
-            yield 2, u'Nodes: %d (Expected %d)' % (num_nodes, params['num_nodes'])
+            output += 'Nodes: %d (Expected %d (!!)), ' % (numNodes, params['num_nodes'])
+            status = 2
 
     # Check for number of resources when enabled
-    if params['num_resources'] is not None and num_resources is not None:
-        if num_resources == params['num_resources']:
-            yield 0, u'Resources: %d' % (num_resources,)
+    if params['num_resources'] is not None and numResources is not None:
+        if numResources == params['num_resources']:
+            output += 'Resources: %d, ' % numResources
         else:
-            yield 2, u'Resources: %d (Expected %d)' % (num_resources, params['num_resources'])
+            output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_resources'])
+            status = 2
 
-    res = heartbeat_crm_parse_resources(info, show='all')
-    failed_actions = res.get(_FAILED_ACTIONS_KEY, [])
-
-    if params.get('show_failed_actions'):
-        for action in failed_actions:
-            yield 1, "Failed: %s" % (action,)
+    return (status, output.rstrip(', '))
 
 
 check_info["heartbeat_crm"] = {
@@ -220,84 +234,19 @@ check_info["heartbeat_crm"] = {
 #   '----------------------------------------------------------------------'
 
 
-def _join_lines(lines):
-    """Join lines with the help of some helper characters.
-
-    :param lines:
-        List of strings
-
-    :returns:
-        List of joined strings
-
-    Examples:
-
-        >>> _join_lines(["* 1, 2,", "_ 3"])
-        ['1, 2, 3']
-
-        >>> _join_lines(["* 1, 2,", "_ 3,", "_ 4", "* 1, 2,", "_ 3"])
-        ['1, 2, 3, 4', '1, 2, 3']
-
-        >>> _join_lines(["1, 2, 3", "1, 2, 3", "* 1,", "_ 2, 3"])
-        ['1, 2, 3', '1, 2, 3', '1, 2, 3']
-
-        >>> _join_lines(["1, 2,", "  3"])
-        ['1, 2, 3']
-
-        >>> _join_lines([])
-        []
-
-    """
-    joined = []
-    line = ''
-    for part in lines:
-        if part.startswith("*"):
-            if line:
-                joined.append(line)
-            line = part[2:]
-        elif part.startswith(("_ ", "  ")):
-            line += part[1:]
-        else:
-            if line:
-                joined.append(line)
-            line = part
-
-    if line:
-        joined.append(line)
-    return joined
-
-
-def heartbeat_crm_parse_resources(info, show='resources'):
-    """
-
-    :param info:
-        An info list of lists from the check system.
-
-    :param show:
-        Can be either 'all', then it shows some additional information or
-        'resources' then it shows only resources.
-
-    :return:
-        A dict of resources and possibly additional information (like error messages).
-    """
-    block_start = False
+def heartbeat_crm_parse_resources(info):
+    blockStart = False
     resources = {}
     resource = ''
-    list_start = False
-    lines = []
     mode = 'single'
     for parts in info:
         line = " ".join(parts)
 
         if "failed" in line.lower() and "actions" in line.lower():
-            block_start = False
-            list_start = True
-        elif not block_start and line == 'Full list of resources:':
-            block_start = True
-            list_start = False
-        elif list_start:
-            lines.append(line)
-            mode = 'failedaction'
-        elif block_start:
+            blockStart = False
+        elif not blockStart and line == 'Full list of resources:':
+            blockStart = True
+        elif blockStart:
             if line.startswith('Resource Group:'):
                 # Resource group
                 resources[parts[2]] = []
@@ -334,9 +283,6 @@ def heartbeat_crm_parse_resources(info, show='resources'):
                 # Single resource
                 resources[parts[0]] = [parts]
 
-    if show == 'all':
-        resources[_FAILED_ACTIONS_KEY] = _join_lines(lines)
-
     return resources
 
 
@@ -350,7 +296,7 @@ def inventory_heartbeat_crm_resources(info):
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
     inventory = []
     settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
-    for name, resources in heartbeat_crm_parse_resources(info).items():
+    for name, resources in heartbeat_crm_parse_resources(info).iteritems():
         # In naildown mode only resources which are started somewhere can be
         # inventorized
         if settings.get('naildown_resources', False) and resources[0][2] != 'Stopped':
@@ -361,25 +307,30 @@ def inventory_heartbeat_crm_resources(info):
 
 
 def check_heartbeat_crm_resources(item, target_node, info):
+    output = ''
+    status = 0
+
     resources = None
     for name, this_resources in heartbeat_crm_parse_resources(info).items():
         if name == item:
             resources = this_resources
-
     if resources is None:
         return
 
-    if not len(resources):
-        yield 0, u"no resources found"
-
     for resource in resources:
-        yield 0, ' '.join([isinstance(p, list) and ", ".join(p) or p for p in resource])
-
+        output += ' '.join([isinstance(p, list) and repr(p) or p for p in resource])
         if len(resource) == 3 and resource[2] != 'Started':
-            yield 2, u'Resource is in state "%s"' % (resource[2],)
+            status = 2
+            output += ' (Resource is in state "%s" (!!))' % resource[2]
         elif target_node and target_node != resource[3] and resource[1] != 'Slave' and resource[
                 1] != 'Clone':
-            yield 2, u'Expected node: %s' % (target_node,)
+            status = 2
+            output += ' (Expected node: %s (!!))' % target_node
+        output += ', '
+
+    if not output:
+        output = "no resources found"
+    return (status, output.rstrip(', '))
 
 
 check_info["heartbeat_crm.resources"] = {

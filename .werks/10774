@@ -1,12 +1,13 @@
 Title: Homogenize dates in Service Graphs
-Class: fix
-Compatible: compat
-Component: metrics
-Date: 1582105799
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p10
+Date: 1582105799
 
 Graph Time range title uses ISO format with day precision YEAR-MONTH-DAY
 

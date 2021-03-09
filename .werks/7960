@@ -1,12 +1,11 @@
 Title: ps: Option to include process arguments in long-output
 Level: 1
 Component: checks
-Class: feature
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b5
 Date: 1564562329
+Class: feature
 
 This Werk adds an option to include process arguments in the long-output
 of the service.

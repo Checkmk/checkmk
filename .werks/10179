@@ -1,12 +1,11 @@
 Title: Discovery page: Missing "full scan" button in some cases
 Level: 1
 Component: wato
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0p1
 Date: 1569341563
+Class: fix
 
 In previous 1.6 releases the message "No discovery information available.
 Please perform a full scan." could appear without a visible "Full scan"

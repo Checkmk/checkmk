@@ -1,11 +1,12 @@
 Title: Fixed address => host name mapping for events
 Level: 1
 Component: ec
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b5
 Date: 1565178890
-Class: fix
 
 When an incoming event console message does not contain a host name, but
 only an address (e.g. an SNMP trap), the EC should use the host name

@@ -1,13 +1,11 @@
 Title: stunnel: Improve logging of the daemon
-Class: fix
-Compatible: compat
-Component: packages
-Date: 1571383568
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0p6
+Date: 1571383568
+Class: fix
 
 The stunnel daemon instance, which is used once encrypted livestatus is enabled,
 is now not logging to syslog anymore. It only logs to the sites log file var/log/stunnel-server.log.

@@ -1,12 +1,13 @@
 Title: Windows: Inventory correctly reports IP addresses for more than one network card
-Class: fix
-Compatible: compat
-Component: checks
-Date: 1579682279
-Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p9
+Date: 1579682279
 
 
 Previously the inventory reported only IP address(s) of the last network card.

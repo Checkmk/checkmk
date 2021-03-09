@@ -1,0 +1,16 @@
+Title: Fixed KeyError in site specific global settings if no explicit customer is set
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.6.0p13
+Date: 1591105253
+Class: fix
+
+If no explicit customer is used, the site specific global settings page could
+crash with "KeyError ('customer')". As a workaround, you can just edit the site
+via "Properties" at the "Distributed Monitoring" page and save the settings
+again. This will set the missing key.
+
+From now on "provider" is set, if no explicit customer is present in the site
+configuration file.

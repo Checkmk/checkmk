@@ -1,11 +1,10 @@
 Title: Reporting: Now able to create subreports based on service reports
 Level: 1
 Component: reporting
-Class: feature
 Compatible: compat
 Edition: cee
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b4
 Date: 1562671576
+Class: feature
 
 

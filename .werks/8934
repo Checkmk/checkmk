@@ -1,10 +1,11 @@
 Title: rstcli: Skip check plugin if command rstcli is not found
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0b8
 Date: 1566396653
-Class: fix
 
 

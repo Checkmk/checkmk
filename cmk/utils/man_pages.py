@@ -1,8 +1,28 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
 """This module handles the manual pages of Check_MK checks. These man
 pages are meant to document the individual checks of Check_MK and are
 used as base for the list of supported checks and catalogs of checks.
@@ -10,26 +30,20 @@ used as base for the list of supported checks and catalogs of checks.
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
 
-from io import StringIO
 import os
 import re
 import sys
-from pathlib import Path
+import StringIO
 import subprocess
-from typing import Any, Dict, List, Optional, Tuple
 
-from six import ensure_str
+from pathlib2 import Path
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 
-from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-
-ManPage = Dict[str, Any]
-ManPageCatalogPath = Tuple[str, ...]
 
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
@@ -46,7 +60,6 @@ catalog_titles = {
             "didactum"     : "Didactum",
             "eaton"        : "Eaton",
             "emerson"      : "EMERSON",
-            "emka"         : "EMKA Electronic Locking & Monitoring",
             "eltek"        : "ELTEK",
             "epson"        : "Epson",
             "hwg"          : "HW group",
@@ -62,20 +75,19 @@ catalog_titles = {
             "sensatronics" : "Sensatronics",
             "socomec"      : "Socomec",
             "stulz"        : "STULZ",
-            "teracom"      : "Teracom",
-            "tinkerforge"  : "Tinkerforge",
-            "vutlan"       : "Vutlan EMS",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
+            "emka"         : "EMKA Electronic Locking & Monitoring",
+            "tinkerforge"  : "Tinkerforge",
+        "other"       : "Other devices",
         "time"        : "Clock Devices",
-            "hopf"       : "Hopf",
             "meinberg"   : "Meinberg",
+            "hopf"       : "Hopf",
         "network"     : "Networking (Switches, Routers, etc.)",
             "aerohive"    : "Aerohive Networking",
             "adva"        : "ADVA Optical Networking",
             "alcatel"     : "Alcatel",
             "arbor"       : "Arbor",
-            "arista"      : "Arista Networks",
             "arris"       : "ARRIS",
             "aruba"       : "Aruba Networks",
             "avaya"       : "Avaya",
@@ -89,9 +101,7 @@ catalog_titles = {
             "cisco"       : "Cisco Systems (also IronPort)",
             "decru"       : "Decru",
             "dell"        : "DELL",
-            "docsis"      : "DOCSIS",
             "enterasys"   : "Enterasys Networks",
-            "ewon"        : "Ewon",
             "f5"          : "F5 Networks",
             "fireeye"     : "FireEye",
             "fortinet"    : "Fortinet",
@@ -123,7 +133,6 @@ catalog_titles = {
             "safenet"     : "SafeNet",
             "salesforce"  : "Salesforce",
             "symantec"    : "Symantec",
-            "seh"         : "SEH",
             "servertech"  : "Server Technology",
             "siemens"     : "Siemens",
             "sophos"      : "Sophos",
@@ -137,24 +146,21 @@ catalog_titles = {
             "gude"       : "Gude",
             "janitza"    : "Janitza electronics",
         "printer"     : "Printers",
-        "mail"        : "Mail appliances",
-            "artec"         : "ARTEC",
         "server"      : "Server hardware, blade enclosures",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "atto"       : "ATTO",
             "brocade"    : "Brocade",
             "bdt"        : "BDT",
-            "ddn_s2a"    : "DDN S2A",
-            "emc"        : "EMC",
             "fastlta"    : "FAST LTA",
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
             "nimble"     : "Nimble Storage",
             "hitachi"    : "Hitachi",
-            "oraclehw"   : "Oracle",
+            "emc"        : "EMC",
             "qlogic"     : "QLogic",
             "quantum"    : "Quantum",
+            "oraclehw"   : "ORACLE",
             "synology"   : "Synology Inc.",
         "phone"       : "Telephony",
 
@@ -162,61 +168,46 @@ catalog_titles = {
         "ad"            : "Active Directory",
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
-        "barracuda"     : "Barracuda",
-        "checkmk"       : "Checkmk Monitoring System",
-        "citrix"        : "Citrix",
-        "couchbase"     : "Couchbase",
+        "artec"         : "ARTEC",
         "db2"           : "IBM DB2",
-        "dotnet"        : "dotNET",
         "elasticsearch" : "Elasticsearch",
-        "entersekt"     : "Entersekt",
+        "splunk"        : "Splunk",
+        "mongodb"       : "MongoDB",
+        "citrix"        : "Citrix",
+        "netscaler"     : "Citrix Netscaler",
         "exchange"      : "Microsoft Exchange",
-        "graylog"       : "Graylog",
         "haproxy"       : "HAProxy Loadbalancer",
         "informix"      : "IBM Informix",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
-        "jenkins"       : "Jenkins",
-        "jira"          : "Jira",
-        "kaspersky"     : "Kaspersky Lab",
         "libelle"       : "Libelle Business Shadow",
         "lotusnotes"    : "IBM Lotus Domino",
-        "mongodb"       : "MongoDB",
         "mailman"       : "Mailman",
-        "mcafee"        : "McAfee",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",
         "msoffice"      : "MS Office",
-        "netscaler"     : "Citrix Netscaler",
         "nginx"         : "NGINX",
         "nullmailer"    : "Nullmailer",
         "nutanix"       : "Nutanix",
-        "cmk"           : "Checkmk",
+        "omd"           : "Open Monitoring Distribution (OMD)",
+        "check_mk"      : "Check_MK Monitoring System",
         "oracle"        : "ORACLE Database",
         "plesk"         : "Plesk",
         "pfsense"       : "pfsense",
         "postfix"       : "Postfix",
         "postgresql"    : "PostgreSQL",
-        "prometheus"    : "Prometheus",
-        "proxmox"       : "Proxmox",
         "qmail"         : "qmail",
-        "rabbitmq"      : "RabbitMQ",
-        "redis"         : "Redis",
-        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
-        "sansymphony"   : "Datacore SANsymphony",
-        "silverpeak"    : "Silver Peak",
-        "skype"         : "Skype",
-        "splunk"        : "Splunk",
-        "sshd"          : "SSH Daemon",
         "tsm"           : "IBM Tivoli Storage Manager (TSM)",
         "unitrends"     : "Unitrends",
+        "sansymphony"   : "Datacore SANsymphony",
+        "sshd"          : "SSH Daemon",
+        "kaspersky"     : "Kaspersky Lab",
+        "mcafee"        : "McAfee",
+        "barracuda"     : "Barracuda",
         "vnx"           : "VNX NAS",
         "websphere_mq"  : "WebSphere MQ",
-        "zerto"         : "Zerto",
-        "ibm_mq"        : "IBM MQ",
-        "pulse_secure"  : "Pulse Secure",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",
@@ -244,9 +235,7 @@ catalog_titles = {
     "cloud"    : "Cloud Based Environments",
         "azure"       : "Microsoft Azure",
         "aws"         : "Amazon Web Services",
-        "quanta"      : "Quanta Cloud Technology",
     "containerization" : "Containerization",
-        "cadvisor"     : "cAdvisor",
         "docker"       : "Docker",
         "kubernetes"   : "Kubernetes",
         "lxc"          : "Linux Container",
@@ -270,51 +259,53 @@ check_mk_agents = {
     "vnx_quotas": "VNX Quotas"
 }
 
-_manpage_catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
+_manpage_catalog = {}  # type: ignore
 
 
-def man_page_exists(name: str) -> bool:
+def man_page_exists(name):
     return man_page_path(name) is not None
 
 
-def man_page_path(name: str) -> Optional[Path]:
+def man_page_path(name):
     if name[0] != "." and name[-1] != "~":
         for basedir in [
-                cmk.utils.paths.local_check_manpages_dir,
+                Path(cmk.utils.paths.local_check_manpages_dir),
                 Path(cmk.utils.paths.check_manpages_dir)
         ]:
-            # check plugins pre 1.7 could have dots in them. be nice and find those.
-            p = basedir / (name if name.startswith("check-mk") else maincheckify(name))
+            p = basedir / name
             if p.exists():
                 return p
     return None
 
 
-def all_man_pages() -> Dict[str, str]:
+def all_man_pages():
     manuals = {}
-    for basedir in [
-            Path(cmk.utils.paths.check_manpages_dir),  #
-            cmk.utils.paths.local_check_manpages_dir,
-    ]:
-        if basedir.exists():
-            for file_path in basedir.iterdir():
-                if not file_path.name.startswith(".") and not file_path.name.endswith("~"):
-                    manuals[file_path.name] = str(file_path)
+
+    for basedir in [cmk.utils.paths.check_manpages_dir, cmk.utils.paths.local_check_manpages_dir]:
+        if not os.path.exists(basedir):
+            continue
+
+        for name in os.listdir(basedir):
+            if name[0] == "." or name[-1] == "~":
+                continue
+
+            manuals[name] = basedir + "/" + name
+
     return manuals
 
 
-def print_man_page_table() -> None:
+def print_man_page_table():
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append([name, ensure_str(get_title_from_man_page(Path(path)))])
+            table.append((name, _get_title_from_man_page(Path(path))))
         except MKGeneralException as e:
-            sys.stderr.write(str("ERROR: %s" % e))
+            sys.stderr.write("ERROR: %s" % e)
 
-    tty.print_table([str('Check type'), str('Title')], [tty.bold, tty.normal], table)
+    tty.print_table(['Check type', 'Title'], [tty.bold, tty.normal], table)
 
 
-def get_title_from_man_page(path: Path) -> str:
+def _get_title_from_man_page(path):
     with path.open(encoding="utf-8") as fp:
         for line in fp:
             if line.startswith("title:"):
@@ -326,8 +317,8 @@ def man_page_catalog_titles():
     return catalog_titles
 
 
-def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
-    catalog: Dict[ManPageCatalogPath, List[Dict]] = {}
+def load_man_page_catalog():
+    catalog = {}
     for name, path in all_man_pages().items():
         try:
             parsed = _parse_man_page_header(name, Path(path))
@@ -335,16 +326,23 @@ def load_man_page_catalog() -> Dict[ManPageCatalogPath, List[Dict]]:
             if cmk.utils.debug.enabled():
                 raise
             parsed = _create_fallback_man_page(name, Path(path), e)
-        cat = parsed.get("catalog", ["unsorted"])
-        cats = [[cat[0]] + [agent] + cat[1:] for agent in parsed["agents"]
-               ] if cat[0] == "os" else [cat]
-        for c in cats:
-            catalog.setdefault(tuple(c), []).append(parsed)
+
+        if parsed.get("catalog"):
+            cat = parsed["catalog"]
+        else:
+            cat = ["unsorted"]
+
+        if cat[0] == "os":
+            for agent in parsed["agents"]:
+                acat = [cat[0]] + [agent] + cat[1:]
+                catalog.setdefault(tuple(acat), []).append(parsed)
+        else:
+            catalog.setdefault(tuple(cat), []).append(parsed)
+
     return catalog
 
 
 def print_man_page_browser(cat=()):
-    # typxe: (ManPageCatalogPath) -> None
     global _manpage_catalog
     _manpage_catalog = load_man_page_catalog()
 
@@ -352,8 +350,8 @@ def print_man_page_browser(cat=()):
     subtree_names = _manpage_catalog_subtree_names(_manpage_catalog, cat)
 
     if entries and subtree_names:
-        sys.stderr.write(
-            str("ERROR: Catalog path %s contains man pages and subfolders.\n") % ("/".join(cat)))
+        sys.stderr.write("ERROR: Catalog path %s contains man pages and subfolders.\n" %
+                         ("/".join(cat)))
 
     if entries:
         _manpage_browse_entries(cat, entries)
@@ -420,7 +418,7 @@ def _manpage_browse_entries(cat, entries):
         if x[0]:
             index = int(x[1]) - 1
             name = checks[index][1]
-            ConsoleManPageRenderer(name).paint()
+            print_man_page(name)
         else:
             break
 
@@ -442,8 +440,6 @@ def _dialog_menu(title, text, choices, defvalue, oktext, canceltext):
 def _run_dialog(args):
     env = {"TERM": os.getenv("TERM", "linux"), "LANG": "de_DE.UTF-8"}
     p = subprocess.Popen(["dialog", "--shadow"] + args, env=env, stderr=subprocess.PIPE)
-    if p.stderr is None:
-        raise Exception()
     response = p.stderr.read()
     return os.waitpid(p.pid, 0)[1] == 0, response
 
@@ -467,24 +463,26 @@ def _parse_man_page_header(name, path):
         "name": name,
         "path": str(path),
     }
-    key = ""
+    key = None
+    lineno = 0
     with path.open(encoding="utf-8") as fp:
-        for lineno, line in enumerate(fp, start=1):
+        for line in fp:
             line = line.rstrip()
-            if not line:
-                parsed[key] += "\n\n"
-            elif line[0] == ' ':
-                parsed[key] += "\n" + line.lstrip()
-            elif line[0] == '[':
-                break  # End of header
-            elif ':' in line:
-                key, rest = line.split(":", 1)
-                parsed[key] = rest.lstrip()
-            else:
-                msg = "ERROR: Invalid line %d in man page %s:\n%s" % (lineno, path, line)
+            lineno += 1
+            try:
+                if not line:
+                    parsed[key] += "\n\n"
+                elif line[0] == ' ':
+                    parsed[key] += "\n" + line.lstrip()
+                elif line[0] == '[':
+                    break  # End of header
+                else:
+                    key, rest = line.split(":", 1)
+                    parsed[key] = rest.lstrip()
+            except Exception:
                 if cmk.utils.debug.enabled():
-                    raise ValueError(msg)
-                sys.stderr.write("%s\n" % msg)
+                    raise
+                sys.stderr.write("ERROR: Invalid line %d in man page %s\n%s" % (lineno, path, line))
                 break
 
     # verify mandatory keys. FIXME: This list may be incomplete
@@ -506,18 +504,18 @@ def _parse_man_page_header(name, path):
     return parsed
 
 
-def load_man_page(name: str) -> Optional[ManPage]:
+def load_man_page(name):
     path = man_page_path(name)
     if path is None:
-        return None
+        return
 
-    man_page: ManPage = {}
-    current_section: List[Tuple[str, str]] = []
+    man_page = {}
+    current_section = []
     current_variable = None
     man_page['header'] = current_section
     empty_line_count = 0
 
-    with path.open(encoding=str("utf-8")) as fp:
+    with path.open(encoding="utf-8") as fp:
         for lineno, line in enumerate(fp):
             try:
                 if line.startswith(' ') and line.strip() != "":  # continuation line
@@ -553,66 +551,99 @@ def load_man_page(name: str) -> Optional[ManPage]:
                 raise MKGeneralException("Syntax error in %s line %d (%s).\n" %
                                          (path, lineno + 1, e))
 
-    header: Dict[str, Any] = {}
+    header = {}
     for key, value in man_page['header']:
         header[key] = value.strip()
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = 'unsorted'
+        header['catalog'] = ['unsorted']
     man_page['header'] = header
 
     return man_page
 
 
-class ManPageRenderer:
+def print_man_page(name):
+    renderer = ConsoleManPageRenderer(name)
+    renderer.init_output()
+    renderer.paint()
+
+
+class ManPageRenderer(object):
     def __init__(self, name):
         self.name = name
-        man_page = load_man_page(name)
-        if not man_page:
+        self.output = sys.stdout
+        self.width = tty.get_size()[1]
+
+        bg_color = 4
+        fg_color = 7
+        self._tty_color = tty.white + tty.bold
+        self._normal_color = tty.normal + tty.colorset(fg_color, bg_color)
+        self._title_color_left = tty.colorset(0, 7, 1)
+        self._title_color_right = tty.colorset(0, 7)
+        self._subheader_color = tty.colorset(fg_color, bg_color, 1)
+        self._header_color_left = tty.colorset(0, 2)
+        self._header_color_right = tty.colorset(7, 2, 1)
+        self._parameters_color = tty.colorset(6, 4, 1)
+        self._examples_color = tty.colorset(6, 4, 1)
+
+        self._load()
+
+    def _load(self):
+        self.man_page = load_man_page(self.name)
+        if not self.man_page:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
-        self._header = man_page["header"]
 
     def paint(self):
         try:
             self._paint_man_page()
         except Exception as e:
-            sys.stdout.write(str("ERROR: Invalid check manpage %s: %s\n") % (self.name, e))
+            sys.stdout.write("ERROR: Invalid check manpage %s: %s\n" % (self.name, e))
 
     def _paint_man_page(self):
         self._print_header()
-        self._print_manpage_title(self._header['title'])
+        header = self.man_page['header']
+
+        self._print_manpage_title(header['title'])
+
+        ags = []
+        for agent in header['agents']:
+            ags.append(check_mk_agents.get(agent, agent.upper()))
 
         self._print_begin_splitlines()
-        distro = ("official part of Check_MK"
-                  if self._header['distribution'] == 'check_mk' else self._header['distribution'])
-        ags = [check_mk_agents.get(agent, agent.upper()) for agent in self._header['agents']]
-        self._print_info_line("Distribution:            ", distro)
-        self._print_info_line("License:                 ", self._header['license'])
-        self._print_info_line("Supported Agents:        ", ", ".join(ags))
+
+        distro = header['distribution']
+        if distro == 'check_mk':
+            distro = "official part of Check_MK"
+        self._print_splitline(self._header_color_left, "Distribution:            ",
+                              self._header_color_right, distro)
+
+        self._print_splitline(self._header_color_left, "License:                 ",
+                              self._header_color_right, header['license'])
+        self._print_splitline(self._header_color_left, "Supported Agents:        ",
+                              self._header_color_right, ", ".join(ags))
+
         self._print_end_splitlines()
 
         self._print_empty_line()
-        self._print_textbody(self._header['description'])
-        if 'item' in self._header:
+        self._print_textbody(header['description'])
+        if 'item' in header:
             self._print_subheader("Item")
-            self._print_textbody(self._header['item'])
+            self._print_textbody(header['item'])
 
         self._print_subheader("Discovery")
-        self._print_textbody(self._header.get('inventory', 'No discovery supported.'))
-        self._print_empty_line()
-        self._flush()
+        if header.has_key('inventory'):
+            self._print_textbody(header['inventory'])
+        else:
+            self._print_textbody("No discovery supported.")
 
-    def _flush(self):
-        raise NotImplementedError()
+        self._print_empty_line()
+        self.output.flush()
 
     def _print_header(self):
         raise NotImplementedError()
 
     def _print_manpage_title(self, title):
-        raise NotImplementedError()
-
-    def _print_info_line(self, left, right):
         raise NotImplementedError()
 
     def _print_subheader(self, line):
@@ -627,38 +658,35 @@ class ManPageRenderer:
     def _print_end_splitlines(self):
         pass
 
+    def _print_splitline(self, attr1, left, attr2, right):
+        raise NotImplementedError()
+
     def _print_empty_line(self):
         raise NotImplementedError()
 
     def _print_textbody(self, text):
         raise NotImplementedError()
 
+    def _print_splitwrap(self, attr1, left, attr2, text):
+        raise NotImplementedError()
 
-def _console_stream():
-    if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
-        # NOTE: We actually want to use subprocess.Popen here, but the tty is in
-        # a horrible state after rendering the man page if we do that. Why???
-        return os.popen(str("/usr/bin/less -S -R -Q -u -L"), "w")  # nosec
-    return sys.stdout
+    def _begin_table(self, titles):
+        raise NotImplementedError()
+
+    def _end_table(self):
+        raise NotImplementedError()
+
+    def _begin_main_mk(self):
+        raise NotImplementedError()
+
+    def _end_main_mk(self):
+        raise NotImplementedError()
 
 
 class ConsoleManPageRenderer(ManPageRenderer):
-    def __init__(self, name):
-        super(ConsoleManPageRenderer, self).__init__(name)
-        self.__output = _console_stream()
-        # NOTE: We must use instance variables for the TTY stuff because TTY-related
-        # stuff might have been changed since import time, consider e.g. pytest.
-        self.__width = tty.get_size()[1]
-        self._tty_color = tty.white + tty.bold
-        self._normal_color = tty.normal + tty.colorset(7, 4)
-        self._title_color_left = tty.colorset(0, 7, 1)
-        self._title_color_right = tty.colorset(0, 7)
-        self._subheader_color = tty.colorset(7, 4, 1)
-        self._header_color_left = tty.colorset(0, 2)
-        self._header_color_right = tty.colorset(7, 2, 1)
-
-    def _flush(self):
-        self.__output.flush()
+    def init_output(self):
+        if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
+            self.output = os.popen("/usr/bin/less -S -R -Q -u -L", "w")
 
     def _markup(self, line, attr):
         # Replaces braces in the line but preserves the inner braces
@@ -671,14 +699,11 @@ class ConsoleManPageRenderer(ManPageRenderer):
         self._print_splitline(self._title_color_left, "%-25s" % self.name, self._title_color_right,
                               title)
 
-    def _print_info_line(self, left, right):
-        self._print_splitline(self._header_color_left, left, self._header_color_right, right)
-
     def _print_subheader(self, line):
         self._print_empty_line()
-        self.__output.write(self._subheader_color + " " + tty.underline + line.upper() +
-                            self._normal_color + (" " * (self.__width - 1 - len(line))) +
-                            tty.normal + "\n")
+        self.output.write(self._subheader_color + " " + tty.underline + line.upper() +
+                          self._normal_color + (" " *
+                                                (self.width - 1 - len(line))) + tty.normal + "\n")
 
     def _print_line(self, line, attr=None, no_markup=False):
         if attr is None:
@@ -691,17 +716,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
             text = self._markup(line, attr)
             l = self._print_len(line)
 
-        self.__output.write(attr + " ")
-        self.__output.write(text)
-        self.__output.write(" " * (self.__width - 2 - l))
-        self.__output.write(" " + tty.normal + "\n")
+        self.output.write(attr + " ")
+        self.output.write(text)
+        self.output.write(" " * (self.width - 2 - l))
+        self.output.write(" " + tty.normal + "\n")
 
     def _print_splitline(self, attr1, left, attr2, right):
-        self.__output.write(attr1 + " " + left)
-        self.__output.write(attr2)
-        self.__output.write(self._markup(right, attr2))
-        self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
-        self.__output.write(tty.normal + "\n")
+        self.output.write(attr1 + " " + left)
+        self.output.write(attr2)
+        self.output.write(self._markup(right, attr2))
+        self.output.write(" " * (self.width - 1 - len(left) - self._print_len(right)))
+        self.output.write(tty.normal + "\n")
 
     def _print_empty_line(self):
         self._print_line("", tty.colorset(7, 4))
@@ -753,7 +778,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         for word in words[1:]:
             newline += ' '
             x += 1.0
-            while s / x < need_spaces / spaces:  # fixed: true-division
+            while s / x < need_spaces / spaces:
                 newline += ' '
                 s += 1
             newline += word
@@ -766,27 +791,42 @@ class ConsoleManPageRenderer(ManPageRenderer):
         return line
 
     def _print_textbody(self, text):
-        wrapped = self._wrap_text(text, self.__width - 2)
+        wrapped = self._wrap_text(text, self.width - 2)
         attr = tty.colorset(7, 4)
         for line in wrapped:
             self._print_line(line, attr)
+
+    def _print_splitwrap(self, attr1, left, attr2, text):
+        wrapped = self._wrap_text(left + attr2 + text, self.width - 2)
+        self.output.write(attr1 + " " + wrapped[0] + " " + tty.normal + "\n")
+        for line in wrapped[1:]:
+            self.output.write(attr2 + " " + line + " " + tty.normal + "\n")
+
+    def _begin_table(self, titles):
+        pass
+
+    def _end_table(self):
+        pass
+
+    def _begin_main_mk(self):
+        pass
+
+    def _end_main_mk(self):
+        pass
 
 
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
         super(NowikiManPageRenderer, self).__init__(name)
-        self.__output = StringIO()
-
-    def _flush(self):
-        pass
+        self.output = StringIO.StringIO()
 
     def index_entry(self):
         return "<tr><td class=\"tt\">%s</td><td>[check_%s|%s]</td></tr>\n" % \
-                  (self.name, self.name, self._header["title"])
+                  (self.name, self.name, self.man_page["header"]["title"])
 
     def render(self):
         self.paint()
-        return self.__output.getvalue()
+        return self.output.getvalue()
 
     def _markup(self, line, ignored=None):
         # preserve the inner { and } in double braces and then replace the braces left
@@ -796,58 +836,61 @@ class NowikiManPageRenderer(ManPageRenderer):
                    .replace("}", "</tt>")
 
     def _print_header(self):
-        self.__output.write("TI:Check manual page of %s\n" % self.name)
+        self.output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
-        # of the man page here. More useful would be the Checkmk version where
+        # of the man page here. More useful would be the Check_MK version where
         # the plugin first appeared. But we have no access to that - alas.
-        # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
-        self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
+        # self.output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
+        self.output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
     def _print_manpage_title(self, title):
-        self.__output.write("<b>%s</b>\n" % title)
-
-    def _print_info_line(self, left, right):
-        self.__output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
+        self.output.write("<b>%s</b>\n" % title)
 
     def _print_subheader(self, line):
-        self.__output.write("H2:%s\n" % line)
+        self.output.write("H2:%s\n" % line)
 
     def _print_line(self, line, attr=None, no_markup=False):
         if no_markup:
-            self.__output.write("%s\n" % line)
+            self.output.write("%s\n" % line)
         else:
-            self.__output.write("%s\n" % self._markup(line))
+            self.output.write("%s\n" % self._markup(line))
 
     def _print_begin_splitlines(self):
-        self.__output.write("<table>\n")
+        self.output.write("<table>\n")
 
     def _print_end_splitlines(self):
-        self.__output.write("</table>\n")
+        self.output.write("</table>\n")
+
+    def _print_splitline(self, attr1, left, attr2, right):
+        self.output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
 
     def _print_empty_line(self):
-        self.__output.write("\n")
+        self.output.write("\n")
 
     def _print_textbody(self, text):
-        self.__output.write("%s\n" % self._markup(text))
+        self.output.write("%s\n" % self._markup(text))
 
+    def _print_splitwrap(self, attr1, left, attr2, text):
+        if '(' in left:
+            name, typ = left.split('(', 1)
+            name = name.strip()
+            typ = typ.strip()[:-2]
+        else:
+            name = left
+            typ = ""
+        self.output.write("<tr><td class=tt>%s</td>"
+                          "<td>%s</td><td>%s</td></tr>\n" % (name, typ, self._markup(text)))
 
-if __name__ == "__main__":
-    import argparse
-    _parser = argparse.ArgumentParser(prog="man_pages", description="show manual pages for checks")
-    _parser.add_argument('checks', metavar='NAME', nargs='*', help='name of a check')
-    _parser.add_argument('-r',
-                         '--renderer',
-                         choices=['console', 'nowiki'],
-                         default='console',
-                         help='use the given renderer (default: console)')
-    _args = _parser.parse_args()
-    cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / str("checkman")
-    for check in _args.checks:
-        try:
-            print("----------------------------------------", check)
-            if _args.renderer == 'console':
-                ConsoleManPageRenderer(check).paint()
-            else:
-                print(NowikiManPageRenderer(check).render())
-        except MKGeneralException as _e:
-            print(_e)
+    def _begin_table(self, titles):
+        self.output.write("<table><tr>")
+        self.output.write("".join(["<th>%s</th>" % t for t in titles]))
+        self.output.write("</tr>\n")
+
+    def _end_table(self):
+        self.output.write("</table>\n")
+
+    def _begin_main_mk(self):
+        self.output.write("F+:main.mk\n")
+
+    def _end_main_mk(self):
+        self.output.write("F-:\n")

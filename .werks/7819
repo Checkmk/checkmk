@@ -1,12 +1,11 @@
 Title: Fix "HTTP header authentication"
 Level: 1
 Component: multisite
-Class: fix
 Compatible: incomp
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1560923023
+Class: fix
 
 The HTTP header authentication can be enabled in the Global Settings using the
 option "Authenticate users by incoming HTTP requests". In case you do not use

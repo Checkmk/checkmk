@@ -1,0 +1,12 @@
+Title: AWS Agent throws 'list' object has no attribute 'iteritems'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p1
+Date: 1569317167
+Class: fix
+
+Fix for AWSSectionsGeneric: 'list' object has no attribute 'iteritems' exception thrown by the AWS Agent.
+
+

@@ -1,12 +1,11 @@
 Title: Improve metric plugin compatibility
 Level: 1
 Component: multisite
-Class: fix
 Compatible: compat
 Edition: cre
-State: unknown
-Version: 2.0.0i1
+Version: 1.6.0b3
 Date: 1562155245
+Class: fix
 
 GUI metric plugins which were built for Checkmk 1.5 or older could
 access the variable MAX_CORES and the function indexed_color(). This

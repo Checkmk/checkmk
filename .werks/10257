@@ -1,12 +1,10 @@
 Title: Do not make whole discovery page fail on single discovery function issue
-Class: fix
-Compatible: compat
-Component: wato
-Date: 1571125507
-Edition: cre
-Knowledge: undoc
 Level: 1
-State: unknown
-Version: 2.0.0i1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p5
+Date: 1571125507
+Class: fix
 
 

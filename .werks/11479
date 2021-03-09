@@ -1,0 +1,14 @@
+Title: Fix host 'Save & Test' action showing 'API error' for all tests for good
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600432423
+Class: fix
+
+Werk #11259 fixed this error on the "Edit host" page. On the "Create host" page
+the host diagnostic still displayed the error
+"API Error:The text<b><tt>None</tt></b> is not a valid integer number".
+
+From now on, the host diagnostic page works as designed from all call sites.

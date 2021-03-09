@@ -1,11 +1,12 @@
 Title: mk_oracle: Fixed jobs with auto_drop
 Level: 1
 Component: checks
+Class: fix
 Compatible: incomp
 Edition: cre
-Version: 2.0.0i1
+State: unknown
+Version: 1.6.0p6
 Date: 1566542577
-Class: fix
 
 All Schduler-Jobs with auto_drop=True were ignored by the plugin. This has
 been fixed to:

@@ -500,48 +500,6 @@ TEST_F(ModuleCommanderTest, FindModules) {
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
-TEST_F(ModuleCommanderTest, Internal) {
-    using namespace std::literals;
-    namespace fs = std::filesystem;
-    fs::path user_dir = cma::cfg::GetUserDir();
-    fs::path user = cma::cfg::GetTempDir();
-    fs::path modules = ModuleCommander::GetModInstall(user);
-
-    ModuleCommander mc;
-    auto dir = user / dirs::kUserModules / "tst";
-    EXPECT_FALSE(mc.CreateFileForTargetDir("c:\\windows", modules));
-    EXPECT_FALSE(mc.CreateFileForTargetDir(modules / "tst", "c:\\windows"));
-    EXPECT_TRUE(mc.CreateFileForTargetDir(modules / "tst", modules));
-
-    auto result =
-        cma::tools::ReadFileInString((dir / kTargetDir).u8string().c_str());
-    ASSERT_EQ(result, modules.u8string());
-
-    // simulate file creation from unzip
-    fs::create_directories(modules / "doc");
-    tst::CreateWorkFile(modules / "test.txt", "z");
-    // simulate file existing before(should stay)
-
-    // uninstall by directory content
-    tst::CreateWorkFile(modules / "test_left.txt", "z");
-
-    // check results
-    EXPECT_TRUE(fs::exists(modules / "doc"));
-    EXPECT_TRUE(fs::exists(modules / "test.txt"));
-    EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
-
-    EXPECT_TRUE(mc.RemoveContentByTargetDir({}, modules / "tst"));
-    EXPECT_FALSE(mc.RemoveContentByTargetDir({L"doc"}, modules / "t"));
-
-    EXPECT_FALSE(mc.RemoveContentByTargetDir({L"doc", L"test.txt"}, {}));
-
-    EXPECT_TRUE(
-        mc.RemoveContentByTargetDir({L"doc", L"test.txt"}, modules / "tst"));
-    EXPECT_FALSE(fs::exists(modules / "doc"));
-    EXPECT_FALSE(fs::exists(modules / "test.txt"));
-    EXPECT_TRUE(fs::exists(modules / "test_left.txt"));
-}
-
 TEST_F(ModuleCommanderTest, InstallModules) {
     using namespace std::literals;
     namespace fs = std::filesystem;

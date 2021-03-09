@@ -848,7 +848,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/$site/tmp/run/live" ]; then
                 echo "[$site]"
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
 GET hosts
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0
@@ -862,7 +862,7 @@ StatsAnd: 2
 Stats: scheduled_downtime_depth > 0
 Filter: custom_variable_names < _REALNAME
 LimitString
-                waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
 GET services
 Stats: state = 0
 Stats: scheduled_downtime_depth = 0

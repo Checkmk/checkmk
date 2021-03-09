@@ -33,7 +33,6 @@ from cmk.gui.plugins.wato.utils import (
     make_diff_text,
     add_replication_paths,
     ReplicationPath,
-    CheckTypeSelection,
     config_domain_registry,
     ABCConfigDomain,
     ConfigDomainCore,
@@ -161,6 +160,7 @@ from cmk.gui.plugins.wato.utils import (
     mode_url,
     flash,
     redirect,
+    valuespec_check_plugin_selection,
 )
 
 #.

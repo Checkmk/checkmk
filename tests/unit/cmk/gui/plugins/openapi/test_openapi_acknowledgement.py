@@ -378,7 +378,7 @@ def test_openapi_acknowledge_hostgroup(
                 'persistent': False,
                 'comment': 'Acknowledged'
             }),
-            status=404,
+            status=400,
         )
 
 

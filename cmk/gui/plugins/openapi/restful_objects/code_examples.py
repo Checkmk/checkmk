@@ -189,11 +189,16 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
+    --json
+    {%- if endpoint.does_redirects %}
+    --follow \\
+    --all \\
+    {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
     "Accept: application/json" \\
 {%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
-{% endfor -%}
+{%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
@@ -206,7 +211,6 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
     {{ key }}='{{ field | field_value }}' \\
  {%- endfor %}
 {%- endif %}
-    --json
 
 """
 
@@ -241,6 +245,9 @@ resp = session.{{ method }}(
             to_dict |
             to_python |
             indent(skip_lines=1, spaces=4) }},
+    {%- endif %}
+    {%- if endpoint.does_redirects %}
+    allow_redirects=True,
     {%- endif %}
 )
 if resp.status_code == 200:

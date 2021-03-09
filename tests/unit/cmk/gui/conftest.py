@@ -21,6 +21,7 @@ import webtest  # type: ignore[import]
 from mock import MagicMock
 from werkzeug.test import create_environ
 
+from cmk.gui import watolib
 from testlib.utils import DummyApplication
 
 import cmk.utils.log
@@ -385,6 +386,17 @@ def logged_in_wsgi_app(wsgi_app, with_user):
     resp = login.form.submit('_login', index=1)
     assert "Invalid credentials." not in resp.text
     return wsgi_app
+
+
+@pytest.fixture(scope='function')
+def with_groups(module_wide_request_context, with_user_login, suppress_automation_calls):
+    watolib.add_group('windows', 'host', {'alias': 'windows'})
+    watolib.add_group('routers', 'service', {'alias': 'routers'})
+    watolib.add_group('admins', 'contact', {'alias': 'admins'})
+    yield
+    watolib.delete_group('windows', 'host')
+    watolib.delete_group('routers', 'service')
+    watolib.delete_group('admins', 'contact')
 
 
 @pytest.fixture(scope='function')

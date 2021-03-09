@@ -34,13 +34,22 @@ from cmk.gui.bi import get_cached_bi_packs
 from cmk.utils.bi.bi_schema import Schema
 
 BI_RULE_ID = {
-    'rule_id': fields.String(example='rule1'),
+    'rule_id': fields.String(
+        description="The unique id for the rule",
+        example='rule1',
+    ),
 }
 BI_AGGR_ID = {
-    'aggregation_id': fields.String(example="aggregation1"),
+    'aggregation_id': fields.String(
+        description="The unique id for the aggregation",
+        example="aggregation1",
+    ),
 }
 BI_PACK_ID = {
-    'pack_id': fields.String(example="pack1"),
+    'pack_id': fields.String(
+        description="The unique id for the aggregation pack",
+        example="pack1",
+    ),
 }
 
 

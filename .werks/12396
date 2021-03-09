@@ -1,0 +1,11 @@
+Title: Links to ntopng are now using ifid
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1615299286
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+Links to ntopng are now having the current interface id set.

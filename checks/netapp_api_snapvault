@@ -31,7 +31,19 @@
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
 
-def inventory_netapp_api_snapvault(parsed):
+def _cleanse_item_name(name):
+    return name.replace("$", "_")
+
+
+def parse_netapp_api_snapvault(info):
+    parsed = {}
+    for line in info:
+        parsed_line = dict([tuple(i.split(' ', 1)) for i in line])
+        parsed[_cleanse_item_name(parsed_line['snapvault'])] = parsed_line
+    return parsed
+
+
+def discover_netapp_api_snapvault(parsed):
     for snapvault, values in parsed.items():
         if "lag-time" in values:
             yield snapvault, {}
@@ -71,15 +83,10 @@ def check_netapp_api_snapvault(item, params, snapvault):
     yield state, "Lag-Time: %s" % get_age_human_readable(lag_time)
 
 
-def netapp_api_snapvault_item(name):
-    return name.replace("$", "_")
-
-
 check_info["netapp_api_snapvault"] = {
-    'parse_function': lambda x: netapp_api_parse_lines(x, item_func=netapp_api_snapvault_item),
+    'parse_function': parse_netapp_api_snapvault,
     'check_function': check_netapp_api_snapvault,
-    'inventory_function': inventory_netapp_api_snapvault,
+    'inventory_function': discover_netapp_api_snapvault,
     'group': "snapvault",
     'service_description': 'Snapvault %s',
-    'includes': ["netapp_api.include"]
 }

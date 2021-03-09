@@ -285,8 +285,6 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
                 except (IOError, PermissionError):
-                    logger.exception("Error reading certificates from %s", cert_file_path)
-
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
                     # trigger for further checking web.log when a really needed certificate can
@@ -297,6 +295,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     # not needed.
                     if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
                         continue
+
+                    logger.exception("Error reading certificates from %s", cert_file_path)
 
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
                                   "See web.log for details." % cert_file_path)

@@ -34,13 +34,12 @@ def inventory_mongodb_instance(info):
 
 
 def check_mongodb_instance(_no_item, _no_params, info):
-    infos = ["%s: %s" % (line[0].title(), line[1]) for line in info]
     for line in info:
         status, messg = line
         if status == "error":
             yield 2, messg
         else:
-            yield 0, ", ".join(infos)
+            yield 0, '{}: {}'.format(status.title(), messg)
 
 
 check_info["mongodb_instance"] = {

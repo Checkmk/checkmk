@@ -459,7 +459,7 @@ class UpdateConfig:
                         rule.value, e)
                     num_errors += 1
 
-        if num_errors:
+        if num_errors and self._arguments.debug:
             raise MKGeneralException("Failed to transform %d rule values" % num_errors)
 
     def _transform_discovery_disabled_services(self, all_rulesets):
@@ -522,7 +522,7 @@ class UpdateConfig:
                             " (Ruleset: %s, Folder: %s, Rule nr: %s, Condition:%s)", ruleset.name,
                             folder.path(), index, regex)
 
-        if num_errors:
+        if num_errors and self._arguments.debug:
             raise MKGeneralException("Detected %d errors in service conditions" % num_errors)
 
     def _initialize_gui_environment(self):

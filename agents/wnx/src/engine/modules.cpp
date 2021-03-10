@@ -387,8 +387,22 @@ bool ModuleCommander::UninstallModuleZip(
     XLOG::l.i("Killed [{}] processes from dir '{}'", count,
               target_dir.u8string());
 
-    fs::remove_all(target_dir, ec);
-    fs::remove(file, ec);
+    try {
+        // prepare
+        fs::path move_location{GetMoveLocation(file)};
+        fs::remove_all(move_location, ec);
+        fs::create_directories(move_location);
+
+        // execute
+        fs::rename(target_dir, move_location / target_dir.filename());
+        fs::rename(file, move_location / file.filename());
+
+    } catch (const fs::filesystem_error &e) {
+        // fallback
+        XLOG::l("Error '{}'", e.what(), e.path1(), e.path2());
+        fs::remove_all(target_dir, ec);
+        fs::remove(file, ec);
+    }
 
     return true;
 }
@@ -585,13 +599,20 @@ bool ModuleCommander::isModuleScript(const std::string_view filename) {
 
 std::wstring ModuleCommander::buildCommandLine(
     const std::string_view filename) {
-    namespace fs = std::filesystem;
     for (auto &m : modules_) {
         if (m.isMyScript(filename)) {
             return m.buildCommandLine(fs::path{filename});
         }
     }
     return {};
+}
+
+std::filesystem::path ModuleCommander::GetMoveLocation(
+    const std::filesystem::path &module_file) {
+    return fs::temp_directory_path() /
+           (std::string{g_module_uninstall_path} +
+            (cma::IsService() ? "_srv" : "_app")) /
+           module_file.filename();
 }
 
 }  // namespace cma::cfg::modules

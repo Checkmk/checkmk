@@ -23,6 +23,8 @@ namespace cma::cfg::modules {
 constexpr std::string_view kNoExtension = ".";
 constexpr std::string_view kExtension = ".zip";
 constexpr int kResonableDirLengthMin = 20;
+constexpr std::string_view g_module_uninstall_path =
+    "checkmk_uninstalled_modules";
 
 class Module {
 public:
@@ -125,10 +127,14 @@ public:
     [[nodiscard]] static const std::vector<StringViewPair>
     GetSystemExtensions();
 
+    /// \brief Returns path in the %temp% where content of module will be moved
+    static std::filesystem::path GetMoveLocation(
+        const std::filesystem::path& module_file);
+
 private:
     void removeSystemExtensions(YAML::Node& node);
     // internals static API
-    static bool InstallModule(const Module& module,
+    static bool InstallModule(const Module& mod,
                               const std::filesystem::path& root,
                               const std::filesystem::path& user,
                               InstallMode mode);

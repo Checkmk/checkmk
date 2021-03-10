@@ -181,9 +181,14 @@ def parse_arguments(argv):
         help="Debug mode: let Python exceptions come through.",
     )
     parser.add_argument(
+        "--no-tls",
+        action="store_true",
+        help="Use http instead of https",
+    )
+    parser.add_argument(
         "--legacy",
         action="store_true",
-        help="Legacy mode with NaServer.py/NaElements.py (not configurable in Setup)",
+        help="Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)",
     )
 
     if not argv:
@@ -234,8 +239,8 @@ class ErrorMessages:
 
 
 class NetAppConnection:
-    def __init__(self, hostname, user, password) -> None:
-        self.hostname = hostname
+    def __init__(self, hostname, user, password, no_tls):
+        self.url = f"{'http' if no_tls else 'https'}://{hostname}/servlets/netapp.servlets.admin.XMLrequest_filer"
         self.user = user
         self.password = password
         self.vfiler = None
@@ -293,7 +298,7 @@ class NetAppConnection:
 
         req = requests.Request(
             "POST",
-            "https://%s/servlets/netapp.servlets.admin.XMLrequest_filer" % self.hostname,
+            self.url,
             data=request_message,
             headers=self.headers,
             auth=(self.user, self.password),
@@ -1704,7 +1709,7 @@ def connect(args):
             if args.dump_xml:
                 server.set_debug_style("NA_PRINT_DONT_PARSE")
         else:
-            server = NetAppConnection(args.host_address, args.user, args.secret)
+            server = NetAppConnection(args.host_address, args.user, args.secret, args.no_tls)
             if args.debug:
                 print("Running in optimized mode")
                 server.debug = True

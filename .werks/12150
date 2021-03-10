@@ -1,0 +1,18 @@
+Title: Bakery error when baking with agent updater proxy configuration
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1615365430
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+When configuring the entry "Proxy settings" and choosing the item "Provide
+proxy settings" at the "Agent updater" agent ruleset, the agent bakery
+would fail to bake agents, showing a traceback with the error:<br>
+<tt>Error creating agent for ... : Error in bakery plugin
+"cmk_update_agent" ("files" section): 'proxy'</tt>
+
+This is fixed now.

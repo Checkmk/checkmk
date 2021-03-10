@@ -22,7 +22,6 @@
 namespace cma::cfg::modules {
 constexpr std::string_view kNoExtension = ".";
 constexpr std::string_view kExtension = ".zip";
-constexpr std::string_view kTargetDir = ".target.dir";  // dir for installation
 constexpr int kResonableDirLengthMin = 20;
 
 class Module {
@@ -137,13 +136,6 @@ private:
     // returns true when changes had been made
     static bool UninstallModuleZip(const std::filesystem::path& file,
                                    const std::filesystem::path& mod_root);
-
-    static bool RemoveContentByTargetDir(
-        const std::vector<std::wstring>& content,
-        const std::filesystem::path& target_dir);
-
-    static bool CreateFileForTargetDir(const std::filesystem::path& module_dir,
-                                       const std::filesystem::path& target_dir);
 
     static bool BackupModule(const std::filesystem::path& module_file,
                              const std::filesystem::path& backup_file);

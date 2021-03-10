@@ -21,9 +21,9 @@ Version 1
 
 .. toctree::
 
-   cmk.base.plugins.agent_based.agent_based_api.v1
-   cmk.base.plugins.agent_based.agent_based_api.v1.clusterize
-   cmk.base.plugins.agent_based.agent_based_api.v1.register
-   cmk.base.plugins.agent_based.agent_based_api.v1.render
-   cmk.base.plugins.agent_based.agent_based_api.v1.type_defs
+   v1
+   v1.clusterize
+   v1.register
+   v1.render
+   v1.type_defs
 """

@@ -26,7 +26,7 @@ def run(Map args) {
             dir(args.DIR) {
                 args.ENV_VARS.add("TEST_CONTAINER=${TEST_CONTAINER}")
                 withEnv(args.ENV_VARS) {
-                    STATUS = sh(script: ". /bauwelt/bin/bw-setup-jenkins-env ; " + args.COMMAND, returnStatus: true)
+                    STATUS = sh(script: args.COMMAND, returnStatus: true)
                     desc_add_status_row(args.NAME, STATUS)
                     sh('exit ' + STATUS)
                 }

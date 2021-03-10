@@ -1,0 +1,11 @@
+Title: Standardize CPU utilization graphs with fixed range from 0% to 100%
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1615372221
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+

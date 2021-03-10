@@ -506,7 +506,7 @@ graph_info["util_average_1"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
+    "range": (0, 100),
 }
 
 graph_info["util_average_2"] = {
@@ -740,11 +740,11 @@ graph_info["util_fallback"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
     "conflicting_metrics": [
         "util_average",
         "system",
     ],
+    "range": (0, 100),
 }
 
 graph_info["cpu_entitlement"] = {

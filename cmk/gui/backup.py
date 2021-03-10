@@ -22,7 +22,7 @@ import signal
 import socket
 import subprocess
 import time
-from typing import Any, List, Optional, Tuple, Iterator
+from typing import Any, List, Optional, Tuple, Iterator, Dict
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
@@ -357,15 +357,15 @@ class Job(MKBackupJob, BackupEntity):
 
         return path / ("%s.state" % self.ident())
 
-    def _start_command(self):
+    def _start_command(self) -> List[str]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
-    def schedule(self):
+    def schedule(self) -> Optional[Dict[str, Any]]:
         return self._config["schedule"]
 
-    def cron_config(self):
+    def cron_config(self) -> List[str]:
         if not self._config["schedule"] or self._config["schedule"]["disabled"]:
-            return
+            return []
         userspec = self._cron_userspec()
         cmdline = self._cron_cmdline()
         return ["%s %s%s" % (timespec, userspec, cmdline) for timespec in self._cron_timespecs()]
@@ -407,7 +407,7 @@ class Job(MKBackupJob, BackupEntity):
         # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
         # compatibility.
         schedule = config.get("schedule", {})
-        if "timeofday" in schedule:
+        if schedule and "timeofday" in schedule:
             config["schedule"]["timeofday"] = [e for e in schedule["timeofday"] if e is not None]
         self._config = config
 

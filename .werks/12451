@@ -1,0 +1,12 @@
+Title: CME: Improved performance when pushing snapshots to remote sites
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1615379492
+Edition: cme
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p1
+
+CME remote sites needs to evaluate if the custom files for users need to be kept.
+This mechanism was quite slow and prone to quadratic complexity.

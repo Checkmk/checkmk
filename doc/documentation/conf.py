@@ -11,8 +11,11 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import sys
+
+DOC_ROOT = os.path.dirname(__file__)
+
+sys.path.insert(0, os.path.join(DOC_ROOT, "..", ".."))
 
 
 # -- Project information -----------------------------------------------------
@@ -28,7 +31,8 @@ author = 'Tribe 29'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinxcontrib.plantuml'
+    'sphinx.ext.autodoc',
+    'sphinxcontrib.plantuml',
 ]
 plantuml = " ".join([
     "java",
@@ -36,7 +40,7 @@ plantuml = " ".join([
     "-jar",
     os.path.realpath(
         os.path.join(
-            os.path.dirname(__file__),
+            DOC_ROOT,
             "plantuml.jar",
         )
     )

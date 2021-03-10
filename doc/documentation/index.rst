@@ -7,11 +7,11 @@ Welcome to CheckMK's documentation!
 ===================================
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: Contents:
 
    arch-index.rst
-
+   api-index.rst
 
 Indices and tables
 ==================

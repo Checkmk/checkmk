@@ -246,6 +246,7 @@ class ParserState(abc.ABC):
     """Base class for the state machine.
 
     .. uml::
+
         state FSM {
 
         state "NOOPState" as noop

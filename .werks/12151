@@ -1,0 +1,26 @@
+Title: Agent updater fails eventually when proxy environment is set on host
+Class: fix
+Compatible: incomp
+Component: agents
+Date: 1615392496
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+In some rare cases, the agent updater may fail on hosts that have a proxy environment
+configured. I.e., one of the environment variables <tt>HTTP_PROXY</tt>, <tt>HTTPS_PROXY</tt>,
+<tt>ALL_PROXY</tt> (also lowercase variants) are set.
+
+The agent updater will eventually fail with the following error message, which will be visible
+at the <tt>cmk-update-agent.log</tt>:<br>
+<tt>RuntimeError: dictionary changed size during iteration</tt>
+
+This Werk is marked as incompatible, because there may be some manual action needed to
+overcome this error:
+If you are experiencing this error, you can temporarily unset the above mentioned environment
+variable(s) on the affected systems in order to allow the agent updater to run properly and
+to update itself to the fixed version. Alternatively, you can install a newly baked agent
+on the system.
+

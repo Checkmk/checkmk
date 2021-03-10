@@ -1013,6 +1013,15 @@ def service_table_query(properties, context, column_generator):
     return ['site'] + columns, rows
 
 
+def create_service_view_url(context):
+    return makeuri_contextless(
+        request,
+        [("view_name", "service"), ("site", context["site"]), ("host", context["host_name"]),
+         ("service", context['service_description'])],
+        filename="view.py",
+    )
+
+
 def create_data_for_single_metric(properties, context, column_generator):
     columns, data_rows = service_table_query(properties, context, column_generator)
 
@@ -1029,15 +1038,7 @@ def create_data_for_single_metric(properties, context, column_generator):
             continue
 
         series = merge_multicol(d_row, columns, properties)
-        site = d_row['site']
         host = d_row["host_name"]
-        svc_url = makeuri_contextless(
-            request,
-            [("view_name", "service"), ("site", site), ("host", host),
-             ("service", d_row['service_description'])],
-            filename="view.py",
-        )
-
         row_id = "row_%d" % idx
 
         # Historic values
@@ -1057,7 +1058,7 @@ def create_data_for_single_metric(properties, context, column_generator):
             "timestamp": int(time.time()),
             "value": metric['value'],
             "label": host,
-            "url": svc_url,
+            "url": create_service_view_url(d_row),
         })
 
         used_metrics.append((row_id, metric, d_row))

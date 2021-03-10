@@ -707,7 +707,9 @@ export function get_function(render_string) {
 export function plot_render_function(plot) {
     let js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
-    return get_function("v => cmk.number_format.fmt_number_with_precision(v, 1000, 2, true)");
+    return get_function(
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
+    );
 }
 export function svc_status_css(paint, params) {
     let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";

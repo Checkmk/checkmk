@@ -17,9 +17,9 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Typ
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
-import werkzeug
 from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
+from werkzeug.datastructures import MultiDict
 from werkzeug.utils import import_string
 
 import cmk.gui.config as config
@@ -151,13 +151,13 @@ def _path_item(
     return response
 
 
-def _from_multi_dict(multi_dict: werkzeug.MultiDict) -> Dict[str, Union[List[str], str]]:
+def _from_multi_dict(multi_dict: MultiDict) -> Dict[str, Union[List[str], str]]:
     """Transform a MultiDict to a non-heterogenous dict
 
     Meaning: lists are lists and lists of lenght 1 are scalars.
 
     Examples:
-        >>> _from_multi_dict(werkzeug.MultiDict([('a', '1'), ('a', '2'), ('c', '3')]))
+        >>> _from_multi_dict(MultiDict([('a', '1'), ('a', '2'), ('c', '3')]))
         {'a': ['1', '2'], 'c': '3'}
 
     Args:

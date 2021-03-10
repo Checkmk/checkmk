@@ -32,6 +32,7 @@ author = 'Tribe 29'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinxcontrib.spelling',
     'sphinxcontrib.plantuml',
 ]
 plantuml = " ".join([
@@ -45,6 +46,8 @@ plantuml = " ".join([
         )
     )
 ])
+
+spelling_show_suggestions = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

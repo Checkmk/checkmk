@@ -17,8 +17,12 @@ help:
 plantuml.jar:
 	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/plantuml.${PLANTUML_VERSION}.jar" -O $@
 
+.PHONY: spell
+spell:
+	@$(SPHINXBUILD) -b spelling "$(SOURCEDIR)" "$(BUILDDIR)"
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 .PHONY: Makefile
-%: Makefile plantuml.jar
+%: Makefile plantuml.jar spell
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

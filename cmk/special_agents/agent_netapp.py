@@ -57,7 +57,7 @@ import re
 import sys
 import time
 import warnings
-from typing import Any, Dict, List
+from typing import Dict
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
@@ -68,21 +68,6 @@ from cmk.utils.password_store import replace_passwords
 from cmk.special_agents.utils import vcrtrace
 
 # pylint: disable=inconsistent-return-statements
-
-# Hackish early conditional import for legacy mode
-# TODO: Check whether or not we can drop this
-
-if "--legacy" in sys.argv:
-    try:
-        from NaElement import NaElement  # type: ignore[import] # pylint: disable=import-error
-        from NaServer import NaServer  # type: ignore[import] # pylint: disable=import-error
-    except Exception as e:
-        sys.stderr.write(
-            "Unable to import the files NaServer.py/NaElement.py.\nThese files are "
-            "provided by the NetApp Managability SDK and must be put into "
-            "the sites folder ~/local/lib/python.\nDetailed error: %s\n" % e
-        )
-        sys.exit(1)
 
 try:
     import lxml.etree as ET
@@ -105,18 +90,6 @@ urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(  # type: ignore[attr-define
 
 # This suppress deprecated warning on older python versions
 warnings.filterwarnings("ignore")
-
-# Use this block if you want to use TLS instead of SSL authentification
-# import ssl
-# from functools import wraps
-# def sslwrap(func):
-#    @wraps(func)
-#    def bar(*args, **kw):
-#        kw['ssl_version'] = ssl.PROTOCOL_TLSv1
-#        return func(*args, **kw)
-#    return bar
-#
-# ssl.wrap_socket = sslwrap(ssl.wrap_socket)
 
 
 def parse_arguments(argv):
@@ -187,11 +160,6 @@ def parse_arguments(argv):
         action="store_true",
         help="Use http instead of https",
     )
-    parser.add_argument(
-        "--legacy",
-        action="store_true",
-        help="Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)",
-    )
 
     if not argv:
         # This is done to always print out the *full* help when no arguments are passed, not just
@@ -200,19 +168,6 @@ def parse_arguments(argv):
         sys.exit(1)
 
     return parser.parse_args(argv)
-
-
-# .
-#   .--Direct XML----------------------------------------------------------.
-#   |            ____  _               _    __  ____  __ _                 |
-#   |           |  _ \(_)_ __ ___  ___| |_  \ \/ /  \/  | |                |
-#   |           | | | | | '__/ _ \/ __| __|  \  /| |\/| | |                |
-#   |           | |_| | | | |  __/ (__| |_   /  \| |  | | |___             |
-#   |           |____/|_|_|  \___|\___|\__| /_/\_\_|  |_|_____|            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Replaces the NaServer/NaElements based legacy mode                   |
-#   '----------------------------------------------------------------------'
 
 
 def prettify(elem):
@@ -458,17 +413,6 @@ class NetAppResponse:
         return self.content.child_get("results")
 
 
-# .
-#   .--Format-Fctns--------------------------------------------------------.
-#   |   _____                          _        _____    _                 |
-#   |  |  ___|__  _ __ _ __ ___   __ _| |_     |  ___|__| |_ _ __  ___     |
-#   |  | |_ / _ \| '__| '_ ` _ \ / _` | __|____| |_ / __| __| '_ \/ __|    |
-#   |  |  _| (_) | |  | | | | | | (_| | ||_____|  _| (__| |_| | | \__ \    |
-#   |  |_|  \___/|_|  |_| |_| |_|\__,_|\__|    |_|  \___|\__|_| |_|___/    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-
 def create_dict(instances, custom_key=None, is_counter=True):
     if custom_key is None:
         custom_key = []
@@ -602,97 +546,88 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
     return "\n".join(result)
 
 
-# .
-#   .--Query-Helpers-------------------------------------------------------.
-#   |  ___                              _   _      _                       |
-#   | / _ \ _   _  ___ _ __ _   _      | | | | ___| |_ __   ___ _ __ ___   |
-#   || | | | | | |/ _ \ '__| | | |_____| |_| |/ _ \ | '_ \ / _ \ '__/ __|  |
-#   || |_| | |_| |  __/ |  | |_| |_____|  _  |  __/ | |_) |  __/ |  \__ \  |
-#   | \__\_\\__,_|\___|_|   \__, |     |_| |_|\___|_| .__/ \___|_|  |___/  |
-#   |                       |___/                   |_|                    |
-#   +----------------------------------------------------------------------+
-
-
-def debug_node(args, node):
-    if args.legacy:
-        print(node.sprintf())
-    else:
-        print(prettify(node.get_node()))
-
-
 def output_error_section(args, server):
-    if args.legacy:
-        print("<<<netapp_api_connection>>>")
-        sys.stdout.write("\n".join(section_errors))
-    else:
-        print("<<<netapp_api_connection>>>")
-        # Remove some messages which may appear on a Netapp Simulator
-        server.error_messages.remove_messages(
-            "storage-shelf-environment-list-info: Enclosure services scan not done"
-        )
-        server.error_messages.remove_messages("environment-sensors-get-iter: invalid operation")
-        print(server.error_messages.format_messages())
+    print("<<<netapp_api_connection>>>")
+    # Remove some messages which may appear on a Netapp Simulator
+    server.error_messages.remove_messages(
+        "storage-shelf-environment-list-info: Enclosure services scan not done"
+    )
+    server.error_messages.remove_messages("environment-sensors-get-iter: invalid operation")
+    print(server.error_messages.format_messages())
 
 
 def query_nodes(args, server, nodes, what, node_attribute="node-name"):
-    if args.legacy:
-        results = {}
-        for node in nodes:
-            node_query = NaElement(what)  # pylint: disable=undefined-variable
-            node_query.child_add_string(node_attribute, node)
-            response = server.invoke_elem(node_query)
-            if response.results_status() == "failed":
-                section_errors.append("In class %s: %s" % (what, response.results_reason()))
-                continue
+    results = {}
+    for node in nodes:
+        what_element = ET.Element(what)
+        ET.SubElement(what_element, node_attribute).text = node
+        response = server.get_response([what, [[node_attribute, node]]])
 
-            results["%s.%s" % (what, node)] = response
-    else:
-        results = {}
-        for node in nodes:
-            what_element = ET.Element(what)
-            ET.SubElement(what_element, node_attribute).text = node
-            response = server.get_response([what, [[node_attribute, node]]])
+        if response.results_status() != "passed":
+            return
 
-            if response.results_status() != "passed":
-                return
-
-            results["%s.%s" % (what, node)] = response.get_results()
+        results["%s.%s" % (what, node)] = response.get_results()
 
     return results
 
 
 def query(args, server, what, return_toplevel_node=False):  # pylint: disable=too-many-branches
-    if args.legacy:
-        # HACK: if "what" endswith "iter", add max_records = 5000
-        # This approach is way easier than reading the tag, invoke another command and merge all answers together
-        # This might lead to out of memory requests. The new mechanism handles this better
+    max_records = "2000"
+    if isinstance(what, str):
         if what.endswith("iter"):
-            results = server.invoke(what, "max-records", 5000)
+            response = server.get_response([what, [["max-records", max_records]]])
         else:
-            results = server.invoke(what)
-
-        if results.results_status() == "failed":
-            section_errors.append("In class %s: %s" % (what, results.results_reason()))
-            return
+            response = server.get_response([what])
     else:
-        max_records = "2000"
-        if isinstance(what, str):
-            if what.endswith("iter"):
-                response = server.get_response([what, [["max-records", max_records]]])
-            else:
-                response = server.get_response([what])
-        else:
-            response = server.get_response(what)
+        response = server.get_response(what)
 
-        if response.results_status() != "passed":
+    if response.results_status() != "passed":
+        return
+
+    results = response.get_results()
+    tag_string = results.child_get_string("next-tag")
+    while tag_string:
+        # We need to start additinal query until all data is fetched
+        tag_response = server.get_response(
+            [what, [["max-records", max_records], ["tag", tag_string]]]
+        )
+        if tag_response.results_status() != "passed":
             return
+        if tag_response.get_results().child_get_string("num-records") == "0":
+            break
+
+        # Get attributes-list and add this content to the initial response
+        tag_string = tag_response.get_results().child_get_string("next-tag")
+        attr_children = tag_response.get_results().child_get("attributes-list")
+        results.extend_attributes_list(attr_children)
+
+    if return_toplevel_node:
+        return results
+    data = results.children_get()
+    if data:
+        return data[0]
+
+
+def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many-branches
+    instance_uuids = []
+    if netapp_mode == "clustermode":
+        max_records = "3000"
+        response = server.get_response(
+            [
+                "perf-object-instance-list-info-iter",
+                [["objectname", what], ["max-records", max_records]],
+            ]
+        )
 
         results = response.get_results()
         tag_string = results.child_get_string("next-tag")
         while tag_string:
             # We need to start additinal query until all data is fetched
             tag_response = server.get_response(
-                [what, [["max-records", max_records], ["tag", tag_string]]]
+                [
+                    "perf-object-instance-list-info-iter",
+                    [["objectname", what], ["max-records", max_records], ["tag", tag_string]],
+                ]
             )
             if tag_response.results_status() != "passed":
                 return
@@ -704,163 +639,81 @@ def query(args, server, what, return_toplevel_node=False):  # pylint: disable=to
             attr_children = tag_response.get_results().child_get("attributes-list")
             results.extend_attributes_list(attr_children)
 
-    if return_toplevel_node:
-        return results
-    data = results.children_get()
-    if data:
-        return data[0]
+        if response.results_status() != "passed":
+            return
 
+        instance_list = results.child_get("attributes-list")
+        if not instance_list:
+            return
 
-def query_counters(args, server, netapp_mode, what):  # pylint: disable=too-many-branches
-    instance_uuids = []
-    if args.legacy:
-        counter_query = NaElement("perf-object-get-instances")  # pylint: disable=undefined-variable
-        counter_query.child_add_string("objectname", what)
+        for instance_data in instance_list.children_get():
+            instance_uuids.append(instance_data.child_get_string("uuid"))
 
-        # In clustermode there is no "get all" command for performance counters
-        # We need to determine the instance names first and add them to the query
-        if netapp_mode == "clustermode":
-            instance_query = NaElement(
-                "perf-object-instance-list-info-iter"
-            )  # pylint: disable=undefined-variable
-            instance_query.child_add_string("objectname", what)
+        if not instance_uuids:
+            return  # Nothing to query..
 
-            instance_query_response = server.invoke_elem(instance_query)
-            instance_list = instance_query_response.child_get("attributes-list")
-            if instance_list:
-                for instance_data in instance_list.children_get():
-                    instance_uuids.append(instance_data.child_get_string("uuid"))
-                if not instance_uuids:
-                    # Nothing to query..
-                    return
-
-                instances_to_query = NaElement(
-                    "instance-uuids"
-                )  # pylint: disable=undefined-variable
-                for uuid in instance_uuids:
-                    instances_to_query.child_add_string("instance-uuid", uuid)
-                counter_query.child_add(instances_to_query)
-            else:
-                return
-
-        # Query counters
-        response = server.invoke_elem(counter_query)
-        if response.results_status() == "failed":
-            section_errors.append("In counter %s: %s" % (what, response.results_reason()))
-        else:
-            return response.child_get("instances")
-    else:
-        if netapp_mode == "clustermode":
-            max_records = "3000"
-            response = server.get_response(
-                [
-                    "perf-object-instance-list-info-iter",
-                    [["objectname", what], ["max-records", max_records]],
-                ]
-            )
-
-            results = response.get_results()
-            tag_string = results.child_get_string("next-tag")
-            while tag_string:
-                # We need to start additinal query until all data is fetched
-                tag_response = server.get_response(
-                    [
-                        "perf-object-instance-list-info-iter",
-                        [["objectname", what], ["max-records", max_records], ["tag", tag_string]],
-                    ]
-                )
-                if tag_response.results_status() != "passed":
-                    return
-                if tag_response.get_results().child_get_string("num-records") == "0":
+        # I was unable to find an iterator API to query clustermode perfcounters...
+        # Maybe the perf-object-get-instances is already able to provide huge amounts
+        # of counter info in a single call
+        responses = []
+        while instance_uuids:
+            max_instances_per_request = 1000
+            instances_to_query = ("instance-uuids", [])  # type: ignore[var-annotated]
+            for idx, uuid in enumerate(instance_uuids):
+                if idx >= max_instances_per_request:
                     break
-
-                # Get attributes-list and add this content to the initial response
-                tag_string = tag_response.get_results().child_get_string("next-tag")
-                attr_children = tag_response.get_results().child_get("attributes-list")
-                results.extend_attributes_list(attr_children)
+                instances_to_query[1].append(["instance-uuid", uuid])
+                perfobject_node = ("perf-object-get-instances", [["objectname", what]])
+                perfobject_node[1].append(instances_to_query)  # type: ignore[arg-type]
+            response = server.get_response(perfobject_node)
 
             if response.results_status() != "passed":
                 return
 
-            instance_list = results.child_get("attributes-list")
-            if not instance_list:
-                return
-
-            for instance_data in instance_list.children_get():
-                instance_uuids.append(instance_data.child_get_string("uuid"))
-
-            if not instance_uuids:
-                return  # Nothing to query..
-
-            # I was unable to find an iterator API to query clustermode perfcounters...
-            # Maybe the perf-object-get-instances is already able to provide huge amounts
-            # of counter info in a single call
-            responses = []
-            while instance_uuids:
-                max_instances_per_request = 1000
-                instances_to_query = ["instance-uuids", []]
-                for idx, uuid in enumerate(instance_uuids):
-                    if idx >= max_instances_per_request:
-                        break
-                    instances_to_query[1].append(["instance-uuid", uuid])
-                    perfobject_node: List[Any] = [
-                        "perf-object-get-instances",
-                        [["objectname", what]],
-                    ]
-                    perfobject_node[1].append(instances_to_query)
-                response = server.get_response(perfobject_node)
-
-                if response.results_status() != "passed":
-                    return
-
-                responses.append(response)
-                instance_uuids = instance_uuids[max_instances_per_request:]
-
-            initial_results = responses[0].get_results()
-            for response in responses[1:]:
-                the_instances = response.get_results().child_get("instances")
-                initial_results.extend_instances_list(the_instances)
-            return initial_results.child_get("instances")
-        # 7 Mode
-        perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
-        response = server.get_response(perfobject_node)
-        results = response.get_results()
-        records = results.child_get_string("records")
-        tag = results.child_get_string("tag")
-
-        if not records or records == "0":
-            return
-
-        responses = []
-        while records != "0":
-            perfobject_node = [
-                "perf-object-get-instances-iter-next",
-                [["tag", tag], ["maximum", "1000"]],
-            ]
-            response = server.get_response(perfobject_node)
-            results = response.get_results()
-            records = results.child_get_string("records")
             responses.append(response)
-            if not records or records == "0":
-                perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
-                server.get_response(perfobject_node)
-                break
+            instance_uuids = instance_uuids[max_instances_per_request:]
 
         initial_results = responses[0].get_results()
         for response in responses[1:]:
             the_instances = response.get_results().child_get("instances")
-            if the_instances:
-                initial_results.extend_instances_list(the_instances)
+            initial_results.extend_instances_list(the_instances)
         return initial_results.child_get("instances")
+    # 7 Mode
+    perfobject_node = ("perf-object-get-instances-iter-start", [["objectname", what]])
+    response = server.get_response(perfobject_node)
+    results = response.get_results()
+    records = results.child_get_string("records")
+    tag = results.child_get_string("tag")
+
+    if not records or records == "0":
+        return
+
+    responses = []
+    while records != "0":
+        perfobject_node = (
+            "perf-object-get-instances-iter-next",
+            [["tag", tag], ["maximum", "1000"]],
+        )
+        response = server.get_response(perfobject_node)
+        results = response.get_results()
+        records = results.child_get_string("records")
+        responses.append(response)
+        if not records or records == "0":
+            perfobject_node = ("perf-object-get-instances-iter-end", [["tag", tag]])
+            server.get_response(perfobject_node)
+            break
+
+    initial_results = responses[0].get_results()
+    for response in responses[1:]:
+        the_instances = response.get_results().child_get("instances")
+        if the_instances:
+            initial_results.extend_instances_list(the_instances)
+    return initial_results.child_get("instances")
 
 
 def fetch_netapp_mode(args, server):
     # Determine if this filer is running 7mode or Clustermode
     version_info = query(args, server, "system-get-version", return_toplevel_node=True)
-
-    if not version_info:
-        sys.stderr.write(",".join(section_errors))
-        sys.exit(1)
 
     clustered_info = version_info.child_get_string("is-clustered")
     if clustered_info:
@@ -908,13 +761,6 @@ def fetch_license_information(args, server):
 def fetch_nodes(args, server):
     nodes = []
 
-    if args.legacy:
-        node_query = NaElement("system-get-node-info-iter")  # pylint: disable=undefined-variable
-        node_list = server.invoke_elem(node_query)
-        for instance in node_list.child_get("attributes-list").children_get():
-            nodes.append(instance.child_get_string("system-name"))
-        return nodes
-
     # This query may fail for unknown reasons. Some clustermode systems report 0 results
     response = server.get_response(["system-get-node-info-iter", []])
     if response.results_status() == "failed":
@@ -956,12 +802,8 @@ def process_clustermode(args, server, netapp_mode, licenses):  # pylint: disable
             print("<<<netapp_api_cm_cluster:sep(9)>>>")
             for node, entry in cluster_status.items():
                 # Small trick to improve formatting
-                if args.legacy:
-                    container = NaElement("container")  # pylint: disable=undefined-variable
-                    container.child_add(entry)
-                else:
-                    container = NetAppNode("container")
-                    container.append(entry.get_node())
+                container = NetAppNode("container")
+                container.append(entry.get_node())
 
                 partner_name = entry.child_get_string("partner-name")
                 if partner_name:
@@ -1468,12 +1310,8 @@ def process_7mode(args, server, netapp_mode, licenses):  # pylint: disable=too-m
     print("<<<netapp_api_snapshots:sep(9)>>>")
     for volume in volumes.children_get():
         # Small trick improve formatting
-        if args.legacy:
-            container = NaElement("container")  # pylint: disable=undefined-variable
-            container.child_add(volume)
-        else:
-            container = NetAppNode("container")
-            container.append(volume.get_node())
+        container = NetAppNode("container")
+        container.append(volume.get_node())
         print(
             format_config(
                 container,
@@ -1696,21 +1534,10 @@ def process_7mode(args, server, netapp_mode, licenses):  # pylint: disable=too-m
 
 def connect(args):
     try:
-        if args.legacy:
-            if args.debug:
-                print("Running in legacy mode")
-            server = NaServer(args.host_address, 1, 8)  # pylint: disable=undefined-variable
-            server.set_admin_user(args.user, args.secret)
-            server.set_timeout(args.timeout)
-            server.set_transport_type("HTTPS")
-            server.set_server_cert_verification(False)
-            if args.dump_xml:
-                server.set_debug_style("NA_PRINT_DONT_PARSE")
-        else:
-            server = NetAppConnection(args.host_address, args.user, args.secret, args.no_tls)
-            if args.debug:
-                print("Running in optimized mode")
-                server.debug = True
+        server = NetAppConnection(args.host_address, args.user, args.secret, args.no_tls)
+        if args.debug:
+            print("Running in optimized mode")
+            server.debug = True
 
         return server
 
@@ -1723,21 +1550,6 @@ def connect(args):
             "again."
         )
         sys.exit(1)
-
-
-# .
-#   .--Main----------------------------------------------------------------.
-#   |                        __  __       _                                |
-#   |                       |  \/  | __ _(_)_ __                           |
-#   |                       | |\/| |/ _` | | '_ \                          |
-#   |                       | |  | | (_| | | | | |                         |
-#   |                       |_|  |_|\__,_|_|_| |_|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-SectionType = List[str]
-
-section_errors: SectionType = []
 
 
 def main(argv=None):

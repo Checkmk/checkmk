@@ -42,6 +42,8 @@ powershell Write-Host "other files" -foreground white
 del /Q .venv\.project
 del /Q Lib\turtle.py
 del /Q .venv\Lib\site-packages\PyWin32.chm
+:: On a request from LM/Clients
+del /Q .venv\Scripts\pythonw.exe 
 powershell Write-Host "pip, pipenv, virtualenv" -foreground white
 for /f %%i in ('dir /a:d /s /b pipenv*') do rd /s /q %%i
 for /f %%i in ('dir /a:d /s /b virtualenv*') do rd /s /q %%i

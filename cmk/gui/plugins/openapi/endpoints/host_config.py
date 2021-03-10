@@ -14,6 +14,9 @@ the services assigned that are provided by the cluster.
 
 You can find an introduction to hosts in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
+
+Please note that every host always resides in a folder. You can never remove a host from a folder,
+just move it to a different one.
 """
 from typing import Iterable
 
@@ -89,6 +92,7 @@ def bulk_create_hosts(params):
     entries = body['entries']
 
     failed_hosts = []
+    folder: watolib.CREFolder
     for folder, grouped_hosts in itertools.groupby(body['entries'], operator.itemgetter('folder')):
         validated_entries = []
         folder.prepare_create_hosts()

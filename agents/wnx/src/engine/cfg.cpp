@@ -1507,8 +1507,8 @@ bool ConfigInfo::smartMerge(YAML::Node& target, const YAML::Node& source,
                             Combine combine) {
     // we are scanning source
     for (auto it = source.begin(); it != source.end(); ++it) {
-        const auto& source_name = it->first;
-        const auto& source_value = it->second;
+        const auto source_name = it->first;
+        const auto source_value = it->second;
         if (!source_name.IsDefined()) {
             XLOG::l.bp(XLOG_FLINE + "  problems here");
             continue;

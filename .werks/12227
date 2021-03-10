@@ -1,0 +1,14 @@
+Title: Fix displaying inventory status data in CRE
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615379791
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+Inventory status data was present, but never shown in inventory tables. That
+causes, e.g. missing data in the "Site overview" dashlet in the new "Checkmk
+dashboard".

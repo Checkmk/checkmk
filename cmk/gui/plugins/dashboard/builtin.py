@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.version as cmk_version
 from cmk.gui.i18n import _
-
 from cmk.gui.plugins.dashboard import (
     builtin_dashboards,
     GROW,
@@ -344,171 +344,255 @@ builtin_dashboards["checkmk"] = {
     'icon': 'dashboard_system'
 }
 
-builtin_dashboards['checkmk_host'] = {
-    'add_context_to_title': True,
-    'description': u'Display information relevant for the Checkmk performance\n',
-    'link_from': {
-        'single_infos': ['host'],
-        'host_labels': {
-            'cmk/check_mk_server': 'yes'
-        }
+checkmk_host_dashlets = [
+    {
+        'show_title': True,
+        'link_from': {},
+        'background': True,
+        'add_context_to_title': True,
+        'context': {},
+        'position': (-1, 29),
+        'size': (0, 0),
+        'type': 'linked_view',
+        'single_infos': [],
+        'name': 'cmk_sites_of_host'
     },
-    'title': u'Checkmk server',
-    'hidebutton': False,
-    'dashlets': [
-        {
-            'show_title': True,
-            'link_from': {},
-            'background': True,
-            'add_context_to_title': True,
-            'context': {},
-            'position': (-1, 29),
-            'size': (0, 0),
-            'type': 'linked_view',
-            'single_infos': [],
-            'name': 'cmk_sites_of_host'
+    {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Disk IO SUMMARY'
         },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'canvas_color': 'default',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'vertical_axis_width': 'fixed',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 'METRIC_disk_latency',
+        'show_title': True,
+        'position': (-36, 15),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    },
+    {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Kernel Performance'
+        },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'canvas_color': 'default',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'vertical_axis_width': 'fixed',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 'METRIC_major_page_faults',
+        'show_title': True,
+        'position': (27, 15),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    },
+    {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Memory'
+        },
+        'link_from': {},
+        'type': 'pnpgraph',
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'vertical_axis_width': 'fixed',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'canvas_color': 'default',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 'mem_used_percent',
+        'background': True,
+        'position': (27, 1),
+        'show_title': True,
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    },
+    {
+        'add_context_to_title': True,
+        'context': {
+            'service': u'Disk IO SUMMARY',
+        },
+        'background': True,
+        'link_from': {},
+        'timerange': '1',
+        'graph_render_options': {
+            'font_size': 8.0,
+            'show_time_axis': True,
+            'foreground_color': 'default',
+            'vertical_axis_width': 'fixed',
+            'show_legend': False,
+            'show_title': True,
+            'show_margin': True,
+            'canvas_color': 'default',
+            'show_controls': False,
+            'show_pin': True,
+            'background_color': 'default',
+            'show_vertical_axis': True
+        },
+        'source': 'disk_throughput',
+        'show_title': True,
+        'position': (-36, 1),
+        'type': 'pnpgraph',
+        'single_infos': ['service', 'host'],
+        'size': (0, 14)
+    },
+    {
+        'force_checkboxes': False,
+        'background': True,
+        'play_sounds': False,
+        'num_columns': 1,
+        'size': (35, 28),
+        'group_painters': [],
+        'layout': 'table',
+        'title': u'Network',
+        'painters': [
+            ('service_state', None, None),
+            ('service_description', None, None),
+            ('perfometer', None, None),
+        ],
+        'column_headers': 'off',
+        'type': 'view',
+        'columns': {
+            'columns': [
+                ('service_state', None, None),
+                ('service_description', None, None),
+                ('perfometer', None, None),
+            ]
+        },
+        'link_from': {},
+        'visibility': {},
+        'add_context_to_title': True,
+        'user_sortable': False,
+        'show_title': True,
+        'grouping': {
+            'grouping': []
+        },
+        'sorting': {
+            'sorters': [('svcdescr', False)]
+        },
+        'name': 'dashlet_7',
+        'mobile': False,
+        'browser_reload': 0,
+        'sorters': [('svcdescr', False)],
+        'datasource': 'services',
+        'context': {
+            'serviceregex': {
+                'service_regex': 'Interface',
+                'neg_service_regex': ''
+            }
+        },
+        'position': (-1, 1),
+        'single_infos': ['host'],
+        'mustsearch': False
+    },
+]
+
+# CRE does not support single_netric dashlets
+if cmk_version.is_raw_edition():
+
+    checkmk_host_dashlets += [
         {
+            'add_context_to_title': True,
+            'background': True,
             'context': {
-                'service': u'CPU load'
+                'service': 'CPU load'
+            },
+            'graph_render_options': {
+                'fixed_timerange': False,
+                'font_size': 8.0,
+                'show_controls': False,
+                'show_graph_time': False,
+                'show_legend': False,
+                'show_margin': False,
+                'show_pin': True,
+                'show_time_axis': True,
+                'show_vertical_axis': True,
+                'vertical_axis_width': 'fixed'
             },
             'link_from': {},
-            'type': 'single_metric',
-            'time_range': 'current',
-            'metric': u'load5',
-            'add_context_to_title': True,
-            'render_options': {
-                'show_site': 'false',
-                'font_size': 'dynamic',
-                'show_state_color': 'background',
-                'show_metric': 'tooltip',
-                'show_unit': 'true',
-                'link_to_svc_detail': 'true',
-                'show_host': 'false',
-                'show_service': ('above', 12.0)
-            },
-            'background': True,
             'position': (1, 1),
             'show_title': True,
-            'single_infos': ['service', 'host'],
-            'size': (26, 14)
+            'single_infos': ['host', 'service'],
+            'size': (0, 14),
+            'sort_index': 99,
+            'source': 'cpu_load',
+            'timerange': '1',
+            'topic': None,
+            'type': 'pnpgraph'
         },
         {
             'add_context_to_title': True,
-            'context': {
-                'service': u'Disk IO SUMMARY'
-            },
             'background': True,
-            'link_from': {},
-            'timerange': '1',
-            'graph_render_options': {
-                'font_size': 8.0,
-                'show_time_axis': True,
-                'foreground_color': 'default',
-                'canvas_color': 'default',
-                'show_legend': False,
-                'show_title': True,
-                'show_margin': True,
-                'vertical_axis_width': 'fixed',
-                'show_controls': False,
-                'show_pin': True,
-                'background_color': 'default',
-                'show_vertical_axis': True
-            },
-            'source': 'METRIC_disk_latency',
-            'show_title': True,
-            'position': (-36, 15),
-            'type': 'pnpgraph',
-            'single_infos': ['service', 'host'],
-            'size': (0, 14)
-        },
-        {
-            'add_context_to_title': True,
             'context': {
-                'service': u'Kernel Performance'
+                'service': 'Filesystem /'
             },
-            'background': True,
-            'link_from': {},
-            'timerange': '1',
             'graph_render_options': {
+                'fixed_timerange': False,
                 'font_size': 8.0,
-                'show_time_axis': True,
-                'foreground_color': 'default',
-                'canvas_color': 'default',
-                'show_legend': False,
-                'show_title': True,
-                'show_margin': True,
-                'vertical_axis_width': 'fixed',
                 'show_controls': False,
-                'show_pin': True,
-                'background_color': 'default',
-                'show_vertical_axis': True
+                'show_graph_time': False,
+                'show_legend': False,
+                'show_margin': False,
+                'show_pin': False,
+                'show_time_axis': True,
+                'show_vertical_axis': True,
+                'vertical_axis_width': 'fixed'
             },
-            'source': 'METRIC_major_page_faults',
-            'show_title': True,
-            'position': (27, 15),
-            'type': 'pnpgraph',
-            'single_infos': ['service', 'host'],
-            'size': (0, 14)
-        },
-        {
-            'add_context_to_title': True,
-            'context': {
-                'service': u'Memory'
-            },
+            'icon': None,
+            'is_show_more': False,
             'link_from': {},
-            'type': 'pnpgraph',
-            'timerange': '1',
-            'graph_render_options': {
-                'font_size': 8.0,
-                'show_time_axis': True,
-                'foreground_color': 'default',
-                'vertical_axis_width': 'fixed',
-                'show_legend': False,
-                'show_title': True,
-                'show_margin': True,
-                'canvas_color': 'default',
-                'show_controls': False,
-                'show_pin': True,
-                'background_color': 'default',
-                'show_vertical_axis': True
-            },
-            'source': 'mem_used_percent',
-            'background': True,
-            'position': (27, 1),
+            'position': (1, 15),
             'show_title': True,
-            'single_infos': ['service', 'host'],
-            'size': (0, 14)
-        },
-        {
-            'add_context_to_title': True,
-            'context': {
-                'service': u'Disk IO SUMMARY',
-            },
-            'background': True,
-            'link_from': {},
+            'single_infos': ['host', 'service'],
+            'size': (0, 14),
+            'sort_index': 99,
+            'source': 'fs_used',
             'timerange': '1',
-            'graph_render_options': {
-                'font_size': 8.0,
-                'show_time_axis': True,
-                'foreground_color': 'default',
-                'vertical_axis_width': 'fixed',
-                'show_legend': False,
-                'show_title': True,
-                'show_margin': True,
-                'canvas_color': 'default',
-                'show_controls': False,
-                'show_pin': True,
-                'background_color': 'default',
-                'show_vertical_axis': True
-            },
-            'source': 'disk_throughput',
-            'show_title': True,
-            'position': (-36, 1),
-            'type': 'pnpgraph',
-            'single_infos': ['service', 'host'],
-            'size': (0, 14)
+            'topic': None,
+            'type': 'pnpgraph'
         },
+    ]
+
+else:
+
+    checkmk_host_dashlets += [
         {
             'context': {
                 'service': u'Filesystem /'
@@ -535,55 +619,44 @@ builtin_dashboards['checkmk_host'] = {
             'size': (26, 14)
         },
         {
-            'force_checkboxes': False,
-            'background': True,
-            'play_sounds': False,
-            'num_columns': 1,
-            'size': (35, 28),
-            'group_painters': [],
-            'layout': 'table',
-            'title': u'Network',
-            'painters': [
-                ('service_state', None, None),
-                ('service_description', None, None),
-                ('perfometer', None, None),
-            ],
-            'column_headers': 'off',
-            'type': 'view',
-            'columns': {
-                'columns': [
-                    ('service_state', None, None),
-                    ('service_description', None, None),
-                    ('perfometer', None, None),
-                ]
+            'context': {
+                'service': u'CPU load'
             },
             'link_from': {},
-            'visibility': {},
+            'type': 'single_metric',
+            'time_range': 'current',
+            'metric': u'load5',
             'add_context_to_title': True,
-            'user_sortable': False,
+            'render_options': {
+                'show_site': 'false',
+                'font_size': 'dynamic',
+                'show_state_color': 'background',
+                'show_metric': 'tooltip',
+                'show_unit': 'true',
+                'link_to_svc_detail': 'true',
+                'show_host': 'false',
+                'show_service': ('above', 12.0)
+            },
+            'background': True,
+            'position': (1, 1),
             'show_title': True,
-            'grouping': {
-                'grouping': []
-            },
-            'sorting': {
-                'sorters': [('svcdescr', False)]
-            },
-            'name': 'dashlet_7',
-            'mobile': False,
-            'browser_reload': 0,
-            'sorters': [('svcdescr', False)],
-            'datasource': 'services',
-            'context': {
-                'serviceregex': {
-                    'service_regex': 'Interface',
-                    'neg_service_regex': ''
-                }
-            },
-            'position': (-1, 1),
-            'single_infos': ['host'],
-            'mustsearch': False
+            'single_infos': ['service', 'host'],
+            'size': (26, 14)
         },
-    ],
+    ]
+
+builtin_dashboards['checkmk_host'] = {
+    'add_context_to_title': True,
+    'description': u'Display information relevant for the Checkmk performance\n',
+    'link_from': {
+        'single_infos': ['host'],
+        'host_labels': {
+            'cmk/check_mk_server': 'yes'
+        }
+    },
+    'title': u'Checkmk server',
+    'hidebutton': False,
+    'dashlets': checkmk_host_dashlets,
     'topic': 'applications',
     'context': {},
     'mtime': 0,

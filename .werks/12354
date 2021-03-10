@@ -1,0 +1,24 @@
+Title: Uneditable WATO rules: <i>"You are trying to edit a rule which does not exist anymore."</i>
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615387751
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+During cmk-update-config we re-write the WATO rules.
+In case the transformation of a value of an individual rule failed,
+we did not write the transformed rulesets at all. This lead to
+rules that could not be edited (the reported error was
+<i>"You are trying to edit a rule which does not exist anymore."</i>).
+This could be mitigated by temporarily adding a new rule; after that
+you could edit the pre-existing rules.
+
+With this werk, we write the transformed rulesets even if the transformation
+of single rules' values failed. That way, you can at least work with
+all of the other rules, and replace the offending ones.
+
+If this affects you, you can simply re-run cmk-update-config.
+

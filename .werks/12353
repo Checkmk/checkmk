@@ -1,0 +1,12 @@
+Title: Crash during discovery of fans of Alcatel devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615366654
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+Checkmk version 2.0.0i1 to 2.0.0 crashed during the discovery
+of Alcatel fans.

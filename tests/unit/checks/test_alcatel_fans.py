@@ -13,8 +13,8 @@ CHECK_NAME = "alcatel_fans"
 
 
 @pytest.mark.parametrize("info, result_expected", [
-    ([[u'doesnt matter']], [(1, None)]),
-    ([[u'doesnt matter', u'doesent matter'], [u'doesnt matter']], [(1, None), (2, None)]),
+    ([[u'doesnt matter']], [('1', None)]),
+    ([[u'doesnt matter', u'doesent matter'], [u'doesnt matter']], [('1', None), ('2', None)]),
 ])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_function(info, result_expected):
@@ -25,9 +25,9 @@ def test_inventory_function(info, result_expected):
 
 @pytest.mark.parametrize(
     "parameters, item, info, state_expected, infotext_expected, perfdata_expected", [
-        ((0, 0), 1, [[u'0']], 2, 'Fan has no status', None),
-        ((0, 0), 1, [[u'1']], 2, 'Fan not running', None),
-        ((0, 0), 1, [[u'2']], 0, 'Fan running', None),
+        ((0, 0), '1', [[u'0']], 2, 'Fan has no status', None),
+        ((0, 0), '1', [[u'1']], 2, 'Fan not running', None),
+        ((0, 0), '1', [[u'2']], 0, 'Fan running', None),
     ])
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(parameters, item, info, state_expected, infotext_expected,

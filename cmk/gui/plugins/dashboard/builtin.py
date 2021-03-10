@@ -403,7 +403,6 @@ builtin_dashboards['checkmk_host'] = {
             'timerange': '1',
             'graph_render_options': {
                 'font_size': 8.0,
-                'show_graph_time': True,
                 'show_time_axis': True,
                 'foreground_color': 'default',
                 'canvas_color': 'default',
@@ -433,7 +432,6 @@ builtin_dashboards['checkmk_host'] = {
             'timerange': '1',
             'graph_render_options': {
                 'font_size': 8.0,
-                'show_graph_time': True,
                 'show_time_axis': True,
                 'foreground_color': 'default',
                 'canvas_color': 'default',
@@ -463,7 +461,6 @@ builtin_dashboards['checkmk_host'] = {
             'timerange': '1',
             'graph_render_options': {
                 'font_size': 8.0,
-                'show_graph_time': True,
                 'show_time_axis': True,
                 'foreground_color': 'default',
                 'vertical_axis_width': 'fixed',
@@ -493,7 +490,6 @@ builtin_dashboards['checkmk_host'] = {
             'timerange': '1',
             'graph_render_options': {
                 'font_size': 8.0,
-                'show_graph_time': True,
                 'show_time_axis': True,
                 'foreground_color': 'default',
                 'vertical_axis_width': 'fixed',

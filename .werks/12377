@@ -1,0 +1,12 @@
+Title: agent_azure, agent_hp_msa, agent_zerto: Fix execution if option '-v' or '--verbose' is not given
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615361509
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+Python3 is more restrictive when comparing different types:
+{{TypeError: '>=' not supported between instances of 'NoneType' and 'int'}}.

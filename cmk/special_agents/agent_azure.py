@@ -126,18 +126,18 @@ def parse_arguments(argv):
         args.sequential = True
 
     # LOGGING
-    if args.verbose >= 3:
+    if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
-    elif args.verbose == 2:
+    elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
         fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
-    elif args.verbose == 1:
+    elif args.verbose:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:

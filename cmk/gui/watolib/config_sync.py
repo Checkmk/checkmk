@@ -417,7 +417,7 @@ From there on inspect every user's cached_profile.mk to recognize if they are a 
 belonging to a certain customer in the CME."""
     return {
         os.path.normpath(os.path.dirname(entry)):
-        ast.literal_eval(tar_file.extractfile(entry).read()).get('customer', None)
+        ast.literal_eval(tar_file.extractfile(entry).read().decode("utf-8")).get('customer', None)
         for entry in tar_file.getnames()
         if os.path.basename(entry) == "cached_profile.mk"
     }

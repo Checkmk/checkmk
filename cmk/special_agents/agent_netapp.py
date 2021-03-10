@@ -51,14 +51,26 @@ Additionally you may need to make further adjustments for the Ontap 9.5:
  * Create a role for the command ''statistics' on the Ontap 9.5:
      sec log role create -role netapp-monitoring-role -cmddirname \"statistics\" -access readonly
 """
+from __future__ import annotations
 
 import argparse
 import re
 import sys
 import time
 import warnings
-from typing import Any, Dict, List
-from xml.dom import minidom  # type: ignore[import]
+from typing import (
+    Any,
+    Iterable,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
+from xml.dom import minidom
 
 import requests
 import urllib3
@@ -74,6 +86,11 @@ try:
 except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
+
+Section = Iterable[str]
+Query = Tuple[str, Any]
+Args = argparse.Namespace
+LicenseInformation = MutableMapping[str, MutableMapping[str, Any]]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # TODO: Couldn't we use create_urllib3_context() instead of this access violation?
@@ -92,15 +109,16 @@ urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(  # type: ignore[attr-define
 warnings.filterwarnings("ignore")
 
 
-def parse_arguments(argv):
+def parse_arguments(argv: Sequence[str]) -> Args:
     class Formatter(argparse.RawDescriptionHelpFormatter):
-        def _get_help_string(self, action):
+        def _get_help_string(self, action: argparse.Action) -> Optional[str]:
             return action.help
 
-    def positive_int(num):
-        val = int(num)
-        if val < 0:
-            raise ValueError
+    def positive_int(value: str) -> int:
+        ivalue = int(value)
+        if ivalue <= 0:
+            raise argparse.ArgumentTypeError(f"{value} is an invalid positive int value")
+        return ivalue
 
     description, epilog = __doc__.split("\n\n", 1)  # See module's doc-string.
     parser = argparse.ArgumentParser(
@@ -170,20 +188,20 @@ def parse_arguments(argv):
     return parser.parse_args(argv)
 
 
-def prettify(elem):
+def prettify(elem: ET._Element) -> str:
     rough_string = ET.tostring(elem)
     reparsed = minidom.parseString(rough_string)
-    return reparsed.toprettyxml(indent="\t")
+    return str(reparsed.toprettyxml(indent="\t"))
 
 
 class ErrorMessages:
     def __init__(self) -> None:
-        self.messages: set[str] = set()
+        self.messages: Set[str] = set()
 
-    def add_message(self, message):
+    def add_message(self, message: str) -> None:
         self.messages.add(message)
 
-    def remove_messages(self, infix_text):
+    def remove_messages(self, infix_text: str) -> None:
         new_messages = set()
         for message in self.messages:
             if infix_text in message:
@@ -191,60 +209,61 @@ class ErrorMessages:
             new_messages.add(message)
         self.messages = new_messages
 
-    def format_messages(self):
+    def format_messages(self) -> str:
         return "\n".join(self.messages)
 
 
 class NetAppNode:
-    def __init__(self, xml_element) -> None:
+    def __init__(self, xml_element: Union[ET._Element, str]) -> None:
         if isinstance(xml_element, str):
             xml_element = ET.Element(xml_element)
-        self.node = xml_element
+        self.node: ET._Element = xml_element
         self.element = self
 
-    def __getitem__(self, what):
-        if what == "name":
-            return self.node.tag.split("}")[-1]
-        if what == "content":
+    def __getitem__(self, key: str) -> str:
+        if key == "name":
+            return str(self.node.tag.split("}")[-1])
+        if key == "content":
             return self.node.text or ""
+        raise KeyError(key)
 
-    def __getattr__(self, what):
+    def __getattr__(self, what: str) -> Any:
         return object.__getattribute__(self, what)
 
-    def child_get_string(self, what):
-        for element in list(self.node):
+    def child_get_string(self, what: str) -> Optional[str]:
+        for element in self.node:
             if element.tag.split("}")[-1] == what:
-                return element.text
+                return None if element.text is None else str(element.text)
         return None
 
-    def child_get(self, what):
-        for element in list(self.node):
+    def child_get(self, what: str) -> Optional[NetAppNode]:
+        for element in self.node:
             if element.tag.split("}")[-1] == what:
                 return NetAppNode(element)
         return None
 
-    def children_get(self):
-        return [NetAppNode(n) for n in self.node]
+    def children_get(self) -> Iterable[NetAppNode]:
+        yield from map(NetAppNode, self.node)
 
-    def append(self, what):
-        self.node.append(what)
+    def append(self, element: ET._Element) -> None:
+        self.node.append(element)
 
-    def extend_attributes_list(self, new_attrs):
+    def extend_attributes_list(self, new_attrs: NetAppNode) -> None:
         for child in self.node:
             if child.tag.endswith("attributes-list"):
                 child.extend(new_attrs.get_node())
 
-    def extend_instances_list(self, new_attrs):
+    def extend_instances_list(self, new_attrs: NetAppNode) -> None:
         for child in self.node:
             if child.tag.endswith("instances"):
                 child.extend(new_attrs.get_node())
 
-    def get_node(self):
+    def get_node(self) -> ET._Element:
         return self.node
 
 
 class NetAppRootNode(NetAppNode):
-    def __init__(self, vfiler=False) -> None:
+    def __init__(self, vfiler: Optional[str]) -> None:
         root_node = ET.Element(
             "netapp",
             version="1.8",
@@ -265,9 +284,9 @@ class NetAppResponse:
     # In that case replace them and try again.
     # According to https://www.w3.org/TR/xml/#charsets
     # these should never be in an XML output:
-    INVALID_XML = re.compile("[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]")
+    INVALID_XML = re.compile(b"[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]")
 
-    def __init__(self, response, debug) -> None:
+    def __init__(self, response: requests.Response, debug: bool) -> None:
         self.status = None
         self.content = None
         self.reason = None
@@ -285,7 +304,8 @@ class NetAppResponse:
             try:
                 tree = ET.fromstring(response.content)
             except ET.ParseError:
-                tree = ET.fromstring(NetAppResponse.INVALID_XML.sub("", response.text))
+                # retry with some invalid characters replaced
+                tree = ET.fromstring(NetAppResponse.INVALID_XML.sub(b"", response.content))
         except ET.ParseError as exc:
             if debug:
                 raise
@@ -295,28 +315,35 @@ class NetAppResponse:
 
         self.content = NetAppNode(tree)
 
-        self.status = self.content.child_get("results").node.attrib["status"]
+        results = self.content.child_get("results")
+        assert results
+        self.status = str(results.node.attrib["status"])
         if self.status != "passed":
-            self.reason = self.content.child_get("results").node.attrib["reason"]
+            self.reason = str(results.node.attrib["reason"])
 
-    def results_status(self):
+    def results_status(self) -> Optional[str]:
         return self.status
 
-    def results_reason(self):
+    def results_reason(self) -> Optional[str]:
         return self.reason
 
-    def get_results(self):
+    def get_results(self) -> NetAppNode:
         if self.content is None:
-            raise Exception("no content")
-        return self.content.child_get("results")
+            raise RuntimeError("Response has no content")
+        if (results := self.content.child_get("results")) is None:
+            raise RuntimeError("Response has no results")
+        return results
 
 
 class NetAppConnection:
-    def __init__(self, hostname, user, password, no_tls):
-        self.url = f"{'http' if no_tls else 'https'}://{hostname}/servlets/netapp.servlets.admin.XMLrequest_filer"
+    def __init__(self, hostname: str, user: str, password: str, no_tls: bool) -> None:
+        self.url = (
+            f"{'http' if no_tls else 'https'}://{hostname}"
+            "/servlets/netapp.servlets.admin.XMLrequest_filer"
+        )
         self.user = user
         self.password = password
-        self.vfiler = None
+        self.vfiler: Optional[str] = None
 
         self.status = None
         self.error_messages = ErrorMessages()
@@ -327,10 +354,10 @@ class NetAppConnection:
         self.session = requests.Session()
         self.debug = False
 
-    def get_xml_message_from_node(self, node):
-        return ET.tostring(node, encoding="UTF-8")
+    def get_xml_message_from_node(self, node: ET._Element) -> str:
+        return ET.tostring(node, encoding="unicode")
 
-    def add_error_message(self, message):
+    def add_error_message(self, message: str) -> None:
         if not self.suppress_errors:
             self.error_messages.add_message(message)
 
@@ -342,14 +369,16 @@ class NetAppConnection:
     #            <instance-uuid>5</instance-uuid>
     #        </instance-uuids>
     #    </perf-object-get-instances>
-    def create_node_from_list(self, the_list, parent_node):
-        new_node = ET.Element(the_list[0])
-        if len(the_list) > 1:
-            for entry in the_list[1]:
-                if isinstance(entry[1], list):
-                    self.create_node_from_list(entry, new_node)
-                else:  # simple (key, value) pair
-                    ET.SubElement(new_node, entry[0]).text = entry[1]
+    def create_node_from_list(
+        self, the_list: Query, parent_node: Optional[ET._Element]
+    ) -> ET._Element:
+        name, elements = (the_list[0], the_list[1] if len(the_list) > 1 else [])
+        new_node = ET.Element(name)
+        for entry in elements:
+            if isinstance(entry[1], (list, tuple)):
+                self.create_node_from_list(entry, new_node)
+            else:  # simple (key, value) pair
+                ET.SubElement(new_node, entry[0]).text = entry[1]
 
         if parent_node is None:
             parent_node = new_node
@@ -357,7 +386,7 @@ class NetAppConnection:
             parent_node.append(new_node)
         return parent_node
 
-    def get_response(self, query_content):
+    def get_response(self, query_content: Query) -> NetAppResponse:
         node = self.create_node_from_list(query_content, None)
 
         # Nodes are always enveloped in the root_node
@@ -376,7 +405,7 @@ class NetAppConnection:
             headers=self.headers,
             auth=(self.user, self.password),
         )
-        prepped = self.session.prepare_request(req)
+        prepped = self.session.prepare_request(req)  # type: ignore[no-untyped-call]
         # No SSL certificate check..
 
         response = self.session.send(prepped, verify=False)
@@ -393,27 +422,35 @@ class NetAppConnection:
                 if netapp_response.results_status() == "parse-exception":
                     print("Raw response text:\n%r" % netapp_response.raw_response_text)
             else:
-                print(prettify(netapp_response.get_results().get_node()))
+                results = netapp_response.get_results()
+                print(prettify(results.get_node()))
 
         if netapp_response.results_status() != "passed":
-            if not netapp_response.results_reason().startswith("Unable to find API"):
+            reason = netapp_response.results_reason()
+            assert reason
+            if not reason.startswith("Unable to find API"):
                 self.add_error_message(
                     "Querying class %s: %s" % (node.tag, netapp_response.results_reason())
                 )
 
         return netapp_response
 
-    def invoke(self, *args_):
-        invoke_list = [args_[0], [list(a) for a in zip(args_[1::2], args_[2::2])]]
+    def invoke(self, *args_: str) -> Optional[NetAppNode]:
+        invoke_list = (args_[0], list(zip(args_[1::2], args_[2::2])))
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
+        return None
 
-    def set_vfiler(self, name):
+    def set_vfiler(self, name: str) -> None:
         self.vfiler = name
 
 
-def create_dict(instances, custom_key=None, is_counter=True):
+def create_dict(  # pylint: disable=too-many-branches
+    instances: Optional[NetAppNode],
+    custom_key: Optional[Union[Sequence[str], str]] = None,
+    is_counter: bool = True,
+) -> MutableMapping[str, Any]:
     if custom_key is None:
         custom_key = []
 
@@ -424,7 +461,9 @@ def create_dict(instances, custom_key=None, is_counter=True):
     for instance in instances.children_get():
         values = {}
         if is_counter:
-            for node in instance.child_get("counters").children_get():
+            counters = instance.child_get("counters")
+            assert counters
+            for node in counters.children_get():
                 values[node.child_get_string("name")] = node.child_get_string("value") or ""
         else:
             for node in instance.children_get():
@@ -436,28 +475,33 @@ def create_dict(instances, custom_key=None, is_counter=True):
                 for name in custom_key:
                     tokens.append(values[name])
                 key = "|".join(tokens)
-            else:
+            elif isinstance(custom_key, str):
                 key = values[custom_key]
+            else:
+                assert False
         else:
             # Used to identify counters
-            key = instance.child_get_string("name")
+            child_name = instance.child_get_string("name")
+            assert child_name
+            key = child_name
+
         result[key] = values
     return result
 
 
-# Format config as one liner. Might add extra info identified by config_key
-def format_config(
-    instances,
-    prefix,
-    config_key,
-    config_report="all",
-    config_scale=None,
-    config_rename=None,
-    extra_info=None,
-    extra_info_report="all",
-    delimeter="\t",
-    skip_missing_config_key=False,
-):  # pylint: disable=too-many-branches
+def format_config(  # pylint: disable=too-many-branches
+    instances: NetAppNode,
+    prefix: str,
+    config_key: Union[Sequence[str], str],
+    config_report: Union[Sequence[str], str] = "all",
+    config_scale: Optional[Mapping[str, int]] = None,
+    config_rename: Optional[Mapping[str, str]] = None,
+    extra_info: Optional[Mapping[str, Mapping[str, str]]] = None,
+    extra_info_report: Union[Sequence[str], str] = "all",
+    delimeter: str = "\t",
+    skip_missing_config_key: bool = False,
+) -> str:
+    # Format config as one liner. Might add extra info identified by config_key
 
     config_scale = {} if config_scale is None else config_scale
     config_rename = {} if config_rename is None else config_rename
@@ -466,7 +510,7 @@ def format_config(
     result = []
     values = {}
 
-    def collect_values(node, namespace=""):
+    def collect_values(node: NetAppNode, namespace: str = "") -> None:
         for entry in node.children_get():
             collect_values(entry, namespace + node.element["name"] + ".")
 
@@ -482,12 +526,7 @@ def format_config(
             collect_values(node)
 
         line = []
-        if isinstance(config_key, list):
-            instance_key_list = []
-            for entry in config_key:
-                instance_key_list.append(values.get(entry, ""))
-            instance_key = ".".join(instance_key_list)
-        else:
+        if isinstance(config_key, str):
             if skip_missing_config_key and config_key not in values:
                 # The config_key is not available in the xml node
                 # Looks like the information is only available through the other node
@@ -496,11 +535,17 @@ def format_config(
             instance_key = values.get(config_key, config_key)
             if config_key in values:
                 del values[config_key]
+        else:
+            instance_key_list = []
+            for entry in config_key:
+                instance_key_list.append(values.get(entry, ""))
+            instance_key = ".".join(instance_key_list)
+
         line.append("%s %s" % (prefix, instance_key))
         for key, value in values.items():
             if config_report == "all" or key in config_report:
                 if key in config_scale:
-                    value = int(value) * config_scale[key]
+                    value = str(int(value) * config_scale[key])
                 key = config_rename.get(key, key)
                 line.append("%s %s" % (key, value))
 
@@ -514,7 +559,12 @@ def format_config(
 
 
 # Format instance without subnodes as key/value lines
-def format_as_key_value(plain_instance, prefix="", report="all", delimeter="\t"):
+def format_as_key_value(
+    plain_instance: NetAppNode,
+    prefix: str = "",
+    report: Union[Sequence[str], str] = "all",
+    delimeter: str = "\t",
+) -> str:
     result = []
     for node in plain_instance.children_get():
         if report == "all" or node.element["name"] in report:
@@ -526,7 +576,13 @@ def format_as_key_value(plain_instance, prefix="", report="all", delimeter="\t")
 
 
 # Output a single dictionary
-def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False):
+def format_dict(
+    the_dict: Mapping[str, Any],
+    prefix: str = "",
+    report: Union[Sequence[str], str] = "all",
+    delimeter: str = "\t",
+    as_line: bool = False,
+) -> str:
     result = []
 
     values = {}
@@ -546,7 +602,7 @@ def format_dict(the_dict, prefix="", report="all", delimeter="\t", as_line=False
     return "\n".join(result)
 
 
-def output_error_section(args, server):
+def output_error_section(server: NetAppConnection) -> None:
     print("<<<netapp_api_connection>>>")
     # Remove some messages which may appear on a Netapp Simulator
     server.error_messages.remove_messages(
@@ -556,69 +612,88 @@ def output_error_section(args, server):
     print(server.error_messages.format_messages())
 
 
-def query_nodes(args, server, nodes, what, node_attribute="node-name"):
-    results = {}
+def query_nodes(
+    server: NetAppConnection,
+    nodes: Sequence[str],
+    what: str,
+    node_attribute: str = "node-name",
+) -> Mapping[str, NetAppNode]:
+    results: MutableMapping[str, NetAppNode] = {}
     for node in nodes:
-        what_element = ET.Element(what)
-        ET.SubElement(what_element, node_attribute).text = node
-        response = server.get_response([what, [[node_attribute, node]]])
+        ET.SubElement(ET.Element(what), node_attribute).text = node
+        response = server.get_response((what, [(node_attribute, node)]))
 
         if response.results_status() != "passed":
-            return
-
-        results["%s.%s" % (what, node)] = response.get_results()
+            # NOTE(frans) - is this intentional?
+            return {}
+        value = response.get_results()
+        results["%s.%s" % (what, node)] = value
 
     return results
 
 
-def query(args, server, what, return_toplevel_node=False):  # pylint: disable=too-many-branches
+def query(
+    server: NetAppConnection,
+    what: str,
+    return_toplevel_node: bool = False,
+) -> Optional[NetAppNode]:
     max_records = "2000"
     if isinstance(what, str):
         if what.endswith("iter"):
-            response = server.get_response([what, [["max-records", max_records]]])
+            response = server.get_response((what, [("max-records", max_records)]))
         else:
-            response = server.get_response([what])
+            response = server.get_response((what, []))
     else:
         response = server.get_response(what)
 
     if response.results_status() != "passed":
-        return
+        return None
 
     results = response.get_results()
     tag_string = results.child_get_string("next-tag")
     while tag_string:
         # We need to start additinal query until all data is fetched
         tag_response = server.get_response(
-            [what, [["max-records", max_records], ["tag", tag_string]]]
+            (
+                what,
+                [
+                    ("max-records", max_records),
+                    ("tag", tag_string),
+                ],
+            )
         )
         if tag_response.results_status() != "passed":
-            return
-        if tag_response.get_results().child_get_string("num-records") == "0":
+            return None
+        tag_results = tag_response.get_results()
+        if tag_results.child_get_string("num-records") == "0":
             break
 
         # Get attributes-list and add this content to the initial response
-        tag_string = tag_response.get_results().child_get_string("next-tag")
-        attr_children = tag_response.get_results().child_get("attributes-list")
+        tag_string = tag_results.child_get_string("next-tag")
+        attr_children = tag_results.child_get("attributes-list")
+        assert attr_children
         results.extend_attributes_list(attr_children)
 
     if return_toplevel_node:
         return results
-    data = results.children_get()
-    if data:
-        return data[0]
+
+    data = list(results.children_get())
+    if not data:
+        return None
+    return data[0]
 
 
-def fetch_license_information(args, server):
+def fetch_license_information(server: NetAppConnection) -> LicenseInformation:
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
-        licenses: Dict[str, Dict[str, Dict[str, str]]] = {
+        license_info = query(server, "license-list-info")
+        licenses: LicenseInformation = {
             "v1": {},
             "v1_disabled": {},
             "v2": {},
             "v2_disabled": {},
         }
-        license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
             for license_, values in licenses["v1"].items():
@@ -626,7 +701,7 @@ def fetch_license_information(args, server):
                     licenses["v1_disabled"][license_] = values
 
         # The v2 license info is not used, yet
-        licensev2_info = query(args, server, "license-v2-list-info")
+        licensev2_info = query(server, "license-v2-list-info")
         if licensev2_info:
             licenses["v2"] = create_dict(licensev2_info, custom_key=["package"], is_counter=False)
         return licenses
@@ -634,33 +709,36 @@ def fetch_license_information(args, server):
         server.suppress_errors = False
 
 
-def fetch_nodes(args, server):
-    nodes = []
-
+def fetch_nodes(server: NetAppConnection) -> Sequence[str]:
     # This query may fail for unknown reasons. Some clustermode systems report 0 results
-    response = server.get_response(["system-get-node-info-iter", []])
+    response = server.get_response(("system-get-node-info-iter", []))
     if response.results_status() == "failed":
         return []
 
     nodename_field = "system-name"
-    attr_list = response.get_results().child_get("attributes-list")
+    results = response.get_results()
+    attr_list = results.child_get("attributes-list")
 
     # Fallback query to determine the available node names
     if not attr_list:
-        response = server.get_response(["system-node-get-iter", []])
+        response = server.get_response(("system-node-get-iter", []))
         if response.results_status() == "failed":
             return []
-
-        attr_list = response.get_results().child_get("attributes-list")
+        results = response.get_results()
+        attr_list = results.child_get("attributes-list")
         nodename_field = "node"
 
-    for instance in attr_list.children_get():
-        nodes.append(instance.child_get_string(nodename_field))
-    return nodes
+    assert attr_list
+    return [
+        name
+        for instance in attr_list.children_get()
+        for name in (instance.child_get_string(nodename_field),)
+        if name
+    ]
 
 
-def process_vserver_status(args, server):
-    vservers = query(args, server, "vserver-get-iter")
+def process_vserver_status(server: NetAppConnection) -> None:
+    vservers = query(server, "vserver-get-iter")
     if not vservers:
         return
     vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
@@ -673,7 +751,11 @@ def process_vserver_status(args, server):
         print("\t".join(words))
 
 
-def process_interfaces(interfaces, ports, if_counters):
+def process_interfaces(
+    interfaces: Optional[NetAppNode],
+    ports: Optional[NetAppNode],
+    if_counters: Optional[NetAppNode],
+) -> None:
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
         extra_info = {}
@@ -741,17 +823,17 @@ def process_interfaces(interfaces, ports, if_counters):
         )
 
 
-def process_ports(args, server):
-    ports = query(args, server, "net-port-get-iter")
+def process_ports(server: NetAppConnection) -> None:
+    ports = query(server, "net-port-get-iter")
     if ports:
         print("<<<netapp_api_ports:sep(9)>>>")
         print(format_config(ports, "port", ["node", "port"]))
 
 
-def process_cpu(args, server):
+def process_cpu(server: NetAppConnection) -> None:
     # CPU Util for both nodes
-    node_info = query(args, server, "system-get-node-info-iter")
-    system_info = query(args, server, "system-node-get-iter")
+    node_info = query(server, "system-get-node-info-iter")
+    system_info = query(server, "system-node-get-iter")
     if node_info and system_info:
         print("<<<netapp_api_cpu:sep(9)>>>")
         print(
@@ -775,26 +857,28 @@ def process_cpu(args, server):
         )
 
 
-def process_clustermode(args, server, licenses):  # pylint: disable=too-many-branches
+def process_clustermode(  # pylint: disable=too-many-branches
+    args: Args, server: NetAppConnection, licenses: LicenseInformation
+) -> None:
     netapp_mode = "clustermode"
-    nodes = fetch_nodes(args, server)
+    nodes = fetch_nodes(server)
 
-    process_vserver_status(args, server)
-    process_vserver_traffic(netapp_mode, args, server)
+    process_vserver_status(server)
+    process_vserver_traffic(netapp_mode, server)
     process_interfaces(
-        interfaces=query(args, server, "net-interface-get-iter"),
-        ports=query(args, server, "net-port-get-iter"),
-        if_counters=query_counters_clustermode(args, server, "lif"),
+        interfaces=query(server, "net-interface-get-iter"),
+        ports=query(server, "net-port-get-iter"),
+        if_counters=query_counters_clustermode(server, "lif"),
     )
-    process_ports(args, server)
-    process_fibrechannel_ports(netapp_mode, args, server)
-    process_cpu(args, server)
+    process_ports(server)
+    process_fibrechannel_ports(netapp_mode, server)
+    process_cpu(server)
 
     # Cluster info
     # TODO: check is missing
     ha_partners = {}  # Used later on by environmental sensors
     if "cf" not in licenses["v1_disabled"]:
-        cluster_status = query_nodes(args, server, nodes, "cf-status", node_attribute="node")
+        cluster_status = query_nodes(server, nodes, "cf-status", node_attribute="node")
         if cluster_status:
             print("<<<netapp_api_cm_cluster:sep(9)>>>")
             for node, entry in cluster_status.items():
@@ -815,7 +899,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
                 print("%s\t%s\t%s" % (node[10:], current_time, node_current_time))
 
     # Disk
-    disks = query(args, server, "storage-disk-get-iter")
+    disks = query(server, "storage-disk-get-iter")
     if disks:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(
@@ -849,11 +933,11 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # Volumes
-    volumes = query(args, server, "volume-get-iter")
+    volumes = query(server, "volume-get-iter")
     if "volumes" in args.no_counters:
         volume_counters = None
     else:
-        volume_counters = query_counters_clustermode(args, server, "volume")
+        volume_counters = query_counters_clustermode(server, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
         print(
@@ -896,7 +980,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # Aggregations
-    aggregations = query(args, server, "aggr-get-iter")
+    aggregations = query(server, "aggr-get-iter")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(
@@ -916,7 +1000,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # LUNs
-    luns = query(args, server, "lun-get-iter")
+    luns = query(server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(
@@ -937,14 +1021,14 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # Diagnosis status
-    diag_status = query(args, server, "diagnosis-status-get")
+    diag_status = query(server, "diagnosis-status-get")
     if diag_status:
         print("<<<netapp_api_status>>>")
         print(format_config(diag_status, "status", "status"))
 
     # NetApp System Version/Info
-    system_version = query(args, server, "system-get-version", return_toplevel_node=True)
-    system_info = query(args, server, "system-get-node-info-iter")
+    system_version = query(server, "system-get-version", return_toplevel_node=True)
+    system_info = query(server, "system-get-node-info-iter")
     if system_version:
         print("<<<netapp_api_info:sep(9)>>>")
         print(format_as_key_value(system_version))
@@ -954,7 +1038,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
                 print(format_dict(values, prefix="node %s" % key, as_line=True))
 
     # Snapmirror / Snapvault lag-time
-    snapmirror_info = query(args, server, "snapmirror-get-iter")
+    snapmirror_info = query(server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
         # NOTE: destination-location is used as the item name for clustermode snapvault services, as the destination
@@ -984,7 +1068,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # Environmental sensors
-    environment_info = query_nodes(args, server, nodes, "storage-shelf-environment-list-info")
+    environment_info = query_nodes(server, nodes, "storage-shelf-environment-list-info")
     processed_nodes = []
     if environment_info:
         for node, values in environment_info.items():
@@ -1014,16 +1098,17 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
                     ]:
                         print("<<<%s:sep(9)>>>" % section)
                         node = shelf.child_get(what)
+                        assert isinstance(node, NetAppNode)
                         print(format_config(node, what, shelf_id))
 
     # Controller Status
-    environment = query(args, server, "environment-sensors-get-iter")
+    environment = query(server, "environment-sensors-get-iter")
     if environment:
         print("<<<netapp_api_environment:sep(9)>>>")
         print(format_config(environment, "sensor-name", "sensor-name"))
 
     # Qtree quota usage
-    quota_info = query(args, server, "quota-report-iter")
+    quota_info = query(server, "quota-report-iter")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(
@@ -1044,7 +1129,7 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
     # LUNs
-    luns = query(args, server, "lun-get-iter")
+    luns = query(server, "lun-get-iter")
     if luns:
         print("<<<netapp_api_luns:sep(9)>>>")
         print(
@@ -1065,9 +1150,11 @@ def process_clustermode(args, server, licenses):  # pylint: disable=too-many-bra
         )
 
 
-def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
-    interfaces = query(args, server, "net-ifconfig-get")
-    if_counters = query_counters_7mode(args, server, "ifnet")
+def process_7mode(  # pylint: disable=too-many-branches
+    args: Args, server: NetAppConnection, licenses: LicenseInformation
+) -> None:
+    interfaces = query(server, "net-ifconfig-get")
+    if_counters = query_counters_7mode(server, "ifnet")
     if interfaces:
         print("<<<netapp_api_if:sep(9)>>>")
         print(
@@ -1094,18 +1181,18 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
     # TODO: Fibrechannel interfaces
 
     # CPU
-    system_counters = query_counters_7mode(args, server, "system")
+    system_counters = query_counters_7mode(server, "system")
     if system_counters:
         print("<<<netapp_api_cpu:sep(9)>>>")
         dict_counters = create_dict(system_counters)
-        print(format_dict(dict_counters.get("system"), report=["cpu_busy", "num_processors"]))
+        print(format_dict(dict_counters.get("system", {}), report=["cpu_busy", "num_processors"]))
 
     # Volumes
-    volumes = query(args, server, "volume-list-info")
+    volumes = query(server, "volume-list-info")
     if "volumes" in args.no_counters:
         volume_counters = None
     else:
-        volume_counters = query_counters_7mode(args, server, "volume")
+        volume_counters = query_counters_7mode(server, "volume")
     if volumes:
         print("<<<netapp_api_volumes:sep(9)>>>")
         print(
@@ -1135,7 +1222,7 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         )
 
     # Aggregation
-    aggregations = query(args, server, "aggr-list-info")
+    aggregations = query(server, "aggr-list-info")
     if aggregations:
         print("<<<netapp_api_aggr:sep(9)>>>")
         print(
@@ -1148,6 +1235,7 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         )
 
     # Snapshot info
+    assert volumes
     print("<<<netapp_api_snapshots:sep(9)>>>")
     for volume in volumes.children_get():
         # Small trick improve formatting
@@ -1178,7 +1266,7 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         ("cifs", "cifs"),
         ("fcp", "fcp"),
     ]:
-        protocol_counters = query_counters_7mode(args, server, what)
+        protocol_counters = query_counters_7mode(server, what)
         if protocol_counters:
             protocol_dict = create_dict(protocol_counters)
             print(
@@ -1191,13 +1279,13 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
             )
 
     # Diagnosis status
-    diag_status = query(args, server, "diagnosis-status-get")
+    diag_status = query(server, "diagnosis-status-get")
     if diag_status:
         print("<<<netapp_api_status>>>")
         print(format_config(diag_status, "status", "status"))
 
     # Disks
-    disk_info = query(args, server, "disk-list-info")
+    disk_info = query(server, "disk-list-info")
     if disk_info:
         print("<<<netapp_api_disk:sep(9)>>>")
         print(
@@ -1221,14 +1309,16 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         )
 
     # VFiler
-    vfiler_info = query(args, server, "vfiler-list-info")
+    vfiler_info = query(server, "vfiler-list-info")
     vfiler_names = [""]  # default is no vfiler
     if vfiler_info:
         print("<<<netapp_api_vf_status:sep(9)>>>")
-        for vfiler in vfiler_info.children_get():
-            name = vfiler.child_get_string("name")
+        for vfiler_node in vfiler_info.children_get():
+            name = vfiler_node.child_get_string("name")
+            assert name
             vfiler_names.append(name)
             response = server.invoke("vfiler-get-status", "vfiler", name)
+            assert response
             print("%s\t%s" % (name, response.child_get_string("status")))
 
     # Snapvaults
@@ -1237,10 +1327,12 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         for vfiler in vfiler_names:
             server.set_vfiler(vfiler)
             response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
+            assert response
             records = response.child_get_string("records")
             if not records or records == "0":
                 continue
             tag = response.child_get_string("tag")
+            assert tag
             response = server.invoke(
                 "snapvault-secondary-relationship-status-list-iter-next",
                 "maximum",
@@ -1248,9 +1340,12 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
                 "tag",
                 tag,
             )
+            assert response
+            status_list = response.child_get("status-list")
+            assert status_list
             print(
                 format_config(
-                    response.child_get("status-list"),
+                    status_list,
                     "snapvault",
                     "source-path",
                     config_report=[
@@ -1269,13 +1364,13 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
     for vfiler in vfiler_names + [""]:
         server.set_vfiler(vfiler)
         response = server.invoke("snapmirror-get-status")
-        data = response.children_get()
-        if not data or len(data) <= 1:
+        assert response
+        data = list(response.children_get())
+        if not data or len(data) == 1:
             continue
-        data = data[1]
         print(
             format_config(
-                data,
+                data[1],
                 "snapvault",
                 "source-location",
                 config_report=[
@@ -1294,7 +1389,7 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
     server.set_vfiler("")
 
     # VFiler Counters
-    vfiler_counters = query_counters_7mode(args, server, "vfiler")
+    vfiler_counters = query_counters_7mode(server, "vfiler")
     if vfiler_counters:
         print("<<<netapp_api_vf_stats:sep(9)>>>")
         vfiler_dict = create_dict(vfiler_counters)
@@ -1302,16 +1397,18 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
             print(format_dict(values, prefix="vfiler %s" % key, as_line=True))
 
     # NetApp System Version/Info
-    system_info = query(args, server, "system-get-info")
-    system_version = query(args, server, "system-get-version", return_toplevel_node=True)
-    if system_info:
+    system_info = query(server, "system-get-info")
+    system_version = query(server, "system-get-version", return_toplevel_node=True)
+    if system_info or system_version:
         print("<<<netapp_api_info:sep(9)>>>")
-        print(format_as_key_value(system_info))
-        print(format_as_key_value(system_version))
+        if system_info:
+            print(format_as_key_value(system_info))
+        if system_version:
+            print(format_as_key_value(system_version))
 
     # 7Mode Cluster info
     if "cf" not in licenses["v1_disabled"]:
-        cluster_status = query(args, server, "cf-status", return_toplevel_node=True)
+        cluster_status = query(server, "cf-status", return_toplevel_node=True)
         if cluster_status:
             print("<<<netapp_api_cluster:sep(9)>>>")
             print(format_as_key_value(cluster_status))
@@ -1326,16 +1423,19 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
     # Sensors: Temp, Fan, PSU
     # Definition: all sensors are always monitored by one of the filers
     # We choose this filer by an alphanumerical compare
+    assert system_info
     system_name = system_info.child_get_string("system-name")
+    assert system_name
     partner_system_name = system_info.child_get_string("partner-system-name")
     if not partner_system_name or system_name < partner_system_name:
-        environ_info = query(args, server, "storage-shelf-environment-list-info")
+        environ_info = query(server, "storage-shelf-environment-list-info")
         if environ_info:
             for channel in environ_info.children_get():
                 shelf_list = channel.child_get("shelf-environ-shelf-list")
                 if shelf_list:
                     for shelf in shelf_list.children_get():
                         shelf_id = shelf.child_get_string("shelf-id")
+                        assert shelf_id
                         for what, section in [
                             ("power-supply-list", "netapp_api_psu"),
                             ("cooling-element-list", "netapp_api_fan"),
@@ -1343,16 +1443,17 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
                         ]:
                             print("<<<%s:sep(9)>>>" % section)
                             node = shelf.child_get(what)
+                            assert node
                             print(format_config(node, what, shelf_id))
 
     # License information
     print("<<<netapp_api_licenses:sep(9)>>>")
-    licensev2_info = query(args, server, "license-v2-list-info")
+    licensev2_info = query(server, "license-v2-list-info")
     if licensev2_info:
         print(format_config(licensev2_info, "license", "package"))
 
     # Qtree quota usage
-    quota_info = query(args, server, "quota-report")
+    quota_info = query(server, "quota-report")
     if quota_info:
         print("<<<netapp_api_qtree_quota:sep(9)>>>")
         print(
@@ -1373,14 +1474,19 @@ def process_7mode(args, server, licenses):  # pylint: disable=too-many-branches
         )
 
 
-def process_mode_specific(args, server, netapp_mode, licenses):
+def process_mode_specific(
+    netapp_mode: str,
+    args: Args,
+    server: NetAppConnection,
+    licenses: LicenseInformation,
+) -> None:
     if netapp_mode == "clustermode":
         process_clustermode(args, server, licenses)
     else:
         process_7mode(args, server, licenses)
 
 
-def process_vserver_traffic(netapp_mode, args, server):
+def process_vserver_traffic(netapp_mode: str, server: NetAppConnection) -> None:
     print("<<<netapp_api_vs_traffic:sep(9)>>>")
     for what in [
         "lif:vserver",
@@ -1391,17 +1497,17 @@ def process_vserver_traffic(netapp_mode, args, server):
         "nfsv4",
         "nfsv4_1",
     ]:
-        result = query_counters(netapp_mode, args, server, what)
+        result = query_counters(netapp_mode, server, what)
         if result:
             result_dict = create_dict(result)
             for value in result_dict.values():
                 print(format_dict(value, prefix="protocol %s" % what, as_line=True))
 
 
-def process_fibrechannel_ports(netapp_mode, args, server):
-    fcp_counters = query_counters(netapp_mode, args, server, "fcp_lif")
-    fcp_ports = query(args, server, "fcp-interface-get-iter")
-    fcp_adapter = query(args, server, "fcp-adapter-get-iter")
+def process_fibrechannel_ports(netapp_mode: str, server: NetAppConnection) -> None:
+    fcp_counters = query_counters(netapp_mode, server, "fcp_lif")
+    fcp_ports = query(server, "fcp-interface-get-iter")
+    fcp_adapter = query(server, "fcp-adapter-get-iter")
 
     if fcp_counters:
         print("<<<netapp_api_fcp:sep(9)>>>")
@@ -1411,20 +1517,22 @@ def process_fibrechannel_ports(netapp_mode, args, server):
         for values in fcp_counter_dict.values():
             if values["port_wwpn"] in port_dict:
                 values.update(port_dict[values["port_wwpn"]])
-
+        assert fcp_ports
         print(format_config(fcp_ports, "fcp", "interface-name", extra_info=fcp_counter_dict))
 
 
-def fetch_netapp_mode(args, server):
+def fetch_netapp_mode(server: NetAppConnection) -> str:
     # Determine if this filer is running 7mode or Clustermode
-    version_info = query(args, server, "system-get-version", return_toplevel_node=True)
+    version_info = query(server, "system-get-version", return_toplevel_node=True)
+    assert version_info
 
     clustered_info = version_info.child_get_string("is-clustered")
     if clustered_info:
         return "7mode" if clustered_info.lower() == "false" else "clustermode"
 
     # Looks like the is-clustered attribute is not set, e.g. NetApp 7-Mode Version 8.0
-    version_string = version_info.child_get_string("version").lower()
+    version_string = (version_info.child_get_string("version") or "").lower()
+    assert version_string
     # TODO: Needs improvement. Unfortunately the version info string does not provide
     # exact info whether its a 7mode or a clustermode system
     # Possible approach: Query a class which does not exist in 7-mode and evaluate response
@@ -1433,17 +1541,16 @@ def fetch_netapp_mode(args, server):
     return "7mode" if "7-mode" in version_string else "clustermode"
 
     # DEBUG
-    # version_info = query(args, server, "system-api-list")
+    # version_info = query(server, "system-api-list")
 
 
-def query_counters_clustermode(args, server, what):
-    instance_uuids = []
+def query_counters_clustermode(server: NetAppConnection, what: str) -> Optional[NetAppNode]:
     max_records = "3000"
     response = server.get_response(
-        [
+        (
             "perf-object-instance-list-info-iter",
-            [["objectname", what], ["max-records", max_records]],
-        ]
+            [("objectname", what), ("max-records", max_records)],
+        )
     )
 
     results = response.get_results()
@@ -1451,33 +1558,39 @@ def query_counters_clustermode(args, server, what):
     while tag_string:
         # We need to start additinal query until all data is fetched
         tag_response = server.get_response(
-            [
+            (
                 "perf-object-instance-list-info-iter",
-                [["objectname", what], ["max-records", max_records], ["tag", tag_string]],
-            ]
+                [("objectname", what), ("max-records", max_records), ("tag", tag_string)],
+            )
         )
         if tag_response.results_status() != "passed":
-            return
-        if tag_response.get_results().child_get_string("num-records") == "0":
+            return None
+        tag_results = tag_response.get_results()
+        if tag_results.child_get_string("num-records") == "0":
             break
 
         # Get attributes-list and add this content to the initial response
-        tag_string = tag_response.get_results().child_get_string("next-tag")
-        attr_children = tag_response.get_results().child_get("attributes-list")
+        tag_string = tag_results.child_get_string("next-tag")
+        attr_children = tag_results.child_get("attributes-list")
+        assert attr_children
         results.extend_attributes_list(attr_children)
 
     if response.results_status() != "passed":
-        return
+        return None
 
     instance_list = results.child_get("attributes-list")
     if not instance_list:
-        return
+        return None
 
-    for instance_data in instance_list.children_get():
-        instance_uuids.append(instance_data.child_get_string("uuid"))
+    instance_uuids = [
+        uuid
+        for instance_data in instance_list.children_get()
+        for uuid in (instance_data.child_get_string("uuid"),)
+        if uuid
+    ]
 
     if not instance_uuids:
-        return  # Nothing to query..
+        return None  # Nothing to query..
 
     # I was unable to find an iterator API to query clustermode perfcounters...
     # Maybe the perf-object-get-instances is already able to provide huge amounts
@@ -1485,68 +1598,80 @@ def query_counters_clustermode(args, server, what):
     responses = []
     while instance_uuids:
         max_instances_per_request = 1000
-        instances_to_query: Any = ["instance-uuids", []]  # Any for now, will vanish soon
+        uuids = []
         for idx, uuid in enumerate(instance_uuids):
             if idx >= max_instances_per_request:
                 break
-            instances_to_query[1].append(["instance-uuid", uuid])
-            perfobject_node: List[Any] = ["perf-object-get-instances", [["objectname", what]]]
-            perfobject_node[1].append(instances_to_query)
+            uuids.append(("instance-uuid", uuid))
+
+        perfobject_node: Query = (
+            "perf-object-get-instances",
+            [("objectname", what), ("instance-uuids", uuids)],
+        )
         response = server.get_response(perfobject_node)
 
         if response.results_status() != "passed":
-            return
+            return None
 
         responses.append(response)
         instance_uuids = instance_uuids[max_instances_per_request:]
 
     initial_results = responses[0].get_results()
     for response in responses[1:]:
-        the_instances = response.get_results().child_get("instances")
+        results = response.get_results()
+        the_instances = results.child_get("instances")
+        assert the_instances
         initial_results.extend_instances_list(the_instances)
     return initial_results.child_get("instances")
 
 
-def query_counters_7mode(args, server, what):
-    perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+def query_counters_7mode(server: NetAppConnection, what: str) -> Optional[NetAppNode]:
+    perfobject_node = ("perf-object-get-instances-iter-start", [("objectname", what)])
     response = server.get_response(perfobject_node)
     results = response.get_results()
+    assert results
     records = results.child_get_string("records")
     tag = results.child_get_string("tag")
+    assert tag
 
     if not records or records == "0":
-        return
+        return None
 
-    responses = []
+    responses: List[NetAppResponse] = []
     while records != "0":
-        perfobject_node = [
+        perfobject_node = (
             "perf-object-get-instances-iter-next",
-            [["tag", tag], ["maximum", "1000"]],
-        ]
+            [("tag", tag), ("maximum", "1000")],
+        )
         response = server.get_response(perfobject_node)
         results = response.get_results()
         records = results.child_get_string("records")
         responses.append(response)
         if not records or records == "0":
-            perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
+            perfobject_node = ("perf-object-get-instances-iter-end", [("tag", tag)])
             server.get_response(perfobject_node)
             break
 
     initial_results = responses[0].get_results()
     for response in responses[1:]:
-        the_instances = response.get_results().child_get("instances")
+        results = response.get_results()
+        the_instances = results.child_get("instances")
         if the_instances:
             initial_results.extend_instances_list(the_instances)
     return initial_results.child_get("instances")
 
 
-def query_counters(netapp_mode, args, server, what):
+def query_counters(
+    netapp_mode: str,
+    server: NetAppConnection,
+    what: str,
+) -> Optional[NetAppNode]:
     if netapp_mode == "clustermode":
-        return query_counters_clustermode(args, server, what)
-    return query_counters_7mode(args, server, what)
+        return query_counters_clustermode(server, what)
+    return query_counters_7mode(server, what)
 
 
-def connect(args):
+def connect(args: Args) -> NetAppConnection:
     try:
         server = NetAppConnection(args.host_address, args.user, args.secret, args.no_tls)
         if args.debug:
@@ -1566,19 +1691,16 @@ def connect(args):
         sys.exit(1)
 
 
-def main(argv=None):
-    if argv is None:
-        replace_passwords()
-        argv = sys.argv[1:]
-
-    args = parse_arguments(argv)
+def main() -> int:
+    replace_passwords()
+    args = parse_arguments(sys.argv[1:])
 
     try:
         server = connect(args)
-        netapp_mode = fetch_netapp_mode(args, server)
-        licenses = fetch_license_information(args, server)
+        netapp_mode = fetch_netapp_mode(server)
+        licenses = fetch_license_information(server)
 
-        process_mode_specific(args, server, netapp_mode, licenses)
+        process_mode_specific(netapp_mode, args, server, licenses)
 
         return 0
 
@@ -1589,7 +1711,7 @@ def main(argv=None):
             raise
         return 1
     finally:
-        output_error_section(args, server)
+        output_error_section(server)
 
 
 if __name__ == "__main__":

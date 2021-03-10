@@ -17,7 +17,7 @@ load-plugins=
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster
 persistent=no
-extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic,lxml
 bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 signature-mutators=cmk.utils.store.with_lock_dict

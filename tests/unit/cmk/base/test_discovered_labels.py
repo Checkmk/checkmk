@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import MutableMapping
+from typing import Counter
 
 import pytest  # type: ignore[import]
 
@@ -20,7 +21,8 @@ from cmk.base.discovered_labels import (
     ServiceLabel,
 )
 
-from cmk.base.discovery import _perform_host_label_discovery, DiscoveryParameters
+from cmk.base.discovery import (_perform_host_label_discovery, DiscoveryParameters,
+                                HostLabelDiscoveryResult)
 import cmk.base.config as config
 
 
@@ -251,44 +253,65 @@ def test_label_validation(cls):
         cls(u"äbc", b"\xc3\xbcbc")
 
 
-@pytest.mark.parametrize(["existing_labels", "new_labels", "expected_labels", "load_labels"], [
+@pytest.mark.parametrize(["existing_labels", "new_labels", "expected_result", "load_labels"], [
     [
         [("foo", "1.5")],
         [("foo", "1.6")],
-        [("foo", "1.6")],
+        HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(HostLabel('foo', '1.6', plugin_name="xyz")),
+            per_plugin=Counter({"xyz": 1}),
+        ),
         False,
     ],
     [
         [("foo", "1.5")],
         [("foo", "1.6"), ("foo", "1.7")],
-        [("foo", "1.7")],
+        HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(HostLabel('foo', '1.7', plugin_name="xyz")),
+            per_plugin=Counter({"xyz": 1}),
+        ),
         False,
     ],
     [
         [("foo", "1.5"), ("bar", "2.0"), ("dung", "3.0")],
         [("foo", "1.6"), ("bar", "2.0")],
-        [("foo", "1.6"), ("bar", "2.0")],
+        HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(HostLabel('bar', '2.0', plugin_name="xyz"),
+                                        HostLabel('foo', '1.6', plugin_name="xyz")),
+            per_plugin=Counter({"xyz": 2}),
+        ),
         False,
     ],
     [
         [("foo", "1.5"), ("bar", "1.5")],
         [("foo", "1.6")],
-        [("foo", "1.6"), ("bar", "1.5")],
+        HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz"),
+                                        HostLabel('foo', '1.6', plugin_name="xyz")),
+            per_plugin=Counter({"xyz": 1}),
+        ),
         True,
     ],
     [
         [("foo", "1.5"), ("bar", "1.5")],
         [("foo", "1.6"), ("batz", "3.0")],
-        [("foo", "1.6"), ("batz", "3.0"), ("bar", "1.5")],
+        HostLabelDiscoveryResult(
+            labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz"),
+                                        HostLabel('batz', '3.0', plugin_name="xyz"),
+                                        HostLabel('foo', '1.6', plugin_name="xyz")),
+            per_plugin=Counter({"xyz": 2}),
+        ),
         True,
     ],
 ])
 def test_perform_host_label_discovery(discovered_host_labels_dir, existing_labels, new_labels,
-                                      expected_labels, load_labels):
+                                      expected_result, load_labels):
     hostname = "testhost"
     config.get_config_cache().initialize()
     store = DiscoveredHostLabelsStore(hostname)
-    store.save(DiscoveredHostLabels(*[HostLabel(*x) for x in existing_labels]).to_dict())
+    store.save(
+        DiscoveredHostLabels(
+            *[HostLabel(x[0], x[1], plugin_name="xyz") for x in existing_labels]).to_dict())
 
     discovery_parameters = DiscoveryParameters(
         on_error="raise",
@@ -298,11 +321,12 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
     )
 
     host_label_discovery_result = _perform_host_label_discovery(
-        hostname, DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]), discovery_parameters)
-    new_host_labels = host_label_discovery_result.labels
+        hostname,
+        DiscoveredHostLabels(*[HostLabel(x[0], x[1], plugin_name="xyz") for x in new_labels]),
+        discovery_parameters)
 
-    labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
-    assert new_host_labels.to_dict() == labels_expected.to_dict()
+    assert host_label_discovery_result.labels == expected_result.labels
+    assert host_label_discovery_result.per_plugin == expected_result.per_plugin
 
 
 def test_discovered_host_labels_path(discovered_host_labels_dir):

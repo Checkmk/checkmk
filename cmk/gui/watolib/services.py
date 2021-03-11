@@ -97,6 +97,9 @@ DiscoveryResult = NamedTuple("DiscoveryResult", [
     ("check_table_created", int),
     ("check_table", CheckTable),
     ("host_labels", dict),
+    ("new_labels", dict),
+    ("vanished_labels", dict),
+    ("changed_labels", dict),
 ])
 
 DiscoveryOptions = NamedTuple("DiscoveryOptions", [
@@ -494,8 +497,18 @@ def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
     remote_result = ast.literal_eval(raw_result)
 
     if isinstance(remote_result, tuple):
-        # Previous to 2.0.0p1 the remote call returned a tuple
-        return DiscoveryResult(*remote_result)
+        # Previous to 2.0.0p1 the remote call returned
+        # a) a tuple
+        # b) did not know about the new_labels, vanished_labels and changed_labels
+        return DiscoveryResult(
+            job_status=remote_result[0],
+            check_table_created=remote_result[1],
+            check_table=remote_result[2],
+            host_labels=remote_result[3],
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+        )
 
     assert isinstance(remote_result, dict)
     return DiscoveryResult(**remote_result)
@@ -547,6 +560,9 @@ def _get_check_table_from_remote(request):
             check_table=check_table,
             check_table_created=int(time.time()),
             host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
         )
 
 
@@ -640,6 +656,9 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             check_table_created=check_table_created,
             check_table=result.get("check_table", []),
             host_labels=result.get("host_labels", {}),
+            new_labels=result.get("new_labels", {}),
+            vanished_labels=result.get("vanished_labels", {}),
+            changed_labels=result.get("changed_labels", {}),
         )
 
     @staticmethod

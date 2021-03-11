@@ -6617,6 +6617,7 @@ check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats.fs"] = df_translation
 check_metrics["check_mk-sap_hana_diskusage"] = df_translation
+check_metrics["check_mk-nimble_volumes"] = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:

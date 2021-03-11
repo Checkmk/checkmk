@@ -577,17 +577,38 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     EXPECT_TRUE(fs::exists(target_postinstall_folder) &&
                 fs::is_directory(target_postinstall_folder));
 
+    auto move_dir = ModuleCommander::GetMoveLocation(backup_file);
+    fs::remove_all(move_dir, ec);
+
     // check duplicated install
     ASSERT_FALSE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
     ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
     ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
 
+    EXPECT_FALSE(fs::exists(move_dir / backup_file.filename()))
+        << move_dir / backup_file.filename() << " shoud be absent";
+    EXPECT_FALSE(fs::is_directory(move_dir / mc.modules_[0].name()))
+        << move_dir / mc.modules_[0].name() << " should be absent";
+
     // check forced install
     ASSERT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::force));
     ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
     ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+
+    // check that uninstall is correct
+    EXPECT_TRUE(fs::exists(move_dir / backup_file.filename()))
+        << move_dir / backup_file.filename() << " is absent";
+    EXPECT_TRUE(fs::is_directory(move_dir / mc.modules_[0].name()))
+        << move_dir / mc.modules_[0].name() << " is absent or invalid";
+
+    // create some files/folders simulation old installation
+    auto sim_dir = move_dir / mc.modules_[0].name() / "simulation";
+    auto sim_file = sim_dir / "simulatiom.dat";
+    fs::create_directories(sim_dir);
+    tst::CreateBinaryFile(sim_file, "a");
+    EXPECT_TRUE(fs::exists(sim_file));
 
     // check uninstall
     auto mod_backup = mc.GetModBackup(user);
@@ -602,6 +623,10 @@ TEST_F(ModuleCommanderTest, InstallModules) {
 
     ASSERT_TRUE(installed.empty());
     ASSERT_TRUE(!fs::exists(backup_file));
+
+    // check that files/folders from simulated old installation removed
+    EXPECT_FALSE(fs::exists(sim_file));
+    EXPECT_FALSE(fs::exists(sim_dir));
 
     // Simulate full install
     mc.installModules(root, user, InstallMode::normal);

@@ -71,6 +71,7 @@ class WerkTranslator(object):
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
             "dcd": _("Dynamic host configuration"),
+            "ntopng_integration": _("Ntopng integration"),
 
             # CMK-OMD
             "omd": _("Site management"),

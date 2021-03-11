@@ -1,28 +1,11 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# flake8: noqa
+# pylint: disable=unused-import
 
 from cmk.utils.plugin_loader import load_plugins
 
@@ -36,8 +19,10 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 from cmk.gui.plugins.wato.utils import (
     PermissionSectionWATO,
+    ACResult,
     ACResultCRIT,
     ACResultOK,
     ACResultWARN,
@@ -45,14 +30,11 @@ from cmk.gui.plugins.wato.utils import (
     ACTestCategories,
     ac_test_registry,
     add_change,
+    make_diff_text,
     add_replication_paths,
-    global_buttons,
-    changelog_button,
-    home_button,
-    host_status_button,
-    CheckTypeSelection,
+    ReplicationPath,
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
     ConfigDomainCore,
     ConfigDomainEventConsole,
     ConfigDomainGUI,
@@ -70,7 +52,7 @@ from cmk.gui.plugins.wato.utils import (
     ABCHostAttributeValueSpec,
     ABCHostAttributeNagiosText,
     host_attribute_registry,
-    EventsMode,
+    ABCEventsMode,
     folder_preserving_link,
     get_search_expression,
     ContactGroupSelection,
@@ -87,7 +69,7 @@ from cmk.gui.plugins.wato.utils import (
     LivestatusViaTCP,
     MainMenu,
     make_action_link,
-    may_edit_ruleset,
+    make_confirm_link,
     MenuItem,
     mode_registry,
     monitoring_macro_help,
@@ -102,7 +84,17 @@ from cmk.gui.plugins.wato.utils import (
     register_configvar,
     register_check_parameters,
     main_module_registry,
-    MainModule,
+    MainModuleTopic,
+    MainModuleTopicHosts,
+    MainModuleTopicServices,
+    MainModuleTopicBI,
+    MainModuleTopicAgents,
+    MainModuleTopicEvents,
+    MainModuleTopicUsers,
+    MainModuleTopicGeneral,
+    MainModuleTopicMaintenance,
+    MainModuleTopicCustom,
+    ABCMainModule,
     WatoModule,
     register_modules,
     register_notification_parameters,
@@ -117,13 +109,13 @@ from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
     ManualCheckParameterRulespec,
-    RulespecGroupManualChecksNetworking,
-    RulespecGroupManualChecksApplications,
-    RulespecGroupManualChecksEnvironment,
-    RulespecGroupManualChecksOperatingSystem,
-    RulespecGroupManualChecksHardware,
-    RulespecGroupManualChecksStorage,
-    RulespecGroupManualChecksVirtualization,
+    RulespecGroupEnforcedServicesNetworking,
+    RulespecGroupEnforcedServicesApplications,
+    RulespecGroupEnforcedServicesEnvironment,
+    RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupEnforcedServicesHardware,
+    RulespecGroupEnforcedServicesStorage,
+    RulespecGroupEnforcedServicesVirtualization,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
@@ -148,11 +140,10 @@ from cmk.gui.plugins.wato.utils import (
     UserIconOrAction,
     user_script_choices,
     user_script_title,
-    WatoBackgroundJob,
-    wato_confirm,
     wato_fileheader,
     register_hook,
     WatoMode,
+    ActionResult,
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,
@@ -166,6 +157,10 @@ from cmk.gui.plugins.wato.utils import (
     get_check_information,
     SampleConfigGenerator,
     sample_config_generator_registry,
+    mode_url,
+    flash,
+    redirect,
+    valuespec_check_plugin_selection,
 )
 
 #.

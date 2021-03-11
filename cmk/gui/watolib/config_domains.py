@@ -1,39 +1,26 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
+import logging
 import os
 import re
+from pathlib import Path
 import signal
 import subprocess
 import traceback
-from pathlib2 import Path
+from typing import Any, Dict, List, Tuple, Set
 
-import cmk
+from six import ensure_binary, ensure_str
+
+import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.paths
+
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -50,15 +37,19 @@ from cmk.gui.watolib.utils import (
 )
 from cmk.gui.plugins.watolib import (
     config_domain_registry,
-    ConfigDomain,
+    ABCConfigDomain,
 )
+from cmk.gui.type_defs import ConfigDomainName
 
 
 @config_domain_registry.register
-class ConfigDomainCore(ConfigDomain):
+class ConfigDomainCore(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "check_mk"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "check_mk"
 
     def config_dir(self):
         return wato_root_dir()
@@ -76,10 +67,13 @@ class ConfigDomainCore(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainGUI(ConfigDomain):
+class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "multisite"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "multisite"
 
     def config_dir(self):
         return multisite_dir()
@@ -96,39 +90,42 @@ class ConfigDomainGUI(ConfigDomain):
 # As soon as we have untied this we should re-establish a watolib plugin hierarchy and
 # move this to a CEE/CME specific watolib plugin
 @config_domain_registry.register
-class ConfigDomainLiveproxy(ConfigDomain):
+class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
-    ident = "liveproxyd"
     in_global_settings = True
 
     @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "liveproxyd"
+
+    @classmethod
     def enabled(cls):
-        return not cmk.is_raw_edition() and config.liveproxyd_enabled
+        return not cmk_version.is_raw_edition() and config.liveproxyd_enabled
 
     def config_dir(self):
         return liveproxyd_config_dir()
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainLiveproxy, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainLiveproxy, self).save(settings,
+                                                site_specific=site_specific,
+                                                custom_site_path=custom_site_path)
         self.activate()
 
     def activate(self):
-        log_audit(None, "liveproxyd-activate",
-                  _("Activating changes of Livestatus Proxy configuration"))
+        log_audit("liveproxyd-activate", _("Activating changes of Livestatus Proxy configuration"))
 
         try:
-            pidfile = cmk.utils.paths.livestatus_unix_socket + "proxyd.pid"
+            pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
             try:
-                pid = int(file(pidfile).read().strip())
+                with pidfile.open(encoding="utf-8") as f:
+                    pid = int(f.read().strip())
+
                 os.kill(pid, signal.SIGUSR1)
-            except IOError as e:
-                # No liveproxyd running: No reload needed.
-                if e.errno != errno.ENOENT:
-                    raise
             except OSError as e:
-                # PID in pidfiles does not exist: No reload needed.
-                if e.errno != errno.ESRCH:  # [Errno 3] No such process
+                # ENOENT: No liveproxyd running: No reload needed.
+                # ESRCH: PID in pidfiles does not exist: No reload needed.
+                if e.errno not in (errno.ENOENT, errno.ESRCH):
                     raise
             except ValueError:
                 # ignore empty pid file (may happen during locking in
@@ -138,7 +135,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
                 pass
 
         except Exception as e:
-            logger.exception()
+            logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
                 _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
                   "for further information.") % e)
@@ -148,7 +145,7 @@ class ConfigDomainLiveproxy(ConfigDomain):
     def default_globals(self):
         return {
             "liveproxyd_log_levels": {
-                "cmk.liveproxyd": cmk.utils.log.INFO,
+                "cmk.liveproxyd": logging.INFO,
             },
             "liveproxyd_default_connection_params":
                 ConfigDomainLiveproxy.connection_params_defaults(),
@@ -167,37 +164,38 @@ class ConfigDomainLiveproxy(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainEventConsole(ConfigDomain):
+class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "ec"
     in_global_settings = False
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ec"
 
     @classmethod
     def enabled(cls):
         return config.mkeventd_enabled
 
     def config_dir(self):
-        return str(cmk.ec.export.rule_pack_dir())
+        return str(ec.rule_pack_dir())
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
             mkeventd.execute_command("RELOAD", site=config.omd_site())
-            log_audit(None, "mkeventd-activate",
-                      _("Activated changes of event console configuration"))
+            log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
             if hooks.registered('mkeventd-activate-changes'):
                 hooks.call("mkeventd-activate-changes")
 
     def default_globals(self):
-        return cmk.ec.defaults.default_config()
+        return ec.default_config()
 
 
 @config_domain_registry.register
-class ConfigDomainCACertificates(ConfigDomain):
+class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
-    ident = "ca-certificates"
 
     trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root
 
@@ -211,7 +209,11 @@ class ConfigDomainCACertificates(ConfigDomain):
     ]
 
     _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         "", re.DOTALL)
+                         b"", re.DOTALL)
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ca-certificates"
 
     def config_dir(self):
         return multisite_dir()
@@ -221,8 +223,10 @@ class ConfigDomainCACertificates(ConfigDomain):
             return os.path.join(self.config_dir(), "ca-certificates_sitespecific.mk")
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
-    def save(self, settings, site_specific=False):
-        super(ConfigDomainCACertificates, self).save(settings, site_specific=site_specific)
+    def save(self, settings, site_specific=False, custom_site_path=None):
+        super(ConfigDomainCACertificates, self).save(settings,
+                                                     site_specific=site_specific,
+                                                     custom_site_path=custom_site_path)
 
         current_config = settings.get("trusted_certificate_authorities", {
             "use_system_wide_cas": True,
@@ -235,7 +239,8 @@ class ConfigDomainCACertificates(ConfigDomain):
         # Since this can be called from any WATO page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
-        self._update_trusted_cas(current_config)
+        if not site_specific and custom_site_path is None:
+            self._update_trusted_cas(current_config)
 
         if ConfigDomainLiveproxy.enabled():
             ConfigDomainLiveproxy().activate()
@@ -244,26 +249,28 @@ class ConfigDomainCACertificates(ConfigDomain):
         try:
             return self._update_trusted_cas(config.trusted_certificate_authorities)
         except Exception:
-            logger.exception()
+            logger.exception("error updating trusted CAs")
             return [
                 "Failed to create trusted CA file '%s': %s" %
                 (self.trusted_cas_file, traceback.format_exc())
             ]
 
     def _update_trusted_cas(self, current_config):
-        trusted_cas, errors = [], []
+        trusted_cas: List[bytes] = []
+        errors: List[str] = []
 
         if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += current_config["trusted_cas"]
+        trusted_cas += [ensure_binary(e) for e in current_config["trusted_cas"]]
 
-        store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
+        store.save_bytes_to_file(self.trusted_cas_file, b"\n".join(trusted_cas))
         return errors
 
-    def _get_system_wide_trusted_ca_certificates(self):
-        trusted_cas, errors = set([]), []
+    def _get_system_wide_trusted_ca_certificates(self) -> Tuple[List[bytes], List[str]]:
+        trusted_cas: Set[bytes] = set()
+        errors: List[str] = []
         for p in self.system_wide_trusted_ca_search_paths:
             cert_path = Path(p)
 
@@ -277,9 +284,7 @@ class ConfigDomainCACertificates(ConfigDomain):
                         continue
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
-                except IOError:
-                    logger.exception()
-
+                except (IOError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
                     # trigger for further checking web.log when a really needed certificate can
@@ -291,6 +296,8 @@ class ConfigDomainCACertificates(ConfigDomain):
                     if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
                         continue
 
+                    logger.exception("Error reading certificates from %s", cert_file_path)
+
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
                                   "See web.log for details." % cert_file_path)
 
@@ -298,15 +305,19 @@ class ConfigDomainCACertificates(ConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path):
+    def _get_certificates_from_file(self, path: Path) -> List[bytes]:
         try:
-            return [match.group(0) for match in self._PEM_RE.finditer(open("%s" % path).read())]
+            # This IO is done as binary IO, even if the files are text files. Since we work with
+            # arbitrary files here, we can not be sure about the encoding of these files. Since we
+            # only want to concatenate them to a Checkmk global file, it is OK to treat them all as
+            # binary.
+            with path.open("rb") as f:
+                return [match.group(0) for match in self._PEM_RE.finditer(f.read())]
         except IOError as e:
             if e.errno == errno.ENOENT:
                 # Silently ignore e.g. dangling symlinks
                 return []
-            else:
-                raise
+            raise
 
     def default_globals(self):
         return {
@@ -318,15 +329,18 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
 @config_domain_registry.register
-class ConfigDomainOMD(ConfigDomain):
+class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "omd"
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root)
+    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
         super(ConfigDomainOMD, self).__init__()
         self._logger = logger.getChild("config.omd")
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "omd"
 
     def config_dir(self):
         return self.omd_config_dir
@@ -359,12 +373,15 @@ class ConfigDomainOMD(ConfigDomain):
 
         self._logger.debug("Executing \"omd config change\"")
         self._logger.debug("  Commands: %r" % config_change_commands)
-        p = subprocess.Popen(["omd", "config", "change"],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             stdin=subprocess.PIPE,
-                             close_fds=True)
-        stdout = p.communicate(cmk.utils.make_utf8("\n".join(config_change_commands)))[0]
+        p = subprocess.Popen(
+            ["omd", "config", "change"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.PIPE,
+            close_fds=True,
+            encoding="utf-8",
+        )
+        stdout, _stderr = p.communicate(input="\n".join(config_change_commands))
         self._logger.debug("  Exit code: %d" % p.returncode)
         self._logger.debug("  Output: %r" % stdout)
         if p.returncode != 0:
@@ -379,25 +396,28 @@ class ConfigDomainOMD(ConfigDomain):
     def _load_omd_config(self, path):
         settings = {}
 
-        if not os.path.exists(path):
+        file_path = Path(path)
+
+        if not file_path.exists():
             return {}
 
         try:
-            for line in file(path):
-                line = line.strip()
+            with file_path.open(encoding="utf-8") as f:
+                for line in f:
+                    line = ensure_str(line.strip())
 
-                if line == "" or line.startswith("#"):
-                    continue
+                    if line == "" or line.startswith("#"):
+                        continue
 
-                var, value = line.split("=", 1)
+                    var, value = line.split("=", 1)
 
-                if not var.startswith("CONFIG_"):
-                    continue
+                    if not var.startswith("CONFIG_"):
+                        continue
 
-                key = var[7:].strip()
-                val = value.strip().strip("'")
+                    key = var[7:].strip()
+                    val = value.strip().strip("'")
 
-                settings[key] = val
+                    settings[key] = val
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (path, e))
 
@@ -410,7 +430,7 @@ class ConfigDomainOMD(ConfigDomain):
     # Sadly we can not use the Transform() valuespecs, because each configvar
     # only get's the value associated with it's config key.
     def _from_omd_config(self, omd_config):
-        settings = {}
+        settings: Dict[str, Any] = {}
 
         for key, value in omd_config.items():
             if value == "on":
@@ -457,7 +477,7 @@ class ConfigDomainOMD(ConfigDomain):
                 settings["MKEVENTD"] = None
 
         # Convert from OMD key (to lower, add "site_" prefix)
-        settings = dict([("site_%s" % key.lower(), val) for key, val in settings.items()])
+        settings = {"site_%s" % key.lower(): val for key, val in settings.items()}
 
         return settings
 
@@ -465,7 +485,7 @@ class ConfigDomainOMD(ConfigDomain):
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, settings):
         # Convert to OMD key
-        settings = dict([(key.upper()[5:], val) for key, val in settings.items()])
+        settings = {key.upper()[5:]: val for key, val in settings.items()}
 
         if "LIVESTATUS_TCP" in settings:
             if settings["LIVESTATUS_TCP"] is not None:

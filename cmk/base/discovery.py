@@ -1142,25 +1142,24 @@ def _perform_host_label_discovery(
 
     # Take over old items if -I is selected
     if discovery_parameters.load_labels:
-        return_host_labels = DiscoveredHostLabels.from_dict(
-            DiscoveredHostLabelsStore(hostname).load())
+        return_labels = DiscoveredHostLabels.from_dict(DiscoveredHostLabelsStore(hostname).load())
     else:
-        return_host_labels = DiscoveredHostLabels()
+        return_labels = DiscoveredHostLabels()
 
-    old_labels_set = {x.label for x in return_host_labels.to_list()}
-    new_labels_set = {x.label for x in discovered_host_labels.to_list()}
+    existing_labels_set = {x.label for x in return_labels.to_list()}
+    discovered_labels_set = {x.label for x in discovered_host_labels.to_list()}
 
-    new_host_labels_per_plugin: Counter[str] = Counter()
+    return_labels_per_plugin: Counter[str] = Counter()
     for label in discovered_host_labels.values():
-        if label.label in old_labels_set:
+        if label.label in existing_labels_set:
             continue
-        return_host_labels.add_label(label)
-        new_host_labels_per_plugin[label.plugin_name] += 1
+        return_labels.add_label(label)
+        return_labels_per_plugin[label.plugin_name] += 1
 
     if discovery_parameters.save_labels:
-        DiscoveredHostLabelsStore(hostname).save(return_host_labels.to_dict())
+        DiscoveredHostLabelsStore(hostname).save(return_labels.to_dict())
 
-    if new_labels_set - old_labels_set:
+    if discovered_labels_set - existing_labels_set:
         # Some check plugins like 'df' may discover services based on host labels.
         # A rule may look like:
         # [{
@@ -1184,8 +1183,8 @@ def _perform_host_label_discovery(
         config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
     return HostLabelDiscoveryResult(
-        labels=return_host_labels,
-        per_plugin=new_host_labels_per_plugin,
+        labels=return_labels,
+        per_plugin=return_labels_per_plugin,
     )
 
 

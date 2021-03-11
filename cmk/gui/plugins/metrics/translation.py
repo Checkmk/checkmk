@@ -768,6 +768,8 @@ check_metrics["check_mk-k8s_stats_fs"] = df_translation
 check_metrics["check_mk-sap_hana_diskusage"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-dell_compellent_folder"] = df_translation
+check_metrics["check_mk-nimble_volumes"] = df_translation
+
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {
         "scale": MB

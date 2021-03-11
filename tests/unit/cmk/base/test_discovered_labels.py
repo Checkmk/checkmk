@@ -297,8 +297,9 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
         only_host_labels=False,
     )
 
-    new_host_labels, _host_labels_per_plugin = _perform_host_label_discovery(
+    host_label_discovery_result = _perform_host_label_discovery(
         hostname, DiscoveredHostLabels(*[HostLabel(*x) for x in new_labels]), discovery_parameters)
+    new_host_labels = host_label_discovery_result.labels
 
     labels_expected = DiscoveredHostLabels(*[HostLabel(*x) for x in expected_labels])
     assert new_host_labels.to_dict() == labels_expected.to_dict()

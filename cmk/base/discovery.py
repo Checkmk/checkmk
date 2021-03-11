@@ -1136,7 +1136,7 @@ def _perform_host_label_discovery(
     hostname: HostName,
     discovered_host_labels: DiscoveredHostLabels,
     discovery_parameters: DiscoveryParameters,
-) -> Tuple[DiscoveredHostLabels, Counter[str]]:
+) -> HostLabelDiscoveryResult:
 
     section.section_step("Perform host label discovery")
 
@@ -1183,7 +1183,10 @@ def _perform_host_label_discovery(
         # to find new services, eg. in 'inventory_df'. Thus we have to clear these caches.
         config.get_config_cache().ruleset_matcher.ruleset_optimizer.clear_caches()
 
-    return return_host_labels, new_host_labels_per_plugin
+    return HostLabelDiscoveryResult(
+        labels=return_host_labels,
+        per_plugin=new_host_labels_per_plugin,
+    )
 
 
 def _discover_host_labels(
@@ -1383,7 +1386,7 @@ def _discover_host_labels_and_services(
         discovery_parameters,
     )
 
-    host_labels, host_labels_per_plugin = _perform_host_label_discovery(
+    host_label_discovery_result = _perform_host_label_discovery(
         hostname,
         discovered_host_labels,
         discovery_parameters,
@@ -1397,10 +1400,7 @@ def _discover_host_labels_and_services(
         run_only_plugin_names=run_only_plugin_names,
     )
 
-    return discovered_services, HostLabelDiscoveryResult(
-        labels=host_labels,
-        per_plugin=host_labels_per_plugin,
-    )
+    return discovered_services, host_label_discovery_result
 
 
 # Create a table of autodiscovered services of a host. Do not save
@@ -1770,15 +1770,12 @@ def _get_cluster_services(
 
             # In all other cases either both must be "new" or "vanished" -> let it be
 
-    cluster_host_labels, cluster_labels_per_plugin = _perform_host_label_discovery(
+    host_label_discovery_result = _perform_host_label_discovery(
         host_config.hostname,
         cluster_host_labels,
         discovery_parameters,
     )
-    return cluster_items, HostLabelDiscoveryResult(
-        labels=cluster_host_labels,
-        per_plugin=cluster_labels_per_plugin,
-    )
+    return cluster_items, host_label_discovery_result
 
 
 def get_check_preview(

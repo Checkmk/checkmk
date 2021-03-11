@@ -138,6 +138,16 @@ else
     unset IS_LXC_CONTAINER
 fi
 
+if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+    if [ "$(stat -fc'%t' /sys/fs/cgroup)" = "63677270" ]; then
+        IS_CGROUP_V2=1
+        CGROUP_SECTION_SUFFIX="_cgroupv2"
+    else
+        unset IS_CGROUP_V2
+        unset CGROUP_SECTION_SUFFIX
+    fi
+fi
+
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
@@ -263,13 +273,19 @@ section_cpu() {
         fi
     else
         if [ -n "$IS_DOCKERIZED" ]; then
-            echo '<<<docker_container_cpu>>>'
+            echo "<<<docker_container_cpu$CGROUP_SECTION_SUFFIX>>>"
         else
-            echo '<<<lxc_container_cpu>>>'
+            echo "<<<lxc_container_cpu$CGROUP_SECTION_SUFFIX>>>"
         fi
-        grep "^cpu " /proc/stat
-        echo "num_cpus $NUM_CPUS"
-        cat /sys/fs/cgroup/cpuacct/cpuacct.stat
+        if [ -n "$IS_CGROUP_V2" ]; then
+            echo "uptime $(cat /proc/uptime)"
+            echo "num_cpus $NUM_CPUS"
+            cat /sys/fs/cgroup/cpu.stat
+        else
+            grep "^cpu " /proc/stat
+            echo "num_cpus $NUM_CPUS"
+            cat /sys/fs/cgroup/cpuacct/cpuacct.stat
+        fi
     fi
 }
 

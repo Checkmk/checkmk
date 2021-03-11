@@ -16,6 +16,7 @@ def __parse_docker_container_cpu(info):
     parsed = {}
     version = docker.get_version(info)
     if version is None:
+        # agent running inside a docker container
         for line in info:
             if line[0] == "cpu":
                 parsed["system_ticks"] = sum(map(int, line[1:]))
@@ -25,6 +26,7 @@ def __parse_docker_container_cpu(info):
             parsed["container_ticks"] = parsed["user"] + parsed["system"]
         return parsed
 
+    # data comes from mk_docker.py agent plugin
     raw = docker.json_get_obj(info[1])
     # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
     if (online_cpus := raw.get("online_cpus")) is not None:
@@ -45,7 +47,8 @@ def parse_docker_container_cpu_cgroupv1(
     if not result:
         return None
     return SectionCpuUtilizationOs(
-        time_base=result["system_ticks"],
+        # system_ticks ticks 4 times for 4 cores per time interval
+        time_base=result["system_ticks"] / result["num_cpus"],
         time_cpu=result["container_ticks"],
         num_cpus=result["num_cpus"],
     )

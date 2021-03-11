@@ -27,7 +27,8 @@ def parse_docker_container_cpu_cgroupv1(
         return None
 
     return SectionCpuUtilizationOs(
-        time_base=parsed["system_ticks"],
+        # system_ticks ticks 4 times for 4 cores per time interval
+        time_base=parsed["system_ticks"] / parsed["num_cpus"],
         time_cpu=parsed["user"] + parsed["system"],
         num_cpus=parsed["num_cpus"],
     )

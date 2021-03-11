@@ -12,4 +12,6 @@ class SectionCpuUtilizationOs(NamedTuple):
     # time_base and time_cpu have to have the same unit!
     # either both seconds, or both ticks, or both micro seconds
     time_base: float
+    # time base has to be independent of num_cpus! so if you use system_ticks
+    # as time_base you may have to divide it by the number of cpus
     time_cpu: float

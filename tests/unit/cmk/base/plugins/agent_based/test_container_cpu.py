@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 value_store_fixture = get_value_store_fixture(cpu_utilization_os)
 
 # the following string tables should display 150% cpu usage
-# two cpus were working at 75%
+# two cpus were working at 75% `stress-ng -c2 -l75`
 
 # agent running inside docker on a host with cgroupv1
 
@@ -65,6 +65,30 @@ DOCKER_CONTAINER_CPU_CGROUPV1_10 = [
     ["system", "146"],
 ]
 
+# agent running inside docker on a host with cgroupv2
+
+DOCKER_CONTAINER_CPU_CGROUPV2_0 = [
+    ["uptime", "277947.50", "789050.50"],
+    ["num_cpus", "8"],
+    ["usage_usec", "76366093"],
+    ["user_usec", "75233350"],
+    ["system_usec", "1132743"],
+    ["nr_periods", "0"],
+    ["nr_throttled", "0"],
+    ["throttled_usec", "0"],
+]
+
+DOCKER_CONTAINER_CPU_CGROUPV2_10 = [
+    ["uptime", "277963.73", "789135.59"],
+    ["num_cpus", "8"],
+    ["usage_usec", "100942557"],
+    ["user_usec", "99597724"],
+    ["system_usec", "1344833"],
+    ["nr_periods", "0"],
+    ["nr_throttled", "0"],
+    ["throttled_usec", "0"],
+]
+
 # mk_docker.py running on a host with cgroupv1
 
 MK_DOCKER_CONTAINER_CPU_CGROUPV1_0 = [
@@ -94,6 +118,31 @@ MK_DOCKER_CONTAINER_CPU_CGROUPV1_10 = [
         "}}"
     ],
 ]
+# mk_docker.py running on a host with cgroupv2
+
+MK_DOCKER_CONTAINER_CPU_CGROUPV2_0 = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"cpu_usage": {"total_usage": 176193343000, "usage_in_kernelmode": 944280000, "usage_in_user'
+        'mode": 175249062000}, "system_cpu_usage": 2624340000000, "online_cpus": 8, "throttling_data"'
+        ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+    ],
+]
+
+MK_DOCKER_CONTAINER_CPU_CGROUPV2_10 = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.4.2", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"cpu_usage": {"total_usage": 194273739000, "usage_in_kernelmode": 948242000, "usage_in_user'
+        'mode": 193325496000}, "system_cpu_usage": 2720280000000, "online_cpus": 8, "throttling_data"'
+        ': {"periods": 0, "throttled_periods": 0, "throttled_time": 0}}'
+    ],
+]
 
 # linux agent running inside a lxc container
 
@@ -109,6 +158,30 @@ LXC_CONTAINER_CPU_CGROUPV1_10 = [
     ["num_cpus", "2"],
     ["user", "710388"],
     ["system", "450408"],
+]
+
+# linux agent running inside a lxc container on a cgroupv2 host
+
+LXC_CONTAINER_CPU_CGROUPV2_0 = [
+    ["uptime", "694393.79", "694393.79"],
+    ["num_cpus", "2"],
+    ["usage_usec", "13952194626"],
+    ["user_usec", "8286052826"],
+    ["system_usec", "5666141800"],
+    ["nr_periods", "0"],
+    ["nr_throttled", "0"],
+    ["throttled_usec", "0"],
+]
+
+LXC_CONTAINER_CPU_CGROUPV2_10 = [
+    ["uptime", "694445.26", "694445.26"],
+    ["num_cpus", "2"],
+    ["usage_usec", "14030119356"],
+    ["user_usec", "8363977556"],
+    ["system_usec", "5666141800"],
+    ["nr_periods", "0"],
+    ["nr_throttled", "0"],
+    ["throttled_usec", "0"],
 ]
 
 
@@ -138,6 +211,30 @@ LXC_CONTAINER_CPU_CGROUPV1_10 = [
             LXC_CONTAINER_CPU_CGROUPV1_10,
             2,
             150.56829923537921,
+        ],
+        [
+            "lxc_container_cpu_cgroupv2",
+            "cpu_utilization_os",
+            LXC_CONTAINER_CPU_CGROUPV2_0,
+            LXC_CONTAINER_CPU_CGROUPV2_10,
+            2,
+            151.39834855263476,
+        ],
+        [
+            "docker_container_cpu_cgroupv2",
+            "cpu_utilization_os",
+            DOCKER_CONTAINER_CPU_CGROUPV2_0,
+            DOCKER_CONTAINER_CPU_CGROUPV2_10,
+            8,
+            151.42614910676645,
+        ],
+        [
+            "docker_container_cpu",
+            "cpu_utilization_os",
+            MK_DOCKER_CONTAINER_CPU_CGROUPV2_0,
+            MK_DOCKER_CONTAINER_CPU_CGROUPV2_10,
+            8,
+            150.76419428809672,
         ],
     ],
 )

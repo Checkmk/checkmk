@@ -25,7 +25,7 @@ def check_cpu_utilization_os(params: Mapping[str, Any],
         value_store=get_value_store(),
     )
     yield from check_cpu_util(
-        util=util * section.num_cpus * 100,
+        util=util * 100,
         params=params,
         this_time=section.time_base,
         value_store=get_value_store(),

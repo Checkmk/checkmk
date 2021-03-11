@@ -463,7 +463,7 @@ class ModeFolder(WatoMode):
         if html.request.var("_search"):  # just commit to search form
             return None
 
-        folder_url = mode_url("folder", folder=self._folder.path())
+        folder_url = self._folder.url()
 
         # Operations on SUBFOLDERS
 
@@ -537,10 +537,11 @@ class ModeFolder(WatoMode):
         ]:
             if html.request.var(request_var):
                 return redirect(
-                    mode_url(mode_name,
-                             folder=watolib.Folder.current().path(),
-                             search=search_text,
-                             selection=weblib.selection_id()))
+                    self._folder.url(add_vars=[
+                        ("mode", mode_name),
+                        ("search", search_text),
+                        ("selection", weblib.selection_id()),
+                    ]))
 
         return None
 
@@ -940,7 +941,7 @@ class ModeFolder(WatoMode):
     def _delete_hosts(self, host_names) -> ActionResult:
         self._folder.delete_hosts(host_names)
         flash(_("Successfully deleted %d hosts") % len(host_names))
-        return redirect(mode_url("folder", folder=self._folder.path()))
+        return redirect(self._folder.url())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():

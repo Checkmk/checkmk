@@ -30,12 +30,6 @@
 # snapvault /vol/ipb_user/    status idle state snapvaulted   lag-time 97007  source-system 172.31.12.15
 # snapvault /vol/ipb_vol0/    status idle state snapvaulted   lag-time 97011  source-system 172.31.12.15
 
-# Netapp clustermode:
-# <<<netapp_api_snapvault:sep(9)>>>
-# snapvault sv_home	state snapmirrored	source-system cnlan1snas001	destination-location nlhoo2snas003:sv_home	policy XPDefaultCompression	lag-time 91486	destination-system nlhoo2-scl020-02	status idle
-# snapvault sv_home	state snapmirrored	source-system inpnq1snas001	destination-location nlhoo2snas001:sv_home	policy XDPDefault	lag-time 82486	destination-system nlhoo2-scl020-02	status idle
-# snapvault sv_home	state snapmirrored	source-system trizm1snas001	destination-location nlhoo2snas002:sv_home	policy XDPDefault	lag-time 73487	destination-system nlhoo2-scl020-01	status idle
-
 discovery_snapvault = []
 
 

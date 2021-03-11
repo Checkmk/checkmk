@@ -151,7 +151,9 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
         return "searchhost"
 
     @classmethod
-    def _named_stats(cls, stats):
+    def _named_stats(cls, stats: List[int]) -> HostStats:
+        if not stats:
+            stats = [0, 0, 0, 0]
         return HostStats(*stats)
 
     @classmethod
@@ -224,7 +226,9 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
         return "searchsvc"
 
     @classmethod
-    def _named_stats(cls, stats):
+    def _named_stats(cls, stats: List[int]) -> ServiceStats:
+        if not stats:
+            stats = [0, 0, 0, 0, 0, 0]
         return ServiceStats(*stats)
 
     @classmethod

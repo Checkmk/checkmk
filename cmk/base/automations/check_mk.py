@@ -70,7 +70,7 @@ from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -166,15 +166,19 @@ class AutomationTryDiscovery(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
-            check_preview_table, host_labels = self._execute_discovery(args)
+            check_preview_table, host_label_discovery_result = self._execute_discovery(args)
             return {
                 "output": buf.getvalue(),
                 "check_table": check_preview_table,
-                "host_labels": host_labels.to_dict(),
+                "host_labels": host_label_discovery_result.labels.to_dict(),
+                "new_labels": host_label_discovery_result.new_labels.to_dict(),
+                "vanished_labels": host_label_discovery_result.vanished_labels.to_dict(),
+                "replaced_labels": host_label_discovery_result.replaced_labels.to_dict(),
             }
 
     def _execute_discovery(
-            self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
+            self, args: List[str]
+    ) -> Tuple[discovery.CheckPreviewTable, discovery.HostLabelDiscoveryResult]:
 
         use_cached_snmp_data = False
         if args[0] == '@noscan':

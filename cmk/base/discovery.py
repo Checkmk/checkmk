@@ -1803,7 +1803,7 @@ def get_check_preview(
     max_cachefile_age: int,
     use_cached_snmp_data: bool,
     on_error: str,
-) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
+) -> Tuple[CheckPreviewTable, HostLabelDiscoveryResult]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1812,7 +1812,7 @@ def get_check_preview(
     ip_address = None if host_config.is_cluster else ip_lookup.lookup_ip_address(host_config)
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
-        load_labels=False,
+        load_labels=True,
         save_labels=False,
         only_host_labels=False,
     )
@@ -1902,7 +1902,7 @@ def get_check_preview(
                 found_on_nodes,
             ))
 
-    return table, host_label_discovery_result.labels
+    return table, host_label_discovery_result
 
 
 def _preview_check_source(

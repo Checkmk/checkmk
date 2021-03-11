@@ -1,0 +1,14 @@
+Title: Fix TypeError on LDAP user synchronization
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615474651
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+If users had user specific notification rules, the LDAP synchronization could
+lead to an error "TypeError: '<' not supported between instances of 'dict' and
+'dict'".

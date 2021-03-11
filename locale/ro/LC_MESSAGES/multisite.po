@@ -2779,7 +2779,7 @@ msgid "Activity log updates"
 msgstr "actualizare"
 
 #, fuzzy
-msgid "Actual Traffic"
+msgid "Actual traffic"
 msgstr "Numele Elementului"
 
 #, fuzzy
@@ -8593,6 +8593,13 @@ msgid "Checkpoint VSID traffic rate"
 msgstr "Portul TCP pentru conexiune"
 
 msgid "Checks & agents"
+msgstr ""
+
+#, fuzzy
+msgid "Checks on management boards"
+msgstr "(fără parametri)"
+
+msgid "Checks on regular hosts"
 msgstr ""
 
 msgid "Checks to send data for"
@@ -28374,6 +28381,10 @@ msgid ""
 "or call the with the missing HTTP variables."
 msgstr ""
 
+#, python-format
+msgid "Missing data needed to render this graph. Details: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Missing host name"
 msgstr " pe siteul de monitorizare: "
@@ -29548,14 +29559,6 @@ msgstr "Adresă"
 msgid "Network ID"
 msgstr "Adresă"
 
-#, fuzzy
-msgid "Network Interfaces: Last Day View"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Network Interfaces: Last Hour View"
-msgstr "Adresă"
-
 msgid "Network Load Balancer Listeners"
 msgstr ""
 
@@ -29598,6 +29601,14 @@ msgstr ""
 
 msgid "Network interfaces on Windows"
 msgstr ""
+
+#, fuzzy
+msgid "Network interfaces: last day view"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Network interfaces: last hour view"
+msgstr "Adresă"
 
 #, fuzzy
 msgid "Network scan"
@@ -30759,6 +30770,10 @@ msgstr ""
 #, fuzzy
 msgid "Ntopng Connection Parameters (chargeable add-on)"
 msgstr "Conexiuni Active"
+
+#, fuzzy
+msgid "Ntopng integration"
+msgstr "Atribute personalizate"
 
 msgid "Nullmailer: Mail Queue"
 msgstr ""
@@ -48693,7 +48708,7 @@ msgid ""
 "This ruleset is similar to 'Disabled services', but selects checks to be "
 "disabled by their <b>type</b>. This allows you to disable certain technical "
 "implementations such as filesystem checks via SNMP on hosts that also have "
-"the Check_MK agent installed."
+"the Checkmk agent installed."
 msgstr ""
 
 msgid ""
@@ -49775,17 +49790,6 @@ msgstr ""
 msgid "Top"
 msgstr ""
 
-msgid "Top Application Traffic: Last Day View"
-msgstr ""
-
-#, fuzzy
-msgid "Top Application Traffic: Last Hour View"
-msgstr "Adresă"
-
-#, fuzzy
-msgid "Top Local Talkers"
-msgstr "% / gamă"
-
 msgid "Top Talkers"
 msgstr ""
 
@@ -49797,8 +49801,24 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Top alerters - %s"
 msgstr ""
 
+#, fuzzy
+msgid "Top application traffic: last day view"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Top application traffic: last hour view"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Top local talkers"
+msgstr "% / gamă"
+
 msgid "Top of page handling"
 msgstr ""
+
+#, fuzzy
+msgid "Top remote destinations"
+msgstr "foloseste descrierea"
 
 #, python-format
 msgid "Top talkers not implemented for type: %s"

@@ -34,24 +34,34 @@ export class HostStats extends cmk_figures.FigureBase {
             if (element.count > largest_element_count) largest_element_count = element.count;
         }
 
-        let sum = this._data.total.count;
-        let radius = 0;
-        parts.forEach(part => {
-            radius =
-                part.count == 0
-                    ? 0
-                    : (Math.pow(sum, 0.33) / Math.pow(this._data.total.count, 0.33)) *
-                      this._max_radius;
-            sum -= part.count;
-
+        if (this._data.total.count == 0) {
             hexagon_config.push({
-                title: part.title,
-                path: hexbin.hexagon(radius),
-                css_class: part.css_class,
+                title: "",
+                path: hexbin.hexagon(this._max_radius),
+                css_class: "empty",
                 tooltip: "",
-                count: part.count,
+                count: 0,
             });
-        });
+        } else {
+            let sum = this._data.total.count;
+            let radius = 0;
+            parts.forEach(part => {
+                radius =
+                    part.count == 0
+                        ? 0
+                        : (Math.pow(sum, 0.33) / Math.pow(this._data.total.count, 0.33)) *
+                          this._max_radius;
+                sum -= part.count;
+
+                hexagon_config.push({
+                    title: part.title,
+                    path: hexbin.hexagon(radius),
+                    css_class: part.css_class,
+                    tooltip: "",
+                    count: part.count,
+                });
+            });
+        }
 
         // render all hexagons
         this._hexagon_box

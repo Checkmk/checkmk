@@ -43,12 +43,9 @@ def load_timeperiods() -> TimeperiodSpecs:
     return timeperiods
 
 
-def load_timeperiod(name: str):
+def load_timeperiod(name: str) -> TimeperiodSpec:
     timeperiods = load_timeperiods()
-    try:
-        return timeperiods[name]
-    except KeyError:
-        return
+    return timeperiods[name]
 
 
 def save_timeperiods(timeperiods: TimeperiodSpecs) -> None:

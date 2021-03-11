@@ -1,0 +1,13 @@
+Title: API time_period: modifying update endpoint to conform to internal structure
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615461910
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+In the previous, updating a time period using the API endpoint
+resulted in a incompatible format for some attributes. This is fixed
+with this werk.

@@ -128,6 +128,9 @@ DiscoveryParameters = NamedTuple("DiscoveryParameters", [
 HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
     ("labels", DiscoveredHostLabels),
     ("per_plugin", Counter[str]),
+    ("new_labels", DiscoveredHostLabels),
+    ("vanished_labels", DiscoveredHostLabels),
+    ("replaced_labels", DiscoveredHostLabels),
 ])
 
 #   .--Helpers-------------------------------------------------------------.
@@ -525,6 +528,9 @@ def discover_on_host(
     host_label_discovery_result = HostLabelDiscoveryResult(
         labels=DiscoveredHostLabels(),
         per_plugin=Counter(),
+        new_labels=DiscoveredHostLabels(),
+        vanished_labels=DiscoveredHostLabels(),
+        replaced_labels=DiscoveredHostLabels(),
     )
 
     try:
@@ -1149,8 +1155,16 @@ def _perform_host_label_discovery(
     existing_labels_set = {x.label for x in return_labels.to_list()}
     discovered_labels_set = {x.label for x in discovered_host_labels.to_list()}
 
+    new_labels = discovered_host_labels - return_labels
+    vanished_labels = return_labels - discovered_host_labels
+    replaced_labels = DiscoveredHostLabels()
+
     return_labels_per_plugin: Counter[str] = Counter()
     for label in discovered_host_labels.values():
+        existing_label = return_labels.get(label.name)
+        if existing_label and existing_label.value != label.value:
+            replaced_labels.add_label(existing_label)
+
         if label.label in existing_labels_set:
             continue
         return_labels.add_label(label)
@@ -1185,6 +1199,9 @@ def _perform_host_label_discovery(
     return HostLabelDiscoveryResult(
         labels=return_labels,
         per_plugin=return_labels_per_plugin,
+        new_labels=new_labels,
+        vanished_labels=vanished_labels,
+        replaced_labels=replaced_labels,
     )
 
 
@@ -1717,6 +1734,9 @@ def _get_cluster_services(
         return {}, HostLabelDiscoveryResult(
             labels=DiscoveredHostLabels(),
             per_plugin=Counter(),
+            new_labels=DiscoveredHostLabels(),
+            vanished_labels=DiscoveredHostLabels(),
+            replaced_labels=DiscoveredHostLabels(),
         )
 
     cluster_items: ServicesTable = {}

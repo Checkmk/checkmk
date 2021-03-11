@@ -4,6 +4,7 @@ from checktestlib import (
     DiscoveryResult,
     assertDiscoveryResultsEqual,
     assertCheckResultsEqual,
+    MockHostExtraConf,
 )
 from testlib import Check  # type: ignore[import]
 
@@ -55,6 +56,36 @@ pytestmark = pytest.mark.checks
                 'destination-system': 'a2-b0-02',
                 'status': 'idle',
             },
+            'd3:my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 'c1',
+                'destination-location': 'd3:my_snap',
+                'policy': 'ABCDefault',
+                'lag-time': '91486',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+            'd1:my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 'i1',
+                'destination-location': 'd1:my_snap',
+                'policy': 'Default',
+                'lag-time': '82486',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+            'd2:my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 't1',
+                'destination-location': 'd2:my_snap',
+                'policy': 'Default',
+                'lag-time': '73487',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            }
         },
     ),
 ])
@@ -68,7 +99,7 @@ def test_parse_netapp_api_snapvault(info, expected_parsed):
         assert sorted(actual_parsed.items()) == sorted(expected_parsed.items())
 
 
-@pytest.mark.parametrize('info, expected_discovery', [
+@pytest.mark.parametrize('info, discovery_params, expected_discovery', [
     (
         [
             [
@@ -102,18 +133,104 @@ def test_parse_netapp_api_snapvault(info, expected_parsed):
                 u'status idle',
             ],
         ],
+        {
+            'exclude_destination_vserver': True,
+        },
         [
             ('my_snap', {}),
         ],
     ),
+    (
+        [
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system c1',
+                u'destination-location d3:my_snap',
+                u'policy ABCDefault',
+                u'lag-time 91486',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system i1',
+                u'destination-location d1:my_snap',
+                u'policy Default',
+                u'lag-time 82486',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system t1',
+                u'destination-location d2:my_snap',
+                u'policy Default',
+                u'lag-time 73487',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+        ],
+        {},
+        [
+            ('d1:my_snap', {}),
+            ('d2:my_snap', {}),
+            ('d3:my_snap', {}),
+        ],
+    ),
+    (
+        [
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system c1',
+                u'destination-location d3:my_snap',
+                u'policy ABCDefault',
+                u'lag-time 91486',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system i1',
+                u'destination-location d1:my_snap',
+                u'policy Default',
+                u'lag-time 82486',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+            [
+                u'snapvault my_snap',
+                u'state snapmirrored',
+                u'source-system t1',
+                u'destination-location d2:my_snap',
+                u'policy Default',
+                u'lag-time 73487',
+                u'destination-system a2-b0-02',
+                u'status idle',
+            ],
+        ],
+        {
+            'exclude_destination_vserver': False,
+        },
+        [
+            ('d1:my_snap', {}),
+            ('d2:my_snap', {}),
+            ('d3:my_snap', {}),
+        ],
+    ),
 ])
-def test_discover_netapp_api_snapvault(info, expected_discovery):
+def test_discover_netapp_api_snapvault(info, discovery_params, expected_discovery):
     check = Check('netapp_api_snapvault')
-    assertDiscoveryResultsEqual(
-        check,
-        DiscoveryResult(check.run_discovery(check.run_parse(info))),
-        DiscoveryResult(expected_discovery),
-    )
+    with MockHostExtraConf(check, discovery_params, 'host_extra_conf_merged'):
+        assertDiscoveryResultsEqual(
+            check,
+            DiscoveryResult(check.run_discovery(check.run_parse(info))),
+            DiscoveryResult(expected_discovery),
+        )
 
 
 @pytest.mark.parametrize('item, params, parsed, expected_result', [

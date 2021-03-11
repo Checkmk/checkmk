@@ -15,6 +15,9 @@
 #include "test_tools.h"
 #include "zip.h"
 
+using namespace std::literals;
+namespace fs = std::filesystem;
+
 namespace cma::tools {
 template <typename T, typename = void>
 struct is_iterable : std::false_type {};
@@ -306,22 +309,67 @@ TEST(ModuleCommander, ReadConfig) {
 class ModuleCommanderTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
+        fs::create_directories(temp_fs_.root() / dirs::kInstall);
+        fs::create_directories(temp_fs_.data() / dirs::kUserInstallDir);
     }
 
-    void TearDown() override { tst::SafeCleanTempDir(); }
+    void TearDown() override {}
+
+    tst::TempCfgFs temp_fs_;
+
+    std::pair<fs::path, fs::path> CreateModulesAndBackup() {
+        fs::path user = temp_fs_.data();
+        auto modules_dir = user / dirs::kUserModules;
+        auto backup_dir =
+            user / dirs::kUserInstallDir / dirs::kInstalledModules;
+        fs::create_directories(modules_dir);
+        fs::create_directories(backup_dir);
+        return {modules_dir, backup_dir};
+    }
+
+    ::testing::AssertionResult IsPresented(const fs::path& file,
+                                           const fs::path& dir) {
+        if (!fs::exists(file)) {
+            return ::testing::AssertionFailure()
+                   << file.u8string() << " is absent";
+        }
+
+        if (!fs::exists(dir)) {
+            return ::testing::AssertionFailure()
+                   << dir.u8string() << " is absent";
+        }
+
+        if (!fs::is_regular_file(file)) {
+            return ::testing::AssertionFailure()
+                   << file.u8string() << " is not a file";
+        }
+
+        if (!fs::is_directory(dir)) {
+            return ::testing::AssertionFailure()
+                   << dir.u8string() << " is not a dir";
+        }
+
+        return ::testing::AssertionSuccess();
+    }
+
+    ::testing::AssertionResult IsAbsent(const fs::path& file,
+                                        const fs::path& dir) {
+        if (fs::exists(file)) {
+            return ::testing::AssertionFailure()
+                   << file.u8string() << " should be absent";
+        }
+
+        if (fs::exists(dir)) {
+            return ::testing::AssertionFailure()
+                   << dir.u8string() << " should be absent";
+        }
+
+        return ::testing::AssertionSuccess();
+    }
 };
 
 TEST_F(ModuleCommanderTest, PrepareToWork) {
-    namespace fs = std::filesystem;
-    using namespace cma::cfg;
-
-    fs::path user = tst::CreateDirInTemp(L"user");
-    auto modules_dir = user / dirs::kUserModules;
-    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
-    fs::create_directories(modules_dir);
-    fs::create_directories(backup_dir);
+    auto [modules_dir, backup_dir] = CreateModulesAndBackup();
 
     Module m;
     std::string test_1 =
@@ -349,18 +397,7 @@ TEST_F(ModuleCommanderTest, PrepareToWork) {
 }
 
 TEST_F(ModuleCommanderTest, PrepareToWork2) {
-    namespace fs = std::filesystem;
-    using namespace cma::cfg;
-
-    fs::path user = tst::CreateDirInTemp(L"user");
-    fs::path root = tst::CreateDirInTemp(L"root");
-    GetCfg().pushFolders(root, user);
-    ON_OUT_OF_SCOPE(GetCfg().popFolders());
-
-    auto modules_dir = user / dirs::kUserModules;
-    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
-    fs::create_directories(modules_dir);
-    fs::create_directories(backup_dir);
+    auto [modules_dir, backup_dir] = CreateModulesAndBackup();
 
     std::string base =
         "modules:\n"
@@ -416,13 +453,11 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
 }
 
 TEST_F(ModuleCommanderTest, LowLevelFs) {
-    using namespace std::literals;
-    namespace fs = std::filesystem;
-    fs::path root = cma::cfg::GetTempDir();
-    fs::path user = tst::CreateDirInTemp(L"user");
+    fs::path user = temp_fs_.data();
 
+    auto backup_dir = user / dirs::kUserInstallDir / dirs::kInstalledModules;
+    ASSERT_FALSE(fs::exists(backup_dir));
     ModuleCommander::CreateBackupFolder(user);
-    auto backup_dir = user / dirs::kInstall / dirs::kInstalledModules;
     ASSERT_TRUE(fs::exists(backup_dir));
 
     auto mod_file = user / "to_backup";
@@ -451,10 +486,8 @@ TEST_F(ModuleCommanderTest, LowLevelFs) {
 }
 
 TEST_F(ModuleCommanderTest, FindModules) {
-    using namespace std::literals;
-    namespace fs = std::filesystem;
-    fs::path root = cma::cfg::GetTempDir();
-    fs::path install = tst::CreateDirInTemp(dirs::kInstall);
+    fs::path root = temp_fs_.root();
+    fs::path install = root / dirs::kInstall;
 
     std::string base =
         "modules:\n"
@@ -501,47 +534,33 @@ TEST_F(ModuleCommanderTest, FindModules) {
 }
 
 TEST_F(ModuleCommanderTest, InstallModules) {
-    using namespace std::literals;
-    namespace fs = std::filesystem;
-    fs::path user_dir = cma::cfg::GetUserDir();
-
-    auto zip_file = user_dir / tst::zip_to_test;
+    auto zip_file =
+        tst::MakePathToUnitTestFiles(tst::G_SolutionPath) / tst::zip_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
-        << "Please make '" << tst::zip_to_test << "' available in the '"
-        << user_dir.u8string() << "'";
+        << "Please make '" << tst::zip_to_test << "' available";
 
-    auto [root, user] = tst::CreateInOut();
-    fs::path install = root / dirs::kInstall;
-    fs::create_directories(install);
-
-    std::error_code ec;
-    fs::create_directories(install, ec);
-    fs::create_directories(user / dirs::kInstall, ec);
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
-    GetCfg().pushFolders(root, user);
-    ON_OUT_OF_SCOPE(GetCfg().popFolders(););
+    auto user = temp_fs_.data();
+    auto root = temp_fs_.root();
+    auto install = root / dirs::kInstall;
 
     std::string modules_text =
-        "enabled: yes\n"
-        "table:\n"
-        "  - name: unzip_test\n"    // valid
-        "    exts: ['.test']\n"     //
-        "    exec: 'nothing {}'\n"  //
+        "modules:\n"
+        "  enabled: yes\n"
+        "  table:\n"
+        "    - name: unzip_test\n"    // valid
+        "      exts: ['.test']\n"     //
+        "      exec: 'nothing {}'\n"  //
         ;
 
-    auto main_yaml = GetLoadedConfig();
-    main_yaml[groups::kModules] = YAML::Load(modules_text);
-
     ModuleCommander mc;
-    mc.readConfig(main_yaml);
+    auto cfg = YAML::Load(modules_text);
+    mc.readConfig(cfg);
     fs::copy_file(zip_file, install / tst::zip_to_test);
     ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
 
     // check installation
     auto bad_module = mc.modules_[0];
     bad_module.name_ = "zzzz";
-    bad_module.dir_ = "moduleS\\zzzz";
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
     tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip", "");
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal))
@@ -561,16 +580,14 @@ TEST_F(ModuleCommanderTest, InstallModules) {
         auto target_folder = user / dirs::kUserModules / "zzzz";
         auto backup_file =
             user / dirs::kUserInstallDir / dirs::kInstalledModules / "zzzz.zip";
-        ASSERT_FALSE(fs::exists(target_folder));
-        ASSERT_FALSE(fs::exists(backup_file));
+        ASSERT_TRUE(IsAbsent(backup_file, target_folder));
     }
 
     // check install
     auto target_folder = user / dirs::kUserModules / "unzip_test";
     auto backup_file = user / dirs::kUserInstallDir / dirs::kInstalledModules /
                        tst::zip_to_test;
-    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
-    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+    ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
     auto target_postinstall_folder =
         user / dirs::kUserModules / "unzip_test" / "DLLS";
@@ -578,66 +595,80 @@ TEST_F(ModuleCommanderTest, InstallModules) {
                 fs::is_directory(target_postinstall_folder));
 
     auto move_dir = ModuleCommander::GetMoveLocation(backup_file);
+    std::error_code ec;
     fs::remove_all(move_dir, ec);
 
     // check duplicated install
     ASSERT_FALSE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
-    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
-    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
-
-    EXPECT_FALSE(fs::exists(move_dir / backup_file.filename()))
-        << move_dir / backup_file.filename() << " shoud be absent";
-    EXPECT_FALSE(fs::is_directory(move_dir / mc.modules_[0].name()))
-        << move_dir / mc.modules_[0].name() << " should be absent";
+    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+    // Check that files removed from the uninstall store
+    ASSERT_TRUE(IsAbsent(move_dir / backup_file.filename(),
+                         move_dir / mc.modules_[0].name()));
 
     // check forced install
     ASSERT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::force));
-    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
-    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+    ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
-    // check that uninstall is correct
-    EXPECT_TRUE(fs::exists(move_dir / backup_file.filename()))
-        << move_dir / backup_file.filename() << " is absent";
-    EXPECT_TRUE(fs::is_directory(move_dir / mc.modules_[0].name()))
-        << move_dir / mc.modules_[0].name() << " is absent or invalid";
+    // check uninstall store
+    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                            move_dir / mc.modules_[0].name()));
 
-    // create some files/folders simulation old installation
+    // Poisoning: create some files/folders simulation old installation
     auto sim_dir = move_dir / mc.modules_[0].name() / "simulation";
-    auto sim_file = sim_dir / "simulatiom.dat";
+    auto sim_file = sim_dir / "simulation.dat";
     fs::create_directories(sim_dir);
     tst::CreateBinaryFile(sim_file, "a");
     EXPECT_TRUE(fs::exists(sim_file));
 
     // check uninstall
-    auto mod_backup = mc.GetModBackup(user);
-    auto mod_install = mc.GetModInstall(user);
+    auto mod_backup = ModuleCommander::GetModBackup(user);
+    auto mod_install = ModuleCommander::GetModInstall(user);
 
-    auto installed = mc.ScanDir(mod_backup);
+    auto installed = ModuleCommander::ScanDir(mod_backup);
 
     ASSERT_EQ(installed.size(), 1);
     ASSERT_TRUE(mc.isBelongsToModules(installed[0]));
     ASSERT_TRUE(mc.UninstallModuleZip(installed[0], mod_install));
-    installed = mc.ScanDir(mod_backup);
+    installed = ModuleCommander::ScanDir(mod_backup);
 
     ASSERT_TRUE(installed.empty());
     ASSERT_TRUE(!fs::exists(backup_file));
 
     // check that files/folders from simulated old installation removed
-    EXPECT_FALSE(fs::exists(sim_file));
-    EXPECT_FALSE(fs::exists(sim_dir));
+    ASSERT_TRUE(IsAbsent(sim_file, sim_dir));
 
     // Simulate full install
     mc.installModules(root, user, InstallMode::normal);
-    ASSERT_TRUE(fs::exists(target_folder) && fs::is_directory(target_folder));
-    ASSERT_TRUE(fs::exists(backup_file) && fs::is_regular_file(backup_file));
+    ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
     // Simulate install of the empty file(as packaged)
     tst::CreateTextFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
     mc.installModules(root, user, InstallMode::normal);
-    ASSERT_TRUE(!fs::exists(target_folder));
-    ASSERT_TRUE(!fs::exists(backup_file));
+    ASSERT_TRUE(IsAbsent(backup_file, target_folder));
+
+    // check uninstall store
+    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                            move_dir / mc.modules_[0].name()));
+
+    // Simulate full install to check quick install
+    fs::copy_file(zip_file, install / tst::zip_to_test,
+                  fs::copy_options::overwrite_existing);
+    mc.installModules(root, user, InstallMode::normal);
+    ASSERT_TRUE(IsPresented(backup_file, target_folder));
+
+    // Check that files removed from the quick uninstall
+    ASSERT_TRUE(IsAbsent(move_dir / backup_file.filename(),
+                         move_dir / mc.modules_[0].name()));
+
+    // Move modules to store, this is part of deinstall process
+    mc.moveModulesToStore(root, user);
+    ASSERT_TRUE(IsAbsent(backup_file, target_folder));
+
+    // Check that files removed from the quick uninstall
+    ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
+                            move_dir / mc.modules_[0].name()));
 }
 
 }  // namespace cma::cfg::modules

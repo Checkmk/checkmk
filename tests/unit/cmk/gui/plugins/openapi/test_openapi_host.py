@@ -53,3 +53,36 @@ def test_openapi_livestatus_hosts_generic_filter(
             status=200,
         )
         assert len(resp.json['value']) == 1
+
+
+def test_openapi_livestatus_hosts_empty_query(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
+
+    live = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/1.0'
+    live.add_table('hosts', [
+        {
+            'name': 'heute',
+            'address': '127.0.0.1',
+            'alias': 'heute',
+            'downtimes_with_info': [],
+            'scheduled_downtime_depth': 0,
+        },
+    ])
+    live.expect_query([
+        'GET hosts',
+        'Columns: name alias',
+    ],)
+    with live:
+        resp = wsgi_app.call_method(
+            'get',
+            base + '/domain-types/host/collections/all?query={}&columns=name&columns=alias',
+            status=200,
+        )
+        assert resp.json['value'][0]['id'] == 'heute'

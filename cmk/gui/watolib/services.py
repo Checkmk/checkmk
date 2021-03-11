@@ -490,6 +490,17 @@ def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> D
     return DiscoveryResult(**d)
 
 
+def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
+    remote_result = ast.literal_eval(raw_result)
+
+    if isinstance(remote_result, tuple):
+        # Previous to 2.0.0p1 the remote call returned a tuple
+        return DiscoveryResult(*remote_result)
+
+    assert isinstance(remote_result, dict)
+    return DiscoveryResult(**remote_result)
+
+
 def _get_check_table_from_remote(request):
     """Gathers the check table from a remote site
 
@@ -499,12 +510,12 @@ def _get_check_table_from_remote(request):
     try:
         sync_changes_before_remote_automation(request.host.site_id())
 
-        return DiscoveryResult(*ast.literal_eval(
+        return _deserialize_remote_result(
             watolib.do_remote_automation(config.site(request.host.site_id()),
                                          "service-discovery-job", [
                                              ("host_name", request.host.name()),
                                              ("options", json.dumps(request.options._asdict())),
-                                         ])))
+                                         ]))
     except watolib.MKAutomationException as e:
         if "Invalid automation command: service-discovery-job" not in "%s" % e:
             raise

@@ -186,7 +186,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                                      options=DiscoveryOptions(**options))
 
     def execute(self, request: StartDiscoveryRequest) -> str:
-        return repr(tuple(execute_discovery_job(request)))
+        return repr(execute_discovery_job(request)._asdict())
 
 
 @page_registry.register_page("ajax_service_discovery")

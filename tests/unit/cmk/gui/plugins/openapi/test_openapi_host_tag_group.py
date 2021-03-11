@@ -160,7 +160,7 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user, suppres
     )
     built_in_tags = [tag_group.title for tag_group in BuiltinTagConfig().tag_groups]
     assert all(
-        [title in (entry["title"] for entry in resp.json_body["value"]) for title in built_in_tags]
+        title in (entry["title"] for entry in resp.json_body["value"]) for title in built_in_tags
     )
 
     resp = wsgi_app.call_method(
@@ -193,4 +193,50 @@ def test_openapi_host_tag_group_built_in(wsgi_app, with_automation_user, suppres
         params=json.dumps({}),
         status=405,
         content_type="application/json",
+    )
+
+
+def test_openapi_host_tag_group_update_use_case(
+    wsgi_app, with_automation_user, suppress_automation_calls
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = wsgi_app.call_method(
+        "post",
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "group_id999",
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        status=200,
+        content_type="application/json",
+    )
+
+    _resp = wsgi_app.call_method(
+        "put",
+        base + "/objects/host_tag_group/group_id999",
+        params=json.dumps(
+            {
+                "title": "Kubernetes",
+                "topic": "Data Sources",
+                "help": "Kubernetes Pods",
+                "tags": [{"ident": "pod", "title": "Pod"}],
+            }
+        ),
+        headers={"If-Match": resp.headers["ETag"]},
+        status=200,
+        content_type="application/json",
+    )
+
+    _ = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_tag_group/group_id999",
+        status=200,
     )

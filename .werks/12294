@@ -1,0 +1,15 @@
+Title: Changing predefined conditions now triggers core reload
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615490538
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+Changing the conditions of a predefined condition did not trigger a core reload
+during the following activate changes. This made the change appear not not
+affect existing rules. In fact it was just delayed until the next core config
+creation + reload. This has now been changed to directly triggering a core
+config creation + reload.

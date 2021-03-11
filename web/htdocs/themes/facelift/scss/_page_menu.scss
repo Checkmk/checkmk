@@ -146,6 +146,10 @@ div#top_heading {
     background-color: $color-background;
     border-spacing: 0;
 
+    tr {
+      display: flex;
+    }
+
     td {
       padding: 0;
       margin: 0;
@@ -153,7 +157,7 @@ div#top_heading {
 
       &.shortcuts {
         width: 100%;
-        padding: 0 3px;
+        padding: 3px 3px 0;
         background-color: $page-menu-bg-color;
 
         a.disabled {

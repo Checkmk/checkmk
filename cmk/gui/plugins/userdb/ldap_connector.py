@@ -1285,6 +1285,9 @@ class LDAPUserConnector(UserConnector):
     def _find_changed_user_keys(self, keys, user, new_user):
         changed = {}
         for key in keys:
+            # Skip user notification rules, not relevant here
+            if key == "notification_rules":
+                continue
             value = user[key]
             new_value = new_user[key]
             if isinstance(value, list) and isinstance(new_value, list):

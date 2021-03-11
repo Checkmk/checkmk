@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Union
+from typing import Optional
 from .agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
 
-Section = Dict[str, Union[float, List[float]]]
+from .utils.cpu import Section
 
 
 def parse_cpu(string_table: StringTable) -> Optional[Section]:

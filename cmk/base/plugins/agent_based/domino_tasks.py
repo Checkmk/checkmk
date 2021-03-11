@@ -11,7 +11,7 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
 )
 
-from .utils import ps, domino
+from .utils import domino, memory, ps
 from .agent_based_api.v1 import register, SNMPTree
 
 # Example SNMP walk:
@@ -55,7 +55,7 @@ register.snmp_section(
 def discover_domino_tasks(
     params: Sequence[Mapping[str, Any]],
     section_domino_tasks: Optional[ps.Section],
-    section_mem: Optional[Dict[str, float]],
+    section_mem: Optional[memory.SectionMem],
 ) -> DiscoveryResult:
     yield from ps.discover_ps(params, section_domino_tasks, section_mem, None)
 
@@ -64,7 +64,7 @@ def check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
     section_domino_tasks: Optional[ps.Section],
-    section_mem: Optional[Dict[str, float]],
+    section_mem: Optional[memory.SectionMem],
 ) -> CheckResult:
     if section_domino_tasks is None:
         return
@@ -85,7 +85,7 @@ def cluster_check_domino_tasks(
     item: str,
     params: Mapping[str, Any],
     section_domino_tasks: Dict[str, ps.Section],
-    section_mem: Dict[str, Dict[str, int]],
+    section_mem: Dict[str, memory.SectionMem],
 ) -> CheckResult:
 
     process_lines: ProcessLines = [(node_name, psi, cmd_line)

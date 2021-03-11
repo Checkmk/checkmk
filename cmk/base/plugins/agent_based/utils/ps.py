@@ -41,6 +41,8 @@ from ..agent_based_api.v1 import (
     State as state,
 )
 
+from . import cpu, memory
+
 ps_info = collections.namedtuple(
     "ps_info",
     (
@@ -438,15 +440,11 @@ def process_capture(
     return ps_aggregator
 
 
-SectionMem = Dict[str, float]
-SectionCpu = Dict[str, Union[float, List[float]]]
-
-
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
     section_ps: Optional[Section],
-    section_mem: Optional[SectionMem],
-    section_cpu: Optional[SectionCpu],
+    section_mem: Optional[memory.SectionMem],
+    section_cpu: Optional[cpu.Section],
 ) -> DiscoveryResult:
     if not section_ps:
         return

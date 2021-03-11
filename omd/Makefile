@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include Makefile.omd
+include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
 # You can build singele packages by calling macke <PACKAGENAME>

@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 # Sample debian/rules that uses debhelper.
-# This file is public domain software, originally written by Joey Hess. 
+# This file is public domain software, originally written by Joey Hess.
 #
 # This version is for packages that are architecture dependent.
 
@@ -9,7 +9,7 @@
 
 _PWD=`pwd`
 
-include Makefile.omd
+include omd.make
 -include .config
 
 .PHONY: clean binary-indep binary-arch binary install

@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple
 from .agent_based_api.v1.type_defs import CheckResult
 
 from .agent_based_api.v1 import register
+from .utils import cpu
+from .utils import memory
 from .utils import ps
 
 
@@ -15,15 +17,15 @@ def check_ps(
     item: str,
     params: Mapping[str, Any],
     section_ps: Optional[ps.Section],
-    section_mem: Optional[ps.SectionMem],
-    section_cpu: Optional[ps.SectionCpu],
+    section_mem: Optional[memory.SectionMem],
+    section_cpu: Optional[cpu.Section],
 ) -> CheckResult:
     if not section_ps:
         return
 
     cpu_cores, lines = section_ps
     if section_cpu:
-        cpu_cores = section_cpu.get('num_cpus') or cpu_cores  # type: ignore[assignment]
+        cpu_cores = section_cpu.num_cpus or cpu_cores
 
     total_ram = section_mem.get("MemTotal") if section_mem else None
 
@@ -42,8 +44,8 @@ def cluster_check_ps(
         item: str,
         params: Mapping[str, Any],
         section_ps: Dict[str, ps.Section],
-        section_mem: Dict[str, ps.SectionMem],  # unused
-        section_cpu: Dict[str, ps.SectionCpu],  # unused
+        section_mem: Dict[str, memory.SectionMem],  # unused
+        section_cpu: Dict[str, cpu.Section],  # unused
 ) -> CheckResult:
     # introduce node name
     process_lines: List[Tuple[Optional[str], ps.ps_info, List[str]]] = [

@@ -15,7 +15,6 @@ import six
 
 import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
-from cmk.utils.labels import DiscoveredHostLabelsStore
 
 from cmk.gui.htmllib import HTML
 import cmk.gui.escaping as escaping
@@ -411,6 +410,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         config.user.need_permission("wato.services")
 
         if self._options.action in [
+                DiscoveryAction.UPDATE_HOST_LABELS,
+                DiscoveryAction.FIX_ALL,
+        ]:
+            self._do_update_host_labels(discovery_result)
+
+        if self._options.action in [
                 DiscoveryAction.SINGLE_UPDATE,
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
@@ -418,14 +423,16 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ]:
             discovery = Discovery(self._host, self._options, request)
             discovery.do_discovery(discovery_result)
-            # did discovery! update the check table
-            discovery_result = self._get_check_table()
 
         if self._options.action in [
-                DiscoveryAction.UPDATE_HOST_LABELS,
+                DiscoveryAction.SINGLE_UPDATE,
+                DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
+                DiscoveryAction.UPDATE_HOST_LABELS,
         ]:
-            self._do_update_host_labels(discovery_result)
+            # did discovery! update the check table
+            discovery_result = self._get_check_table()
 
         if not self._host.locked():
             self._host.clear_discovery_failed()
@@ -574,26 +581,15 @@ class DiscoveryPageRenderer:
 
         undecided_services = 0
         vanished_services = 0
-        new_host_labels = 0
-        vanished_host_labels = 0
-        changed_host_labels = 0
+        new_host_labels = len(discovery_result.new_labels)
+        vanished_host_labels = len(discovery_result.vanished_labels)
+        changed_host_labels = len(discovery_result.replaced_labels)
 
         for service in discovery_result.check_table:
             if service[0] == DiscoveryState.UNDECIDED:
                 undecided_services += 1
             if service[0] == DiscoveryState.VANISHED:
                 vanished_services += 1
-
-        active_host_labels = DiscoveredHostLabelsStore(self._host.name()).load()
-
-        for label in active_host_labels:
-            if label not in discovery_result.host_labels:
-                vanished_host_labels += 1
-        for label in discovery_result.host_labels:
-            if label not in active_host_labels:
-                new_host_labels += 1
-            elif discovery_result.host_labels[label] != active_host_labels[label]:
-                changed_host_labels += 1
 
         if all(v == 0 for v in [
                 undecided_services,

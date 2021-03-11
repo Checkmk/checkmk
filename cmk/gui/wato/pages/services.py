@@ -240,6 +240,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 check_table_created=previous_discovery_result.check_table_created,
                 check_table=previous_discovery_result.check_table,
                 host_labels=previous_discovery_result.host_labels,
+                new_labels=previous_discovery_result.new_labels,
+                vanished_labels=previous_discovery_result.vanished_labels,
+                replaced_labels=previous_discovery_result.replaced_labels,
             )
 
         self._update_persisted_discovery_options()

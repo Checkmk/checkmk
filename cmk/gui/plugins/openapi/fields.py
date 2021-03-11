@@ -16,7 +16,8 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 from cmk.gui import watolib, valuespec as valuespec, sites, config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import load_group_information
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
+    NothingExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
@@ -657,6 +658,9 @@ class ExprSchema(OneOfSchema):
 
         if not self.context or 'table' not in self.context:
             raise RuntimeError(f"No table in context for field {self}")
+
+        if not data:
+            return NothingExpression()
 
         try:
             tree_to_expr(data, self.context['table'])

@@ -14,7 +14,7 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Any, Counter, Dict, List, Match, Optional, Set, Tuple
+from typing import Any, Counter, Dict, List, Mapping, Match, Optional, Sequence, Set, Tuple
 
 import fnmatch
 import getpass
@@ -27,7 +27,7 @@ import time
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import get_checkgroup_parameters, host_extra_conf, host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import host_extra_conf, host_name  # pylint: disable=cmk-module-layer-violation
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
 
@@ -43,6 +43,8 @@ from .agent_based_api.v1 import (
 )
 from .utils import logwatch, eval_regex
 
+AllParams = Sequence[Mapping[str, Any]]
+
 ClusterSection = Dict[Optional[str], logwatch.Section]
 
 GroupingPattern = Tuple[str, str]
@@ -51,12 +53,8 @@ LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 LOGWATCH_SERVICE_OUTPUT = "default"
 
 
-def _get_discovery_groups():
-    """Isolate the remaining API violation w.r.t. parameters"""
-    return host_extra_conf(
-        host_name(),
-        get_checkgroup_parameters('logwatch_groups', []),
-    )
+def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, GroupingPattern]]]:
+    return [p["grouping_patterns"] for p in params if "grouping_patterns" in p]
 
 
 def _compile_params() -> Dict[str, Any]:
@@ -102,13 +100,16 @@ def _is_cache_new(last_run: float, node: Optional[str]) -> bool:
 #
 
 
-def discover_logwatch_single(section: logwatch.Section,) -> DiscoveryResult:
+def discover_logwatch_single(
+    params: AllParams,
+    section: logwatch.Section,
+) -> DiscoveryResult:
     not_forwarded_logs = logwatch.select_forwarded(
         logwatch.discoverable_items(section),
         logwatch.get_ec_rule_params(),
         invert=True,
     )
-    inventory_groups = _get_discovery_groups()
+    inventory_groups = _get_discovery_groups(params)
 
     for logfile in not_forwarded_logs:
         if not any(
@@ -116,13 +117,16 @@ def discover_logwatch_single(section: logwatch.Section,) -> DiscoveryResult:
             yield Service(item=logfile)
 
 
-def discover_logwatch_groups(section: logwatch.Section,) -> DiscoveryResult:
+def discover_logwatch_groups(
+    params: AllParams,
+    section: logwatch.Section,
+) -> DiscoveryResult:
     not_forwarded_logs = logwatch.select_forwarded(
         logwatch.discoverable_items(section),
         logwatch.get_ec_rule_params(),
         invert=True,
     )
-    inventory_groups = _get_discovery_groups()
+    inventory_groups = _get_discovery_groups(params)
     inventory: Dict[str, Set[GroupingPattern]] = {}
 
     for logfile in not_forwarded_logs:
@@ -173,6 +177,9 @@ register.check_plugin(
     name='logwatch',
     service_name="Log %s",
     discovery_function=discover_logwatch_single,
+    discovery_ruleset_name="logwatch_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={},
     check_function=check_logwatch_node,
     cluster_check_function=check_logwatch,
 )
@@ -293,6 +300,9 @@ register.check_plugin(
     name='logwatch_groups',
     service_name="Log %s",
     discovery_function=discover_logwatch_groups,
+    discovery_ruleset_name="logwatch_groups",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
     cluster_check_function=check_logwatch_groups,
 )

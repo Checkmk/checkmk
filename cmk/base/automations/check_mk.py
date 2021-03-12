@@ -14,7 +14,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Sequence
 from contextlib import redirect_stdout, redirect_stderr
 
 from six import ensure_binary
@@ -72,8 +72,8 @@ from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import (DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel,
-                                        HostLabel)
+from cmk.base.discovered_labels import (DiscoveredHostLabels, DiscoveredHostLabelsDict,
+                                        DiscoveredServiceLabels, ServiceLabel, HostLabel)
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -169,18 +169,21 @@ class AutomationTryDiscovery(Automation):
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
             check_preview_table, host_label_result = self._execute_discovery(args)
+
+            def make_discovered_host_labels(
+                    labels: Sequence[HostLabel]) -> DiscoveredHostLabelsDict:
+                # this dict deduplicates label names!
+                return DiscoveredHostLabels(*{l.name: l for l in labels}.values()).to_dict()
+
+            new_labels = make_discovered_host_labels(host_label_result.new)
             return {
                 "output": buf.getvalue(),
                 "check_table": check_preview_table,
-                "host_labels": DiscoveredHostLabels(
-                    # this dict deduplicates label names!
-                    *{l.name: l for l in host_label_result.present}.values()),
-                "new_labels":
-                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.new}.values()),
-                "vanished_labels":
-                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.vanished}.values()),
-                "replaced_labels":
-                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.present}.values()),
+                "host_labels": make_discovered_host_labels(host_label_result.present),
+                "new_labels": new_labels,
+                "vanished_labels": make_discovered_host_labels(host_label_result.vanished),
+                "changed_labels": make_discovered_host_labels(
+                    [l for l in host_label_result.vanished if l.name in new_labels.keys()]),
             }
 
     def _execute_discovery(

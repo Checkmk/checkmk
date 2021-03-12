@@ -130,9 +130,8 @@ def set_acknowledgement_on_hosts(params):
           'cmk/create_service',
           method='post',
           tag_group='Monitoring',
-          additional_status_codes=[404, 422],
+          additional_status_codes=[422],
           status_descriptions={
-              404: 'Unknown service.',
               422: 'Service was not in a problem state.',
           },
           request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
@@ -156,7 +155,7 @@ def set_acknowledgement_on_services(params):
                             Services.description == description)).first(live)
         if not service:
             raise ProblemException(
-                status=404,
+                status=400,
                 title=f'Service {description!r}@{host_name!r} could not be found.',
             )
         if not service.state:
@@ -188,7 +187,7 @@ def set_acknowledgement_on_services(params):
             )
         except ValueError:
             raise ProblemException(
-                status=404,
+                status=400,
                 title="Servicegroup could not be found.",
                 detail=f"Unknown servicegroup: {service_group}",
             )

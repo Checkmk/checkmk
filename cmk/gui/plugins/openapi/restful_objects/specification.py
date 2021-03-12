@@ -90,6 +90,15 @@ Some example queries:
 
         {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
+# Host and Folder attributes
+
+Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
+host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+community in a folder is equivalent to setting the same on all hosts in said folder.
+
+Some host endpoints allow one to view the "effective attributes", which is a combination of all
+attributes up to the root.
+
 # Link relations
 
 Every response comes with a collection of `links` to inform the API client on possible

@@ -23,7 +23,7 @@ configured restriction via IP Access Lists.
 
 However, there's one caveat to this approach: The IP Access Lists feature is only
 available for systemd installations from version 235. Because of this, the Checkmk agent
-package will abort the activation of the systemd service, if a systemd version &lt 235 is
+package will abort the activation of the systemd service, if a systemd version &lt; 235 is
 detected on the host. In that case, the Checkmk agent will be completely inaccessible via
 systemd. Please note that this is only relevant if no xinetd is available, because
 xinetd will be used as a service dispatcher before considering systemd.

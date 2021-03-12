@@ -1,0 +1,14 @@
+Title: Fix error handling of missing dashlet types
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615554314
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+If a dashboard contained a dashlet type that is not known, a KeyError occurred.
+Now a static dashlet is rendered instead, showing a message to remove the
+unknown dashlet type from the dashboard configuration.

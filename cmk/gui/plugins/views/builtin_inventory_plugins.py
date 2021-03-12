@@ -402,6 +402,7 @@ inventory_displayhints.update({
     ".software.os.": {"title": _("Operating System")},
     ".software.os.name": {"title": _("Name"), "short": _("Operating System"), "is_show_more": False},
     ".software.os.version": {"title": _("Version")},
+    ".software.os.build": {"title": _("Build")},
     ".software.os.vendor": {"title": _("Vendor")},
     ".software.os.type": {"title": _("Type"), "is_show_more": False},  # e.g. "linux"
     ".software.os.install_date": {"title": _("Install Date"), "paint": "date"},

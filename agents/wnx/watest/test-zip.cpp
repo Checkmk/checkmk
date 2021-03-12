@@ -30,13 +30,6 @@ protected:
     fs::path cab_file_;
 };
 
-TEST(Zip, ListIntegration) {
-    auto ret = List(tst::G_TestPath / tst::cab_to_test);
-    ASSERT_TRUE(ret.empty());
-    ret = List(tst::G_TestPath / tst::zip_to_test);
-    ASSERT_EQ(ret.size(), 5);
-}
-
 TEST_F(ZipFixture, UnZipIntegration) {
     auto target = target_ / "unzip";
     auto work_file = zip_file_;
@@ -50,13 +43,6 @@ TEST_F(ZipFixture, UnZipIntegration) {
     ASSERT_FALSE(Extract(target, work_file));
     ASSERT_FALSE(Extract(target_, work_file));
     ASSERT_FALSE(Extract(target, target));
-
-    //
-    auto expected_entries = List(work_file);
-    ASSERT_TRUE(Extract(work_file, target));
-    for (auto& entry : expected_entries) {
-        EXPECT_TRUE(fs::exists(target / entry));
-    }
 }
 
 TEST_F(ZipFixture, UnCabIntegration) {

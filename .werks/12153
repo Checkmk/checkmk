@@ -1,0 +1,36 @@
+Title: Prevent Linux agent systemd service from being accidentally accessible via network
+Knowledge: doc
+Level: 1
+Component: agents
+Class: security
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p23
+Date: 1615562834
+
+When baking agents with activated ruleset "Allowed agent access via IP address", the
+configured restriction previously would only apply to the Windows agent service and the Linux
+xinetd service.
+
+As the used service dispatcher (xinetd or systemd) is automatically chosen on Linux
+systems on agent package installation (with xinetd being preferred), the agent might
+accidentally result in being accessible via systemd service without restiction, although
+it is expected that an IP restriction is active.
+
+To mitigate this situation, the Linux agent systemd service now also applies the
+configured restriction via IP Access Lists.
+
+However, there's one caveat to this approach: The IP Access Lists feature is only
+available for systemd installations from version 235. Because of this, the Checkmk agent
+package will abort the activation of the systemd service, if a systemd version < 235 is
+detected on the host. In that case, the Checkmk agent will be completely inaccessible via
+systemd. Please note that this is only relevant if no xinetd is available, because
+xinetd will be used as a service dispatcher before considering systemd.
+
+Please note that for Solaris, there is no IP restriction available at all, because the
+Checkmk agent package will use inetd as a service dispatcher on Solaris hosts.
+While this is not a new situation, as this has never been supported on Solaris, however
+the help text of the "Allowed agent access via IP address" now contains a warning about
+this fact.
+

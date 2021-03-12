@@ -4707,13 +4707,21 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed.") \
-            + _("If you are using the Agent bakery, the configuration will be "
-                "used for restricting network access to the baked agents. Even "
-                "if you don't use the bakery, the configured IP address "
+               "access the agent. IPv6 addresses and networks are also allowed. ") \
+            + _("If you are using the Agent bakery and deploying for Windows or Linux, "
+                "the configuration will be used for restricting network access to the "
+                "baked agents. Even if you don't use the bakery, the configured IP address "
                 "restrictions of a host will be verified against the allowed "
                 "IP addresses reported by the agent. This is done during "
-                "monitoring by the Check_MK service."),
+                "monitoring by the Check_MK service.") + "<br><br>" \
+            + _("<b>Caution</b>: When deploying via agent bakery for Solaris, <b>no</b> "
+                "network restriction will be applied!<br>"
+                "Also, in order to have the network "
+                "restriction applied on Linux, xinetd or systemd with a version of at least 235 "
+                "must be installed on the target hosts. In order to prevent accidentally "
+                "accessible hosts, the Checkmk service will not be activated on Linux hosts "
+                "with a systemd installation < version 235 and no xinetd. I.e., the Checkmk "
+                "agent will be completely unaccessible via systemd in that case.") + "<br><br>",
     )
 
 

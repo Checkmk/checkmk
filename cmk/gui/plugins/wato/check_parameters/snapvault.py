@@ -109,7 +109,6 @@ def _discovery_valuespec_snapvault():
             ),
         ],
         title=_('Discovery parameters for NetApp snapvault'),
-        allow_empty=False,
     )
 
 

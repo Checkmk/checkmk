@@ -7,8 +7,8 @@
 
 The host status provides the host's "health" information.
 
-You can find an introduction to basic monitoring principles including host status in the
-[Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
+For a more detailed description please have a look at the
+[Querying Status Data](#section/Querying-Status-Data) section.
 """
 
 from cmk.gui import sites

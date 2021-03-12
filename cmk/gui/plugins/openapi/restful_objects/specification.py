@@ -54,6 +54,42 @@ This scheme is used for most `PUT` requests throughout the REST API and always w
 Detailed documentation of the various involved fields as well as the possible error messages can
 be found on the documentation of each affected endpoint.
 
+# Querying Status Data
+
+The endpoints in the category "Monitoring" support arbitrary Livestatus expressions (including And,
+Or combinators) and all columns of the host and service tables can be queried. Given this, very
+complex queries can be constructed.
+
+You can find an introduction to basic monitoring principles including host and service status in the
+[Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
+
+This endpoint supports all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
+which you can look up in the Checkmk documentation.
+
+A detailed description of the columns can be found on GitHub:
+
+ * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
+ * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
+
+Some example queries:
+
+    To query a list of all hosts which have a problem, you can query the "status" column on the
+    host table. A status of 0 means OK, 1 means WARN, 2 means CRIT and 3 means UNKNOWN.
+
+    The query expression for all non-OK hosts would be:
+
+        {'op': '!=', 'left': 'status', 'right': '0'}
+
+    To search for all hosts with their host name or alias starting with 'location1-':
+
+        {'op': '~', 'left': 'name', 'right': 'location1-.*'}
+
+        {'op': '~', 'left': 'alias', 'right': 'location1-.*'}
+
+    To search for hosts with specific tags set on them:
+
+        {'op': '~', 'left': 'tag_names', 'right': 'windows'}
+
 # Link relations
 
 Every response comes with a collection of `links` to inform the API client on possible

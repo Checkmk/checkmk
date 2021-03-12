@@ -6,11 +6,12 @@
 """Service status
 
 The service status provides the service's "health" information.
+
 A service (for example, a file system or a process) is a property of a certain host that
 is monitored by Checkmk.
 
-You can find an introduction to services in the
-[Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
+For a more detailed description please have a look at the
+[Querying Status Data](#section/Querying-Status-Data) section.
 """
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields

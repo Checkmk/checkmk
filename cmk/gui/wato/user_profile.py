@@ -25,8 +25,8 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
-from cmk.gui.exceptions import (HTTPRedirect, MKUserError, MKGeneralException, MKAuthException,
-                                FinalizeRequest)
+from cmk.gui.plugins.wato.utils.base_modes import redirect
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
 from cmk.gui.globals import html, request
 from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
@@ -414,6 +414,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         userdb.save_users(users)
 
+        flash(_("Successfully changed password."))
+
         # Set the new cookie to prevent logout for the current user
         login.update_auth_cookie(config.user.id)
 
@@ -422,10 +424,10 @@ class UserChangePasswordPage(ABCUserProfilePage):
         # page after completion. Otherwise directly open up the destination page.
         origtarget = html.request.get_str_input_mandatory('_origtarget', 'user_change_pw.py')
         if config.user.authorized_login_sites():
-            raise HTTPRedirect(
+            raise redirect(
                 makeuri_contextless(request, [("back", origtarget)],
                                     filename="user_profile_replicate.py"))
-        raise HTTPRedirect(origtarget)
+        raise redirect(origtarget)
 
     def _show_form(self) -> None:
         assert config.user.id is not None

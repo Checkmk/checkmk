@@ -1,0 +1,24 @@
+Title: mk_jolokia: Error running agent plugin when deploying via agent bakery
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1615543724
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+When deploying the agent plugin <tt>mk_jolokia</tt> via agent bakery, the
+execution of the plugin will fail, if the field "Name of the instance in the
+monitoring" is set within the "JMX monitoring of Java JVMs using Jolokia".
+
+As the corresponding agent section is missing when experiencing this error,
+the corresponding services will change it's state to <tt>UNKNOWN</tt>. When
+running the mk_jolokia plugin manually, this will result in a traceback, ending
+with the error<br>
+<tt>TypeError: a bytes-like object is required, not 'str'</tt>
+
+This is fixed with this Werk. The plugin and the corresponding services will be
+functional again when rebaking and deploying agents.
+

@@ -6297,6 +6297,7 @@ def test_registered_display_hints():
     '.software.kernel_config:*.value',
     '.software.os.',
     '.software.os.arch',
+    '.software.os.build',
     '.software.os.install_date',
     '.software.os.kernel_version',
     '.software.os.name',

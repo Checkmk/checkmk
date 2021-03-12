@@ -1,0 +1,12 @@
+Title: Remove problem dashboard from CRE
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615577437
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+The dashboard had the same content as the main dashboard.

@@ -55,6 +55,16 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
             "hardware.biosInfo.releaseDate": ("date", lambda v: _try_convert_to_epoch(v[0])),
         },
     },
+    "os": {
+        "path": ["software", "os"],
+        "translation": {
+            "config.product.licenseProductName": ("name", FIRST_ELEMENT),
+            "config.product.version": ("version", FIRST_ELEMENT),
+            "config.product.build": ("build", FIRST_ELEMENT),
+            "config.product.vendor": ("vendor", FIRST_ELEMENT),
+            "config.product.osType": ("type", FIRST_ELEMENT),
+        },
+    },
     "sys": {
         "path": ["hardware", "system"],
         "translation": {

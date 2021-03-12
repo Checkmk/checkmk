@@ -48,9 +48,12 @@ def test_discover_haproxy_frontent(info, expected_result):
     assert list(result) == expected_result
 
 
-@pytest.mark.parametrize("item, info, expected_result", [
+@pytest.mark.parametrize("item, params, info, expected_result", [
     (
         "https_t3test.tgic.de",
+        {
+            "OPEN": 0
+        },
         [[
             "# pxname", "svname", "qcur", "qmax", "scur", "smax", "slim", "stot", "bin", "bout",
             "dreq", "dresp", "ereq", "econ", "eresp", "wretr", "wredis", "status", "weight", "act",
@@ -75,6 +78,9 @@ def test_discover_haproxy_frontent(info, expected_result):
     ),
     (
         "https_t3test.tgic.de",
+        {
+            "STOP": 1
+        },
         [[
             "https_t3test.tgic.de", "FRONTEND", "", "", "0", "0", "2000", "0", "0", "0", "0", "0",
             "0", "", "", "", "", "STOP", "", "", "", "", "", "", "", "", "1", "2", "0", "", "", "",
@@ -82,13 +88,14 @@ def test_discover_haproxy_frontent(info, expected_result):
             "0", "0", "0", "0", "", "", "", "", "", "", "", ""
         ]],
         [
-            Result(state=State.CRIT, summary="Status: STOP"),
+            Result(state=State.WARN, summary="Status: STOP"),
             Result(state=State.OK, summary="Session Rate: 0.00"),
             Metric('session_rate', 0.0)
         ],
     ),
     (
         "t3test/t3test",
+        {},
         [[
             "https_t3test.tgic.de", "FRONTEND", "", "", "0", "0", "2000", "0", "0", "0", "0", "0",
             "0", "", "", "", "", "STOP", "", "", "", "", "", "", "", "", "1", "2", "0", "", "", "",
@@ -100,9 +107,9 @@ def test_discover_haproxy_frontent(info, expected_result):
 ])
 @mock.patch("cmk.base.plugins.agent_based.haproxy.get_value_store",
             mock.MagicMock(return_value={"sessions.https_t3test.tgic.de": (time(), 0.0)}))
-def test_haproxy_frontend(item, info, expected_result):
+def test_haproxy_frontend(item, params, info, expected_result):
     data = parse_haproxy(info)
-    result = check_haproxy_frontend(item, data)
+    result = check_haproxy_frontend(item, params, data)
     assert list(result) == expected_result
 
 
@@ -126,9 +133,12 @@ def test_discover_haproxy_server(info, expected_result):
     assert list(result) == expected_result
 
 
-@pytest.mark.parametrize("item, info, expected_result", [
+@pytest.mark.parametrize("item, params, info, expected_result", [
     (
         "t3test/t3test",
+        {
+            "UP": 0
+        },
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "UP", "1", "1", "0", "0", "0", "363417", "0", "", "1", "3", "1", "", "0", "", "2",
@@ -144,6 +154,9 @@ def test_discover_haproxy_server(info, expected_result):
     ),
     (
         "t3test/t3test",
+        {
+            "UP": 1
+        },
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "UP", "1", "0", "1", "0", "0", "363417", "0", "", "1", "3", "1", "", "0", "", "2",
@@ -151,7 +164,7 @@ def test_discover_haproxy_server(info, expected_result):
             "", "", "", "", "-1", "", "", "0", "0", "0", "0", ""
         ]],
         [
-            Result(state=State.OK, summary="Status: UP"),
+            Result(state=State.WARN, summary="Status: UP"),
             Result(state=State.OK, summary="Backup"),
             Result(state=State.OK, summary="Layer Check: L4OK"),
             Result(state=State.OK, summary="Up since 4 days 4 hours")
@@ -159,6 +172,9 @@ def test_discover_haproxy_server(info, expected_result):
     ),
     (
         "t3test/t3test",
+        {
+            "UP": 0
+        },
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "UP", "1", "0", "0", "0", "0", "363417", "0", "", "1", "3", "1", "", "0", "", "2",
@@ -174,6 +190,9 @@ def test_discover_haproxy_server(info, expected_result):
     ),
     (
         "t3test/t3test",
+        {
+            "UP": 0
+        },
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "UP", "1", "1", "0", "0", "0", "None", "0", "", "1", "3", "1", "", "0", "", "2",
@@ -188,6 +207,9 @@ def test_discover_haproxy_server(info, expected_result):
     ),
     (
         "t3test/t3test",
+        {
+            "MAINT": 3
+        },
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "MAINT", "1", "1", "0", "0", "0", "363417", "0", "", "1", "3", "1", "", "0", "",
@@ -195,7 +217,7 @@ def test_discover_haproxy_server(info, expected_result):
             "0", "", "", "", "", "-1", "", "", "0", "0", "0", "0", ""
         ]],
         [
-            Result(state=State.CRIT, summary="Status: MAINT"),
+            Result(state=State.UNKNOWN, summary="Status: MAINT"),
             Result(state=State.OK, summary="Active"),
             Result(state=State.OK, summary="Layer Check: L4OK"),
             Result(state=State.OK, summary="Up since 4 days 4 hours")
@@ -203,6 +225,7 @@ def test_discover_haproxy_server(info, expected_result):
     ),
     (
         "https_t3test.tgic.de",
+        {},
         [[
             "t3test", "t3test", "0", "0", "0", "0", "", "0", "0", "0", "", "0", "", "0", "0", "0",
             "0", "MAINT", "1", "1", "0", "0", "0", "363417", "0", "", "1", "3", "1", "", "0", "",
@@ -212,7 +235,7 @@ def test_discover_haproxy_server(info, expected_result):
         [],
     )
 ])
-def test_haproxy_server(item, info, expected_result):
+def test_haproxy_server(item, params, info, expected_result):
     data = parse_haproxy(info)
-    result = check_haproxy_server(item, data)
+    result = check_haproxy_server(item, params, data)
     assert list(result) == expected_result

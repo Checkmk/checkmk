@@ -1,5 +1,6 @@
-# Minimal makefile for Sphinx documentation
-#
+# Makefile for Sphinx documentation
+
+.DEFAULT_GOAL := help
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
@@ -7,14 +8,17 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
+PLANTUML_VERSION = 1.2020.6
 
-# Put it first so that "make" without argument is like "make help".
+.PHONY: help
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+plantuml.jar:
+	wget "http://downloads.sourceforge.net/project/plantuml/${PLANTUML_VERSION}/plantuml.${PLANTUML_VERSION}.jar" -O $@
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
+.PHONY: Makefile
+%: Makefile plantuml.jar
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

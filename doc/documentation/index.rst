@@ -10,6 +10,7 @@ Welcome to CheckMK's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   arch-index.rst
 
 
 Indices and tables

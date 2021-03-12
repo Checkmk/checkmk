@@ -6,7 +6,8 @@
 
 from typing import List, NamedTuple, Final, Sequence
 
-from .agent_based_api.v1 import State, Service, register, SNMPTree, all_of, exists, Result
+from .utils.printer import DETECT_PRINTER
+from .agent_based_api.v1 import State, Service, register, SNMPTree, Result
 from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
 
 
@@ -153,10 +154,7 @@ def parse_printer_alerts(string_table: List[StringTable]) -> Section:
 
 register.snmp_section(
     name="printer_alerts",
-    detect=all_of(
-        exists(".1.3.6.1.2.1.43.*"),
-        exists(".1.3.6.1.2.1.43.11.1.1.6.1.1"),
-    ),
+    detect=DETECT_PRINTER,
     parse_function=parse_printer_alerts,
     fetch=[
         SNMPTree(base=".1.3.6.1.2.1.43.18.1.1", oids=[

@@ -7,9 +7,10 @@
 from typing import NamedTuple, Mapping, List, Any, Dict, Final
 
 from .utils.constants import OID_SYS_OBJ
+from .utils.printer import DETECT_PRINTER
 from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult, StringTable
-from .agent_based_api.v1 import (all_of, exists, not_matches, check_levels, register, Result,
-                                 Service, State, render, SNMPTree, OIDEnd, Metric)
+from .agent_based_api.v1 import (all_of, not_matches, check_levels, register, Result, Service,
+                                 State, render, SNMPTree, OIDEnd, Metric)
 
 MAP_UNIT: Final = {
     "3": "ten thousandths of inches",
@@ -96,8 +97,7 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
 
 register.snmp_section(
     name="printer_supply",
-    detect=all_of(exists(".1.3.6.1.2.1.43.*"), exists(".1.3.6.1.2.1.43.11.1.1.6.1.1"),
-                  not_matches(OID_SYS_OBJ, ".1.3.6.1.4.1.367.1.1")),
+    detect=all_of(DETECT_PRINTER, not_matches(OID_SYS_OBJ, ".1.3.6.1.4.1.367.1.1")),
     parse_function=parse_printer_supply,
     fetch=[
         SNMPTree(

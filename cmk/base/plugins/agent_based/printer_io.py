@@ -6,9 +6,11 @@
 
 import enum
 from typing import NamedTuple, Mapping, List, Any, Dict
+
+from .utils.printer import DETECT_PRINTER
 from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult, StringTable
-from .agent_based_api.v1 import (all_of, exists, check_levels, register, Result, Service, State,
-                                 render, SNMPTree, OIDEnd)
+from .agent_based_api.v1 import (check_levels, register, Result, Service, State, render, SNMPTree,
+                                 OIDEnd)
 
 printer_io_units = {
     "-1": "unknown",
@@ -126,7 +128,7 @@ def parse_printer_io(string_table: List[StringTable]) -> Section:
 
 register.snmp_section(
     name="printer_input",
-    detect=all_of(exists(".1.3.6.1.2.1.43.*"), exists(".1.3.6.1.2.1.43.11.1.1.6.1.1")),
+    detect=DETECT_PRINTER,
     parse_function=parse_printer_io,
     fetch=[
         SNMPTree(
@@ -145,7 +147,7 @@ register.snmp_section(
 
 register.snmp_section(
     name="printer_output",
-    detect=all_of(exists(".1.3.6.1.2.1.43.*"), exists(".1.3.6.1.2.1.43.11.1.1.6.1.1")),
+    detect=DETECT_PRINTER,
     parse_function=parse_printer_io,
     fetch=[
         SNMPTree(

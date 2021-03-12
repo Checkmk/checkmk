@@ -10,7 +10,7 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.printer import (
-    DETECT_GENERIC,
+    DETECT_PRINTER_PAGES,
     discovery_printer_pages,
     check_printer_pages_types,
     Section,
@@ -27,7 +27,7 @@ def parse_printer_pages(string_table: List[StringTable]) -> Section:
 
 register.snmp_section(
     name="printer_pages",
-    detect=DETECT_GENERIC,
+    detect=DETECT_PRINTER_PAGES,
     parse_function=parse_printer_pages,
     fetch=[
         SNMPTree(

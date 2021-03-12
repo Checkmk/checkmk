@@ -289,12 +289,10 @@ def _folders_collection(
                     'id': folder.id()
                 },
             ))
-    collection_object = constructors.collection_object(
+    return constructors.collection_object(
         domain_type='folder_config',
         value=folders_,
-        links=[constructors.link_rel('self', constructors.collection_href('folder_config'))],
     )
-    return collection_object
 
 
 @Endpoint(

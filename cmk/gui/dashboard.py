@@ -1878,7 +1878,6 @@ class EditDashletPage(Page):
 
         forms.end()
         html.show_localization_hint()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 

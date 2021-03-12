@@ -72,7 +72,8 @@ from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel
+from cmk.base.discovered_labels import (DiscoveredHostLabels, DiscoveredServiceLabels, ServiceLabel,
+                                        HostLabel)
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]
@@ -167,15 +168,24 @@ class AutomationTryDiscovery(Automation):
         buf = io.StringIO()
         with redirect_stdout(buf), redirect_stderr(buf):
             log.setup_console_logging()
-            check_preview_table, host_labels = self._execute_discovery(args)
+            check_preview_table, host_label_result = self._execute_discovery(args)
             return {
                 "output": buf.getvalue(),
                 "check_table": check_preview_table,
-                "host_labels": host_labels.to_dict(),
+                "host_labels": DiscoveredHostLabels(
+                    # this dict deduplicates label names!
+                    *{l.name: l for l in host_label_result.present}.values()),
+                "new_labels":
+                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.new}.values()),
+                "vanished_labels":
+                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.vanished}.values()),
+                "replaced_labels":
+                    DiscoveredHostLabels(*{l.name: l for l in host_label_result.present}.values()),
             }
 
     def _execute_discovery(
-            self, args: List[str]) -> Tuple[discovery.CheckPreviewTable, DiscoveredHostLabels]:
+        self, args: List[str]
+    ) -> Tuple[discovery.CheckPreviewTable, discovery.QualifiedDiscovery[HostLabel]]:
 
         use_cached_snmp_data = False
         if args[0] == '@noscan':

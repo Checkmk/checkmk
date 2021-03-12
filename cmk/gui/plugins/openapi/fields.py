@@ -493,6 +493,9 @@ class FolderField(String):
             >>> FolderField._normalize_folder("\\")
             '/'
 
+            >>> FolderField._normalize_folder("~")
+            '/'
+
             >>> FolderField._normalize_folder("/foo/bar")
             '/foo/bar'
 
@@ -517,8 +520,6 @@ class FolderField(String):
 
     @classmethod
     def load_folder(cls, folder_id: str) -> watolib.CREFolder:
-        folder_id = cls._normalize_folder(folder_id)
-
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -531,6 +532,7 @@ class FolderField(String):
         elif _ishexdigit(folder_id):
             folder = watolib.Folder.by_id(folder_id)
         else:
+            folder_id = cls._normalize_folder(folder_id)
             folder = watolib.Folder.folder(folder_id[1:])
 
         return folder
@@ -540,7 +542,7 @@ class FolderField(String):
         try:
             return self.load_folder(value)
         except MKException:
-            if self.required:
+            if value:
                 raise self.make_error("not_found", folder_id=value)
 
 

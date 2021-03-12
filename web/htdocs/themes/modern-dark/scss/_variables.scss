@@ -301,15 +301,9 @@ $invtree-td-bg-color: rgb(100, 100, 100);
 
 $availability-table-border-color: $grey-7;
 $availability-summary-bg-color: null;
-$lightened-state0-bg-color: lighten($color-state-success-background, 10%);
-$lightened-state1-bg-color: lighten($color-state-1-background, 10%);
-$lightened-state2-bg-color: lighten($color-state-2-background, 10%);
-$lightened-state3-bg-color: lighten($color-state-3-background, 10%);
 $unmonitored-font-color: $grey-7;
 $unmonitored-bg-color: rgb(134, 134, 134);
-$lightened-unmonitored-bg-color: lighten($unmonitored-bg-color, 10%);
 $hostdown-bg-color: rgb(0, 102, 170);
-$lightened-hostdown-bg-color: lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color: rgb(60, 60, 60);
 

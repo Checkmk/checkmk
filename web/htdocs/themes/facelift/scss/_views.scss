@@ -778,6 +778,10 @@ table.data.availability {
   tr.odd0 td.number.stats {
     opacity: 0.5;
   }
+
+  td.state span {
+    font-weight: $font-weight-default;
+  }
 }
 
 table.data td.flapping,
@@ -806,13 +810,13 @@ div.avlegend.timeline div.state.unmonitored {
   background-color: $unmonitored-bg-color;
 }
 
-table.data.availability tr.even0 td {
+table.data.availability tr td {
   &.unmonitored {
-    background-color: $lightened-unmonitored-bg-color;
+    background-color: lighten($unmonitored-bg-color, 10%);
   }
 
   &.hostdown {
-    background-color: $lightened-hostdown-bg-color;
+    background-color: lighten($hostdown-bg-color, 10%);
   }
 }
 

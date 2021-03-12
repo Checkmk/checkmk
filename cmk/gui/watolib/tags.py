@@ -445,7 +445,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
 
         # In case it needs to be replaced with a new value, do it now
         if new_tag:
-            was_negated = isinstance(dict, current_value) and "$ne" in current_value
+            was_negated = isinstance(current_value, dict) and "$ne" in current_value
             new_value = {"$ne": new_tag} if was_negated else new_tag
             rule.conditions.host_tags[operation.tag_group_id] = new_value
         elif mode == TagCleanupMode.DELETE:

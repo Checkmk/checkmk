@@ -519,11 +519,11 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.open_div(class_="avlegend levels")
         html.h3(_("Availability levels"))
 
-        html.div(_("OK"), class_="state state0")
+        html.div(html.render_span(_("OK")), class_="state state0")
         html.div("> %.3f%%" % warn, class_="level")
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
         html.div("> %.3f%%" % crit, class_="level")
-        html.div(_("CRIT"), class_="state state2")
+        html.div(html.render_span(_("CRIT")), class_="state state2")
         html.div("< %.3f%%" % crit, class_="level")
 
         html.close_div()
@@ -617,21 +617,22 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.open_div(class_="avlegend timeline")
 
     html.h3(_('Timeline colors'))
-    html.div(_("UP") if what == "host" else _("OK"), class_="state state0")
+    html.div(html.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
 
     if what != "host":
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
 
-    html.div(_("DOWN") if what == "host" else _("CRIT"), class_="state state2")
-    html.div(_("UNREACH") if what == "host" else _("UNKNOWN"), class_="state state3")
-    html.div(_("Flapping"), class_="state flapping")
+    html.div(html.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2")
+    html.div(html.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")),
+             class_="state state3")
+    html.div(html.render_span(_("Flapping")), class_="state flapping")
 
     if what != "host":
-        html.div(_("H.Down"), class_="state hostdown")
+        html.div(html.render_span(_("H.Down")), class_="state hostdown")
 
-    html.div(_("Downtime"), class_="state downtime")
-    html.div(_("OO/Service"), class_="state ooservice")
-    html.div(_("unmonitored"), class_="state unmonitored")
+    html.div(html.render_span(_("Downtime")), class_="state downtime")
+    html.div(html.render_span(_("OO/Service")), class_="state ooservice")
+    html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
 
     html.close_div()
 

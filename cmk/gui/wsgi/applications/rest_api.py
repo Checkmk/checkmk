@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import base64
+import traceback
+
 import binascii
 import functools
 import http.client
@@ -431,27 +433,36 @@ class CheckmkRESTAPI:
         except Exception as exc:
             crash = APICrashReport.from_exception()
             crash_reporting.CrashReportStore().save(crash)
-            logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
+            crash_id = crash.ident_to_text()
+            logger.exception("Unhandled exception (Crash-ID: %s)", crash_id)
             if self.debug:
                 raise
 
-            crash_url = f"/{config.omd_site()}/check_mk/crash.py?" + urllib.parse.urlencode([
-                ("crash_id", crash.ident_to_text()),
-                ("site", config.omd_site()),
-            ],)
+            request = Request(environ)
+            site = config.omd_site()
+            query_string = urllib.parse.urlencode([
+                ("crash_id", crash_id),
+                ("site", site),
+            ])
+            crash_url = f"{request.host_url}{site}/check_mk/crash.py?{query_string}"
+            crash_details = {
+                'crash_id': crash_id,
+                'crash_report': {
+                    'href': crash_url,
+                    'method': 'get',
+                    'rel': 'cmk/crash-report',
+                    'type': 'text/html',
+                },
+            }
+            if config.user.may("general.see_crash_reports"):
+                crash_details['stack_trace'] = traceback.format_exc().split("\n")
 
-            return problem(status=500,
-                           title=str(exc),
-                           detail="An internal error occured while processing your request.",
-                           ext={
-                               'crash_report': {
-                                   'href': crash_url,
-                                   'method': 'get',
-                                   'rel': 'cmk/crash-report',
-                                   'type': 'text/html',
-                               },
-                               'crash_id': crash.ident_to_text(),
-                           })(environ, start_response)
+            return problem(
+                status=500,
+                title=http.client.responses[500],
+                detail=str(exc),
+                ext=crash_details,
+            )(environ, start_response)
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):

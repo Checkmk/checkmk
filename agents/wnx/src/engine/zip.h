@@ -16,9 +16,6 @@
 namespace cma::tools::zip {
 enum class Type { unknown, zip, cab };
 
-// Base functionality(no recursion, only top-level entries)
-std::vector<std::wstring> List(const std::filesystem::path& file);
-
 bool Extract(const std::filesystem::path& file_src,
              const std::filesystem::path& dir_dest);
 

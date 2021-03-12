@@ -173,7 +173,7 @@ class AutomationTryDiscovery(Automation):
                 "host_labels": host_label_discovery_result.labels.to_dict(),
                 "new_labels": host_label_discovery_result.new_labels.to_dict(),
                 "vanished_labels": host_label_discovery_result.vanished_labels.to_dict(),
-                "replaced_labels": host_label_discovery_result.replaced_labels.to_dict(),
+                "changed_labels": host_label_discovery_result.changed_labels.to_dict(),
             }
 
     def _execute_discovery(

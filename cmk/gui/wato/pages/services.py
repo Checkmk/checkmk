@@ -241,7 +241,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 host_labels=previous_discovery_result.host_labels,
                 new_labels=previous_discovery_result.new_labels,
                 vanished_labels=previous_discovery_result.vanished_labels,
-                replaced_labels=previous_discovery_result.replaced_labels,
+                changed_labels=previous_discovery_result.changed_labels,
             )
 
         self._update_persisted_discovery_options()
@@ -583,7 +583,7 @@ class DiscoveryPageRenderer:
         vanished_services = 0
         new_host_labels = len(discovery_result.new_labels)
         vanished_host_labels = len(discovery_result.vanished_labels)
-        changed_host_labels = len(discovery_result.replaced_labels)
+        changed_host_labels = len(discovery_result.changed_labels)
 
         for service in discovery_result.check_table:
             if service[0] == DiscoveryState.UNDECIDED:

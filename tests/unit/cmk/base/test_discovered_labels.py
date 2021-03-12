@@ -262,7 +262,7 @@ def test_label_validation(cls):
             per_plugin=Counter({"xyz": 1}),
             new_labels=DiscoveredHostLabels(HostLabel('foo', '1.6', plugin_name="xyz")),
             vanished_labels=DiscoveredHostLabels(),
-            replaced_labels=DiscoveredHostLabels(),
+            changed_labels=DiscoveredHostLabels(),
         ),
         False,
     ],
@@ -274,7 +274,7 @@ def test_label_validation(cls):
             per_plugin=Counter({"xyz": 1}),
             new_labels=DiscoveredHostLabels(HostLabel('foo', '1.7', plugin_name="xyz")),
             vanished_labels=DiscoveredHostLabels(),
-            replaced_labels=DiscoveredHostLabels(),
+            changed_labels=DiscoveredHostLabels(),
         ),
         False,
     ],
@@ -288,7 +288,7 @@ def test_label_validation(cls):
             new_labels=DiscoveredHostLabels(HostLabel('bar', '2.0', plugin_name="xyz"),
                                             HostLabel('foo', '1.6', plugin_name="xyz")),
             vanished_labels=DiscoveredHostLabels(),
-            replaced_labels=DiscoveredHostLabels(),
+            changed_labels=DiscoveredHostLabels(),
         ),
         False,
     ],
@@ -301,7 +301,7 @@ def test_label_validation(cls):
             per_plugin=Counter({"xyz": 1}),
             new_labels=DiscoveredHostLabels(),
             vanished_labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz")),
-            replaced_labels=DiscoveredHostLabels(HostLabel('foo', '1.5', plugin_name="xyz")),
+            changed_labels=DiscoveredHostLabels(HostLabel('foo', '1.5', plugin_name="xyz")),
         ),
         True,
     ],
@@ -315,7 +315,7 @@ def test_label_validation(cls):
             per_plugin=Counter({"xyz": 2}),
             new_labels=DiscoveredHostLabels(HostLabel('batz', '3.0', plugin_name="xyz")),
             vanished_labels=DiscoveredHostLabels(HostLabel('bar', '1.5', plugin_name="xyz")),
-            replaced_labels=DiscoveredHostLabels(HostLabel('foo', '1.5', plugin_name="xyz")),
+            changed_labels=DiscoveredHostLabels(HostLabel('foo', '1.5', plugin_name="xyz")),
         ),
         True,
     ],
@@ -345,7 +345,7 @@ def test_perform_host_label_discovery(discovered_host_labels_dir, existing_label
     assert host_label_discovery_result.per_plugin == expected_result.per_plugin
     assert host_label_discovery_result.new_labels == expected_result.new_labels
     assert host_label_discovery_result.vanished_labels == expected_result.vanished_labels
-    assert host_label_discovery_result.replaced_labels == expected_result.replaced_labels
+    assert host_label_discovery_result.changed_labels == expected_result.changed_labels
 
 
 def test_discovered_host_labels_path(discovered_host_labels_dir):

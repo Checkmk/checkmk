@@ -130,7 +130,7 @@ HostLabelDiscoveryResult = NamedTuple("HostLabelDiscoveryResult", [
     ("per_plugin", Counter[str]),
     ("new_labels", DiscoveredHostLabels),
     ("vanished_labels", DiscoveredHostLabels),
-    ("replaced_labels", DiscoveredHostLabels),
+    ("changed_labels", DiscoveredHostLabels),
 ])
 
 #   .--Helpers-------------------------------------------------------------.
@@ -530,7 +530,7 @@ def discover_on_host(
         per_plugin=Counter(),
         new_labels=DiscoveredHostLabels(),
         vanished_labels=DiscoveredHostLabels(),
-        replaced_labels=DiscoveredHostLabels(),
+        changed_labels=DiscoveredHostLabels(),
     )
 
     try:
@@ -1157,13 +1157,13 @@ def _perform_host_label_discovery(
 
     new_labels = discovered_host_labels - return_labels
     vanished_labels = return_labels - discovered_host_labels
-    replaced_labels = DiscoveredHostLabels()
+    changed_labels = DiscoveredHostLabels()
 
     return_labels_per_plugin: Counter[str] = Counter()
     for label in discovered_host_labels.values():
         existing_label = return_labels.get(label.name)
         if existing_label and existing_label.value != label.value:
-            replaced_labels.add_label(existing_label)
+            changed_labels.add_label(existing_label)
 
         if label.label in existing_labels_set:
             continue
@@ -1201,7 +1201,7 @@ def _perform_host_label_discovery(
         per_plugin=return_labels_per_plugin,
         new_labels=new_labels,
         vanished_labels=vanished_labels,
-        replaced_labels=replaced_labels,
+        changed_labels=changed_labels,
     )
 
 
@@ -1736,7 +1736,7 @@ def _get_cluster_services(
             per_plugin=Counter(),
             new_labels=DiscoveredHostLabels(),
             vanished_labels=DiscoveredHostLabels(),
-            replaced_labels=DiscoveredHostLabels(),
+            changed_labels=DiscoveredHostLabels(),
         )
 
     cluster_items: ServicesTable = {}

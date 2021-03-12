@@ -40,6 +40,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.html import HTML
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
@@ -54,7 +55,7 @@ AVEntry = Any
 AVData = List[AVEntry]
 AVTimelineSpan = _Tuple[_Optional[int], str, float, CSSClass]
 AVObjectCells = List[_Tuple[str, str]]
-AVRowCells = List[_Tuple[str, CSSClass]]
+AVRowCells = List[_Tuple[Union[HTML, str], CSSClass]]
 AVGroups = List[_Tuple[_Optional[str], AVData]]
 HostOrServiceGroupName = str
 AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
@@ -1469,8 +1470,9 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                     css = "state%d" % check_av_levels(number, av_levels,
                                                       entry["considered_duration"])
 
-                css = css + " narrow number"
-                cells.append((render_number(number, entry["considered_duration"]), css))
+                css = css + " state narrow number"
+                cells.append((html.render_span(render_number(number,
+                                                             entry["considered_duration"])), css))
 
                 # Statistics?
                 x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
@@ -1502,7 +1504,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
     # We ignore unmonitored objects
     len_availability_table = len(availability_table) - unmonitored_objects
     if show_summary and len_availability_table > 0:
-        summary_cells = []
+        summary_cells: AVRowCells = []
 
         for timeformat, render_number in timeformats:
             for sid, css, sname, help_txt in availability_columns[what]:
@@ -1522,8 +1524,9 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                 if number and av_levels and sid in ["ok", "up"]:
                     css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
-                css = css + " narrow number"
-                summary_cells.append((render_number(number, int(total_duration)), css))
+                css = css + " state narrow number"
+                summary_cells.append((html.render_span(render_number(number,
+                                                                     int(total_duration))), css))
                 if sid in os_states:
                     for aggr in os_aggrs:
                         if aggr == "cnt":

@@ -485,28 +485,3 @@ table.timeline {
     background-color: $color-state-3-background;
   }
 }
-
-table.data.availability tr.even0 td {
-  &.state0,
-  &.state1,
-  &.state2,
-  &.state3 {
-    color: $black;
-  }
-
-  &.state0 {
-    background-color: $lightened-state0-bg-color;
-  }
-
-  &.state1 {
-    background-color: $lightened-state1-bg-color;
-  }
-
-  &.state2 {
-    background-color: $lightened-state2-bg-color;
-  }
-
-  &.state3 {
-    background-color: $lightened-state3-bg-color;
-  }
-}

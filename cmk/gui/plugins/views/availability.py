@@ -314,6 +314,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                          page_menu=_page_menu_availability(breadcrumb, view, what, av_mode,
                                                            av_object, time_range, avoptions)
                          if display_options.enabled(display_options.B) else None)
+        html.begin_page_content()
 
     if html.has_user_errors():
         form_name = html.request.get_ascii_input_mandatory("filled_in")
@@ -344,8 +345,10 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                 _('Repeat query without limit.'),
                 makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]))
             html.show_warning(text)
-
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
+
+    if display_options.enabled(display_options.T):
+        html.end_page_content()
 
     if display_options.enabled(display_options.H):
         html.body_end()

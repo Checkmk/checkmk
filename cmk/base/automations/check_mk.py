@@ -601,7 +601,6 @@ class AutomationAnalyseServices(Automation):
     # Determine the type of the check, and how the parameters are being
     # constructed
     # TODO: Refactor this huge function
-    # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(self, config_cache: config.ConfigCache, host_config: config.HostConfig,
                           servicedesc: str) -> Dict:
@@ -615,6 +614,8 @@ class AutomationAnalyseServices(Automation):
         # 4. active checks
 
         # 1. Manual checks
+        # If we used the check table here, we would end up with the
+        # *effective* parameters, these are the *configured* ones.
         for checkgroup_name, checktype, item, params in host_config.static_checks:
             # TODO (mo): centralize maincheckify: CMK-4295
             check_plugin_name = CheckPluginName(maincheckify(checktype))
@@ -630,19 +631,17 @@ class AutomationAnalyseServices(Automation):
 
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
-        if host_config.is_cluster:
-            services: List[cmk.base.check_utils.Service] = []
-            for node in host_config.nodes or []:
-                for service in config_cache.get_autochecks_of(node):
-                    if hostname == config_cache.host_of_clustered_service(
-                            node, service.description):
-                        services += services
-        else:
-            services = config_cache.get_autochecks_of(hostname)
-
+        # NOTE: Iterating over the check table would make things easier. But we might end up with
+        # differen information. Also:  check table forgets wether it's an *auto*check.
         table = check_table.get_check_table(hostname)
         # 2. Load all autochecks of the host in question and try to find
         # our service there
+        services = [
+            service for node in host_config.nodes or []
+            for service in config_cache.get_autochecks_of(node)
+            if hostname == config_cache.host_of_clustered_service(node, service.description)
+        ] if host_config.is_cluster else config_cache.get_autochecks_of(hostname)
+
         for service in services:
 
             if service.id() not in table:

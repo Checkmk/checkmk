@@ -104,6 +104,7 @@ TEST(WinPerf, ValidateFabricConfig) {
 
 TEST(WinPerf, BuildCommandLine) {
     tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+    ASSERT_TRUE(temp_fs.loadContent("global:\n  enabled: yes\n"));
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
     EXPECT_TRUE(cmd_line.empty()) << cmd_line;
 

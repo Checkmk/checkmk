@@ -85,7 +85,7 @@ private:
     FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
 
 #endif
 };
@@ -107,6 +107,8 @@ public:
     void LoadDefault() noexcept;
     void InstallDefault(InstallMode mode) noexcept;
     void readConfig(YAML::Node& node);
+
+    static bool IsQuickReinstallAllowed();
 
     void prepareToWork();
     bool isModuleScript(const std::string_view filename);
@@ -172,7 +174,7 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
     FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);

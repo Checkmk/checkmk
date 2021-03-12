@@ -212,6 +212,7 @@ private:
     std::filesystem::path data_;
     std::filesystem::path base_;
     Mode mode_;
+    YAML::Node yaml_;
 };
 
 const extern std::filesystem::path G_SolutionPath;

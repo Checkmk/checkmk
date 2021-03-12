@@ -87,6 +87,31 @@ TEST(ModuleCommander, CheckSystemAuto) {
     }
 }
 
+namespace {
+void LoadContentWithoutQuickReinstall() {
+    ASSERT_TRUE(
+        cfg::GetCfg().loadDirect("global:\n"
+                                 "  enabled: yes\n"
+                                 "modules:\n"
+                                 "  enabled: yes\n"
+                                 "  quick_reinstall: no\n"sv));
+}
+
+}  // namespace
+
+TEST(ModulesTest, QuickInstallEnabled) {
+    // NOTE: normally we do not test constants, but this is business decision
+    // which may differ for different branches
+    ASSERT_TRUE(g_quick_module_reinstall_allowed);
+
+    {
+        tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+        LoadContentWithoutQuickReinstall();
+        EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
+    }
+    EXPECT_TRUE(ModuleCommander::IsQuickReinstallAllowed());
+}
+
 TEST(ModulesTest, Internal) {
     Module m;
     EXPECT_FALSE(m.valid());
@@ -366,6 +391,16 @@ protected:
 
         return ::testing::AssertionSuccess();
     }
+
+    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path& zip_file) {
+        auto name{zip_file.filename()};
+        auto target_folder = temp_fs_.data() / dirs::kUserModules / name;
+        target_folder.replace_extension();
+        auto backup_file = temp_fs_.data() / dirs::kUserInstallDir /
+                           dirs::kInstalledModules / name;
+
+        return {backup_file, target_folder};
+    }
 };
 
 TEST_F(ModuleCommanderTest, PrepareToWork) {
@@ -533,7 +568,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
-TEST_F(ModuleCommanderTest, InstallModules) {
+TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     auto zip_file =
         tst::MakePathToUnitTestFiles(tst::G_SolutionPath) / tst::zip_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
@@ -558,7 +593,7 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     fs::copy_file(zip_file, install / tst::zip_to_test);
     ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
 
-    // check installation
+    // BAD MODULE installation
     auto bad_module = mc.modules_[0];
     bad_module.name_ = "zzzz";
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
@@ -574,29 +609,24 @@ TEST_F(ModuleCommanderTest, InstallModules) {
                         "OKYYYYSSD");  // not null file should fail
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
 
+    // Clean install store
+    auto move_dir = ModuleCommander::GetMoveLocation(tst::zip_to_test);
+    std::error_code ec;
+    fs::remove_all(move_dir, ec);
+
+    // NORMAL install
     ASSERT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::normal));
-    {
-        auto target_folder = user / dirs::kUserModules / "zzzz";
-        auto backup_file =
-            user / dirs::kUserInstallDir / dirs::kInstalledModules / "zzzz.zip";
-        ASSERT_TRUE(IsAbsent(backup_file, target_folder));
-    }
+    auto [zzzz_backup_file, zzzz_target_folder] = makeExpectedPair("zzzz.zip");
+    ASSERT_TRUE(IsAbsent(zzzz_backup_file, zzzz_target_folder));
 
-    // check install
-    auto target_folder = user / dirs::kUserModules / "unzip_test";
-    auto backup_file = user / dirs::kUserInstallDir / dirs::kInstalledModules /
-                       tst::zip_to_test;
+    auto [backup_file, target_folder] = makeExpectedPair(tst::zip_to_test);
     ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
     auto target_postinstall_folder =
         user / dirs::kUserModules / "unzip_test" / "DLLS";
-    EXPECT_TRUE(fs::exists(target_postinstall_folder) &&
-                fs::is_directory(target_postinstall_folder));
-
-    auto move_dir = ModuleCommander::GetMoveLocation(backup_file);
-    std::error_code ec;
-    fs::remove_all(move_dir, ec);
+    EXPECT_TRUE(fs::is_directory(target_postinstall_folder))
+        << fmt::format("'{}' is bad or not found", target_postinstall_folder);
 
     // check duplicated install
     ASSERT_FALSE(
@@ -606,12 +636,12 @@ TEST_F(ModuleCommanderTest, InstallModules) {
     ASSERT_TRUE(IsAbsent(move_dir / backup_file.filename(),
                          move_dir / mc.modules_[0].name()));
 
-    // check forced install
+    // forced install
     ASSERT_TRUE(
         mc.InstallModule(mc.modules_[0], root, user, InstallMode::force));
     ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
-    // check uninstall store
+    // uninstall store must not be empty(removed from the previous installation)
     ASSERT_TRUE(IsPresented(move_dir / backup_file.filename(),
                             move_dir / mc.modules_[0].name()));
 

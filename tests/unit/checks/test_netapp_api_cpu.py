@@ -1,6 +1,5 @@
 import pytest
 from cmk_base.check_api import MKCounterWrapped
-from checktestlib import BasicCheckResult, CheckResult, DiscoveryResult, assertDiscoveryResultsEqual, PerfValue
 
 pytestmark = pytest.mark.checks
 

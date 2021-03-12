@@ -1641,6 +1641,9 @@ class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
         except KeyError:
             return self._default_title
 
+    def list_title(self, cell: Cell) -> str:
+        return self._default_title
+
     @abc.abstractproperty
     def _default_title(self) -> str:
         raise NotImplementedError()

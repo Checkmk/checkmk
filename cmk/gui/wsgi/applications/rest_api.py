@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import base64
+import binascii
 import functools
 import http.client
 import json
@@ -10,8 +12,8 @@ import logging
 import mimetypes
 import os
 import re
+import traceback
 import urllib.parse
-from base64 import b64decode
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
@@ -21,11 +23,12 @@ from werkzeug.routing import Map, Rule, Submount
 
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
-from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
-from cmk.gui import userdb
+from cmk.gui import config, userdb
+from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.globals import user
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
@@ -108,6 +111,17 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
         >>> user_from_basic_header("Basic Zm9vYmF6YmFyOmZvb2JhemJhcg==")
         ('foobazbar', 'foobazbar')
 
+        >>> import pytest
+
+        >>> with pytest.raises(MKAuthException):
+        ...     user_from_basic_header("Basic SGFsbG8gV2VsdCE=")  # 'Hallo Welt!'
+
+        >>> with pytest.raises(MKAuthException):
+        ...     user_from_basic_header("Basic foobazbar")
+
+        >>> with pytest.raises(MKAuthException):
+        ...      user_from_basic_header("Basic     ")
+
     Args:
         auth_header:
 
@@ -116,11 +130,22 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
     """
     try:
         _, token = auth_header.split("Basic ", 1)
-    except ValueError:
-        raise MKAuthException(f"Not a valid Basic token: {auth_header}")
+    except ValueError as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
 
-    user_entry = b64decode(token.strip()).decode('latin1')
-    user_id, secret = user_entry.split(":")
+    if not token.strip():
+        raise MKAuthException("Not a valid Basic token.")
+
+    try:
+        user_entry = base64.b64decode(token.strip()).decode('latin1')
+    except binascii.Error as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
+
+    try:
+        user_id, secret = user_entry.split(":")
+    except ValueError as exc:
+        raise MKAuthException("Not a valid Basic token.") from exc
+
     return UserId(user_id), secret
 
 
@@ -245,7 +270,10 @@ def serve_spec(
 ) -> Response:
     data = generate_data(target=target)
     data.setdefault('servers', [])
-    add_once(data['servers'], {'url': url, 'description': f"Site: {site}"})
+    add_once(data['servers'], {
+        'url': url,
+        'description': f"Site: {site}",
+    })
     response = Response(status=200)
     response.data = serializer(data)
     response.content_type = content_type
@@ -315,6 +343,8 @@ class ServeSwaggerUI:
             for line in content.splitlines():
                 if b"<title>" in line:
                     page.append(b"<title>REST-API Interactive GUI - Checkmk</title>")
+                elif b"favicon" in line:
+                    continue
                 elif b"petstore.swagger.io" in line:
                     page.append(f'        url: "{yaml_file}",'.encode('utf-8'))
                     page.append(b'        validatorUrl: null,')
@@ -400,23 +430,31 @@ class CheckmkRESTAPI:
             if self.debug:
                 raise
 
-            crash_url = f"/{omd_site()}/check_mk/crash.py?" + urllib.parse.urlencode([
-                ("crash_id", crash.ident_to_text()),
-                ("site", omd_site()),
-            ],)
+            request = Request(environ)
+            site = config.omd_site()
+            query_string = urllib.parse.urlencode([
+                ("crash_id", (crash.ident_to_text())),
+                ("site", site),
+            ])
+            crash_url = f"{request.host_url}{site}/check_mk/crash.py?{query_string}"
+            crash_details = {
+                'crash_id': (crash.ident_to_text()),
+                'crash_report': {
+                    'href': crash_url,
+                    'method': 'get',
+                    'rel': 'cmk/crash-report',
+                    'type': 'text/html',
+                },
+            }
+            if user.may("general.see_crash_reports"):
+                crash_details['stack_trace'] = traceback.format_exc().split("\n")
 
-            return problem(status=500,
-                           title=str(exc),
-                           detail="An internal error occured while processing your request.",
-                           ext={
-                               'crash_report': {
-                                   'href': crash_url,
-                                   'method': 'get',
-                                   'rel': 'cmk/crash-report',
-                                   'type': 'text/html',
-                               },
-                               'crash_id': crash.ident_to_text(),
-                           })(environ, start_response)
+            return problem(
+                status=500,
+                title=http.client.responses[500],
+                detail=str(exc),
+                ext=crash_details,
+            )(environ, start_response)
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):

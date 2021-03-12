@@ -286,7 +286,8 @@ class ModeAuditLog(WatoMode):
                 table.cell(_("Summary"), text)
 
                 if self._show_details:
-                    diff_text = entry.diff_text.replace("\n", "<br>\n") if entry.diff_text else ""
+                    diff_text = escaping.escape_text(entry.diff_text).replace(
+                        "\n", "<br>\n") if entry.diff_text else ""
                     table.cell(_("Details"), diff_text)
 
     def _get_next_daily_paged_log(self, log):

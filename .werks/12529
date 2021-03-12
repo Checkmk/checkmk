@@ -1,0 +1,12 @@
+Title: Remove duplicated upload button on "Custom GUI design" page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615575767
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+

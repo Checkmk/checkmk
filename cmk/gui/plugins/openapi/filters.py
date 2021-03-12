@@ -167,12 +167,12 @@ def parse_filter(fstr: str):
     ...     )
     ... )
     ... ''')
-    AndNode([OrNode([OrNode([NotNode(AndNode([BinaryNode((ColumnNode(Column(hosts.name: string)),\
- InfixOpNode(=), IntNode(2))), BinaryNode((ColumnNode(Column(hosts.alias: string)),\
- InfixOpNode(=), StringNode(fo"obar))), BinaryNode((ColumnNode(Column(hosts.alias: string)),\
+    AndNode([OrNode([OrNode([NotNode(AndNode([BinaryNode((ColumnNode(name),\
+ InfixOpNode(=), IntNode(2))), BinaryNode((ColumnNode(alias),\
+ InfixOpNode(=), StringNode(fo"obar))), BinaryNode((ColumnNode(alias),\
  InfixOpNode(~), ListNode([IntNode(1), ListNode([IntNode(2), StringNode(fo)]), IntNode(3)])))])),\
- BinaryNode((ColumnNode(Column(hosts.name: string)), InfixOpNode(~), RegexpNode(^foo bar$))),\
- BinaryNode((ColumnNode(Column(hosts.name: string)), InfixOpNode(=),\
+ BinaryNode((ColumnNode(name), InfixOpNode(~), RegexpNode(^foo bar$))),\
+ BinaryNode((ColumnNode(name), InfixOpNode(=),\
  DateTimeNode(2010-01-01 10:10:10+00:00)))])])])
 
     """

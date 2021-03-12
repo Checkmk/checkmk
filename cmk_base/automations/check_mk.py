@@ -600,7 +600,6 @@ class AutomationAnalyseServices(Automation):
     # Determine the type of the check, and how the parameters are being
     # constructed
     # TODO: Refactor this huge function
-    # TODO: Was ist mit Clustern???
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
     def _get_service_info(self, config_cache, host_config, servicedesc):
         # type: (config.ConfigCache, config.HostConfig, Text) -> Dict
@@ -637,7 +636,7 @@ class AutomationAnalyseServices(Automation):
                 for service in config_cache.get_autochecks_of(node):
                     if hostname == config_cache.host_of_clustered_service(
                             node, service.description):
-                        services += services
+                        services.append(service)
         else:
             services = config_cache.get_autochecks_of(hostname)
 

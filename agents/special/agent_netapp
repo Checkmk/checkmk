@@ -1003,6 +1003,9 @@ def process_clustermode(server, netapp_mode, licenses):
     snapmirror_info = query(server, "snapmirror-get-iter")
     if snapmirror_info:
         print "<<<netapp_api_snapvault:sep(9)>>>"
+        # NOTE: destination-location is used as the item name for clustermode snapvault services, as the destination
+        # volume may not be unique. For 7mode installations, this has not been implemented, as we do not have a test case
+        # and we do not know whether the issue exists.
         print format_config(snapmirror_info,
                             "snapvault",
                             "destination-volume",

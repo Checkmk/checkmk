@@ -194,8 +194,8 @@ TEST(LogWatchEventTest, LoadFrom) {
 
 TEST(LogWatchEventTest, Config) {
     using namespace cma::cfg;
-    tst::TempCfgFs test_fs;
-    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
 
     {
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);

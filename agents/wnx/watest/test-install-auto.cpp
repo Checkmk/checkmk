@@ -115,8 +115,8 @@ TEST_F(InstallAutoPrepareFixture, GetCommand) {
 
 class InstallAutoSimulationFixture : public testing::Test {
 protected:
-    static void SetUpTestSuite() {
-        fs_ = std::make_unique<tst::TempCfgFs>();
+    void SetUp() override {
+        fs_ = tst::TempCfgFs::Create();
         eu_ = std::make_unique<ExecuteUpdate>();
         ASSERT_TRUE(fs_->loadConfig(tst::GetFabricYml()));
         eu_->prepare(L"msi", L"x x x", true);
@@ -129,15 +129,8 @@ protected:
                             "This is  script");
     }
 
-    static void TearDownTestSuite() {}
-
-    // ***************************************************
-    // NOTE: inline makes our life a bit easier.
-    // Attention: We must use unique_ptr, because constructing during EXE init
-    // will fail.
-    // ***************************************************
-    static inline std::unique_ptr<tst::TempCfgFs> fs_;
-    static inline std::unique_ptr<ExecuteUpdate> eu_;
+    std::unique_ptr<tst::TempCfgFs> fs_;
+    std::unique_ptr<ExecuteUpdate> eu_;
 };
 
 TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
@@ -196,8 +189,8 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
     auto msi = cma::cfg::GetMsiExecPath();
     ASSERT_TRUE(!msi.empty());
 
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
 
     auto [in, out] = tst::CreateInOut();
     // artificial file creation
@@ -234,7 +227,7 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
         auto path = in / name;
         tst::CreateTextFile(path, "-----\n");
 
-        ASSERT_TRUE(temp_fs.createRootFile(
+        ASSERT_TRUE(temp_fs->createRootFile(
             fs::path(cfg::dirs::kAgentUtils) / cfg::files::kExecuteUpdateFile,
             "rem echo nothing\n"));
         auto [command, result] = CheckForUpdateFile(

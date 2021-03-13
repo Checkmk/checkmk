@@ -130,19 +130,20 @@ class CapTestYamlFixture : public ::testing::Test {
 public:
     static constexpr std::string_view name() { return files::kInstallYmlFileA; }
     void SetUp() override {
-        fs::create_directories(temp_fs_.root() / dirs::kInstall);
-        fs::create_directories(temp_fs_.data() / dirs::kUserInstallDir);
+        temp_fs_ = tst::TempCfgFs::Create();
+        fs::create_directories(temp_fs_->root() / dirs::kInstall);
+        fs::create_directories(temp_fs_->data() / dirs::kUserInstallDir);
     }
 
     fs::path yml_source() const {
-        return temp_fs_.root() / dirs::kInstall / name();
+        return temp_fs_->root() / dirs::kInstall / name();
     }
     fs::path yml_target() const {
-        return temp_fs_.data() / dirs::kInstall / name();
+        return temp_fs_->data() / dirs::kInstall / name();
     }
 
 private:
-    tst::TempCfgFs temp_fs_;
+    tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CapTestYamlFixture, Uninstall) {
@@ -275,7 +276,7 @@ TEST(CapTest, InstallCap) {
 }
 
 TEST(CapTest, Check) {
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     std::string name = "a/b.txt";
     auto out = ProcessPluginPath(name);
     fs::path expected_path = cma::cfg::GetUserDir() + L"\\a\\b.txt";
@@ -284,8 +285,8 @@ TEST(CapTest, Check) {
 
 TEST(CapTest, IsAllowedToKill) {
     using namespace cma::cfg;
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
 
     EXPECT_FALSE(IsAllowedToKill(L"smss_log.exe"));
     EXPECT_TRUE(IsAllowedToKill(L"cMk-upDate-agent.exe"));
@@ -361,6 +362,7 @@ TEST(CapTest, StoreFileAgressive) {
 class CapTestProcessFixture : public ::testing::Test {
 public:
     void SetUp() override {
+        temp_fs_ = tst::TempCfgFs::Create();
         names_[0] = GetUserPluginsDir() + L"\\windows_if.ps1";
         names_[1] = GetUserPluginsDir() + L"\\mk_inventory.vbs";
     }
@@ -369,16 +371,16 @@ public:
 
     void makeFilesInPlugins() {
         fs::create_directories(GetUserPluginsDir());
-        ASSERT_TRUE(temp_fs_.createDataFile(
+        ASSERT_TRUE(temp_fs_->createDataFile(
             fs::path{"plugins"} / "windows_if.ps1", "1"));
-        ASSERT_TRUE(temp_fs_.createDataFile(
+        ASSERT_TRUE(temp_fs_->createDataFile(
             fs::path{"plugins"} / "mk_inventory.vbs", "1"));
     }
 
 private:
     std::array<std::wstring, 2> names_;
 
-    tst::TempCfgFs temp_fs_;
+    tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CapTestProcessFixture, ValidFile) {
@@ -458,7 +460,7 @@ TEST_F(CapTestProcessFixture, BadFiles) {
 }
 
 TEST(CapTest, GetExampleYmlNames) {
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto expected_example_yml = fs::path{GetUserDir()} / files::kUserYmlFile;
     expected_example_yml.replace_extension("example.yml");
     auto expected_source_yml =

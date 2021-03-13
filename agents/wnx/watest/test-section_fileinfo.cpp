@@ -156,8 +156,8 @@ namespace {
 constexpr const char* hdr = "<<<fileinfo:sep(124)>>>";
 }
 TEST(FileInfoTest, ValidateConfig) {
-    tst::TempCfgFs test_fs;
-    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
 
     auto cfg = cma::cfg::GetLoadedConfig();
     auto x = cfg[cfg::groups::kFileInfo];
@@ -188,11 +188,12 @@ public:
 
 protected:
     void SetUp() override {
-        ASSERT_TRUE(test_fs_.loadConfig(tst::GetFabricYml()));
+        test_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(test_fs_->loadConfig(tst::GetFabricYml()));
     }
 
     void TearDown() override {}
-    tst::TempCfgFs test_fs_;
+    tst::TempCfgFs::ptr test_fs_;
 };
 
 TEST_F(FileInfoFixture, ValidateConfig) {

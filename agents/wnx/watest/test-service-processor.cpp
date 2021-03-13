@@ -76,8 +76,8 @@ TEST(ServiceProcessorTest, Generate) {
 TEST(ServiceProcessorTest, StartStopExe) {
     using namespace cma::cfg;
     int counter = 0;
-    tst::TempCfgFs temp_fs{tst::TempCfgFs::Mode::no_io};
-    ASSERT_TRUE(temp_fs.loadContent(tst::GetFabricYmlContent()));
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto processor =
         new ServiceProcessor(100ms, [&counter](const void* Processor) {

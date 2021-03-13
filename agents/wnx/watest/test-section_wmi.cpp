@@ -183,8 +183,8 @@ TEST(WmiProviderTest, OhmCtor) {
 }
 
 TEST(WmiProviderTest, OhmIntegration) {
-    tst::TempCfgFs temp_fs;
-    ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     Wmi ohm(kOhm, ohm::kSepChar);
     EXPECT_TRUE(ohm.isAllowedByCurrentConfig());
     tst::EnableSectionsNode(provider::kOhm, true);

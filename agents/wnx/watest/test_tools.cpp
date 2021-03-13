@@ -307,7 +307,7 @@ TempCfgFs ::~TempCfgFs() {
     if (mode_ == Mode::standard) {
         std::filesystem::remove_all(base_);
     }
-    cma::cfg::GetLoadedConfig() = yaml_;
+    cma::cfg::GetCfg().setConfig(yaml_);
 }
 
 bool TempCfgFs::loadConfig(const std::filesystem::path& yml) {

@@ -105,7 +105,7 @@ TEST(ModulesTest, QuickInstallEnabled) {
     ASSERT_TRUE(g_quick_module_reinstall_allowed);
 
     {
-        tst::TempCfgFs temp_fs(tst::TempCfgFs::Mode::no_io);
+        auto temp_fs{tst::TempCfgFs::CreateNoIo()};
         LoadContentWithoutQuickReinstall();
         EXPECT_FALSE(ModuleCommander::IsQuickReinstallAllowed());
     }
@@ -334,16 +334,17 @@ TEST(ModuleCommander, ReadConfig) {
 class ModuleCommanderTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        fs::create_directories(temp_fs_.root() / dirs::kInstall);
-        fs::create_directories(temp_fs_.data() / dirs::kUserInstallDir);
+        temp_fs_ = tst::TempCfgFs::Create();
+        fs::create_directories(temp_fs_->root() / dirs::kInstall);
+        fs::create_directories(temp_fs_->data() / dirs::kUserInstallDir);
     }
 
     void TearDown() override {}
 
-    tst::TempCfgFs temp_fs_;
+    tst::TempCfgFs::ptr temp_fs_;
 
     std::pair<fs::path, fs::path> CreateModulesAndBackup() {
-        fs::path user = temp_fs_.data();
+        fs::path user = temp_fs_->data();
         auto modules_dir = user / dirs::kUserModules;
         auto backup_dir =
             user / dirs::kUserInstallDir / dirs::kInstalledModules;
@@ -394,9 +395,9 @@ protected:
 
     std::pair<fs::path, fs::path> makeExpectedPair(const fs::path& zip_file) {
         auto name{zip_file.filename()};
-        auto target_folder = temp_fs_.data() / dirs::kUserModules / name;
+        auto target_folder = temp_fs_->data() / dirs::kUserModules / name;
         target_folder.replace_extension();
-        auto backup_file = temp_fs_.data() / dirs::kUserInstallDir /
+        auto backup_file = temp_fs_->data() / dirs::kUserInstallDir /
                            dirs::kInstalledModules / name;
 
         return {backup_file, target_folder};
@@ -488,7 +489,7 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
 }
 
 TEST_F(ModuleCommanderTest, LowLevelFs) {
-    fs::path user = temp_fs_.data();
+    fs::path user = temp_fs_->data();
 
     auto backup_dir = user / dirs::kUserInstallDir / dirs::kInstalledModules;
     ASSERT_FALSE(fs::exists(backup_dir));
@@ -521,7 +522,7 @@ TEST_F(ModuleCommanderTest, LowLevelFs) {
 }
 
 TEST_F(ModuleCommanderTest, FindModules) {
-    fs::path root = temp_fs_.root();
+    fs::path root = temp_fs_->root();
     fs::path install = root / dirs::kInstall;
 
     std::string base =
@@ -574,8 +575,8 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     ASSERT_TRUE(fs::exists(zip_file))
         << "Please make '" << tst::zip_to_test << "' available";
 
-    auto user = temp_fs_.data();
-    auto root = temp_fs_.root();
+    auto user = temp_fs_->data();
+    auto root = temp_fs_->root();
     auto install = root / dirs::kInstall;
 
     std::string modules_text =

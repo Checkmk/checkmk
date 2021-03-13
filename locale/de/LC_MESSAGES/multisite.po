@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-03-11 07:00+0000\n"
-"Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
+"PO-Revision-Date: 2021-03-13 06:19+0000\n"
+"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -388,9 +388,9 @@ msgstr[1] "%d Instanzen sind %s"
 msgid "%d sites %s: %s"
 msgstr "%d Instanzen %s: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d sites without history: %s"
-msgstr "%d Instanz ist %s"
+msgstr "%d Instanzen ohne Verlauf: %s"
 
 #, python-format
 msgid "%d specific settings"
@@ -8048,6 +8048,12 @@ msgstr ""
 msgid "Cannot display graph"
 msgstr "Kann Graph nicht anzeigen"
 
+#, python-format
+msgid ""
+"Cannot display inventory tree of host '%s': Found this host on multiple "
+"sites: %s"
+msgstr ""
+
 msgid ""
 "Cannot display this view in matrix layout. You need at least one group "
 "column!"
@@ -9048,9 +9054,8 @@ msgstr "Checkpoint VSID-Verkehrsrate"
 msgid "Checks & agents"
 msgstr "Checks & Agenten"
 
-#, fuzzy
 msgid "Checks on management boards"
-msgstr "Kein Management-Board"
+msgstr "Checks auf Management-Boards"
 
 #, fuzzy
 msgid "Checks on regular hosts"
@@ -15146,6 +15151,10 @@ msgstr "Dokumentation Fragmentation"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr "Endet nicht mit \"%s\"."
+
+#, fuzzy
+msgid "Does not match any service"
+msgstr "Keinen eigenen Service anlegen"
 
 msgid "Domain (only used for european accounts)"
 msgstr "Domain (nur für europäische Konten verwendet)"
@@ -29480,7 +29489,7 @@ msgstr ""
 
 #, python-format
 msgid "Missing data needed to render this graph. Details: %s"
-msgstr ""
+msgstr "Es fehlen benötigte Daten um den Graph zu rendern. Details: %s"
 
 msgid "Missing host name"
 msgstr "Fehlender Hostname"
@@ -30633,11 +30642,9 @@ msgstr "Netzwerkschnittstellen/Switch Ports"
 msgid "Network interfaces on Windows"
 msgstr "Netzwerkkarten unter Windows"
 
-#, fuzzy
 msgid "Network interfaces: last day view"
 msgstr "Netzwerkschnittstellen: Ansicht über den vergangenen Tag"
 
-#, fuzzy
 msgid "Network interfaces: last hour view"
 msgstr "Netzwerkschnittstellen: Ansicht über die letzte Stunde"
 
@@ -40528,9 +40535,9 @@ msgstr "Zeige %ss für Hosts"
 msgid "Show %ss for hosts and services"
 msgstr "Alle veralteten Hosts und Services zeigen"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Show %ss for services"
-msgstr "%s zu %s Services verschieben"
+msgstr "Zeige %ss für Services"
 
 msgid "Show / hide notification context"
 msgstr "Alarmierungs-Kontext zeigen / verstecken"
@@ -40946,9 +40953,8 @@ msgstr "Position der Seitenleiste"
 msgid "Sidecar name"
 msgstr "Instanzname"
 
-#, fuzzy
 msgid "Sidecars"
-msgstr "Instanzname"
+msgstr "Sidecars"
 
 msgid "Siemens PLC (SPS)"
 msgstr "Siemens PLC (SPS)"
@@ -43478,6 +43484,10 @@ msgid "Success"
 msgstr "Erfolg"
 
 msgid "Successfully baked agents"
+msgstr "Agenten erfolgreich gebacken"
+
+#, fuzzy
+msgid "Successfully changed password."
 msgstr "Agenten erfolgreich gebacken"
 
 #, python-format
@@ -48156,6 +48166,8 @@ msgid ""
 "The timeseries graph may be incomplete due to the following warnings:<ul>%s</"
 "ul>"
 msgstr ""
+"Der Zeitreihen Graph kann unvollständig sein aufgrund der folgenden "
+"Warnungen: <ul>%s</ul>"
 
 msgid "The title is used to label this attribute."
 msgstr "Der wird zum Markieren des Attributes verwendet."
@@ -64870,9 +64882,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgstr ""
 #~ "Inventarisierung und Service-Konfiguration auf existierenden Hosts "
 #~ "ausführen"
-
-#~ msgid "Do not create extra services"
-#~ msgstr "Keinen eigenen Service anlegen"
 
 #~ msgid "Do not show a context button to this %s"
 #~ msgstr "Keinen Kontextknopf für diese(n) %s zeigen"

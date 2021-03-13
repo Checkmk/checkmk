@@ -7617,6 +7617,12 @@ msgstr ""
 msgid "Cannot display graph"
 msgstr ""
 
+#, python-format
+msgid ""
+"Cannot display inventory tree of host '%s': Found this host on multiple "
+"sites: %s"
+msgstr ""
+
 msgid ""
 "Cannot display this view in matrix layout. You need at least one group "
 "column!"
@@ -14720,6 +14726,10 @@ msgstr "Numele Elementului"
 #, python-format
 msgid "Does not ends with \"%s\"."
 msgstr ""
+
+#, fuzzy
+msgid "Does not match any service"
+msgstr "Afectat de serviciu"
 
 msgid "Domain (only used for european accounts)"
 msgstr ""
@@ -42393,6 +42403,10 @@ msgstr ""
 msgid "Successfully baked agents"
 msgstr ""
 
+#, fuzzy
+msgid "Successfully changed password."
+msgstr "Parola"
+
 #, python-format
 msgid ""
 "Successfully created the host. Now you should do a <a href=\"%s\">service "
@@ -59282,10 +59296,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Do inventory and service configuration on existing hosts."
 #~ msgstr "Adaugp o noua configurație de utilizator"
-
-#, fuzzy
-#~ msgid "Do not create extra services"
-#~ msgstr "Afectat de serviciu"
 
 #, fuzzy
 #~ msgid "Do not use description"

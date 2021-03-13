@@ -294,24 +294,23 @@ TEST(CmaCfg, ProcessPluginEnvironment) {
 TEST(CmaCfg, InstallationTypeCheck) {
     namespace fs = std::filesystem;
     //
-    cma::OnStartTest();
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
 
     fs::path install_yml{fs::path(dirs::kFileInstallDir) /
                          files::kInstallYmlFileW};
 
     // without
-    ASSERT_TRUE(temp_fs.createRootFile(install_yml,
-                                       "# Wato\nglobal:\n  enabled: yes\n"));
+    ASSERT_TRUE(temp_fs->createRootFile(install_yml,
+                                        "# Wato\nglobal:\n  enabled: yes\n"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
-    ASSERT_TRUE(temp_fs.createRootFile(
+    ASSERT_TRUE(temp_fs->createRootFile(
         install_yml, "# packaged\nglobal:\n  install: no\n  enabled: yes\n"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
 
     // Absent:
-    temp_fs.removeRootFile(install_yml);
+    temp_fs->removeRootFile(install_yml);
     EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
 }
 

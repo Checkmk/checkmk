@@ -2223,13 +2223,13 @@ TEST(PluginTest, EmptyPlugins) {
 class PluginCmkUpdateAgentIgnoreFixture : public ::testing::Test {
 public:
     void SetUp() override {
-        ASSERT_TRUE(temp_fs.loadConfig(tst::GetFabricYml()));
-        fs::create_directory(temp_fs.data() / "plugins");
+        temp_fs = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
 
         ASSERT_TRUE(
-            temp_fs.createDataFile(fs::path{"plugins"} / "1.cmd", "@echo 1"));
+            temp_fs->createDataFile(fs::path{"plugins"} / "1.cmd", "@echo 1"));
         ASSERT_TRUE(
-            temp_fs.createDataFile(fs::path{"plugins"} / "2.cmd", "@echo 2"));
+            temp_fs->createDataFile(fs::path{"plugins"} / "2.cmd", "@echo 2"));
         fs::copy_file(
             fs::path{"c:\\Windows\\system32\\whoami.exe"},
             fs::path{cfg::GetUserPluginsDir()} / "cmk-update-agent.exe");
@@ -2243,7 +2243,7 @@ public:
         return plugins.generateContent(section::kPlugins);
     }
 
-    tst::TempCfgFs temp_fs;
+    tst::TempCfgFs::ptr temp_fs;
 };
 
 TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
@@ -2252,7 +2252,7 @@ TEST_F(PluginCmkUpdateAgentIgnoreFixture, CheckHardAndSoftIntegration) {
 
     // check hard prevention:
     // User allows execution of the cmk-update-agent.exe. But we prevent it!
-    ASSERT_TRUE(temp_fs.loadContent(
+    ASSERT_TRUE(temp_fs->loadContent(
         "global:\n"
         "  enabled: yes\n"
         "  install: yes\n"
@@ -2660,8 +2660,8 @@ TEST(PluginTest, ModulesCmdLine) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    tst::TempCfgFs test_fs;
-    ASSERT_TRUE(test_fs.loadConfig(tst::GetFabricYml()));
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
     std::vector<Plugins::ExeUnit> exe_units = {
         //
         {"*.cmd",
@@ -2705,7 +2705,7 @@ TEST(PluginTest, AllowedExtensions) {
     using namespace wtools;
     namespace fs = std::filesystem;
 
-    tst::TempCfgFs temp_fs;
+    auto temp_fs{tst::TempCfgFs::Create()};
     auto yaml = cma::cfg::GetLoadedConfig();
     yaml = YAML::Load(
         "global:\n"

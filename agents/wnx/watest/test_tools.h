@@ -175,17 +175,25 @@ std::wstring GenerateRandomFileName() noexcept;
 
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
-public:
+private:
     enum class Mode { standard, no_io };
-    TempCfgFs() : TempCfgFs(Mode::standard) {}
-    TempCfgFs(Mode mode);
+
+public:
+    using ptr = std::unique_ptr<TempCfgFs>;
+
+    static std::unique_ptr<TempCfgFs> CreateNoIo() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::no_io));
+    }
+
+    static std::unique_ptr<TempCfgFs> Create() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::standard));
+    }
+    ~TempCfgFs();
 
     TempCfgFs(const TempCfgFs&) = delete;
     TempCfgFs(TempCfgFs&&) = delete;
     TempCfgFs& operator=(const TempCfgFs&) = delete;
     TempCfgFs& operator=(TempCfgFs&&) = delete;
-
-    ~TempCfgFs();
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
 
@@ -203,6 +211,7 @@ public:
     const std::filesystem::path data() const { return data_; }
 
 private:
+    TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
         const std::filesystem::path& filepath,
         const std::filesystem::path& filepath_base, const std::string& content);

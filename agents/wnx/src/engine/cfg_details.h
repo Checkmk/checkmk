@@ -153,7 +153,7 @@ int CreateTree(const std::filesystem::path& base_path);
 
 namespace cma::cfg {
 namespace details {
-constexpr size_t kMaxFoldersStackSize = 10;
+constexpr size_t kMaxFoldersStackSize = 32;
 // low level API to combine sequences
 enum class Combine { overwrite, merge, merge_value };
 constexpr Combine GetCombineMode(std::string_view name);
@@ -263,6 +263,13 @@ public:
         if (ok_) return yaml_;
 
         return {};
+    }
+
+    void setConfig(YAML::Node yaml) {
+        std::lock_guard lk(lock_);
+        if (yaml_.IsDefined()) {
+            yaml_ = yaml;
+        }
     }
 
     std::wstring getRootYamlPath() const noexcept {

@@ -6,7 +6,7 @@
 
 from time import time
 from enum import Enum
-from typing import Dict, Any, Mapping, Literal
+from typing import Any, Mapping, NamedTuple, Dict, Optional
 
 from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (render, register, Result, Service, State, get_value_store,
@@ -27,38 +27,62 @@ class HAProxyServerStatus(Enum):
     NO_CHECK = "no check"
 
 
-Section = Dict
+class Frontend(NamedTuple):
+    status: str
+    stot: Optional[int]
+
+
+class Server(NamedTuple):
+    status: str
+    layer_check: str
+    uptime: Optional[int]
+    active: Optional[int]
+    backup: Optional[int]
+
+
+class Section(NamedTuple):
+    frontends: Dict[str, Frontend]
+    servers: Dict[str, Server]
+
+
+def parse_int(val):
+    try:
+        return int(val)
+    except ValueError:
+        return
 
 
 def parse_haproxy(string_table: StringTable) -> Section:
-    parsed = {}
+    frontends = {}
+    servers = {}
     for line in string_table:
         if len(line) <= 32 or line[32] not in ("0", "2"):
             continue
 
-        data: Dict[str, Any] = {"status": line[17]}
+        status = line[17]
 
         if line[32] == "0":
-            data["type"] = Literal["frontend"]
-            item = line[0]
+            name = line[0]
             try:
-                data["stot"] = int(line[7])
+                stot = int(line[7])
             except ValueError:
                 continue
+            frontends[name] = Frontend(status=status, stot=stot)
 
         elif line[32] == "2":
-            data["type"] = Literal["server"]
-            item = "%s/%s" % (line[0], line[1])
-            data["layer_check"] = line[36]
-            for key, idx in (("uptime", 23), ("active", 19), ("backup", 20)):
-                try:
-                    data[key] = int(line[idx])
-                except ValueError:
-                    continue
+            name = "%s/%s" % (line[0], line[1])
+            layer_check = line[36]
+            uptime = parse_int(line[23])
+            active = parse_int(line[19])
+            backup = parse_int(line[20])
 
-        parsed[item] = data
+            servers[name] = Server(status=status,
+                                   layer_check=layer_check,
+                                   uptime=uptime,
+                                   active=active,
+                                   backup=backup)
 
-    return parsed
+    return Section(frontends=frontends, servers=servers)
 
 
 register.agent_section(
@@ -68,20 +92,19 @@ register.agent_section(
 
 
 def discover_haproxy_frontend(section: Section) -> DiscoveryResult:
-    for key in section.keys():
-        if section[key]["type"] == Literal["frontend"]:
-            yield Service(item=key)
+    for key in section.frontends.keys():
+        yield Service(item=key)
 
 
 def check_haproxy_frontend(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    data = section.get(item)
+    data = section.frontends.get(item)
     if data is None:
         return
 
-    status = data.get("status")
+    status = data.status
     yield Result(state=State(params[status]), summary=f"Status: {status}")
 
-    stot = data.get("stot")
+    stot = data.stot
     if stot is not None:
         value_store = get_value_store()
         session_rate = get_rate(value_store, f"sessions.{item}", time(), stot)
@@ -103,29 +126,28 @@ register.check_plugin(name="haproxy_frontend",
 
 
 def discover_haproxy_server(section: Section) -> DiscoveryResult:
-    for key in section.keys():
-        if section[key]["type"] == Literal["server"]:
-            yield Service(item=key)
+    for key in section.servers.keys():
+        yield Service(item=key)
 
 
 def check_haproxy_server(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-    data = section.get(item)
+    data = section.servers.get(item)
     if data is None:
         return
 
-    status = data.get("status")
+    status = data.status
     yield Result(state=State(params[status]), summary=f"Status: {status}")
 
-    if data.get("active"):
+    if data.active:
         yield Result(state=State.OK, summary="Active")
-    elif data.get("backup"):
+    elif data.backup:
         yield Result(state=State.OK, summary="Backup")
     else:
         yield Result(state=State.CRIT, summary="Neither active nor backup")
 
-    yield Result(state=State.OK, summary=f"Layer Check: {data['layer_check']}")
+    yield Result(state=State.OK, summary=f"Layer Check: {data.layer_check}")
 
-    uptime = data.get("uptime")
+    uptime = data.uptime
     if uptime is not None:
         yield Result(state=State.OK, summary=f"Up since {render.timespan(uptime)}")
 

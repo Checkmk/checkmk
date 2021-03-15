@@ -11,7 +11,7 @@ from time import time
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric, Service
 from cmk.base.plugins.agent_based.haproxy import (parse_haproxy, discover_haproxy_frontend,
                                                   discover_haproxy_server, check_haproxy_frontend,
-                                                  check_haproxy_server)
+                                                  check_haproxy_server, Section)
 
 
 @pytest.mark.parametrize("info, expected_parsed", [((
@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.haproxy import (parse_haproxy, discover_haprox
         "", "0", "0", "0", "0", "", "", "", "0", "0", "0", "0", "0", "0", "", "0", "0", "0", "", "",
         "0", "0", "0", "0", "", "", "", "", "", "", "", ""
     ]],
-    {},
+    Section(frontends={}, servers={}),
 ))])
 def test_parse_haproxy(info, expected_parsed):
     data = parse_haproxy(info)

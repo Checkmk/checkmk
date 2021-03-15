@@ -399,10 +399,10 @@ public:
 
     // **********************************
     // STREAM OUTPUT
-    template <typename... T>
-    auto operator()(const std::string& Format, T... args) noexcept {
+    template <typename... Args>
+    auto operator()(const std::string& format, Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
                 xlog::l("Attempt to log too early '%s'", s.c_str());
                 return s;
@@ -412,26 +412,27 @@ public:
             postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
 
     // #TODO make more versatile
-    template <typename... T>
-    auto operator()(int Flags, const std::string& Format, T... args) noexcept {
+    template <typename... Args>
+    auto operator()(int flags, const std::string& format,
+                    Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
                 xlog::l("Attempt to log too early '%s'", s.c_str());
                 return s;
             }
 
-            auto e = (*this).operator()(Flags);
+            auto e = (*this).operator()(flags);
             std::lock_guard lk(lock_);
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
     // **********************************
@@ -459,64 +460,69 @@ public:
     // XLOG::l(XLOG::kInfo)(...);
     // XLOG::d(XLOG::kTrace)(...);
 
-    // #TODO please, Sergey, this is copy-paste and copy-paste is streng
-    // verboten by Check MK
-    template <typename... T>
-    auto exec(int Modifications, const std::string& Format,
-              T... args) noexcept {
+    template <typename... Args>
+    auto exec(int modifications, const std::string& format,
+              Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             // check construction
             if (!this->constructed_) return s;
             auto e = *this;
-            e.mods_ |= Modifications;
+            e.mods_ |= modifications;
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
 
 #pragma warning(push)
 #pragma warning(disable : 26444)
     // [Trace]
-    template <typename... T>
-    [[maybe_unused]] auto t(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kTrace, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto t(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kTrace, format, std::forward<Args>(args)...);
     }
 
     // no prefix, just informational
-    template <typename... T>
-    [[maybe_unused]] auto i(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kInfo, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto i(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kInfo, format, std::forward<Args>(args)...);
     }
 
-    template <typename... T>
-    [[maybe_unused]] auto i(int Mods, const std::string& Format,
-                            T... args) noexcept {
-        return exec(XLOG::kInfo | Mods, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto i(int Mods, const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kInfo | Mods, format, std::forward<Args>(args)...);
     }
 
     // [Err  ]
-    template <typename... T>
-    [[maybe_unused]] auto e(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kError, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto e(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kError, format, std::forward<Args>(args)...);
     }
 
     // [Warn ]
-    template <typename... T>
-    [[maybe_unused]] auto w(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kWarning, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto w(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kWarning, format, std::forward<Args>(args)...);
     }
 
-    template <typename... T>
-    [[maybe_unused]] auto crit(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kCritError, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto crit(const std::string& format,
+                               Args&&... args) noexcept {
+        return exec(XLOG::kCritError, format, std::forward<Args>(args)...);
     }
     // [ERROR:CRITICAL] +  breakpoint
-    template <typename... T>
-    [[maybe_unused]] auto bp(const std::string& Format, T... args) noexcept {
-        return exec(XLOG::kCritError | XLOG::kBp, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto bp(const std::string& format,
+                             Args&&... args) noexcept {
+        return exec(XLOG::kCritError | XLOG::kBp, format,
+                    std::forward<Args>(args)...);
     }
 
     // this if for stream operations

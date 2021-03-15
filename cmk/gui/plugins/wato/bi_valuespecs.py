@@ -177,10 +177,9 @@ def _convert_bi_rule_from_vs(value):
 
     search = copy.deepcopy(value[1][0])
     search["type"] = value[0]
-    return {
-        "search": search,
-        "action": value[1][1][1],
-    }
+    action = copy.deepcopy(value[1][1][1])
+    action["type"] = value[1][1][0]
+    return {"search": search, "action": action}
 
 
 def get_bi_rule_node_choices_vs():

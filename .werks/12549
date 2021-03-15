@@ -1,0 +1,12 @@
+Title: Fix parent scan
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615803081
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+The parent scan job always failed with an exception like "TypeError: tuple
+indices must be integers or slices, not str".

@@ -25,13 +25,18 @@ else
 MANAGED            := no
 endif
 
+# Will be set to "yes" by cmk build system when building a free edition
+FREE               := no
+
+ifeq ('yes', $(FREE))
+EDITION            := free
+EDITION_SHORT      := cfe
+endif
+
 VERSION            := 2.1.0i1
-# Will be set to ".demo" by cmk build system when building a demo package
-DEMO_SUFFIX        :=
-OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
-# But keep the ".demo" suffix. Somehow inconsistent, but this is our scheme.
-PKG_VERSION        := $(VERSION)$(DEMO_SUFFIX)
+PKG_VERSION        := $(VERSION)
 
 # Currently only used for the OMD package build cache. We did not want to use
 # the branch name, because we want to re-use a single cache also for derived sandbox

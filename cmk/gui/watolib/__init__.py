@@ -636,8 +636,8 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "lock_on_logon_failures": 10,
         }
 
-        if cmk_version.is_demo():
-            # CMC may not run here, we will base the decision on is_demo only
+        if cmk_version.is_free_edition():
+            # CMC may not run here, we will base the decision on is_free_edition only
             settings["cmc_cmk_helpers"] = 3
 
         return settings

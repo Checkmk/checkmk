@@ -1,0 +1,23 @@
+Title: Fix cmk --scan-parents on localized linux systems
+Class: fix
+Compatible: compat
+Component: core
+Date: 1615802056
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p1
+
+The command "cmk --scan-parents" was detecting all hosts to be not pingable in
+previous Checkmk 2.0 releases on Checkmk servers that use a localized
+environment.
+
+For example Linux systems that have the locale set to de_DE
+(LC_NUMERIC=de_DE.UTF-8) use "," as decimal separator which is then expected as
+parameter format by the underlying "ping" command.
+
+This issue is solved by disabling inheritance of the the systems locale
+settings for Checkmk site environments. This should've been ensured by the
+shipped ".profile" file but the mechanism was not covering all cases. It now
+explicitly unsets already set locale related environment variables to disable
+the locales in the site.

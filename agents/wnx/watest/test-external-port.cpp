@@ -4,8 +4,13 @@
 //
 #include "pch.h"
 
+#include <chrono>
+
 #include "asio.h"
 #include "external_port.h"
+#include "test_tools.h"
+
+using namespace std::chrono_literals;
 
 namespace wtools {  // to become friendly for wtools classes
 class TestProcessor2 : public wtools::BaseServiceProcessor {
@@ -51,8 +56,8 @@ TEST(ExternalPortTest, StartStop) {
             return v;
         };
         wtools::TestProcessor2 tp;
-        cma::world::ExternalPort test_port(&tp, 64351);  //
-        auto ret = test_port.startIo(reply);             //
+        cma::world::ExternalPort test_port(&tp, tst::TestPort());  //
+        auto ret = test_port.startIo(reply);                       //
         EXPECT_TRUE(ret);
         EXPECT_TRUE(test_port.io_thread_.joinable());
         ret = test_port.startIo(reply);  //
@@ -86,7 +91,6 @@ TEST(ExternalPortTest, Read) {
     }
     {
         char reply_text[] = "I am test\r\n";
-        int port = 64351;
         cma::world::ReplyFunc reply =
             [reply_text](const std::string Ip) -> std::vector<uint8_t> {
             auto len = strlen(reply_text) + 1;
@@ -97,8 +101,8 @@ TEST(ExternalPortTest, Read) {
             }
             return v;
         };
-        cma::world::ExternalPort test_port(nullptr, port);  //
-        auto ret = test_port.startIo(reply);                //
+        cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+        auto ret = test_port.startIo(reply);                           //
         EXPECT_TRUE(ret);
         ret = test_port.startIo(reply);  //
         EXPECT_FALSE(ret);
@@ -109,7 +113,8 @@ TEST(ExternalPortTest, Read) {
 
         io_context ios;
 
-        ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"), port);
+        ip::tcp::endpoint endpoint(ip::make_address("127.0.0.1"),
+                                   tst::TestPort());
 
         asio::ip::tcp::socket sock(ios);
 
@@ -193,10 +198,9 @@ TEST(ExternalPortTest, LowLevelApiEx) {
             auto f = std::async(std::launch::async, &ExternalPort::processQueue,
                                 &test_port, reply);
 
-            for (size_t i = 0; i < test_port.kMaxSessionQueueLength; i++) {
-                if (test_port.session_queue_.empty()) break;
-                cma::tools::sleep(1000);
-            }
+            tst::WaitForSuccessSilent(1000ms, [&test_port]() {
+                return test_port.session_queue_.empty();
+            });
 
             EXPECT_EQ(test_port.session_queue_.size(), 0)
                 << "must 0 after processing";
@@ -235,7 +239,6 @@ TEST(ExternalPortTest, MultiConnect) {
     auto yaml = GetLoadedConfig();
 
     groups::global.loadFromMainConfig();
-    int port = 64351;
     g_count = 0;
     // inside light delay
     cma::world::ReplyFunc reply =
@@ -250,15 +253,16 @@ TEST(ExternalPortTest, MultiConnect) {
 
     //  ipv4 connected successfully
     {
-        cma::world::ExternalPort test_port(nullptr, port);  //
-        auto ret = test_port.startIo(reply);                //
+        cma::world::ExternalPort test_port(nullptr, tst::TestPort());  //
+        auto ret = test_port.startIo(reply);                           //
         ASSERT_TRUE(ret);
 
         static int thread_count = 8;
 
         std::vector<std::future<void>> futures;
         for (int i = 0; i < thread_count; ++i) {
-            futures.push_back(std::async(std::launch::async, runThread, port));
+            futures.push_back(
+                std::async(std::launch::async, runThread, tst::TestPort()));
         }
 
         for (int i = 0; i < thread_count; ++i) {

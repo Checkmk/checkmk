@@ -71,6 +71,26 @@ A detailed description of the columns can be found on GitHub:
  * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
  * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
+JSON envelope attributes
+
+All objects are wrapped in a JSON structure called an "Domain Object" which take the following
+form:
+
+    {"domainType": "domain type identifier",
+     "instanceId": "string to uniquely identify domain object",
+     "title": "Human readable header for domain object",
+     "members": {},
+     "links": [],
+     "extensions": {}}
+
+The collections `members`, `extensions` and `links` are defined as such:
+
+ * members - this contains all relationships to other objects or collections which are present on
+   this domain object
+ * extensions - this contains all key-values pairs which are direct attributes of the domain object
+ * links - holds a collection of links to other resources or actions
+
+
 Some example queries:
 
     To query a list of all hosts which have a problem, you can query the "status" column on the
@@ -96,7 +116,7 @@ Every host and folder can have "attributes" set, which determine the behavior of
 host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
 community in a folder is equivalent to setting the same on all hosts in said folder.
 
-Some host endpoints allow one to view the "effective attributes", which is a combination of all
+Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
 attributes up to the root.
 
 # Link relations
@@ -152,7 +172,7 @@ scripts works with the other method.
 
 # Client compatibility issues
 
-## Overriding request methods
+## HTTP client compatibility
 
 If you have a client which cannot do the HTTP PUT or DELETE methods, you can use the
 `X-HTTP-Method-Override` HTTP header to force the server into believing the client actually sent

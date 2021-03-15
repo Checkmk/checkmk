@@ -177,6 +177,7 @@ public:
     uint16_t defaultPort() const noexcept { return default_port_; }
 
     void putOnQueue(AsioSession::s_ptr asio_session);
+    size_t sessionsInQueue();
 
     const size_t kMaxSessionQueueLength = 16;
 
@@ -377,7 +378,7 @@ protected:
     FRIEND_TEST(ExternalPortTest, CreateDelete);
     FRIEND_TEST(ExternalPortTest, StartStop);
     FRIEND_TEST(ExternalPortTest, LowLevelApiBase);
-    FRIEND_TEST(ExternalPortTest, LowLevelApiEx);
+    FRIEND_TEST(ExternalPortTest, ProcessQueue);
 #endif
 };
 

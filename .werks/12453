@@ -1,0 +1,12 @@
+Title: CME Activate Changes: No longer override user files on remote sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615809141
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+User-specific files (e.g. views, dashboards) on remote sites were overwritten by the central site.

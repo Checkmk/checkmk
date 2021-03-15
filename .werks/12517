@@ -1,0 +1,11 @@
+Title: Fixed "Services colored according to state" view column
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.0.0p1
+Date: 1615796425
+
+The services shown in the host view column "Hosts: Services colored according to state" were not colored in the state color. This has been fixed.

@@ -2815,7 +2815,7 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
         else:
             css = "statep"
 
-        h += html.render_div(html.render_a(text, link), class_=css)
+        h += html.render_div(html.render_span(html.render_a(text, link)), class_=css)
 
     return "", html.render_div(h, class_="objectlist")
 

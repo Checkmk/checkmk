@@ -422,13 +422,15 @@ img.tabicon {
 }
 
 /* Styles used by specific painters. These should be modularized later ... */
-/* TODO: Reproduce this html element */
 table.data div.objectlist div {
   float: left;
-  padding: 2px 6px;
-  margin: 2px;
-  border: none;
-  border-radius: $theme-border-radius;
+  margin: 2px $spacing-half 3px 0;
+
+  span {
+    display: inline-block;
+    padding: 2px $spacing-half;
+    border-radius: $theme-border-radius;
+  }
 }
 
 /*

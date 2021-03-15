@@ -617,6 +617,57 @@ def test_openapi_delete_downtime_with_query(
         )
 
 
+def test_openapi_delete_downtime_by_id(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    base = '/NO_SITE/check_mk/api/1.0'
+    live.add_table('downtimes', [{
+        'id': 123,
+        'host_name': 'heute',
+        'service_description': 'CPU load',
+        'is_service': 1,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'literally nothing'
+    }, {
+        'id': 1234,
+        'host_name': 'heute',
+        'service_description': 'Memory',
+        'is_service': 1,
+        'author': 'random',
+        'start_time': 1606913913,
+        'end_time': 1606913913,
+        'recurring': 0,
+        'comment': 'some service downtime'
+    }])
+
+    live.expect_query([
+        'GET downtimes',
+        'Columns: is_service',
+        'Filter: id = 123',
+    ])
+    live.expect_query('COMMAND [...] DEL_SVC_DOWNTIME;123', match_type='ellipsis')
+
+    with live:
+        wsgi_app.post(
+            base + '/domain-types/downtime/actions/delete/invoke',
+            content_type='application/json',
+            params=json.dumps({
+                'delete_type': 'by_id',
+                'downtime_id': '123',
+            }),
+            status=204,
+        )
+
+
 def test_openapi_delete_downtime_with_params(
     wsgi_app,
     with_automation_user,

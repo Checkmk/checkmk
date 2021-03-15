@@ -92,7 +92,7 @@ def delete_downtime(connection, downtime_id):
     """Delete a scheduled downtime based upon the downtime id"""
     is_service = Query(
         [Downtimes.is_service],
-        Downtimes.id.contains(downtime_id),
+        Downtimes.id == downtime_id,
     ).value(connection)
     if is_service:
         del_service_downtime(connection, downtime_id)

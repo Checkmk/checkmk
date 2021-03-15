@@ -1,0 +1,17 @@
+Title: Agent Bakery fails over custom binary files
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1615808830
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p1
+
+When deploying files to agent packages using the agent bakery and the
+"Deploy custom files with agent" ruleset, the agent bakery would fail
+to bake agents, if there are any files placed under your custom files
+package's <tt>bin</tt> subdirectory that have an executable flag set.
+
+This is fixed now.

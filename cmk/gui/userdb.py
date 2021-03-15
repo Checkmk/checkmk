@@ -610,13 +610,19 @@ def declare_user_attribute(name: str,
             )
 
 
-def load_users(lock: bool = False) -> Users:
-    filename = _root_dir() + "contacts.mk"
+def load_contacts() -> Dict[str, Any]:
+    return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
 
+
+def _contacts_filepath() -> str:
+    return _root_dir() + "contacts.mk"
+
+
+def load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        store.aquire_lock(filename)
+        store.aquire_lock(_contacts_filepath())
 
     if 'users' in g:
         return g.users
@@ -624,10 +630,9 @@ def load_users(lock: bool = False) -> Users:
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
-    contacts = store.load_from_mk_file(filename, "contacts", {})
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
-    filename = _multisite_dir() + "users.mk"
     users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
@@ -672,8 +677,7 @@ def load_users(lock: bool = False) -> Users:
             return []
 
     # FIXME TODO: Consolidate with htpasswd user connector
-    filename = cmk.utils.paths.htpasswd_file
-    for line in readlines(filename):
+    for line in readlines(cmk.utils.paths.htpasswd_file):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]

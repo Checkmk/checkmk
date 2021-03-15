@@ -16,3 +16,7 @@ Components and interfaces
    [Core] -- Livestatus
    [Core] -- Log
    [Core] -  [Check engine]
+
+See also
+--------
+- :doc:`arch-comp-livestatus`

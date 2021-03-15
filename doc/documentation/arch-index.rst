@@ -13,6 +13,7 @@ Components
    :maxdepth: 2
    :caption: Components:
 
-   arch-comp-omd.rst
-   arch-comp-core.rst
    arch-comp-checkengine.rst
+   arch-comp-core.rst
+   arch-comp-livestatus.rst
+   arch-comp-omd.rst

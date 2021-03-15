@@ -61,6 +61,9 @@ PACKAGES := \
 ifeq ($(EDITION),enterprise)
 PACKAGES += enterprise
 endif
+ifeq ($(EDITION),free)
+PACKAGES += enterprise
+endif
 ifeq ($(EDITION),managed)
 PACKAGES += enterprise
 PACKAGES += managed
@@ -84,7 +87,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \

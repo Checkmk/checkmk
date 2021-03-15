@@ -185,6 +185,11 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                                      options=DiscoveryOptions(**options))
 
     def execute(self, request: StartDiscoveryRequest) -> str:
+        # Be compatible with pre-2.0.0p1 central sites. The version was not sent before this
+        # version. We need to skip the new_labels, vanished_labels and replaced_labels.
+        version = html.request.headers.get("x-checkmk-version")
+        if not version:
+            return repr(tuple(execute_discovery_job(request))[:4])
         return repr(execute_discovery_job(request)._asdict())
 
 

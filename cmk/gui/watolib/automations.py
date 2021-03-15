@@ -313,6 +313,10 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         auth=auth,
         files=files,
         timeout=timeout,
+        headers={
+            "x-checkmk-version": cmk_version.__version__,
+            "x-checkmk-edition": cmk_version.edition_short(),
+        },
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8

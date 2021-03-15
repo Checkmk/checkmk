@@ -250,5 +250,7 @@ private:
     std::wstring argv0_;
 };
 
+constexpr inline int TestPort() { return 64531; }
+
 }  // namespace tst
 #endif  // test_tools_h__

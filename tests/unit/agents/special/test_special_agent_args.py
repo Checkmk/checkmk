@@ -22,7 +22,6 @@ NOT_TESTED_YET = {
     'agent_ddn_s2a',
     'agent_emcvnx',
     'agent_hp_msa',
-    'agent_innovaphone',
     'agent_ipmi_sensors',
     'agent_jolokia',
     'agent_netapp',
@@ -80,6 +79,9 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
+    'agent_innovaphone': [
+        '--debug', '--verbose', '--vcrtrace', 'TRACEFILE', 'User', 'MyPass', 'Hostname'
+    ],
 }
 
 

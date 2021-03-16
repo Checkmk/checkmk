@@ -6,10 +6,16 @@
 
 import base64
 import sys
-from urllib.request import Request, urlopen
 import xml.etree.ElementTree as etree
+from typing import Optional, Sequence
+from urllib.request import Request, urlopen
 
 from six import ensure_binary, ensure_str
+
+from cmk.special_agents.utils.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 
 def get_informations(credentials, name, xml_id, org_name):
@@ -65,24 +71,22 @@ def get_url(address, user, password):
     return urlopen(request)
 
 
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("user", metavar="USER")
+    parser.add_argument("password", metavar="PASSWORD")
+    parser.add_argument("host", metavar="HOST")
+    return parser.parse_args(argv)
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
+    args = parse_arguments(sys_argv)
 
-    if len(sys_argv) != 3:
-        sys.stderr.write("usage: agent_innovaphone HOST USER PASSWORD\n")
-        return 1
-
-    server = sys_argv[0]
-    user = sys_argv[1]
-    password = sys_argv[2]
-
-    base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
-    counter_address = "http://%s%s" % (server, base_url)
-
-    credentials = (server, counter_address, user, password)
-
-    p = etree.parse(get_url(counter_address, user, password))
+    counter_address = f"http://{args.host}/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
+    credentials = (args.host, counter_address, args.user, args.password)
+    p = etree.parse(get_url(counter_address, args.user, args.password))
     root_data = p.getroot()
 
     informations = {}
@@ -91,15 +95,18 @@ def main(sys_argv=None):
         x = entry.get('x')
         informations[n] = x
 
-    s_prefix = "innovaphone_"
     for what in ["CPU", "MEM", "TEMP"]:
         if informations.get(what):
-            section_name = s_prefix + what.lower()
+            section_name = "innovaphone_" + what.lower()
             get_informations(credentials, section_name, informations[what], what)
 
-    print("<<<%schannels>>>" % s_prefix)
+    print("<<<innovaphone_channels>>>")
     for channel_num in range(1, 5):
         get_pri_channel(credentials, 'PRI' + str(channel_num))
 
-    print("<<<%slicenses>>>" % s_prefix)
+    print("<<<innovaphone_licenses>>>")
     get_licenses(credentials)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -106,6 +106,7 @@ class SectionMeta:
     """Metadata for the section names."""
     checking: bool
     disabled: bool
+    redetect: bool
     fetch_interval: Optional[int]
 
     def __init__(
@@ -113,11 +114,13 @@ class SectionMeta:
         *,
         checking: bool,
         disabled: bool,
+        redetect: bool,
         fetch_interval: Optional[int],
     ) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
         self.disabled = disabled
+        self.redetect = redetect
         self.fetch_interval = fetch_interval
 
     def serialize(self) -> Dict[str, Any]:
@@ -264,7 +267,8 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
     def _get_selection(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return self.checking_sections - self.disabled_sections
+            return {name for name in self.checking_sections if not self.sections[name].redetect
+                   } - self.disabled_sections
 
         if mode is Mode.FORCE_SECTIONS:
             return self.checking_sections
@@ -273,7 +277,12 @@ class SNMPFetcher(ABCFetcher[SNMPRawData]):
 
     def _get_detected_sections(self, mode: Mode) -> Set[SectionName]:
         """Determine the sections fetched after successful detection"""
-        if mode is Mode.INVENTORY or (mode is Mode.CHECKING and self.do_status_data_inventory):
+        if mode is Mode.CHECKING:
+            return ({name for name in self.checking_sections if self.sections[name].redetect} |
+                    (self.inventory_sections if self.do_status_data_inventory else set())
+                   ) - self.disabled_sections
+
+        if mode is Mode.INVENTORY:
             return self.inventory_sections - self.disabled_sections
 
         if mode is Mode.DISCOVERY:

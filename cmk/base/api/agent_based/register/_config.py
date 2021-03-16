@@ -152,6 +152,10 @@ def get_section_plugin(section_name: SectionName) -> SectionPlugin:
             registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
 
 
+def get_section_producers(parsed_section_name: ParsedSectionName) -> Set[SectionName]:
+    return set(_sections_by_parsed_name[parsed_section_name])
+
+
 def get_snmp_section_plugin(section_name: SectionName) -> SNMPSectionPlugin:
     return registered_snmp_sections[section_name]
 

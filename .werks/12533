@@ -1,0 +1,15 @@
+Title: Fix naming of entries in sorting section of views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615898339
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+If you created or edited a view, some entries in the "Sorting" section where
+shown as e.g. "<bound method PainterAlias.title of
+<cmk.gui.plugins.views.painters.PainterAlias object at 0x7fb79a752ca0>>"
+instead of "Host Alias".

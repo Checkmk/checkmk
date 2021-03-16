@@ -1525,7 +1525,7 @@ def view_editor_sorter_specs(view):
         ds_name = view['datasource']
 
         for name, p in sorters_of_datasource(ds_name).items():
-            yield name, get_sorter_title_for_choices(p)
+            yield name, get_plugin_title_for_choices(p)
 
         for painter_spec in view.get('painters', []):
             if isinstance(painter_spec[0], tuple) and painter_spec[0][0] in [
@@ -2916,17 +2916,18 @@ def _allowed_for_datasource(collection, ds_name):
     allowed = {}
     for name, plugin_class in collection.items():
         plugin = plugin_class()
-        infos_needed = infos_needed_by_painter(plugin, add_columns)
+        infos_needed = infos_needed_by_plugin(plugin, add_columns)
         if len(infos_needed.difference(infos_available)) == 0:
             allowed[name] = plugin
     return allowed
 
 
-def infos_needed_by_painter(painter, add_columns=None):
+def infos_needed_by_plugin(plugin: Union[Painter, Sorter],
+                           add_columns: Optional[List] = None) -> Set[str]:
     if add_columns is None:
         add_columns = []
 
-    return {c.split("_", 1)[0] for c in painter.columns if c != "site" and c not in add_columns}
+    return {c.split("_", 1)[0] for c in plugin.columns if c != "site" and c not in add_columns}
 
 
 def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
@@ -2934,37 +2935,29 @@ def painter_choices(painters: Dict[str, Painter]) -> List[DropdownChoiceEntry]:
 
 
 def painter_choices_with_params(painters: Dict[str, Painter]) -> List[CascadingDropdownChoice]:
-    return sorted(((name, get_painter_title_for_choices(painter),
+    return sorted(((name, get_plugin_title_for_choices(painter),
                     painter.parameters if painter.parameters else None)
                    for name, painter in painters.items()),
                   key=lambda x: x[1])
 
 
-def get_sorter_title_for_choices(sorter: Sorter) -> str:
+def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
     info_title = "/".join([
         visual_info_registry[info_name]().title_plural
-        for info_name in sorted(infos_needed_by_painter(sorter))
+        for info_name in sorted(infos_needed_by_plugin(plugin))
     ])
 
     # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if sorter.columns == ["site"]:
+    if plugin.columns == ["site"]:
         info_title = _("Site")
 
-    return u"%s: %s" % (info_title, sorter.title)
+    if callable(plugin.title):
+        dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+        title = plugin.title(dummy_cell)
+    else:
+        title = plugin.title
 
-
-def get_painter_title_for_choices(painter: Painter) -> str:
-    info_title = "/".join([
-        visual_info_registry[info_name]().title_plural
-        for info_name in sorted(infos_needed_by_painter(painter))
-    ])
-
-    # TODO: Cleanup the special case for sites. How? Add an info for it?
-    if painter.columns == ["site"]:
-        info_title = _("Site")
-
-    dummy_cell = Cell(View("", {}, {}), PainterSpec(painter.ident))
-    return u"%s: %s" % (info_title, painter.list_title(dummy_cell))
+    return u"%s: %s" % (info_title, title)
 
 
 #.

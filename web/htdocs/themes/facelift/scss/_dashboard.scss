@@ -897,10 +897,6 @@ div.hoststats,
 div.servicestats {
   height: 100%;
 
-  g.hexagons {
-    transform: translate(60px, 95px);
-  }
-
   path.hexagon {
     &.ok {
       fill: $success;

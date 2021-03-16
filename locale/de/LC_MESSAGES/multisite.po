@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-03-13 06:19+0000\n"
-"Last-Translator: Lukas Lengler <lukas.lengler@tribe29.com>\n"
+"PO-Revision-Date: 2021-03-16 07:00+0000\n"
+"Last-Translator: Ulrich Bschorer <ulrich.bschorer@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -8053,6 +8053,8 @@ msgid ""
 "Cannot display inventory tree of host '%s': Found this host on multiple "
 "sites: %s"
 msgstr ""
+"Inventarverzeichnis von Host '%s' kann nicht angezeigt werden: Diesen Host "
+"auf mehreren Sites gefunden: %s"
 
 msgid ""
 "Cannot display this view in matrix layout. You need at least one group "
@@ -9057,9 +9059,8 @@ msgstr "Checks & Agenten"
 msgid "Checks on management boards"
 msgstr "Checks auf Management-Boards"
 
-#, fuzzy
 msgid "Checks on regular hosts"
-msgstr "Checkperiode für Hosts"
+msgstr "Checks auf regulären Hosts"
 
 msgid "Checks to send data for"
 msgstr "Checks, für die Daten übertragen werden sollen"
@@ -12359,6 +12360,12 @@ msgstr ""
 "erreichbar sein soll. Einen neuen Themennamen kann man <a href='%s'>hier</a> "
 "definieren."
 
+#, python-format
+msgid ""
+"Dashlet type %s could not be found. Please remove it from your dashboard "
+"configuration."
+msgstr ""
+
 msgid "Data"
 msgstr "Daten"
 
@@ -15152,9 +15159,8 @@ msgstr "Dokumentation Fragmentation"
 msgid "Does not ends with \"%s\"."
 msgstr "Endet nicht mit \"%s\"."
 
-#, fuzzy
 msgid "Does not match any service"
-msgstr "Keinen eigenen Service anlegen"
+msgstr "Passt zu keinem Service."
 
 msgid "Domain (only used for european accounts)"
 msgstr "Domain (nur für europäische Konten verwendet)"
@@ -28682,7 +28688,6 @@ msgstr "Maximale anzahl von Emails in der Schlange"
 msgid "Maximum PGA allocated"
 msgstr "Maximal zugewiesener PGA"
 
-#, fuzzy
 msgid "Maximum PGA used for auto workareas"
 msgstr "Maximale PGA verwendet für Auto-Workareas"
 
@@ -43486,9 +43491,8 @@ msgstr "Erfolg"
 msgid "Successfully baked agents"
 msgstr "Agenten erfolgreich gebacken"
 
-#, fuzzy
 msgid "Successfully changed password."
-msgstr "Agenten erfolgreich gebacken"
+msgstr "Das Passwort wurde erfolgreich geändert."
 
 #, python-format
 msgid ""
@@ -43873,7 +43877,6 @@ msgstr "Systemd-Services"
 msgid "Systemd single services"
 msgstr "Systemd einzelne Dienste"
 
-#, fuzzy
 msgid "Systemd single services discovery"
 msgstr "Erkennung von Systemd Services"
 
@@ -44174,16 +44177,14 @@ msgstr "Task in Warteschlange seit"
 msgid "Task max waiting"
 msgstr "Maximale Wartezeit eines Tasks."
 
-#, fuzzy
 msgid "Task name"
-msgstr "Sicherungsname"
+msgstr "Name der Aufgabe"
 
 msgid "Task state: Blocked"
 msgstr "Task-Zustand: Blockiert"
 
-#, fuzzy
 msgid "Task state: Pending"
-msgstr "Auswahl der Tasks"
+msgstr "Status der Aufgabe: Pending"
 
 msgid "Task state: Stuck"
 msgstr "Task-Zustand: Hängen geblieben"
@@ -44191,9 +44192,8 @@ msgstr "Task-Zustand: Hängen geblieben"
 msgid "Tasks"
 msgstr "Tasks"
 
-#, fuzzy
 msgid "Team Secret"
-msgstr "Secret"
+msgstr "Team Secret"
 
 msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
@@ -47928,9 +47928,8 @@ msgstr ""
 "Die Quelldetails können entweder auf dem abgefragten Host oder auf dem "
 "Quellhost angezeigt werden."
 
-#, fuzzy
 msgid "The source host"
-msgstr "Das Ressourcenmerkmal"
+msgstr "Der Quell-Host"
 
 msgid ""
 "The staleness value of a host / service is calculated by measuring the "
@@ -48898,21 +48897,19 @@ msgstr "Diese %s existiert nicht."
 msgid "This %s is one of your favorites"
 msgstr "Dieser %s ist einer deiner Favoriten"
 
-#, fuzzy
 msgid "This BI aggregation does not exist"
-msgstr "Diese Aggregation existiert nicht."
+msgstr "Diese BI Aggregation existiert nicht."
 
 msgid "This BI pack does not exist."
 msgstr "Dieses BI-Paket existiert nicht."
 
-#, fuzzy, python-format
+#, python-format
 msgid "This BI pack does not exist: %s"
-msgstr "Dieses BI-Paket existiert nicht."
+msgstr "Dieses BI-Paket existiert nicht: %s"
 
 msgid "This BI rule does not exist"
 msgstr "Diese BI-Regel existiert nicht."
 
-#, fuzzy
 msgid "This BI rule does not exist."
 msgstr "Diese BI-Regel existiert nicht."
 
@@ -48984,18 +48981,16 @@ msgstr ""
 "Postfach die Antwort auszulesen. Auf dieser Art können Sie die komplette "
 "Schleife von Email Senden und Empfangen testen."
 
-#, fuzzy
 msgid ""
 "This active check uses <tt>traceroute</tt> in order to determine the current "
 "routing from the monitoring host to the target host. You can specify any "
 "number of missing or expected routes in order to detect e.g. an (unintended) "
 "failover to a secondary route."
 msgstr ""
-"Dieser aktive Check verwendet <tt>traceroute</tt>, um festzustellen, welche "
-"Route gerade vom Monitoring-Server zum Zielhost verwendet wird. Sie können "
-"eine beliebige Zahl von Routen festlegen, und jeweils festlegen, ob diese "
-"erwünscht oder unerwünscht sind. So können Sie z.B. das Umschalten zu einer "
-"sekundären Route erkennen."
+"Dieser aktive Check verwendet <tt>traceroute</tt>, um das aktuelle Routing "
+"vom Überwachungshost zum Zielhost zu ermitteln. Sie können eine beliebige "
+"Anzahl von fehlenden oder erwarteten Routen angeben, um z. B. einen "
+"(unbeabsichtigten) Failover auf eine sekundäre Route zu erkennen."
 
 msgid ""
 "This adds another graph to the performance CPU utilization details page, "
@@ -49074,24 +49069,22 @@ msgstr ""
 "Das ist ein Pflicht-Attribut. In der Hosts-Liste oder dem übergeordneten "
 "Verzeichnis wurde noch kein Wert definiert."
 
-#, fuzzy
 msgid ""
 "This attribute is only visibile in the edit host and folder pages by "
 "default. This option displays it in host overview tables of the setup menu "
 "as well."
 msgstr ""
-"Dieses Attribut ist standardmäßig nur auf den Seiten des Hosts und des "
-"Ordners sichtbar, kann aber auch in den Tabellen der Host-Übersicht von WATO "
-"sichtbar gemacht werden."
+"Dieses Attribut ist standardmäßig nur auf den Seiten \"Host und Ordner "
+"bearbeiten\" sichtbar. Mit dieser Option wird es auch in Host-"
+"Übersichtstabellen des Setup-Menüs angezeigt."
 
-#, fuzzy
 msgid ""
 "This attribute is only visibile in the edit user page by default. This "
 "option displays it in the user overview table of the setup menu as well."
 msgstr ""
-"Dieses Attribut ist standardmäßig nur auf den Seiten des Hosts und des "
-"Ordners sichtbar, kann aber auch in den Tabellen der Host-Übersicht von WATO "
-"sichtbar gemacht werden."
+"Dieses Attribut ist standardmäßig nur auf der Seite \"Benutzer bearbeiten\" "
+"sichtbar. Mit dieser Option wird es auch in der Benutzerübersichtstabelle "
+"des Setup-Menüs angezeigt."
 
 msgid ""
 "This avoids automatic changes during these times so that the automatic "
@@ -49164,14 +49157,12 @@ msgstr ""
 "Sie eine Prozedur verwenden, können Sie Eingabeparameter durch Komma "
 "getrennt angeben. Dieser Check ruft das Plugin <tt>check_sql</tt> auf."
 
-#, fuzzy
 msgid ""
 "This check crashed, but no crash dump is available, please report this to "
 "the development team."
 msgstr ""
-"Dieser Check ist abgestürzt. Bitte informieren sie einen Check_MK Benutzer, "
-"der die nötigen Berechtingungen hat Crashreports zu sehen und an das "
-"Entwicklerteam zu übermitteln."
+"Dieser Check ist abgestürzt, aber es ist kein Crash-Dump verfügbar, bitte "
+"melden Sie dies dem Entwicklungsteam."
 
 msgid ""
 "This check crashed. Please click here for more information. You also can "
@@ -49195,17 +49186,16 @@ msgstr "Dieser Check hat keine Parameter."
 msgid "This check is not configurable via WATO"
 msgstr "Dieser Check ist nicht via WATO konfigurierbar"
 
-#, fuzzy
 msgid ""
 "This check is part of the Check_MK Event Console and monitors whether there "
 "are any open events for a particular host. The overall state of the service "
 "generated by the check reflects the most critical status of any open event "
 "for that host."
 msgstr ""
-"Dieser Check ist Teil der Check_MK Event Console. Er überprüft ob auf einem "
-"bestimmten Host offene Ereignisse vorliegen (möglicherweise auch eine "
-"bestimmte Anwendung auf diesem Host). Der Status liefert das schlechteste "
-"offene Ereignis des Hosts."
+"Dieser Check ist Teil der Check_MK-Ereigniskonsole und überwacht, ob es "
+"offene Ereignisse für einen bestimmten Host gibt. Der von der Prüfung "
+"erzeugte Gesamtstatus des Services spiegelt den kritischsten Status aller "
+"offenen Ereignisse für diesen Host wider."
 
 msgid ""
 "This check is used to monitor successful email delivery through Symantec "
@@ -49365,12 +49355,11 @@ msgid "This connection is currently not being used for synchronization."
 msgstr ""
 "Diese Verbindung wird momentan nicht für die Synchronisation verwendet."
 
-#, fuzzy
 msgid ""
 "This connector can be used to automatically create hosts based on my data."
 msgstr ""
-"Diese Verbindung kann genutzt werden um automatisiert Hosts auf Basis der "
-"verfügbaren Huckepack-Daten anzulegen."
+"Diese Verbindung kann genutzt werden um automatisiert Hosts auf Basis meiner "
+"Daten anzulegen."
 
 msgid ""
 "This connector can be used to automatically create hosts based on piggyback "
@@ -49379,13 +49368,11 @@ msgstr ""
 "Diese Verbindung kann genutzt werden um automatisiert Hosts auf Basis der "
 "verfügbaren Huckepack-Daten anzulegen."
 
-#, fuzzy
 msgid "This crash report"
-msgstr "Crashberichte einsehen"
+msgstr "Dieser Crashbericht"
 
-#, fuzzy
 msgid "This custom graph"
-msgstr "Angepasster Graph"
+msgstr "Dieser angepasste Graph"
 
 msgid ""
 "This customer does not exist anymore. This object can not be used nor edit "
@@ -49439,7 +49426,7 @@ msgstr "Das Ereignis hat den Ziel-Zähler noch nicht erreicht."
 msgid "This expression must match the value of the variable"
 msgstr "Dieser Ausdruck muss auf den Wert der Variable matchen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -49453,18 +49440,18 @@ msgid ""
 "number of CPUs explicitly. This maximum number is capped at the number of "
 "CPU cores or 12, whichever is lower."
 msgstr ""
-"Diese Funktion ermöglicht die Verteilung der Arbeitslast der "
-"Konfigurationsgenerierung auf mehrere CPUs. Abhängig von der Anzahl der "
-"verfügbaren CPU-Kerne kann die Zeit zur Erstellung der Konfiguration "
-"drastisch verbessert werden. Der Nachteil ist, dass das System während der "
-"Konfigurationsgenerierung etwas mehr Rechenleistung benötigt, was sich auf "
-"die Performance des eigentlichen Monitorings auswirken kann. Da neue "
-"Prozesse entstehen, steigt auch der RAM-Verbrauch während der "
-"Konfigurationsgenerierung. Wenn Sie diese Funktion mit weiteren Anpassungen "
-"aktivieren verwendet die Konfigurationsgenerierung 75% der verfügbaren CPU-"
-"Kerne. Die Option <tt>Limit maximum number of used cpus</tt> ermöglicht die "
-"Anzahl der CPUs explizit einzustellen. Diese Zahl ist auf die Anzahl der CPU-"
-"Kerne begrenzt."
+"Diese Funktion ermöglicht die Verteilung der Arbeitslast bei der "
+"Konfigurationserstellung auf mehrere CPUs. Abhängig von der Anzahl der "
+"verfügbaren CPU-Kerne kann dies die Zeit für die Generierung der "
+"Konfiguration drastisch verbessern. Der Nachteil ist, dass das System "
+"während der Konfigurationserstellung etwas stärker belastet wird, was sich "
+"auf die Leistung der eigentlichen Überwachung auswirken kann, und dass der "
+"RAM-Bedarf während der Konfigurationserstellung ansteigt, da neue Prozesse "
+"gespawnt werden. Wenn Sie diese Funktion einfach ohne weitere Anpassungen "
+"aktivieren, wird die Konfigurationserstellung 75 % der verfügbaren CPU-Kerne "
+"verwenden. Mit der Option <tt>Limit maximum number of used cpus</tt> können "
+"Sie die Anzahl der CPUs explizit festlegen. Diese maximale Anzahl ist auf "
+"die Anzahl der CPU-Kerne oder 12 begrenzt, je nachdem, was niedriger ist."
 
 msgid ""
 "This feature is to apply different rules to files that are inconsistent with "
@@ -49507,9 +49494,8 @@ msgstr ""
 msgid "This filter cannot be displayed"
 msgstr "Der Filter kann nicht dargestellt werden."
 
-#, fuzzy
 msgid "This forecast graph"
-msgstr "Neuer Vorhersagegraph..."
+msgstr "Dieser Vorhersagegraph"
 
 #, python-format
 msgid ""
@@ -49593,7 +49579,6 @@ msgstr ""
 msgid "This is a front matter Template"
 msgstr "Das ist eine Titelei Vorlage"
 
-#, fuzzy
 msgid ""
 "This is a placeholder for a timeseries graph displaying the historical "
 "development of your license usage. To be able to see this graph, you first "
@@ -49601,12 +49586,11 @@ msgid ""
 "settings. Secondly you will have to wait for at least two days after "
 "creating a site or updating to 2.0"
 msgstr ""
-"Hier wird ein zeitlicher Verlauf der vergangenen Entwicklung der "
-"Lizenznutzung angezeigt. Um diesen Graphen zu sehen muss zuerst der "
-"Subskriptionsanfang, das Subkriptionsende und die Größe in den "
-"Subkriptionseinstellungen festgelegt werden. Zusätzlich müssen mindestens "
-"zwei Tage gewartet werden nachdem eine Instanz erstellt oder zur 2.0 "
-"upgedatet wurde."
+"Dies ist ein Platzhalter für ein Zeitreihen-Diagramm, das die historische "
+"Entwicklung Ihrer Lizenznutzung anzeigt. Um diesen Graphen sehen zu können, "
+"müssen Sie zunächst in den Abonnement-Einstellungen den Abonnement-Start, "
+"das Ende und die Größe konfigurieren. Zweitens müssen Sie nach dem Anlegen "
+"einer Site oder dem Update auf 2.0 mindestens zwei Tage lang warten"
 
 msgid "This is a regular expression for matching the event's comment."
 msgstr ""
@@ -49783,9 +49767,8 @@ msgstr ""
 "Titelzeile nicht als Titelzeile der Tabelle gezeigt wird, können Sie die "
 "Importeinstellungen anpassen und es erneut versuchen."
 
-#, fuzzy
 msgid "This log file"
-msgstr "Die Logdatei"
+msgstr "Diese Logdatei"
 
 msgid "This logfile contains no unacknowledged messages."
 msgstr "Diese Logdatei enthält keine nicht-quittierten Meldungen."
@@ -49872,9 +49855,8 @@ msgstr ""
 "Dies muss mit dem Benutzer übereinstimmen, für den <tt>mk-remote-alert-"
 "handler</tt> eingerichtet ist."
 
-#, fuzzy
 msgid "This name corresponds to the cooling device to be monitored."
-msgstr "Name des überwachten Zählers"
+msgstr "Dieser Name entspricht dem zu überwachenden Kühlgerät."
 
 msgid "This name corresponds to the single file name to be monitored."
 msgstr ""
@@ -49972,11 +49954,10 @@ msgstr ""
 "Service oder die zugehörigen Services ausfallen. Die meiste CPU-Leistung "
 "wird von der Eventlog-Überwachung und den Leistungszählern benötigt. "
 
-#, fuzzy
 msgid "This option allows to skip specific sections of the Checkmk agent."
 msgstr ""
-"Diese Berechtigung erlaubt das Änderung der globalen Einstellungen der Event "
-"Console."
+"Diese Option ermöglicht es, bestimmte Sektionen des Checkmk-Agenten zu "
+"überspringen."
 
 msgid ""
 "This option allows to skip specific sections of the Checkmk agent. By "
@@ -50281,9 +50262,8 @@ msgstr ""
 "(Endung <tt>.ics</tt>) erzeugen. Ein üblicher Zweck ist das importieren von "
 "Feiertagskalendern. Daher werden nur Ganztagestermine importiert."
 
-#, fuzzy
 msgid "This page does not provide an inline help."
-msgstr "Dieses Paket enthält noch keine Regeln."
+msgstr "Diese Seite bietet keine Inline-Hilfe."
 
 msgid "This page does not support cluster hosts."
 msgstr "Diese Ansicht unterstützt keine Cluster-Hosts."
@@ -50294,9 +50274,8 @@ msgstr "Diese Seite konnte leider nicht gefunden werden."
 msgid "This page with navigation"
 msgstr "Diese Seite mit Navigation"
 
-#, fuzzy
 msgid "This page without navigation"
-msgstr "Phasen ohne Synchronisation"
+msgstr "Diese Seite ohne Navigation"
 
 msgid ""
 "This password management module stores the passwords you use in your checks "
@@ -50319,13 +50298,15 @@ msgstr ""
 msgid "This period has been reclassified as a scheduled downtime"
 msgstr "Diese Zeitspanne wurde umklassifiziert als geplante Wartungszeit."
 
-#, fuzzy, python-format
+#, python-format
 msgid "This period has been reclassified in host state to state: %s"
-msgstr "Diese Zeitspanne wurde umklassifiziert als geplante Wartungszeit."
+msgstr ""
+"Dieser Zeitraum wurde im Host-Zustand in den Zustand: %s umklassifiziert"
 
-#, fuzzy, python-format
+#, python-format
 msgid "This period has been reclassified in service state to state: %s"
-msgstr "Diese Zeitspanne wurde umklassifiziert als geplante Wartungszeit."
+msgstr ""
+"Diese Zeitspanne wurde im Service-Zustand in den Zustand: %s umklassifiziert"
 
 msgid ""
 "This plugin allows you to let users keep their own plugins, local scripts "
@@ -50455,11 +50436,8 @@ msgstr ""
 msgid "This plugin monitors Veeam backup status on Window hosts."
 msgstr "Dieses Plugin überwacht den Veeam-Backup-Status auf Windows-Hosts."
 
-#, fuzzy
 msgid "This plugin monitors channels, managers and queues of IBM MQ."
-msgstr ""
-"Dieses Plugin ermöglicht Checks für die Kanäle und Queues von IBM WebSphere "
-"MQ."
+msgstr "Dieses Plugin überwacht Kanäle, Manager und Warteschlangen von IBM MQ."
 
 msgid "This plugin monitors the NFS version 4 exports of a Linux host."
 msgstr ""
@@ -50696,9 +50674,8 @@ msgstr ""
 msgid "This role does not exist."
 msgstr "Diese Rolle existiert nicht."
 
-#, fuzzy
 msgid "This rule"
-msgstr "Bearbeite Regel"
+msgstr "Diese Regel"
 
 msgid ""
 "This rule activates an agent which connects to an ACME Session Border "
@@ -50755,13 +50732,13 @@ msgstr ""
 "Diese Regel ermöglicht einen Couchbase Server zum Monitoren auszuwählen, als "
 "auch Buckets für weitere Checks zu konfigurieren"
 
-#, fuzzy
 msgid ""
 "This rule allows to set the warn and crit levels of the heap / non-heap and "
 "total memory area usage on web application servers."
 msgstr ""
-"Mit dieser Regel können Sie Schwellwerte für den Heap-, Nicht-Heap und "
-"Gesamtspeicherverbrauch von Web-Application-Servern festlegen."
+"Mit dieser Regel können Sie die Warn- und Kritikalitätsstufen für die Heap-/"
+"Non-Heap- und Gesamtspeicherbereichsnutzung auf Webanwendungsservern "
+"festlegen."
 
 msgid ""
 "This rule allows to set the warn and crit levels of the memory metrics of "
@@ -50770,15 +50747,14 @@ msgstr ""
 "Dieser Regelsatz erlaubt das Setzen von WARN-/CRIT-Schwellen auf "
 "Speichermetriken einer DotNet- (.Net)-Runtime."
 
-#, fuzzy
 msgid ""
 "This rule allows to set the warn and crit levels of the memory pools on web "
 "application servers."
 msgstr ""
-"Diese Regel setzt die WARN und CRIT Level für die Zahl der eingehenden "
-"Anfragen zu einem JVM Server."
+"Mit dieser Regel können Sie die Warn- und Kritikalitätsstufen der "
+"Speicherpools auf Webanwendungsservern festlegen."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "This rule allows you to add your own files and folders to the agent package. "
 "All you have to do is to place them under <i>%s/local/share/check_mk/agents/"
@@ -50796,24 +50772,23 @@ msgid ""
 "dir. Multiple rules can apply, this means that the packages of multiple "
 "rules are merged."
 msgstr ""
-"Diese Regel erlaubt Ihnen dem Agentenpaket eigene Dateien und Ordner "
-"hinzuzufügen. Sie müssen Sie nur unter <i>%s/local/share/check_mk/agents/"
-"custom</i> ablegen, mit den folgenden Einschränkungen: Erstellen Sie einen "
-"Unterordner für jedes Paket, was sie ausrollen möchten. Diese Pakete werden "
-"in dieser Regel als Listenauswahl angezeigt. Innerhalb eines Paketordners "
-"können sie die folgenden Unterordner erstellen: <i>lib</i>, <i>bin</i>, "
-"<i>var</i>, <i>config</i>. Diese Ordner sind die lokalen Zielpfade für die "
-"dateien. Wenn Sie zum Beispiel <i>mypackage/lib/myfolder/myfile</i> in den "
-"<i>custom</i>-Ordner ablegen, wird mypackage als Listenoption angezeigt. Der "
-"Unterordner <i>lib</i> wird aufgelöst zu <i>/usr/lib/check_mk_agent</i> wenn "
-"Sie einen Linuxagenten mit Standardkonfiguration benutzen. Am Ende wird die "
-"Datei unter  <i>/usr/lib/check_mk_agent/myfolder/myfile</i> liegen. "
-"Bemerkung: Wenn Sie einen Windowsagenten benutzen, zeigen alle logischen "
-"Pfade zum selben Ort - das Installationsverzeichnis des Agenten. Mehrere "
-"Regeln können greifen, was bedeutet, dass die Pakete mehrere Regeln "
-"kombiniert werden. Bemerkung: Dieses Feature wird bald für Linux/Unix "
-"verfügbar sein, darum wurde die dokumentation für Linux geschrieben (diese "
-"Beispiel ist klarer)."
+"Mit dieser Regel können Sie Ihre eigenen Dateien und Ordner zum Agentenpaket "
+"hinzufügen. Alles, was Sie tun müssen, ist, sie unter <i>%s/local/share/"
+"check_mk/agents/custom mit</i> den folgenden Einschränkungen zu platzieren. "
+"Erstellen Sie für jedes Paket, das Sie bereitstellen möchten, ein "
+"Unterverzeichnis. Diese Pakete werden in dieser Regel als Listenauswahl "
+"angezeigt. Innerhalb eines Paketordners können Sie die folgenden Unterordner "
+"erstellen: <i>lib</i>, <i>bin</i>, <i>var</i>, <i>config</i>. Diese Ordner "
+"sind die logischen Zielpfade für die Dateien. Wenn Sie zum Beispiel "
+"<i>mypackage/lib/myfolder/myfile</i> in das <i>custom</i>-Verzeichnis legen. "
+"Diese Regel wird mypackage als Listenauswahloption anzeigen. Der Unterordner "
+"<i>lib</i> wird in <i>/usr/lib/check_mk_agent</i> aufgelöst, wenn ein Linux-"
+"Agent mit der Standardkonfiguration verwendet wird. Am Ende wird die Datei "
+"unter <i>/usr/lib/check_mk_agent/myfolder/myfile</i> zu finden sein. "
+"Hinweis: Wenn Sie den Windows-Agenten verwenden, zeigen alle logischen Pfade "
+"auf denselben Ort - das Installationsverzeichnis des Agenten. Es können "
+"mehrere Regeln gelten, das bedeutet, dass die Pakete mehrerer Regeln "
+"zusammengeführt werden."
 
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
@@ -50831,13 +50806,12 @@ msgstr ""
 "Mit diesem Regelsatz können Sie die Überschusslevels für Datenbank-"
 "Tablespaces und -Indexspace angeben."
 
-#, fuzzy
 msgid ""
 "This rule allows you to configure levels for the Prometheus custom check "
 "targeting specific service metric values"
 msgstr ""
-"Diese Regel konfiguriert die Schwellwerte für SharedAccess und Exclusive "
-"Locks einer PostgreSQL-Datenbank"
+"Mit dieser Regel können Sie Stufen für die benutzerdefinierte Prometheus-"
+"Prüfung konfigurieren, die auf bestimmte Service-Metrikwerte abzielen"
 
 msgid ""
 "This rule allows you to configure limits for the deadlocks and lockwaits "
@@ -50853,13 +50827,12 @@ msgstr ""
 "Diese Regel konfiguriert die Schwellwerte für SharedAccess und Exclusive "
 "Locks einer PostgreSQL-Datenbank"
 
-#, fuzzy
 msgid ""
 "This rule allows you to configure the number of incoming connections from "
 "clients to the database server."
 msgstr ""
-"Mit dieser Regel können Sie die Maximalanzahl von simultanen Verbindungen zu "
-"einer Datenbank bestimmen."
+"Mit dieser Regel können Sie die Anzahl der eingehenden Verbindungen von "
+"Clients zum Datenbankserver konfigurieren."
 
 msgid ""
 "This rule allows you to configure the number of maximum concurrent "
@@ -50868,13 +50841,12 @@ msgstr ""
 "Mit dieser Regel können Sie die Maximalanzahl von simultanen Verbindungen zu "
 "einer Datenbank bestimmen."
 
-#, fuzzy
 msgid ""
 "This rule allows you to configure the number of maximum connections for a "
 "given VSID."
 msgstr ""
-"Mit dieser Regel können Sie die Maximalanzahl von simultanen Verbindungen zu "
-"einer Datenbank bestimmen."
+"Mit dieser Regel können Sie die Anzahl der maximalen Verbindungen für eine "
+"bestimmte VSID konfigurieren."
 
 msgid "This rule allows you to override netapp warnings"
 msgstr "Diese Regel erlaubt das Überschreiben von NetApp Warnungen"
@@ -51111,13 +51083,12 @@ msgstr ""
 "befinden,oder in der allgemeinen Schlange für ausgehende Mails, wenn eine "
 "solche Unterscheidung nicht verfügbar ist."
 
-#, fuzzy
 msgid ""
 "This rule is applied to the number of E-Mails currently in the failed mail "
 "queue"
 msgstr ""
-"Diese Regel prüft die Anzahl von E-Mails, die sich in der aktiven "
-"Mailwarteschlange befinden."
+"Diese Regel wird auf die Anzahl der E-Mails angewendet, die sich aktuell in "
+"der Warteschlange für fehlgeschlagene E-Mails befinden"
 
 msgid ""
 "This rule is applied to the number of print jobs currently waiting in "

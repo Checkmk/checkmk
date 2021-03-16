@@ -11909,6 +11909,12 @@ msgid ""
 "href='%s'>here</a>."
 msgstr ""
 
+#, python-format
+msgid ""
+"Dashlet type %s could not be found. Please remove it from your dashboard "
+"configuration."
+msgstr ""
+
 msgid "Data"
 msgstr ""
 

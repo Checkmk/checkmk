@@ -8,6 +8,7 @@
 import argparse
 import fcntl
 import os
+import shutil
 import struct
 import subprocess
 import sys
@@ -17,6 +18,15 @@ import tty
 from typing import Dict, List, NoReturn, Optional, Set, Tuple, Union
 
 Werk = Dict[str, str]
+
+RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
+if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile('.my_ids'):
+    try:
+        # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
+        dest = shutil.move('.my_ids', RESERVED_IDS_FILE_PATH)
+        sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
+    except Exception:
+        sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -888,7 +898,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
 def get_werk_ids() -> List[int]:
     try:
-        return eval(open('.my_ids', 'r').read())
+        return eval(open(RESERVED_IDS_FILE_PATH, 'r').read())
     except Exception:
         return []
 
@@ -900,7 +910,8 @@ def invalidate_my_werkid(wid: int) -> None:
 
 
 def store_werk_ids(l: List[int]) -> None:
-    open('.my_ids', 'w').write(repr(l) + "\n")
+    open(RESERVED_IDS_FILE_PATH, 'w').write(repr(l) + "\n")
+    sys.stdout.write(f'Werk IDs stored in the file: {RESERVED_IDS_FILE_PATH}\n')
 
 
 def current_branch() -> str:

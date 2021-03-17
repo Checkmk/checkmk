@@ -79,6 +79,11 @@ def check_redis_info(item, params, item_data):
     if server_data is None:
         return
 
+    server_status = server_data.get("redis_status")
+    if server_status == "failed":
+        server_messg = server_data.get("redis_messg")
+        yield 2, server_messg
+
     server_mode = server_data.get("redis_mode")
     if server_mode is not None:
         mode_state = 0

@@ -26,20 +26,6 @@ factory_settings["memory_default_levels"] = {
 }
 
 
-##############################################################################
-# This function is mid-migration and only called in the ps check. It won't be
-# after ps is migrated!
-##############################################################################
-def parse_proc_meminfo_bytes(info):
-    meminfo = {}
-    for line in info:
-        value = int(line[1])
-        if len(line) > 2 and line[2] == 'kB':
-            value *= 1024
-        meminfo[line[0][:-1]] = value
-    return meminfo
-
-
 class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float)])):
     def __new__(cls, value):
         return super(MemBytes, cls).__new__(cls, int(value * 1024), float(value), value / 1024.0)

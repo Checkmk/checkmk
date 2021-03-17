@@ -1471,8 +1471,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                                                       entry["considered_duration"])
 
                 css = css + " state narrow number"
-                cells.append((html.render_span(render_number(number,
-                                                             entry["considered_duration"])), css))
+                cells.append((render_number(number, entry["considered_duration"]), css))
 
                 # Statistics?
                 x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
@@ -1525,8 +1524,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                     css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
                 css = css + " state narrow number"
-                summary_cells.append((html.render_span(render_number(number,
-                                                                     int(total_duration))), css))
+                summary_cells.append((render_number(number, int(total_duration)), css))
                 if sid in os_states:
                     for aggr in os_aggrs:
                         if aggr == "cnt":

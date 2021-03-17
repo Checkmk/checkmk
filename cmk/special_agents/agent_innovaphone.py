@@ -7,6 +7,7 @@
 import base64
 import sys
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 import xml.etree.ElementTree as etree
 
 from six import ensure_binary, ensure_str
@@ -30,7 +31,11 @@ def get_pri_channel(credentials, channel_name):
     server, address, user, password = credentials
     data_url = "/%s/mod_cmd.xml" % channel_name
     address = "http://%s%s" % (server, data_url)
-    data = etree.parse(get_url(address, user, password)).getroot()
+    raw_data = get_url(address, user, password).read()
+    if not raw_data:  # no such channel
+        return
+
+    data = etree.parse(raw_data).getroot()
     link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
@@ -49,7 +54,15 @@ def get_pri_channel(credentials, channel_name):
 def get_licenses(credentials):
     server, address, user, password = credentials
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
-    data = etree.parse(get_url(address, user, password)).getroot()
+    try:
+        raw_data = get_url(address, user, password).read()
+    except HTTPError as exc:
+        if exc.reason == "Unauthorized":
+            return
+        raise
+
+    data = etree.parse(raw_data).getroot()
+    print("<<<innovaphone_licenses>>>")
     for child in data.findall('lic'):
         if child.get('name') == "Port":
             count = child.get('count')
@@ -101,5 +114,4 @@ def main(sys_argv=None):
     for channel_num in range(1, 5):
         get_pri_channel(credentials, 'PRI' + str(channel_num))
 
-    print("<<<%slicenses>>>" % s_prefix)
     get_licenses(credentials)

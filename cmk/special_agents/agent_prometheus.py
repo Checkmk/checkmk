@@ -1984,11 +1984,13 @@ def main(argv=None):
         print(api_data.prometheus_build_section())
         print(api_data.promql_section(config_args["custom_services"]))
         if "cadvisor" in exporter_options:
-            print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])))
+            print(*list(api_data.cadvisor_section(exporter_options["cadvisor"])), sep='\n')
         if "kube_state" in exporter_options:
-            print(*list(api_data.kube_state_section(exporter_options["kube_state"]["entities"])))
+            print(*list(api_data.kube_state_section(exporter_options["kube_state"]["entities"])),
+                  sep='\n')
         if "node_exporter" in exporter_options:
-            print(*list(api_data.node_exporter_section(exporter_options["node_exporter"])))
+            print(*list(api_data.node_exporter_section(exporter_options["node_exporter"])),
+                  sep='\n')
 
     except Exception as e:
         if args.debug:

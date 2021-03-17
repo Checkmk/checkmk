@@ -1136,6 +1136,12 @@ msgid ""
 "order."
 msgstr ""
 
+msgid ""
+"<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
+"3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
+"\"requests\" and \"PySocks\" is required on the target hosts."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "<b>WARNING: </b> the IP address lookup of <b>%s</b> has failed. The core has "
@@ -3872,7 +3878,7 @@ msgstr "actualizare"
 msgid "Agent update status"
 msgstr "Stare adiministrativă"
 
-msgid "Agent updater (Linux, Windows)"
+msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr ""
 
 #, fuzzy
@@ -16747,8 +16753,9 @@ msgstr ""
 msgid "Exclusive locks"
 msgstr ""
 
-msgid "Executable Python2 script"
-msgstr ""
+#, fuzzy
+msgid "Executable Python script"
+msgstr "%s acest site"
 
 msgid "Executable format (Linux)"
 msgstr ""
@@ -25662,6 +25669,10 @@ msgstr ""
 msgid "Linux-User:"
 msgstr "Utilizator nou"
 
+#, fuzzy
+msgid "List Grouping Patterns"
+msgstr "Adaugă model/tipar"
+
 msgid ""
 "List all allowed expected answers here. If query for an IP address then the "
 "answer will be host names, that end with a dot. Multiple IP addresses within "
@@ -26169,8 +26180,9 @@ msgstr ""
 msgid "Logfile"
 msgstr ""
 
-msgid "Logfile Grouping Patterns"
-msgstr ""
+#, fuzzy
+msgid "Logfile Grouping"
+msgstr "Nume nou"
 
 #, fuzzy
 msgid "Logfile Names"
@@ -32156,7 +32168,7 @@ msgid ""
 "for Linux only. On other OSes, the executable format will be chosen "
 "automatically regardless of this rule. The binary formats yield a broader "
 "compatibility whereas the python script is small an editable. Please note "
-"that the Check_MK team can offer no support for issues about the target "
+"that the Checkmk team can offer no support for issues about the target "
 "system's python environment when choosing \"Script\"."
 msgstr ""
 
@@ -47323,12 +47335,11 @@ msgstr ""
 msgid ""
 "This is essentially the raw agent updater script that gets packaged within "
 "the binary versions. You have to care for the dependencies by yourself. The "
-"script requires a Python 2.7.13 (or greater, but not Python3) installation "
-"and matching python packages \"requests\", \"requests[socks]\" and "
-"\"pyOpenSSL\" installed on the target hosts. Requirements may change "
-"eventually without anouncement. However, this might be the right choice for "
-"experienced users or users that want to run the agent updater on "
-"architectures like ARM, ppc or others."
+"script requires a Python 3.4 (or greater) installation and matching python "
+"packages \"requests\", \"PySocks\" and \"pyOpenSSL\" installed on the target "
+"hosts. Requirements may change eventually without anouncement. However, this "
+"might be the right choice for experienced users or users that want to run "
+"the agent updater on architectures like ARM, ppc or others."
 msgstr ""
 
 msgid ""
@@ -48466,17 +48477,17 @@ msgid ""
 msgstr ""
 
 msgid ""
-"This rule set allows to deploy an agent plugin that updates the Check_MK "
-"agent for Linux and Windows on a regular base. The agent will look for new "
-"updates on a regular base and update itself, when a new baked agent is "
-"available, released and signed. <br><b>Note<sup>1</sup>:</b> This update "
+"This rule set allows to deploy an agent plugin that updates the Checkmk "
+"agent for Linux, Solaris and Windows on a regular base. The agent will look "
+"for new updates on a regular base and update itself, when a new baked agent "
+"is available, released and signed. <br><b>Note<sup>1</sup>:</b> This update "
 "mechanism is baked into the agent itself. So after activating this feature "
 "you need at least one more manual update of the agent, of course."
 "<br><b>Note<sup>2</sup>:</b> After deploying this new plugin you need to "
 "call it once manually for registerting the agent at your update server. Call "
 "<tt>cmk-update-agent -H <i>HOST</i></tt>, where <i>HOST</i> must be the name "
 "of that host in your monitoring. You find the plugin in <tt>/usr/lib/"
-"check_mk_agent/plugins</tt> (Linux) and in the subdirectory <tt>plugins</tt> "
+"check_mk_agent/plugins</tt> (UNIX) and in the subdirectory <tt>plugins</tt> "
 "of your agent installation directory (Windows)."
 msgstr ""
 
@@ -60137,10 +60148,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Rule to call"
 #~ msgstr "Reguli"
-
-#, fuzzy
-#~ msgid "SAP Value Grouping Patterns"
-#~ msgstr "Adaugă model/tipar"
 
 #, fuzzy
 #~ msgid "SQL statement or procedure name"

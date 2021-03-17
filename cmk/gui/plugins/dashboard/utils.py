@@ -22,7 +22,7 @@ import cmk.gui.escaping as escaping
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.exceptions import MKGeneralException, MKTimeout, MKUserError
+from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
 from cmk.gui.globals import g, html, request
 from cmk.gui.i18n import _, _u
@@ -1078,3 +1078,7 @@ def purge_metric_for_js(metric):
         "bounds": metric.get("scalar", {}),
         "unit": {k: v for k, v in metric["unit"].items() if k in ["js_render", "stepping"]}
     }
+
+
+def make_mk_missing_data_error() -> MKMissingDataError:
+    return MKMissingDataError(_("No data was found with the current parameters of this dashlet."))

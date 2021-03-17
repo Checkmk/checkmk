@@ -960,16 +960,18 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
-        vi = visual_info_registry.get(this_tablename)
-        ds = data_source_registry.get(this_tablename)
-        if ds is None or vi is None:
+        visual_info_class = visual_info_registry.get(this_tablename)
+        data_source_class = data_source_registry.get(this_tablename)
+        if data_source_class is None or visual_info_class is None:
             errors.append("Missing declare_invtable_view for inventory table view '%s'" %
                           this_tablename)
             continue
-        assert isinstance(ds, ABCDataSourceInventory)
+
+        assert issubclass(data_source_class, ABCDataSourceInventory)
+        ds = data_source_class()
         info_names.append(ds.ident)
         invpaths.append(ds.inventory_path)
-        titles.append(vi.title)
+        titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
     ds_class = type(

@@ -2,18 +2,23 @@
 CheckMK software architecture
 =============================
 
-Processes
-=========
-.. uml:: uml/arch-processes.uml
+
+Top-level Architecture
+======================
+
+
+.. toctree::
+   :maxdepth: 1
+
+   arch-comp-omd.rst
 
 Components
 ==========
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Components:
+   :maxdepth: 1
 
    arch-comp-checkengine.rst
    arch-comp-core.rst
    arch-comp-livestatus.rst
-   arch-comp-omd.rst
+   arch-comp-template.rst

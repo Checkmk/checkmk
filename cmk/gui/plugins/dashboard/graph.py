@@ -32,6 +32,7 @@ from cmk.gui.plugins.dashboard.utils import (
     DashletConfig,
     DashletId,
     macro_mapping_from_context,
+    make_mk_missing_data_error,
 )
 from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
@@ -254,8 +255,7 @@ class GraphDashlet(Dashlet):
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
-            raise MKMissingDataError(
-                _("No data was found with the current parameters of this dashlet."))
+            raise make_mk_missing_data_error()
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

@@ -1,0 +1,13 @@
+Title: <tt>logwatch_groups</tt>: Fix discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1616054076
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+The check plugin <tt>logwatch_groups</tt>, which monitors groups of multiple log files,
+was never discovered. This has been fixed.

@@ -14,40 +14,50 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Any, Counter, Dict, List, Mapping, Match, Optional, Sequence, Set, Tuple
-
 import fnmatch
 import getpass
 import hashlib
 import os
 import pathlib
-import six
 import time
+from typing import (
+    Any,
+    Counter,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Mapping,
+    Match,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+)
+
+import six
 
 # for now, we shamelessly violate the API:
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import host_extra_conf, host_name  # pylint: disable=cmk-module-layer-violation
+
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .agent_based_api.v1 import (
-    get_value_store,
-    regex,
-    register,
-    render,
-    Result,
-    Service,
-    State as state,
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    host_extra_conf, host_name,
 )
-from .utils import logwatch, eval_regex
+
+from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils import eval_regex, logwatch
 
 AllParams = Sequence[Mapping[str, Any]]
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
 
 GroupingPattern = Tuple[str, str]
+DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
 
 LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
 LOGWATCH_SERVICE_OUTPUT = "default"
@@ -268,19 +278,19 @@ def _match_group_patterns(
 
 def check_logwatch_groups_node(
     item: str,
+    params: DiscoveredGroupParams,
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch_groups(item, {None: section})
+    yield from check_logwatch_groups(item, params, {None: section})
 
 
 def check_logwatch_groups(
     item: str,
+    params: DiscoveredGroupParams,
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.errors(section)
-
-    params = _compile_params()
 
     group_patterns = set(params['group_patterns'])
 
@@ -293,17 +303,19 @@ def check_logwatch_groups(
                     loglines.extend(item_data['lines'])
                 break
 
-    yield from check_logwatch_generic(item, params, loglines, True)
+    yield from check_logwatch_generic(item, _compile_params(), loglines, True)
 
 
 register.check_plugin(
     name='logwatch_groups',
     service_name="Log %s",
+    sections=['logwatch'],
     discovery_function=discover_logwatch_groups,
     discovery_ruleset_name="logwatch_groups",
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
+    check_default_parameters={'group_patterns': []},
     cluster_check_function=check_logwatch_groups,
 )
 

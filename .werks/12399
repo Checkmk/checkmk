@@ -1,0 +1,11 @@
+Title: Opacity for TopTalkers area graphs
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1615970567
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The area graphs at the Top Talkers Dashboard have now full opacity.

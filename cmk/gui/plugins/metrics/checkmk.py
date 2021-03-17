@@ -551,6 +551,7 @@ graph_info["cmk_hosts_not_up"] = {
             "stack",
         ),
     ],
+    "omit_zero_metrics": True,
 }
 
 graph_info["cmk_services_total"] = {
@@ -592,4 +593,5 @@ graph_info["cmk_services_not_ok"] = {
             "stack",
         ),
     ],
+    "omit_zero_metrics": True,
 }

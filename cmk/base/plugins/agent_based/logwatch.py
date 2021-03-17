@@ -299,6 +299,7 @@ def check_logwatch_groups(
 register.check_plugin(
     name='logwatch_groups',
     service_name="Log %s",
+    sections=['logwatch'],
     discovery_function=discover_logwatch_groups,
     discovery_ruleset_name="logwatch_groups",
     discovery_ruleset_type=register.RuleSetType.ALL,

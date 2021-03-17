@@ -16,7 +16,7 @@ With this setting you can overwrite the default service state. This will help
 you to reduce above warnings during the update process of your Checkmk sites
 and agents.
 We recommend to set this option only for the affected hosts as long as you
-monitor agents older than Checkmk 1.7. After updating them, you should change
+monitor agents older than Checkmk 2.0. After updating them, you should change
 this setting back to it's original value.
 There is also an {{Analyze Configuration Test}} {{Restricted address missmatch}}
 below {{Security}} that informs you if there are configured rules which differ

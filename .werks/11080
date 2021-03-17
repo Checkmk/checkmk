@@ -10,14 +10,14 @@ Version: 2.0.0i1
 
 Most of Checkmk is written in Python. We have been developing on Python 2 for
 over 10 years now and are now taking the big step of porting Checkmk to Python
-3 with Checkmk 1.7.
+3 with Checkmk 2.0.
 
 This is a very big change in the software which has cost us a lot of time. But
 this step is necessary to continue to develop Checkmk efficiently and safely.
 
 In the past, Python 2.7 with all necessary 3rd party modules have been shipped
 in Checkmk for a long time. This Python 2.7 will no longer be shipped with
-Checkmk 1.7. Instead we now ship Python 3.8 with all necessary 3rd party
+Checkmk 2.0. Instead we now ship Python 3.8 with all necessary 3rd party
 modules.
 
 This is especially important if you use your own plugins or scripts. You have

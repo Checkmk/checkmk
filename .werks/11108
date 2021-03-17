@@ -18,7 +18,7 @@ Now the value of the variable is evaluated during discovery, and the resulting v
 saved in the autochecks and used for every subsequent execution of the check plugin.
 
 Autochecks that have references to variable names in them will be converted during the update
-process to Checkmk 1.7 or by running `cmk-update-config -v` manually.
+process to Checkmk 2.0 or by running `cmk-update-config -v` manually.
 
 Users that use an etc/check_mk/conf.d/*.mk file to set these default parameters are encouraged
 to configure an appropriate WATO rule instead.

@@ -183,7 +183,7 @@ def _to_api_format(time_period: TimeperiodSpec,
     """
     time_period_readable: Dict[str, Any] = {"alias": time_period["alias"]}
     if not builtin_period:
-        time_period_readable["exclude"] = time_period["exclude"]
+        time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
         {key: time_period[key] for key in defines.weekday_ids()})

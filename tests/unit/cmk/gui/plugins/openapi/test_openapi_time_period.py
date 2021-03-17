@@ -427,3 +427,54 @@ def test_openapi_timeperiod_complex_update(wsgi_app, with_automation_user,
         'sunday': [('08:00', '12:30'), ('13:30', '17:00')],
         'exclude': [],
     }
+
+
+def test_openapi_timeperiod_excluding_exclude(wsgi_app, with_automation_user,
+                                              suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/time_period/collections/all",
+        params=json.dumps({
+            'active_time_ranges': [{
+                'day': 'monday',
+                'time_ranges': [{
+                    'end': '12:30',
+                    'start': '08:00'
+                }, {
+                    'end': '17:00',
+                    'start': '13:30'
+                }]
+            }],
+            'alias': 'Test All days 8x5',
+            'exceptions': [],
+            'name': 'test_all_8x5'
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/time_period/test_all_8x5",
+        status=200,
+    )
+    assert resp.json_body == {
+        'active_time_ranges': [{
+            'day': 'monday',
+            'time_ranges': [{
+                'end': '12:30',
+                'start': '08:00'
+            }, {
+                'end': '17:00',
+                'start': '13:30'
+            }]
+        }],
+        'alias': 'Test All days 8x5',
+        'exceptions': [],
+        'exclude': []
+    }

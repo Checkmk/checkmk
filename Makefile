@@ -395,7 +395,7 @@ setup:
 	    enchant \
 	    ksh \
 	    p7zip-full
-	curl -O https://bootstrap.pypa.io/2.7/get-pip.py
+	curl -O https://bootstrap.pypa.io/pip/2.7/get-pip.py
 	sudo python2 get-pip.py
 	rm get-pip.py
 	python2 -m pip install --upgrade pip

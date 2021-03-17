@@ -384,8 +384,10 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 {
     var nr = handler_data;
     var container = document.getElementById('dashlet_graph_' + nr);
-    container.innerHTML = response_body;
-    cmk.utils.execute_javascript_by_object(container);
+    if (container) {
+        container.innerHTML = response_body;
+        cmk.utils.execute_javascript_by_object(container);
+    }
 }
 
 """

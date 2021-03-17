@@ -236,6 +236,24 @@ if [ $1 = 0 ] ; then
             exit 1
         fi
     done
+    # Remove decoded file
+    # setup "root" path in the same manner as in DEB package
+    BASE_PATH=/omd/versions/%{version}
+
+    # names
+    CMK_DECODED_DIR_NAME=decoded
+    CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+
+    # dirs
+    CMK_PLUGINS_DIR=$BASE_PATH/share/check_mk/agents/windows/plugins
+    CMK_DECODED_DIR=$CMK_PLUGINS_DIR/$CMK_DECODED_DIR_NAME
+
+    # files
+    CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
+
+    # remove cmk-update-agent.exe and dir:
+    rm -f $CMK_DECODED_EXE_PATH
+    rmdir $CMK_DECODED_DIR 2>/dev/null || true
 fi
 
 

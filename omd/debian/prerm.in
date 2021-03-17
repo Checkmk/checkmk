@@ -31,6 +31,15 @@ case "$1" in
               exit 1
           fi
       done
+      # Remove decoded file
+
+      # names
+      CMK_DECODED_DIR_NAME=share/check_mk/agents/windows/plugins/decoded
+      CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+
+      # remove cmk-update-agent.exe and dir:
+      rm -f /omd/versions/###OMD_VERSION###/$CMK_DECODED_DIR_NAME/$CMK_UPDATE_EXE_NAME
+      rmdir /omd/versions/###OMD_VERSION###/$CMK_DECODED_DIR_NAME 2>/dev/null || true
     ;;
 
     upgrade|deconfigure)

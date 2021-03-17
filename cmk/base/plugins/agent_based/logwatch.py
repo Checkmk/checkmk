@@ -268,19 +268,20 @@ def _match_group_patterns(
 
 def check_logwatch_groups_node(
     item: str,
+    params: AllParams,
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    yield from check_logwatch_groups(item, {None: section})
+    yield from check_logwatch_groups(item, params, {None: section})
 
 
 def check_logwatch_groups(
     item: str,
+    params: AllParams,
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.errors(section)
 
-    params = _compile_params()
 
     group_patterns = set(params['group_patterns'])
 
@@ -292,6 +293,8 @@ def check_logwatch_groups(
                 if _match_group_patterns(logfile_name, inclusion, exclusion):
                     loglines.extend(item_data['lines'])
                 break
+
+    params = _compile_params()
 
     yield from check_logwatch_generic(item, params, loglines, True)
 
@@ -305,6 +308,7 @@ register.check_plugin(
     discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
     check_function=check_logwatch_groups_node,
+    check_default_parameters={},
     cluster_check_function=check_logwatch_groups,
 )
 

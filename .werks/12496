@@ -1,0 +1,28 @@
+Title: Agent vSphere: no longer collect output from Checkmk agent
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1616012549
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The special agent vsphere no longer collects data from a Checkmk
+agent installed on the monitored system.
+
+This incompatibility only affects users who had set one of the options
+<i>"Queried host is a host system with Checkmk Agent installed"</i>
+or
+<i>"Queried host is the vCenter with Checkmk Agent installed"</i>
+ in the WATO rule for the special agent vSphere.
+
+These options are a relict from a time when a Checkmk host could only
+have one data source. In this case the special agent vsphere could be
+configured to contact the Checkmk agent in turn and forward the data.
+
+Since Checkmk hosts can have multiple data sources, this option is
+no longer needed.
+
+Affected users must configure their hosts to use
+<i>"Normal Checkmk agent, all configured special agents"</i>.

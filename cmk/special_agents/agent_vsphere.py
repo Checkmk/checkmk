@@ -15,7 +15,7 @@ import re
 import socket
 import sys
 import time
-from typing import Any, Counter, Dict, Iterable, List
+from typing import Any, Counter, Dict, List
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
@@ -913,13 +913,6 @@ def parse_arguments(argv):
         help="""Assume a directly queried host system (no vCenter). In this we expect data about
         only one HostSystem to be found and do not create piggy host data for that host.""")
     parser.add_argument(
-        "-a",
-        "--agent",
-        action="store_true",
-        help="""Also retrieve data from the normal Check_MK Agent. This makes sense if you query
-        a vCenter that is installed on a Windows host that you also want to monitor with
-        Check_MK.""")
-    parser.add_argument(
         "-P",
         "--skip-placeholder-vm",
         action="store_true",
@@ -935,10 +928,8 @@ def parse_arguments(argv):
         "--timeout",
         type=int,
         default=60,
-        help="""Set the network timeout to vSphere to SECS seconds. This is also used when
-        connecting the agent (option -a). Default is 60 seconds.
-        Note: the timeout is not only applied to the connection, but also to each individual
-        subquery.""")
+        help="""Set the network timeout to vSphere to SECS seconds. The timeout is not only
+        applied to the connection, but also to each individual subquery.""")
     parser.add_argument(
         "-p",
         "--port",
@@ -1567,46 +1558,6 @@ def convert_hostname(hostname, opt):
     return hostname.replace(" ", "_")
 
 
-def write_output(lines: Iterable[str], opt: argparse.Namespace) -> None:
-    if opt.agent:
-        for chunk in get_agent_info_tcp(opt.host_address, opt.timeout, opt.debug):
-            sys.stdout.write(chunk)
-        sys.stdout.write("\n")
-
-    sys.stdout.writelines("%s\n" % line for line in lines)
-    sys.stdout.flush()
-
-
-def get_agent_info_tcp(address, timeout, debug):
-    try:
-        # TODO: gethostbyname() automatically detects IP addresses and does
-        # *not* contact any nameserver in that case. So the following two
-        # lines of code should not be neccessary:
-        if address[0] in "123456789":
-            ipaddress = address
-        else:
-            ipaddress = socket.gethostbyname(address)
-        soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            soc.settimeout(timeout)
-        except AttributeError:
-            pass  # some old Python versions lack settimeout(). Better ignore than fail
-        soc.connect((ipaddress, 6556))
-        try:
-            soc.setblocking(True)
-        except AttributeError:
-            pass
-        while True:
-            received = soc.recv(4096, socket.MSG_WAITALL)
-            if not received:
-                break
-            yield received
-        soc.close()
-    except Exception:
-        if debug:
-            raise
-
-
 def get_pattern(pattern, line):
     return re.findall(pattern, line, re.DOTALL) if line else []
 
@@ -1970,7 +1921,7 @@ def main(argv=None):
         sys.stderr.write("%s\n" % exc)
         return 0 if opt.agent else 1
 
-    write_output(vsphere_output, opt)
+    sys.stdout.writelines("%s\n" % line for line in vsphere_output)
 
     return 0
 

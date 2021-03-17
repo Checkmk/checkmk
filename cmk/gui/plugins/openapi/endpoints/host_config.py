@@ -15,8 +15,9 @@ the services assigned that are provided by the cluster.
 You can find an introduction to hosts in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 
-Please note that every host always resides in a folder. You can never remove a host from a folder,
-just move it to a different one.
+Please note that every host always resides in a folder. The folder is included twice
+in the host's links: Once based upon the canonical path and once based upon the folder's
+unique id. You can never remove a host from a folder, just move it to a different one.
 """
 from typing import Iterable
 
@@ -410,17 +411,6 @@ def _serve_host(host, effective_attributes=False):
 
 def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     # TODO: readd link mechanism once object ref between endpoints is in place
-    base = constructors.object_href('host_config', host.ident())
-    members = constructors.DomainObjectMembers(base)
-    members.object_property(
-        name='folder_config',
-        value=constructors.absolute_url(
-            constructors.object_href('folder_config',
-                                     host.folder().id())),
-        prop_format='string',
-        linkable=False,
-    )
-
     if effective_attributes:
         attributes = host.effective_attributes()
     else:
@@ -429,12 +419,25 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     if 'meta_data' in attributes:
         attributes = attributes.copy()
         del attributes['meta_data']
-
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
-        members=members.to_dict(),
+        links=[
+            constructors.link_rel(
+                rel='cmk/show',
+                href=constructors.object_href('folder_config',
+                                              host.folder().path().rstrip("/").replace("/", "~")),
+                method='get',
+                title='Show the folder config of the host',
+            ),
+            constructors.link_rel(
+                rel='cmk/permalink',
+                href=constructors.object_href('folder_config', host.id()),
+                method='get',
+                title='Show the folder config of the host',
+            )
+        ],
         extensions={
             'attributes': attributes,
             'is_cluster': host.is_cluster(),

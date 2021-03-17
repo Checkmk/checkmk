@@ -181,6 +181,7 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             name: SectionMeta(
                 checking=name in checking_sections,
                 disabled=name in disabled_sections,
+                redetect=name in checking_sections and self._needs_redetection(name),
                 fetch_interval=self.host_config.snmp_fetch_interval(name),
             ) for name in (checking_sections | disabled_sections)
         }
@@ -223,6 +224,11 @@ class SNMPSource(Source[SNMPRawData, SNMPHostSections]):
             s for s in checking_sections
             if agent_based_register.is_registered_snmp_section_plugin(s)
         }
+
+    @staticmethod
+    def _needs_redetection(section_name: SectionName) -> bool:
+        section = agent_based_register.get_section_plugin(section_name)
+        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
 
     @staticmethod
     def _make_description(

@@ -11,10 +11,13 @@ from functools import partial
 
 from six import ensure_str
 
+from livestatus import SiteId
+
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -65,6 +68,15 @@ PaintResult = Tuple[str, Union[str, HTML]]
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
+    hostname = row.get("host_name")
+    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
+
+    if len(sites_with_same_named_hosts) > 1:
+        html.show_error(
+            _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
+            (hostname, ", ".join(sites_with_same_named_hosts)))
+        return "", ""
+
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
@@ -86,6 +98,12 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
                                             attribute_keys)
+
+
+def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
+    query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
+    with sites.prepend_site():
+        return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -942,16 +960,18 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
-        vi = visual_info_registry.get(this_tablename)
-        ds = data_source_registry.get(this_tablename)
-        if ds is None or vi is None:
+        visual_info_class = visual_info_registry.get(this_tablename)
+        data_source_class = data_source_registry.get(this_tablename)
+        if data_source_class is None or visual_info_class is None:
             errors.append("Missing declare_invtable_view for inventory table view '%s'" %
                           this_tablename)
             continue
-        assert isinstance(ds, ABCDataSourceInventory)
+
+        assert issubclass(data_source_class, ABCDataSourceInventory)
+        ds = data_source_class()
         info_names.append(ds.ident)
         invpaths.append(ds.inventory_path)
-        titles.append(vi.title)
+        titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
     ds_class = type(
@@ -1296,7 +1316,11 @@ multisite_builtin_views["inv_host"] = {
     # Filters
     'hard_filters': [],
     'hard_filtervars': [],
-    'hide_filters': ['host', 'site'],
+    # Previously (<2.0/1.6??) the hide_filters: ['host, 'site'] were needed to build the URL.
+    # Now for creating the URL these filters are obsolete;
+    # Side effect: with 'site' in hide_filters the only_sites filter for livestatus is NOT set
+    # properly. Thus we removed 'site'.
+    'hide_filters': ['host'],
     'show_filters': [],
     'sorters': [],
 }

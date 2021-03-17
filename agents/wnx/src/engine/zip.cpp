@@ -126,51 +126,6 @@ static ReleasedResource<FolderItems> GetFolderItems(Folder *folder) {
     return ReleasedResource<FolderItems>{fi};
 }
 
-std::vector<std::wstring> List(const std::filesystem::path &file) {
-    namespace fs = std::filesystem;
-    if (!fs::exists(file) || !fs::is_regular_file(file)) {
-        XLOG::l("File '{}' is absent or not suitable", file);
-        return {};
-    }
-
-    wtools::Bstr src(file.wstring());
-
-    wtools::InitWindowsCom();
-
-    auto dispatch = CreateShellDispatch();
-    if (nullptr == dispatch) {
-        XLOG::l("Error during Create Instance /unzip/");
-        return {};
-    }
-
-    auto from_file = CreateFolder(dispatch.get(), src);
-    if (from_file == nullptr) {
-        XLOG::l("Error during NameSpace 1 /unzip/. The file is '{}'", file);
-        return {};
-    }
-
-    auto fi = GetFolderItems(from_file.get());
-    if (fi == nullptr) {
-        XLOG::l("Failed to get folder items /unzip/. The file is '{}'", file);
-        return {};
-    }
-
-    std::vector<std::wstring> vec;
-    long count = 0;
-    fi->get_Count(&count);
-    for (int i = 0; i < count; i++) {
-        auto item = GetItem(fi.get(), i);
-        if (item == nullptr) continue;
-
-        BSTR name;
-        item->get_Name(&name);
-        vec.emplace_back(name);
-        ::SysFreeString(name);
-    }
-
-    return vec;
-}
-
 namespace {
 
 zip::Type GetFileType(std::wstring_view name) noexcept {

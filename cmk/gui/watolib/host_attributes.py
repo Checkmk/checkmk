@@ -44,6 +44,7 @@ from cmk.gui.valuespec import (
     Checkbox,
     DropdownChoice,
     Dictionary,
+    ListOf,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
 
@@ -848,7 +849,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         # which is not escaped). For Dictionary we know that it cares about
         # escaping it's values. For this reason it is OK to wrap it into HTML
         # to prevent escaping during rendering.
-        if isinstance(vs, Dictionary):
+        if isinstance(vs, (ListOf, Dictionary)):
             content = HTML(content)
 
         return "", content

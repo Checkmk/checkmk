@@ -124,7 +124,7 @@ PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.0.1.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
-PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.3.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency

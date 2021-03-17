@@ -442,10 +442,13 @@ def section_container_agent(client, container_id):
         return True
     result = client.run_agent(container)
     success = '<<<check_mk>>>' in result
-    LOGGER.debug("running containers check_mk_agent: %s", 'ok' if success else 'failed')
-    section = Section(piggytarget=container_id)
-    section.append(result)
-    section.write()
+    if success:
+        LOGGER.debug("running check_mk_agent in container %s: ok", container_id)
+        section = Section(piggytarget=container_id)
+        section.append(result)
+        section.write()
+    else:
+        LOGGER.warning("running check_mk_agent in container %s failed: %s", container_id, result)
     return success
 
 

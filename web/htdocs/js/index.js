@@ -1,30 +1,15 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import "core-js/stable";
+import "canvas-5-polyfill"; // needed for IE11
 
 import $ from "jquery";
+import * as d3 from "d3";
+import * as d3Sankey from "d3-sankey";
+import * as crossfilter from "crossfilter2";
+import * as dc from "dc";
 import * as forms from "forms";
 import * as ajax from "ajax";
 import * as prediction from "prediction";
@@ -39,36 +24,88 @@ import * as help from "help";
 import * as availability from "availability";
 import * as sla from "sla";
 import * as bi from "bi";
-import * as crash_reporting from "crash_reporting";
+import * as transfer from "transfer";
 import * as backup from "backup";
 import * as hover from "hover";
 import * as service_discovery from "service_discovery";
+import * as sidebar from "sidebar";
+import * as quicksearch from "quicksearch";
 import * as sites from "sites";
 import * as host_diagnose from "host_diagnose";
 import * as profile_replication from "profile_replication";
 import * as wato from "wato";
 import * as popup_menu from "popup_menu";
 import * as valuespecs from "valuespecs";
+import * as number_format from "number_format";
 import * as views from "views";
 import * as reload_pause from "reload_pause";
 import * as graph_integration from "graph_integration";
 import * as dashboard from "dashboard";
+import * as page_menu from "page_menu";
 
-import * as d3 from "d3";
-import * as d3_flextree from "d3-flextree";
+import * as cmk_figures from "cmk_figures";
+import "cmk_figures_plugins";
+try {
+    require("cmk_figures_plugins_cee");
+} catch (e) {}
+import * as graphs from "graphs";
+
 import * as node_visualization from "node_visualization";
 import * as node_visualization_utils from "node_visualization_utils";
 import * as node_visualization_layout_styles from "node_visualization_layout_styles";
 import * as node_visualization_viewport_utils from "node_visualization_viewport_utils";
 import * as node_visualization_viewport_layers from "node_visualization_viewport_layers";
+
 import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
-var graphs;
+var graphs_cee;
 try {
-    graphs = require("graphs");
-} catch(e) {
-    graphs = null;
+    graphs_cee = require("graphs_cee");
+} catch (e) {
+    graphs_cee = null;
+}
+
+var ntop_host_details;
+try {
+    ntop_host_details = require("ntop_host_details");
+} catch (e) {
+    ntop_host_details = null;
+}
+
+var ntop_alerts;
+try {
+    ntop_alerts = require("ntop_alerts");
+} catch (e) {
+    ntop_alerts = null;
+}
+
+var ntop_flows;
+try {
+    ntop_flows = require("ntop_flows");
+} catch (e) {
+    ntop_flows = null;
+}
+
+var ntop_top_talkers;
+try {
+    ntop_top_talkers = require("ntop_top_talkers");
+} catch (e) {
+    ntop_top_talkers = null;
+}
+
+var ntop_utils;
+try {
+    ntop_utils = require("ntop_utils");
+} catch (e) {
+    ntop_utils = null;
+}
+
+var license_usage_timeseries_graph;
+try {
+    license_usage_timeseries_graph = require("license_usage_timeseries_graph");
+} catch (e) {
+    license_usage_timeseries_graph = null;
 }
 
 $(() => {
@@ -79,6 +116,10 @@ $(() => {
 });
 
 export const cmk_export = {
+    crossfilter: crossfilter.default,
+    d3: d3,
+    dc: dc,
+    d3Sankey: d3Sankey,
     cmk: {
         forms: forms,
         prediction: prediction,
@@ -94,27 +135,42 @@ export const cmk_export = {
         availability: availability,
         sla: sla,
         bi: bi,
-        crash_reporting: crash_reporting,
+        transfer: transfer,
         backup: backup,
         hover: hover,
         service_discovery: service_discovery,
         sites: sites,
+        sidebar: sidebar /* needed for add snapin page */,
+        quicksearch: quicksearch,
         host_diagnose: host_diagnose,
         profile_replication: profile_replication,
         wato: wato,
         popup_menu: popup_menu,
         valuespecs: valuespecs,
+        number_format: number_format,
         views: views,
         reload_pause: reload_pause,
         graph_integration: graph_integration,
         graphs: graphs,
+        graphs_cee: graphs_cee,
         dashboard: dashboard,
+        page_menu: page_menu,
+        // TODO: node_visualization cleanups
         node_visualization_utils: node_visualization_utils,
         node_visualization_layout_styles: node_visualization_layout_styles,
         node_visualization_viewport_utils: node_visualization_viewport_utils,
         node_visualization_viewport_layers: node_visualization_viewport_layers,
         node_visualization: node_visualization,
-        d3: d3,
-        d3_flextree: d3_flextree,
-    }
+        figures: cmk_figures,
+        ntop: {
+            host_details: ntop_host_details,
+            alerts: ntop_alerts,
+            flows: ntop_flows,
+            top_talkers: ntop_top_talkers,
+            utils: ntop_utils,
+        },
+        license_usage: {
+            timeseries_graph: license_usage_timeseries_graph,
+        },
+    },
 };

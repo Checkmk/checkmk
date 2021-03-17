@@ -617,6 +617,10 @@ def _get_dashlets(name: DashboardName, board: DashboardConfig) -> List[Dashlet]:
         try:
             dashlet_type = get_dashlet_type(dashlet_spec)
             dashlet = dashlet_type(name, board, nr, dashlet_spec)
+        except KeyError as e:
+            info_text = _("Dashlet type %s could not be found. "
+                          "Please remove it from your dashboard configuration.") % e
+            dashlet = _fallback_dashlet(name, board, dashlet_spec, nr, info_text=info_text)
         except Exception:
             dashlet = _fallback_dashlet(name, board, dashlet_spec, nr)
 
@@ -754,12 +758,15 @@ def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInpu
         return html.drain()
 
 
-def _fallback_dashlet(name: DashboardName, board: DashboardConfig, dashlet_spec: DashletConfig,
-                      dashlet_id: int) -> Dashlet:
+def _fallback_dashlet(name: DashboardName,
+                      board: DashboardConfig,
+                      dashlet_spec: DashletConfig,
+                      dashlet_id: int,
+                      info_text: str = "") -> Dashlet:
     """Create some place holder dashlet instance in case the dashlet could not be
     initialized"""
     dashlet_spec = dashlet_spec.copy()
-    dashlet_spec.update({"type": "nodata", "text": ""})
+    dashlet_spec.update({"type": "nodata", "text": info_text})
 
     dashlet_type = get_dashlet_type(dashlet_spec)
     return dashlet_type(name, board, dashlet_id, dashlet_spec)
@@ -1304,7 +1311,7 @@ def dashlet_styles(board):
 
 def used_dashlet_types(board):
     type_names = list({d['type'] for d in board['dashlets']})
-    return [dashlet_registry[ty] for ty in type_names]
+    return [dashlet_registry[ty] for ty in type_names if ty in dashlet_registry]
 
 
 # dashlets using the 'url' method will be refreshed by us. Those
@@ -1878,7 +1885,6 @@ class EditDashletPage(Page):
 
         forms.end()
         html.show_localization_hint()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 

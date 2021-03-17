@@ -1,0 +1,13 @@
+Title: Drop legacy "Use unsafe legacy encoding" setting
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614862941
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b9
+
+This setting has been deprecated before Checkmk 1.4 and has now been finally
+removed. It was only kept for compatibility with pre 1.4 sites in distributed
+setups which is not relevant anymore these days.

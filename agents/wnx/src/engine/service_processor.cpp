@@ -72,7 +72,7 @@ void KillProcessesInUserFolder() {
     }
 }
 
-void TryCleanOnExit() {
+void TryCleanOnExit(cfg::modules::ModuleCommander& mc) {
     namespace details = cfg::details;
 
     KillProcessesInUserFolder();
@@ -89,6 +89,9 @@ void TryCleanOnExit() {
     XLOG::l.i(
         "Clean on exit was requested, trying to remove what we have, mode is [{}]",
         static_cast<int>(mode));
+    if (mode != details::CleanMode::none) {
+        mc.moveModulesToStore(cfg::GetRootDir(), cfg::GetUserDir());
+    }
     details::CleanDataFolder(mode);  // normal
 }
 }  // namespace
@@ -115,7 +118,7 @@ void ServiceProcessor::cleanupOnStop() {
     }
     cma::KillAllInternalUsers();
 
-    TryCleanOnExit();
+    TryCleanOnExit(mc_);
 }
 
 // #TODO - implement

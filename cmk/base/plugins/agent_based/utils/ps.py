@@ -41,6 +41,8 @@ from ..agent_based_api.v1 import (
     State as state,
 )
 
+from . import cpu, memory
+
 ps_info = collections.namedtuple(
     "ps_info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile', 'usermode_time',
                 'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
@@ -184,28 +186,19 @@ def format_process_list(processes, html_output):
             return "%.1f%s" % (value, unit)
         return "%s%s" % (value, unit)
 
+    # keys to output and default values:
+    headers = dict.fromkeys((key for process in processes for key, _value in process), '')
+
     if html_output:
         table_bracket = "<table>%s</table>"
         line_bracket = "<tr>%s</tr>"
         cell_bracket = "<td>%.0s%s</td>"
         cell_seperator = ""
-
-        headers = []
-        headers_found = set()
-
-        for process in processes:
-            for key, _value in process:
-                if key not in headers_found:
-                    headers.append(key)
-                    headers_found.add(key)
+        header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
 
         # make sure each process has all fields from the table
-        processes_filled = []
-        for process in processes:
-            dictified = dict(process)
-            processes_filled.append([(key, dictified.get(key, "")) for key in headers])
-        processes = processes_filled
-        header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
+        processes = [{**headers, **dict(process)}.items() for process in processes]
+
     else:
         table_bracket = "%s"
         line_bracket = "%s\r\n"
@@ -214,10 +207,9 @@ def format_process_list(processes, html_output):
         header_line = ""
 
     return table_bracket % (header_line + "".join([
-        line_bracket %
-        cell_seperator.join([cell_bracket % (key, format_value(value))
-                             for key, value in process])
-        for process in processes
+        line_bracket % cell_seperator.join([
+            cell_bracket % (key, format_value(value)) for key, value in process if key in headers
+        ]) for process in processes
     ]))
 
 
@@ -424,15 +416,11 @@ def process_capture(
     return ps_aggregator
 
 
-SectionMem = Dict[str, float]
-SectionCpu = Dict[str, Union[float, List[float]]]
-
-
 def discover_ps(
     params: Sequence[Mapping[str, Any]],
     section_ps: Optional[Section],
-    section_mem: Optional[SectionMem],
-    section_cpu: Optional[SectionCpu],
+    section_mem: Optional[memory.SectionMem],
+    section_cpu: Optional[cpu.Section],
 ) -> DiscoveryResult:
     if not section_ps:
         return

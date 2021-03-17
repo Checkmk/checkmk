@@ -1,135 +1,123 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles used in the logwatch pages */
 
 #logwatch {
   margin-top: 6px;
-  color: #000;
 
-  div.chunk {
+  table.section {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: $color-table-background;
     padding: 3px;
     margin-bottom: 11px;
-    background-color: #fff;
-    border-color: #bbb #555 #222 #bbb;
-    border-style: solid;
-    border-width: 1px;
   }
 
-  a {
-    width: 26px;
-    font-family: sans-serif;
-    font-weight: bold;
-    color: #008;
-
-    /* TODO: Reproduce this html element */
-    b {
-      color: #08f;
-    }
-
-    /* TODO: Reproduce this html element */
-    &.ack {
-      padding: 2.1px 7px;
-      color: #fff;
-      text-decoration: none;
-      background-color: #33c;
-      border-color: #ccc #888 #333 #777;
-      border-style: solid;
-      border-width: 2px;
-      border-radius: 6px;
-    }
+  td.WARN,
+  td.CRIT,
+  td.OK {
+    width: 40px;
+    padding: 2px 5px;
+    margin-left: 5px;
+    font-weight: $font-weight-bold;
+    text-align: center;
+    border-radius: $theme-border-radius;
   }
 
-  p {
+  td.WARN {
+    background-color: $warning;
+    color: $black;
+  }
+
+  td.CRIT {
+    background-color: $danger;
+    color: $white;
+  }
+
+  td.OK {
+    background-color: none;
+    color: $success;
+  }
+
+  td.date {
+    padding-left: 6px;
+    font-weight: $font-weight-default;
+    color: $grey-2;
+    font-size: $font-size-small;
+  }
+
+  td.lines {
+    color: $logwatch-text-color;
     padding: 1.6px 0 4px 12px;
     margin: 0;
-    font-family: courier, monospace;
-    font-size: 13px;
     text-indent: -8px;
-    word-wrap: break-word;    /* IE */
-    white-space: pre-wrap;      /* CSS3 */
-    white-space: -moz-pre-wrap; /* Firefox */
-    white-space: -pre-wrap;     /* Opera <7 */
-    white-space: -o-pre-wrap;   /* Opera 7 */
-    background-color: #ddd;
-    border-right: 1px solid #888;
-    border-left: 1px solid #888;
+    border: none;
 
     img {
       margin-right: 2px;
     }
   }
 
-  .WARN {
-    background-color: #ff8;
-    border-bottom: 1px solid #cc0;
+  tr:nth-child(odd) {
+    &.context {
+      background-color: $table-highlight-color;
+      td.lines {
+        color: $logwatch-text-color-2;
+      }
+    }
+    &.OK {
+      background-color: $color-state-success-background;
+    }
+    &.WARN {
+      background-color: $color-state-1-background;
+    }
+    &.CRIT {
+      background-color: $color-state-2-background;
+    }
+  }
+  tr:nth-child(even) {
+    &.context {
+      background-color: $color-table-background;
+      td.lines {
+        color: $logwatch-text-color-2;
+      }
+    }
+    &.OK {
+      background-color: lighten($color-state-success-background, 10%);
+    }
+    &.WARN {
+      background-color: lighten($color-state-1-background, 10%);
+    }
+    &.CRIT {
+      background-color: lighten($color-state-2-background, 10%);
+    }
   }
 
-  .CRIT {
-    background-color: #f88;
-    border-bottom: 1px solid #c00;
-  }
-
-  .OK {
-    background-color: #0b3;
-    border-bottom: 1px solid #0c0;
-  }
-
-  td.WARN, td.CRIT, td.OK {
-    width: 60px;
-    padding: 0 3px;
-    margin: 0;
+  a {
+    width: 26px;
+    font-family: sans-serif;
     font-weight: bold;
-    text-align: center;
-    border: 1px solid #000;
-  }
+    color: rgb(0, 0, 136);
 
-  td.WARN {
-    background-color: #ff0;
-  }
+    /* TODO: Reproduce this html element */
+    b {
+      color: rgb(0, 136, 255);
+    }
 
-  td.CRIT {
-    color: #fff;
-    background-color: #f00;
-  }
-
-  td.OK {
-    color: #fff;
-    background-color: #0b3;
-  }
-
-  table.section {
-    width: 100%;
-    margin: 0 0 4.8px;
-  }
-
-  .date {
-    padding-left: 6px;
-    font-weight: normal;
-    color: #666;
+    /* TODO: Reproduce this html element */
+    &.ack {
+      padding: 2.1px 7px;
+      color: rgb(255, 255, 255);
+      text-decoration: none;
+      background-color: rgb(51, 51, 204);
+      border-color: rgb(204, 204, 204) rgb(136, 136, 136) rgb(51, 51, 51) rgb(119, 119, 119);
+      border-style: solid;
+      border-width: 2px;
+      border-radius: 6px;
+    }
   }
 
   /* TODO: Reproduce these three td.button elements */
@@ -137,18 +125,18 @@ Boston, MA 02110-1301 USA.
     text-align: right;
 
     a {
-      padding: .7px 7px;
+      padding: 0.7px 7px;
       font-weight: normal;
-      color: #000;
+      color: rgb(0, 0, 0);
       text-decoration: none;
-      background-color: #cca;
-      border-color: #ddd #888 #333 #ddd;
+      background-color: rgb(204, 204, 170);
+      border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
       border-style: solid;
       border-width: 1px;
       border-radius: 4px;
 
       &:active {
-        background-color: #aa8;
+        background-color: rgb(170, 170, 136);
       }
     }
   }
@@ -156,17 +144,18 @@ Boston, MA 02110-1301 USA.
   /* --- navigation tabs in logwatch ------------------ */
   /* TODO: Reproduce these .tab and .tabactive elements */
 
-  a.tab, a.tabactive {
+  a.tab,
+  a.tabactive {
     display: block;
     width: 140px;
     padding: 2.8px 12px;
     margin-right: 2.1px;
     margin-bottom: 0;
-    color: #000;
+    color: rgb(0, 0, 0);
     text-decoration: none;
     vertical-align: top;
-    background-color: #fc0;
-    border-bottom: 1px solid #000;
+    background-color: rgb(255, 204, 0);
+    border-bottom: 1px solid rgb(0, 0, 0);
     border-style: none;
     border-radius: 12px 12px 0 0;
   }

@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional
+from typing import Optional
 from .agent_based_api.v1 import (
     register,
     type_defs,
     Attributes,
 )
 
+from .utils import memory
 
-def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> Optional[Dict[str, int]]:
+
+def parse_proc_meminfo_bytes(string_table: type_defs.StringTable) -> Optional[memory.SectionMem]:
     """Parse /proc/meminfo into the canonical form: into bytes
 
         >>> import pprint
@@ -48,7 +50,7 @@ register.agent_section(
 )
 
 
-def inventory_mem(section: Dict[str, int]):
+def inventory_mem(section: memory.SectionMem):
     yield Attributes(
         path=["hardware", "memory"],
         inventory_attributes={

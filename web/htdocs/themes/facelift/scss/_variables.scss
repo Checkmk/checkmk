@@ -311,15 +311,9 @@ $invtree-td-bg-color: $primary-td-bg-color;
 
 $availability-table-border-color: null;
 $availability-summary-bg-color: $grey-2;
-$lightened-state0-bg-color: lighten($color-state-success-background, 10%);
-$lightened-state1-bg-color: lighten($color-state-1-background, 10%);
-$lightened-state2-bg-color: lighten($color-state-2-background, 10%);
-$lightened-state3-bg-color: lighten($color-state-3-background, 10%);
 $unmonitored-font-color: rgb(102, 102, 102);
 $unmonitored-bg-color: rgb(202, 202, 202);
-$lightened-unmonitored-bg-color: lighten($unmonitored-bg-color, 10%);
 $hostdown-bg-color: rgb(0, 102, 170);
-$lightened-hostdown-bg-color: lighten($hostdown-bg-color, 10%);
 
 $nform-vlof-border-color: $color-table-border;
 
@@ -473,10 +467,10 @@ $hexagon-unknown-color: rgb(255, 136, 0);
 $hexagon-warning-color: $color-state-1-background;
 $hexagon-downtime-color: rgb(60, 194, 255);
 $hexagon-host-down-color: rgb(16, 99, 176);
-$hexagon-ok-color: $ux-theme-4;
-$hexagon-ok-fill-opacity: 0.4;
-$hexagon-ok-stroke-color: rgb(210, 212, 214);
-$hexagon-ok-stroke-opacity: 1;
+$hexagon-default-color: $ux-theme-4;
+$hexagon-default-fill-opacity: 0.4;
+$hexagon-default-stroke-color: rgb(210, 212, 214);
+$hexagon-default-stroke-opacity: 1;
 $host-hexagon-ok-stroke-color: $grey-2;
 $input-field-height: 21px; // also for tactical overview
 $input-field-margin: 0 $spacing-half $spacing-half 0;

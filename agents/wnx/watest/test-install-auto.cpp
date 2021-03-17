@@ -16,12 +16,9 @@ namespace fs = std::filesystem;
 namespace cma::install {
 
 TEST(InstallAuto, FileControlIntegration) {
-    namespace fs = std::filesystem;
-    cma::OnStart(cma::AppType::test);
-
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [in, out] = tst::CreateInOut();
+    tst::TempDirPair dirs{test_info_->name()};
+    auto in = dirs.in();
+    auto out = dirs.out();
     // artificial file creation
     const auto name = L"test.dat";
     auto path = in / name;
@@ -32,7 +29,7 @@ TEST(InstallAuto, FileControlIntegration) {
     EXPECT_NO_THROW(BackupFile(path, out));
     EXPECT_FALSE(NeedInstall(path, out));
 
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
 
     // check for presence
     std::error_code ec;
@@ -48,7 +45,7 @@ TEST(InstallAuto, FileControlIntegration) {
 
     EXPECT_TRUE(RmFile(path));
     EXPECT_FALSE(MvFile(path, out / name)) << "file should be removed";
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
     EXPECT_TRUE(MvFile(path, out / name)) << "move has to success";
 
     EXPECT_NO_THROW(BackupFile(path, out));
@@ -56,10 +53,14 @@ TEST(InstallAuto, FileControlIntegration) {
     EXPECT_TRUE(fs::exists(path, ec));
 
     EXPECT_FALSE(NeedInstall(path, out));
-    tst::ConstructFile(path, "-----\n");
+    tst::CreateTextFile(path, "-----\n");
     EXPECT_TRUE(NeedInstall(path, out));
     BackupFile(path, out);
     EXPECT_FALSE(NeedInstall(path, out));
+}
+
+TEST(InstallAuto, GlobalSettings) {
+    EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 }
 
 class InstallAutoPrepareFixture : public ::testing::Test {
@@ -74,10 +75,10 @@ public:
         eu_->prepare(L"msi exec", L"x x x", false);
         msi_log_file_ = eu_->getLogFileName();
         temp_script_file_ = eu_->getTempScriptFile();
-        expected_cmd_line_ =
-            fmt::format(LR"("{}" "msi exec" "/i x x x /qn /L*V {}" "{}")",
-                        temp_script_file_.wstring(), msi_log_file_,
-                        script_log_file_.wstring());
+        expected_cmd_line_ = fmt::format(
+            LR"("{}" "msi exec" "/i x x x /qn REBOOT=ReallySuppress /L*V {}" "{}")",
+            temp_script_file_.wstring(), msi_log_file_,
+            script_log_file_.wstring());
     }
 
     // ***************************************************
@@ -114,21 +115,22 @@ TEST_F(InstallAutoPrepareFixture, GetCommand) {
 
 class InstallAutoSimulationFixture : public testing::Test {
 protected:
-    static void SetUpTestSuite() {
+    void SetUp() override {
+        fs_ = tst::TempCfgFs::Create();
         eu_ = std::make_unique<ExecuteUpdate>();
+        ASSERT_TRUE(fs_->loadConfig(tst::GetFabricYml()));
         eu_->prepare(L"msi", L"x x x", true);
 
         tst::CreateWorkFile(eu_->getLogFileName(), "This is log");
+
+        fs::create_directories(fs_->root() / cfg::dirs::kAgentUtils);
+        tst::CreateWorkFile(fs_->root() / cfg::dirs::kAgentUtils /
+                                cfg::files::kExecuteUpdateFile,
+                            "This is  script");
     }
 
-    static void TearDownTestSuite() {}
-
-    // ***************************************************
-    // NOTE: inline makes our life a bit easier.
-    // Attention: We must use unique_ptr, because constructing during EXE init
-    // will fail.
-    // ***************************************************
-    static inline std::unique_ptr<ExecuteUpdate> eu_;
+    std::unique_ptr<tst::TempCfgFs> fs_;
+    std::unique_ptr<ExecuteUpdate> eu_;
 };
 
 TEST_F(InstallAutoSimulationFixture, BackupLogIntegration) {
@@ -156,8 +158,10 @@ TEST(InstallAuto, PrepareExecutionLegacy) {
 
     ExecuteUpdate eu;
     eu.prepare(L"msi-exec", L"xx.msi", false);
-    EXPECT_EQ(eu.getCommand(), fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})",
-                                           eu.getLogFileName()));
+    EXPECT_EQ(
+        eu.getCommand(),
+        fmt::format(LR"(msi-exec /i xx.msi /qn REBOOT=ReallySuppress /L*V {})",
+                    eu.getLogFileName()));
 
     EXPECT_EQ(fs::path(eu.getLogFileName()).filename(),
               fs::path(kMsiLogFileName));
@@ -172,10 +176,69 @@ TEST(InstallAuto, PrepareExecutionFallback) {
     eu.prepare(L"msi-exec", L"xx.msi", true);
     auto msi_log_file = eu.getLogFileName();
     auto command = eu.getCommand();
-    EXPECT_EQ(command,
-              fmt::format(LR"(msi-exec /i xx.msi /qn /L*V {})", msi_log_file));
+    EXPECT_EQ(
+        command,
+        fmt::format(LR"(msi-exec /i xx.msi /qn REBOOT=ReallySuppress /L*V {})",
+                    msi_log_file));
 
     EXPECT_EQ(fs::path(msi_log_file).filename().u8string(), kMsiLogFileName);
 }
 
+TEST(InstallAuto, CheckForUpdateFileIntegration) {
+    namespace fs = std::filesystem;
+    auto msi = cma::cfg::GetMsiExecPath();
+    ASSERT_TRUE(!msi.empty());
+
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+
+    auto [in, out] = tst::CreateInOut();
+    // artificial file creation
+    const auto name = L"test.dat";
+
+    // check for presence
+    std::error_code ec;
+    {
+        auto [command, result] =
+            CheckForUpdateFile(name, L"", UpdateProcess::skip);
+        EXPECT_FALSE(result);
+    }
+
+    {
+        auto [command, result] =
+            CheckForUpdateFile(L"invalidname", L"", UpdateProcess::skip);
+        EXPECT_FALSE(result);
+    }
+
+    {
+        auto path = in / name;
+        tst::CreateTextFile(path, "-----\n");
+        auto [command, result] = CheckForUpdateFile(
+            name, in.wstring(), UpdateProcess::skip, out.wstring());
+        EXPECT_TRUE(result);
+
+        EXPECT_TRUE(fs::exists(out / name, ec));
+        EXPECT_TRUE(!fs::exists(path, ec));
+
+        EXPECT_EQ(command.find(cfg::files::kExecuteUpdateFile),
+                  std::string::npos);
+    }
+    {
+        auto path = in / name;
+        tst::CreateTextFile(path, "-----\n");
+
+        ASSERT_TRUE(temp_fs->createRootFile(
+            fs::path(cfg::dirs::kAgentUtils) / cfg::files::kExecuteUpdateFile,
+            "rem echo nothing\n"));
+        auto [command, result] = CheckForUpdateFile(
+            name, in.wstring(), UpdateProcess::skip, out.wstring());
+        EXPECT_TRUE(result);
+
+        EXPECT_TRUE(fs::exists(out / name, ec));
+        EXPECT_TRUE(!fs::exists(path, ec));
+
+        EXPECT_NE(command.find(cfg::files::kExecuteUpdateFile),
+                  std::string::npos);
+    }
+}
 }  // namespace cma::install

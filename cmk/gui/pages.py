@@ -1,105 +1,135 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import json
+import http.client as http_client
 import inspect
+import json
+from typing import Any, Callable, Dict, Mapping, Optional, Type
+
 import cmk.utils.plugin_registry
-from cmk.gui.globals import html
+from cmk.utils.exceptions import MKException
+
 import cmk.gui.config as config
-from cmk.gui.exceptions import MKException
+from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.globals import g, html
 from cmk.gui.log import logger
 
+PageHandlerFunc = Callable[[], None]
+PageResult = Any
+AjaxPageResult = Dict[str, Any]
 
-class Page(object):
-    __metaclass__ = abc.ABCMeta
 
+# At the moment pages are simply callables that somehow render content for the HTTP response
+# and send it to the client.
+#
+# At least for HTML pages we should standardize the pages a bit more since there are things all pages do
+# - Create a title, render the header
+# - Have a breadcrumb
+# - Optional: Handle actions
+# - Render the page
+#
+# TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
+# implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
+class Page(metaclass=abc.ABCMeta):
+    # TODO: In theory a page class could be registered below multiple URLs. For this case it would
+    # be better to move the ident out of the class, to the registry. At the moment the URL is stored
+    # in self._ident by PageRegistry.register_page().
+    # In practice this is no problem at the moment, because each page is accessible only through a
+    # single endpoint.
     @classmethod
-    #TODO: Use when we are using python3 abc.abstractmethod
-    def ident(cls):
+    def ident(cls) -> str:
         raise NotImplementedError()
 
-    def handle_page(self):
+    def handle_page(self) -> None:
         self.page()
 
     @abc.abstractmethod
-    def page(self):
+    def page(self) -> PageResult:
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(Page):
+class AjaxPage(Page, metaclass=abc.ABCMeta):
     """Generic page handler that wraps page() calls into AJAX respones"""
-    __metaclass__ = abc.ABCMeta
-
     def __init__(self):
         super(AjaxPage, self).__init__()
         self._from_vars()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         """Override this method to set mode specific attributes based on the
         given HTTP variables."""
-        pass
 
-    def webapi_request(self):
+    def webapi_request(self) -> Dict[str, str]:
         return html.get_request()
 
-    def handle_page(self):
+    @abc.abstractmethod
+    def page(self) -> AjaxPageResult:
+        """Override this to implement the page functionality"""
+        raise NotImplementedError()
+
+    def _handle_exc(self, method) -> None:
+        # FIXME: cyclical link between crash_reporting.py and pages.py
+        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+        try:
+            # FIXME: These methods write to the response themselves. This needs to be refactored.
+            method()
+        except MKException as e:
+            html.response.status_code = http_client.BAD_REQUEST
+            html.write(str(e))
+        except Exception as e:
+            html.response.status_code = http_client.INTERNAL_SERVER_ERROR
+            if config.debug:
+                raise
+            logger.exception("error calling AJAX page handler")
+            handle_exception_as_gui_crash_report(
+                plain_error=True,
+                show_crash_link=getattr(g, "may_see_crash_reports", False),
+            )
+            html.write(str(e))
+
+    def handle_page(self) -> None:
         """The page handler, called by the page registry"""
+        # FIXME: cyclical link between crash_reporting.py and pages.py
+        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
         html.set_output_format("json")
         try:
             action_response = self.page()
-            response = {"result_code": 0, "result": action_response}
+            response = {"result_code": 0, "result": action_response, "severity": "success"}
+        except MKMissingDataError as e:
+            response = {"result_code": 1, "result": "%s" % e, "severity": "success"}
         except MKException as e:
-            response = {"result_code": 1, "result": "%s" % e}
+            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
         except Exception as e:
             if config.debug:
                 raise
-            logger.exception()
-            response = {"result_code": 1, "result": "%s" % e}
+            logger.exception("error calling AJAX page handler")
+            handle_exception_as_gui_crash_report(
+                plain_error=True,
+                show_crash_link=getattr(g, "may_see_crash_reports", False),
+            )
+            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
         html.write(json.dumps(response))
 
 
-class PageRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Page
+class PageRegistry(cmk.utils.plugin_registry.Registry[Type[Page]]):
+    def plugin_name(self, instance: Type[Page]) -> str:
+        return instance.ident()
 
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident()
-
-    def register_page(self, path):
-        def wrap(plugin_class):
+    def register_page(self, path: str) -> Callable[[Type[Page]], Type[Page]]:
+        def wrap(plugin_class: Type[Page]) -> Type[Page]:
             if not inspect.isclass(plugin_class):
                 raise NotImplementedError()
 
-            plugin_class._ident = path
-            plugin_class.ident = classmethod(lambda cls: cls._ident)
+            # mypy is not happy with this. Find a cleaner way
+            plugin_class._ident = path  # type: ignore[attr-defined]
+            plugin_class.ident = classmethod(lambda cls: cls._ident)  # type: ignore[assignment]
 
             self.register(plugin_class)
             return plugin_class
@@ -112,7 +142,7 @@ page_registry = PageRegistry()
 
 # TODO: Refactor all call sites to sub classes of Page() and change the
 # registration to page_registry.register("path")
-def register(path):
+def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
     """Register a function to be called when the given URL is called.
 
     In case you need to register some callable like staticmethods or
@@ -121,7 +151,7 @@ def register(path):
 
     It is essentially a decorator that calls register_page_handler().
     """
-    def wrap(wrapped_callable):
+    def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
         cls_name = "PageClass%s" % path.title().replace(":", "")
         LegacyPageClass = type(cls_name, (Page,), {
             "_wrapped_callable": (wrapped_callable,),
@@ -135,18 +165,22 @@ def register(path):
 
 
 # TODO: replace all call sites by directly calling page_registry.register_page("path")
-def register_page_handler(path, page_func):
+def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerFunc:
     """Register a function to be called when the given URL is called."""
     wrap = register(path)
     return wrap(page_func)
 
 
-def get_page_handler(name, dflt=None):
+def get_page_handler(name: str,
+                     dflt: Optional[PageHandlerFunc] = None) -> Optional[PageHandlerFunc]:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no
     page handler for the requested name."""
-    handle_class = page_registry.get(name)
+    # NOTE: Workaround for our non-generic registries... :-/
+    pr: Mapping[str, Type[Page]] = page_registry
+    handle_class = pr.get(name)
     if handle_class is None:
         return dflt
-    return lambda: handle_class().handle_page()
+    # NOTE: We can'use functools.partial because of https://bugs.python.org/issue3445
+    return (lambda hc: lambda: hc().handle_page())(handle_class)

@@ -179,10 +179,10 @@ builtin_dashboards["problems"] = {
     ]
 }
 
-# In the CEE we have a specific "main" dashboard which uses all the new CEE specific dashlets.  We
-# don't have them in the CRE, so we simply keep using the main dashboard as previous versions did.
-if "main" not in builtin_dashboards:
-    builtin_dashboards["main"] = builtin_dashboards["problems"].copy()
+# CEE uses specific "main" dashboard with new CEE specific dashlets.
+# CRE should use the problem dashboard as main dashboard
+if cmk_version.is_raw_edition():
+    builtin_dashboards["main"] = builtin_dashboards.pop("problems")
     builtin_dashboards["main"].update({
         "title": _("Main dashboard"),
         "title_url": "view.py?filled_in=filter&hoststate_filled=1&hst1=on&hst2=on&hstp=on&view_name=searchhost&_show_filter_form=0",

@@ -374,4 +374,9 @@ void ExternalPort::shutdownIo() {
     }
 }
 
+size_t ExternalPort::sessionsInQueue() {
+    std::scoped_lock lk(io_thread_lock_);
+    return session_queue_.size();
+}
+
 }  // namespace cma::world

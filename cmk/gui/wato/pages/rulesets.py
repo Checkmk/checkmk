@@ -1927,6 +1927,10 @@ class RuleConditionRenderer(object):
         is_negate, service_conditions = ruleset_matcher.parse_negated_condition_list(
             conditions.service_description)
 
+        if not service_conditions:
+            yield _("Does not match any service")
+            return
+
         exact_match_count = len(
             [x for x in service_conditions if not isinstance(x, dict) or x["$regex"][-1] == "$"])
 

@@ -1782,6 +1782,9 @@ class ABCPainterCustomVariable(Painter):
         except KeyError:
             return self._default_title
 
+    def list_title(self, cell: Cell) -> str:
+        return self._default_title
+
     @abc.abstractproperty
     def _default_title(self):
         raise NotImplementedError()
@@ -3018,7 +3021,7 @@ def paint_service_list(row, columnname):
         else:
             css = "statep"
 
-        h += html.render_div(html.render_a(text, link), class_=css)
+        h += html.render_div(html.render_span(html.render_a(text, link)), class_=css)
 
     return "", html.render_div(h, class_="objectlist")
 

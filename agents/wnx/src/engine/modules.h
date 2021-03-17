@@ -85,7 +85,7 @@ private:
     FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
 
 #endif
 };
@@ -99,9 +99,16 @@ constexpr std::string_view post_install_script_name{"postinstall.cmd"};
 
 class ModuleCommander {
 public:
+    struct UninstallStore {
+        std::filesystem::path base_;
+        std::filesystem::path zip_file_;
+        std::filesystem::path module_dir_;
+    };
     void LoadDefault() noexcept;
     void InstallDefault(InstallMode mode) noexcept;
     void readConfig(YAML::Node& node);
+
+    static bool IsQuickReinstallAllowed();
 
     void prepareToWork();
     bool isModuleScript(const std::string_view filename);
@@ -111,6 +118,9 @@ public:
     void installModules(const std::filesystem::path& root,
                         const std::filesystem::path& user,
                         InstallMode mode) const;
+
+    void moveModulesToStore(const std::filesystem::path& root,
+                            const std::filesystem::path& user) const;
 
     std::vector<std::string> getExtensions() const;
 
@@ -133,7 +143,12 @@ public:
 
 private:
     void removeSystemExtensions(YAML::Node& node);
+
     // internals static API
+    static bool TryQuickInstall(const Module& mod,
+                                const std::filesystem::path& root,
+                                const std::filesystem::path& user);
+
     static bool InstallModule(const Module& mod,
                               const std::filesystem::path& root,
                               const std::filesystem::path& user,
@@ -142,6 +157,10 @@ private:
     // returns true when changes had been made
     static bool UninstallModuleZip(const std::filesystem::path& file,
                                    const std::filesystem::path& mod_root);
+
+    // \brief Validates that default move dir contains good module
+    static std::optional<UninstallStore> GetUninstallStore(
+        const std::filesystem::path& file);
 
     static bool BackupModule(const std::filesystem::path& module_file,
                              const std::filesystem::path& backup_file);
@@ -155,7 +174,7 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
-    FRIEND_TEST(ModuleCommanderTest, InstallModules);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
     FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);

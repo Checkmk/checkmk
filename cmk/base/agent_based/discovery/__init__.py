@@ -71,10 +71,7 @@ from cmk.base.api.agent_based import checking_classes
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
-from cmk.base.discovered_labels import (
-    DiscoveredHostLabels,
-    HostLabel,
-)
+from cmk.base.discovered_labels import HostLabel
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -1126,7 +1123,7 @@ def get_check_preview(
     max_cachefile_age: int,
     use_cached_snmp_data: bool,
     on_error: str,
-) -> Tuple[CheckPreviewTable, DiscoveredHostLabels]:
+) -> Tuple[CheckPreviewTable, QualifiedDiscovery[HostLabel]]:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible"""
     config_cache = config.get_config_cache()
@@ -1135,7 +1132,7 @@ def get_check_preview(
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
     discovery_parameters = DiscoveryParameters(
         on_error=on_error,
-        load_labels=False,
+        load_labels=True,
         save_labels=False,
         only_host_labels=False,
     )
@@ -1207,9 +1204,7 @@ def get_check_preview(
                 found_on_nodes,
             ))
 
-    return table, DiscoveredHostLabels(
-        # this dict deduplicates label names!
-        *{l.name: l for l in host_label_result.present}.values())
+    return table, host_label_result
 
 
 def _preview_check_source(

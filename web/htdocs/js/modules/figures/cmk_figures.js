@@ -356,8 +356,7 @@ export class FigureBase {
         })
             .then(json_data => this._process_api_response(json_data))
             .catch(e => {
-                console.error(e);
-                this._show_error_info("Error fetching data");
+                this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
     }
@@ -371,7 +370,7 @@ export class FigureBase {
         //      },
         // }}
         if (api_response.result_code != 0) {
-            this._show_error_info(api_response.result);
+            this._show_error_info(api_response.result, api_response.severity);
             return;
         }
         this._clear_error_info();
@@ -390,14 +389,20 @@ export class FigureBase {
         this._call_post_render_hooks(data);
     }
 
-    _show_error_info(error_info) {
-        let error = this._div_selection.selectAll("label#figure_error").data([null]);
-        error = error.enter().append("label").attr("id", "figure_error").merge(error);
-        error.text(error_info);
+    _show_error_info(error_info, div_class) {
+        this._div_selection
+            .selectAll("div#figure_error")
+            .data([null])
+            .join("div")
+            .attr("id", "figure_error")
+            .attr("class", div_class)
+            .text(error_info);
+        this.svg.style("display", "none");
     }
 
     _clear_error_info() {
         this._div_selection.select("#figure_error").remove();
+        this.svg.style("display", null);
     }
 
     _call_pre_render_hooks(data) {

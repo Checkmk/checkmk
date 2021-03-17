@@ -253,9 +253,9 @@ class GraphDashlet(Dashlet):
             graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
         except MKMissingDataError:
             raise
-        except livestatus.MKLivestatusNotFoundError as livestatus_excpt:
+        except livestatus.MKLivestatusNotFoundError:
             raise MKMissingDataError(
-                _("Missing data needed to render this graph. Details: %s") % livestatus_excpt)
+                _("No data was found with the current parameters of this dashlet."))
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 

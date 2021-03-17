@@ -114,7 +114,6 @@ def test_registered_permissions():
         'background_jobs.stop_jobs',
         'bi.see_all',
         'dashboard.main',
-        'dashboard.problems',
         'dashboard.simple_problems',
         'dashboard.checkmk',
         'dashboard.checkmk_host',
@@ -523,6 +522,7 @@ def test_registered_permissions():
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            'dashboard.problems',
             'dashboard.site',
             'dashboard.ntop_alerts',
             'dashboard.ntop_flows',

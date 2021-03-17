@@ -54,6 +54,7 @@ class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
         else:
             num_columns = 2
 
+        assert config.user.id is not None
         target = views.get_context_link(config.user.id, view)
         html.open_table(class_="allhosts")
         col = 1
@@ -73,7 +74,11 @@ class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
             html.open_div(class_=["statebullet", "state%d" % statecolor])
             html.nbsp()
             html.close_div()
-            link(host, target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
+            if target is None:
+                html.span(host)
+            else:
+                link(host,
+                     target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
             html.close_td()
             if col == num_columns:
                 html.close_tr()

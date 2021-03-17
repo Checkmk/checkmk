@@ -26,6 +26,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.type_defs import HostName, ServiceName, UserId
 
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -64,7 +65,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     toggle_page_menu_entries,
 )
-from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.pages import AjaxPage, page_registry, AjaxPageResult
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
@@ -133,6 +134,7 @@ from cmk.gui.type_defs import (
     Rows,
     ViewSpec,
     Visual,
+    ViewName,
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -650,12 +652,13 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.var("_row_id")])
+                rows = _filter_selected_rows(view_spec, rows,
+                                             [html.request.get_str_input_mandatory("_row_id")])
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(
+                rows = _filter_selected_rows(
                     view_spec, rows,
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
@@ -678,7 +681,8 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
+                rows = _filter_selected_rows(view_spec, rows,
+                                             [html.request.get_str_input_mandatory("_row_id")])
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')
@@ -710,7 +714,7 @@ class GUIViewRenderer(ABCViewRenderer):
                           show_checkboxes and not html.do_actions())
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
-                selected = filter_selected_rows(
+                selected = _filter_selected_rows(
                     view_spec, rows,
                     config.user.get_rowselection(weblib.selection_id(),
                                                  'view-' + view_spec['name']))
@@ -3209,29 +3213,29 @@ def do_actions(view, what, action_rows, backurl):
     return True
 
 
-def filter_selected_rows(view_spec: ViewSpec, rows, selected_ids):
-    action_rows = []
+def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
+    action_rows: Rows = []
     for row in rows:
         if row_id(view_spec, row) in selected_ids:
             action_rows.append(row)
     return action_rows
 
 
-def get_context_link(user, viewname):
+def get_context_link(user: UserId, viewname: ViewName) -> Optional[str]:
     if viewname in get_permitted_views():
         return "view.py?view_name=%s" % viewname
     return None
 
 
 @cmk.gui.pages.register("export_views")
-def ajax_export():
+def ajax_export() -> None:
     for view in get_permitted_views().values():
         view["owner"] = ''
         view["public"] = True
     html.write(pprint.pformat(get_permitted_views()))
 
 
-def get_view_by_name(view_name):
+def get_view_by_name(view_name: ViewName) -> ViewSpec:
     return get_permitted_views()[view_name]
 
 
@@ -3285,7 +3289,7 @@ def docu_link(topic, text):
 
 
 @cmk.gui.pages.register("ajax_popup_icon_selector")
-def ajax_popup_icon_selector():
+def ajax_popup_icon_selector() -> None:
     varprefix = html.request.var('varprefix')
     value = html.request.var('value')
     allow_empty = html.request.var('allow_empty') == '1'
@@ -3308,7 +3312,8 @@ def ajax_popup_icon_selector():
 #   '----------------------------------------------------------------------'
 
 
-def query_action_data(what, host, site, svcdesc):
+def query_action_data(what: str, host: HostName, site: SiteId,
+                      svcdesc: Optional[ServiceName]) -> Row:
     # Now fetch the needed data from livestatus
     columns = list(iconpainter_columns(what, toplevel=False))
     try:
@@ -3325,9 +3330,9 @@ def query_action_data(what, host, site, svcdesc):
 
 
 @cmk.gui.pages.register("ajax_popup_action_menu")
-def ajax_popup_action_menu():
-    site = html.request.var('site')
-    host = html.request.var('host')
+def ajax_popup_action_menu() -> None:
+    site = html.request.get_str_input_mandatory('site')
+    host = html.request.get_str_input_mandatory('host')
     svcdesc = html.request.get_unicode_input('service')
     what = 'service' if svcdesc else 'host'
 
@@ -3382,11 +3387,11 @@ def ajax_popup_action_menu():
 @page_registry.register_page("ajax_reschedule")
 class PageRescheduleCheck(AjaxPage):
     """Is called to trigger a host / service check"""
-    def page(self):
+    def page(self) -> AjaxPageResult:
         request = html.get_request()
         return self._do_reschedule(request)
 
-    def _do_reschedule(self, request):
+    def _do_reschedule(self, request: Dict[str, Any]) -> AjaxPageResult:
         if not config.user.may("action.reschedule"):
             raise MKGeneralException("You are not allowed to reschedule checks.")
 

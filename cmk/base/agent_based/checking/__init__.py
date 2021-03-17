@@ -100,7 +100,7 @@ def do_check(
     dry_run: bool = False,
     show_perfdata: bool = False,
 ) -> Tuple[int, List[ServiceDetails], List[ServiceAdditionalDetails], List[str]]:
-    console.verbose("Checkmk version %s\n", cmk_version.__version__)
+    console.vverbose("Checkmk version %s\n", cmk_version.__version__)
 
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)

@@ -1,0 +1,11 @@
+Title: Fix "Availability table" report element rendering
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1616060200
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+

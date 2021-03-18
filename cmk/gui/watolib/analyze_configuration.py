@@ -217,15 +217,16 @@ class ACTest(object):
         version = local_connection.query_value("GET status\nColumns: program_version\n", deflt="")
         return version.startswith("Check_MK")
 
-    def _get_effective_global_setting(self, varname):
+    def _get_effective_global_setting(self, varname, site=None):
         global_settings = load_configuration_settings()
         default_values = ConfigDomain().get_all_default_globals()
+        site = site if site else config.omd_site()
 
         if cmk.gui.config.is_wato_slave_site():
             current_settings = load_configuration_settings(site_specific=True)
         else:
             sites = SiteManagementFactory.factory().load_sites()
-            current_settings = sites[config.omd_site()].get("globals", {})
+            current_settings = sites[site].get("globals", {})
 
         if varname in current_settings:
             value = current_settings[varname]

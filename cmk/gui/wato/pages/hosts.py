@@ -273,12 +273,14 @@ class ModeEditHost(HostMode):
                 _("Diagnostic"),
                 watolib.folder_preserving_link([("mode", "diag_host"),
                                                 ("host", self._host.name())]), "diagnose")
-        html.context_button(_("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]),
-                            "update")
+
+        if self._should_use_dns_cache():
+            html.context_button(_("Update DNS Cache"),
+                                html.makeactionuri([("_update_dns_cache", "1")]), "update")
 
     def action(self):
         if html.request.var("_update_dns_cache"):
-            if html.check_transaction():
+            if html.check_transaction() and self._should_use_dns_cache():
                 config.user.need_permission("wato.update_dns_cache")
                 num_updated, failed_hosts = watolib.check_mk_automation(
                     self._host.site_id(), "update-dns-cache", [])
@@ -313,6 +315,11 @@ class ModeEditHost(HostMode):
             self._host.name(),
             title=_("Hostname"),
         )
+
+    def _should_use_dns_cache(self):
+        site = self._host.effective_attributes().get("site")
+        return watolib.analyze_configuration.ACTest()._get_effective_global_setting(
+            "use_dns_cache", site)
 
 
 class CreateHostMode(HostMode):

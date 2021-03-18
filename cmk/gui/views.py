@@ -664,7 +664,7 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if html.request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(view_spec, rows, [html.request.has_var("_row_id")])
+                rows = filter_selected_rows(view_spec, rows, [html.request.var("_row_id")])
 
             try:
                 do_actions(view_spec, self.view.datasource.infos[0], rows, '')

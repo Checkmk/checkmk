@@ -1,0 +1,13 @@
+Title: Fix single event deletion via view API call
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616068639
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+When trying to delete a single event using the view based web API calls, the
+"_row_id" parameter was not respected which resulted in no action being
+executted.

@@ -55,3 +55,5 @@ node_modules/
 web/htdocs/js/*_min.js.map
 .vscode/
 *.code-workspace
+.venv.lock
+.idea

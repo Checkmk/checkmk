@@ -478,29 +478,106 @@ class DiscoveryPageRenderer:
         if not discovery_result.host_labels:
             return host_label_row_count
 
-        host_labels_by_plugin: Dict[str, Dict[str, str]] = {}
-        for label_id, label in discovery_result.host_labels.items():
-            host_labels_by_plugin.setdefault(label["plugin_name"], {})[label_id] = label["value"]
-
         with table_element(css="data",
                            searchable=False,
                            limit=False,
                            sortable=False,
                            omit_update_header=False) as table:
-            table.groupheader(_("Discovered host labels"))
-            host_label_row_count += len(host_labels_by_plugin)
-            for plugin_name, labels in sorted(host_labels_by_plugin.items(), key=lambda x: x[0]):
-                table.row()
-                labels_html = render_labels(
-                    labels,
-                    "host",
-                    with_links=False,
-                    label_sources={k: "discovered" for k in discovery_result.host_labels},
-                )
-                table.text_cell(_("Check plugin"), plugin_name)
-                table.cell(_("Host labels"), labels_html)
 
+            return self._render_host_labels(
+                table,
+                host_label_row_count,
+                discovery_result,
+            )
+
+    def _render_host_labels(
+        self,
+        table,
+        host_label_row_count: int,
+        discovery_result: DiscoveryResult,
+    ) -> int:
+        table.groupheader(_("Discovered host labels"))
+        active_host_labels: Dict[str, Dict[str, str]] = {}
+        changed_host_labels: Dict[str, Dict[str, str]] = {}
+
+        for label_id, label in discovery_result.host_labels.items():
+            # For visualization of the changed host labels the old value and the new value
+            # of the host label are used the values are seperated with an arrow (\u279c)
+            if label_id in discovery_result.changed_labels:
+                changed_host_labels.setdefault(
+                    label_id,
+                    {
+                        "value":
+                            "%s \u279c %s" %
+                            (discovery_result.changed_labels[label_id]["value"], label["value"]),
+                        "plugin_name": label["plugin_name"],
+                    },
+                )
+            if label_id not in {
+                    **discovery_result.new_labels,
+                    **discovery_result.vanished_labels,
+                    **discovery_result.changed_labels,
+            }:
+                active_host_labels.setdefault(label_id, label)
+
+        host_label_row_count += self._create_host_label_row(
+            table,
+            discovery_result.new_labels,
+            _("New"),
+        )
+        host_label_row_count += self._create_host_label_row(
+            table,
+            discovery_result.vanished_labels,
+            _("Vanished"),
+        )
+        host_label_row_count += self._create_host_label_row(
+            table,
+            changed_host_labels,
+            _("Changed"),
+        )
+        host_label_row_count += self._create_host_label_row(
+            table,
+            active_host_labels,
+            _("Active"),
+        )
         return host_label_row_count
+
+    def _create_host_label_row(self, table, host_labels, text) -> int:
+        if not host_labels:
+            return 0
+
+        table.row()
+        table.text_cell(_("Status"), text, css="labelstate")
+
+        if not self._options.show_plugin_names:
+            labels_html = render_labels(
+                {label_id: label["value"] for label_id, label in host_labels.items()},
+                "host",
+                with_links=False,
+                label_sources={label_id: "discovered" for label_id in host_labels.keys()},
+            )
+            table.cell(_("Host labels"), labels_html, css="expanding")
+            return 1
+
+        plugin_names = HTML("")
+        labels_html = HTML("")
+        for label_id, label in host_labels.items():
+            label_data = {label_id: label["value"]}
+            ctype = label["plugin_name"]
+
+            manpage_url = watolib.folder_preserving_link([("mode", "check_manpage"),
+                                                          ("check_type", ctype)])
+            plugin_names += html.render_a(content=ctype, href=manpage_url) + "<br>"
+            labels_html += render_labels(
+                label_data,
+                "host",
+                with_links=False,
+                label_sources={label_id: "discovered"},
+            )
+
+        table.cell(_("Host labels"), labels_html, css="expanding")
+        table.cell(_("Check Plugin"), plugin_names, css="plugins")
+        return 1
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, request: dict) -> int:
         detail_row_count = 0
@@ -733,7 +810,7 @@ class DiscoveryPageRenderer:
 
         table.cell(_("State"), html.render_span(statename), css=stateclass)
         table.cell(_("Service"), escaping.escape_attribute(descr), css="service")
-        table.cell(_("Status detail"))
+        table.cell(_("Status detail"), css="expanding")
         self._show_status_detail(table_source, check_type, item, descr, output)
 
         if table_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
@@ -743,16 +820,18 @@ class DiscoveryPageRenderer:
         manpage_url = watolib.folder_preserving_link([("mode", "check_manpage"),
                                                       ("check_type", ctype)])
 
-        if self._options.show_plugin_names:
-            table.cell(_("Check plugin"), html.render_a(content=ctype, href=manpage_url))
-
         if self._options.show_parameters:
-            table.cell(_("Check parameters"))
+            table.cell(_("Check parameters"), css="expanding")
             self._show_check_parameters(table_source, check_type, checkgroup, check_params)
 
         if self._options.show_discovered_labels:
             table.cell(_("Discovered labels"))
             self._show_discovered_labels(service_labels)
+
+        if self._options.show_plugin_names:
+            table.cell(_("Check plugin"),
+                       html.render_a(content=ctype, href=manpage_url),
+                       css="plugins")
 
     def _show_status_detail(self, table_source, check_type, item, descr, output):
         if table_source not in [

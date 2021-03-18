@@ -421,7 +421,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> List[Tuple[str
                                                key=lambda e: (e.sort_index, e.title))]
 
 
-def get_sorted_host_attributes_by_topic(topic_id):
+def get_sorted_host_attributes_by_topic(topic_id) -> List[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
     # TODO: Clean this up by implementing some sort of explicit sorting
     def sort_host_attributes(a, b):

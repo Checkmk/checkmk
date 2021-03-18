@@ -13,7 +13,7 @@ import os
 import re
 import subprocess
 from contextlib import nullcontext
-from typing import Callable, ContextManager, Dict, List, Mapping
+from typing import Callable, cast, ContextManager, Dict, List, Mapping
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type
@@ -1677,7 +1677,7 @@ def configure_attributes(new,
                     html.write_text(content)
                     html.close_b()
                 elif isinstance(attr, str):
-                    html.b(_u(content))
+                    html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 

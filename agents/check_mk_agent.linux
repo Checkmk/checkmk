@@ -243,10 +243,16 @@ section_labels() {
 
 section_mem() {
     if [ -n "$IS_DOCKERIZED" ]; then
-        echo '<<<docker_container_mem>>>'
-        cat /sys/fs/cgroup/memory/memory.stat
-        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        echo "<<<docker_container_mem$CGROUP_SECTION_SUFFIX>>>"
+        if [ -n "$IS_CGROUP_V2" ]; then
+            cat /sys/fs/cgroup/memory.stat
+            echo "memory.current $(cat /sys/fs/cgroup/memory.current)"
+            echo "memory.max $(cat /sys/fs/cgroup/memory.max)"
+        else
+            cat /sys/fs/cgroup/memory/memory.stat
+            echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+            echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        fi
         grep -F 'MemTotal:' /proc/meminfo
     elif [ -n "$IS_LXC_CONTAINER" ]; then
         echo '<<<mem>>>'

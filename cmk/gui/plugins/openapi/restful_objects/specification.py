@@ -200,7 +200,6 @@ SECURITY_SCHEMES = {
     'headerAuth': {
         'type': 'http',
         'scheme': 'bearer',
-        'in': 'header',
         'description': 'Use user credentials in the `Authorization` HTTP header. '
                        'The format of the header value is `$user $password`. This method has the '
                        'highest precedence. If it succeeds, all other authentication methods are '
@@ -210,7 +209,6 @@ SECURITY_SCHEMES = {
     'webserverAuth': {
         'type': 'http',
         'scheme': 'basic',
-        'in': 'header',
         'description': "Use the authentication method of the webserver ('basic' or 'digest'). To "
                        "use this, you'll either have to re-configure the site's Apache instance "
                        "yourself, or disable multi-site logins via `omd config`. This method "

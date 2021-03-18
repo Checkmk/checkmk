@@ -25,7 +25,6 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.utils.tags import TagGroup
 from cmk.gui.watolib.tags import (save_tag_group, load_tag_config, edit_tag_group, load_tag_group,
                                   update_tag_config, tag_group_exists, change_host_tags_in_folders,
                                   TagCleanupMode, OperationRemoveTagGroup, RepairError, is_builtin)
@@ -35,7 +34,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
     constructors,
 )
-from cmk.utils.tags import BuiltinTagConfig
+from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 
 class HostTagGroupName(fields.String):

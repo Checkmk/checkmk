@@ -18,5 +18,5 @@ Livestatus is a library that behaves like a database and a protocol.
 See also
 --------
 - :doc:`arch-comp-core`
-- Retrieving status data via Livestatus 
-  `[doc] <https://docs.checkmk.com/latest/en/livestatus.html>`
+- Retrieving status data via Livestatus
+  `[doc] <https://docs.checkmk.com/latest/en/livestatus.html>`_

@@ -80,8 +80,10 @@ div#top_heading {
     &.default {
       div.text_container {
         position: absolute;
-        right: 6px;
+        right: 5.5px;
+        bottom: 21px;
         font-size: $font-size-small;
+        line-height: $font-size-small;
       }
 
       div.icon_container,

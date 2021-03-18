@@ -57,10 +57,9 @@ def check_ups_out_load(item: str, params: Mapping[str, Any], section: Section) -
                             label="load")
 
 
-register.check_plugin(
-    name="ups_out_load",
-    service_name="OUT load phase %s",
-    discovery_function=discovery_ups,
-    check_function=check_ups_out_load,
-    check_default_parameters={"levels": (85, 90)},
-)
+register.check_plugin(name="ups_out_load",
+                      service_name="OUT load phase %s",
+                      discovery_function=discovery_ups,
+                      check_function=check_ups_out_load,
+                      check_default_parameters={"levels": (85, 90)},
+                      check_ruleset_name="ups_out_load")

@@ -849,7 +849,7 @@ def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
     return tag
 
 
-def _docstring_name(docstring: Union[Any, str, None]) -> str:
+def _docstring_name(docstring: Optional[str]) -> str:
     """Split the docstring by title and rest.
 
     This is part of the rest.
@@ -875,7 +875,7 @@ def _docstring_name(docstring: Union[Any, str, None]) -> str:
     return [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)][0]
 
 
-def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
+def _docstring_description(docstring: Optional[str]) -> Optional[str]:
     """Split the docstring by title and rest.
 
     This is part of the rest.

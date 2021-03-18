@@ -206,6 +206,26 @@ div#service_container {
         min-width: 250px;
         overflow-wrap: break-word;
       }
+
+      &.labelstate {
+        width: 130px;
+        max-width: 130px;
+        min-width: 130px;
+        overflow-wrap: break-word;
+      }
+
+      &.expanding {
+        width: 100%;
+        min-width: 500px;
+      }
+
+      &.plugins {
+        min-width: 200px;
+      }
+
+      a {
+        line-height: 20px;
+      }
     }
   }
 

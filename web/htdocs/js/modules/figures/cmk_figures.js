@@ -574,30 +574,26 @@ export class FigureTooltip {
     update_position(event) {
         if (!this.active()) return;
 
-        let ev = "sourceEvent" in event ? event.sourceEvent : event;
         let tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
-        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
         this._tooltip
             .style("left", () => {
-                if (!render_to_the_left) return ev.layerX + 20 + "px";
-                return "auto";
+                return !render_to_the_left ? x + 20 + "px" : "auto";
             })
             .style("right", () => {
-                if (render_to_the_left) return this.plot_size.width - ev.layerX + 75 + "px";
-                return "auto";
+                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
             })
             .style("bottom", () => {
-                if (render_upwards) return "6px";
-                return "auto";
+                return render_upwards ? "6px" : "auto";
             })
             .style("top", () => {
-                if (!render_upwards) return ev.layerY - 20 + "px";
-                return "auto";
+                return !render_upwards ? y - 20 + "px" : "auto";
             })
             .style("pointer-events", "none")
             .style("opacity", 1);

@@ -14,7 +14,7 @@ import hashlib
 from pathlib import Path
 import traceback
 from typing import (Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional,
-                    Union, Dict, Type, cast)
+                    Union, Dict, Type, cast, Sequence)
 from contextlib import suppress
 
 from six import ensure_str
@@ -90,6 +90,11 @@ if TYPE_CHECKING:
 
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
+CommandSpecWithoutSite = str
+CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
+CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
+CommandActionResult = Optional[Tuple[Union[CommandSpecWithoutSite, Sequence[CommandSpec]], str]]
+CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -491,14 +496,14 @@ class Command(metaclass=abc.ABCMeta):
             "what": ungettext(what, what + "s", len_action_rows)
         }
 
-    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple]:
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
-    def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-               num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+    def action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+               num_rows: int) -> CommandActionResult:
         result = self._action(cmdtag, spec, row, row_index, num_rows)
         if result:
             commands, title = result
@@ -506,8 +511,8 @@ class Command(metaclass=abc.ABCMeta):
         return None
 
     @abc.abstractmethod
-    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-                num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         raise NotImplementedError()
 
     @property
@@ -536,9 +541,12 @@ class Command(metaclass=abc.ABCMeta):
     def is_suggested(self) -> bool:
         return False
 
-    def executor(self, command: str, site: str) -> None:
+    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
+        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
+        # object type for the command
+        assert isinstance(command, str)
+        sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
 class CommandRegistry(cmk.utils.plugin_registry.Registry[Type[Command]]):

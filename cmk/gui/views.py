@@ -85,7 +85,8 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     paint_age, paint_host_list, paint_stalified, Painter, painter_exists, painter_registry,
     PainterOptions, register_command_group, register_legacy_command, register_painter,
     register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
-    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title,
+    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title, CommandExecutor,
+    CommandSpec,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -3084,27 +3085,34 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
     return by_group
 
 
-# Examine the current HTML variables in order determine, which
-# command the user has selected. The fetch ids from a data row
-# (host name, service description, downtime/commands id) and
-# construct one or several core command lines and a descriptive
-# title.
-def core_command(what, row, row_nr, total_rows):
+def core_command(
+        what: str, row: Row, row_nr: int, total_rows: int
+) -> _Tuple[Sequence[CommandSpec], List[_Tuple[str, str]], str, CommandExecutor]:
+    """Examine the current HTML variables in order determine, which command the user has selected.
+    The fetch ids from a data row (host name, service description, downtime/commands id) and
+    construct one or several core command lines and a descriptive title."""
     host = row.get("host_name")
     descr = row.get("service_description")
 
     if what == "host":
-        spec = host
+        assert isinstance(host, str)
+        spec: str = host
         cmdtag = "HOST"
+
     elif what == "service":
+        assert isinstance(host, str)
+        assert isinstance(descr, str)
         spec = "%s;%s" % (host, descr)
         cmdtag = "SVC"
+
     else:
-        spec = row.get(what + "_id")
+        # e.g. downtime_id for downtimes may be int, same for acknowledgements
+        spec = str(row[what + "_id"])
         if descr:
             cmdtag = "SVC"
         else:
             cmdtag = "HOST"
+    assert isinstance(spec, str)
 
     commands, title = None, None
     # Call all command actions. The first one that detects
@@ -3126,7 +3134,7 @@ def core_command(what, row, row_nr, total_rows):
 
     # Some commands return lists of commands, others
     # just return one basic command. Convert those
-    if not isinstance(commands, list):
+    if isinstance(commands, str):
         commands = [commands]
 
     return commands, confirm_options, title, executor
@@ -3135,8 +3143,7 @@ def core_command(what, row, row_nr, total_rows):
 # Returns:
 # True -> Actions have been done
 # False -> No actions done because now rows selected
-# [...] new rows -> Rows actions (shall/have) be performed on
-def do_actions(view, what, action_rows, backurl):
+def do_actions(view: ViewSpec, what: InfoName, action_rows: Rows, backurl: str) -> bool:
     if not config.user.may("general.act"):
         html.show_error(
             _("You are not allowed to perform actions. "
@@ -3175,7 +3182,7 @@ def do_actions(view, what, action_rows, backurl):
             len(action_rows),
         )
         for command_entry in core_commands:
-            site = row.get(
+            site: Optional[str] = row.get(
                 "site")  # site is missing for BI rows (aggregations can spawn several sites)
             if (site, command_entry) not in already_executed:
                 # Some command functions return the information about the site per-command (e.g. for BI)
@@ -3184,7 +3191,7 @@ def do_actions(view, what, action_rows, backurl):
                 else:
                     command = command_entry
 
-                executor(command, site)
+                executor(command, SiteId(site) if site else None)
                 already_executed.add((site, command_entry))
                 count += 1
 

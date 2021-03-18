@@ -40,6 +40,7 @@ from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.plugins.views import (
     command_registry,
     Command,
+    CommandActionResult,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
@@ -318,7 +319,9 @@ class CommandDeleteCrashReports(Command):
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")
+        return None

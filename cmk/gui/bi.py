@@ -7,9 +7,20 @@
 import abc
 from contextlib import contextmanager
 from typing import Any, List, Optional, Set, Tuple, Type, Union
-
-from cmk.gui.valuespec import DropdownChoiceEntry
 from pathlib import Path
+
+from livestatus import SiteId, LivestatusResponse
+
+from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.utils.bi.bi_compiler import BICompiler
+from cmk.utils.bi.bi_lib import SitesCallback, BIStates, NodeResultBundle
+from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
+from cmk.utils.bi.bi_trees import BICompiledRule
+
+from cmk.gui.exceptions import MKConfigError
+from cmk.gui.valuespec import DropdownChoiceEntry
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.pages
@@ -27,15 +38,6 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.utils.urls import makeuri_contextless
-
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.utils.bi.bi_compiler import BICompiler
-from cmk.utils.bi.bi_lib import SitesCallback, BIStates, NodeResultBundle
-from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
-from cmk.utils.bi.bi_trees import BICompiledRule
-from cmk.gui.exceptions import MKConfigError
-from livestatus import SiteId, LivestatusResponse
 
 
 @permission_section_registry.register
@@ -766,7 +768,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-def find_all_leaves(node):
+def find_all_leaves(node) -> List[Tuple[Optional[str], HostName, Optional[ServiceName]]]:
     # leaf node
     if node["type"] == 1:
         site, host = node["host"]

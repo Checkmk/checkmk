@@ -138,6 +138,7 @@ class ModeDiscovery(WatoMode):
         # button. The help texts on this page are only added dynamically via
         # AJAX.
         html.enable_help_toggle()
+        self._fix_all_container()
         self._async_progress_msg_container()
         self._service_container()
         html.javascript("cmk.service_discovery.start(%s, %s, %s)" %
@@ -151,6 +152,10 @@ class ModeDiscovery(WatoMode):
 
     def _service_container(self):
         html.open_div(id_="service_container", style="display:none")
+        html.close_div()
+
+    def _fix_all_container(self):
+        html.open_div(id_="fixall_container")
         html.close_div()
 
 
@@ -256,6 +261,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             self._options,
         )
         page_code = renderer.render(discovery_result, request)
+        fix_all_code = renderer.render_fix_all(discovery_result)
 
         # Clean the requested action after performing it
         performed_action = self._options.action
@@ -266,6 +272,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             "job_state": discovery_result.job_status["state"],
             "message": self._get_status_message(discovery_result, performed_action),
             "body": page_code,
+            "fixall": fix_all_code,
             "page_menu": self._get_page_menu(),
             "pending_changes_info": get_pending_changes_info(),
             "discovery_options": self._options._asdict(),
@@ -461,12 +468,16 @@ class DiscoveryPageRenderer:
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
             html.div("", id_="row_info")
-            self._show_fix_all(discovery_result)
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
             details_row_count = self._show_discovery_details(discovery_result, request)
             self._update_row_info(host_labels_row_count + details_row_count)
+            return html.drain()
+
+    def render_fix_all(self, discovery_result: DiscoveryResult) -> str:
+        with html.plugged():
+            self._show_fix_all(discovery_result)
             return html.drain()
 
     def _update_row_info(self, abs_row_count: int):
@@ -605,7 +616,6 @@ class DiscoveryPageRenderer:
         ]):
             return
 
-        html.open_div(id_="fixall")
         html.icon("fixall", _("Services/Host labels to fix"))
 
         html.open_ul()
@@ -641,8 +651,6 @@ class DiscoveryPageRenderer:
                 self._options._replace(action=DiscoveryAction.FIX_ALL),
             ),
         )
-
-        html.close_div()
 
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not config.user.may("wato.services"):

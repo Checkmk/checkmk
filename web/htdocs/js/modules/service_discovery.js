@@ -113,6 +113,12 @@ function update(handler_data, response) {
     page_menu_bar.outerHTML = response.page_menu;
     utils.execute_javascript_by_object(page_menu_bar);
 
+    // Update fix all button
+    var fixall_container = document.getElementById("fixall_container");
+    fixall_container.style.display = "block";
+    fixall_container.innerHTML = response.fixall;
+    utils.execute_javascript_by_object(fixall_container);
+
     // Update the content table
     var container = document.getElementById("service_container");
     container.style.display = "block";

@@ -216,49 +216,49 @@ div#service_container {
       position: relative;
     }
   }
+}
 
-  div#fixall {
-    background-color: $headline-color;
-    border-radius: 2px;
+div#fixall_container {
+  background-color: $headline-color;
+  border-radius: 2px;
 
-    img {
-      float: left;
-      margin: 10px 0 0 10px;
-    }
+  img {
+    float: left;
+    margin: 10px 0 0 10px;
+  }
 
-    ul {
-      float: left;
-      list-style: none;
-      margin: 15px 0 0 0;
-      padding-left: 10px;
-    }
+  ul {
+    float: left;
+    list-style: none;
+    margin: 15px 0 0 0;
+    padding-left: 10px;
+  }
 
-    li {
-      display: inline-block;
-      padding: 0 10px;
-      border-right: 1px solid $font-color;
-    }
+  li {
+    display: inline-block;
+    padding: 0 10px;
+    border-right: 1px solid $font-color;
+  }
 
-    li:last-child {
-      border-right: none;
-    }
+  li:last-child {
+    border-right: none;
+  }
 
-    span {
-      padding: 2px;
-    }
+  span {
+    padding: 2px;
+  }
 
-    span.changed {
-      color: $success;
-      font-weight: $font-weight-bold;
-    }
+  span.changed {
+    color: $success;
+    font-weight: $font-weight-bold;
+  }
 
-    input.button {
-      height: 25px;
-      padding: 5px 10px;
-      margin-left: 10px;
-      background-color: $success;
-      color: $black;
-    }
+  input.button {
+    height: 25px;
+    padding: 5px 10px;
+    margin-left: 10px;
+    background-color: $success;
+    color: $black;
   }
 }
 

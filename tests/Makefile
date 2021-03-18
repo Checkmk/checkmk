@@ -182,7 +182,7 @@ test-format-shell:
 	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
 
 test-format-js:
-	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/js/**/*.js"
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js

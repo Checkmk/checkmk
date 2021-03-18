@@ -54,8 +54,8 @@ node (NODE) {
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // Gather the list of changed JavaScript and CSS files in raw and enterprise edition
-        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)

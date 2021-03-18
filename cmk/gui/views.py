@@ -25,7 +25,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
 from cmk.utils.structured_data import StructuredDataTree
-from cmk.utils.type_defs import HostName, ServiceName, UserId
+from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.config as config
 import cmk.gui.forms as forms
@@ -3218,12 +3218,6 @@ def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[st
         if row_id(view_spec, row) in selected_ids:
             action_rows.append(row)
     return action_rows
-
-
-def get_context_link(user: UserId, viewname: ViewName) -> Optional[str]:
-    if viewname in get_permitted_views():
-        return "view.py?view_name=%s" % viewname
-    return None
 
 
 @cmk.gui.pages.register("export_views")

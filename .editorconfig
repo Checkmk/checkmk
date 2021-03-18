@@ -14,7 +14,7 @@ charset = utf-8
 [*.{bat,ps1,vbs,cmd}]
 end_of_line = crlf
 
-[*.md]
+[*.{md,rst}]
 max_line_length = 80
 
 [active_checks/check_*]

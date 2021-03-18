@@ -5,8 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+import typing
 
-from cmk.base.plugins.agent_based.utils.docker import parse, parse_multiline, _cleanup_oci_error_message
+from cmk.base.plugins.agent_based.utils.docker import (
+    parse,
+    parse_multiline,
+    _cleanup_oci_error_message,
+    MemorySection,
+)
 
 
 def test_parse_strict():
@@ -92,3 +98,17 @@ def test_parse_multiline():
 def test_parse_remove_error_message(data_in, data_out):
     cleaned_up = _cleanup_oci_error_message(data_in)
     assert cleaned_up == data_out
+
+
+@pytest.mark.parametrize("memory_section, result", [
+    [MemorySection(mem_total=16, mem_usage=3, mem_cache=0), {
+        "MemFree": 16 - 3,
+        "MemTotal": 16
+    }],
+    [MemorySection(mem_total=16, mem_usage=3, mem_cache=4), {
+        "MemFree": 16,
+        "MemTotal": 16
+    }],
+])
+def test_to_mem_used(memory_section: MemorySection, result: typing.Dict[str, int]) -> None:
+    assert memory_section.to_mem_used() == result

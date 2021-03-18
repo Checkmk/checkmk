@@ -82,19 +82,7 @@ def parse_docker_container_mem(string_table: StringTable) -> Dict[str, int]:
     else:
         parsed = _parse_docker_container_mem_plugin(string_table)
 
-    container_memory_usage = parsed.mem_usage - parsed.mem_cache
-
-    if container_memory_usage < 0:
-        # all container runtimes seem to do it this way:
-        # https://github.com/google/cadvisor/blob/c6ad44633aa0cee60a28430ddec632dca53becac/container/libcontainer/handler.go#L823
-        # https://github.com/containerd/cri/blob/bc08a19f3a44bda9fd141e6ee4b8c6b369e17e6b/pkg/server/container_stats_list_linux.go#L123
-        # https://github.com/docker/cli/blob/70a00157f161b109be77cd4f30ce0662bfe8cc32/cli/command/container/stats_helpers.go#L245
-        container_memory_usage = 0
-
-    return {
-        "MemTotal": parsed.mem_total,
-        "MemFree": parsed.mem_total - container_memory_usage,
-    }
+    return parsed.to_mem_used()
 
 
 register.agent_section(

@@ -28409,10 +28409,6 @@ msgid ""
 "or call the with the missing HTTP variables."
 msgstr ""
 
-#, python-format
-msgid "Missing data needed to render this graph. Details: %s"
-msgstr ""
-
 #, fuzzy
 msgid "Missing host name"
 msgstr " pe siteul de monitorizare: "
@@ -29948,6 +29944,9 @@ msgid "No data for discovery available. Please perform a full scan."
 msgstr ""
 
 msgid "No data from any site"
+msgstr ""
+
+msgid "No data was found with the current parameters of this dashlet."
 msgstr ""
 
 msgid "No data."

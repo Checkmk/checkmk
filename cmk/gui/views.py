@@ -11,7 +11,6 @@ import functools
 import json
 import pprint
 import time
-import traceback
 from dataclasses import dataclass
 from itertools import chain
 from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set
@@ -3237,42 +3236,6 @@ def ajax_export() -> None:
 
 def get_view_by_name(view_name: ViewName) -> ViewSpec:
     return get_permitted_views()[view_name]
-
-
-#.
-#   .--Plugin Helpers------------------------------------------------------.
-#   |   ____  _             _         _   _      _                         |
-#   |  |  _ \| |_   _  __ _(_)_ __   | | | | ___| |_ __   ___ _ __ ___     |
-#   |  | |_) | | | | |/ _` | | '_ \  | |_| |/ _ \ | '_ \ / _ \ '__/ __|    |
-#   |  |  __/| | |_| | (_| | | | | | |  _  |  __/ | |_) |  __/ |  \__ \    |
-#   |  |_|   |_|\__,_|\__, |_|_| |_| |_| |_|\___|_| .__/ \___|_|  |___/    |
-#   |                 |___/                       |_|                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def register_hook(hook, func):
-    if hook not in view_hooks:
-        view_hooks[hook] = []
-
-    if func not in view_hooks[hook]:
-        view_hooks[hook].append(func)
-
-
-def execute_hooks(hook):
-    for hook_func in view_hooks.get(hook, []):
-        try:
-            hook_func()
-        except Exception:
-            if config.debug:
-                raise MKGeneralException(
-                    _('Problem while executing hook function %s in hook %s: %s') %
-                    (hook_func.__name__, hook, traceback.format_exc()))
-
-
-def docu_link(topic, text):
-    return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)
 
 
 #.

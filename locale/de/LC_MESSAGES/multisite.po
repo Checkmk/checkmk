@@ -36266,16 +36266,8 @@ msgstr "Abgefragter Hostname oder IP-Adresse"
 msgid "Queried host is a host system"
 msgstr "Der abgefragte Host ist ein Hostsystem"
 
-msgid "Queried host is a host system with Checkmk Agent installed"
-msgstr "Der abgefragte Host ist ein ESX Host mit einem Checkmk Agent"
-
 msgid "Queried host is the vCenter"
 msgstr "Befragter Host ist das vCenter"
-
-msgid "Queried host is the vCenter with Checkmk Agent installed"
-msgstr ""
-"Der abgefragte Host ist ein vCenter, auf dem ein Checkmk-Agent installiert "
-"ist"
 
 msgid "Query"
 msgstr "Anfrage"
@@ -50711,6 +50703,15 @@ msgstr ""
 "eines dieser Parameter führt zu häufigen Änderungen in der HW/SW-Inventur, "
 "wodurch sich das temporäre Dateisystem schnell füllen kann."
 
+#, fuzzy
+msgid ""
+"This rule allows monitoring of VMWare ESX via the vSphere API. You can "
+"configure your connection settings here."
+msgstr ""
+"Dieser Regelsatz wählt für einen Host den vSphere-Agenten anstelle des "
+"normalen Monitoring-Agenten. Dies erlaubt das Überwachen von VMWare ESX über "
+"dessen vSphere-API. Die Zugangsdaten können Sie hier konfigurieren."
+
 msgid ""
 "This rule allows querying an AppDynamics server for information about Java "
 "applicationsvia the AppDynamics REST API. You can configure your connection "
@@ -51283,15 +51284,6 @@ msgstr ""
 
 msgid "This rule selects the special agent for Salesforce."
 msgstr "Mit dieser Regel wählen Sie den Spezialagenten Salesforce aus."
-
-msgid ""
-"This rule selects the vSphere agent instead of the normal Check_MK Agent and "
-"allows monitoring of VMWare ESX via the vSphere API. You can configure your "
-"connection settings here."
-msgstr ""
-"Dieser Regelsatz wählt für einen Host den vSphere-Agenten anstelle des "
-"normalen Monitoring-Agenten. Dies erlaubt das Überwachen von VMWare ESX über "
-"dessen vSphere-API. Die Zugangsdaten können Sie hier konfigurieren."
 
 msgid ""
 "This rule set allows to deploy an agent plugin that updates the Checkmk "
@@ -62635,6 +62627,14 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Queried host is a host system with Checkmk Agent installed"
+#~ msgstr "Der abgefragte Host ist ein ESX Host mit einem Checkmk Agent"
+
+#~ msgid "Queried host is the vCenter with Checkmk Agent installed"
+#~ msgstr ""
+#~ "Der abgefragte Host ist ein vCenter, auf dem ein Checkmk-Agent "
+#~ "installiert ist"
 
 #~ msgid "Missing data needed to render this graph. Details: %s"
 #~ msgstr "Es fehlen benötigte Daten um den Graph zu rendern. Details: %s"

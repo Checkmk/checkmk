@@ -30,6 +30,20 @@ class DockerParseMultilineResult(NamedTuple):
     version: Dict[str, Any]
 
 
+def _cleanup_oci_error_message(string_table: StringTable) -> StringTable:
+    """
+    If mk_docker.py can not execute the agent inside the docker container, a error
+    message is appended to the agent output. The expected output would be the
+    agent's output which includes section headers, the error message does not
+    include a section header so the output is appended to the privous section.
+    Here we try to remove this error message, without changing any other data.
+    """
+    if (string_table and string_table[-1] and len(string_table[-1]) == 1 and
+            string_table[-1][0].startswith("OCI runtime exec failed: exec failed:")):
+        return string_table[:-1]
+    return string_table[:]
+
+
 def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     """
     expected layout of string_table:
@@ -44,6 +58,7 @@ def parse_multiline(string_table: StringTable) -> DockerParseMultilineResult:
     returns generator of parsed json data and version info
     """
     version = ensure_valid_docker_header(string_table)
+    string_table = _cleanup_oci_error_message(string_table)
 
     def generator():
         for line in string_table[1:]:
@@ -70,6 +85,7 @@ def parse(string_table: StringTable, *, strict=True) -> DockerParseResult:
         an Value Error will be thrown
     """
     version = ensure_valid_docker_header(string_table)
+    string_table = _cleanup_oci_error_message(string_table)
     if strict:
         if len(string_table) != 2 or len(string_table[0]) != 2 or len(string_table[1]) != 1:
             raise ValueError("Expected list of length 2. "

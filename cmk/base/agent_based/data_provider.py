@@ -293,7 +293,7 @@ def _collect_host_sections(
     use source.get_summary_result() to get the state, output and perfdata of the agent execution
     or source.exception to get the exception object.
     """
-    console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
+    console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
     flat_node_sources = [(hn, ip, src) for hn, ip, sources in nodes for src in sources]
 

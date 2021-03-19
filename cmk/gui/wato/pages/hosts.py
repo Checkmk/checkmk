@@ -233,20 +233,27 @@ class ModeEditHost(HostMode):
     def title(self):
         return _("Properties of host") + " " + self._host.name()
 
-    def buttons(self):
-        super(ModeEditHost, self).buttons()
-
-        host_status_button(self._host.name(), "hoststatus")
-
-        html.context_button(
-            _("Services"),
-            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._host.name())]),
-            "services")
-        if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
-            html.context_button(
-                _("Monitoring Agent"),
-                watolib.folder_preserving_link([("mode", "agent_of_host"),
-                                                ("host", self._host.name())]), "agents")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        self._page_menu_save_topic(),
+                        PageMenuTopic(
+                            title=_("For this host"),
+                            entries=list(page_menu_host_entries(self.name(), self._host)),
+                        ),
+                        PageMenuTopic(
+                            title=_("For all hosts on site %s") % self._host.site_id(),
+                            entries=list(page_menu_all_hosts_entries(self._should_use_dns_cache())),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
 
         if config.user.may('wato.rulesets'):
             html.context_button(
@@ -268,27 +275,16 @@ class ModeEditHost(HostMode):
             html.context_button(self._is_cluster() and _("Delete cluster") or _("Delete host"),
                                 html.makeactionuri([("delete", "1")]), "delete")
 
-        if not self._is_cluster():
-            html.context_button(
-                _("Diagnostic"),
-                watolib.folder_preserving_link([("mode", "diag_host"),
-                                                ("host", self._host.name())]), "diagnose")
-        html.context_button(_("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]),
-                            "update")
-
-    def action(self):
-        if html.request.var("_update_dns_cache"):
-            if html.check_transaction():
-                config.user.need_permission("wato.update_dns_cache")
-                num_updated, failed_hosts = watolib.check_mk_automation(
-                    self._host.site_id(), "update-dns-cache", [])
-                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
-                if failed_hosts:
-                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
-                              + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
-                return None, infotext
-            else:
-                return None
+        if html.request.var("_update_dns_cache") and self._should_use_dns_cache():
+            config.user.need_permission("wato.update_dns_cache")
+            num_updated, failed_hosts = watolib.check_mk_automation(self._host.site_id(),
+                                                                    "update-dns-cache", [])
+            infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
+            if failed_hosts:
+                infotext += "<br><br><b>Hostnames failed to lookup:</b> " \
+                          + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
+            flash(infotext)
+            return None
 
         if html.request.var("delete"):  # Delete this host
             if not html.transaction_valid():
@@ -308,6 +304,14 @@ class ModeEditHost(HostMode):
             return "diag_host"
         return "folder"
 
+    def _should_use_dns_cache(self) -> bool:
+        site = self._host.effective_attribute("site")
+        return watolib.sites.get_effective_global_setting(
+            site,
+            config.is_wato_slave_site(),
+            "use_dns_cache",
+        )
+
     def _vs_host_name(self):
         return FixedValue(
             self._host.name(),
@@ -315,7 +319,126 @@ class ModeEditHost(HostMode):
         )
 
 
-class CreateHostMode(HostMode):
+def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenuEntry]:
+    if should_use_dns_cache:
+        yield PageMenuEntry(
+            title=_("Update DNS cache"),
+            icon_name="update",
+            item=make_simple_link(html.makeactionuri([("_update_dns_cache", "1")])),
+            shortcut_title=_("Update site DNS cache"),
+            is_shortcut=True,
+            is_suggested=True,
+        )
+
+
+def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEntry]:
+    if mode_name != "edit_host":
+        yield PageMenuEntry(
+            title=_("Properties"),
+            icon_name="edit",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_host"), ("host", host.name())])),
+        )
+
+    if mode_name != "inventory":
+        yield PageMenuEntry(
+            title=_("Service configuration"),
+            icon_name="services",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "inventory"), ("host", host.name())])),
+        )
+
+    if mode_name != "diag_host" and not host.is_cluster():
+        yield PageMenuEntry(
+            title=_("Connection tests"),
+            icon_name="diagnose",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "diag_host"), ("host", host.name())])),
+        )
+
+    if mode_name != "object_parameters" and config.user.may('wato.rulesets'):
+        yield PageMenuEntry(
+            title=_("Effective parameters"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "object_parameters"),
+                                                ("host", host.name())])),
+        )
+
+    if mode_name == "object_parameters" or mode_name == "edit_host" and config.user.may(
+            'wato.rulesets'):
+        yield PageMenuEntry(
+            title=_("Rules"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                makeuri_contextless(
+                    html.request,
+                    [
+                        ("mode", "rule_search"),
+                        ("filled_in", "search"),
+                        ("search_p_ruleset_deprecated", "OFF"),
+                        ("search_p_rule_host_list_USE", "ON"),
+                        ("search_p_rule_host_list", host.name()),
+                    ],
+                    filename="wato.py",
+                )),
+        )
+
+    yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
+
+    if config.user.may('wato.rulesets') and host.is_cluster():
+        yield PageMenuEntry(
+            title=_("Clustered services"),
+            icon_name="rulesets",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "edit_ruleset"),
+                                                ("varname", "clustered_services")])),
+        )
+
+    if watolib.has_agent_bakery() and config.user.may('wato.download_agents'):
+        yield PageMenuEntry(
+            title=_("Monitoring agent"),
+            icon_name="agents",
+            item=make_simple_link(
+                watolib.folder_preserving_link([("mode", "agent_of_host"), ("host", host.name())])),
+        )
+
+    if mode_name == "edit_host" and not host.locked():
+        if config.user.may("wato.rename_hosts"):
+            yield PageMenuEntry(
+                title=_("Rename"),
+                icon_name="rename_host",
+                item=make_simple_link(
+                    watolib.folder_preserving_link([("mode", "rename_host"),
+                                                    ("host", host.name())])),
+            )
+
+        if config.user.may("wato.manage_hosts") and config.user.may("wato.clone_hosts"):
+            yield PageMenuEntry(
+                title=_("Clone"),
+                icon_name="insert",
+                item=make_simple_link(host.clone_url()),
+            )
+
+        yield PageMenuEntry(
+            title=_("Delete"),
+            icon_name="delete",
+            item=make_simple_link(
+                make_confirm_link(
+                    url=html.makeactionuri([("delete", "1")]),
+                    message=_("Do you really want to delete the host <tt>%s</tt>?") % host.name(),
+                )),
+        )
+
+        if config.user.may("wato.auditlog"):
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(make_object_audit_log_url(host.object_ref())),
+            )
+
+
+class CreateHostMode(ABCHostMode):
     @classmethod
     @abc.abstractmethod
     def _init_new_host_object(cls):

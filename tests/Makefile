@@ -70,8 +70,29 @@ test-format-python: $(VENV) ../.style.yapf
 	sed -e 's/^+++ //' -e 's/[[:blank:]]*(reformatted)$$/:1:1: error: file needs formatting/' ; \
 	exit $${PIPESTATUS[0]}
 
-test-gui-crawl: $(VENV) $(NODE_MODULES)
-	$(PYTEST) -T gui_crawl $(realpath integration/cmk/gui/test_crawl.py)
+test-format-python-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-python
+
+test-format-shell:
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES)
+
+test-format-js:
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{enterprise/web,web}/htdocs/js/**/*.js"
+
+test-format-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-js
+
+test-format-css:
+	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/themes/**/*.scss"
+
+test-format-css-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-css
+
+test-gui-crawl: prepare-node-modules
+	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
+
+test-gui-crawl-docker:
+	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
 
 test-integration: $(VENV) $(NODE_MODULES)
 	$(PYTEST) -T integration $(realpath integration)

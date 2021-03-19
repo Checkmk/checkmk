@@ -320,7 +320,7 @@ def store_piggyback_raw_data(source_hostname: str, piggybacked_raw_data: Dict[st
         status_file_path = _get_source_status_file_path(source_hostname)
         _store_status_file_of(status_file_path, piggyback_file_paths)
     else:
-        logger.log(VERBOSE, "Received no piggyback data")
+        logger.debug("Received no piggyback data")
         remove_source_status_file(source_hostname)
 
 

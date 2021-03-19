@@ -1,10 +1,3 @@
-===
-OMD
-===
-
-CheckMK runtime environment
----------------------------
-
 Black-box view
 ~~~~~~~~~~~~~~
 .. uml:: uml/arch-top-level-blackbox.uml
@@ -12,3 +5,7 @@ Black-box view
 White-box view
 ~~~~~~~~~~~~~~
 .. uml:: uml/arch-top-level-whitebox.uml
+
+Processes
+~~~~~~~~~
+.. uml:: uml/arch-processes.uml

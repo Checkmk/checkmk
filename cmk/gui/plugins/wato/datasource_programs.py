@@ -209,8 +209,27 @@ def _factory_default_special_agents_vsphere():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _transform_agent_vsphere(params):
+    params.setdefault("skip_placeholder_vms", True)
+    params.setdefault("ssl", False)
+    params.pop("use_pysphere", None)
+    params.setdefault("spaces", "underscore")
+
+    if "snapshots_on_host" not in params:
+        params["snapshots_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
+
+    if isinstance(params["direct"], str):
+        params["direct"] = "hostsystem" in params["direct"]
+
+    return params
+
+
 def _valuespec_special_agents_vsphere():
-    return Transform(valuespec=Dictionary(
+    return Transform(Dictionary(
+        title=_("VMWare ESX via vSphere"),
+        help=_(
+            "This rule allows monitoring of VMWare ESX via the vSphere API. "
+            "You can configure your connection settings here.",),
         elements=[
             ("user", TextAscii(
                 title=_("vSphere User name"),
@@ -225,12 +244,8 @@ def _valuespec_special_agents_vsphere():
                  title=_("Type of query"),
                  choices=[
                      (True, _("Queried host is a host system")),
-                     ("hostsystem_agent",
-                      _("Queried host is a host system with Check_MK Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Check_MK Agent installed")),
                  ],
-                 default=True,
              )),
             ("tcp_port",
              Integer(

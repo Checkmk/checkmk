@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 """Module to hold shared code for check parameter module internals"""
 
+from typing import List, Tuple as _Tuple, Union
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -64,7 +65,13 @@ def match_dual_level_type(value):
     return 0
 
 
-def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
+def get_free_used_dynamic_valuespec(
+        what,
+        name,
+        default_value=(80.0, 90.0),
+        *,
+        maxvalue: Union[None, int, float] = 101.0,
+):
     if what == "used":
         title = _("used space")
         course = _("above")
@@ -75,8 +82,18 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
     vs_subgroup = [
         Tuple(title=_("Percentage %s") % title,
               elements=[
-                  Percentage(title=_("Warning if %s") % course, unit="%", minvalue=0.0),
-                  Percentage(title=_("Critical if %s") % course, unit="%", minvalue=0.0),
+                  Percentage(
+                      title=_("Warning if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
+                  Percentage(
+                      title=_("Critical if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
               ]),
         Tuple(title=_("Absolute %s") % title,
               elements=[

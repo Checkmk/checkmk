@@ -30,7 +30,22 @@ import os
 import shutil
 import time
 import multiprocessing
-import psutil
+import traceback
+import subprocess
+import hashlib
+from itertools import filterfalse
+from logging import Logger
+from pathlib import Path
+from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any, Callable
+
+import psutil  # type: ignore[import]
+import werkzeug.urls
+from six import ensure_binary, ensure_str
+
+from livestatus import (
+    SiteId,
+    SiteConfiguration,
+)
 
 import cmk.utils
 import cmk.utils.daemon as daemon
@@ -878,11 +893,18 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
         except:
             return 1
 
-    def _get_queued_jobs(self):
-        queued_jobs = []
-        for site_id in sorted(self._site_snapshots):
-            site_job = ActivateChangesSite(site_id, self._activation_id,
-                                           self._site_snapshots[site_id], self._prevent_activate)
+    def _get_queued_jobs(self) -> 'List[ActivateChangesSite]':
+        queued_jobs: List[ActivateChangesSite] = []
+
+        file_filter_func = None
+        if cmk_version.is_managed_edition():
+            import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
+            file_filter_func = managed_snapshots.customer_user_files_filter()
+
+        for site_id, snapshot_settings in sorted(self._site_snapshot_settings.items(),
+                                                 key=lambda e: e[0]):
+            site_job = ActivateChangesSite(site_id, snapshot_settings, self._activation_id,
+                                           self._prevent_activate, file_filter_func)
             site_job.load()
             if site_job.lock_activation():
                 queued_jobs.append(site_job)
@@ -890,12 +912,19 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
 
 
 class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
-    def __init__(self, site_id, activation_id, site_snapshot_file, prevent_activate=False):
+    """Executes and monitors a single activation for one site"""
+    def __init__(self,
+                 site_id: SiteId,
+                 snapshot_settings: SnapshotSettings,
+                 activation_id: str,
+                 prevent_activate: bool = False,
+                 file_filter_func: Optional[Callable[[str], bool]] = None) -> None:
         super(ActivateChangesSite, self).__init__()
         self._site_id = site_id
         self._site_changes = []
         self._activation_id = activation_id
-        self._snapshot_file = site_snapshot_file
+        self._snapshot_settings = snapshot_settings
+        self._file_filter_func = file_filter_func
         self.daemon = True
         self._prevent_activate = prevent_activate
 
@@ -1097,7 +1126,105 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         start = time.time()
 
-        result = self._push_snapshot_to_site()
+        try:
+            if self._snapshot_settings.create_pre_17_snapshot:
+                self._synchronize_pre_17_site()
+            else:
+                self._synchronize_17_or_newer_site()
+        finally:
+            duration = time.time() - start
+            self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
+
+    def _synchronize_17_or_newer_site(self) -> None:
+        """Realizes the incremental config sync from the central to the remote site
+
+        1. Gather the replication paths handled by the central site.
+
+           We want the state of these files from the remote site to be able to compare the state of
+           the central sites site_config directory with it. Warning: In mixed version setups it
+           would not be enough to use the replication paths known by the remote site. We really need
+           the central sites definitions.
+
+        2. Send them over to the remote site and request the current state of the mentioned files
+        3. Compare the response with the site_config directory of the site
+        4. Collect needed files and send them over to the remote site (+ remote config hash)
+        5. Raise when something failed on the remote site while applying the sent files
+        """
+        self._set_sync_state(_("Fetching sync state"))
+        self._logger.debug("Starting config sync with >1.7 site")
+        replication_paths = self._snapshot_settings.snapshot_components
+        remote_file_infos, remote_config_generation = self._get_config_sync_state(replication_paths)
+        self._logger.debug("Received %d file infos from remote", len(remote_file_infos))
+
+        # In case we experience performance issues here, we could postpone the hashing of the
+        # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
+        # are not enough to detect a differing file.
+        site_config_dir = Path(self._snapshot_settings.work_dir)
+        central_file_infos = _get_config_sync_file_infos(replication_paths, site_config_dir)
+        self._logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
+
+        self._set_sync_state(_("Computing differences"))
+        to_sync_new, to_sync_changed, to_delete = get_file_names_to_sync(
+            self._logger, central_file_infos, remote_file_infos, self._file_filter_func)
+
+        self._logger.debug("New files to be synchronized: %r", to_sync_new)
+        self._logger.debug("Changed files to be synchronized: %r", to_sync_changed)
+        self._logger.debug("Obsolete files to be deleted: %r", to_delete)
+
+        if not to_sync_new and not to_sync_changed and not to_delete:
+            self._logger.debug("Finished config sync (Nothing to be done)")
+            return
+
+        self._set_sync_state(
+            _("Transfering: %d new, %d changed and %d vanished files") %
+            (len(to_sync_new), len(to_sync_changed), len(to_delete)))
+        self._synchronize_files(to_sync_new + to_sync_changed, to_delete, remote_config_generation,
+                                site_config_dir)
+        self._logger.debug("Finished config sync")
+
+    def _set_sync_state(self, status_details: Optional[str] = None) -> None:
+        self._set_result(PHASE_SYNC, _("Synchronizing"), status_details=status_details)
+
+    def _get_config_sync_state(
+            self, replication_paths: List[ReplicationPath]
+    ) -> 'Tuple[Dict[str, ConfigSyncFileInfo], int]':
+        """Get the config file states from the remote sites
+
+        Calls the automation call "get-config-sync-state" on the remote site,
+        which is handled by AutomationGetConfigSyncState."""
+        site = config.site(self._site_id)
+        response = cmk.gui.watolib.automations.do_remote_automation(
+            site,
+            "get-config-sync-state",
+            [("replication_paths", repr([tuple(r) for r in replication_paths]))],
+        )
+
+        return {k: ConfigSyncFileInfo(*v) for k, v in response[0].items()}, response[1]
+
+    def _synchronize_files(self, files_to_sync: List[str], files_to_delete: List[str],
+                           remote_config_generation: int, site_config_dir: Path) -> None:
+        """Pack the files in a simple tar archive and send it to the remote site
+
+        We build a simple tar archive containing all files to be synchronized.  The list of file to
+        be deleted and the current config generation is handed over using dedicated HTTP parameters.
+        """
+
+        sync_archive = _get_sync_archive(files_to_sync, site_config_dir)
+
+        site = config.site(self._site_id)
+        response = cmk.gui.watolib.automations.do_remote_automation(
+            site,
+            "receive-config-sync",
+            [
+                ("site_id", self._site_id),
+                ("sync_archive", sync_archive),
+                ("to_delete", repr(files_to_delete)),
+                ("config_generation", "%d" % remote_config_generation),
+            ],
+            files={
+                "sync_archive": io.BytesIO(sync_archive),
+            },
+        )
 
         duration = time.time() - start
         self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
@@ -1301,3 +1428,592 @@ def get_number_of_pending_changes():
     changes = ActivateChanges()
     changes.load()
     return len(changes.grouped_changes())
+
+
+def apply_pre_17_sync_snapshot(site_id: SiteId, tar_content: bytes, base_dir: Path,
+                               components: List[ReplicationPath]) -> bool:
+    """Apply the snapshot received from a central site to the local site"""
+    extract_from_buffer(tar_content, base_dir, components)
+
+    _save_pre_17_site_globals_on_slave_site(tar_content)
+
+    # Create rule making this site only monitor our hosts
+    create_distributed_wato_files(Path(cmk.utils.paths.omd_root), site_id, is_remote=True)
+
+    _execute_post_config_sync_actions(site_id)
+    return True
+
+
+def _execute_post_config_sync_actions(site_id):
+    try:
+        # pending changes are lost
+        confirm_all_local_changes()
+
+        hooks.call("snapshot-pushed")
+    except Exception:
+        raise MKGeneralException(
+            _("Failed to deploy configuration: \"%s\". "
+              "Please note that the site configuration has been synchronized "
+              "partially.") % traceback.format_exc())
+
+    cmk.gui.watolib.changes.log_audit("replication",
+                                      _("Synchronized with master (my site id is %s.)") % site_id)
+
+
+def verify_remote_site_config(site_id: SiteId) -> None:
+    our_id = config.omd_site()
+
+    if not config.is_single_local_site():
+        raise MKGeneralException(
+            _("Configuration error. You treat us as "
+              "a <b>remote</b>, but we have an own distributed WATO configuration!"))
+
+    if our_id is not None and our_id != site_id:
+        raise MKGeneralException(
+            _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+            (our_id, site_id))
+
+    # Make sure there are no local changes we would lose!
+    changes = cmk.gui.watolib.activate_changes.ActivateChanges()
+    changes.load()
+    pending = list(reversed(changes.grouped_changes()))
+    if pending:
+        message = _("There are %d pending changes that would get lost. The most recent are: "
+                   ) % len(pending)
+        message += ", ".join(change["text"] for _change_id, change in pending[:10])
+
+        raise MKGeneralException(message)
+
+
+def _save_pre_17_site_globals_on_slave_site(tarcontent: bytes) -> None:
+    tmp_dir = cmk.utils.paths.tmp_dir + "/sitespecific-%s" % id(object)
+    try:
+        if not os.path.exists(tmp_dir):
+            store.mkdir(tmp_dir)
+
+        extract_from_buffer(
+            tarcontent, Path(tmp_dir),
+            [ReplicationPath("dir", "sitespecific", "site_globals/sitespecific.mk", [])])
+
+        site_globals = store.load_object_from_file(tmp_dir + "site_globals/sitespecific.mk",
+                                                   default={})
+        save_site_global_settings(site_globals)
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
+    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
+    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
+
+
+def _create_distributed_wato_file_for_base(base_dir: Path, site_id: SiteId,
+                                           is_remote: bool) -> None:
+    output = wato_fileheader()
+    output += ("# This file has been created by the master site\n"
+               "# push the configuration to us. It makes sure that\n"
+               "# we only monitor hosts that are assigned to our site.\n\n")
+    output += "distributed_wato_site = '%s'\n" % site_id
+    output += "is_wato_slave_site = %r\n" % is_remote
+
+    store.save_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
+
+
+def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
+    if cmk_version.is_raw_edition():
+        return
+
+    output = wato_fileheader()
+    output += "dcd_is_wato_remote_site = %r\n" % is_remote
+
+    store.save_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
+
+
+def create_site_globals_file(site_id: SiteId, tmp_dir: str,
+                             site_globals: SiteConfiguration) -> None:
+    site_globals_dir = os.path.join(tmp_dir, "site_globals")
+    store.makedirs(site_globals_dir)
+    store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
+
+
+def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> Dict:
+    site_globals = site_config.get("globals", {}).copy()
+    site_globals.update({
+        "wato_enabled": not site_config.get("disable_wato", True),
+        "userdb_automatic_sync": site_config.get("user_sync", user_sync_default_config(site_id)),
+        "user_login": site_config.get("user_login", False),
+    })
+    return site_globals
+
+
+def _get_replication_components(work_dir: str, site_config: SiteConfiguration,
+                                is_pre_17_site: bool) -> List[ReplicationPath]:
+    """Gives a list of ReplicationPath instances.
+
+    These represent the folders which need to be sent to remote sites. Whether a specific subset
+    of paths need to be sent is being determined by the site-specific `site_config`.
+
+    Note:
+        "Replication path" or "replication component" or "snapshot component" are the same concept.
+
+    Args:
+        work_dir:
+            Something no longer used apparently.
+
+        site_config:
+            The site configuration. Specifically the following keys on it are used:
+
+                 - `replicate_ec`:
+                 - `replicate_mkps`
+
+        is_pre_17_site:
+            This is true if the site in question (as supplied in `site_config`) is of a version
+            1.6.x or less.
+
+    Returns:
+        A list of ReplicationPath instances, specifying which paths shall be packaged for this
+        particular site.
+
+    """
+    paths = get_replication_paths()[:]
+
+    # Remove Event Console settings, if this site does not want it (might
+    # be removed in some future day)
+    if not site_config.get("replicate_ec"):
+        paths = [e for e in paths if e.ident not in ["mkeventd", "mkeventd_mkp"]]
+
+    # Remove extensions if site does not want them
+    if not site_config.get("replicate_mkps"):
+        paths = [e for e in paths if e.ident not in ["local", "mkps"]]
+
+    # Add site-specific global settings
+    if is_pre_17_site:
+        # When synchronizing with pre 1.7 sites, the sitespecific.mk from the config domain
+        # directories must not be used. Instead of this, they are transfered using the
+        # site_globals/sitespecific.mk (see below) and written on the remote site.
+        paths = _add_pre_17_sitespecific_excludes(paths)
+
+        paths.append(
+            ReplicationPath(
+                ty="file",
+                ident="sitespecific",
+                site_path="site_globals/sitespecific.mk",
+                excludes=[],
+            ))
+
+    # Add distributed_wato.mk
+    if not is_pre_17_site:
+        paths.append(
+            ReplicationPath(
+                ty="file",
+                ident="distributed_wato",
+                site_path="etc/check_mk/conf.d/distributed_wato.mk",
+                excludes=[],
+            ))
+
+    return paths
+
+
+def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[ReplicationPath]:
+    add_domains = {"check_mk", "multisite", "liveproxyd", "mkeventd", "dcd", "mknotify"}
+    new_paths = []
+    for p in paths:
+        if p.ident in add_domains:
+            excludes = p.excludes[:] + ["sitespecific.mk"]
+            if p.ident == "dcd":
+                excludes.append("distributed.mk")
+
+            p = ReplicationPath(
+                ty=p.ty,
+                ident=p.ident,
+                site_path=p.site_path,
+                excludes=excludes,
+            )
+
+        new_paths.append(p)
+    return new_paths
+
+
+def get_file_names_to_sync(
+    site_logger: Logger,
+    central_file_infos: 'Dict[str, ConfigSyncFileInfo]',
+    remote_file_infos: 'Dict[str, ConfigSyncFileInfo]',
+    file_filter_func: Optional[Callable[[str], bool]],
+) -> Tuple[List[str], List[str], List[str]]:
+    """Compare the response with the site_config directory of the site
+
+    Comparing both file lists and returning all files for synchronization that
+
+    a) Do not exist on the remote site
+    b) Differ from the central site
+    c) Exist on the remote site but not on the central site as
+    """
+
+    # New files
+    central_files = set(central_file_infos.keys())
+    remote_files = set(remote_file_infos.keys())
+    to_sync_new = list(central_files - remote_files)
+
+    # Add differing files
+    to_sync_changed = []
+    for existing in central_files.intersection(remote_files):
+        if central_file_infos[existing] != remote_file_infos[existing]:
+            site_logger.debug("Sync needed %s: %r <> %r", existing, central_file_infos[existing],
+                              remote_file_infos[existing])
+            to_sync_changed.append(existing)
+
+    # Files to be deleted
+    to_delete = list(remote_files - central_files)
+
+    if file_filter_func is not None:
+        to_sync_new = list(filterfalse(file_filter_func, to_sync_new))
+        to_sync_changed = list(filterfalse(file_filter_func, to_sync_changed))
+        to_delete = list(filterfalse(file_filter_func, to_delete))
+    return to_sync_new, to_sync_changed, to_delete
+
+
+def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:
+    # Use native tar instead of python tarfile for performance reasons
+    p = subprocess.Popen(
+        [
+            "tar", "-c", "-C",
+            str(base_dir), "-f", "-", "--null", "-T", "-", "--preserve-permissions"
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        shell=False,
+    )
+
+    # Since we don't stream the archive to the remote site (we could probably do this) it should be
+    # no problem to buffer it in memory for the moment
+    archive, stderr = p.communicate(b"\0".join(ensure_binary(f) for f in to_sync))
+
+    if p.returncode != 0:
+        raise MKGeneralException(
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
+
+    return archive
+
+
+def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
+    p = subprocess.Popen(
+        [
+            "tar", "-x", "-C",
+            str(base_dir), "-f", "-", "-U", "--recursive-unlink", "--preserve-permissions"
+        ],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        shell=False,
+    )
+    assert p.stdin is not None
+    assert p.stdout is not None
+    assert p.stderr is not None
+
+    stderr = p.communicate(sync_archive)[1]
+    if p.returncode != 0:
+        raise MKGeneralException(
+            _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
+
+
+ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
+    ("st_mode", int),
+    ("st_size", int),
+    ("link_target", Optional[str]),
+    ("file_hash", Optional[str]),
+])
+
+# Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
+# Using some simpler data structure for transport now to reduce the pain.
+#GetConfigSyncStateResponse = NamedTuple("GetConfigSyncStateResponse", [
+#    ("file_infos", Dict[str, ConfigSyncFileInfo]),
+#    ("config_generation", int),
+#])
+GetConfigSyncStateResponse = Tuple[Dict[str, Tuple[int, int, Optional[str], Optional[str]]], int]
+
+
+@automation_command_registry.register
+class AutomationGetConfigSyncState(AutomationCommand):
+    """Called on remote site from a central site to get the current config sync state
+
+    The central site hands over the list of replication paths it will try to synchronize later.  The
+    remote site computes the list of replication files and sends it back together with the current
+    configuration generation ID. The config generation ID is increased on every WATO modification
+    and ensures that nothing is changed between the two config sync steps.
+    """
+    def command_name(self):
+        return "get-config-sync-state"
+
+    def get_request(self) -> List[ReplicationPath]:
+        return [
+            ReplicationPath(*e)
+            for e in ast.literal_eval(_request.get_ascii_input_mandatory("replication_paths"))
+        ]
+
+    def execute(self, request: List[ReplicationPath]) -> GetConfigSyncStateResponse:
+        with store.lock_checkmk_configuration():
+            file_infos = _get_config_sync_file_infos(request,
+                                                     base_dir=Path(cmk.utils.paths.omd_root))
+            transport_file_infos = {
+                k: (v.st_mode, v.st_size, v.link_target, v.file_hash)
+                for k, v in file_infos.items()
+            }
+            return (transport_file_infos, _get_current_config_generation())
+
+
+def _get_config_sync_file_infos(replication_paths: List[ReplicationPath],
+                                base_dir: Path) -> Dict[str, ConfigSyncFileInfo]:
+    """Scans the given replication paths for the information needed for the config sync
+
+    It produces a dictionary of sync file infos. One entry is created for each file.  Directories
+    are not added to the dictionary.
+    """
+    infos = {}
+
+    for replication_path in replication_paths:
+        path = base_dir.joinpath(replication_path.site_path)
+
+        if not path.exists():
+            continue  # Only report back existing things
+
+        if replication_path.ty == "file":
+            infos[replication_path.site_path] = _get_config_sync_file_info(path)
+
+        elif replication_path.ty == "dir":
+            for entry in path.glob("**/*"):
+                if entry.is_dir() and not entry.is_symlink():
+                    continue  # Do not add directories at all
+
+                entry_site_path = entry.relative_to(base_dir)
+                infos[str(entry_site_path)] = _get_config_sync_file_info(entry)
+
+        else:
+            raise NotImplementedError()
+    return infos
+
+
+def _get_config_sync_file_info(file_path: Path) -> ConfigSyncFileInfo:
+    stat = file_path.lstat()
+    is_symlink = file_path.is_symlink()
+    return ConfigSyncFileInfo(
+        stat.st_mode,
+        stat.st_size,
+        os.readlink(str(file_path)) if is_symlink else None,
+        _create_config_sync_file_hash(file_path) if not is_symlink else None,
+    )
+
+
+def _create_config_sync_file_hash(file_path: Path) -> str:
+    sha256 = hashlib.sha256()
+    with file_path.open("rb") as f:
+        while True:
+            chunk = f.read(65536)
+            if not chunk:
+                break
+            sha256.update(chunk)
+    return sha256.hexdigest()
+
+
+def update_config_generation():
+    """Increase the config generation ID
+
+    This ID is used to detect whether something else has been changed in the configuration between
+    two points in time. Therefore, all places that change the configuration must call this function
+    at least once.
+    """
+    store.save_object_to_file(_config_generation_path(),
+                              _get_current_config_generation(lock=True) + 1)
+
+
+def _get_current_config_generation(lock: bool = False) -> int:
+    return store.load_object_from_file(_config_generation_path(), default=0, lock=lock)
+
+
+def _config_generation_path():
+    return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
+
+
+ReceiveConfigSyncRequest = NamedTuple("ReceiveConfigSyncRequest", [
+    ("site_id", SiteId),
+    ("sync_archive", bytes),
+    ("to_delete", List[str]),
+    ("config_generation", int),
+])
+
+
+@automation_command_registry.register
+class AutomationReceiveConfigSync(AutomationCommand):
+    """Called on remote site from a central site to update the Checkmk configuration
+
+    The central site hands over the a tar archive with the files to be written and a list of
+    files to be deleted. The configuration generation is used to validate that no modification has
+    been made between the two sync steps (get-config-sync-state and this autmoation).
+    """
+    def command_name(self):
+        return "receive-config-sync"
+
+    def get_request(self) -> ReceiveConfigSyncRequest:
+        site_id = SiteId(_request.get_ascii_input_mandatory("site_id"))
+        verify_remote_site_config(site_id)
+
+        return ReceiveConfigSyncRequest(
+            site_id,
+            _request.uploaded_file("sync_archive")[2],
+            ast.literal_eval(_request.get_ascii_input_mandatory("to_delete")),
+            _request.get_integer_input_mandatory("config_generation"),
+        )
+
+    def execute(self, request: ReceiveConfigSyncRequest) -> bool:
+        with store.lock_checkmk_configuration():
+            if request.config_generation != _get_current_config_generation():
+                raise MKGeneralException(
+                    _("The configuration was changed during activation. "
+                      "Terminating this activation to ensure configuration integrity. "
+                      "Please try again."))
+
+            self._update_config_on_remote_site(request.sync_archive, request.to_delete)
+
+            _execute_post_config_sync_actions(request.site_id)
+            return True
+
+    def _update_config_on_remote_site(self, sync_archive: bytes, to_delete: List[str]) -> None:
+        """Use the given tar archive and list of files to be deleted to update the local files"""
+        base_dir = Path(cmk.utils.paths.omd_root)
+
+        for site_path in to_delete:
+            site_file = base_dir.joinpath(site_path)
+            try:
+                site_file.unlink()
+            except OSError as e:
+                # errno.ENOENT - File already removed. Fine
+                # errno.ENOTDIR - dir with files was replaced by e.g. symlink
+                if e.errno not in [errno.ENOENT, errno.ENOTDIR]:
+                    raise
+
+        _unpack_sync_archive(sync_archive, base_dir)
+
+
+def activate_changes_start(
+    sites: List[SiteId],
+    comment: Optional[str] = None,
+    force_foreign_changes: bool = False,
+) -> ActivationId:
+    """Start activation of configuration changes on specific or "dirty" sites.
+
+    A "dirty" site is defined by having pending configuration changes to be activated.
+
+    Args:
+        sites:
+            A list of site names which to activate.
+
+        comment:
+            A comment which shall be associated with this activation.
+
+        force_foreign_changes:
+            Will activate changes even if the user who made those changes is not the currently
+            logged in user.
+
+    Returns:
+        An activation id.
+
+    """
+    changes = ActivateChanges()
+    changes.load()
+
+    if changes.has_foreign_changes():
+        if not config.user.may("wato.activateforeign"):
+            raise MKAuthException(_("You are not allowed to activate changes of other users."))
+        if not force_foreign_changes:
+            raise MKAuthException(
+                _("There are changes from other users and foreign changes are "
+                  "not allowed in this API call."))
+
+    known_sites = config.allsites().keys()
+    for site in sites:
+        if site not in known_sites:
+            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(site))
+
+    manager = ActivateChangesManager()
+    manager.load()
+    if manager.is_running():
+        raise MKUserError(None, _("There is an activation already running."))
+
+    if not manager.has_changes():
+        raise MKUserError(None, _("Currently there are no changes to activate."))
+
+    if not sites:
+        dirty_sites = manager.dirty_sites()
+        if not dirty_sites:
+            raise MKUserError(None, _("Currently there are no changes to activate."))
+
+        sites = manager.filter_not_activatable_sites(dirty_sites)
+        if not sites:
+            raise MKUserError(
+                None,
+                _("There are changes to activate, but no site can be "
+                  "activated (The sites %s have changes, but may be "
+                  "offline or not logged in).") %
+                ", ".join([site_id for site_id, _site in dirty_sites]))
+
+    return manager.start(sites, comment=comment, activate_foreign=force_foreign_changes)
+
+
+def activate_changes_wait(activation_id: ActivationId,
+                          timeout: Optional[Union[float, int]] = None) -> Optional[ActivationState]:
+    """Wait for configuration changes to complete activating.
+
+    Args:
+        activation_id:
+            The activation_id representing the activation to wait for.
+
+        timeout:
+            An optional timeout for the waiting time. If timeout is set to None, it will run
+            until finished. A timeout set to 0 will time out immediately.
+
+    Returns:
+        The activation-state when finished, if not yet finished it will return None
+    """
+    manager = ActivateChangesManager()
+    manager.load()
+    manager.load_activation(activation_id)
+    if manager.wait_for_completion(timeout=timeout):
+        return manager.get_state()
+    return None
+
+
+def append_query_string(url: str, variables: HTTPVariables) -> str:
+    """Append a query string to an URL.
+
+    Non-str values are converted to str, None values are omitted in the result.
+
+    Examples:
+
+        None values are filtered out:
+
+            >>> append_query_string("foo", [('b', 2), ('c', None), ('a', '1'),])
+            'foo?a=1&b=2'
+
+        Empty values are kept:
+
+            >>> append_query_string("foo", [('c', ''), ('a', 1), ('b', '2'),])
+            'foo?a=1&b=2&c='
+
+    Args:
+        url:
+            The url to append the query string to.
+        variables:
+            The query string variables as a list of tuples.
+
+    Returns:
+        The url with the query string appended.
+
+    """
+    if variables:
+        # Encoding would work even with byte-string keys, yet these are
+        # excluded via our type signature.
+        url += "?" + werkzeug.urls.url_encode(variables, sort=True)
+
+    return url

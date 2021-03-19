@@ -397,11 +397,13 @@ export class FigureBase {
             .attr("id", "figure_error")
             .attr("class", div_class)
             .text(error_info);
+        if (!this.svg) return;
         this.svg.style("display", "none");
     }
 
     _clear_error_info() {
         this._div_selection.select("#figure_error").remove();
+        if (!this.svg) return;
         this.svg.style("display", null);
     }
 

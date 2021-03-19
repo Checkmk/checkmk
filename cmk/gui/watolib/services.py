@@ -365,11 +365,9 @@ class Discovery:
         return None
 
     def _get_table_target(self, table_source, check_type, item):
-        if self._options.action in [
-                DiscoveryAction.UPDATE_SERVICES,
-                DiscoveryAction.FIX_ALL,
-        ] and ((not self._options.show_checkboxes) or
-               (checkbox_id(check_type, item) in self._discovery_info["update_services"])):
+        if self._options.action == DiscoveryAction.FIX_ALL or (
+                self._options.action == DiscoveryAction.UPDATE_SERVICES and
+                self._service_is_checked(check_type, item)):
             if table_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
             if table_source == DiscoveryState.IGNORED:
@@ -397,6 +395,10 @@ class Discovery:
                 return update_target
 
         return table_source
+
+    def _service_is_checked(self, check_type, item):
+        return not self._options.show_checkboxes or checkbox_id(
+            check_type, item) in self._discovery_info["update_services"]
 
 
 def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:

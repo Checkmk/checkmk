@@ -153,6 +153,7 @@ def test_agent_aws_ec2_limits(get_ec2_sections, names, tags, found_ec2, found_ec
     ec2_limits_results = ec2_limits.run().results
 
     assert ec2_limits.cache_interval == 300
+    assert ec2_limits.period == 600
     assert ec2_limits.name == "ec2_limits"
     assert len(ec2_limits_results) == 1
 
@@ -178,6 +179,7 @@ def test_agent_aws_ec2_summary(get_ec2_sections, names, tags, found_ec2, found_e
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
+    assert ec2_summary.period == 600
     assert ec2_summary.name == "ec2_summary"
 
     if found_ec2:
@@ -199,6 +201,7 @@ def test_agent_aws_ec2_labels(get_ec2_sections, names, tags, found_ec2, found_ec
     ec2_labels_results = ec2_labels.run().results
 
     assert ec2_labels.cache_interval == 300
+    assert ec2_labels.period == 600
     assert ec2_labels.name == "ec2_labels"
 
     assert len(ec2_labels_results) == found_ec2_with_labels
@@ -213,6 +216,7 @@ def test_agent_aws_ec2_security_groups(get_ec2_sections, names, tags, found_ec2,
     ec2_security_groups_results = ec2_security_groups.run().results
 
     assert ec2_security_groups.cache_interval == 300
+    assert ec2_security_groups.period == 600
     assert ec2_security_groups.name == "ec2_security_groups"
 
     assert len(ec2_security_groups_results) == found_ec2
@@ -229,6 +233,7 @@ def test_agent_aws_ec2(get_ec2_sections, names, tags, found_ec2, found_ec2_with_
     ec2_results = ec2.run().results
 
     assert ec2.cache_interval == 300
+    assert ec2.period == 600
     assert ec2.name == "ec2"
 
     assert len(ec2_results) == found_ec2
@@ -246,6 +251,7 @@ def test_agent_aws_ec2_summary_without_limits(get_ec2_sections):
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
+    assert ec2_summary.period == 600
     assert ec2_summary.name == "ec2_summary"
 
     assert len(ec2_summary_results) == 1
@@ -262,6 +268,7 @@ def test_agent_aws_ec2_labels_without_limits(get_ec2_sections):
     ec2_labels_results = ec2_labels.run().results
 
     assert ec2_labels.cache_interval == 300
+    assert ec2_labels.period == 600
     assert ec2_labels.name == "ec2_labels"
 
     assert len(ec2_labels_results) == 1
@@ -274,6 +281,7 @@ def test_agent_aws_ec2_security_groups_without_limits(get_ec2_sections):
     ec2_security_groups_results = ec2_security_groups.run().results
 
     assert ec2_security_groups.cache_interval == 300
+    assert ec2_security_groups.period == 600
     assert ec2_security_groups.name == "ec2_security_groups"
 
     assert len(ec2_security_groups_results) == 3
@@ -289,6 +297,7 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections):
     ec2_results = ec2.run().results
 
     assert ec2.cache_interval == 300
+    assert ec2.period == 600
     assert ec2.name == "ec2"
 
     assert len(ec2_results) == 3

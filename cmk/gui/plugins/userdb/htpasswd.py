@@ -20,11 +20,11 @@ import cmk.utils.store as store
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
-from cmk.gui.plugins.userdb import UserConnector, user_connector_registry
+from cmk.gui.plugins.userdb import UserConnector, user_connector_registry, CheckCredentialsResult
 
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",
-    # Kept for compatibility with Check_MK < 1.6
+    # Kept for compatibility with Checkmk < 1.6
     "md5_crypt",
     "apr_md5_crypt",
     "des_crypt",
@@ -62,7 +62,7 @@ class Htpasswd:
         store.save_text_to_file("%s" % self._path, output)
 
 
-# Check_MK supports different authentication frontends for verifying the
+# Checkmk supports different authentication frontends for verifying the
 # local credentials:
 #
 # a) basic authentication
@@ -105,7 +105,7 @@ class HtpasswdUserConnector(UserConnector):
     def is_enabled(self):
         return True
 
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         users = self._get_htpasswd().load()
         if user_id not in users:
             return None  # not existing user, skip over
@@ -123,7 +123,7 @@ class HtpasswdUserConnector(UserConnector):
 
     # Validate hashes taken from the htpasswd file. For the moment this function
     # needs to be able to deal with des_crypt and apr-md5 hashes which were used
-    # by installations till Check_MK 1.6. The current algorithm also needs to be
+    # by installations till Checkmk 1.6. The current algorithm also needs to be
     # handled: sha256_crypt.
     def _password_valid(self, pwhash, password):
         try:

@@ -4,14 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Type, Any, Dict
 
 from cmk.gui.plugins.openapi.livestatus_helpers.expressions import (
-    ScalarExpression,
+    BinaryExpression,
+    BoolExpression,
     ListExpression,
+    Not,
+    QueryExpression,
+    ScalarExpression,
+    NothingExpression,
 )
 
 LivestatusType = Literal["string", "int", "float", "list", "dict", "time", "blob"]
+ExpressionDict = Dict[str, Any]
 
 
 class Table(abc.ABC):
@@ -19,9 +25,10 @@ class Table(abc.ABC):
 
     This class doesn't do much, it just acts as a container for `Column` instances.
     """
+    @classmethod
     @property
     @abc.abstractmethod
-    def __tablename__(self):
+    def __tablename__(cls) -> str:
         raise NotImplementedError("Please set __tablename__ to the name of the livestatus table")
 
     @classmethod
@@ -40,16 +47,14 @@ class NoTable(Table):
     Can be used in place of an actual table, in order to not have to use `Optional` types when
     something is initialized only later.
     """
+    @classmethod
     @property
-    def __tablename__(self):
+    def __tablename__(cls) -> str:
         raise AttributeError("This table has no name.")
 
     @classmethod
     def __columns__(cls) -> List[str]:
         raise NotImplementedError("NoTable instances have no columns.")
-
-    def __bool__(self) -> bool:
-        return False
 
 
 class Column:
@@ -109,9 +114,18 @@ class Column:
         self.label_name: Optional[str] = None
         self.type: LivestatusType = col_type
         self.expr = (ListExpression(name) if col_type == 'list' else ScalarExpression(name))
-        self.table: Table = NoTable()
+        self.table: Type[Table] = NoTable
 
         self.__doc__ = description
+
+    @property
+    def full_name(self):
+        # This needs to be a @property, due to the descriptor magic mentioned elsewhere.
+        return f"{self.table.__tablename__}.{self.name}"
+
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        return f"{class_name}({self.full_name}: {self.type})"
 
     @property
     def query_name(self) -> str:
@@ -145,7 +159,7 @@ class Column:
     def __get__(self, obj, obj_type) -> 'Column':
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
-        if not self.table:
+        if self.table is NoTable:
             self.table = obj_type
 
         return self
@@ -177,5 +191,53 @@ class Column:
     def disparity(self, other, ignore_case=False):
         return self.expr.disparity(other, ignore_case=ignore_case)
 
+    def op(self, op_str, other) -> BinaryExpression:
+        return self.expr.op(op_str, other)
+
     def empty(self):
         return self.expr.empty()
+
+
+def expr_to_tree(
+    table: Type[Table],
+    query_expr: QueryExpression,
+) -> Optional[ExpressionDict]:
+    """Transform the query-expression to a dict-tree.
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> expr_to_tree(Hosts, Not(And(Hosts.name == 'heute', Hosts.alias == 'heute')))
+        {'op': 'not', 'expr': {'op': 'and', 'expr': [\
+{'op': '=', 'left': 'hosts.name', 'right': 'heute'}, \
+{'op': '=', 'left': 'hosts.alias', 'right': 'heute'}]}}
+
+    Args:
+        table:
+        query_expr:
+
+    Returns:
+        A nested dictionary tree, which uniquely represents the given query-expression.
+
+    """
+    if isinstance(query_expr, BinaryExpression):
+        return {
+            'op': query_expr.operator,
+            'left': getattr(table, query_expr.left.value).full_name,
+            'right': query_expr.right.value,
+        }
+
+    if isinstance(query_expr, BoolExpression):
+        return {
+            'op': query_expr.__class__.__name__.lower(),
+            'expr': [expr_to_tree(table, arg) for arg in query_expr.args]
+        }
+
+    if isinstance(query_expr, Not):
+        return {'op': 'not', 'expr': expr_to_tree(table, query_expr.other)}
+
+    if isinstance(query_expr, NothingExpression):
+        return None
+
+    raise ValueError(f"Unsupported expression: {query_expr!r}")

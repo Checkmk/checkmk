@@ -1,0 +1,11 @@
+Title: Network Topology: Fixed incorrect connection lines after data update
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614615317
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

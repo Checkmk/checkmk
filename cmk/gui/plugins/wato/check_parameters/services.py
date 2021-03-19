@@ -27,7 +27,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_services_rules():
     return Dictionary(
-        title=_("Windows Service Discovery"),
+        title=_("Windows service discovery"),
         elements=[
             ('services',
              ListOfStrings(

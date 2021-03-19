@@ -12,7 +12,7 @@ import cmk.gui.forms as forms
 from cmk.gui.valuespec import TextAscii
 
 from cmk.gui.plugins.wato.utils import mode_registry, configure_attributes
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
@@ -43,19 +43,20 @@ class ModeSearch(WatoMode):
         self._folder = watolib.Folder.current()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Search"),
+                                          breadcrumb,
                                           form_name="edit_host",
                                           button_name="_local",
-                                          save_title=_("Search"),
+                                          save_title=_("Submit"),
                                           save_icon="search",
                                           save_is_enabled=True)
 
     def title(self):
         return _("Search for hosts below %s") % self._folder.title()
 
-    def action(self):
+    def action(self) -> ActionResult:
         self._remove_unused_search_vars()
-        return "folder"
+        return redirect(self._folder.url())
 
     def _remove_unused_search_vars(self):
         """Reduce the HTTP vars (html.request.vars) to the amount of necessary attributes

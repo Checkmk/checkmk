@@ -39,10 +39,10 @@ NTSTATUS PrintDomainName() {
 
     if (ppddi->Sid) {
         XLOG::l("DnsDomainName: '{}'",
-                wtools::ConvertToUTF8(ppddi->DnsDomainName.Buffer));
+                wtools::ToUtf8(ppddi->DnsDomainName.Buffer));
     } else {
         XLOG::l("'{}': not domain controller !!",
-                wtools::ConvertToUTF8(ppddi->Name.Buffer));
+                wtools::ToUtf8(ppddi->Name.Buffer));
         status = -1;
     }
 
@@ -52,8 +52,7 @@ NTSTATUS PrintDomainName() {
     if (LSA_SUCCESS(
             status = LsaQueryInformationPolicy(
                 policy, PolicyAccountDomainInformation, (void**)&ppadi))) {
-        XLOG::l("DomainName: '{}'",
-                wtools::ConvertToUTF8(ppadi->DomainName.Buffer));
+        XLOG::l("DomainName: '{}'", wtools::ToUtf8(ppadi->DomainName.Buffer));
         LsaFreeMemory(ppadi);
     }
 

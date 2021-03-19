@@ -122,7 +122,13 @@ def test_copy_or_create(tmp_path: Path) -> None:
 
 
 def test_generate_product_versions():
-    test = [["1.7.0i1", "1.7.0.xxx"], ["1.2.5i4p1", "1.2.5.xxx"], ["2015.04.12", "15.4.12.xxx"]]
+    test = [
+        ["1.7.0i1", "1.7.0.xxx"],
+        ["1.2.5i4p1", "1.2.5.xxx"],
+        ["2015.04.12", "15.4.12.xxx"],
+        ["2.0.0i1", "2.0.0.xxx"],
+        ["1.6.0-2020.02.20", "1.6.0.xxx"],
+    ]
 
     for in_data, result in test:
         a = msi_engine.generate_product_version(in_data, "xxx")

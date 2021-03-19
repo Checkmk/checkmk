@@ -14,7 +14,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
+    RulespecGroupEnforcedServicesNetworking,
     rulespec_registry,
     ManualCheckParameterRulespec,
 )
@@ -94,7 +94,7 @@ def _parameter_valuespec_tcp_connections():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="tcp_connections",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         item_spec=_item_spec_tcp_connections,
         parameter_valuespec=_parameter_valuespec_tcp_connections,
         title=lambda: _("Monitor specific TCP/UDP connections and listeners"),

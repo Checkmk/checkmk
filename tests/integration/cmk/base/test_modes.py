@@ -50,24 +50,25 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
     web.discover_services("modes-test-host2")
     web.discover_services("modes-test-host3")
 
-    web.activate_changes()
-    yield None
+    try:
+        web.activate_changes()
+        yield None
+    finally:
+        #
+        # Cleanup code
+        #
+        print("Cleaning up test config")
 
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
+        site.delete_dir("var/check_mk/agent_output")
 
-    site.delete_dir("var/check_mk/agent_output")
+        site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-    site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
+        web.delete_host("modes-test-host")
+        web.delete_host("modes-test-host2")
+        web.delete_host("modes-test-host3")
+        web.delete_host("modes-test-host4")
 
-    web.delete_host("modes-test-host")
-    web.delete_host("modes-test-host2")
-    web.delete_host("modes-test-host3")
-    web.delete_host("modes-test-host4")
-
-    web.activate_changes()
+        web.activate_changes()
 
 
 CommandOutput = collections.namedtuple('CommandOutput', [
@@ -75,6 +76,10 @@ CommandOutput = collections.namedtuple('CommandOutput', [
     'stdout',
     'stderr',
 ])
+
+
+def on_failure(p: CommandOutput) -> str:
+    return f"Command failed ({p.stdout!r}, {p.stderr!r})"
 
 
 @pytest.fixture(name="execute")
@@ -112,7 +117,7 @@ def execute_fixture(test_cfg, site):
 def test_list_hosts(execute):
     for opt in ["--list-hosts", "-l"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stdout == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
 
 
@@ -131,31 +136,31 @@ def test_list_hosts(execute):
 
 def test_list_tag_all(execute):
     p = execute(["cmk", "--list-tag"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host\nmodes-test-host2\nmodes-test-host3\n"
 
 
 def test_list_tag_single_tag_filter(execute):
     p = execute(["cmk", "--list-tag", "test"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
 
 
 def test_list_tag_offline(execute):
     p = execute(["cmk", "--list-tag", "offline"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host4\n"
 
 
 def test_list_tag_multiple_tags(execute):
     p = execute(["cmk", "--list-tag", "test", "xyz"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stdout == ""
 
 
 def test_list_tag_multiple_tags_2(execute):
     p = execute(["cmk", "--list-tag", "test", "cmk-agent"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stdout == "modes-test-host2\nmodes-test-host3\n"
     assert p.stderr == ''
 
@@ -175,7 +180,7 @@ def test_list_checks(execute):
     output_long = None
     for opt in ["--list-checks", "-L"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert "zypper" in p.stdout
         assert "Zypper: (Security) Updates" in p.stdout
@@ -200,14 +205,14 @@ def test_list_checks(execute):
 def test_dump_agent_missing_arg(execute):
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 1
+        assert p.returncode == 1, on_failure(p)
 
 
 def test_dump_agent_error(execute):
     output_long = None
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host4"])
-        assert p.returncode == 1
+        assert p.returncode == 1, on_failure(p)
         assert p.stdout == ""
         assert "[agent]: Agent exited " in p.stderr
 
@@ -220,7 +225,7 @@ def test_dump_agent_error(execute):
 def test_dump_agent_test(execute):
     for opt in ["--dump-agent", "-d"]:
         p = execute(["cmk", opt, "modes-test-host"])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout == get_standard_linux_agent_output()
 
@@ -239,7 +244,7 @@ def test_dump_agent_test(execute):
 def test_dump_agent_dump_all_hosts(execute):
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout.count("Addresses: ") == 3
 
@@ -247,7 +252,7 @@ def test_dump_agent_dump_all_hosts(execute):
 def test_dump_agent(execute):
     for opt in ["--dump", "-D"]:
         p = execute(["cmk", opt, "modes-test-host"])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert "Addresses: " in p.stdout
         assert "Type of agent: " in p.stdout
@@ -267,7 +272,7 @@ def test_dump_agent(execute):
 
 def test_paths(execute):
     p = execute(["cmk", "--paths"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert "Main components of check_mk" in p.stdout
     assert "Locally installed " in p.stdout
@@ -287,7 +292,7 @@ def test_paths(execute):
 
 def _create_cmk_backup(site, execute):
     p = execute(["cmk", "--backup", "x.tgz"], cwd=site.root)
-    assert p.returncode == 0, "Command failed: %r, %r" % (p.stdout, p.stderr)
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert p.stdout == ""
     assert site.file_exists("x.tgz")
@@ -321,12 +326,12 @@ def test_restore(request, site, execute):
 
     site.delete_file("etc/check_mk/final.mk")
     p = execute(["cmk", "--restore", "x.tgz"], cwd=site.root)
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert p.stdout == ""
 
     p = execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root)
-    assert p.returncode == 0, "Found differences after restore: %s" % p.stdout
+    assert p.returncode == 0, on_failure(p)
 
 
 #.
@@ -432,39 +437,17 @@ def test_restore(request, site, execute):
 
 def test_flush_existing_host(execute):
     p = execute(["cmk", "--flush", "modes-test-host4"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert p.stdout == "modes-test-host4    : (nothing)\n"
 
 
 def test_flush_not_existing_host(execute):
     p = execute(["cmk", "--flush", "bums"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert p.stdout == "bums                : (nothing)\n"
 
-
-#.
-#   .--nagios-config-------------------------------------------------------.
-#   |                     _                                  __ _          |
-#   |   _ __   __ _  __ _(_) ___  ___        ___ ___  _ __  / _(_) __ _    |
-#   |  | '_ \ / _` |/ _` | |/ _ \/ __|_____ / __/ _ \| '_ \| |_| |/ _` |   |
-#   |  | | | | (_| | (_| | | (_) \__ \_____| (_| (_) | | | |  _| | (_| |   |
-#   |  |_| |_|\__,_|\__, |_|\___/|___/      \___\___/|_| |_|_| |_|\__, |   |
-#   |               |___/                                         |___/    |
-#   '----------------------------------------------------------------------'
-# TODO
-
-#.
-#   .--compile-------------------------------------------------------------.
-#   |                                           _ _                        |
-#   |                  ___ ___  _ __ ___  _ __ (_) | ___                   |
-#   |                 / __/ _ \| '_ ` _ \| '_ \| | |/ _ \                  |
-#   |                | (_| (_) | | | | | | |_) | | |  __/                  |
-#   |                 \___\___/|_| |_| |_| .__/|_|_|\___|                  |
-#   |                                    |_|                               |
-#   '----------------------------------------------------------------------'
-# TODO
 
 #.
 #   .--update--------------------------------------------------------------.
@@ -535,7 +518,7 @@ def test_flush_not_existing_host(execute):
 def test_inventory_all_hosts(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout == ""
 
@@ -543,7 +526,7 @@ def test_inventory_all_hosts(execute):
 def test_inventory_single_host(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host"])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout == ""
 
@@ -551,7 +534,7 @@ def test_inventory_single_host(execute):
 def test_inventory_multiple_hosts(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", opt, "modes-test-host", "modes-test-host2"])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout == ""
 
@@ -559,7 +542,7 @@ def test_inventory_multiple_hosts(execute):
 def test_inventory_verbose(execute):
     for opt in ["--inventory", "-i"]:
         p = execute(["cmk", "-v", opt, "modes-test-host"])
-        assert p.returncode == 0
+        assert p.returncode == 0, on_failure(p)
         assert p.stderr == ''
         assert p.stdout.startswith("Doing HW/SW inventory on: modes-test-host\n")
         stdout_words = p.stdout.split()
@@ -581,15 +564,15 @@ def test_inventory_verbose(execute):
 
 def test_inventory_as_check_unknown_host(execute):
     p = execute(["cmk", "--inventory-as-check", "xyz."])
-    assert p.returncode == 2
-    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address of")
+    assert p.returncode == 2, on_failure(p)
+    assert p.stdout.startswith("Failed to lookup IPv4 address of")
     assert p.stderr == ''
 
 
 def test_inventory_as_check(execute):
     p = execute(["cmk", "--inventory-as-check", "modes-test-host"])
-    assert p.returncode == 0
-    assert re.match(r"OK - Found \d+ inventory entries", p.stdout)
+    assert p.returncode == 0, on_failure(p)
+    assert re.match(r"Found \d+ inventory entries", p.stdout)
     assert p.stderr == ''
 
 
@@ -639,15 +622,15 @@ def test_inventory_as_check(execute):
 
 def test_check_discovery_host(execute):
     p = execute(["cmk", "--check-discovery", "xyz."])
-    assert p.returncode == 2
-    assert p.stdout.startswith("CRIT - Failed to lookup IPv4 address")
+    assert p.returncode == 2, on_failure(p)
+    assert p.stdout.startswith("Failed to lookup IPv4 address")
     assert p.stderr == ''
 
 
 def test_check_discovery(execute):
     p = execute(["cmk", "--check-discovery", "modes-test-host"])
-    assert p.returncode == 0
-    assert p.stdout.startswith("OK - ")
+    assert p.returncode == 0, on_failure(p)
+    assert p.stdout.startswith("no unmonitored services found")
     assert p.stderr == ''
 
 
@@ -677,24 +660,24 @@ def test_check(execute):
     opts: List[List[str]] = [["--check"], []]
     for opt in opts:
         p = execute(["cmk"] + opt + ["modes-test-host"])
-        assert p.returncode == 0
-        assert p.stdout.startswith("OK - [agent] Version:")
+        assert p.returncode == 0, on_failure(p)
+        assert p.stdout.startswith("[agent] Version:")
 
 
 def test_check_verbose_perfdata(execute):
     p = execute(["cmk", "-v", "-p", "modes-test-host"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "temp=32.4;" in p.stdout
-    assert "OK - [agent] Version:" in p.stdout
+    assert "[agent] Version:" in p.stdout
 
 
 def test_check_verbose_only_check(execute):
     p = execute(["cmk", "-v", "--checks=lnx_thermal", "modes-test-host"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert "Temperature Zone 0" in p.stdout
     assert "Interface 2" not in p.stdout
-    assert "OK - [agent] Version:" in p.stdout
+    assert "[agent] Version:" in p.stdout
 
 
 #.
@@ -710,7 +693,7 @@ def test_check_verbose_only_check(execute):
 
 def test_version(execute):
     p = execute(["cmk", "--version"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
     assert "This is Check_MK" in p.stdout
 
@@ -728,7 +711,7 @@ def test_version(execute):
 
 def test_help(execute):
     p = execute(["cmk", "--help"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
     assert p.stdout.startswith("WAYS TO CALL:")
     assert "--snmpwalk" in p.stdout
@@ -736,7 +719,7 @@ def test_help(execute):
 
 def test_help_without_args(execute):
     p = execute(["cmk"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ''
     assert p.stdout.startswith("WAYS TO CALL:")
     assert "--snmpwalk" in p.stdout
@@ -755,6 +738,6 @@ def test_help_without_args(execute):
 
 def test_create_diagnostics_dump(execute):
     p = execute(["cmk", "--create-diagnostics-dump"])
-    assert p.returncode == 0
+    assert p.returncode == 0, on_failure(p)
     assert p.stderr == ""
     assert p.stdout.startswith("+ COLLECT DIAGNOSTICS INFORMATION")

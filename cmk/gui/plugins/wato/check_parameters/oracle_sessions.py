@@ -37,7 +37,6 @@ def _parameter_valuespec_oracle_sessions():
             ("sessions_abs",
              Alternative(
                  title=_("Absolute levels of active sessions"),
-                 style="dropdown",
                  help=_("This check monitors the current number of active sessions on Oracle"),
                  elements=[
                      FixedValue(None, title=_("Do not use absolute levels"), totext=""),

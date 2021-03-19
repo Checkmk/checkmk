@@ -27,7 +27,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_discovery_win_dhcp_pools():
     return Dictionary(
-        title=_("Discovery of Windows DHCP Pools"),
+        title=_("Windows DHCP pool discovery"),
         elements=[
             ("empty_pools",
              Checkbox(

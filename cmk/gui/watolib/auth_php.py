@@ -83,9 +83,9 @@ def _create_php_file(callee, users, role_permissions, groups):
     # Do not change WATO internal objects
     nagvis_users = copy.deepcopy(users)
 
-    # Set a language for all users
     for user in nagvis_users.values():
-        user.setdefault('language', config.default_language)
+        user.setdefault('language', config.default_language)  # Set a language for all users
+        user.pop('session_info', None)  # remove the SessionInfo object
 
     content = u'''<?php
 // Created by Multisite UserDB Hook (%s)

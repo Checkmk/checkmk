@@ -6,7 +6,7 @@ Date: 1572017914
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 On agent registration, an information will now be displayed if the hostname
 that just got registered is not known in the activated monitoring configuration.

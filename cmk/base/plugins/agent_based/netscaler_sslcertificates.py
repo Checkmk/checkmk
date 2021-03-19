@@ -5,20 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
+    List,
     Mapping,
     Optional,
 )
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     check_levels,
     register,
     Service,
     SNMPTree,
 )
-from .agent_based_api.v0.type_defs import (
-    CheckGenerator,
-    DiscoveryGenerator,
-    SNMPStringTable,
-    Parameters,
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
 )
 from .utils.netscaler import SNMP_DETECT
 
@@ -34,7 +35,7 @@ from .utils.netscaler import SNMP_DETECT
 Section = Mapping[str, int]
 
 
-def parse_netscaler_sslcertificates(string_table: SNMPStringTable) -> Section:
+def parse_netscaler_sslcertificates(string_table: List[StringTable]) -> Section:
     """
     >>> parse_netscaler_sslcertificates([[['cert1', '3'], ['cert2', '100']]])
     {'cert1': 3, 'cert2': 100}
@@ -45,7 +46,7 @@ def parse_netscaler_sslcertificates(string_table: SNMPStringTable) -> Section:
 register.snmp_section(
     name="netscaler_sslcertificates",
     parse_function=parse_netscaler_sslcertificates,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5951.4.1.1.56.1.1",
             oids=[
@@ -58,10 +59,10 @@ register.snmp_section(
 )
 
 
-def discover_netscaler_sslcertificates(section: Section) -> DiscoveryGenerator:
+def discover_netscaler_sslcertificates(section: Section) -> DiscoveryResult:
     """
     >>> list(discover_netscaler_sslcertificates({'cert1': 3, 'cert2': 100, '': 4}))
-    [Service(item='cert1', parameters={}, labels=[]), Service(item='cert2', parameters={}, labels=[])]
+    [Service(item='cert1'), Service(item='cert2')]
     """
     for certname in section:
         if certname:
@@ -70,10 +71,10 @@ def discover_netscaler_sslcertificates(section: Section) -> DiscoveryGenerator:
 
 def _check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
     node_name: Optional[str] = None,
-) -> CheckGenerator:
+) -> CheckResult:
     if item not in section:
         return
     label = 'certificate valid for'
@@ -88,9 +89,9 @@ def _check_netscaler_sslcertificates(
 
 def check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_netscaler_sslcertificates(
         item,
         params,
@@ -100,9 +101,9 @@ def check_netscaler_sslcertificates(
 
 def cluster_check_netscaler_sslcertificates(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     for node_name, node_section in section.items():
         yield from _check_netscaler_sslcertificates(
             item,

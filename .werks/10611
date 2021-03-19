@@ -1,0 +1,21 @@
+Title: ntopng intergration: List of fixes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cee
+Version: 2.1.0i1
+Date: 1607597712
+Class: fix
+
+<b>Styling:</b>
+<ul>
+<li>Adapt styling to dark and light theme.</li>
+<li>Prevent pie chart labels from overlapping.</li>
+<li>Improve layout of tables and navigation.</li>
+</ul>
+
+<b>Crashes:</b>
+<ul>
+<li>In case the given ntopng user name has insufficients rights to see the data, a warning is now shown.</li>
+<li>In case the user mapping is derived from the custom attribute "ntopng username" and this attribute is empty, all ntop links will now be hidden.</li>
+</ul>

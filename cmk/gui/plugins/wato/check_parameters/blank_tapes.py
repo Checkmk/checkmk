@@ -28,5 +28,5 @@ rulespec_registry.register(
         check_group_name="blank_tapes",
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_blank_tapes,
-        title=lambda: _("Remaining blank tapes in DIVA CSM Devices"),
+        title=lambda: _("DIVA CSM: remaining blank tapes"),
     ))

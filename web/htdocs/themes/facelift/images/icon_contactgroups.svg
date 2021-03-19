@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 384 331" style="enable-background:new 0 0 384 331;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#12C0FF;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#00ABE9;}
+	.st2{filter:url(#Adobe_OpacityMaskFilter);}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st4{mask:url(#mask-2_1_);fill-rule:evenodd;clip-rule:evenodd;fill:#00ABE9;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -565.000000)">
+		<g id="user-group" transform="translate(514.000000, 565.000000)">
+			<path id="Fill-1" class="st0" d="M145.5,0C97.4,0,58.2,39.2,58.2,87.3c0,48.1,39.2,87.3,87.3,87.3s87.3-39.2,87.3-87.3
+				C232.7,39.2,193.6,0,145.5,0"/>
+			<path id="Fill-3" class="st0" d="M289.4,257.7c-26.2-39.2-69.8-62.4-116.9-62.4h-53.9c-47.1,0-90.8,23.3-116.9,62.4L0,260.2V331
+				h290.9v-70.8L289.4,257.7z"/>
+			<path id="Fill-5" class="st1" d="M145.5,174.5V0c48.1,0,87.3,39.2,87.3,87.3C232.7,135.4,193.6,174.5,145.5,174.5"/>
+			<path id="Fill-7" class="st1" d="M290.9,260.2V331H145.5V195.2h27c47.1,0,90.8,23.3,116.9,62.4L290.9,260.2z"/>
+			<g id="Group-11" transform="translate(287.030303, 224.323232)">
+				<g id="Clip-10">
+				</g>
+				<defs>
+					<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="0.3" y="0.1" width="96.2" height="106.6">
+						<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+					</filter>
+				</defs>
+				<mask maskUnits="userSpaceOnUse" x="0.3" y="0.1" width="96.2" height="106.6" id="mask-2_1_">
+					<g class="st2">
+						<polygon id="path-1_1_" class="st3" points="0.3,0.1 96.6,0.1 96.6,106.7 0.3,106.7 						"/>
+					</g>
+				</mask>
+				<path id="Fill-9" class="st4" d="M95.3,49.1c-20.5-30.7-54.8-49-91.8-49H0.3C7,7,13,14.5,18.5,22.6l0.2,0.3l4.6,7.5v76.3h73.3
+					V51.1L95.3,49.1z"/>
+			</g>
+			<path id="Fill-12" class="st1" d="M269.4,71.2c-6.3,0-12.4,0.9-18.2,2.5c0.6,4.5,0.9,9,0.9,13.6c0,34.9-16.8,65.9-42.8,85.3
+				c1.8,3.2,3.8,6.2,6,9.1c19.4,5.4,37.6,14.4,53.6,26.5c0.1,0,0.3,0,0.4,0c37.8,0,68.5-30.7,68.5-68.5
+				C337.9,101.9,307.2,71.2,269.4,71.2"/>
+		</g>
+	</g>
+</g>
+</svg>

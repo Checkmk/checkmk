@@ -19,7 +19,7 @@ item:
 
 inventory:
  One service is created for each peer which has been contacted at least once
- if {ntp_inventory_mode} is set to {"detailed"} or {"both"}.
- One summary service of type {ntp.time} is created if the {ntp_inventory_mode} is
+ if in the rule {NTP Discovery} the mode is set to {"detailed"} or {"both"}.
+ One summary service of type {ntp.time} is created if the mode is
  set to {"summary"}.
 

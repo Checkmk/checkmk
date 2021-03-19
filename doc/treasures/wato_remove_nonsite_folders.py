@@ -13,7 +13,7 @@
 # The purpose of this script is to remove WATO folders in slave sites which
 # do not have any reference to the site. The positive site effect of this
 # operation is a reduced size of the ~/var/check_mk/core/config.mk, which represents
-# the configuration for the "Check_MK Check Helpers".
+# the configuration for the "Checkmk Check Helpers".
 # A smaller configuration results in smaller helper processes
 
 # The deletion of the nonsite folders is always triggered in a hook right before the

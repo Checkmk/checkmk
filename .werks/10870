@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When editing the ID of a tag choice that is referenced by some other
 object, an exception like this could occur in previous versions:

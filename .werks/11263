@@ -6,7 +6,7 @@ Date: 1597405643
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions it was possible to create files in the querying Checkmk
 site by modifying or extending an agent on a monitored system.

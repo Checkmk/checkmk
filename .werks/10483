@@ -6,7 +6,7 @@ Date: 1575879684
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The checkplugins cifsmounts and nfsmounts now support options to set rules
 on filesystem usage, growth and trend. You can configure them using the

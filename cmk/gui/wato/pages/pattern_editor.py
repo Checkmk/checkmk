@@ -16,7 +16,7 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.wato.pages.rulesets import ModeEditRuleset
 from cmk.gui.breadcrumb import Breadcrumb
@@ -32,10 +32,17 @@ from cmk.gui.plugins.wato import (
     mode_registry,
     ConfigHostname,
 )
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
+from cmk.gui.utils.urls import makeuri_contextless
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
-import cmk.base.export
+import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 
 @mode_registry.register
@@ -60,6 +67,8 @@ class ModePatternEditor(WatoMode):
         # only way to get these information to the modes breadcrumb method.
         with html.stashed_vars():
             html.request.set_var("varname", "logwatch_rules")
+            html.request.del_var("host")
+            html.request.del_var("service")
             return super().breadcrumb()
 
     def _from_vars(self):
@@ -78,9 +87,13 @@ class ModePatternEditor(WatoMode):
         if self._item and not self._hostname:
             raise MKUserError(None, _("You need to specify a host name to test file matching."))
 
+    @staticmethod
+    def title_pattern_analyzer():
+        return _("Logfile pattern analyzer")
+
     def title(self):
         if not self._hostname and not self._item:
-            return _("Logfile pattern analyzer")
+            return self.title_pattern_analyzer()
         if not self._hostname:
             return _("Logfile patterns of logfile %s on all hosts") % (self._item)
         if not self._item:
@@ -113,7 +126,7 @@ class ModePatternEditor(WatoMode):
             title=_("Host log files"),
             icon_name="logwatch",
             item=make_simple_link(
-                html.makeuri_contextless([("host", self._hostname)], filename="logwatch.py")),
+                makeuri_contextless(request, [("host", self._hostname)], filename="logwatch.py")),
         )
 
         if self._item:
@@ -121,8 +134,11 @@ class ModePatternEditor(WatoMode):
                 title=("Show log file"),
                 icon_name="logwatch",
                 item=make_simple_link(
-                    html.makeuri_contextless([("host", self._hostname), ("file", self._item)],
-                                             filename="logwatch.py")),
+                    makeuri_contextless(
+                        request,
+                        [("host", self._hostname), ("file", self._item)],
+                        filename="logwatch.py",
+                    )),
             )
 
     def page(self):
@@ -140,7 +156,8 @@ class ModePatternEditor(WatoMode):
         forms.section(_('Hostname'))
         self._vs_host().render_input("host", self._hostname)
         forms.section(_('Logfile'))
-        html.text_input('file')
+        html.help(_('Here you need to insert the original file or pathname'))
+        html.text_input('file', size=80)
         forms.section(_('Text to match'))
         html.help(
             _('You can insert some text (e.g. a line of the logfile) to test the patterns defined '
@@ -245,12 +262,12 @@ class ModePatternEditor(WatoMode):
 
                     table.row(css=reason_class)
                     table.cell(_('Match'))
-                    html.icon(match_title, "rule%s" % match_img)
+                    html.icon("rule%s" % match_img, match_title)
 
                     cls = ''
                     if match_class == 'match first':
-                        cls = 'svcstate state%d' % logwatch.level_state(state)
-                    table.cell(_('State'), logwatch.level_name(state), css=cls)
+                        cls = 'state%d' % logwatch.level_state(state)
+                    table.cell(_('State'), html.render_span(logwatch.level_name(state)), css=cls)
                     table.cell(_('Pattern'), html.render_tt(pattern))
                     table.cell(_('Comment'), html.render_text(comment))
                     table.cell(_('Matched line'), disp_match_txt)
@@ -261,9 +278,9 @@ class ModePatternEditor(WatoMode):
                     ("mode", "edit_rule"),
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
-                    ("host", self._hostname),
                     ("item", ensure_str(watolib.mk_repr(self._item))),
                     ("rule_folder", folder.path()),
+                    ("rule_id", rule.id),
                 ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
@@ -272,3 +289,30 @@ class ModePatternEditor(WatoMode):
     def _get_service_description(self, hostname: HostName, check_plugin_name: CheckPluginNameStr,
                                  item: Item) -> ServiceName:
         return cmk.base.export.service_description(hostname, check_plugin_name, item)
+
+
+class MatchItemGeneratorLogfilePatternAnalyzer(ABCMatchItemGenerator):
+    def generate_match_items(self) -> MatchItems:
+        title = ModePatternEditor.title_pattern_analyzer()
+        yield MatchItem(
+            title=title,
+            topic=_("Miscellaneous"),
+            url=makeuri_contextless(
+                request,
+                [("mode", ModePatternEditor.name())],
+                filename="wato.py",
+            ),
+            match_texts=[title],
+        )
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorLogfilePatternAnalyzer("logfile_pattern_analyzer"))

@@ -14,6 +14,7 @@ from werkzeug.test import create_environ
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
+from cmk.gui.watolib.search import MatchItem
 import cmk.gui.htmllib as htmllib
 from cmk.gui.watolib.utils import has_agent_bakery
 
@@ -174,6 +175,25 @@ def test_create_nested_folders(register_builtin_html):
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
 
 
+def test_eq_operation(register_builtin_html):
+    with in_chdir("/"):
+        root = watolib.Folder.root_folder()
+        folder1 = watolib.Folder("folder1", parent_folder=root)
+        folder1.persist_instance()
+
+        folder1_new = watolib.Folder("folder1")
+        folder1_new.load_instance()
+
+        assert folder1 == folder1_new
+        assert id(folder1) != id(folder1_new)
+        assert folder1 in [folder1_new]
+
+        folder2 = watolib.Folder("folder2", parent_folder=folder1)
+        folder2.persist_instance()
+
+        assert folder1 not in [folder2]
+
+
 @pytest.mark.parametrize("protocol,host_attribute,base_variable,credentials,folder_credentials", [
     ("snmp", "management_snmp_community", "management_snmp_credentials", "HOST", "FOLDER"),
     ("ipmi", "management_ipmi_credentials", "management_ipmi_credentials", {
@@ -271,15 +291,11 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
 
 
 @pytest.fixture(name="make_folder")
-def fixture_make_folder(mocker, fs):
+def fixture_make_folder(mocker):
     """
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
     """
-    # Set the disk size of the fake in memory filesystem to zero bytes to ensure that no
-    # files are written by accident e.g. in CREFolder.__init__:
-    fs.set_disk_usage(0)
-
     mocker.patch.object(hosts_and_folders.config,
                         'wato_hide_folders_without_read_permissions',
                         True,
@@ -391,3 +407,27 @@ def test_subfolder_creation():
     # Upon instantiation, all the subfolders should be already known.
     folder = hosts_and_folders.Folder.root_folder()
     assert len(folder._subfolders) == 1
+
+
+def test_match_item_generator_hosts():
+    assert list(
+        hosts_and_folders.MatchItemGeneratorHosts(
+            "hosts",
+            lambda: {
+                "host": {
+                    "edit_url": "some_url",
+                    "alias": "alias",
+                    "ipaddress": "1.2.3.4",
+                    "ipv6address": "",
+                    "additional_ipv4addresses": ["5.6.7.8"],
+                    "additional_ipv6addresses": [],
+                },
+            },
+        ).generate_match_items()) == [
+            MatchItem(
+                title='host',
+                topic='Hosts',
+                url='some_url',
+                match_texts=['host', 'alias', '1.2.3.4', '5.6.7.8'],
+            )
+        ]

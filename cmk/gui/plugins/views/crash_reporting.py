@@ -12,8 +12,8 @@ import livestatus
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.globals import html, request
 from cmk.gui.escaping import escape_text
 
 from cmk.gui.plugins.views import (
@@ -40,7 +40,10 @@ from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.plugins.views import (
     command_registry,
     Command,
+    CommandActionResult,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @data_source_registry.register
@@ -165,7 +168,8 @@ class PainterCrashIdent(Painter):
         return ["crash_id"]
 
     def render(self, row, cell):
-        url = html.makeuri_contextless(
+        url = makeuri_contextless(
+            request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -278,27 +282,14 @@ class SorterCrashTime(Sorter):
         return cmp_simple_number("crash_time", r1, r2)
 
 
-@permission_registry.register
-class PermissionActionDeleteCrashReport(Permission):
-    @property
-    def section(self):
-        return PermissionSectionAction
-
-    @property
-    def permission_name(self):
-        return "delete_crash_report"
-
-    @property
-    def title(self):
-        return _("Delete crash reports")
-
-    @property
-    def description(self):
-        return _("Delete crash reports created by Checkmk")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+PermissionActionDeleteCrashReport = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="delete_crash_report",
+        title=_l("Delete crash reports"),
+        description=_l("Delete crash reports created by Checkmk"),
+        defaults=["admin"],
+    ))
 
 
 @command_registry.register
@@ -319,10 +310,18 @@ class CommandDeleteCrashReports(Command):
     def tables(self):
         return ["crash"]
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d crash %s") % (
+            len_action_rows,
+            ungettext("report", "reports", len_action_rows),
+        )
+
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")
+        return None

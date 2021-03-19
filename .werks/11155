@@ -6,7 +6,7 @@ Date: 1591078426
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The checks aws_ec2, aws_ec2.cpu_credits, aws_ec2.cpu_util, aws_ec2.disk_io and
 aws_ec2.network_io now go stale instead of to UNKN if the corresponding EC2 instance

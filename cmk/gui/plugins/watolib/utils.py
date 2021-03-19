@@ -8,7 +8,7 @@ import abc
 import os
 import pprint
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from six import ensure_str
 
@@ -19,21 +19,23 @@ from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.utils.html import HTML
 
 
 def wato_fileheader() -> str:
     return "# Created by WATO\n# encoding: utf-8\n\n"
 
 
-class ABCConfigDomain(metaclass=abc.ABCMeta):
+class ABCConfigDomain(abc.ABC):
     needs_sync = True
     needs_activation = True
     always_activate = False
     in_global_settings = True
 
-    @abc.abstractproperty
-    def ident(self):
-        raise NotImplementedError()
+    @classmethod
+    @abc.abstractmethod
+    def ident(cls) -> ConfigDomainName:
+        ...
 
     @classmethod
     def enabled_domains(cls):
@@ -41,7 +43,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
     @classmethod
     def get_always_activate_domain_idents(cls) -> List[ConfigDomainName]:
-        return [d().ident for d in config_domain_registry.values() if d.always_activate]
+        return [d.ident() for d in config_domain_registry.values() if d.always_activate]
 
     @classmethod
     def get_class(cls, ident):
@@ -68,9 +70,9 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
         return os.path.join(self.config_dir(), "global.mk")
 
     def activate(self):
-        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
+        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident())
 
-    def load(self, site_specific=False, custom_site_path=None):
+    def load_full_config(self, site_specific=False, custom_site_path=None):
         filename = Path(self.config_file(site_specific))
         if custom_site_path:
             filename = Path(custom_site_path) / filename.relative_to(cmk.utils.paths.omd_root)
@@ -85,14 +87,13 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
             with filename.open("rb") as f:
                 exec(f.read(), settings, settings)
 
-            # FIXME: Do not modify the dict while iterating over it.
-            for varname in list(settings.keys()):
-                if varname not in config_variable_registry:
-                    del settings[varname]
-
             return settings
+
         except Exception as e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") % (filename, e))
+
+    def load(self, site_specific=False, custom_site_path=None):
+        return filter_unknown_settings(self.load_full_config(site_specific, custom_site_path))
 
     def load_site_globals(self, custom_site_path=None):
         return self.load(site_specific=True, custom_site_path=custom_site_path)
@@ -130,7 +131,7 @@ class ABCConfigDomain(metaclass=abc.ABCMeta):
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
     def plugin_name(self, instance):
-        return instance.ident
+        return instance.ident()
 
 
 config_domain_registry = ConfigDomainRegistry()
@@ -249,6 +250,9 @@ class ConfigVariable:
         """Whether or not to show this option on the global settings page"""
         return True
 
+    def hint(self) -> Union[str, HTML]:
+        return ""
+
 
 class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVariable]]):
     def plugin_name(self, instance):
@@ -256,6 +260,16 @@ class ConfigVariableRegistry(cmk.utils.plugin_registry.Registry[Type[ConfigVaria
 
 
 config_variable_registry = ConfigVariableRegistry()
+
+
+def filter_unknown_settings(settings):
+    removals: List[str] = []
+    for varname in list(settings.keys()):
+        if varname not in config_variable_registry:
+            removals.append(varname)
+    for removal in removals:
+        del settings[removal]
+    return settings
 
 
 def configvar_order():

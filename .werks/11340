@@ -6,7 +6,7 @@ Date: 1596782641
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 At the moment (md-)checks turn md-service into warning state, because they come with "finish" and "speed" values.
 (md-)checks are "By default, run at 00:57 on every Sunday, but do nothing unless the day of the month is less than or equal to 7 [...]".

@@ -6,7 +6,7 @@ Date: 1584431802
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The agent bakery now recognizes files placed under the local hierachy of
 the Checkmk site and packages them as a replacement for the corresponding

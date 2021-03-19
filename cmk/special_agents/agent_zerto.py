@@ -41,7 +41,7 @@ def parse_arguments(argv):
 
     args = parser.parse_args(argv)
 
-    if args.verbose >= 2:
+    if args.verbose and args.verbose >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
     elif args.verbose:

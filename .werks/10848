@@ -6,7 +6,7 @@ Date: 1590590550
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 An configuration directory for mk_oracle has been added.  mk_oracle
 usually reads mk_oracle.cfg. Now it also reads all files with *.cfg from

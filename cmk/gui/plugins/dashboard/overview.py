@@ -26,7 +26,7 @@ class OverviewDashlet(Dashlet):
 
     @classmethod
     def description(cls):
-        return _("Displays an introduction and Check_MK logo.")
+        return _("Displays an introduction and Checkmk logo.")
 
     @classmethod
     def sort_index(cls):

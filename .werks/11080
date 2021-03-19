@@ -6,7 +6,7 @@ Date: 1590489182
 Edition: cre
 Knowledge: undoc
 Level: 3
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Most of Checkmk is written in Python. We have been developing on Python 2 for
 over 10 years now and are now taking the big step of porting Checkmk to Python

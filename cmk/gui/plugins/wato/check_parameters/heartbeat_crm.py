@@ -25,7 +25,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_heartbeat_crm_rules():
     return Dictionary(
-        title=_("Heartbeat CRM Discovery"),
+        title=_("Heartbeat CRM discovery"),
         elements=[
             ("naildown_dc",
              Checkbox(

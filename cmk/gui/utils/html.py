@@ -9,6 +9,10 @@ from typing import Union, Any, Iterable
 HTMLInput = Union["HTML", int, float, None, str]
 
 
+# TODO: In case one tries to __add__ or __iadd__ a str to a HTML object, this should fail by default
+# or, in case we have to be more graceful, we should enforce the escaping of the added str unless
+# one wrapps the str into a HTML object manually. This would enforce the caller to care more
+# explicitly about escaping and would help prevent XSS issues.
 class HTML:
     """HTML code wrapper to prevent escaping
 

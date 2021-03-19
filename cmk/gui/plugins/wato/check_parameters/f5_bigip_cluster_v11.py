@@ -41,5 +41,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_cluster_v11,
-        title=lambda: _("Configuration Sync Status for F5 BigIP devices"),
+        title=lambda: _("F5 BigIP configuration sync status"),
     ))

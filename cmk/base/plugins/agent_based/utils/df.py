@@ -6,26 +6,30 @@
 
 from typing import (
     Any,
-    List,
-    Tuple,
+    Callable,
     Dict,
+    Generator,
+    Mapping,
+    MutableMapping,
     Optional,
+    Set,
+    Sequence,
+    Tuple,
+    Union,
 )
 import fnmatch
-from cmk.base.check_api import savefloat
-from cmk.utils.render import fmt_number_with_precision
-from .size_trend import size_trend
-from ..agent_based_api.v0 import (
-    render,
-    Metric,
-    Result,
-    state,
+from ..agent_based_api.v1.type_defs import CheckResult
+from ..agent_based_api.v1 import (
     check_levels,
+    Metric,
+    render,
+    Result,
+    State,
 )
-from ..agent_based_api.v0.type_defs import (
-    Parameters,
-    ValueStore,
-)
+from .size_trend import size_trend
+
+FSBlock = Tuple[str, float, float, float]
+FSBlocks = Sequence[FSBlock]
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -40,7 +44,28 @@ FILESYSTEM_DEFAULT_LEVELS = {
 }
 
 
-def get_filesystem_levels(size_gb: float, params):
+def savefloat(raw: Any) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.
+
+
+def ungrouped_mountpoints_and_groups(
+    mount_points: Dict[str, Dict],
+    group_patterns: Mapping[str, Tuple[Sequence[str], Sequence[str]]],
+) -> Tuple[Set[str], Dict[str, Set[str]]]:
+    ungrouped_mountpoints = set(mount_points)
+    groups: Dict[str, Set[str]] = {}
+    for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
+        mp_groups = mountpoints_in_group(mount_points, patterns_inlcude, patterns_exclude)
+        if mp_groups:
+            groups[group_name] = mp_groups
+            ungrouped_mountpoints = ungrouped_mountpoints.difference(mp_groups)
+    return ungrouped_mountpoints, groups
+
+
+def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str, Any]:
     """
     >>> from pprint import pprint as pp
     >>> pp(get_filesystem_levels(1234, FILESYSTEM_DEFAULT_LEVELS))
@@ -48,7 +73,7 @@ def get_filesystem_levels(size_gb: float, params):
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
      'levels_mb': (1010892.8, 1137254.4),
-     'levels_text': '(warn/crit at 80.0%/90.0%)',
+     'levels_text': '(warn/crit at 80.00%/90.00%)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
      'show_levels': 'onmagic',
@@ -184,7 +209,11 @@ def get_filesystem_levels(size_gb: float, params):
     return levels
 
 
-def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patterns_exclude: List):
+def mountpoints_in_group(
+    mplist: Dict[str, Dict],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+) -> Set[str]:
     matching_mountpoints = set()
     for mountpoint in mplist:
         if any(
@@ -198,100 +227,95 @@ def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patter
     return matching_mountpoints
 
 
-def _check_inodes(levels: Dict[str, Any], inodes_total: Optional[float],
-                  inodes_avail: Optional[float]):
+def _render_integer(number: float):
+    return render.filesize(number).strip(' B')
+
+
+def _check_inodes(
+    levels: Dict[str, Any],
+    inodes_total: float,
+    inodes_avail: float,
+) -> Generator[Union[Metric, Result], None, None]:
     """
-    >>> from pprint import pprint as pp
-    >>> levels={"inodes_levels":(10, 5),"show_inodes":"onproblem"}
-    >>> pp(list(_check_inodes(levels, 80, 60)))
-    [Result(state=<state.OK: 0>, summary='Inodes Used: 20.00 ', details='Inodes Used: 20.00 '),
-     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
+    >>> levels = {
+    ...     "inodes_levels": (10, 5),
+    ...     "show_inodes": "onproblem",
+    ... }
+    >>> for r in _check_inodes(levels, 80, 60): print(r)
+    Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.00%)')
 
     >>> levels["show_inodes"] = "always"
-    >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<state.OK: 0>, summary='Inodes Used: 60.00 , inodes available: 20.00 /25.0%', \
-details='Inodes Used: 60.00 , inodes available: 20.00 /25.0%'),
-     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))]
+    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
-    >>> pp(list(_check_inodes(levels, 80, 20)))
-    [Result(state=<state.CRIT: 2>, summary='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
-inodes available: 20.00 /25.0%', details='Inodes Used: 60.00  (warn/crit at 40.00 /45.00 ), \
-inodes available: 20.00 /25.0%'),
-     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))]
+    >>> for r in _check_inodes(levels, 80, 20): print(r)
+    Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
+    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
     """
-    if not inodes_total or not inodes_avail:
-        return
-
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 
+    inodes_abs: Optional[Tuple[float, float]] = None
+    human_readable_func: Callable[[Any], str] = _render_integer
     if isinstance(inodes_warn_variant, int):
         # Levels in absolute numbers
         inodes_abs = (
             inodes_total - inodes_warn_variant,
             inodes_total - inodes_crit_variant,
         )
-        human_readable_func = lambda x: fmt_number_with_precision(x)  # pylint: disable=unnecessary-lambda
     elif isinstance(inodes_warn_variant, float):
         # Levels in percent
         inodes_abs = (
             (100 - inodes_warn_variant) / 100.0 * inodes_total,
             (100 - inodes_crit_variant) / 100.0 * inodes_total,
         )
-        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total
-                                                      )  # type: ignore[misc]
-    else:
-        inodes_abs = None  # type: ignore[assignment] # check_levels excepts levels as tuple or None
-        human_readable_func = fmt_number_with_precision
+        human_readable_func = lambda x: render.percent(100.0 * x / inodes_total)
 
-    inode_results = check_levels(
+    inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
         levels_upper=inodes_abs,
         metric_name='inodes_used',
         render_func=human_readable_func,
         boundaries=(0, inodes_total),
-        label="Inodes Used",
+        label="Inodes used",
     )
+    assert isinstance(inode_result, Result)
+    yield inode_metric
 
     # Only show inodes if they are at less then 50%
     show_inodes = levels["show_inodes"]
     inodes_avail_perc = 100.0 * inodes_avail / inodes_total
-    for inode_result in inode_results:
+    inodes_info = "%s, Inodes available: %s (%s)" % (
+        inode_result.summary,
+        _render_integer(inodes_avail),
+        render.percent(inodes_avail_perc),
+    )
 
-        # Modify yielded summary if it is a Result (and not a Metric, which has no summary)
-        if isinstance(inode_result, Result):
-            infotext = (
-                "%s, inodes available: %s/%s" % (
-                    inode_result.summary,
-                    fmt_number_with_precision(inodes_avail),
-                    render.percent(inodes_avail_perc),
-                )  #
-                if any((
-                    show_inodes == "always",
-                    show_inodes == "onlow" and
-                    (int(inode_result.state) > int(state.OK) or inodes_avail_perc < 50),
-                    show_inodes == "onproblem" and int(inode_result.state) > int(state.OK),
-                )) else inode_result.summary)
-            yield Result(state=inode_result.state, summary=infotext)
-        else:
-            yield inode_result
+    if any((
+            show_inodes == "always",
+            show_inodes == "onlow" and inodes_avail_perc < 50,
+    )):
+        yield Result(state=inode_result.state, summary=inodes_info)
+    else:
+        yield Result(state=inode_result.state, notice=inodes_info)
 
 
 def df_check_filesystem_single(
-    value_store: ValueStore,
-    check: str,
+    value_store: MutableMapping[str, Any],
     mountpoint: str,
     size_mb: float,
     avail_mb: float,
     reserved_mb: float,
     inodes_total: Optional[float],
     inodes_avail: Optional[float],
-    params: Parameters,
+    params: Mapping[str, Any],
     this_time=None,
-):
+) -> CheckResult:
     if size_mb == 0:
-        yield Result(state=state.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
         return
 
     # params might still be a tuple
@@ -315,9 +339,9 @@ def df_check_filesystem_single(
     used_max_hr = render.bytes(used_max * 1024**2)
     used_perc_hr = render.percent(100.0 * used_mb / used_max)
 
-    # If both numbers end with the same unit, then drop the first one
-    if used_hr[-2:] == used_max_hr[-2:]:
-        used_hr = used_hr[:-3]
+    # If both strings end with the same unit, then drop the first one
+    if used_hr.split()[1] == used_max_hr.split()[1]:
+        used_hr = used_hr.split()[0]
 
     if warn_mb < 0.0:
         # Negative levels, so user configured thresholds based on space left. Calculate the
@@ -325,18 +349,23 @@ def df_check_filesystem_single(
         crit_mb = used_max + crit_mb
         warn_mb = used_max + warn_mb
 
-    status = state.CRIT if used_mb >= crit_mb else state.WARN if used_mb >= warn_mb else state.OK
+    status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
-    yield Metric("fs_size", size_mb)
-    yield Metric("fs_used_percent", 100.0 * used_mb / size_mb)
+    yield Metric("fs_size", size_mb, boundaries=(0, None))
+    yield Metric(
+        "fs_used_percent",
+        100.0 * used_mb / size_mb,
+        levels=(_mb_to_perc(warn_mb, size_mb), _mb_to_perc(crit_mb, size_mb)),
+        boundaries=(0.0, 100.0),
+    )
 
     # Expand infotext according to current params
     infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
     if (show_levels == "always" or  #
-        (show_levels == "onproblem" and status is not state.OK) or  #
-        (show_levels == "onmagic" and (status is not state.OK or levels.get("magic", 1.0) != 1.0))):
+        (show_levels == "onproblem" and status is not State.OK) or  #
+        (show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0))):
         infotext.append(levels["levels_text"])
-    yield Result(state=status, summary=", ".join(infotext))
+    yield Result(state=status, summary=", ".join(infotext).replace('), (', ', '))
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
@@ -355,8 +384,7 @@ def df_check_filesystem_single(
 
     yield from size_trend(
         value_store=value_store,
-        check=check,
-        item=mountpoint,
+        value_store_key=mountpoint,
         resource="disk",
         levels=levels,
         used_mb=used_mb,
@@ -364,18 +392,18 @@ def df_check_filesystem_single(
         timestamp=this_time,
     )
 
-    yield from _check_inodes(levels, inodes_total, inodes_avail)
+    if inodes_total and inodes_avail is not None:
+        yield from _check_inodes(levels, inodes_total, inodes_avail)
 
 
 def df_check_filesystem_list(
-    value_store: ValueStore,
-    check: str,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
-    fslist_blocks: List[Tuple[str, float, float, float]],
+    params: Mapping[str, Any],
+    fslist_blocks: FSBlocks,
     fslist_inodes=None,
     this_time=None,
-):
+) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
     def group_sum(metric_name, info, mountpoints_group):
         """Calculate sum of named values for matching mount points"""
@@ -405,7 +433,6 @@ def df_check_filesystem_list(
         data, inodes_data = blocks_info.get(item, {}), inodes_info.get(item, {})
         yield from df_check_filesystem_single(
             value_store,
-            check,
             item,
             data["size_mb"],
             data["avail_mb"],
@@ -419,7 +446,7 @@ def df_check_filesystem_list(
 
     matching_mountpoints = mountpoints_in_group(blocks_info, *params["patterns"])
     if not matching_mountpoints:
-        yield Result(state=state.UNKNOWN, summary="No filesystem matching the patterns")
+        yield Result(state=State.UNKNOWN, summary="No filesystem matching the patterns")
         return
 
     total_size_mb = group_sum("size_mb", blocks_info, matching_mountpoints)
@@ -431,7 +458,6 @@ def df_check_filesystem_list(
 
     yield from df_check_filesystem_single(
         value_store,
-        check,
         item,
         total_size_mb,
         total_avail_mb,
@@ -442,4 +468,8 @@ def df_check_filesystem_list(
         this_time,
     )
 
-    yield Result(state=state.OK, summary="%d filesystems" % len(matching_mountpoints))
+    yield Result(state=State.OK, summary="%d filesystems" % len(matching_mountpoints))
+
+
+def _mb_to_perc(value: Optional[float], size_mb: float) -> Optional[float]:
+    return None if value is None else 100.0 * value / size_mb

@@ -84,7 +84,7 @@ def test_package_parts():
                               str(cmk.utils.paths.local_check_manpages_dir)),
         packaging.PackagePart('agents', _('Agents'), str(cmk.utils.paths.local_agents_dir)),
         packaging.PackagePart('web', _('GUI extensions'), str(cmk.utils.paths.local_web_dir)),
-        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates'),
+        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates (deprecated)'),
                               str(cmk.utils.paths.local_pnp_templates_dir)),
         packaging.PackagePart('doc', _('Documentation files'), str(cmk.utils.paths.local_doc_dir)),
         packaging.PackagePart('locales', _('Localizations'), str(cmk.utils.paths.local_locale_dir)),
@@ -287,7 +287,7 @@ def test_remove():
 
 
 def test_unpackaged_files_none():
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': [],
         'agents': [],
         'alert_handlers': [],
@@ -317,7 +317,7 @@ def test_unpackaged_files():
     with p.open("w", encoding="utf-8") as f:
         f.write(u"huhu\n")
 
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': ['dada'],
         'agents': [],
         'alert_handlers': [],

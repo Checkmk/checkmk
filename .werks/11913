@@ -1,0 +1,19 @@
+Title: Fix usage of host custom attribute in service notification bulking
+Class: fix
+Compatible: incompat
+Component: notifications
+Date: 1610450374
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If the option "Create separate notification bulks..." in section "Notification
+Bulking" of notification rules was used for service notifications, the bulk
+mechanism always pointed to the service context to find the host custom
+attributes.
+
+The host custom attributes are now also available for the above scenario.
+
+Please check your notification rules to avoid unwanted bulking because of
+previously non functional configuration.

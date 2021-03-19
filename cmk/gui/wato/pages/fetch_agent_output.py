@@ -17,7 +17,7 @@ import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request as global_request
 from cmk.gui.i18n import _
 from cmk.gui.pages import page_registry, Page
 from cmk.gui.escaping import escape_attribute
@@ -28,6 +28,7 @@ from cmk.gui.watolib import (
     automation_command_registry,
     AutomationCommand,
 )
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 #.
 #   .--Agent-Output--------------------------------------------------------.
@@ -141,18 +142,21 @@ class PageFetchAgentOutput(AgentOutputPage):
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
             raise HTTPRedirect(
-                html.makeuri_contextless([
-                    ("host", self._request.host.name()),
-                    ("type", self._request.agent_type),
-                    ("back_url", self._back_url),
-                ]))
+                makeuri_contextless(
+                    global_request,
+                    [
+                        ("host", self._request.host.name()),
+                        ("type", self._request.agent_type),
+                        ("back_url", self._back_url),
+                    ],
+                ))
 
     def _show_status(self) -> None:
         job_status = self._get_job_status()
 
         html.h3(_("Job status"))
         if job_status["is_active"]:
-            html.immediate_browser_redirect(0.8, html.makeuri([]))
+            html.immediate_browser_redirect(0.8, makeuri(global_request, []))
 
         job = FetchAgentOutputBackgroundJob(self._request)
         gui_background_job.JobRenderer.show_job_details(job.get_job_id(), job_status)
@@ -256,9 +260,11 @@ class FetchAgentOutputBackgroundJob(watolib.WatoBackgroundJob):
                                         AgentOutputPage.file_name(self._request))
         store.save_file(preview_filepath, agent_data)
 
-        download_url = html.makeuri_contextless([("host", self._request.host.name()),
-                                                 ("type", self._request.agent_type)],
-                                                filename="download_agent_output.py")
+        download_url = makeuri_contextless(
+            global_request,
+            [("host", self._request.host.name()), ("type", self._request.agent_type)],
+            filename="download_agent_output.py",
+        )
 
         button = html.render_icon_button(download_url, _("Download"), "agent_output")
         job_interface.send_progress_update(_("Finished. Click on the icon to download the data."))

@@ -1,0 +1,17 @@
+Title: Fix default active time range on iCalendar timeperiod imports
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1613484100
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+If you imported a timeperiod via the option "Import iCalendar" with version 1.6
+upwards, a default active time range was set.
+This could leed to unwanted send notifications. Timeperiods imported with
+version 1.5 are not affected.
+
+From now on there will be no default. Please check your imported timeperiods.

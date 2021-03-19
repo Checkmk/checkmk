@@ -17,7 +17,7 @@ parsed = {u'active': 1, u'failed': 1, u'succeeded': 1}
 
 
 discovery = {
-    '': [(None, {}), HostLabel(u'cmk/kubernetes_object', u'job')]
+    '': [(None, {})]
 }
 
 

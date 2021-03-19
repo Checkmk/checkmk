@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When there were open events in the Event Console that were created by a rule
 that was removed from the Event Console, this resulted in an exception on the

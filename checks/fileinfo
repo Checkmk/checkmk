@@ -27,69 +27,146 @@
 
 import collections
 import typing
+import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 
 fileinfo_groups = []
 
 
-def _get_field(row, index, data_type):
+def _cast_value(value, data_type):
+    '''
+    >>> _cast_value('abc', str)
+    'abc'
+
+    >>> _cast_value('1.5', float)
+    1.5
+
+    >>> _cast_value('blah', int)
+    None
+
+    >>> _cast_value(None, str)
+    None
+    '''
     try:
-        return data_type(row[index])
-    except (IndexError, ValueError, TypeError):
+        return data_type(value)
+    except (ValueError, TypeError):
         return None
 
 
-def _parse_backwards_compatible(info):
-    for row in info[1:]:
-        name = row[0]
+def _get_field(row, index):
+    '''
+    >>> _get_field(['monster', 'truck', 'races'], 1)
+    'truck'
+
+    >>> _get_field([], 5)
+    None
+    '''
+    try:
+        return row[index]
+    except IndexError:
+        return None
+
+
+def _parse_single_legacy_row(row, **kwargs):
+    name = _cast_value(row[0], str)
+    if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
         # support the very old solaris perl based version of fileinfo
-        if not name or name.endswith("No such file or directory"):
-            continue
-        ambiguous = _get_field(row, 1, str)
-        missing = ambiguous == 'missing'
-        failed = ambiguous in ('not readable', '')
-        size = _get_field(row, 1, int)
-        time = _get_field(row, 2, int)
+        return {}
+    file_stats_dict = {
+        'name': name,
+        'size': None,
+        'time': None,
+        'status': 'ok',
+    }
+    size = _get_field(row, 1)
+    if size == 'missing':
+        file_stats_dict['status'] = 'missing'
+        return file_stats_dict
+    if size in ('not readable', ''):
+        file_stats_dict['status'] = 'stat failed'
+        return file_stats_dict
 
-        yield name, missing, failed, size, time
+    file_stats_dict['size'] = _cast_value(size, int)
+    file_stats_dict['time'] = _cast_value(_get_field(row, 2), int)
+    return file_stats_dict
+
+
+def _parse_single_row(row, **kwargs):
+    return dict([(
+        header_stat[0],
+        _cast_value(
+            header_stat[1],
+            kwargs['file_stat_data_types'][header_stat[0]],
+        ),
+    ) for header_stat in zip(kwargs['header'], row)])
+
+
+def _construct_fileinfo_item(name, status, file_stats_dict, FileinfoItem):
+    return FileinfoItem(
+        name,
+        'missing' in status,
+        'stat failed' in status,
+        file_stats_dict.get('size'),
+        file_stats_dict.get('time'),
+    )
 
 
 def parse_fileinfo(info):
     if not info:
         return {}
-    parsed = {'files': {}}
 
-    parsed['reftime'] = _get_field(info[0], 0, int)
+    parsed = {
+        'reftime': _cast_value(info[0][0], int),
+        'files': {},
+    }
+
+    if len(info) == 1:
+        return parsed
 
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
-    # deal with old agents' output:
-    if len(info) > 1 and _get_field(info[1], 0, str) != '[[[header]]]':
-        for args in _parse_backwards_compatible(info):
-            fi = FileinfoItem(*args)
-            parsed['files'][fi.name] = fi
-        return parsed
+    file_stat_data_types = {
+        'name': str,
+        'size': int,
+        'time': int,
+        'status': str,
+    }
 
-    if len(info) < 3:
-        return parsed
-
-    header = info[2]
-    name_i = header.index('name') if 'name' in header else None
-    size_i = header.index('size') if 'size' in header else None
-    time_i = header.index('time') if 'time' in header else None
-    stat_i = header.index('status') if 'status' in header else None
-
-    for row in info[4:]:
-        name = _get_field(row, name_i, str)
-        stat = _get_field(row, stat_i, str)
-        size = _get_field(row, size_i, int)
-        time = _get_field(row, time_i, int)
-
-        if name is None or stat is None:
+    iter_info = iter(info)
+    for row in iter_info:
+        if len(row) == 1:
+            # the validation whether a section is legacy has to be done inside
+            # the loop, because sections might be consolidated, resulting in a
+            # legacy section appended to a current section, or vice versa.
+            # we have seen this when users monitor both SAP HANA and "regular"
+            # files.
+            if row == ['[[[header]]]']:
+                # non-legacy
+                parse_row_func = _parse_single_row
+                header = next(iter_info)
+                continue
+            if row[0].isdigit():
+                # designates a timestamp; if following this there is a header (as above),
+                # the section is not legacy
+                parse_row_func = _parse_single_legacy_row
+                header = None
+                continue
             continue
-
-        fi = FileinfoItem(name, ('missing' in stat), ('stat failed' in stat), size, time)
-        parsed['files'][fi.name] = fi
+        file_stats_dict = parse_row_func(
+            row,
+            header=header,
+            file_stat_data_types=file_stat_data_types,
+        )
+        name = file_stats_dict.get('name')
+        status = file_stats_dict.get('status')
+        if not name or not status:
+            continue
+        parsed['files'][name] = _construct_fileinfo_item(
+            name,
+            status,
+            file_stats_dict,
+            FileinfoItem,
+        )
 
     return parsed
 
@@ -132,7 +209,7 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
 
         if matches:
             for nr, group in enumerate(matches):
-                inclusion = instantiate_regex_pattern_once(inclusion, group)
+                inclusion = eval_regex.instantiate_regex_pattern_once(inclusion, group)
                 group_name = group_name.replace("%%%d" % (nr + 1), group)
 
             this_group_name = group_name % tuple(matches[:num_perc_s])
@@ -260,96 +337,42 @@ def _filename_matches(filename, reftime, inclusion, exclusion):
     return incl_match and not excl_match, date_inclusion
 
 
-def check_fileinfo_groups(_item, params, parsed):
+def _update_minmax(new_value: float, current_minmax: typing.Optional[typing.Tuple[float, float]]):
 
-    outof_range_txt = fileinfo_check_timeranges(params)
-    count_all = 0
-    age_oldest = None
-    age_newest = 0
-    size_all = 0
-    size_smallest = None
-    size_largest = 0
-    date_inclusion = ""
-    include_patterns = set()
-    exclude_patterns = set()
-    files_stat_failed = set()
-    files_matching = {}
+    if not current_minmax:
+        return new_value, new_value
 
-    reftime = parsed.get('reftime')
-    if reftime is None:
-        yield 3, "Missing reference timestamp"
-        return
+    current_min, current_max = current_minmax
 
-    try:
-        group_patterns = set(params['group_patterns'])
-    except KeyError:
-        yield 3, ("No group pattern found in autocheck. Please rediscover the services "
-                  "of this host to get this fixed automatically")
-        return
+    return min(new_value, current_min), max(new_value, current_max)
 
-    # Start counting values on all files
-    for file_stat in parsed['files'].values():
 
-        for pattern in group_patterns:
-            if isinstance(pattern, str):  # support old format
-                pattern = (pattern, '')
-            inclusion, exclusion = pattern
-            include_patterns.add(inclusion)
-            exclude_patterns.add(exclusion)
+def _check_individual_files(params, file_size, file_age):
+    '''This function checks individual files against levels defined for the file group.
+    This is done to generate information for the long output.'''
+    states = []
+    for key, value in [
+        ("age_oldest", file_age),
+        ("age_newest", file_age),
+        ("size_smallest", file_size),
+        ("size_largest", file_size),
+    ]:
+        levels = params.get("max" + key, (None, None)) + params.get("min" + key, (None, None))
+        state, _text, _no_perf = check_levels(value, key, levels)
+        states.append(state)
 
-            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion,
-                                                                 exclusion)
-            if not filename_matches:
-                continue
-            if file_stat.missing:
-                continue
-            if file_stat.failed:
-                files_stat_failed.add(file_stat.name)
-                continue
+    overall_state = max(states)
+    return overall_state, 'Age: %s, Size: %s%s' % (get_age_human_readable(file_age),
+                                                   get_filesize_human_readable(file_size),
+                                                   state_markers[overall_state])
 
-            size_all += file_stat.size
-            if size_smallest is None:
-                size_smallest = file_stat.size
-            else:
-                size_smallest = min(size_smallest, file_stat.size)
-            size_largest = max(size_largest, file_stat.size)
 
-            age = reftime - file_stat.time
-            if age_oldest is None:  # very first match
-                age_oldest = age
-                age_newest = age
-            else:
-                age_oldest = max(age_oldest, age)
-                age_newest = min(age_newest, age)
-            count_all += 1
-
-            # Used for long ouput information
-            for key, value in [
-                ("age_oldest", age),
-                ("age_newest", age),
-                ("size_smallest", file_stat.size),
-                ("size_largest", file_stat.size),
-                ("size", file_stat.size),
-            ]:
-                skip_ok_files = params.get('shorten_multiline_output', False)
-                levels = params.get("max" + key,
-                                    (None, None)) + params.get("min" + key, (None, None))
-                state, _, _ = check_levels(value, key, levels)
-                if skip_ok_files and not state:
-                    continue
-                files_matching.setdefault(file_stat.name, {
-                    "size": file_stat.size,
-                    "age": age,
-                    "states": [],
-                })["states"].append(state)
-
-    if age_oldest is None:
-        age_oldest = 0
-
-    # Start Checking
-    check_definition = [
-        ("Count", "count", count_all, saveint),
-        ("Size", "size", size_all, get_filesize_human_readable),
+def _define_fileinfo_group_check(files_matching, date_inclusion):
+    size_smallest, size_largest = files_matching['size_minmax'] or (None, None)
+    age_newest, age_oldest = files_matching['age_minmax'] or (None, None)
+    return [
+        ("Count", "count", files_matching['count_all'], saveint),
+        ("Size", "size", files_matching['size_all'], get_filesize_human_readable),
         ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
         ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
         ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
@@ -357,27 +380,97 @@ def check_fileinfo_groups(_item, params, parsed):
         ("Date pattern", "date pattern", date_inclusion, str),
     ]
 
+
+def _get_group_patterns_from_extra_conf(item):
+    try:
+        return collections.OrderedDict(host_extra_conf(host_name(), fileinfo_groups)[0]).get(item)
+    except IndexError:
+        return None
+
+
+def check_fileinfo_groups(item, params, parsed):
+
+    outof_range_txt = fileinfo_check_timeranges(params)
+    date_inclusion = None
+    files_stat_failed = set()
+    files_matching = {
+        'count_all': 0,
+        'size_all': 0,
+        'size_minmax': None,
+        'age_minmax': None,
+        'file_text': {},
+    }
+
+    skip_ok_files = params.get('shorten_multiline_output', False)
+
+    reftime = parsed.get('reftime')
+    if reftime is None:
+        yield 3, "Missing reference timestamp"
+        return
+
+    raw_group_patterns = params.get(
+        'group_patterns',
+        # group pattern is not available in autochecks for enforced services
+        _get_group_patterns_from_extra_conf(item),
+    )
+
+    if not raw_group_patterns:
+        yield 3, ("No group pattern found.")
+        return
+
+    group_patterns = set((p, '') if isinstance(p, str) else p for p in raw_group_patterns)
+
+    # Start counting values on all files
+    for file_stat in parsed.get('files', {}).values():
+        if file_stat.missing:
+            continue
+
+        for inclusion, exclusion in group_patterns:
+
+            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion,
+                                                                 exclusion)
+            if not filename_matches:
+                continue
+            if file_stat.failed:
+                files_stat_failed.add(file_stat.name)
+                break
+
+            files_matching['size_all'] += file_stat.size
+            files_matching['count_all'] += 1
+
+            files_matching['size_minmax'] = _update_minmax(file_stat.size,
+                                                           files_matching['size_minmax'])
+
+            age = reftime - file_stat.time
+            files_matching['age_minmax'] = _update_minmax(age, files_matching['age_minmax'])
+
+            # Used for long ouput information
+            state, text = _check_individual_files(params, file_stat.size, age)
+            if not skip_ok_files or state:
+                files_matching['file_text'][file_stat.name] = text
+            break
+
+    # Start Checking
+    check_definition = _define_fileinfo_group_check(files_matching, date_inclusion)
+
     if files_stat_failed:
         yield 1, "Files with unknown stat: %s" % ", ".join(files_stat_failed)
 
-    for res in _fileinfo_check_function(check_definition, params, outof_range_txt):
-        yield res
+    yield from _fileinfo_check_function(check_definition, params, outof_range_txt)
 
-    for res in _fileinfo_check_conjunctions(check_definition, params):
-        yield res
+    yield from _fileinfo_check_conjunctions(check_definition, params)
 
     long_output = []
-    if any(include_patterns):
-        long_output.append("Include patterns: %s" % ", ".join(include_patterns))
+    include_patterns = [i for i, _e in group_patterns]
+    exclude_patterns = [e for _i, e in group_patterns if e != '']
 
-    if any(exclude_patterns):
+    long_output.append("Include patterns: %s" % ", ".join(include_patterns))
+
+    if exclude_patterns:
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
-    for filename, attrs in sorted(iter(files_matching.items()), key=lambda x: x[0]):
-        long_output.append("[%s] Age: %s, Size: %s%s" % \
-                          (filename, get_age_human_readable(attrs["age"]),
-                           get_filesize_human_readable(attrs["size"]),
-                           state_markers[max(attrs["states"])]))
+    long_output.extend(
+        ['[%s] %s' % file_text for file_text in sorted(files_matching['file_text'].items())])
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
@@ -459,5 +552,4 @@ check_info['fileinfo.groups'] = {
     "service_description": "File group %s",
     "has_perfdata": True,
     "group": "fileinfo-groups",
-    "includes": ["eval_regex.include"],
 }

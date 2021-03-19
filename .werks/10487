@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If a host has the tag {{Always use and expect piggback data}} but no piggyback
 data is available the {{Check_MK}} service returns a WARNING.

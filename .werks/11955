@@ -1,0 +1,17 @@
+Title: agent_kubernetes: improved agent set-up rules
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1613724871
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The ruleset "Kubernetes" that is used to set up the Kubernetes special agent
+can be found in Setup > Agents > VM, Cloud, Container. This ruleset now has
+additional options for configuring the API server endpoint. It is possible to
+configure a custom URL to connect to. Alternatively, the DNS hostname or IP
+address can be used automatically for each host, in combination with optional
+parameters for port (default is 443) and path prefix. Please read the help
+text of these options for more information.

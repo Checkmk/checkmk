@@ -50,8 +50,7 @@ else
     EXIT_CODE=$?
 fi
 
-function unmount()
-{
+unmount() {
     target=$1
     umount $target
     if [ $? != 0 ] ; then

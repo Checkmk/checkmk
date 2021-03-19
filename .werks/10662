@@ -6,7 +6,7 @@ Date: 1576510211
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The {{Check_MK Discovery}} service reports an UNKNOWN state due to wrong
 handling of lines with less than three items (IndexError). Moreover if the

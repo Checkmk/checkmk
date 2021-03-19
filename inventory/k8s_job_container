@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inv_k8s_job_container(info, inventory_tree, status_data_tree):
     # Note: This is a stripped-down version of `k8s_pod_container`.
@@ -22,5 +24,4 @@ def inv_k8s_job_container(info, inventory_tree, status_data_tree):
 
 inv_info['k8s_job_container'] = {
     'inv_function': inv_k8s_job_container,
-    'includes': ['k8s.include'],
 }

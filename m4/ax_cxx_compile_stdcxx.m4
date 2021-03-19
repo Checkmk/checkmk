@@ -595,7 +595,7 @@ m4_define([_AX_CXX_COMPILE_STDCXX_testbody_new_in_17], [[
 
 #error "This is not a C++ compiler"
 
-#elif __cplusplus <= 201703L
+#elif __cplusplus < 201703L
 
 #error "This is not a C++17 compiler"
 

@@ -6,7 +6,7 @@ Date: 1594107209
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 After creating a new host in the configuration, the agent baking process for
 the new host is triggered now. When multiple hosts are created at once, for

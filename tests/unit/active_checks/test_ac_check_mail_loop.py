@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access,redefined-outer-name
-import pytest  # type: ignore[import]
-from testlib import import_module  # pylint: disable=import-error
+import pytest
+from testlib import import_module  # type: ignore[import]
+from cmk.utils.mailbox import _active_check_main_core  # type: ignore[import]
 
 
 @pytest.fixture(scope="module")
@@ -15,20 +16,24 @@ def check_mail_loop():
 
 
 def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop):
-    state, info, perf = check_mail_loop.main([
-        '--smtp-server',
-        'foo',
-        '--fetch-server',
-        'bar',
-        '--fetch-username',
-        'baz',
-        '--fetch-password',
-        'passw',
-        '--mail-from',
-        'from',
-        '--mail-to',
-        'to',
-    ])
+    state, info, perf = _active_check_main_core(
+        check_mail_loop.create_argument_parser(),
+        check_mail_loop.check_mail_roundtrip,
+        [
+            '--smtp-server',
+            'foo',
+            '--fetch-server',
+            'bar',
+            '--fetch-username',
+            'baz',
+            '--fetch-password',
+            'passw',
+            '--mail-from',
+            'from',
+            '--mail-to',
+            'to',
+        ],
+    )
     assert state == 3
     assert info.startswith('Failed to')
     assert perf is None
@@ -160,3 +165,23 @@ def test_ac_check_mail_loop(check_mail_loop, warning, critical, expected_mails, 
     assert state == e_state
     assert info == e_info
     assert perf == e_perf
+
+
+@pytest.mark.parametrize(
+    "subject",
+    [
+        "subject",
+        "Re: subject",
+        "WG: subject",
+        "Re: WG: Re: Re: subject",
+        "RE: Wg: re: subject",
+    ],
+)
+def test_regex_pattern(check_mail_loop, subject):
+    assert check_mail_loop._regex_pattern(subject).match(f"{subject} a b").groups() == (
+        "a",
+        "b",
+    )
+
+
+_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])

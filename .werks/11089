@@ -6,7 +6,7 @@ Date: 1588167864
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk fixes a bug with the discovery of AWS ELB/ELBv2 load balancers based
 on load balancer names specified by the user. In the case where both the overall

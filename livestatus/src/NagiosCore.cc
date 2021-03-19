@@ -7,17 +7,13 @@
 
 #include <cstdint>
 #include <cstdlib>
-#include <ctime>
-#include <filesystem>
+#include <map>
 #include <memory>
-#include <ostream>
 #include <utility>
 
-#include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"
 #include "Logger.h"
+#include "NagiosGlobals.h"
 #include "StringUtils.h"
-#include "contact_fwd.h"
 #include "pnp4nagios.h"
 
 void NagiosPaths::dump(Logger *logger) const {
@@ -31,16 +27,19 @@ void NagiosPaths::dump(Logger *logger) const {
     Notice(logger) << "rrdcached socket path = '" << _rrdcached_socket << "'";
 }
 
-NagiosCore::NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
-                       NagiosAuthorization authorization,
-                       Encoding data_encoding)
-    : _logger_livestatus(Logger::getLogger("cmk.livestatus"))
+NagiosCore::NagiosCore(
+    std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+    std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+    NagiosPaths paths, const NagiosLimits &limits,
+    NagiosAuthorization authorization, Encoding data_encoding)
+    : _downtimes{downtimes}
+    , _comments{comments}
+    , _logger_livestatus(Logger::getLogger("cmk.livestatus"))
     , _paths(std::move(paths))
     , _limits(limits)
     , _authorization(authorization)
     , _data_encoding(data_encoding)
     , _store(this) {
-    extern host *host_list;
     for (host *hst = host_list; hst != nullptr; hst = hst->next) {
         if (const char *address = hst->address) {
             _hosts_by_designation[mk::unsafe_tolower(address)] = hst;
@@ -83,7 +82,8 @@ const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
 }
 
 bool NagiosCore::host_has_contact(const Host *host, const Contact *contact) {
-    return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
+    return is_authorized_for(serviceAuthorization(), toImpl(contact),
+                             toImpl(host), nullptr);
 }
 
 bool NagiosCore::is_contact_member_of_contactgroup(const ContactGroup *group,
@@ -97,13 +97,11 @@ bool NagiosCore::is_contact_member_of_contactgroup(const ContactGroup *group,
 std::chrono::system_clock::time_point NagiosCore::last_logfile_rotation() {
     // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
     // instead of this 'extern' hack...
-    extern time_t last_log_rotation;
     return std::chrono::system_clock::from_time_t(last_log_rotation);
 }
 
 std::chrono::system_clock::time_point NagiosCore::last_config_change() {
     // NOTE: Nagios doesn't reload, it restarts for config changes.
-    extern time_t program_start;
     return std::chrono::system_clock::from_time_t(program_start);
 }
 
@@ -120,7 +118,6 @@ Command NagiosCore::find_command(const std::string &name) const {
 }
 
 std::vector<Command> NagiosCore::commands() const {
-    extern command *command_list;
     std::vector<Command> commands;
     for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
         commands.push_back({cmd->name, cmd->command_line});
@@ -157,27 +154,35 @@ bool NagiosCore::mkeventdEnabled() {
 std::filesystem::path NagiosCore::mkeventdSocketPath() const {
     return _paths._mkeventd_socket;
 }
+
 std::filesystem::path NagiosCore::mkLogwatchPath() const {
     return _paths._mk_logwatch;
 }
+
 std::filesystem::path NagiosCore::mkInventoryPath() const {
     return _paths._mk_inventory;
 }
+
 std::filesystem::path NagiosCore::structuredStatusPath() const {
     return _paths._structured_status;
 }
+
 std::filesystem::path NagiosCore::crashReportPath() const {
     return _paths._crash_reports_path;
 }
-std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
-std::filesystem::path NagiosCore::historyFilePath() const {
-    extern char *log_file;
-    return log_file;
+
+std::filesystem::path NagiosCore::licenseUsageHistoryPath() const {
+    return _paths._license_usage_history_path;
 }
+
+std::filesystem::path NagiosCore::pnpPath() const { return _paths._pnp; }
+
+std::filesystem::path NagiosCore::historyFilePath() const { return log_file; }
+
 std::filesystem::path NagiosCore::logArchivePath() const {
-    extern char *log_archive_path;
     return log_archive_path;
 }
+
 std::filesystem::path NagiosCore::rrdcachedSocketPath() const {
     return _paths._rrdcached_socket;
 }
@@ -264,19 +269,10 @@ bool NagiosCore::answerRequest(InputBuffer &input, OutputBuffer &output) {
     return _store.answerRequest(input, output);
 }
 
-void NagiosCore::registerDowntime(nebstruct_downtime_data *data) {
-    _store.registerDowntime(data);
-}
-
-void NagiosCore::registerComment(nebstruct_comment_data *data) {
-    _store.registerComment(data);
-}
-
 std::vector<DowntimeData> NagiosCore::downtimes_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<DowntimeData> result;
-    for (const auto &entry : _store._downtimes) {
-        auto *dt = static_cast<Downtime *>(entry.second.get());
+    for (const auto &[id, dt] : _downtimes) {
         if (dt->_host == h && dt->_service == s) {
             result.push_back({
                 dt->_id,
@@ -299,8 +295,7 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
 std::vector<CommentData> NagiosCore::comments_for_object(
     const ::host *h, const ::service *s) const {
     std::vector<CommentData> result;
-    for (const auto &entry : _store._comments) {
-        auto *co = static_cast<Comment *>(entry.second.get());
+    for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
             result.push_back(
                 {co->_id, co->_author_name, co->_comment,

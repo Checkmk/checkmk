@@ -33,5 +33,5 @@ rulespec_registry.register(
         check_group_name="vms_procs",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vms_procs,
-        title=lambda: _("Number of processes on OpenVMS"),
+        title=lambda: _("OpenVMS processes"),
     ))

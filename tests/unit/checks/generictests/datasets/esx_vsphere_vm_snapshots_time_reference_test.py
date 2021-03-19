@@ -24,7 +24,8 @@ discovery = {
     'mounted_devices': [],
     'name': [],
     'running_on': [],
-    'snapshots': [(None, {})]
+    'snapshots': [(None, {})],
+    'snapshots_summary': [(None, {})],
 }
 
 checks = {

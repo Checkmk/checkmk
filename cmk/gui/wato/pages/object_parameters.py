@@ -119,7 +119,7 @@ class ModeObjectParameters(WatoMode):
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(rulespec_registry.get_by_group(groupname),
-                                   key=lambda x: x.title):
+                                   key=lambda x: x.title or ""):
                 if (rulespec.item_type == 'service') == (not self._service):
                     continue  # This rule is not for hosts/services
 
@@ -264,7 +264,7 @@ class ModeObjectParameters(WatoMode):
                     None,
                     _("Failed to determine origin rule of %s / %s") %
                     (self._hostname, self._service))
-            rule_folder, rule_index, _rule = origin_rule_result
+            rule_folder, rule_index, rule = origin_rule_result
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),
@@ -273,7 +273,7 @@ class ModeObjectParameters(WatoMode):
             url = watolib.folder_preserving_link([('mode', 'edit_rule'),
                                                   ('varname', "custom_checks"),
                                                   ('rule_folder', rule_folder.path()),
-                                                  ('rulenr', rule_index), ('host', self._hostname)])
+                                                  ('rule_id', rule.id), ('host', self._hostname)])
 
             html.open_table(class_="setting")
             html.open_tr()
@@ -360,12 +360,12 @@ class ModeObjectParameters(WatoMode):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
-        def rule_url(rule):
+        def rule_url(rule: Rule) -> str:
             return watolib.folder_preserving_link([
                 ('mode', 'edit_rule'),
                 ('varname', varname),
                 ('rule_folder', rule.folder.path()),
-                ('rulenr', rule.index()),
+                ('rule_id', rule.id),
                 ('host', self._hostname),
                 ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
                 ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
@@ -473,7 +473,7 @@ class ModeObjectParameters(WatoMode):
             # Binary rule, no valuespec, outcome is True or False
             else:
                 icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else '')
-                html.icon(title=_("yes") if setting else _("no"), icon=icon_name)
+                html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Within the ruleset {{Status of the Checkmk services}} there's a parameter
 {{State in case of restricted address missmatch}} where you can overwrite the

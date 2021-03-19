@@ -259,7 +259,6 @@ def test_get_integer_input_mandatory_not_a_number():
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
-    assert html.request.get_cookie_names() == ["cookie1"]
     assert html.request.has_cookie("cookie1")
     assert not html.request.has_cookie("cookie2")
     #TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
@@ -301,7 +300,7 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
             "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
 
 
-# User IDs in Check_MK may contain non ascii characters. When they need to be encoded,
+# User IDs in Checkmk may contain non ascii characters. When they need to be encoded,
 # they are encoded in UTF-8. Since this is possible the user names in the cookies directly
 # contain those UTF-8 encoded user names.
 # Until we decide that distributed setups between the current version and the previous

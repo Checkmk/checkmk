@@ -16,7 +16,7 @@ info = [
     [u'10', u'2', u'Baz', u'1.3.5.7', u'Model'],
 ]
 
-discovery = {'': [(u'1', None), (u'2', None), (u'10', None)]}
+discovery = {'': [(u'1', {}), (u'2', {}), (u'10', {})]}
 
 checks = {
     '': [

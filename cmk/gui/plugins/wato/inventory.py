@@ -41,7 +41,7 @@ class RulespecGroupInventory(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configuration of the Check_MK Hardware and Software Inventory System")
+        return _("Configuration of the Checkmk Hardware and Software Inventory System")
 
 
 def _valuespec_active_checks_cmk_inv():

@@ -13,42 +13,8 @@
 namespace cma {
 
 TEST(ObjectRepo, CheckShared) {
-    EXPECT_NO_THROW({
-        MicroRepo<int> f;
-        f.addObject("a", new int(90));
-    });  //
-
     MicroRepo<int> f;
     EXPECT_TRUE(f.count() == 0);
-    f.addObject("a", new int(11));
-    EXPECT_TRUE(f.count() == 1);
-    EXPECT_FALSE(f.removeObject("b"));
-
-    {
-        auto good = f.getObject("a");
-        ASSERT_TRUE(good);
-        EXPECT_TRUE(*good == 11);
-
-        auto bad = f.getObject("b");
-        EXPECT_TRUE(bad == nullptr);
-    }
-
-    f.addObject("a", new int(13));
-    EXPECT_TRUE(f.count() == 1);
-    {
-        auto good = f.getObject("a");
-        ASSERT_TRUE(good);
-        EXPECT_TRUE(*good == 13);
-    }
-
-    {
-        f.removeObject("a");
-        auto good = f.getObject("a");
-        ASSERT_FALSE(good);
-        EXPECT_FALSE(f.removeObject("a"));
-        EXPECT_TRUE(f.count() == 0);
-    }
-
     MicroRepo<std::string> fs;
     auto s = fs.createObject("a", "a string");
     ASSERT_TRUE(s);

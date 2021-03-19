@@ -18,7 +18,7 @@ from cmk.gui.plugins.wato import (
 
 from cmk.gui.plugins.wato.check_parameters.db_jobs import (
     run_duration,
-    consider_db_status,
+    ignore_db_status,
     status_disabled_jobs,
     status_missing_jobs,
     missinglog,
@@ -40,7 +40,7 @@ def _parameter_valuespec_oracle_jobs():
                "compared to a cron job on Unix. "),
         elements=[
             ("run_duration", run_duration),
-            ("disabled", consider_db_status),
+            ("disabled", ignore_db_status),
             ("status_disabled_jobs", status_disabled_jobs),
             ("status_missing_jobs", status_missing_jobs),
             ("missinglog", missinglog),

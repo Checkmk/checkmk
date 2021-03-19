@@ -6,7 +6,7 @@ Date: 1579093493
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the averaging option of the WATO rule "Main memory usage (UNIX / Other Devices)"
 was not supported by the check plugin.

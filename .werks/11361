@@ -6,7 +6,7 @@ Date: 1596798161
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Up to now, the discovery of network interfaces and switch ports was controlled by
 two main rules: "Network Interface and Switch Port Discovery" (discovery of single

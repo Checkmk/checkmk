@@ -11,7 +11,7 @@ from typing import Dict, List
 from importlib import import_module
 
 import pytest  # type: ignore[import]
-from testlib import cmk_path
+from testlib import cmk_path  # type: ignore[import]
 
 # TODO: Actually fix this stuff.
 NOT_TESTED_YET = {
@@ -22,7 +22,6 @@ NOT_TESTED_YET = {
     'agent_ddn_s2a',
     'agent_emcvnx',
     'agent_hp_msa',
-    'agent_innovaphone',
     'agent_ipmi_sensors',
     'agent_jolokia',
     'agent_netapp',
@@ -68,16 +67,21 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_ibmsvc': ['HOSTNAME'],
     'agent_jenkins': ['HOSTNAME'],
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
-    'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
+    'agent_kubernetes': [
+        '--token', 'TOKEN', '--infos', 'INFOS', '--api-server-endpoint', 'ENDPOINT'
+    ],
     'agent_prometheus': [],
     'agent_rabbitmq': [
         '-P', 'PROTOCOL', '-m', 'SECTIONS', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'
     ],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
-    'agent_proxmox': ['HOSTNAME'],
+    'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
+    'agent_innovaphone': [
+        '--debug', '--verbose', '--vcrtrace', 'TRACEFILE', 'User', 'MyPass', 'Hostname'
+    ],
 }
 
 

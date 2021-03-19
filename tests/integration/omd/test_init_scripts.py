@@ -20,6 +20,7 @@ def test_init_scripts(site):
         "rrdcached",
         "xinetd",
         "stunnel",
+        "redis",
     ]
 
     if site.version.edition() == "enterprise":

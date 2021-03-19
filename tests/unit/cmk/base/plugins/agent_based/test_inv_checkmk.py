@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Dict
 
 import pytest  # type: ignore[import]
 
@@ -14,6 +15,7 @@ SECTION_LIVESTATUS_STATUS = {
         'accept_passive_host_checks': '1',
         'accept_passive_service_checks': '1',
         'average_latency_cmk': '0.456069',
+        'average_latency_fetcher': '0.456069',
         'average_latency_generic': '0.83618',
         'average_latency_real_time': '0',
         'cached_log_messages': '86',
@@ -37,6 +39,8 @@ SECTION_LIVESTATUS_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '0.00172541',
+        'helper_usage_checker': '0.00172541',
+        'helper_usage_fetcher': '0.00172541',
         'helper_usage_generic': '6.34573e-14',
         'helper_usage_real_time': '0',
         'host_checks': '820',
@@ -51,7 +55,7 @@ SECTION_LIVESTATUS_STATUS = {
         'livestatus_overflows_rate': '0',
         'livestatus_queued_connections': '0',
         'livestatus_threads': '20',
-        'livestatus_usage': '2.23431e-13',
+        'livestatus_usage': '0.0',
         'livestatus_version': '2020.08.20',
         'log_messages': '58',
         'log_messages_rate': '0.00679318',
@@ -77,6 +81,7 @@ SECTION_LIVESTATUS_STATUS = {
         'accept_passive_host_checks': '1',
         'accept_passive_service_checks': '1',
         'average_latency_cmk': '2.93392e-05',
+        'average_latency_fetcher': '2.93392e-05',
         'average_latency_generic': '6.15271e-06',
         'average_latency_real_time': '0',
         'cached_log_messages': '848',
@@ -100,6 +105,8 @@ SECTION_LIVESTATUS_STATUS = {
         'forks_rate': '0',
         'has_event_handlers': '0',
         'helper_usage_cmk': '0.00377173',
+        'helper_usage_fetcher': '0.00377173',
+        'helper_usage_checker': '0.00377173',
         'helper_usage_generic': '3.45846e-323',
         'helper_usage_real_time': '0',
         'host_checks': '182590',
@@ -114,7 +121,7 @@ SECTION_LIVESTATUS_STATUS = {
         'livestatus_overflows_rate': '0',
         'livestatus_queued_connections': '0',
         'livestatus_threads': '20',
-        'livestatus_usage': '3.45846e-323',
+        'livestatus_usage': '0.0',
         'livestatus_version': '1.6.0-2020.08.18',
         'log_messages': '706',
         'log_messages_rate': '0.075',
@@ -137,7 +144,7 @@ SECTION_LIVESTATUS_STATUS = {
         'service_checks_rate': '2.28431'
     }
 }
-SECTION_OMD_STATUS = {
+SECTION_OMD_STATUS: Dict[str, Dict[str, Any]] = {
     'cisco': {
         'stopped': [
             'mkeventd', 'liveproxyd', 'mknotifyd', 'rrdcached', 'cmc', 'apache', 'dcd', 'crontab'
@@ -216,8 +223,8 @@ SECTION_OMD_INFO = {
 
 MERGED_SECTION_ENTERPRISE = {
     'check_mk': {
-        'num_sites': '3',
-        'num_versions': '5'
+        'num_sites': 3,
+        'num_versions': 5
     },
     'sites': {
         'cisco': {
@@ -245,13 +252,15 @@ MERGED_SECTION_ENTERPRISE = {
             },
             'status_columns': {
                 'apache': 'running',
-                'check_helper_usage': '0.00%',
-                'check_mk_helper_usage': '0.17%',
+                'check_helper_usage': 6.34573e-12,
+                'check_mk_helper_usage': 0.172541,
+                'fetcher_helper_usage': 0.172541,
+                'checker_helper_usage': 0.172541,
                 'cmc': 'running',
                 'crontab': 'running',
                 'dcd': 'running',
                 'liveproxyd': 'running',
-                'livestatus_usage': '0.00%',
+                'livestatus_usage': 0.0,
                 'mkeventd': 'running',
                 'mknotifyd': 'running',
                 'num_hosts': '1',
@@ -268,13 +277,15 @@ MERGED_SECTION_ENTERPRISE = {
             },
             'status_columns': {
                 'apache': 'running',
-                'check_helper_usage': '0.00%',
-                'check_mk_helper_usage': '0.38%',
+                'check_helper_usage': 3.46e-321,
+                'check_mk_helper_usage': 0.377173,
+                'fetcher_helper_usage': 0.377173,
+                'checker_helper_usage': 0.377173,
                 'cmc': 'running',
                 'crontab': 'running',
                 'dcd': 'running',
                 'liveproxyd': 'running',
-                'livestatus_usage': '0.00%',
+                'livestatus_usage': 0.0,
                 'mkeventd': 'running',
                 'mknotifyd': 'running',
                 'num_hosts': '2',
@@ -321,8 +332,8 @@ MERGED_SECTION_ENTERPRISE = {
 
 MERGED_SECTION_RAWEDITION = {
     'check_mk': {
-        'num_sites': '3',
-        'num_versions': '5'
+        'num_sites': 3,
+        'num_versions': 5
     },
     'sites': {
         'cisco': {
@@ -348,10 +359,12 @@ MERGED_SECTION_RAWEDITION = {
             },
             'status_columns': {
                 'apache': 'running',
-                'check_helper_usage': '0.00%',
-                'check_mk_helper_usage': '0.17%',
+                'check_helper_usage': 6.34573e-12,
+                'check_mk_helper_usage': 0.172541,
+                'fetcher_helper_usage': 0.172541,
+                'checker_helper_usage': 0.172541,
                 'crontab': 'running',
-                'livestatus_usage': '0.00%',
+                'livestatus_usage': 0.0,
                 'mkeventd': 'running',
                 'nagios': 'not existent',
                 'npcd': 'not existent',
@@ -369,10 +382,12 @@ MERGED_SECTION_RAWEDITION = {
             },
             'status_columns': {
                 'apache': 'running',
-                'check_helper_usage': '0.00%',
-                'check_mk_helper_usage': '0.38%',
+                'check_helper_usage': 3.46e-321,
+                'check_mk_helper_usage': 0.377173,
+                'fetcher_helper_usage': 0.377173,
+                'checker_helper_usage': 0.377173,
                 'crontab': 'running',
-                'livestatus_usage': '0.00%',
+                'livestatus_usage': 0.0,
                 'mkeventd': 'running',
                 'nagios': 'not existent',
                 'npcd': 'not existent',
@@ -419,8 +434,10 @@ MERGED_SECTION_RAWEDITION = {
 }
 
 
-@pytest.mark.parametrize("is_raw_edition, merged_sections", [(False, MERGED_SECTION_ENTERPRISE),
-                                                             (True, MERGED_SECTION_RAWEDITION)])
+@pytest.mark.parametrize("is_raw_edition, merged_sections", [
+    (False, MERGED_SECTION_ENTERPRISE),
+    (True, MERGED_SECTION_RAWEDITION),
+])
 def test_merge_sections(monkeypatch, is_raw_edition, merged_sections):
     monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
     assert merged_sections == inv_checkmk.merge_sections(SECTION_LIVESTATUS_STATUS,
@@ -457,13 +474,15 @@ def test_inventory_checkmk():
                  },
                  status_columns={
                      'apache': 'running',
-                     'check_helper_usage': '0.00%',
-                     'check_mk_helper_usage': '0.17%',
+                     'check_helper_usage': 6.34573e-12,
+                     'check_mk_helper_usage': 0.172541,
+                     'fetcher_helper_usage': 0.172541,
+                     'checker_helper_usage': 0.172541,
                      'cmc': 'running',
                      'crontab': 'running',
                      'dcd': 'running',
                      'liveproxyd': 'running',
-                     'livestatus_usage': '0.00%',
+                     'livestatus_usage': 0.0,
                      'mkeventd': 'running',
                      'mknotifyd': 'running',
                      'num_hosts': '1',
@@ -480,13 +499,15 @@ def test_inventory_checkmk():
                  },
                  status_columns={
                      'apache': 'running',
-                     'check_helper_usage': '0.00%',
-                     'check_mk_helper_usage': '0.38%',
+                     'check_helper_usage': 3.46e-321,
+                     'check_mk_helper_usage': 0.377173,
+                     'fetcher_helper_usage': 0.377173,
+                     'checker_helper_usage': 0.377173,
                      'cmc': 'running',
                      'crontab': 'running',
                      'dcd': 'running',
                      'liveproxyd': 'running',
-                     'livestatus_usage': '0.00%',
+                     'livestatus_usage': 0.0,
                      'mkeventd': 'running',
                      'mknotifyd': 'running',
                      'num_hosts': '2',
@@ -542,8 +563,8 @@ def test_inventory_checkmk():
                  status_columns={}),
         Attributes(path=['software', 'applications', 'check_mk'],
                    inventory_attributes={
-                       'num_versions': '5',
-                       'num_sites': '3'
+                       'num_versions': 5,
+                       'num_sites': 3
                    },
                    status_attributes={}),
     ]

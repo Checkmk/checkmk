@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# yapf: disable
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
 
@@ -14,7 +13,12 @@ import cmk.gui.wato
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import request
+from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
 from cmk.gui.watolib.rulespecs import (
+    CheckParameterRulespecWithoutItem,
+    main_module_from_rulespec_group_name,
+    MatchItemGeneratorRules,
     rulespec_group_registry,
     RulespecGroupRegistry,
     RulespecGroup,
@@ -23,9 +27,11 @@ from cmk.gui.watolib.rulespecs import (
     HostRulespec,
     rulespec_registry,
     CheckTypeGroupSelection,
-    RulespecGroupManualChecks,
+    RulespecGroupEnforcedServices,
     ManualCheckParameterRulespec,
 )
+from cmk.gui.watolib.search import MatchItem
+from cmk.gui.utils.urls import makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Dictionary,
     Tuple,
@@ -38,6 +44,7 @@ from cmk.gui.plugins.wato.utils import (
     register_check_parameters,
     TimeperiodValuespec,
 )
+from cmk.gui.plugins.wato.utils.main_menu import ABCMainModule, MainModuleTopicHosts
 
 
 def test_rulespec_sub_group():
@@ -186,9 +193,7 @@ def test_grouped_rulespecs():
             'agent_config:win_printers',
             'agent_config:mcafee_av_client',
         ],
-        'agents/windows_modules': [
-            'agent_config:install_python',
-        ],
+        'agents/windows_modules': ['agent_config:install_python',],
         'datasource_programs': [
             'datasource_programs',
             'special_agents:ddn_s2a',
@@ -1233,12 +1238,13 @@ def test_grouped_rulespecs():
             'snmp_character_encodings',
             'snmp_check_interval',
             'bulkwalk_hosts',
+            'management_bulkwalk_hosts',
             'snmp_bulk_size',
             'snmp_without_sys_descr',
             'snmpv2c_hosts',
             'snmpv3_contexts',
             'snmp_timing',
-            'non_inline_snmp_hosts',
+            'snmp_backend_hosts',
             'usewalk_hosts',
             'snmp_ports',
             'snmp_limit_oid_range',
@@ -1260,53 +1266,63 @@ def test_grouped_rulespecs():
 
 def _expected_rulespec_group_choices():
     expected = [
-        ('activechecks', u'Check networking services'),
+        ('activechecks', u'HTTP, TCP, Email, ...'),
         ('agent', u'Access to Agents'),
-        ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Check_MK Agent'),
+        ('agent/check_mk_agent', u'&nbsp;&nbsp;\u2319 Checkmk agent'),
         ('agent/general_settings', u'&nbsp;&nbsp;\u2319 General Settings'),
-        ('agents', u'Monitoring Agents'),
+        ('agents', u'Agent rules'),
         ('agents/generic_options', u'&nbsp;&nbsp;\u2319 Generic Options'),
-        ('checkparams', u'Parameters for discovered services'),
-        ('checkparams/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
-        ('checkparams/discovery', u'&nbsp;&nbsp;\u2319 Discovery - automatic service detection'),
-        ('checkparams/networking', u'&nbsp;&nbsp;\u2319 Networking'),
-        ('checkparams/os', u'&nbsp;&nbsp;\u2319 Operating System Resources'),
-        ('checkparams/printers', u'&nbsp;&nbsp;\u2319 Printers'),
-        ('checkparams/storage', u'&nbsp;&nbsp;\u2319 Storage, Filesystems and Files'),
-        ('checkparams/environment',
-         u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
-        ('checkparams/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
-        ('checkparams/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
+        ('checkparams', u'Service discovery rules'),
+        ('checkparams/discovery', u'&nbsp;&nbsp;\u2319 Discovery of individual services'),
+        ('checkparams/inventory_and_check_mk_settings',
+         u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
         ('datasource_programs', u'Other integrations'),
-        ('eventconsole', u'Event Console'),
-        ('grouping', u'Grouping'),
+        ('eventconsole', u'Event Console rules'),
         ('inventory', u'Hardware / Software Inventory'),
         ('host_monconf', u'Host monitoring rules'),
         ('host_monconf/host_checks', u'&nbsp;&nbsp;\u2319 Host checks'),
         ('host_monconf/host_notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
         ('host_monconf/host_various', u'&nbsp;&nbsp;\u2319 Various'),
         ('monconf', u'Service monitoring rules'),
-        ('monconf/inventory_and_check_mk_settings',
-         u'&nbsp;&nbsp;\u2319 Discovery and Checkmk settings'),
+        ('monconf/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
+        ('monconf/networking', u'&nbsp;&nbsp;\u2319 Networking'),
+        ('monconf/os', u'&nbsp;&nbsp;\u2319 Operating System Resources'),
+        ('monconf/printers', u'&nbsp;&nbsp;\u2319 Printers'),
+        ('monconf/storage', u'&nbsp;&nbsp;\u2319 Storage, Filesystems and Files'),
+        ('monconf/environment',
+         u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
+        ('monconf/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
+        ('monconf/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
         ('monconf/notifications', u'&nbsp;&nbsp;\u2319 Notifications'),
         ('monconf/service_checks', u'&nbsp;&nbsp;\u2319 Service Checks'),
         ('monconf/various', u'&nbsp;&nbsp;\u2319 Various'),
-        ('user_interface', u'User Interface'),
-        ('bi', 'Check state of BI aggregations'),
-        ('custom_checks', 'Integrate Nagios plugins'),
-        ('custom_integrations', 'Custom integrations'),
-        ('snmp', 'SNMP settings'),
+        ('custom_checks', 'Other services'),
+        ('datasource_programs/apps', '&nbsp;&nbsp;⌙ Applications'),
+        ('datasource_programs/cloud', '&nbsp;&nbsp;⌙ Cloud based environments'),
+        ('datasource_programs/custom', '&nbsp;&nbsp;⌙ Custom integrations'),
+        ('datasource_programs/hw', '&nbsp;&nbsp;⌙ Hardware'),
+        ('datasource_programs/os', '&nbsp;&nbsp;⌙ Operating systems'),
+        ('datasource_programs/testing', '&nbsp;&nbsp;⌙ Testing'),
+        ('snmp', 'SNMP rules'),
+        ('static', 'Enforced services'),
+        ('static/applications', '&nbsp;&nbsp;⌙ Applications, Processes & Services'),
+        ('static/environment', '&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc.'),
+        ('static/hardware', '&nbsp;&nbsp;⌙ Hardware, BIOS'),
+        ('static/networking', '&nbsp;&nbsp;⌙ Networking'),
+        ('static/os', '&nbsp;&nbsp;⌙ Operating System Resources'),
+        ('static/printers', '&nbsp;&nbsp;⌙ Printers'),
+        ('static/storage', '&nbsp;&nbsp;⌙ Storage, Filesystems and Files'),
+        ('static/virtualization', '&nbsp;&nbsp;⌙ Virtualization'),
         ('vm_cloud_container', 'VM, Cloud, Container'),
     ]
 
     if not cmk_version.is_raw_edition():
         expected += [
-        ('agents/agent_plugins', u'&nbsp;&nbsp;\u2319 Agent Plugins'),
-        ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
-        ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
-        ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
-        ('agents/windows_modules', u'&nbsp;&nbsp;\u2319 Windows Modules'),
-
+            ('agents/agent_plugins', u'&nbsp;&nbsp;\u2319 Agent Plugins'),
+            ('agents/automatic_updates', u'&nbsp;&nbsp;\u2319 Automatic Updates'),
+            ('agents/linux_agent', u'&nbsp;&nbsp;\u2319 Linux Agent'),
+            ('agents/windows_agent', u'&nbsp;&nbsp;\u2319 Windows Agent'),
+            ('agents/windows_modules', u'&nbsp;&nbsp;\u2319 Windows Modules'),
         ]
 
     return expected
@@ -1314,21 +1330,9 @@ def _expected_rulespec_group_choices():
 
 @pytest.mark.parametrize("mode,result", [
     ("rulesets", _expected_rulespec_group_choices()),
-    ("static_checks", [
-        ('static', u'Manual services'),
-        ('static/applications', u'&nbsp;&nbsp;\u2319 Applications, Processes & Services'),
-        ('static/hardware', u'&nbsp;&nbsp;\u2319 Hardware, BIOS'),
-        ('static/networking', u'&nbsp;&nbsp;\u2319 Networking'),
-        ('static/os', u'&nbsp;&nbsp;\u2319 Operating System Resources'),
-        ('static/printers', u'&nbsp;&nbsp;\u2319 Printers'),
-        ('static/storage', u'&nbsp;&nbsp;\u2319 Storage, Filesystems and Files'),
-        ('static/environment',
-         u'&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.'),
-        ('static/virtualization', u'&nbsp;&nbsp;\u2319 Virtualization'),
-    ]),
 ])
 def test_rulespec_group_choices(mode, result):
-    assert sorted(rulespec_group_registry.get_group_choices(mode=mode)) == sorted(result)
+    assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
 @pytest.mark.parametrize("term,result", [
@@ -1340,13 +1344,19 @@ def test_rulespec_group_choices(mode, result):
     ]),
     ("monconf", [
         'monconf',
-        'monconf/inventory_and_check_mk_settings',
+        'monconf/applications',
+        'monconf/environment',
+        'monconf/hardware',
+        'monconf/networking',
         'monconf/notifications',
+        'monconf/os',
+        'monconf/printers',
         'monconf/service_checks',
+        'monconf/storage',
         'monconf/various',
+        'monconf/virtualization',
     ]),
     ("monconf/various", ["monconf/various"]),
-    ("user_interface", ["user_interface"]),
     ("agent", [
         'agent',
         'agent/check_mk_agent',
@@ -1363,10 +1373,8 @@ def test_rulespec_get_main_groups():
     ]
     assert sorted(main_group_names) == sorted([
         'activechecks',
-        'grouping',
         'monconf',
         'host_monconf',
-        'user_interface',
         'agent',
         'agents',
         'checkparams',
@@ -1374,9 +1382,7 @@ def test_rulespec_get_main_groups():
         'datasource_programs',
         'inventory',
         'eventconsole',
-        'bi',
         'custom_checks',
-        'custom_integrations',
         'snmp',
         'vm_cloud_container',
     ])
@@ -1385,52 +1391,51 @@ def test_rulespec_get_main_groups():
 def test_rulespec_get_all_groups():
     expected_rulespec_groups = [
         'activechecks',
-        'grouping',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',
+        'monconf/applications',
+        'monconf/environment',
+        'monconf/hardware',
         'monconf/service_checks',
+        'monconf/networking',
         'monconf/notifications',
-        'monconf/inventory_and_check_mk_settings',
+        'monconf/os',
+        'monconf/printers',
+        'monconf/storage',
         'monconf/various',
-        'user_interface',
         'agent/general_settings',
         'agent/check_mk_agent',
         'agents/generic_options',
-        'bi',
         'custom_checks',
-        'custom_integrations',
         'snmp',
         'vm_cloud_container',
-        'checkparams/hardware',
-        'checkparams/networking',
+        'checkparams/inventory_and_check_mk_settings',
         'static/networking',
-        'checkparams/applications',
         'static/applications',
         'checkparams/discovery',
-        'checkparams/environment',
         'static/environment',
-        'checkparams/storage',
         'static/storage',
-        'checkparams/printers',
         'static/printers',
-        'checkparams/os',
         'static/os',
         'static/virtualization',
         'static/hardware',
-        'datasource_programs',
+        'datasource_programs/apps',
+        'datasource_programs/custom',
+        'datasource_programs/hw',
+        'datasource_programs/os',
+        'datasource_programs/testing',
         'inventory',
         'eventconsole',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_rulespec_groups += [
-        'agents/automatic_updates',
-        'agents/linux_agent',
-        'agents/windows_agent',
-        'agents/windows_modules',
-        'agents/agent_plugins',
-
+            'agents/automatic_updates',
+            'agents/linux_agent',
+            'agents/windows_agent',
+            'agents/windows_modules',
+            'agents/agent_plugins',
         ]
 
     assert sorted(rulespec_registry.get_all_groups()) == sorted(expected_rulespec_groups)
@@ -1439,35 +1444,47 @@ def test_rulespec_get_all_groups():
 def test_rulespec_get_host_groups():
 
     expected_rulespec_host_groups = [
-        'grouping',
+        'checkparams',
+        'checkparams/discovery',
+        'checkparams/inventory_and_check_mk_settings',
         'host_monconf/host_checks',
         'host_monconf/host_notifications',
         'host_monconf/host_various',
+        'monconf/applications',
+        'monconf/environment',
+        'monconf/hardware',
+        'monconf/networking',
         'monconf/service_checks',
         'monconf/notifications',
-        'monconf/inventory_and_check_mk_settings',
+        'monconf/os',
+        'monconf/printers',
+        'monconf/storage',
         'monconf/various',
-        'user_interface',
+        'monconf/virtualization',
         'agent/general_settings',
         'agent/check_mk_agent',
         'agents/generic_options',
         'datasource_programs',
+        'datasource_programs/apps',
+        'datasource_programs/cloud',
+        'datasource_programs/custom',
+        'datasource_programs/hw',
+        'datasource_programs/os',
+        'datasource_programs/testing',
         'inventory',
         'eventconsole',
-        'bi',
         'custom_checks',
-        'custom_integrations',
         'snmp',
         'vm_cloud_container',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_rulespec_host_groups += [
-        'agents/agent_plugins',
-        'agents/automatic_updates',
-        'agents/linux_agent',
-        'agents/windows_agent',
-        'agents/windows_modules',
+            'agents/agent_plugins',
+            'agents/automatic_updates',
+            'agents/linux_agent',
+            'agents/windows_agent',
+            'agents/windows_modules',
         ]
 
     group_names = watolib.rulespec_group_registry.get_host_rulespec_group_names()
@@ -1563,7 +1580,7 @@ def test_legacy_register_rule_attributes(monkeypatch):
 @pytest.fixture(name="patch_rulespec_registries")
 def fixture_patch_rulespec_registries(monkeypatch):
     group_registry = watolib.RulespecGroupRegistry()
-    group_registry.register(RulespecGroupManualChecks)
+    group_registry.register(RulespecGroupEnforcedServices)
     test_rulespec_registry = RulespecRegistry(group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_registry", test_rulespec_registry)
@@ -1724,11 +1741,79 @@ def test_rulespecs_get_by_group():
     result = registry.get_by_group("group")
     assert len(result) == 0
 
-    registry.register(HostRulespec(
-        name = "dummy_name",
-        group = DummyGroup,
-        valuespec = lambda: FixedValue(None)
-    ))
+    registry.register(
+        HostRulespec(name="dummy_name", group=DummyGroup, valuespec=lambda: FixedValue(None)))
     result = registry.get_by_group("group")
     assert len(result) == 1
     assert isinstance(result[0], HostRulespec)
+
+
+def test_match_item_generator_rules():
+    class SomeRulespecGroup(RulespecGroup):
+        @property
+        def name(self):
+            return "rulespec_group"
+
+        @property
+        def title(self):
+            return "Rulespec Group"
+
+        @property
+        def help(self):
+            return ""
+
+    rulespec_group_reg = RulespecGroupRegistry()
+    rulespec_group_reg.register(SomeRulespecGroup)
+
+    rulespec_reg = RulespecRegistry(rulespec_group_reg)
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_host_rulespec",
+            group=SomeRulespecGroup,
+            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+        ))
+    rulespec_reg.register(
+        HostRulespec(
+            name="some_deprecated_host_rulespec",
+            group=SomeRulespecGroup,
+            valuespec=lambda: TextAscii(),  # pylint: disable=unnecessary-lambda
+            title=lambda: "Title",  # pylint: disable=unnecessary-lambda
+            is_deprecated=True,
+        ))
+
+    match_item_generator = MatchItemGeneratorRules(
+        "rules",
+        rulespec_group_reg,
+        rulespec_reg,
+    )
+    assert list(match_item_generator.generate_match_items()) == [
+        MatchItem(
+            title='Title',
+            topic='Rulespec Group',
+            url='wato.py?mode=edit_ruleset&varname=some_host_rulespec',
+            match_texts=['title', 'some_host_rulespec'],
+        ),
+        MatchItem(
+            title='Title',
+            topic='Deprecated rulesets',
+            url='wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec',
+            match_texts=['title', 'some_deprecated_host_rulespec'],
+        )
+    ]
+
+
+def test_all_rulespec_groups_have_main_group(load_plugins):
+    for rulespec_group_name, rulespec_group_cls in rulespec_group_registry.items():
+        if issubclass(rulespec_group_cls, RulespecGroup):
+            main_module_from_rulespec_group_name(
+                rulespec_group_name,
+                main_module_registry,
+            )
+
+
+def test_rulespec_groups_have_unique_names(load_plugins):
+    # The title is e.g. shown in the mega menu search. With duplicate entries a user could not
+    # distinguish where a rule is located in the menu hierarchy.
+    main_group_titles = [e().title for e in rulespec_group_registry.get_main_groups()]
+    assert len(main_group_titles) == len(set(main_group_titles)), "Main group titles are not unique"

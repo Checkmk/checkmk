@@ -8,11 +8,8 @@
 #include <bitset>
 #include <cctype>
 #include <map>
-#include <memory>
-#include <ostream>
 #include <utility>
 
-#include "Filter.h"
 #include "IntFilter.h"
 #include "Logger.h"
 #include "Row.h"
@@ -20,7 +17,7 @@
 
 namespace {
 // see MODATTR_FOO in nagios/common.h
-std::map<std::string, unsigned long> known_attributes = {
+const std::map<std::string, unsigned long> known_attributes = {
     {"notifications_enabled", 0},    {"active_checks_enabled", 1},
     {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
     {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},
@@ -59,8 +56,12 @@ std::string refValueFor(const std::string &value, Logger *logger) {
 std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<IntFilter>(kind, *this, relOp,
-                                       refValueFor(value, logger()));
+    return std::make_unique<IntFilter>(
+        kind, name(),
+        [this](Row row, const contact *auth_user) {
+            return this->getValue(row, auth_user);
+        },
+        relOp, refValueFor(value, logger()));
 }
 
 int32_t AttributeListAsIntColumn::getValue(

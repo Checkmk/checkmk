@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 aws_ec2_limits would crash on unknown resource keys which occur when the agent
 returns with recource identifiers which are still unknown to Checkmk.

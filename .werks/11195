@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The filter "hostgroup" was not set correctly in views "Host Group of Down Hosts" and "Host Group of Unreachable Hosts".

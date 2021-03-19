@@ -1,0 +1,38 @@
+Title: More detailed audit logging
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1613575546
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.1.0i1
+
+With Checkmk 2.0 the audit logging of the setup has been extended to be more
+detailed. We added the general capability of tracking changes to configuration
+objects on attribute level.
+
+The audit log can be opened going to "Setup > General > Audit log". On that
+page you have the list of recorded changes with the new "Details" column. You
+also have the general filter form that can be used for filtering the changes
+you are interested in.
+
+You can also find context related links from hosts, users and rules to the audit
+log entries that are specific to this object.
+
+You may notice that the "Details" column is empty for a lot of changes.
+
+This is because we need to turn on the recording of details specific to each
+action. In Checkmk, we have implemented this for the most common actions first.
+These are:
+
+<ul>
+<li>Create, edit and delete hosts</li>
+<li>Create, edit and delete folders</li>
+<li>Service discovery (bulk and single host discovery)</li>
+<li>Create, edit and delete users</li>
+<li>Create, edit, move and delete rules</li>
+</ul>
+
+Over time, we will increase the level of detail of the other existing log messages.

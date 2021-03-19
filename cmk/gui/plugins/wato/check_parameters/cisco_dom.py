@@ -48,7 +48,6 @@ def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
         "power_levels_%s" % which_levels,
         Alternative(
             title="%s levels for the signal power" % which_levels.title(),
-            style="dropdown",
             default_value=True,  # use device levels
             elements=[
                 FixedValue(
@@ -92,7 +91,7 @@ rulespec_registry.register(
 
 
 def _valuespec_discovery_cisco_dom_rules():
-    return Dictionary(title=_("Cisco DOM Discovery"),
+    return Dictionary(title=_("Cisco DOM discovery"),
                       elements=[
                           ("admin_states",
                            ListChoice(

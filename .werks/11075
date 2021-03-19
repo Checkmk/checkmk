@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 VictorOps seems to have tightened their webhook handling: OK is no longer
 accepted as a message_type, according to their webhook docs it has to be

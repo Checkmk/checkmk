@@ -11,7 +11,7 @@ import cmk.gui.bi as bi
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 
 from cmk.gui.plugins.views import (
     data_source_registry,
@@ -23,6 +23,8 @@ from cmk.gui.plugins.views import (
     painter_registry,
     Painter,
 )
+
+from cmk.gui.utils.urls import makeuri
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
@@ -204,15 +206,16 @@ class PainterAggrIcons(Painter):
             html.icon_button(avail_url, _("Analyse availability of this aggregation"),
                              "availability")
             if row["aggr_effective_state"]["in_downtime"] != 0:
-                html.icon(_("A service or host in this aggregation is in downtime."),
-                          "derived_downtime")
+                html.icon("derived_downtime",
+                          _("A service or host in this aggregation is in downtime."))
             if row["aggr_effective_state"]["acknowledged"]:
                 html.icon(
+                    "ack",
                     _("The critical problems that make this aggregation non-OK have been acknowledged."
-                     ), "ack")
+                     ))
             if not row["aggr_effective_state"]["in_service_period"]:
-                html.icon(_("This aggregation is currently out of its service period."),
-                          "outof_serviceperiod")
+                html.icon("outof_serviceperiod",
+                          _("This aggregation is currently out of its service period."))
             code = html.drain()
         return "buttons", code
 
@@ -251,14 +254,14 @@ class PainterAggrAcknowledged(Painter):
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
-def paint_aggr_state_short(state, assumed=False):
+def _paint_aggr_state_short(state, assumed=False):
     if state is None:
         return "", ""
     name = short_service_state_name(state["state"], "")
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, name
+    return classes, html.render_span(name)
 
 
 @painter_registry.register
@@ -278,8 +281,8 @@ class PainterAggrState(Painter):
         return ['aggr_effective_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_effective_state"],
-                                      row["aggr_effective_state"] != row["aggr_state"])
+        return _paint_aggr_state_short(row["aggr_effective_state"],
+                                       row["aggr_effective_state"] != row["aggr_state"])
 
 
 @painter_registry.register
@@ -319,7 +322,7 @@ class PainterAggrRealState(Painter):
         return ['aggr_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_state"])
+        return _paint_aggr_state_short(row["aggr_state"])
 
 
 @painter_registry.register
@@ -339,7 +342,7 @@ class PainterAggrAssumedState(Painter):
         return ['aggr_assumed_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_assumed_state"])
+        return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
 @painter_registry.register
@@ -405,7 +408,7 @@ class PainterAggrOutput(Painter):
 def paint_aggr_hosts(row, link_to_view):
     h = []
     for site, host in row["aggr_hosts"]:
-        url = html.makeuri([("view_name", link_to_view), ("site", site), ("host", host)])
+        url = makeuri(request, [("view_name", link_to_view), ("site", site), ("host", host)])
         h.append(html.render_a(host, url))
     return "", HTML(" ").join(h)
 

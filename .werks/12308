@@ -1,0 +1,14 @@
+Title: adapt calculation of memory usage to match docker 20.10
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615795909
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Docker 20.10 changed the way how memory usage of docker containers is
+calculated, the docker check was adapted accordingly.
+
+See https://github.com/docker/cli/pull/2415 for more information.

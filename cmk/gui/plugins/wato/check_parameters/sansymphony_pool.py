@@ -42,5 +42,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=lambda: TextAscii(title=_("Name of the pool"),),
         parameter_valuespec=_parameter_valuespec_sansymphony_pool,
-        title=lambda: _("Sansymphony: pool allocation"),
+        title=lambda: _("Sansymphony pool allocation"),
     ))

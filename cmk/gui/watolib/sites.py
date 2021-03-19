@@ -7,10 +7,12 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type
+from typing import NamedTuple, Type, Any
 from pathlib import Path
 
 from six import ensure_binary
+
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -52,10 +54,9 @@ from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
-from cmk.gui.watolib.utils import (
-    default_site,
-    multisite_dir,
-)
+from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.utils import multisite_dir
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 
 
 class SiteManagement:
@@ -172,7 +173,7 @@ class SiteManagement:
         )
 
     @classmethod
-    def user_sync_valuespec(cls):
+    def user_sync_valuespec(cls, site_id):
         return CascadingDropdown(
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
@@ -185,6 +186,7 @@ class SiteManagement:
                      allow_empty=False,
                  )),
             ],
+            default_value="all" if config.site_is_local(site_id) else None,
             help=_(
                 'By default the users are synchronized automatically in the interval configured '
                 'in the connection. For example the LDAP connector synchronizes the users every '
@@ -261,7 +263,7 @@ class SiteManagement:
                                   _("You cannot do replication with the local site."))
 
         # User synchronization
-        user_sync_valuespec = cls.user_sync_valuespec()
+        user_sync_valuespec = cls.user_sync_valuespec(site_id)
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod
@@ -337,7 +339,7 @@ class SiteManagement:
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
-                                           sites=[default_site()])
+                                           sites=[config.omd_site()])
 
     @classmethod
     def _affected_config_domains(cls):
@@ -372,7 +374,6 @@ class CEESiteManagement(SiteManagement):
     def livestatus_proxy_valuespec(cls):
         return Alternative(
             title=_("Use Livestatus Proxy Daemon"),
-            style="dropdown",
             elements=[
                 FixedValue(
                     None,
@@ -388,7 +389,6 @@ class CEESiteManagement(SiteManagement):
                             ("params",
                              Alternative(
                                  title=_("Parameters"),
-                                 style="dropdown",
                                  elements=[
                                      FixedValue(
                                          None,
@@ -664,9 +664,22 @@ def _update_distributed_wato_file(sites):
         _delete_distributed_wato_file()
 
 
-def is_livestatus_encrypted(site):
+def is_livestatus_encrypted(site) -> bool:
     family_spec, address_spec = site["socket"]
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+
+
+def site_globals_editable(site_id, site) -> bool:
+    # Site is a remote site of another site. Allow to edit probably pushed site
+    # specific globals when remote WATO is enabled
+    if config.is_wato_slave_site():
+        return True
+
+    # Local site: Don't enable site specific locals when no remote sites configured
+    if not config.has_wato_slave_sites():
+        return False
+
+    return site["replication"] or config.site_is_local(site_id)
 
 
 def _delete_distributed_wato_file():
@@ -709,3 +722,22 @@ class AutomationPushSnapshot(AutomationCommand):
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
                 request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())
+
+
+def get_effective_global_setting(site_id: SiteId, is_wato_slave_site: bool, varname: str) -> Any:
+    global_settings = load_configuration_settings()
+    default_values = ABCConfigDomain.get_all_default_globals()
+
+    if is_wato_slave_site:
+        current_settings = load_configuration_settings(site_specific=True)
+    else:
+        sites = SiteManagementFactory.factory().load_sites()
+        current_settings = sites[site_id].get("globals", {})
+
+    if varname in current_settings:
+        return current_settings[varname]
+
+    if varname in global_settings:
+        return global_settings[varname]
+
+    return default_values[varname]

@@ -1,0 +1,17 @@
+Title: mem: Fix missing memory service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613397507
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In checkmk versions 2.0.0i1 to 2.0.0b6 the memory service could be missing
+for LCX container and some hosts with reduced memory information.
+
+The mem_linux check plugin is now discovered if the follong fields are
+available in the agent output: "Buffers", "Cached", "Dirty", "MemFree",
+"MemTotal", "SwapFree", "SwapTotal" and "Writeback".

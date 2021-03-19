@@ -6,7 +6,7 @@ Date: 1575628611
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Since Werk 7482 the agent plugin chooses "mysql" as default name for monitored mysql instances.
 The WATO rule is adjusted to reflect this default value when configuring a manual check.

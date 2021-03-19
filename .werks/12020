@@ -1,0 +1,14 @@
+Title: Macros in dashlet titles
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1612365600
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+When setting custom dashlet titles using the configuration
+option "Custom title", you can now use macros such as
+<tt>$HOST_NAME$</tt>. The available macros depend on the
+dashlet type and are listed in the corresponding help text.

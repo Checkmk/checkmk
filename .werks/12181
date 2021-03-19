@@ -1,0 +1,28 @@
+Title: FreeBSD interfaces: prefer SNMP check
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1614499169
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This change only affects hosts that are monitored using
+SNMP data <b>and</b> data provided by the Checkmk agent
+for FreeBSD.
+
+In these cases we now prefer the services discovered by
+the {{if64}} check over the ones discovered by the
+{{interfaces}} check using the {{statgrab_net}} section.
+
+The same rulesets and parameters apply.
+
+If this affects you, we recommend you rediscover the new
+services, as the SNMP services provide more information
+in this case.
+
+However, if you want to continue using the services
+driven by the {{statgrab_net}} section, you can disable
+the SNMP section {{if64}} for the affected host using
+the rule "Disabled and enabled sections (SNMP)".

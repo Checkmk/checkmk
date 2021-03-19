@@ -6,7 +6,7 @@ Date: 1575468649
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  There was an error in the unit conversion which resulted in display the values
  in KB instead GB. This werk fixes this conversion.

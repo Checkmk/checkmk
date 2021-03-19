@@ -13,7 +13,7 @@ NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
 #NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
 
-$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
+$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODULES_CACHE_PKG_PROCESS)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
 	cd $(NET_SNMP_BUILD_DIR) \
@@ -70,4 +70,7 @@ $(NET_SNMP_INSTALL_PERL): $(NET_SNMP_BUILD)
 		INSTALLSITEMAN3DIR=/share/man/man3 \
 		INSTALLARCHLIB=/lib/perl5/lib/perl5/x86_64-linux-gnu-thread-multi \
 		install
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5/auto/*SNMP -type f -name \*.so -exec chmod u+w {} \;
 	$(TOUCH) $@

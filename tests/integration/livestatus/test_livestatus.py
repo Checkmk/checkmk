@@ -121,6 +121,15 @@ def test_service_table(default_cfg, site):
     assert "Memory" in descriptions
 
 
+def test_usage_counters(default_cfg, site):
+    rows = site.live.query(
+        "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n")
+    assert isinstance(rows, list)
+    assert len(rows) == 1
+    assert isinstance(rows[0], list)
+    assert all(isinstance(v, (int, float)) for v in rows[0])
+
+
 @pytest.fixture(name="configure_service_tags")
 def configure_service_tags_fixture(site, web, default_cfg):  # noqa: F811 # pylint: disable=redefined-outer-name
     web.set_ruleset(

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 240 240" style="enable-background:new 0 0 240 240;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#303946;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#ED3B3B;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#FAD90D;}
+	.st3{fill-rule:evenodd;clip-rule:evenodd;fill:#52D300;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-390.000000, -518.000000)">
+		<g id="status" transform="translate(390.000000, 518.000000)">
+			<path id="Rectangle" class="st0" d="M30,0h180c16.6,0,30,13.4,30,30v180c0,16.6-13.4,30-30,30H30c-16.6,0-30-13.4-30-30V30
+				C0,13.4,13.4,0,30,0z"/>
+			<path id="Rectangle_1_" class="st1" d="M60,40h120c11,0,20,9,20,20l0,0c0,11-9,20-20,20H60c-11,0-20-9-20-20l0,0
+				C40,49,49,40,60,40z"/>
+			<path id="Rectangle_2_" class="st2" d="M60,100h120c11,0,20,9,20,20l0,0c0,11-9,20-20,20H60c-11,0-20-9-20-20l0,0
+				C40,109,49,100,60,100z"/>
+			<path id="Rectangle_3_" class="st3" d="M60,160h120c11,0,20,9,20,20l0,0c0,11-9,20-20,20H60c-11,0-20-9-20-20l0,0
+				C40,169,49,160,60,160z"/>
+		</g>
+	</g>
+</g>
+</svg>

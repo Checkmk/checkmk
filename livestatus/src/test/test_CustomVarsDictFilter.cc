@@ -3,8 +3,9 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <cstddef>
 #include <iomanip>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -20,6 +21,8 @@
 #include "nagios.h"
 #include "opids.h"
 #include "test_utilities.h"
+class Comment;
+class Downtime;
 
 namespace {
 std::string b16encode(const std::string& str) {
@@ -35,15 +38,22 @@ std::string b16encode(const std::string& str) {
 struct CustomVarsDictFilterTest : public ::testing::Test {
     bool accepts(AttributeKind kind, const std::string& value) {
         CustomVarsDictColumn cvdc{
-            "name", "description",
-            Column::Offsets{-1, -1, -1, offsetof(host, custom_variables)},
+            "name", "description", ColumnOffsets{}.add([](Row r) {
+                return &r.rawData<host>()->custom_variables;
+            }),
             &core, kind};
         CustomVarsDictFilter filter{Filter::Kind::row, cvdc,
                                     RelationalOperator::equal, value};
         return filter.accepts(Row{&test_host}, {}, {});
     }
 
-    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
+    NagiosCore core{downtimes_,
+                    comments_,
+                    NagiosPaths{},
+                    NagiosLimits{},
+                    NagiosAuthorization{},
                     Encoding::utf8};
 
     TestHost test_host{

@@ -7,7 +7,9 @@
 import functools
 import wsgiref.util
 
-from cmk.gui import http
+import cmk.utils.store
+from cmk.gui import http, config, sites
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 
 
@@ -18,7 +20,11 @@ def with_context_middleware(app):
     @functools.wraps(app)
     def with_context(environ, start_response):
         req = http.Request(environ)
-        with AppContext(app), RequestContext(req=req):
+        with AppContext(app), \
+                RequestContext(req=req, display_options=DisplayOptions()), \
+                cmk.utils.store.cleanup_locks(), \
+                sites.cleanup_connections():
+            config.initialize()
             return app(environ, start_response)
 
     return with_context

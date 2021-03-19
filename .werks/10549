@@ -6,7 +6,7 @@ Date: 1573655985
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The "Log: State type", which was shown in the monitoring events views, was
 problematic. Depending on the type of event the painter showed either the state

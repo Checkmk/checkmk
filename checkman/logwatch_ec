@@ -13,3 +13,5 @@ inventory:
  One service {"Log Forwarding"} is created on each host when the option
  {logwatch_forward_to_ec} is set to {True}.
 
+cluster:
+ In a cluster setup all messages are aggregated across the nodes.

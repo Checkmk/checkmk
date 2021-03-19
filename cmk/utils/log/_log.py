@@ -6,6 +6,7 @@
 
 import sys
 import logging
+from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from typing import IO, Optional, Union
 
@@ -64,19 +65,36 @@ def open_log(log_file_path: Union[str, Path]) -> IOLog:
     return logfile
 
 
+def setup_watched_file_logging_handler(logfile, formatter=None):
+    """Removes all previous logger handlers and set a logfile handler for the given logfile path
+    This handler automatically reopens the logfile if it detects an inode change, e.g through logrotate
+    """
+    if formatter is None:
+        formatter = get_default_formatter()
+
+    handler = WatchedFileHandler(logfile)
+    handler.setFormatter(formatter)
+    del logger.handlers[:]  # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+
 def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] = None) -> None:
     """This method enables all log messages to be written to the given
     stream file object. The messages are formatted in Check_MK standard
     logging format.
     """
     if formatter is None:
-        formatter = get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
+        formatter = get_default_formatter()
 
     handler = logging.StreamHandler(stream=stream)
     handler.setFormatter(formatter)
 
     del logger.handlers[:]  # Remove all previously existing handlers
     logger.addHandler(handler)
+
+
+def get_default_formatter():
+    return get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
 
 
 def modify_logging_handler(

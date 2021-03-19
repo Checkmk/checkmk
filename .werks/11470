@@ -1,0 +1,15 @@
+Title: Fixed site context filter used in views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1599049148
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If you configured a site filter in a multisite view, the filter had no effect
+when calling the view. The cause was that the url variables for the site where
+not present at runtime.
+
+From now on the site filter variables are taken from the context of each view.

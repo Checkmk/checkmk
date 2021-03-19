@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Type
+from typing import Any, Dict, List, Type
 
-from ..agent_based_api.v0 import (
+from ..agent_based_api.v1 import (
     startswith,)
-from ..agent_based_api.v0.type_defs import (
-    SNMPStringTable,)
+from ..agent_based_api.v1.type_defs import (
+    StringTable,)
 
 ParsedStringSection = Dict[str, str]
 ParsedAnySection = Dict[str, Any]
@@ -18,7 +18,7 @@ DETECT_LIEBERT = startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.476.1.42')
 
 
 def parse_liebert_without_unit(
-    string_table: SNMPStringTable,
+    string_table: List[StringTable],
     type_func: Type = float,
 ) -> ParsedStringSection:
 
@@ -51,7 +51,7 @@ def parse_liebert_without_unit(
 
 
 def parse_liebert(
-    string_table: SNMPStringTable,
+    string_table: List[StringTable],
     type_func: Type = float,
 ) -> ParsedAnySection:
 

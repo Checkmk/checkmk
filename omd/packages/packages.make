@@ -121,12 +121,14 @@ debug:
 # Include rules to make packages
 include \
     packages/openssl/openssl.make \
+    packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
+    packages/lasso/lasso.make \
+    packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_mysql_health/check_mysql_health.make \
     packages/check_oracle_health/check_oracle_health.make \
-    packages/dokuwiki/dokuwiki.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \

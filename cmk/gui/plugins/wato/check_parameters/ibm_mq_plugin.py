@@ -8,7 +8,9 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    DropdownChoice,
     TextAscii,
+    Tuple,
 )
 
 from cmk.gui.plugins.wato import (
@@ -23,14 +25,24 @@ def ibm_mq_version():
     return [
         (
             "version",
-            CascadingDropdown(
+            Tuple(
                 title=_("Check for correct version"),
                 help=_("You can make sure that the plugin is running"
                        " with a specific or a minimal version."),
-                choices=[
-                    ('at_least', _("At least"), TextAscii(title=_("At least"), allow_empty=False)),
-                    ('specific', _("Specific version"),
-                     TextAscii(title=_("Specific version"), allow_empty=False)),
+                elements=[
+                    CascadingDropdown(
+                        choices=[
+                            ('at_least', _("At least"),
+                             TextAscii(title=_("At least"), allow_empty=False)),
+                            ('specific', _("Specific version"),
+                             TextAscii(title=_("Specific version"), allow_empty=False)),
+                        ],
+                        default_value='at_least',
+                    ),
+                    DropdownChoice(
+                        choices=[(1, _("Warning")), (2, _("Critical"))],
+                        default_value=1,
+                    ),
                 ],
             ),
         ),

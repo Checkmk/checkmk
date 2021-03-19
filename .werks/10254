@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous 1.6 versions it could happen that 3rd party checks raise
 a TypeError exception resulting in a crash report with a message like

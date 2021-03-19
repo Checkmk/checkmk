@@ -13,8 +13,8 @@ import cmk.base.check_api as check_api
 import cmk.base.autochecks as autochecks
 
 
-@pytest.fixture(name="test_cfg", scope="module")
-def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.fixture(name="setup_test", scope="module")
+def _fixture_setup_test(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
@@ -26,18 +26,33 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
     )
 
     site.makedirs("var/check_mk/agent_output/")
-    web.activate_changes()
 
-    yield None
+    try:
+        web.activate_changes()
+        yield None
+    finally:
+        #
+        # Cleanup code
+        #
+        print("Cleaning up test config")
+        web.delete_host("modes-test-host")
+        web.activate_changes()
 
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
-    web.delete_host("modes-test-host")
+
+@pytest.fixture(name="clear_cache")
+def _fixture_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-name
+
+    cache_file = "tmp/check_mk/cache/modes-test-host"
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
+    yield
+    if site.file_exists(cache_file):
+        site.delete_file(cache_file)
 
 
-def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.mark.skip(reason="test is flaky")
+@pytest.mark.usefixtures("clear_cache", "setup_test")
+def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_1.py"
 
@@ -56,7 +71,7 @@ def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 #
         test_check_path, """
 import pprint
 
-from .agent_based_api.v0 import register, Service
+from .agent_based_api.v1 import register, Service
 
 
 def discover(params, section):
@@ -72,7 +87,7 @@ register.check_plugin(
     name="test_check_1",
     discovery_function=discover,
     discovery_ruleset_name="discover_test_check_1",
-    discovery_ruleset_type="merged",
+    discovery_ruleset_type=register.RuleSetType.MERGED,
     discovery_default_parameters={"default": 42},
     check_function=check,
     service_name="Foo %s",
@@ -81,7 +96,7 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_1>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")
@@ -111,7 +126,8 @@ register.check_plugin(
         assert False, '"test_check_1" not discovered'
 
 
-def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+@pytest.mark.usefixtures("clear_cache", "setup_test")
+def test_test_check_1_all_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     test_check_path = "local/lib/check_mk/base/plugins/agent_based/test_check_2.py"
 
@@ -130,7 +146,7 @@ def test_test_check_1_all_rule(request, test_cfg, site, web):  # noqa: F811 # py
         test_check_path, """
 import pprint
 
-from .agent_based_api.v0 import register, Service
+from .agent_based_api.v1 import register, Service
 
 
 def discover(params, section):
@@ -146,7 +162,7 @@ register.check_plugin(
     name="test_check_2",
     discovery_function=discover,
     discovery_ruleset_name="discover_test_check_2",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={"default": 42},
     check_function=check,
     service_name="Foo %s",
@@ -155,13 +171,14 @@ register.check_plugin(
 
     site.write_file("var/check_mk/agent_output/modes-test-host", "<<<test_check_2>>>\n1 2\n")
 
-    config.load_all_checks(check_api.get_check_api_context)
+    config.load_all_agent_based_plugins(check_api.get_check_api_context)
     config.load(with_conf_d=False)
 
     web.discover_services("modes-test-host")
 
     # Verify that the discovery worked as expected
     services = autochecks.parse_autochecks_file("modes-test-host", config.service_description)
+
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
             assert service.item == "[Parameters({'default': 42})]"

@@ -95,6 +95,7 @@ This is the data we can extract
 """
 
 import typing
+from cmk.base.check_legacy_includes.ip_format import clean_v4_address, clean_v6_address  # pylint: disable=wildcard-import,unused-wildcard-import
 
 names = [
     # "Local address type",  #        2.1.2,
@@ -139,7 +140,7 @@ def parse_arista_bgp(
         info: typing.Sequence[typing.Sequence[typing.Any]]) -> typing.Dict[str, typing.Any]:
     def convert(name: str, value: str) -> typing.Any:
         if name in {"Local address", "Local identifier", "Remote identifier"}:
-            return ".".join(str(n) for n in value)
+            return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
         if name == "Admin state":
             return {
                 "1": "halted",
@@ -183,9 +184,12 @@ def parse_arista_bgp(
             aristaBgp4V2PrefixGaugesSafi:    not provided in our case
         """
         oid_elements = oid_end.split(".")
+        addr_type = int(oid_elements[1])
         addr_len = int(oid_elements[2])
         assert len(oid_elements) == 3 + addr_len
-        return ".".join(oid_elements[3:3 + addr_len])
+        addr_elements = oid_elements[3:3 + addr_len]
+        return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(
+            addr_elements)
 
     assert all(len(entry) == len(names) + 1 for entry in info[0]), (
         "Not all info elements have the size guessed from known names %d: %r" %

@@ -6,7 +6,7 @@ Date: 1575275555
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions the agent was not setting the encoding information in the
 environment, making Python plugins fail with <tt>UnicodeEncodeError</tt>

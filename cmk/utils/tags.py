@@ -332,6 +332,9 @@ class TagConfig:
         self.aux_tag_list += other.aux_tag_list
         return self
 
+    def get_tag_groups(self):
+        return self.tag_groups
+
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
@@ -475,6 +478,16 @@ class TagConfig:
                 raise MKGeneralException(_("The tag ID \"%s\" is used twice.") % aux_tag.id)
             seen_ids.add(aux_tag.id)
 
+    def valid_id(self, tag_aux_id):
+        """Verify if the proposed id is not already in use"""
+        if tag_aux_id in [tag_group.id for tag_group in self.tag_groups]:
+            return False
+
+        if tag_aux_id in [aux_tag.id for aux_tag in self.aux_tag_list.get_tags()]:
+            return False
+
+        return True
+
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
     def _validate_group(self, tag_group):
@@ -558,7 +571,7 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Check_MK Agent'),
+                'title': _('Checkmk agent'),
                 'topic': _('Data sources'),
                 'tags': [
                     {
@@ -636,7 +649,7 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'address_family',
-                'title': _('IP Address Family'),
+                'title': _('IP address family'),
                 'topic': u'Address',
                 'tags': [
                     {
@@ -684,7 +697,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'tcp',
                 'topic': _('Data sources'),
-                'title': _('Monitor via Check_MK Agent'),
+                'title': _('Monitor via Checkmk Agent'),
             },
             {
                 'id': 'ping',

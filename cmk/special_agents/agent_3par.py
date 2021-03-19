@@ -31,6 +31,7 @@ def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('-u', '--user', required=True, help="Username for 3par login")
     parser.add_argument('-p', '--password', required=True, help="Password for 3par login")
+    parser.add_argument('-P', '--port', required=True, help="Port for connection to 3par")
     parser.add_argument('--no-cert-check',
                         action='store_true',
                         help="Disable verification of the servers ssl certificate")
@@ -52,7 +53,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     args = parse_arguments(argv)
 
-    url = "https://%s:8080/api/v1" % args.host
+    url = "https://%s:%s/api/v1" % (args.host, args.port)
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",

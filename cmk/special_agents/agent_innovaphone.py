@@ -6,10 +6,16 @@
 
 import base64
 import sys
+from xml.etree import ElementTree as etree
+from typing import Iterable, Optional, Sequence, Tuple
 from urllib.request import Request, urlopen
-import xml.etree.ElementTree as etree
 
 from six import ensure_binary, ensure_str
+
+from cmk.special_agents.utils.argument_parsing import (
+    Args,
+    create_default_argument_parser,
+)
 
 
 def get_informations(credentials, name, xml_id, org_name):
@@ -26,16 +32,34 @@ def get_informations(credentials, name, xml_id, org_name):
         print(org_name + " " + c)
 
 
-def get_pri_channel(credentials, channel_name):
+def pri_channels_section(
+    *,
+    credentials: Tuple[str, str, str, str],
+    channels: Sequence[str],
+) -> Iterable[str]:
+    yield "<<<innovaphone_channels>>>"
+    for channel_name, channel_data in _pri_channels_fetch_data(credentials, channels):
+        yield _pri_channel_format_line(channel_name, channel_data)
+
+
+def _pri_channels_fetch_data(
+    credentials: Tuple[str, str, str, str],
+    channels: Sequence[str],
+) -> Iterable[Tuple[str, etree.Element]]:
     server, address, user, password = credentials
-    data_url = "/%s/mod_cmd.xml" % channel_name
-    address = "http://%s%s" % (server, data_url)
-    data = etree.parse(get_url(address, user, password)).getroot()
+    for channel_name in channels:
+        address = "http://%s/%s/mod_cmd.xml" % (server, channel_name)
+        raw_data = get_url(address, user, password).read()
+        if not raw_data:
+            return
+        yield channel_name, etree.parse(raw_data).getroot()
+
+
+def _pri_channel_format_line(channel_name: str, data: etree.Element) -> str:
     link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
-        print("%s %s %s 0 0 0" % (channel_name, link, physical))
-        return
+        return "%s %s %s 0 0" % (channel_name, link, physical)
     idle = 0
     total = 0
     for channel in data.findall('ch'):
@@ -43,19 +67,25 @@ def get_pri_channel(credentials, channel_name):
             idle += 1
         total += 1
     total -= 1
-    print("%s %s %s %s %s" % (channel_name, link, physical, idle, total))
+    return "%s %s %s %s %s" % (channel_name, link, physical, idle, total)
 
 
-def get_licenses(credentials):
+def licenses_section(credentials) -> Iterable[str]:
     server, address, user, password = credentials
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
-    data = etree.parse(get_url(address, user, password)).getroot()
+    try:
+        raw_data = get_url(address, user, password).read()
+    except Exception:  # pylint: disable=broad-except # TODO: use requests 'raise_for_status'
+        return
+
+    yield "<<<innovaphone_licenses>>>"
+    data = etree.parse(raw_data).getroot()
     for child in data.findall('lic'):
         if child.get('name') == "Port":
             count = child.get('count')
             used = child.get('used')
-            print(count, used)
-            break
+            yield f"{count} {used}"
+            return
 
 
 def get_url(address, user, password):
@@ -65,24 +95,22 @@ def get_url(address, user, password):
     return urlopen(request)
 
 
+def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+    parser = create_default_argument_parser(description=__doc__)
+    parser.add_argument("user", metavar="USER")
+    parser.add_argument("password", metavar="PASSWORD")
+    parser.add_argument("host", metavar="HOST")
+    return parser.parse_args(argv)
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
+    args = parse_arguments(sys_argv)
 
-    if len(sys.argv) != 3:
-        sys.stderr.write("usage: agent_innovaphone HOST USER PASSWORD\n")
-        return 1
-
-    server = sys_argv[0]
-    user = sys_argv[1]
-    password = sys_argv[2]
-
-    base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
-    counter_address = "http://%s%s" % (server, base_url)
-
-    credentials = (server, counter_address, user, password)
-
-    p = etree.parse(get_url(counter_address, user, password))
+    counter_address = f"http://{args.host}/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
+    credentials = (args.host, counter_address, args.user, args.password)
+    p = etree.parse(get_url(counter_address, args.user, args.password))
     root_data = p.getroot()
 
     informations = {}
@@ -91,15 +119,18 @@ def main(sys_argv=None):
         x = entry.get('x')
         informations[n] = x
 
-    s_prefix = "innovaphone_"
     for what in ["CPU", "MEM", "TEMP"]:
         if informations.get(what):
-            section_name = s_prefix + what.lower()
+            section_name = "innovaphone_" + what.lower()
             get_informations(credentials, section_name, informations[what], what)
 
-    print("<<<%schannels>>>" % s_prefix)
-    for channel_num in range(1, 5):
-        get_pri_channel(credentials, 'PRI' + str(channel_num))
+    sys.stdout.writelines(f"{line}\n" for line in pri_channels_section(
+        credentials=credentials,
+        channels=("PRI1", "PRI2", "PRI3", "PRI4"),
+    ))
 
-    print("<<<%slicenses>>>" % s_prefix)
-    get_licenses(credentials)
+    sys.stdout.writelines(f"{line}\n" for line in licenses_section(credentials))
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -6,7 +6,7 @@ Date: 1574244747
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  The manpage for the informix_tabextents details that a WATO rule can be configured
  to set the levels for the number of table extents. This WATO rule has now been

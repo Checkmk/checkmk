@@ -11,6 +11,7 @@ from cmk.gui.valuespec import (
     Integer,
     TextAscii,
     Tuple,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -21,7 +22,7 @@ from cmk.gui.plugins.wato import (
 
 
 def _parameter_valuespec_hw_fans():
-    return Dictionary(
+    hw_fans_dict = Dictionary(
         elements=[
             (
                 "lower",
@@ -40,8 +41,8 @@ def _parameter_valuespec_hw_fans():
                     help=_("Upper levels for the fan speed of a hardware device"),
                     title=_("Upper levels"),
                     elements=[
-                        Integer(title=_("warning at"), unit=u"rpm", default_value=8000),
-                        Integer(title=_("critical at"), unit=u"rpm", default_value=8400),
+                        Integer(title=_("warning at"), unit=u"rpm"),
+                        Integer(title=_("critical at"), unit=u"rpm"),
                     ],
                 ),
             ),
@@ -49,6 +50,10 @@ def _parameter_valuespec_hw_fans():
              Checkbox(title=_("Performance data"), label=_("Enable performance data"))),
         ],
         optional_keys=["upper", "output_metrics"],
+    )
+    return Transform(
+        hw_fans_dict,
+        forth=lambda spec: spec if isinstance(spec, dict) else {"lower": spec},
     )
 
 

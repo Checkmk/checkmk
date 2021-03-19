@@ -29,6 +29,8 @@ RUN apt-get update \
     apache2 \
     apache2-dev \
     build-essential \
+    chrpath \
+    curl \
     default-libmysqlclient-dev \
     dietlibc-dev \
     dnsutils \
@@ -36,7 +38,9 @@ RUN apt-get update \
     flex \
     gettext \
     git-buildpackage \
-    curl \
+    gtk-doc-tools \
+    iputils-ping \
+    joe \
     libcurl4-openssl-dev \
     libdbi-dev \
     libevent-dev \
@@ -59,6 +63,7 @@ RUN apt-get update \
     libsqlite3-dev \
     libssl-dev \
     libxml2-dev \
+    libxmlsec1-dev \
     openssh-client \
     patch \
     rpcbind \
@@ -67,9 +72,7 @@ RUN apt-get update \
     texinfo \
     tk-dev \
     uuid-dev \
-    chrpath \
-    joe \
-    iputils-ping \
+    valgrind \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
@@ -94,6 +97,7 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

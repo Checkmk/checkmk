@@ -7,9 +7,8 @@
 import os
 import pytest  # type: ignore[import]
 
+from cmk.base.check_legacy_includes.mysql import *
 pytestmark = pytest.mark.checks
-
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/mysql.include')).read())
 
 
 @pytest.mark.parametrize('info,expected_items', [

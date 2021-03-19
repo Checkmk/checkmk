@@ -6,9 +6,9 @@
 
 from typing import Dict, List, Optional, Tuple
 
-from .agent_based_api.v0.type_defs import AgentStringTable
+from .agent_based_api.v1.type_defs import StringTable
 
-from .agent_based_api.v0 import register
+from .agent_based_api.v1 import register
 from .utils import ps
 
 # First generation of agents output only the process command line:
@@ -156,7 +156,7 @@ def parse_process_entries(pre_parsed) -> List[Tuple[ps.ps_info, List[str]]]:
     return parsed
 
 
-def parse_ps(string_table: AgentStringTable,) -> ps.Section:
+def parse_ps(string_table: StringTable,) -> ps.Section:
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
@@ -172,10 +172,13 @@ register.agent_section(
     name="ps",
     parse_function=parse_ps,
     host_label_function=ps.host_labels_ps,
+    host_label_ruleset_name="inventory_processes_rules",
+    host_label_default_parameters={},
+    host_label_ruleset_type=register.RuleSetType.ALL,
 )
 
 
-def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[ps.Section]:
+def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
     """
         >>> cpu_cores, lines = parse_ps_lnx([
         ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
@@ -185,7 +188,7 @@ def parse_ps_lnx(string_table: AgentStringTable,) -> Optional[ps.Section]:
         >>> print(cpu_cores)
         1
         >>> print(lines[0][0])
-        Process_Info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
+        ps_info(user='root', virtual='226036', physical='9736', cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
         >>> print(lines[0][1])
         ['/sbin/init', '--ladida']
     """
@@ -221,4 +224,8 @@ register.agent_section(
     parsed_section_name="ps",
     parse_function=parse_ps_lnx,
     host_label_function=ps.host_labels_ps,
+    host_label_ruleset_name="inventory_processes_rules",
+    host_label_default_parameters={},
+    host_label_ruleset_type=register.RuleSetType.ALL,
+    supersedes=['ps'],
 )

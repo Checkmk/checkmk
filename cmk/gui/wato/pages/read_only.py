@@ -32,7 +32,11 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
+    flash,
+    redirect,
+    mode_url,
 )
 
 
@@ -54,20 +58,19 @@ class ModeManageReadOnly(WatoMode):
         return _("Manage configuration read only mode")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="read_only",
-            button_name="_save",
-            add_abort_link=False,
-        )
+        return make_simple_form_page_menu(_("Mode"),
+                                          breadcrumb,
+                                          form_name="read_only",
+                                          button_name="_save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
         self._settings = settings
 
         self._save()
-        return "read_only", _("Saved read only settings")
+        flash(_("Saved read only settings"))
+        return redirect(mode_url("read_only"))
 
     def _save(self):
         store.save_to_mk_file(watolib.multisite_dir() + "read_only.mk",
@@ -92,7 +95,6 @@ class ModeManageReadOnly(WatoMode):
                           elements=[
                               ("enabled",
                                Alternative(title=_("Enabled"),
-                                           style="dropdown",
                                            elements=[
                                                FixedValue(
                                                    False,

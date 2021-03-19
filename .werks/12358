@@ -1,0 +1,13 @@
+Title: interfaces: Wrong scaling of metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615814464
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+In Checkmk versions 2.0.0i1 to 2.0.0 the metrics of the newly
+introduced check plugin <tt>interfaces</tt> have not been scaled
+properly.

@@ -6,10 +6,7 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.discovered_labels import DiscoveredHostLabels
-
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
-from cmk.base.plugins.agent_based.agent_based_api.v0 import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
@@ -26,16 +23,18 @@ def test_host_labels_ps_no_match_attr():
             ),
         ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
             "user": "flynn",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []
+    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
 def test_host_labels_ps_no_match_pattern():
@@ -49,15 +48,17 @@ def test_host_labels_ps_no_match_pattern():
             ),
         ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~wat?",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []
+    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
 def test_host_labels_ps_match():
@@ -71,15 +72,19 @@ def test_host_labels_ps_match():
             ),
         ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == [HostLabel(u'marco', u'polo')]
+    assert list(ps.host_labels_ps(params, section)) == [  # type: ignore[arg-type]
+        HostLabel('marco', 'polo')
+    ]
 
 
 @pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [

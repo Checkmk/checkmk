@@ -34,7 +34,6 @@ def _parameter_valuespec_vpn_tunnel():
                          help=_(
                              "The configured value must match a tunnel reported by the monitored "
                              "device."),
-                         allow_empty=False,
                      ),
                      TextUnicode(
                          title=_("Tunnel Alias"),

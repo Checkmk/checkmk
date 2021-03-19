@@ -6,7 +6,7 @@ Date: 1592492352
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check returns {{OK}} when the total number of client connections does not
 fall below configurable levels. It shows the sum of connections for each

@@ -1,0 +1,12 @@
+Title: Pushing snapshot to remote site no longer causes an exception
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615379664
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

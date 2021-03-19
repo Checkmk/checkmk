@@ -211,11 +211,12 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': '814bf932-6341-4f96-983d-283525b5416d',
                 'value': 'd,r,f,s',
                 'condition': {}
             }]
         },
-        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+        'configuration_hash': 'a8ee55e0ced14609df741e5a82462e3a',
     }
 
     # TODO: Move testing of initial wato rules to unit tests
@@ -223,6 +224,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
                 'condition': {
                     'host_labels': {
                         u'cmk/check_mk_server': u'yes',
@@ -234,7 +236,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0ef816195d483f9ed828a4dc84bdf706',
+        'configuration_hash': '68e05dd8ab82cea5bebc9c6184c0ee08',
     }
 
 
@@ -243,6 +245,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert orig_ruleset == {
         'ruleset': {
             '': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'value': True,
                 'condition': {
                     'host_tags': {
@@ -257,7 +260,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+        'configuration_hash': '9abf6316805b3daf10ac7745864f13f8',
     }
 
     # Now modify something
@@ -669,12 +672,6 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):  # noqa: F81
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    # FIXME:
-    #   There are supposed to be 63 services to be discovered. Due to the ongoing migration
-    #   however, the services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected
-    #   right now. Please add the 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
-    assert "60 added" in status["job"]["output"]
-    assert "discovery successful" in status["job"]["output"]
 
 
 def test_bulk_discovery_start_with_parameters(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -789,7 +786,7 @@ def test_get_graph_api(web, graph_test_config):  # noqa: F811 # pylint: disable=
     assert len(data["curves"]) == 5
     assert data["curves"][0]["title"] == "CPU time in user space"
     assert data["curves"][1]["title"] == "CPU time in operating system"
-    assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
+    assert data["curves"][2]["title"] == "Time spent waiting for Checkmk agent"
     assert data["curves"][3]["title"] == "Time spent waiting for special agent"
     assert data["curves"][4]["title"] == "Total execution time"
 
@@ -1081,7 +1078,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                         'max', 1.0
                     ],
                     u'line_type': u'stack',
-                    u'title': u'Time spent waiting for Check_MK agent',
+                    u'title': u'Time spent waiting for Checkmk agent',
                     u'unit': u's'
                 }, {
                     u'color': u'#00d1ff',
@@ -1106,6 +1103,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                 u'specification': [
                     u'template', {
                         u'graph_index': 0,
+                        'graph_id': 'cmk_cpu_time_by_phase',
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
                         u'site': web.site.id

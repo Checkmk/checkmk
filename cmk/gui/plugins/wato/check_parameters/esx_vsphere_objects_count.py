@@ -50,5 +50,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_objects_count,
-        title=lambda: _("Distribution of virtual machines over ESX hosts"),
+        title=lambda: _("ESX hosts: distribution of virtual machines"),
     ))

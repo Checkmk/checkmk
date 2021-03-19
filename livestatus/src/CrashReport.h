@@ -28,8 +28,7 @@ private:
     std::string _component;
 };
 
-namespace mk {
-namespace crash_report {
+namespace mk::crash_report {
 
 /// Apply fun to crash reports under base_path until fun returns `true`
 /// or every crash report has been visited.
@@ -41,9 +40,8 @@ bool any(const std::filesystem::path &base_path,
 /// Returns `true` if the crash report was successfully deleted, otherwise
 /// returns `false`.
 bool delete_id(const std::filesystem::path &base_path, const std::string &id,
-               Logger *const);
+               Logger *logger);
 
-}  // namespace crash_report
-}  // namespace mk
+}  // namespace mk::crash_report
 
 #endif

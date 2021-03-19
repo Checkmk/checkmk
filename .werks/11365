@@ -1,0 +1,16 @@
+Title: vms_if: Fix broken discovery and check execution
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1599040685
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+A bug in the check <tt>vms_if</tt>, which monitors network interfaces
+on OpenVMS, prevented the corresponding services from being discovered
+and resulted in a crash for already discovered services (error message:
+"TypeError: '<' not supported between instances of 'str' and 'int'").
+This bug occurred since 2012 and affects all hosts. With this werk,
+<tt>vms_if</tt> will again be discovered and work.

@@ -23,7 +23,7 @@ def agent_elasticsearch_arguments(params, hostname, ipaddress):
     if "password" in params:
         args += ["-s", passwordstore_get_cmdline("%s", params["password"])]
     if "port" in params:
-        args += ["-p", params["port"]]
+        args += ["-p", str(params["port"])]  # non-str gets ignored silently
 
     args += params["hosts"]
 

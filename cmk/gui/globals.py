@@ -10,7 +10,7 @@
 from functools import partial
 import logging
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Optional, List
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -19,7 +19,7 @@ from werkzeug.local import LocalProxy, LocalStack
 # Cyclical import
 
 if TYPE_CHECKING:
-    from cmk.gui import htmllib, http, config
+    from cmk.gui import htmllib, http, config, userdb
 
 _sentinel = object()
 
@@ -100,10 +100,24 @@ def _lookup_req_object(name):
     return getattr(top, name)
 
 
+_unset = object()
+
+
 class RequestContext:
-    def __init__(self, html_obj=None, req=None, resp=None):
+    def __init__(
+        self,
+        html_obj=None,
+        req=None,
+        resp=None,
+        display_options=None,  # pylint: disable=redefined-outer-name
+        prefix_logs_with_url: bool = True,
+    ):
         self.html = html_obj
         self.auth_type = None
+        self.display_options = display_options
+        self.session: Optional["userdb.SessionInfo"] = None
+        self.flashes: Optional[List[str]] = None
+        self._prefix_logs_with_url = prefix_logs_with_url
 
         if req is None and html_obj:
             req = html_obj.request
@@ -116,17 +130,22 @@ class RequestContext:
         from cmk.gui.config import LoggedInNobody
         self.user = LoggedInNobody()
 
+        self._prepend_url_filter = _PrependURLFilter()
+        self._web_log_handler: Optional[logging.Handler] = None
+
     def __enter__(self):
         _request_ctx_stack.push(self)
         # TODO: Move this plus the corresponding cleanup code to hooks.
-        self._web_log_handler = logging.getLogger().handlers[0]
-        self._prepend_url_filter = _PrependURLFilter()
-        self._web_log_handler.addFilter(self._prepend_url_filter)
+        if self._prefix_logs_with_url:
+            self._web_log_handler = logging.getLogger().handlers[0]
+            self._web_log_handler.addFilter(self._prepend_url_filter)
 
         return self
 
     def __exit__(self, exc_type, exc_value, tb):
-        self._web_log_handler.removeFilter(self._prepend_url_filter)
+        if self._web_log_handler is not None:
+            self._web_log_handler.removeFilter(self._prepend_url_filter)
+
         # html.finalize needs to be called before popping the stack, because it does
         # something with the user object. We make this optional, so we can use the RequestContext
         # without the html object (for APIs for example).
@@ -162,5 +181,7 @@ local = request_local_attr()  # None as name will get the whole object.
 # tools in general.
 user: 'config.LoggedInUser' = request_local_attr('user')
 request: 'http.Request' = request_local_attr('request')
+session: 'userdb.Session' = request_local_attr('session')
 
 html: 'htmllib.html' = request_local_attr('html')
+display_options = request_local_attr('display_options')

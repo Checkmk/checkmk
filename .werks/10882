@@ -6,7 +6,7 @@ Date: 1586337518
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The customer sites only have information for a single customer.
 It does not make sense to show the customers snapin in the main

@@ -17,10 +17,13 @@ from typing import Tuple, Dict, Any, Optional, NamedTuple, Sequence
 
 import urllib3  # type: ignore[import]
 import requests
+import logging
 from six import ensure_str
 
 from livestatus import SiteId, SiteConfiguration
 
+from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -91,7 +94,15 @@ def check_mk_local_automation(command: str,
     if timeout:
         new_args = ["--timeout", "%d" % timeout] + new_args
 
-    cmd = ['check_mk', '--automation', command] + new_args
+    cmd = ['check_mk']
+
+    if auto_logger.isEnabledFor(logging.DEBUG):
+        cmd.append("-vv")
+    elif auto_logger.isEnabledFor(VERBOSE):
+        cmd.append("-v")
+
+    cmd += ['--automation', command] + new_args
+
     if command in ['restart', 'reload']:
         call_hook_pre_activate_changes()
 
@@ -147,7 +158,7 @@ def check_mk_local_automation(command: str,
 
 def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
     call = subprocess.list2cmdline(cmdline) if config.debug else command
-    msg = "Error running automation call <tt>%s<tt>" % call
+    msg = "Error running automation call <tt>%s</tt>" % call
     if code:
         msg += " (exit code %d)" % code
     if out:
@@ -196,7 +207,7 @@ def check_mk_remote_automation(site_id: SiteId,
         config.site(site_id),
         "checkmk-automation",
         [
-            ("automation", command),  # The Check_MK automation command
+            ("automation", command),  # The Checkmk automation command
             ("arguments", mk_repr(args)),  # The arguments for the command
             ("indata", mk_repr(indata)),  # The input data
             ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
@@ -233,7 +244,7 @@ def sync_changes_before_remote_automation(site_id):
 # This hook is executed when one applies the pending configuration changes
 # from wato but BEFORE the nagios restart is executed.
 #
-# It can be used to create custom input files for nagios/Check_MK.
+# It can be used to create custom input files for nagios/Checkmk.
 #
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of
@@ -302,6 +313,10 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         auth=auth,
         files=files,
         timeout=timeout,
+        headers={
+            "x-checkmk-version": cmk_version.__version__,
+            "x-checkmk-edition": cmk_version.edition_short(),
+        },
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8
@@ -378,7 +393,7 @@ CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("timeout", Optional[int]),
 ])
 
-CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponsee", [
+CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponse", [
     ("job_status", Dict[str, Any]),
     ("result", Any),
 ])
@@ -503,3 +518,36 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         store.save_object_to_file(result_file_path, result)
 
         job_interface.send_result_message(_("Finished."))
+
+
+def execute_automation_discovery(*,
+                                 site_id: SiteId,
+                                 args: Sequence[str],
+                                 timeout=None,
+                                 non_blocking_http=False) -> AutomationDiscoveryResponse:
+    raw_response = check_mk_automation(site_id,
+                                       "inventory",
+                                       args,
+                                       timeout=timeout,
+                                       non_blocking_http=True)
+    # This automation may be executed agains 1.6 remote sites. Be compatible to old structure
+    # (counts, failed_hosts).
+    if isinstance(raw_response, tuple) and len(raw_response) == 2:
+        results = {
+            hostname: DiscoveryResult(
+                self_new=v[0],
+                self_removed=v[1],
+                self_kept=v[2],
+                self_total=v[3],
+                self_new_host_labels=v[4],
+                self_total_host_labels=v[5],
+            ) for hostname, v in raw_response[0].items()
+        }
+
+        for hostname, error_text in raw_response[1].items():
+            results[hostname].error_text = error_text
+
+        return AutomationDiscoveryResponse(results=results)
+    if isinstance(raw_response, dict):
+        return AutomationDiscoveryResponse.deserialize(raw_response)
+    raise NotImplementedError()

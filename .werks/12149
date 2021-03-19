@@ -1,0 +1,73 @@
+Title: Support for Python 2 based UNIX agent plugins
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1614698163
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.1.0i1
+
+With Werk #11080, we made the huge step to port the entire Checkmk
+codebase from Python 2 to Python 3. This also affects all Python based
+agent plugins, that can be found under <tt>~/share/check_mk/agents/plugins</tt>
+and that can be deployed via the agent bakery or manually.
+
+However, there are still many UNIX systems out there that don't support Python 3
+yet. In order to still ensure a functional monitoring on these hosts, all
+builtin Python based agent plugins now also support Python 2.
+
+<h3>Automatic Python 3/Python 2 agent plugin mechanism</h3>
+This is realized by the following mechanism:
+<ul>
+<li>All python based agent plugins are written in Python 3 and end with <tt>.py</tt></li>
+<li>For all builtin Python 3 agent plugins, an additional Python 2 plugin is available,
+that ends with <tt>_2.py</tt>. E.g., you will find a Python 2 agent plugin named
+<tt>apache_status_2.py</tt> right next to it's Python 3 counterpart
+<tt>apache_status.py</tt>.</li>
+<li>When deploying the agent plugin via agent bakery, both files will be deployed
+via the agent package. The UNIX agent will then automatically decide which file
+will be executed. If there is a Python installation >= 3.4 available on the system,
+the Python 3 variant will be executed. If there is instead a Python installation >= 2.6
+available, the Python 2 variant will be executed. If none of the two variants are
+available, the plugin won't be executed.</li>
+<li>When deploying manually, the same mechanism holds true. You just have to include
+both files, if you want to make use of this feature. Please note that a python based
+plugin must end with <tt>_2.py</tt> to be executed via Python 2.</li>
+</ul>
+
+<h3>New agent rule "Python agent plugin execution (UNIX)"</h3>
+The agent will detect a Python 3 installation by the command <tt>python3</tt> and a
+Python 2 installation by the commands <tt>python2</tt> or <tt>python</tt>. If this
+mechanism is not suitable for you, or if you want to use Python 2, even if there
+is a Python 3 installation available, there exists a new agent ruleset called
+"Python agent plugin execution (UNIX)" for that purpose. Here, you can enforce either
+Python 2 or Python 3. Additionally, you can provide a custom Python command, if your
+host's Python installation differs from one of the above mentioned commands.
+
+<h3>New error communication</h3>
+If the Python based plugins can't be executed on a host system, either because there is no
+suitable Python installation available, or the configured command doesn't
+exist, you will be noticed via the Check_MK service of the host, that will show
+a suitable error message and yield a <tt>WARN</tt> state.
+This also means that the Checkmk agent package installation will no longer fail
+if there is no suitable Python installation available.
+
+<h3>Incompatibilities</h3>
+This Werk is marked as incompatible due to some circumstances:
+<ul>
+<li>Due to the fact that Python based plugins now require a <tt>.py</tt> ending, some builtin
+plugins had to be renamed. You'll have to consider this when deploying via
+a custom script that references the plugin's path on the Checkmk site. However, the
+agent bakery will still choose the right files.</li>
+<li>As Python 3 is the new default, and Python 2 was the old default, many Python based plugins
+will silently be executed with a different interpreter as before. If you still want Python 2,
+(and there is a Python 3 installation that would get chosen automatically,) you'll have to
+configure the above mentioned rule (if deploying via agent bakery), or explicitly deploy the
+<tt>_2.py</tt> version.</li>
+<li>When deploying your own Python based agent plugins, you have to keep in mind that a Python 3
+plugin has to end with <tt>.py</tt> and a Python 2 plugin has to end with <tt>_2.py</tt>.
+In particular, the shebang (if any) will be ignored. If you explicitly wish to disable this
+mechanism, you can still write your Python based plugins as an executable script without a
+<tt>.py</tt> suffix (Of course, the shebang will be used, then).</li>
+</ul>

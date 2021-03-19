@@ -36,5 +36,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_backup_timemachine,
-        title=lambda: _("Age of timemachine backup"),
+        title=lambda: _("Timemachine backup age"),
     ))

@@ -9,11 +9,11 @@
 # "omd_status" and "omd_info". As the new CheckAPI enables subscribing onto multiple
 # sections, this split-up is not necessary anymore and therefore the plugins were merged.
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List, Optional
 
-import cmk.utils.version as cmk_version
-from .agent_based_api.v0.type_defs import InventoryGenerator
-from .agent_based_api.v0 import Attributes, register, TableRow
+import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
+from .agent_based_api.v1.type_defs import InventoryResult
+from .agent_based_api.v1 import Attributes, register, TableRow
 
 
 def _service_status(status: Dict[str, List[str]], service_name: str):
@@ -37,8 +37,11 @@ def _service_status(status: Dict[str, List[str]], service_name: str):
     return "running"
 
 
-def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status: Dict[str, Any],
-                   section_omd_info: Dict[str, Dict[str, Dict]]) -> Dict[str, Dict]:
+def merge_sections(
+    section_livestatus_status: Dict[str, Dict[str, str]],
+    section_omd_status: Dict[str, Dict],
+    section_omd_info: Dict[str, Dict[str, Dict]],
+) -> Dict[str, Dict]:
 
     merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
 
@@ -46,7 +49,19 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
     for site, status in section_livestatus_status.items():
         if status is None:
             continue
-        helper_usage_cmk = float(status['helper_usage_cmk']) * 100
+
+        # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
+        # livestatus status table has been updated.
+        helper_usage_cmk = float(status['helper_usage_cmk'] or "0") * 100
+        try:
+            helper_usage_fetcher = float(status['helper_usage_fetcher'] or "0") * 100
+            helper_usage_checker = float(status['helper_usage_checker'] or "0") * 100
+        except KeyError:
+            # May happen if we are trying to query old host.
+            # To be consistent we correctly report that usage of the new helpers is zero.
+            helper_usage_fetcher = 0.0
+            helper_usage_checker = 0.0
+
         helper_usage_generic = float(status['helper_usage_generic']) * 100
         livestatus_usage = float(status['livestatus_usage']) * 100
 
@@ -56,9 +71,11 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
         })["status_columns"] = {
             'num_hosts': status['num_hosts'],
             'num_services': status['num_services'],
-            'check_helper_usage': ("%.2f%%" % helper_usage_generic),
-            'check_mk_helper_usage': ("%.2f%%" % helper_usage_cmk),
-            'livestatus_usage': ("%.2f%%" % livestatus_usage),
+            'check_helper_usage': helper_usage_generic,
+            'check_mk_helper_usage': helper_usage_cmk,
+            'fetcher_helper_usage': helper_usage_fetcher,
+            'checker_helper_usage': helper_usage_checker,
+            'livestatus_usage': livestatus_usage,
         }
 
     # SECTION: omd_status
@@ -98,7 +115,7 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
             "inventory_columns": {}
         })["status_columns"].update(omd_status_dict)
 
-    merged_section["check_mk"]["num_sites"] = str(num_sites)
+    merged_section["check_mk"]["num_sites"] = num_sites
 
     # SECTION: omd_info
     # Section may not be available in agent output (e.g. when using old linux agent)
@@ -125,12 +142,12 @@ def merge_sections(section_livestatus_status: Dict[str, Any], section_omd_status
                 "status_columns": {}
             })["inventory_columns"].update(values)
 
-        merged_section["check_mk"]["num_versions"] = str(len(versions))
+        merged_section["check_mk"]["num_versions"] = len(versions)
 
     return merged_section
 
 
-def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryGenerator:
+def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
 
     for key, elem in merged_sections["sites"].items():
         yield TableRow(path=["software", "applications", "check_mk", "sites"],
@@ -145,19 +162,21 @@ def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryGenerator:
 
     yield Attributes(path=["software", "applications", "check_mk"],
                      inventory_attributes={
-                         "num_versions": merged_sections["check_mk"].get("num_versions", "n.a."),
-                         "num_sites": merged_sections["check_mk"].get("num_sites", "n.a.")
+                         "num_versions": merged_sections["check_mk"].get("num_versions"),
+                         "num_sites": merged_sections["check_mk"].get("num_sites")
                      })
 
 
-def inventory_checkmk(section_livestatus_status: Dict[str, Dict[str, str]],
-                      section_omd_status: Dict[str, Dict],
-                      section_omd_info: Dict[str, Dict[str, Dict]]) -> InventoryGenerator:
+def inventory_checkmk(
+    section_livestatus_status: Optional[Dict[str, Dict[str, str]]],
+    section_omd_status: Optional[Dict[str, Dict]],
+    section_omd_info: Optional[Dict[str, Dict[str, Dict]]],
+) -> InventoryResult:
 
     merged_sections = merge_sections(
-        section_livestatus_status,
-        section_omd_status,
-        section_omd_info,
+        section_livestatus_status or {},
+        section_omd_status or {},
+        section_omd_info or {},
     )
     yield from generate_inventory(merged_sections)
 

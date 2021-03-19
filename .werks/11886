@@ -1,0 +1,15 @@
+Title: Rename Windows agent section rulesets
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1610710681
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The rulesets <i>"Agent sections to be executed"</i> and <i>"Disabled agent sections"</i>
+have been renamed to <i>"Enabled sections (Windows agent)"</i> and
+<i>"Disabled sections (Windows agent)"</i>, respectively.
+This makes the naming scheme more consistent, both inherently and in relation
+to other section disabling rulesets (Linux agent and SNMP).

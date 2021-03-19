@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1568366612
 
 The option to disable the docker_container_diskstat section was missing in version 1.6.0b9.

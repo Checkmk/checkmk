@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def inventory_k8s_roles(parsed):
     if parsed:
@@ -20,6 +26,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('total'),
         infoname='Total',
         human_readable_func=int,
+        boundaries=(0, None),
     )
     yield check_levels(
         cluster_roles,
@@ -27,6 +34,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('cluster_roles'),
         infoname='Cluster roles',
         human_readable_func=int,
+        boundaries=(0, None),
     )
     yield check_levels(
         roles,
@@ -34,6 +42,7 @@ def check_k8s_roles(item, params, parsed):
         params.get('roles'),
         infoname='Roles',
         human_readable_func=int,
+        boundaries=(0, None),
     )
 
 
@@ -44,5 +53,4 @@ check_info['k8s_roles'] = {
     'service_description': 'Roles',
     'group': 'k8s_roles',
     'has_perfdata': True,
-    'includes': ['k8s.include'],
 }

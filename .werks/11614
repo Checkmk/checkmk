@@ -1,0 +1,15 @@
+Title: Fix crash when configuring icon visibility of custom icons
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1606813681
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When configuring the icon visibility using the global setting "Custom icons and
+actions" of custom icons "Builtin icon visibility" the exception
+"AttributeError (type object 'CustomIconHttp' has no attribute '_title')" could
+occur.

@@ -35,7 +35,6 @@ users: _List[str] = []
 admin_users: _List[str] = ["omdadmin", "cmkadmin"]
 guest_users: _List[str] = []
 default_user_role = "user"
-save_user_access_times = False
 user_online_maxage = 30  # seconds
 
 log_levels = {
@@ -45,7 +44,10 @@ log_levels = {
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
     "cmk.web.background-job": 30,
+    "cmk.web.slow-views": 30,
 }
+
+slow_views_duration_threshold = 60
 
 multisite_users: _Dict = {}
 multisite_hostgroups: _Dict = {}
@@ -61,7 +63,6 @@ multisite_contactgroups: _Dict = {}
 
 sidebar = [
     ('tactical_overview', 'open'),
-    ('search', 'open'),
     ('bookmarks', 'open'),
     ('master_control', 'closed'),
 ]
@@ -72,16 +73,15 @@ sidebar_update_interval = 30.0
 # It is possible (but ugly) to enable a scrollbar in the sidebar
 sidebar_show_scrollbar = False
 
-# Enable regular checking for popup notifications
-sidebar_notify_interval = None
-
-sidebar_show_version_in_sidebar = True
+# Enable regular checking for notification messages
+sidebar_notify_interval = 30
 
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80
 
 # Quicksearch search order
 quicksearch_search_order = [
+    ("menu", "continue"),
     ("h", "continue"),
     ("al", "continue"),
     ("ad", "continue"),
@@ -201,6 +201,9 @@ custom_style_sheet = None
 # UI theme to use
 ui_theme = "modern-dark"
 
+# Show mode to use
+show_mode = "default_show_less"
+
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 
@@ -306,6 +309,10 @@ graph_timeranges: _List[_Dict[str, _Any]] = [
 # in previous versions and is set on remote sites during WATO synchronization.
 userdb_automatic_sync = "master"
 
+# Permission to login to the web gui of a site (can be changed in sites
+# configuration)
+user_login = True
+
 # Holds dicts defining user connector instances and their properties
 user_connections: _List = []
 
@@ -315,7 +322,7 @@ default_user_profile: _Dict[str, _Any] = {
     'force_authuser': False,
 }
 lock_on_logon_failures = False
-user_idle_timeout = None
+user_idle_timeout = 5400
 single_user_session = None
 password_policy: _Dict = {}
 
@@ -405,9 +412,6 @@ user_downtime_timeranges: _List[_Dict[str, _Any]] = [
 # Override toplevel and sort_index settings of builtin icons
 builtin_icon_visibility: _Dict = {}
 
-# Name of the hostgroup to filter the network topology view by default
-topology_default_filter_group = None
-
 trusted_certificate_authorities = {
     "use_system_wide_cas": True,
     "trusted_cas": [],
@@ -475,7 +479,6 @@ wato_use_git = False
 wato_hidden_users: _List = []
 wato_user_attrs: _List = []
 wato_host_attrs: _List = []
-wato_legacy_eval = False
 wato_read_only: _Dict = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
@@ -502,11 +505,11 @@ aggregation_rules: _Dict = {}
 aggregations: _List = []
 host_aggregations: _List = []
 bi_packs: _Dict = {}
-bi_precompile_on_demand = True
-bi_use_legacy_compilation = False
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
 bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+bi_precompile_on_demand = False
+bi_use_legacy_compilation = False

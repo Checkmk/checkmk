@@ -47,7 +47,7 @@ class Automations:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
             if automation.needs_checks:
-                config.load_all_checks(check_api.get_check_api_context)
+                config.load_all_agent_based_plugins(check_api.get_check_api_context)
 
             if automation.needs_config:
                 config.load(validate_hosts=False)

@@ -4,6 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Remove locale settings to eliminate localized outputs where possible
+
+read_python_version() {
+    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
+        echo "$1"
+        return 0
+    fi
+    return 1
+}
+PYTHON3=$(read_python_version python3 4)
+PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/python_path.cfg"
+fi
+export PYTHON2 PYTHON3
+
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
+
 export LC_ALL=C
 unset LANG
 
@@ -40,7 +64,7 @@ else
     exec </dev/null 2>/dev/null
 fi
 
-function file_age() {
+file_age() {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
 }
 
@@ -49,7 +73,7 @@ file_mtime () {
 }
 
 
-function run_mrpe() {
+run_mrpe() {
     local descr=$1
     shift
     local cmdline="$@"
@@ -66,7 +90,7 @@ export -f run_mrpe
 
 
 # Runs a command asynchronous by use of a cache file
-function run_cached () {
+run_cached() {
     local mrpe=0
     local append_age=0
     # TODO: this function is unable to handle mulitple args at once
@@ -136,7 +160,7 @@ function run_cached () {
 
 
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 2.1.0i1"
 echo "AgentOS: solaris"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -476,20 +500,67 @@ then
 
 fi
 
+run_agent_plugin() {
+    if [ "${1:(0):(2)}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+    if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
+            fi
+            return
+        fi
+        if [ -n "$PYTHON3" ]; then
+            $PYTHON3 "$agent_plugin"
+            return
+        fi
+        return
+    fi
+    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+    if [ -n "$PYTHON2" ]; then
+        $PYTHON2 "$agent_plugin"
+    fi
+}
+
 # Plugins
 if cd $PLUGINSDIR 2>/dev/null
 then
     for skript in $(ls)
     do
         if [ -x "$skript" ] ; then
-            ./$skript
+            run_agent_plugin $skript
         fi
     done
 
     # Call some plugins only every X'th second
     for skript in [1-9]*/* ; do
         if [ -x "$skript" ] ; then
-            run_cached plugins_${skript//\//\#} ${skript%/*} "$skript"
+            run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
         fi
     done
+fi
+
+
+if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+    if [ -n "$NO_PYTHON" ]; then
+        echo "FailedPythonReason: No suitable python installation found."
+    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+        echo "FailedPythonReason: Configured python command not found."
+    fi
 fi

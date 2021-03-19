@@ -6,7 +6,7 @@ Date: 1593440606
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk adds the option to specify a minimum age for processes monitored
 by the check <tt>ps</tt>. This can be done either when configuring the default

@@ -3,8 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from .agent_based_api.v0 import (
+from typing import Any, Mapping
+from .agent_based_api.v1 import (
     register,
     Service,
     SNMPTree,
@@ -23,7 +23,7 @@ from .utils.bluecat import (
 register.snmp_section(
     name='bluecat_dns',
     parse_function=parse_bluecat,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13315.3.1.2.2.1",
             oids=[
@@ -35,18 +35,18 @@ register.snmp_section(
 )
 
 
-def discover_bluecat_dns(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_bluecat_dns(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_bluecat_dns({'oper_state': 1}))
-    [Service(item=None, parameters={}, labels=[])]
+    [Service()]
     """
     yield Service()
 
 
 def check_bluecat_dns(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_bluecat_operational_state(
         params,
         section,
@@ -54,9 +54,9 @@ def check_bluecat_dns(
 
 
 def cluster_check_bluecat_dns(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from cluster_check_bluecat_operational_state(
         params,
         section,

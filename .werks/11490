@@ -1,0 +1,28 @@
+Title: Remove cmk -B and cmk -C commands
+Class: feature
+Compatible: compat
+Component: core
+Date: 1599747239
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+
+During the activation of configuration changes we have multiple subsequent steps:
+
+LI: Acquire the activation lock
+LI: Create the core config (incl. backup and restore in case of issues)
+LI: Precompile some more files for the core
+LI: Restart of the core or reload of the config
+
+The most common commands to execute the activation or parts of the procedure
+are "cmk -U" for just creating the configuration or "cmk -O" for creating the
+configuration and reloading the core config and "cmk -R" for creating the
+configuration and restarting the core process.
+
+The commands "cmk -B" (Create core config) and "cmk -C" (precompile some files)
+were providing direkt access to parts of the "cmk -U" command but rarely used.
+
+To simplify things we are now dropping both, the "cmk -B" and "cmk -C"
+commands. If you used one of these before, please use "cmk -U" in the future.

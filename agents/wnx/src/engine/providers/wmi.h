@@ -1,8 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
-
-// provides basic api to start and stop service
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #ifndef wmi_h__
@@ -43,7 +42,6 @@ constexpr char kSepChar = ',';
 
 // separate class - too weak on functionality
 // no need to be included in Wmi hierarchy
-// #TODO think about noch mal, probably should be integrated with WMI
 class SubSection {
 public:
     enum class Type {
@@ -80,8 +78,7 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, WmiAll);
-    FRIEND_TEST(WmiProviderTest, WmiSubSection);
+    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
 #endif
 };
 
@@ -106,7 +103,7 @@ public:
 protected:
     // *internal* function which correctly sets
     // all parameters
-    void setupByName() noexcept;
+    void setupByName();
     std::string makeBody() override;
 
 private:
@@ -123,9 +120,8 @@ private:
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
-    FRIEND_TEST(WmiProviderTest, WmiAll);
-    FRIEND_TEST(WmiProviderTest, WmiSubSection);
-    FRIEND_TEST(WmiProviderTest, WmiOhm);
+    FRIEND_TEST(WmiProviderTest, SimulationIntegration);
+    FRIEND_TEST(WmiProviderTest, SubSectionSimulateExchange);
 #endif
 };
 

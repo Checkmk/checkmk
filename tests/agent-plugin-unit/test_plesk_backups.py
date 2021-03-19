@@ -10,7 +10,7 @@ from utils import import_module
 
 def test_import_module(capfd):
     with pytest.raises(SystemExit) as pytest_wrapped_e:
-        import_module("plesk_backups")
+        import_module("plesk_backups.py")
     out, _ = capfd.readouterr()
     # PY2 vs PY3: No module named 'MySQLdb' vs No module named MySQLdb
     out = out.replace("'", "")

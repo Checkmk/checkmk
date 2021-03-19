@@ -1,0 +1,17 @@
+Title: <tt>mk_cups_queues</tt>: Accept printer names with hyphens ("-")
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1615304704
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The agent plugin <tt>mk_cups_queues</tt>, which delivers data about printers
+in queues within the CUPS printing system, now accepts printer names which
+contain hyphens ("-"). As a result, the corresponding check plugin <tt>cups_queues</tt>
+will now receive data about such printers and discover them.
+
+Note that you have to update the Checkmk agent on the corresponding hosts for
+this werk to become effective.

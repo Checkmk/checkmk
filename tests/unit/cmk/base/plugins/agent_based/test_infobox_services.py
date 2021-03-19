@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.infoblox_services import (
     check_infoblox_services,
     cluster_check_infoblox_services,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Service, Result, state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, State as state
 
 example_snmp_string_table = [[
     ['9', '1', 'Running'],

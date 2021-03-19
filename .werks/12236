@@ -1,0 +1,18 @@
+Title: <tt>oracle_instance</tt>: More detailed version information
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614672374
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The check plugin <tt>oracle_instance</tt>, which monitors the state of
+Oracle instances, now displayes more detailed version information if the
+corresponding Oracle version supports this (the minimum required version
+for this is Oracle 18c).
+
+The displayed version will for example change from Version 19.0.0.0.0 to
+Version 19.5.0.0.0. This has no impact on the monitoring state of the
+corresponding services.

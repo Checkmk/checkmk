@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The MK_VARDIR pointed to "/var/lib/check_mk" and was changed to
 "/var/lib/check_mk_agent".

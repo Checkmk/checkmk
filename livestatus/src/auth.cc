@@ -5,7 +5,6 @@
 
 #include "auth.h"
 
-#include "MonitoringCore.h"
 #include "contact_fwd.h"
 
 contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
@@ -19,27 +18,28 @@ bool host_has_contact(const host *hst, const contact *ctc) {
                                          const_cast<contact *>(ctc)) != 0;
 }
 
-bool service_has_contact(MonitoringCore *mc, const host *hst,
+bool service_has_contact(AuthorizationKind service_auth, const host *hst,
                          const service *svc, const contact *ctc) {
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_service(const_cast<service *>(svc),
                                   const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_service(const_cast<service *>(svc),
                                             const_cast<contact *>(ctc)) != 0 ||
-           (mc->serviceAuthorization() == AuthorizationKind::loose &&
+           (service_auth == AuthorizationKind::loose &&
             host_has_contact(hst, ctc));
 }
 }  // namespace
 
-bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
-                       const service *svc) {
+bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
+                       const host *hst, const service *svc) {
     return ctc != unknown_auth_user() &&
            (svc == nullptr ? host_has_contact(hst, ctc)
-                           : service_has_contact(mc, hst, svc, ctc));
+                           : service_has_contact(service_auth, hst, svc, ctc));
 }
 
-bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
-                                  const contact *ctc) {
+bool is_authorized_for_host_group(AuthorizationKind group_auth,
+                                  AuthorizationKind service_auth,
+                                  const hostgroup *hg, const contact *ctc) {
     if (ctc == nullptr) {
         return true;
     }
@@ -50,9 +50,9 @@ bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
     }
 
     auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(mc, ctc, mem->host_ptr, nullptr);
+        return is_authorized_for(service_auth, ctc, mem->host_ptr, nullptr);
     };
-    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+    if (group_auth == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
             if (has_contact(mem)) {
@@ -70,7 +70,9 @@ bool is_authorized_for_host_group(MonitoringCore *mc, const hostgroup *hg,
     return true;
 }
 
-bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
+bool is_authorized_for_service_group(AuthorizationKind group_auth,
+                                     AuthorizationKind service_auth,
+                                     const servicegroup *sg,
                                      const contact *ctc) {
     if (ctc == nullptr) {
         return true;
@@ -83,9 +85,9 @@ bool is_authorized_for_service_group(MonitoringCore *mc, const servicegroup *sg,
 
     auto has_contact = [=](servicesmember *mem) {
         service *svc = mem->service_ptr;
-        return is_authorized_for(mc, ctc, svc->host_ptr, svc);
+        return is_authorized_for(service_auth, ctc, svc->host_ptr, svc);
     };
-    if (mc->groupAuthorization() == AuthorizationKind::loose) {
+    if (group_auth == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (servicesmember *mem = sg->members; mem != nullptr;
              mem = mem->next) {

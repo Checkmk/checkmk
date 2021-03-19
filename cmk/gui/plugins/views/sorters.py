@@ -277,6 +277,12 @@ declare_simple_sorter("stateage", _("Service state age"), "service_last_state_ch
 declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
 declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
 
+# Alerts
+declare_1to1_sorter("alert_stats_crit", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_unknown", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_warn", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_problem", cmp_simple_number, reverse=True)
+
 # Service
 declare_1to1_sorter("svc_check_command", cmp_simple_string)
 declare_1to1_sorter("svc_contacts", cmp_string_list)

@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksStorage,
+    RulespecGroupEnforcedServicesStorage,
     ManualCheckParameterRulespec,
     rulespec_registry,
 )
@@ -25,7 +25,7 @@ def _item_spec_raid():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="raid",
-        group=RulespecGroupManualChecksStorage,
+        group=RulespecGroupEnforcedServicesStorage,
         item_spec=_item_spec_raid,
         title=lambda: _("RAID: overall state"),
     ))

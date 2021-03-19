@@ -14,8 +14,7 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster import (
     CONFIG_SYNC_DEFAULT_PARAMETERS,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v0 import Result, state
-from cmk.base.plugins.agent_based.agent_based_api.v0.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -76,6 +75,6 @@ def test_check_f5_bigip_config_sync_pre_v11(section, result):
 def test_check_f5_bigip_config_sync_v11_plus(section, result):
     assert list(
         check_f5_bigip_config_sync_v11_plus(
-            Parameters(CONFIG_SYNC_DEFAULT_PARAMETERS),
+            CONFIG_SYNC_DEFAULT_PARAMETERS,
             State(*section),
         )) == result

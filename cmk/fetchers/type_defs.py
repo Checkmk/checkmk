@@ -5,15 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Package containing the fetchers to the data sources."""
 
-from typing import TypeVar, Union
+import enum
+from typing import List
 
-from cmk.utils.type_defs import AgentRawData
+__all__ = ["AgentSectionContent", "Mode"]
 
-from cmk.snmplib.type_defs import SNMPRawData
+AgentSectionContent = List[List[str]]
 
-__all__ = ["TRawData"]
 
-# TODO(ml): This type does not really belong here but there currently
-#           is not better place.
-AbstractRawData = Union[AgentRawData, SNMPRawData]
-TRawData = TypeVar("TRawData", bound=AbstractRawData)
+class Mode(enum.Enum):
+    NONE = enum.auto()
+    CHECKING = enum.auto()
+    DISCOVERY = enum.auto()
+    INVENTORY = enum.auto()
+    RTC = enum.auto()
+    # Special case for discovery/checking/inventory command line argument where we specify in
+    # advance all sections we want. Should disable caching, and in the SNMP case also detection.
+    # Disabled sections must *not* be discarded in this mode.
+    FORCE_SECTIONS = enum.auto()

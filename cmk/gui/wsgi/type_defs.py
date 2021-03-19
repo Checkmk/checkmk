@@ -4,25 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, TypedDict, Union
+from typing import List, Literal, TypedDict, Union
+
+from cmk.utils.type_defs import UserId
 
 Scope = List[str]
 UnixTimeStamp = int  # restrict to positive numbers
 Audience = Union[str, List[str]]
-DomainObject = Dict[str, Any]
-TokenType = Union[Literal["access_token"], Literal["refresh_token"]]
+TokenType = Literal["access_token", "refresh_token"]
+AuthType = Literal['automation', 'cookie', 'webserver', 'http_header']
 RFC7662 = TypedDict(
     'RFC7662',
     {
         'active': bool,
-        'scope': str,
+        'scope': AuthType,
         'client_id': str,
         'username': str,
         'token_type': TokenType,
         'exp': UnixTimeStamp,  # expires
         'iat': UnixTimeStamp,  # issued
         'nbf': UnixTimeStamp,  # not before
-        'sub': str,  # subject
+        'sub': UserId,  # subject
         'aud': Audience,
         'iss': str,  # issuer
         'jti': str,  # json web token-identifier

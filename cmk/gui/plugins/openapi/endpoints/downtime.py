@@ -3,56 +3,65 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Downtimes"""
+"""Downtimes
+
+A (scheduled) downtime is a planned maintenance period.
+Hosts and services are handled differently by Checkmk during a downtime, for example,
+notifications are disabled.
+
+You can find an introduction to downtimes in the
+[Checkmk guide](https://docs.checkmk.com/latest/en/basics_downtimes.html).
+"""
 
 import json
-import http.client
 import datetime as dt
-from typing import Dict, Literal
-
-from connexion import ProblemException, problem  # type: ignore[import]
+from typing import Literal
 
 from cmk.gui import config, sites
 from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands import downtimes as downtime_commands
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And, Or
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.gui.plugins.openapi.restful_objects import (
-    endpoint_schema,
+    Endpoint,
     request_schemas,
     constructors,
     response_schemas,
-    ParamDict,
 )
-from cmk.gui.watolib.downtime import (
-    execute_livestatus_command,
-    remove_downtime_command,
+from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    OPTIONAL_HOST_NAME,
+    SERVICE_DESCRIPTION,
 )
+from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
-DOWNTIME_ID = ParamDict.create('downtime_id',
-                               'path',
-                               description='The id of the downtime',
-                               example='54',
-                               required=True)
-
-DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup']
+DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
+                       'service_by_query']
 
 
-@endpoint_schema(constructors.collection_href('downtime'),
-                 'cmk/create',
-                 method='post',
-                 request_schema=request_schemas.CreateDowntime,
-                 output_empty=True)
-def create_downtime(params):
-    """Create downtime"""
+class DowntimeParameter(BaseSchema):
+    query = fields.query_field(Downtimes, required=False)
+
+
+@Endpoint(constructors.collection_href('downtime', 'host'),
+          'cmk/create_host',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.CreateHostRelatedDowntime,
+          output_empty=True)
+def create_host_related_downtime(params):
+    """Create a host related scheduled downtime"""
     body = params['body']
+    live = sites.live()
+
     downtime_type: DowntimeType = body['downtime_type']
+
     if downtime_type == 'host':
         downtime_commands.schedule_host_downtime(
-            sites.live(),
+            live,
             host_name=body['host_name'],
-            include_all_services=body['include_all_services'],
             start_time=body['start_time'],
             end_time=body['end_time'],
             recur=body['recur'],
@@ -62,9 +71,8 @@ def create_downtime(params):
         )
     elif downtime_type == 'hostgroup':
         downtime_commands.schedule_hostgroup_host_downtime(
-            sites.live(),
+            live,
             hostgroup_name=body['hostgroup_name'],
-            include_all_services=body['include_all_services'],
             start_time=body['start_time'],
             end_time=body['end_time'],
             recur=body['recur'],
@@ -72,9 +80,42 @@ def create_downtime(params):
             user_id=config.user.ident,
             comment=body.get('comment', f"Downtime for hostgroup {body['hostgroup_name']!r}"),
         )
-    elif downtime_type == 'service':
+
+    elif downtime_type == 'host_by_query':
+        downtime_commands.schedule_hosts_downtimes_with_query(
+            live,
+            body['query'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', ''),
+        )
+    else:
+        return problem(status=400,
+                       title="Unhandled downtime-type.",
+                       detail=f"The downtime-type {downtime_type!r} is not supported.")
+
+    return Response(status=204)
+
+
+@Endpoint(constructors.collection_href('downtime', 'service'),
+          'cmk/create_service',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.CreateServiceRelatedDowntime,
+          output_empty=True)
+def create_service_related_downtime(params):
+    """Create a service related scheduled downtime"""
+    body = params['body']
+    live = sites.live()
+
+    downtime_type: DowntimeType = body['downtime_type']
+
+    if downtime_type == 'service':
         downtime_commands.schedule_service_downtime(
-            sites.live(),
+            live,
             host_name=body['host_name'],
             service_description=body['service_descriptions'],
             start_time=body['start_time'],
@@ -89,15 +130,25 @@ def create_downtime(params):
         )
     elif downtime_type == 'servicegroup':
         downtime_commands.schedule_servicegroup_service_downtime(
-            sites.live(),
+            live,
             servicegroup_name=body['servicegroup_name'],
-            include_hosts=body['include_hosts'],
             start_time=body['start_time'],
             end_time=body['end_time'],
             recur=body['recur'],
             duration=body['duration'],
             user_id=config.user.ident,
             comment=body.get('comment', f"Downtime for servicegroup {body['servicegroup_name']!r}"),
+        )
+    elif downtime_type == 'service_by_query':
+        downtime_commands.schedule_services_downtimes_with_query(
+            live,
+            query=body['query'],
+            start_time=body['start_time'],
+            end_time=body['end_time'],
+            recur=body['recur'],
+            duration=body['duration'],
+            user_id=config.user.ident,
+            comment=body.get('comment', ''),
         )
     else:
         return problem(status=400,
@@ -107,31 +158,22 @@ def create_downtime(params):
     return Response(status=204)
 
 
-@endpoint_schema(constructors.collection_href('downtime'),
-                 '.../collection',
-                 method='get',
-                 parameters=[
-                     ParamDict.create(
-                         'host_name',
-                         'query',
-                         required=False,
-                         schema_type='string',
-                         description="The name of the host where the downtimes belong",
-                         example="example.com",
-                     ).to_dict(),
-                     ParamDict.create(
-                         'service_description',
-                         'query',
-                         required=False,
-                         schema_type='string',
-                         description="The service description of a specific service downtime",
-                         example='CPU utilization',
-                     ).to_dict()
-                 ],
-                 response_schema=response_schemas.DomainObjectCollection)
-def list_service_downtimes(param):
-    """List downtimes"""
+@Endpoint(constructors.collection_href('downtime'),
+          '.../collection',
+          method='get',
+          tag_group='Monitoring',
+          query_params=[
+              OPTIONAL_HOST_NAME,
+              SERVICE_DESCRIPTION,
+              DowntimeParameter,
+          ],
+          response_schema=response_schemas.DomainObjectCollection)
+def show_downtimes(param):
+    """Show all scheduled downtimes"""
     live = sites.live()
+    sites_to_query = param.get('sites')
+    if sites_to_query:
+        live.only_sites = sites_to_query
 
     q = Query([
         Downtimes.id,
@@ -145,6 +187,10 @@ def list_service_downtimes(param):
         Downtimes.comment,
     ])
 
+    query_expr = param.get('query')
+    if query_expr is not None:
+        q = q.filter(query_expr)
+
     host_name = param.get('host_name')
     if host_name is not None:
         q = q.filter(Downtimes.host_name.contains(host_name))
@@ -157,52 +203,36 @@ def list_service_downtimes(param):
     return _serve_downtimes(gen_downtimes)
 
 
-@endpoint_schema('/objects/host/{host_name}/objects/downtime/{downtime_id}',
-                 '.../delete',
-                 method='delete',
-                 parameters=['host_name', DOWNTIME_ID],
-                 output_empty=True)
+@Endpoint(constructors.domain_type_action_href('downtime', 'delete'),
+          '.../delete',
+          method='post',
+          tag_group='Monitoring',
+          request_schema=request_schemas.DeleteDowntime,
+          output_empty=True)
 def delete_downtime(params):
-    """Delete downtime"""
-    is_service = Query(
-        [Downtimes.is_service],
-        Downtimes.id.contains(params['downtime_id']),
-    ).value(sites.live())
-    downtime_type = "SVC" if is_service else "HOST"
-    command_delete = remove_downtime_command(downtime_type, params['downtime_id'])
-    execute_livestatus_command(command_delete, params['host_name'])
-    return Response(status=204)
-
-
-@endpoint_schema(constructors.domain_type_action_href('downtime', 'bulk-delete'),
-                 '.../delete',
-                 method='delete',
-                 request_schema=request_schemas.BulkDeleteDowntime,
-                 output_empty=True)
-def bulk_delete_downtimes(params):
-    """Bulk delete downtimes"""
+    """Delete a scheduled downtime"""
+    body = params['body']
     live = sites.live()
-    entries = params['entries']
-    not_found = []
-
-    downtimes: Dict[int, int] = Query(
-        [Downtimes.id, Downtimes.is_service],
-        And(*[Downtimes.id.equals(downtime_id) for downtime_id in entries]),
-    ).to_dict(live)
-
-    for downtime_id in entries:
-        if downtime_id not in downtimes:
-            not_found.append(downtime_id)
-
-    if not_found:
-        raise ProblemException(404, http.client.responses[400],
-                               f"Downtimes {', '.join(not_found)} not found")
-
-    for downtime_id, is_service in downtimes.items():
-        if is_service:
-            downtime_commands.del_service_downtime(live, downtime_id)
+    delete_type = body['delete_type']
+    if delete_type == "query":
+        downtime_commands.delete_downtime_with_query(live, body['query'])
+    elif delete_type == "by_id":
+        downtime_commands.delete_downtime(live, body['downtime_id'])
+    elif delete_type == "params":
+        hostname = body['hostname']
+        if "services" not in body:
+            host_expr = Downtimes.host_name.op("~", hostname)
+            downtime_commands.delete_downtime_with_query(live, host_expr)
         else:
-            downtime_commands.del_host_downtime(live, downtime_id)
+            services_expr = And(*[
+                Downtimes.host_name == body['hostname'],
+                Or(*[Downtimes.service_description == svc_desc for svc_desc in body['services']])
+            ])
+            downtime_commands.delete_downtime_with_query(live, services_expr)
+    else:
+        return problem(status=400,
+                       title="Unhandled delete_type.",
+                       detail=f"The downtime-type {delete_type!r} is not supported.")
     return Response(status=204)
 
 
@@ -215,26 +245,27 @@ def _serve_downtimes(downtimes):
 
 def _serialize_downtimes(downtimes):
     entries = []
-    for downtime_info in downtimes:
-        service_description = downtime_info.get("service_description")
+    for downtime in downtimes:
+        service_description = downtime.get("service_description")
         if service_description:
             downtime_detail = "service: %s" % service_description
         else:
-            downtime_detail = "host: %s" % downtime_info["host_name"]
+            downtime_detail = "host: %s" % downtime["host_name"]
 
-        downtime_id = downtime_info['id']
+        downtime_id = downtime['id']
         entries.append(
             constructors.domain_object(
                 domain_type='downtime',
                 identifier=downtime_id,
                 title='Downtime for %s' % downtime_detail,
-                extensions=_downtime_properties(downtime_info),
+                extensions=_downtime_properties(downtime),
                 links=[
-                    constructors.link_rel(rel='.../delete',
-                                          href='/objects/host/%s/objects/downtime/%s' %
-                                          (downtime_info['host_name'], downtime_id),
-                                          method='delete',
-                                          title='Delete the downtime'),
+                    constructors.link_rel(
+                        rel='.../delete',
+                        href=f'/objects/host/{downtime["host_name"]}/objects/downtime/{downtime_id}',
+                        method='delete',
+                        title='Delete the downtime',
+                    ),
                 ]))
 
     return constructors.object_collection(

@@ -611,7 +611,7 @@ def _get_logfile_timespan(path: Path) -> Tuple[float, float]:
 # encoded history files, see e.g. quote_tab. In theory this shouldn't be
 # necessary, because there are a bunch of bytes which are not contained in any
 # valid UTF-8 string, but following Murphy's Law, those are not used in
-# Check_MK. To keep backwards compatibility with old history files, we have no
+# Checkmk. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s: AnyStr) -> AnyStr:
     if isinstance(s, bytes):

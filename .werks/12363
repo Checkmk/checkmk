@@ -1,0 +1,11 @@
+Title: fileinfo: files with special characters not discovered
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1616193602
+Class: fix
+
+Since Check_mk version 1.6.0p22, files with special characters in their
+filename (e.g. "ö", "ä", etc.) have not been discovered. This has been fixed.

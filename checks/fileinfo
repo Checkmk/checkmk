@@ -84,7 +84,7 @@ def _get_field(row, index):
 
 
 def _parse_single_legacy_row(row, **kwargs):
-    name = _cast_value(row[0], str)
+    name = _cast_value(row[0], unicode)
     if not name or name.endswith("No such file or directory"):
         # endswith("No such file...") is needed to
         # support the very old solaris perl based version of fileinfo
@@ -143,7 +143,7 @@ def parse_fileinfo(info):
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
     file_stat_data_types = {
-        'name': str,
+        'name': unicode,
         'size': int,
         'time': int,
         'status': str,

@@ -1,42 +1,22 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 import os
 import sys
 import livestatus
 
 try:
-    omd_root = os.getenv("OMD_ROOT")
-    socket_path = "unix:" + omd_root + "/tmp/run/live"
-except:
+    omd_root = os.environ["OMD_ROOT"]
+except KeyError:
     sys.stderr.write("This example is indented to run in an OMD site\n")
     sys.stderr.write("Please change socket_path in this example, if you are\n")
     sys.stderr.write("not using OMD.\n")
     sys.exit(1)
+
+socket_path = "unix:" + omd_root + "/tmp/run/live"
 
 sites = {
     "muc": {
@@ -57,7 +37,7 @@ sites = {
     },
 }
 
-c = livestatus.MultiSiteConnection(sites)
+c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 c.set_prepend_site(True)
 print(c.query("GET hosts\nColumns: name state\n"))
 c.set_prepend_site(False)
@@ -86,7 +66,7 @@ sites = {
     },
 }
 
-c = livestatus.MultiSiteConnection(sites)
+c = livestatus.MultiSiteConnection(sites)  # type: ignore[arg-type]
 for name, state in c.query("GET hosts\nColumns: name state\n"):
     print("%-15s: %d" % (name, state))
 print("Dead sites:")

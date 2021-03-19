@@ -1,35 +1,14 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2018             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 r"""
 Send notification messages to PagerDuty
 =======================================
 
 """
-from __future__ import unicode_literals
-
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 
 from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context, retrieve_from_passwordstore
 
@@ -56,8 +35,15 @@ def pagerduty_severity(state):
     }[state]
 
 
-def pagerduty_msg(context):
-    # type: (Dict) -> Dict
+def _notification_source_from_context(context: Dict) -> str:
+    """
+    payload.source must not be empty, otherwise:
+    HTTP 400 (Bad Request), "'payload.source' is missing or blank"
+    """
+    return context.get('HOSTADDRESS') or context.get('HOSTNAME') or 'Undeclared Host identifier'
+
+
+def pagerduty_msg(context: Dict) -> Dict:
     """Build the PagerDuty incident payload"""
 
     if context.get('WHAT', None) == "SERVICE":
@@ -79,8 +65,7 @@ def pagerduty_msg(context):
         "dedup_key": incident_key,
         "payload": {
             "summary": incident,
-            "source": context.get('HOSTADDRESS',
-                                  context.get('HOSTNAME', 'Undeclared Host identifier')),
+            "source": _notification_source_from_context(context),
             "severity": pagerduty_severity(state),
             "custom_details": {
                 "info": output,

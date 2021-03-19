@@ -1,4 +1,10 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include <string>
+
 #include "RegExp.h"
 #include "gtest/gtest.h"
 
@@ -67,7 +73,7 @@ TEST(RegExpTest, IgnorePattern) {
     EXPECT_TRUE(r.search("GNARK mMbZKENU"));
 }
 
-TEST(RegExpTest, CMK_1381) {
+TEST(RegExpTest, CMK1381) {
     // Regression test for wrong quoting of special characters
     RegExp r{"xy.z|", RegExp::Case::respect, RegExp::Syntax::literal};
 

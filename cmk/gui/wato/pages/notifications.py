@@ -1,34 +1,15 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing notification configuration"""
 
 import abc
 import time
+from typing import (List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type,
+                    overload)
 
-import cmk
 import cmk.utils.store as store
 
 import cmk.gui.view_utils
@@ -41,46 +22,66 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
-    TextUnicode,
-    Dictionary,
+    Age,
     Alternative,
-    FixedValue,
-    Tuple,
-    Integer,
-    Transform,
-    ListOf,
-    EmailAddress,
-    ID,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
     DropdownChoice,
+    EmailAddress,
+    FixedValue,
+    ID,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
     RegExp,
     RegExpUnicode,
-    ListChoice,
-    Age,
-    CascadingDropdown,
     TextAscii,
-    ListOfStrings,
-    Checkbox,
+    TextUnicode,
+    Transform,
+    Tuple,
+    rule_option_elements,
 )
 
 from cmk.gui.plugins.wato import (
-    EventsMode,
+    ABCEventsMode,
     mode_registry,
-    wato_confirm,
-    global_buttons,
+    make_confirm_link,
     make_action_link,
     add_change,
-    rule_option_elements,
     notification_parameter_registry,
+    flash,
 )
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
     save_notification_rules,
     load_notification_rules,
+    load_user_notification_rules,
 )
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
+from cmk.gui.wato.pages.users import ModeEditUser
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_simple_link,
+    make_simple_form_page_menu,
+    make_display_options_dropdown,
+)
+from cmk.gui.utils.urls import makeuri
+
+NotificationRule = Dict[str, Any]
 
 
-class NotificationsMode(EventsMode):
+class ABCNotificationsMode(ABCEventsMode):
     # TODO: Clean this up. Use inheritance
     @classmethod
     def _rule_match_conditions(cls):
@@ -98,11 +99,10 @@ class NotificationsMode(EventsMode):
         return [
             ("match_escalation",
              Tuple(
-                 title=_("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+                 title=_("Restrict to notification number"),
                  orientation="float",
                  elements=[
                      Integer(
-                         label=_("from"),
                          help=_("Let through notifications counting from this number. "
                                 "The first notification always has the number 1."),
                          default_value=1,
@@ -162,7 +162,6 @@ class NotificationsMode(EventsMode):
                         "These notifications will be processed by the rule based notification "
                         "system of Check_MK. This matching option helps you distinguishing "
                         "and also gives you access to special event fields."),
-                 style="dropdown",
                  elements=[
                      FixedValue(False, title=_("Do not match Event Console alerts"), totext=""),
                      Dictionary(
@@ -223,161 +222,102 @@ class NotificationsMode(EventsMode):
                                    start_nr=0,
                                    profilemode=False):
         if not rules:
-            html.message(_("You have not created any rules yet."))
+            html.show_message(_("You have not created any rules yet."))
             return
 
         vs_match_conditions = Dictionary(elements=self._rule_match_conditions())
 
-        if rules:
-            if not show_title:
-                title = ""
-            elif profilemode:
-                title = _("Notification rules")
-            elif userid:
-                url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
-                code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
-                title = code + _("Notification rules of user %s") % userid
-            else:
-                title = _("Global notification rules")
-            with table_element(title=title, limit=None, sortable=False) as table:
+        title = self._table_title(show_title, profilemode, userid)
+        with table_element(title=title, limit=None, sortable=False) as table:
+            if analyse:
+                analyse_rules, _analyse_plugins = analyse
 
+            # have_match = False
+            for nr, rule in enumerate(rules):
+                table.row()
+
+                # Analyse
                 if analyse:
-                    analyse_rules, _analyse_plugins = analyse
+                    table.cell(css="buttons")
+                    what, _anarule, reason = analyse_rules[nr + start_nr]
+                    if what == "match":
+                        html.icon("rulematch", _("This rule matches"))
+                    elif what == "miss":
+                        html.icon("rulenmatch", _("This rule does not match: %s") % reason)
 
-                # have_match = False
-                for nr, rule in enumerate(rules):
-                    table.row()
-
-                    # Analyse
-                    if analyse:
-                        table.cell(css="buttons")
-                        what, _anarule, reason = analyse_rules[nr + start_nr]
-                        if what == "match":
-                            html.icon(_("This rule matches"), "rulematch")
-                        elif what == "miss":
-                            html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
-
-                    if profilemode:
-                        listmode = "user_notifications_p"
-                    elif userid:
-                        listmode = "user_notifications"
-                    else:
-                        listmode = "notifications"
-
-                    # In case a notification plugin does not exist anymore the permission is completely missing.
-                    permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
-                    actions_allowed = permission_name not in permissions.permission_registry \
-                        or config.user.may(permission_name)
-
-                    if show_buttons and actions_allowed:
-                        anavar = html.request.var("analyse", "")
-                        delete_url = make_action_link([
-                            ("mode", listmode),
-                            ("user", userid),
-                            ("_delete", nr),
-                        ])
-                        drag_url = make_action_link([
-                            ("mode", listmode),
-                            ("analyse", anavar),
-                            ("user", userid),
-                            ("_move", nr),
-                        ])
-                        suffix = "_p" if profilemode else ""
-                        edit_url = watolib.folder_preserving_link([
-                            ("mode", "notification_rule" + suffix),
-                            ("edit", nr),
-                            ("user", userid),
-                        ])
-                        clone_url = watolib.folder_preserving_link([
-                            ("mode", "notification_rule" + suffix),
-                            ("clone", nr),
-                            ("user", userid),
-                        ])
-
-                        table.cell(_("Actions"), css="buttons")
-                        html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-                        html.icon_button(clone_url, _("Create a copy of this notification rule"),
-                                         "clone")
-                        html.element_dragger_url("tr", base_url=drag_url)
-                        html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-                    else:
-                        table.cell("", css="buttons")
-                        for _x in xrange(4):
-                            html.empty_icon_button()
-
-                    table.cell("", css="narrow")
-                    if rule.get("disabled"):
-                        html.icon(_("This rule is currently disabled and will not be applied"),
-                                  "disabled")
-                    else:
+                if show_buttons and self._actions_allowed(rule):
+                    table.cell(_("Actions"), css="buttons")
+                    links = self._rule_links(rule, nr, profilemode, userid)
+                    html.icon_button(links.edit, _("Edit this notification rule"), "edit")
+                    html.icon_button(links.clone, _("Create a copy of this notification rule"),
+                                     "clone")
+                    html.element_dragger_url("tr", base_url=links.drag)
+                    html.icon_button(links.delete, _("Delete this notification rule"), "delete")
+                else:
+                    table.cell("", css="buttons")
+                    for _x in range(4):
                         html.empty_icon_button()
 
-                    notify_method = rule["notify_plugin"]
-                    # Catch rules with empty notify_plugin key
-                    # Maybe this should be avoided somewhere else (e.g. rule editor)
-                    if not notify_method:
-                        notify_method = (None, [])
-                    notify_plugin = notify_method[0]
+                table.cell("", css="narrow")
+                if rule.get("disabled"):
+                    html.icon("disabled",
+                              _("This rule is currently disabled and will not be applied"))
+                else:
+                    html.empty_icon_button()
 
-                    table.cell(_("Type"), css="narrow")
-                    if notify_method[1] is None:
-                        html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
-                    else:
-                        html.icon(_("Create a notification"), "notify_create")
+                notify_method = rule["notify_plugin"]
+                # Catch rules with empty notify_plugin key
+                # Maybe this should be avoided somewhere else (e.g. rule editor)
+                if not notify_method:
+                    notify_method = (None, [])
+                notify_plugin = notify_method[0]
 
-                    table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
+                table.cell(_("Type"), css="narrow")
+                if notify_method[1] is None:
+                    html.icon("notify_cancel", _("Cancel notifications for this plugin type"))
+                else:
+                    html.icon("notify_create", _("Create a notification"))
 
-                    table.cell(_("Bulk"), css="narrow")
-                    if "bulk" in rule or "bulk_period" in rule:
-                        html.icon(_("This rule configures bulk notifications."), "bulk")
+                table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
-                    table.cell(_("Description"))
-                    url = rule.get("docu_url")
-                    if url:
-                        html.icon_button(url,
-                                         _("Context information about this rule"),
-                                         "url",
-                                         target="_blank")
-                        html.write("&nbsp;")
-                    html.write_text(rule["description"])
-                    table.cell(_("Contacts"))
-                    infos = []
-                    if rule.get("contact_object"):
-                        infos.append(_("all contacts of the notified object"))
-                    if rule.get("contact_all"):
-                        infos.append(_("all users"))
-                    if rule.get("contact_all_with_email"):
-                        infos.append(_("all users with and email address"))
-                    if rule.get("contact_users"):
-                        infos.append(_("users: ") + (", ".join(rule["contact_users"])))
-                    if rule.get("contact_groups"):
-                        infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
-                    if rule.get("contact_emails"):
-                        infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
-                    if not infos:
-                        html.i(_("(no one)"))
+                table.cell(_("Bulk"), css="narrow")
+                if "bulk" in rule or "bulk_period" in rule:
+                    html.icon("bulk", _("This rule configures bulk notifications."))
 
-                    else:
-                        for line in infos:
-                            html.write("&bullet; %s" % line)
-                            html.br()
+                table.cell(_("Description"))
+                url = rule.get("docu_url")
+                if url:
+                    html.icon_button(url,
+                                     _("Context information about this rule"),
+                                     "url",
+                                     target="_blank")
+                    html.write("&nbsp;")
+                html.write_text(rule["description"])
+                table.cell(_("Contacts"))
 
-                    table.cell(_("Conditions"), css="rule_conditions")
-                    num_conditions = len([key for key in rule if key.startswith("match_")])
-                    if num_conditions:
-                        title = _("%d conditions") % num_conditions
-                        html.begin_foldable_container(
-                            treename="rule_%s_%d" % (userid, nr),
-                            id_="%s" % nr,
-                            isopen=False,
-                            title=title,
-                            indent=False,
-                            tree_img="tree_black",
-                        )
-                        html.write(vs_match_conditions.value_to_text(rule))
-                        html.end_foldable_container()
-                    else:
-                        html.i(_("(no conditions)"))
+                infos = self._rule_infos(rule)
+                if not infos:
+                    html.i(_("(no one)"))
+                else:
+                    for line in infos:
+                        html.write("&bullet; %s" % line)
+                        html.br()
+
+                table.cell(_("Conditions"), css="rule_conditions")
+                num_conditions = len([key for key in rule if key.startswith("match_")])
+                if num_conditions:
+                    title = _("%d conditions") % num_conditions
+                    html.begin_foldable_container(
+                        treename="rule_%s_%d" % (userid, nr),
+                        id_="%s" % nr,
+                        isopen=False,
+                        title=title,
+                        indent=False,
+                    )
+                    html.write(vs_match_conditions.value_to_text(rule))
+                    html.end_foldable_container()
+                else:
+                    html.i(_("(no conditions)"))
 
     def _add_change(self, log_what, log_text):
         add_change(log_what, log_text, need_restart=False)
@@ -398,9 +338,98 @@ class NotificationsMode(EventsMode):
             default_value=["host"],
         )
 
+    def _table_title(self, show_title, profilemode, userid):
+        if not show_title:
+            return ""
+        if profilemode:
+            return _("Notification rules")
+        if userid:
+            url = makeuri(request, [("mode", "user_notifications"), ("user", userid)])
+            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
+            return code + _("Notification rules of user %s") % userid
+        return _("Global notification rules")
+
+    def _rule_infos(self, rule):
+        infos = []
+        if rule.get("contact_object"):
+            infos.append(_("all contacts of the notified object"))
+        if rule.get("contact_all"):
+            infos.append(_("all users"))
+        if rule.get("contact_all_with_email"):
+            infos.append(_("all users with and email address"))
+        if rule.get("contact_users"):
+            infos.append(_("users: ") + (", ".join(rule["contact_users"])))
+        if rule.get("contact_groups"):
+            infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
+        if rule.get("contact_emails"):
+            infos.append(_("email addresses: ") + (", ".join(rule["contact_emails"])))
+        return infos
+
+    def _actions_allowed(self, rule):
+        # In case a notification plugin does not exist anymore the permission is completely missing.
+        permission_name = "notification_plugin.%s" % rule['notify_plugin'][0]
+        return (permission_name not in permissions.permission_registry or
+                config.user.may(permission_name))
+
+    def _rule_links(self, rule, nr, profilemode, userid):
+        anavar = html.request.var("analyse", "")
+
+        if profilemode:
+            listmode = "user_notifications_p"
+        elif userid:
+            listmode = "user_notifications"
+        else:
+            listmode = "notifications"
+
+        if profilemode:
+            mode = "notification_rule_p"
+        elif userid:
+            mode = "user_notification_rule"
+        else:
+            mode = "notification_rule"
+
+        delete_url = make_confirm_link(
+            url=make_action_link([
+                ("mode", listmode),
+                ("user", userid),
+                ("_delete", nr),
+            ]),
+            message=_("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
+            (nr, rule.get("description", "")),
+        )
+        drag_url = make_action_link([
+            ("mode", listmode),
+            ("analyse", anavar),
+            ("user", userid),
+            ("_move", nr),
+        ])
+        edit_url = watolib.folder_preserving_link([
+            ("mode", mode),
+            ("edit", nr),
+            ("user", userid),
+        ])
+        clone_url = watolib.folder_preserving_link([
+            ("mode", mode),
+            ("clone", nr),
+            ("user", userid),
+        ])
+
+        return NotificationRuleLinks(delete=delete_url,
+                                     edit=edit_url,
+                                     drag=drag_url,
+                                     clone=clone_url)
+
+
+NotificationRuleLinks = NamedTuple('NotificationRuleLinks', [
+    ('delete', str),
+    ('edit', str),
+    ('drag', str),
+    ('clone', str),
+])
+
 
 @mode_registry.register
-class ModeNotifications(NotificationsMode):
+class ModeNotifications(ABCNotificationsMode):
     @classmethod
     def name(cls):
         return "notifications"
@@ -410,7 +439,7 @@ class ModeNotifications(NotificationsMode):
         return ["notifications"]
 
     def __init__(self):
-        super(ModeNotifications, self).__init__()
+        super().__init__()
         options = config.user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
         self._show_backlog = options.get("show_backlog", False)
@@ -419,30 +448,85 @@ class ModeNotifications(NotificationsMode):
     def title(self):
         return _("Notification configuration")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule")]), "new")
-        if self._show_user_rules:
-            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]),
-                                "users")
-        else:
-            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]),
-                                "users")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "notification_rule")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+        self._extend_display_dropdown(menu)
+        return menu
 
-        if self._show_backlog:
-            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]),
-                                "analyze")
-        else:
-            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]),
-                                "analyze")
+    def _extend_display_dropdown(self, menu: PageMenu) -> None:
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Toggle elements"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Hide user rules")
+                        if self._show_user_rules else _("Show user rules"),
+                        icon_name={
+                            'icon': 'checkbox',
+                            'emblem': 'disable' if self._show_user_rules else 'enable'
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_user", "" if self._show_user_rules else "1"),
+                            ])),
+                    ),
+                    PageMenuEntry(
+                        title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
+                        icon_name={
+                            'icon': 'analyze',
+                            'emblem': 'disable' if self._show_backlog else "enable",
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_backlog", "" if self._show_backlog else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
+                    ),
+                    PageMenuEntry(
+                        title=_("Hide bulks") if self._show_bulks else _("Show bulks"),
+                        icon_name={
+                            'icon': 'bulk',
+                            'emblem': 'disable' if self._show_bulks else "enable",
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_bulks", "" if self._show_bulks else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
+                    ),
+                ],
+            ))
 
-        if self._show_bulks:
-            html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
-        else:
-            html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
-
-    def action(self):
+    def action(self) -> ActionResult:
         if html.request.has_var("_show_user"):
             if html.check_transaction():
                 self._show_user_rules = bool(html.request.var("_show_user"))
@@ -460,13 +544,15 @@ class ModeNotifications(NotificationsMode):
 
         elif html.request.has_var("_replay"):
             if html.check_transaction():
-                nr = int(html.request.var("_replay"))
+                nr = html.request.get_integer_input_mandatory("_replay")
                 watolib.check_mk_local_automation("notification-replay", [str(nr)], None)
-                return None, _("Replayed notifiation number %d") % (nr + 1)
+                flash(_("Replayed notifiation number %d") % (nr + 1))
+                return None
 
         else:
-            return self._generic_rule_list_actions(self._get_notification_rules(), "notification",
-                                                   _("notification rule"), save_notification_rules)
+            self._generic_rule_list_actions(self._get_notification_rules(), "notification",
+                                            _("notification rule"), save_notification_rules)
+        return redirect(self.mode_url())
 
     def _get_notification_rules(self):
         return load_notification_rules()
@@ -490,8 +576,7 @@ class ModeNotifications(NotificationsMode):
         # Check setting of global notifications. Are they enabled? If not, display
         # a warning here. Note: this is a main.mk setting, so we cannot access this
         # directly.
-        current_settings = watolib.load_configuration_settings()
-        if not current_settings.get("enable_rulebased_notifications"):
+        if not rulebased_notifications_enabled():
             url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
             html.show_warning(
                 _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
@@ -517,7 +602,7 @@ class ModeNotifications(NotificationsMode):
         if current_settings.get("notification_fallback_email"):
             return True
 
-        for user in userdb.load_users(lock=False).itervalues():
+        for user in userdb.load_users(lock=False).values():
             if user.get("fallback_contact", False):
                 return True
 
@@ -527,14 +612,14 @@ class ModeNotifications(NotificationsMode):
         if self._show_bulks:
             # Warn if there are unsent bulk notifications
             if not self._render_bulks(only_ripe=False):
-                html.message(_("Currently there are no unsent notification bulks pending."))
+                html.show_message(_("Currently there are no unsent notification bulks pending."))
         else:
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
 
     def _render_bulks(self, only_ripe):
         bulks = watolib.check_mk_local_automation("notification-get-bulks",
-                                                  ["1" if only_ripe else "0"], None)
+                                                  ["1" if only_ripe else "0"])
         if not bulks:
             return False
 
@@ -552,13 +637,13 @@ class ModeNotifications(NotificationsMode):
                 table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
                 table.cell(_("Age (sec)"), "%d" % age, css="number")
                 if interval and age >= interval:
-                    html.icon(_("Age of oldest notification is over maximum age"), "warning")
+                    html.icon("warning", _("Age of oldest notification is over maximum age"))
                 table.cell(_("Timeperiod"), "%s" % timeperiod)
                 table.cell(_("Max. Count"), str(maxcount), css="number")
                 table.cell(_("Count"), str(len(uuids)), css="number")
                 if len(uuids) >= maxcount:
-                    html.icon(_("Number of notifications exceeds maximum allowed number"),
-                              "warning")
+                    html.icon("warning",
+                              _("Number of notifications exceeds maximum allowed number"))
         return True
 
     def _show_notification_backlog(self):
@@ -566,7 +651,10 @@ class ModeNotifications(NotificationsMode):
         if not self._show_backlog:
             return
 
-        backlog = store.load_data_from_file(cmk.utils.paths.var_dir + "/notify/backlog.mk", [])
+        backlog = store.load_object_from_file(
+            cmk.utils.paths.var_dir + "/notify/backlog.mk",
+            default=[],
+        )
         if not backlog:
             return
 
@@ -574,11 +662,10 @@ class ModeNotifications(NotificationsMode):
                            title=_("Recent notifications (for analysis)"),
                            sortable=False) as table:
             for nr, context in enumerate(backlog):
-                self._convert_context_to_unicode(context)
                 table.row()
                 table.cell("&nbsp;", css="buttons")
 
-                analyse_url = html.makeuri([("analyse", str(nr))])
+                analyse_url = makeuri(request, [("analyse", str(nr))])
                 html.icon_button(analyse_url, _("Analyze ruleset with this notification"),
                                  "analyze")
 
@@ -590,20 +677,19 @@ class ModeNotifications(NotificationsMode):
 
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
-                                 "replay")
+                                 "reload_cmk")
 
-                if html.request.var("analyse") and nr == int(html.request.var("analyse")):
-                    html.icon(_("You are analysing this notification"), "rulematch")
+                if (html.request.var("analyse") and
+                        nr == html.request.get_integer_input_mandatory("analyse")):
+                    html.icon("rulematch", _("You are analysing this notification"))
 
                 table.cell(_("Nr."), nr + 1, css="number")
                 if "MICROTIME" in context:
-                    date = time.strftime("%Y-%m-%d %H:%M:%S",
-                                         time.localtime(int(context["MICROTIME"]) / 1000000.0))
+                    date: str = time.strftime("%Y-%m-%d %H:%M:%S",
+                                              time.localtime(int(context["MICROTIME"]) / 1000000.0))
                 else:
-                    date = context.get("SHORTDATETIME") or \
-                           context.get("LONGDATETIME") or \
-                           context.get("DATE") or \
-                           _("Unknown date")
+                    date = (context.get("SHORTDATETIME") or context.get("LONGDATETIME") or
+                            context.get("DATE") or _("Unknown date"))
 
                 table.cell(_("Date/Time"), date, css="nobr")
                 nottype = context.get("NOTIFICATIONTYPE", "")
@@ -618,16 +704,16 @@ class ModeNotifications(NotificationsMode):
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
                         css = "state hstate hstate%s" % state
-                    table.cell(_("State"), statename, css=css)
+                    table.cell(_("State"), html.render_span(statename), css=css)
                 elif nottype.startswith("DOWNTIME"):
                     table.cell(_("State"))
-                    html.icon(_("Downtime"), "downtime")
+                    html.icon("downtime", _("Downtime"))
                 elif nottype.startswith("ACK"):
                     table.cell(_("State"))
-                    html.icon(_("Acknowledgement"), "ack")
+                    html.icon("ack", _("Acknowledgement"))
                 elif nottype.startswith("FLAP"):
                     table.cell(_("State"))
-                    html.icon(_("Flapping"), "flapping")
+                    html.icon("flapping", _("Flapping"))
                 else:
                     table.cell(_("State"), "")
 
@@ -657,24 +743,11 @@ class ModeNotifications(NotificationsMode):
                 # This dummy row is needed for not destroying the odd/even row highlighting
                 table.row(class_="notification_context hidden")
 
-    def _convert_context_to_unicode(self, context):
-        # Convert all values to unicode
-        for key, value in context.iteritems():
-            if isinstance(value, str):
-                try:
-                    value_unicode = value.decode("utf-8")
-                except UnicodeDecodeError:
-                    try:
-                        value_unicode = value.decode("latin-1")
-                    except UnicodeDecodeError:
-                        value_unicode = u"(Invalid byte sequence)"
-                context[key] = value_unicode
-
     # TODO: Refactor this
     def _show_rules(self):
         # Do analysis
         if html.request.var("analyse"):
-            nr = int(html.request.var("analyse"))
+            nr = html.request.get_integer_input_mandatory("analyse")
             analyse = watolib.check_mk_local_automation("notification-analyse", [str(nr)], None)
         else:
             analyse = False
@@ -685,19 +758,17 @@ class ModeNotifications(NotificationsMode):
         start_nr += len(rules)
 
         if self._show_user_rules:
-            users = userdb.load_users()
-            userids = sorted(users.keys())
-            for userid in userids:
-                user = users[userid]
-                user_rules = user.get("notification_rules", [])
-                if user_rules:
-                    self._render_notification_rules(user_rules,
-                                                    userid,
-                                                    show_title=True,
-                                                    show_buttons=False,
-                                                    analyse=analyse,
-                                                    start_nr=start_nr)
-                    start_nr += len(user_rules)
+            for user_id, user_rules in sorted(load_user_notification_rules().items(),
+                                              key=lambda u: u[0]):
+                self._render_notification_rules(
+                    user_rules,
+                    user_id,
+                    show_title=True,
+                    show_buttons=False,
+                    analyse=analyse,
+                    start_nr=start_nr,
+                )
+                start_nr += len(user_rules)
 
         if analyse:
             with table_element(table_id="plugins", title=_("Resulting notifications")) as table:
@@ -722,9 +793,9 @@ class ModeNotifications(NotificationsMode):
                               default_value="mail")
 
 
-class UserNotificationsMode(NotificationsMode):
+class ABCUserNotificationsMode(ABCNotificationsMode):
     def __init__(self):
-        super(UserNotificationsMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
 
     def _from_vars(self):
@@ -744,56 +815,37 @@ class UserNotificationsMode(NotificationsMode):
     def title(self):
         return _("Custom notification table for user %s") % self._user_id()
 
-    def buttons(self):
-        html.context_button(_("All Users"), watolib.folder_preserving_link([("mode", "users")]),
-                            "back")
-        html.context_button(
-            _("User Properties"),
-            watolib.folder_preserving_link([("mode", "edit_user"), ("edit", self._user_id())]),
-            "edit")
-        html.context_button(
-            _("New Rule"),
-            watolib.folder_preserving_link([("mode", "notification_rule"),
-                                            ("user", self._user_id())]), "new")
+    def action(self) -> ActionResult:
+        if not html.check_transaction():
+            return redirect(self.mode_url(user=self._user_id()))
 
-    def action(self):
         if html.request.has_var("_delete"):
-            nr = int(html.request.var("_delete"))
-            rule = self._rules[nr]
-            c = wato_confirm(
-                _("Confirm notification rule deletion"),
-                _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?") %
-                (nr, rule.get("description", "")))
-            if c:
-                del self._rules[nr]
-                userdb.save_users(self._users)
-
-                self._add_change(
-                    "notification-delete-user-rule",
-                    _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
-            elif c is False:
-                return ""
-            else:
-                return
+            nr = html.request.get_integer_input_mandatory("_delete")
+            del self._rules[nr]
+            userdb.save_users(self._users)
+            self._add_change("notification-delete-user-rule",
+                             _("Deleted notification rule %d of user %s") % (nr, self._user_id()))
 
         elif html.request.has_var("_move"):
-            if html.check_transaction():
-                from_pos = html.get_integer_input("_move")
-                to_pos = html.get_integer_input("_index")
-                rule = self._rules[from_pos]
-                del self._rules[from_pos]  # make to_pos now match!
-                self._rules[to_pos:to_pos] = [rule]
-                userdb.save_users(self._users)
+            from_pos = html.request.get_integer_input_mandatory("_move")
+            to_pos = html.request.get_integer_input_mandatory("_index")
+            rule = self._rules[from_pos]
+            del self._rules[from_pos]  # make to_pos now match!
+            self._rules[to_pos:to_pos] = [rule]
+            userdb.save_users(self._users)
 
-                self._add_change(
-                    "notification-move-user-rule",
-                    _("Changed position of notification rule %d of user %s") %
-                    (from_pos, self._user_id()))
+            self._add_change(
+                "notification-move-user-rule",
+                _("Changed position of notification rule %d of user %s") %
+                (from_pos, self._user_id()))
+
+        return redirect(self.mode_url(user=self._user_id()))
 
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             html.h3(_('Notification Rules'))
 
         self._render_notification_rules(
@@ -810,7 +862,7 @@ def _get_notification_sync_sites():
 
 
 @mode_registry.register
-class ModeUserNotifications(UserNotificationsMode):
+class ModeUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications"
@@ -819,12 +871,82 @@ class ModeUserNotifications(UserNotificationsMode):
     def permissions(cls):
         return ["users"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeEditUser
+
+    # pylint does not understand this overloading
+    @overload
+    @classmethod
+    def mode_url(cls, *, user: str) -> str:  # pylint: disable=arguments-differ
+        ...
+
+    @overload
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        ...
+
+    @classmethod
+    def mode_url(cls, **kwargs: str) -> str:
+        return super().mode_url(**kwargs)
+
+    def _breadcrumb_url(self) -> str:
+        return self.mode_url(user=self._user_id())
+
     def _user_id(self):
-        return html.get_unicode_input("user")
+        return html.request.get_unicode_input("user")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        menu = PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="notification_rules",
+                    title=_("Notification rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add new"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([
+                                            ("mode", "user_notification_rule"),
+                                            ("user", self._user_id()),
+                                        ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="related",
+                    title=_("Related"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Setup"),
+                            entries=list(self._page_menu_entries_related()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
+        return menu
+
+    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Users"),
+            icon_name="users",
+            item=make_simple_link(watolib.folder_preserving_link([("mode", "users")])),
+        )
 
 
 @mode_registry.register
-class ModePersonalUserNotifications(UserNotificationsMode):
+class ModePersonalUserNotifications(ABCUserNotificationsMode):
     @classmethod
     def name(cls):
         return "user_notifications_p"
@@ -834,8 +956,40 @@ class ModePersonalUserNotifications(UserNotificationsMode):
         return None
 
     def __init__(self):
-        super(ModePersonalUserNotifications, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
+
+    def main_menu(self):
+        return mega_menu_registry.menu_user()
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="rules",
+                    title=_("Rules"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Personal rules"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add rule"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode",
+                                                                         "notification_rule_p")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
 
     def _user_id(self):
         return config.user.id
@@ -843,44 +997,54 @@ class ModePersonalUserNotifications(UserNotificationsMode):
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(None, log_what, log_text)
+            watolib.log_audit(log_what, log_text)
         else:
-            super(ModePersonalUserNotifications, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
     def title(self):
         return _("Your personal notification rules")
 
-    def buttons(self):
-        html.context_button(_("Profile"), "user_profile.py", "back")
-        html.context_button(_("New Rule"),
-                            watolib.folder_preserving_link([("mode", "notification_rule_p")]),
-                            "new")
 
-
-# TODO: Split editing of user notification rule and global notification rule
-#       into separate classes
-class EditNotificationRuleMode(NotificationsMode):
+class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def __init__(self):
-        super(EditNotificationRuleMode, self).__init__()
+        super().__init__()
         self._start_async_repl = False
+
+    @abc.abstractmethod
+    def _load_rules(self) -> List[NotificationRule]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _user_id(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _back_mode(self) -> ActionResult:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def title(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _log_text(self, edit_nr: int) -> str:
+        raise NotImplementedError()
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        """Optional method to update the rule after editing with the valuespec"""
+        return rule
 
     # TODO: Refactor this
     def _from_vars(self):
-        self._edit_nr = html.get_integer_input("edit", -1)
-        self._clone_nr = html.get_integer_input("clone", -1)
+        self._edit_nr = html.request.get_integer_input_mandatory("edit", -1)
+        self._clone_nr = html.request.get_integer_input_mandatory("clone", -1)
         self._new = self._edit_nr < 0
 
-        if self._user_id():
-            self._users = userdb.load_users(lock=html.is_transaction())
-            if self._user_id() not in self._users:
-                raise MKUserError(
-                    None,
-                    _("The user you are trying to edit "
-                      "notification rules for does not exist."))
-            user = self._users[self._user_id()]
-            self._rules = user.setdefault("notification_rules", [])
-        else:
-            self._rules = load_notification_rules(lock=html.is_transaction())
+        self._rules = self._load_rules()
 
         if self._new:
             if self._clone_nr >= 0 and not html.request.var("_clear"):
@@ -903,9 +1067,9 @@ class EditNotificationRuleMode(NotificationsMode):
     # TODO: Refactor this mess
     def _vs_notification_rule(self, userid=None):
         if userid:
-            contact_headers = []
+            contact_headers: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = []
             section_contacts = []
-            section_override = []
+            section_override: List[DictionaryEntry] = []
         else:
             contact_headers = [
                 (_("Contact Selection"), [
@@ -950,13 +1114,13 @@ class EditNotificationRuleMode(NotificationsMode):
                 ("contact_groups",
                  ListOf(
                      cmk.gui.plugins.wato.ContactGroupSelection(),
-                     title=_("The members of certain contact groups"),
+                     title=_("Members of contact groups"),
                      movable=False,
                  )),
                 ("contact_emails",
                  ListOfStrings(
                      valuespec=EmailAddress(size=44),
-                     title=_("The following explicit email addresses"),
+                     title=_("Explicit email addresses"),
                      orientation="vertical",
                  )),
                 ("contact_match_macros",
@@ -1009,7 +1173,7 @@ class EditNotificationRuleMode(NotificationsMode):
                  )),
             ]
 
-        bulk_options = [
+        bulk_options: List[DictionaryEntry] = [
             ("count",
              Integer(
                  title=_("Maximum bulk size"),
@@ -1032,10 +1196,12 @@ class EditNotificationRuleMode(NotificationsMode):
                  _("Create separate notification bulks for different values of the following custom macros"
                   ),
                  help=
-                 _("If you enter the names of host/service-custom macros here then for each different "
-                   "combination of values of those macros a separate bulk will be created. This can be used "
-                   "in combination with the grouping by folder, host etc. Omit any leading underscore. "
-                   "<b>Note</b>: If you are using "
+                 _("If you enter the names of host/service-custom macros here "
+                   "then for each different combination of values of those "
+                   "macros a separate bulk will be created. Service macros "
+                   "match first, if no service macro is found, the host macros "
+                   "are searched. This can be used in combination with the grouping by folder, host etc. "
+                   "Omit any leading underscore. <b>Note</b>: If you are using "
                    "Nagios as a core you need to make sure that the values of the required macros are "
                    "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
                    "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
@@ -1055,6 +1221,53 @@ class EditNotificationRuleMode(NotificationsMode):
                  size=80,
                  default_value=
                  "Check_MK: $COUNT_NOTIFICATIONS$ notifications for $COUNT_HOSTS$ hosts")),
+        ]
+
+        def make_interval_entry() -> List[DictionaryEntry]:
+            return [
+                ("interval",
+                 Age(
+                     title=_("Time horizon"),
+                     label=_("Bulk up to"),
+                     help=_("Notifications are kept back for bulking at most for this time."),
+                     default_value=60,
+                 )),
+            ]
+
+        timeperiod_entry: List[DictionaryEntry] = [
+            ("timeperiod",
+             watolib.timeperiods.TimeperiodSelection(
+                 title=_("Only bulk notifications during the following timeperiod"),)),
+        ]
+
+        bulk_outside_entry: List[DictionaryEntry] = [
+            ("bulk_outside",
+             Dictionary(
+                 title=_("Also bulk outside of timeperiod"),
+                 help=_("By enabling this option notifications will be bulked "
+                        "outside of the defined timeperiod as well."),
+                 elements=make_interval_entry() + bulk_options,
+                 columns=1,
+                 optional_keys=["bulk_subject"],
+             )),
+        ]
+
+        headers_part1: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
+            (_("Rule Properties"),
+             ["description", "comment", "disabled", "docu_url", "allow_disable"]),
+            (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
+        ]
+
+        headers_part2: List[Union[_Tuple[str, List[str]], _Tuple[str, str, List[str]]]] = [
+            (_("Conditions"), [
+                "match_site", "match_folder", "match_hosttags", "match_hostlabels",
+                "match_hostgroups", "match_hosts", "match_exclude_hosts", "match_servicelabels",
+                "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex",
+                "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
+                "match_checktype", "match_contacts", "match_contactgroups", "match_plugin_output",
+                "match_timeperiod", "match_escalation", "match_escalation_throttle", "match_sl",
+                "match_host_event", "match_service_event", "match_ec", "match_notification_comment"
+            ]),
         ]
 
         return Dictionary(
@@ -1081,17 +1294,7 @@ class EditNotificationRuleMode(NotificationsMode):
                                 "actual problems, e.g. in a single email. This cuts down the number of notifications "
                                 "in cases where many (related) problems occur within a short time."
                                ),
-                              elements=[
-                                  ("interval",
-                                   Age(
-                                       title=_("Time horizon"),
-                                       label=_("Bulk up to"),
-                                       help=
-                                       _("Notifications are kept back for bulking at most for this time."
-                                        ),
-                                       default_value=60,
-                                   )),
-                              ] + bulk_options,
+                              elements=make_interval_entry() + bulk_options,
                               columns=1,
                               optional_keys=["bulk_subject"],
                           )),
@@ -1104,33 +1307,7 @@ class EditNotificationRuleMode(NotificationsMode):
                                   "will be sent. "
                                   "If bulking should be enabled outside of the timeperiod as well, "
                                   "the option \"Also Bulk outside of timeperiod\" can be used."),
-                              elements=[
-                                  ("timeperiod",
-                                   watolib.timeperiods.TimeperiodSelection(title=_(
-                                       "Only bulk notifications during the following timeperiod"),)
-                                  ),
-                              ] + bulk_options + [
-                                  ("bulk_outside",
-                                   Dictionary(
-                                       title=_("Also bulk outside of timeperiod"),
-                                       help=_(
-                                           "By enabling this option notifications will be bulked "
-                                           "outside of the defined timeperiod as well."),
-                                       elements=[
-                                           ("interval",
-                                            Age(
-                                                title=_("Time horizon"),
-                                                label=_("Bulk up to"),
-                                                help=
-                                                _("Notifications are kept back for bulking at most for this time."
-                                                 ),
-                                                default_value=60,
-                                            )),
-                                       ] + bulk_options,
-                                       columns=1,
-                                       optional_keys=["bulk_subject"],
-                                   )),
-                              ],
+                              elements=timeperiod_entry + bulk_options + bulk_outside_entry,
                               columns=1,
                               optional_keys=["bulk_subject", "bulk_outside"],
                           )),
@@ -1139,32 +1316,17 @@ class EditNotificationRuleMode(NotificationsMode):
                            forth=lambda x: x if isinstance(x, tuple) else ("always", x))),
             ],
             optional_keys=[
-                "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts",
-                "match_exclude_hosts", "match_servicegroups", "match_exclude_servicegroups",
-                "match_servicegroups_regex", "match_exclude_servicegroups_regex", "match_services",
-                "match_exclude_services", "match_contacts", "match_contactgroups",
-                "match_plugin_output", "match_timeperiod", "match_escalation",
-                "match_escalation_throttle", "match_sl", "match_host_event", "match_service_event",
-                "match_ec", "match_notification_comment", "match_checktype", "bulk",
-                "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
+                "match_site", "match_folder", "match_hosttags", "match_hostlabels",
+                "match_hostgroups", "match_hosts", "match_exclude_hosts", "match_servicelabels",
+                "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex",
+                "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
+                "match_contacts", "match_contactgroups", "match_plugin_output", "match_timeperiod",
+                "match_escalation", "match_escalation_throttle", "match_sl", "match_host_event",
+                "match_service_event", "match_ec", "match_notification_comment", "match_checktype",
+                "bulk", "contact_users", "contact_groups", "contact_emails", "contact_match_macros",
                 "contact_match_groups"
             ],
-            headers=[
-                (_("Rule Properties"),
-                 ["description", "comment", "disabled", "docu_url", "allow_disable"]),
-                (_("Notification Method"), ["notify_plugin", "notify_method", "bulk"]),
-            ] + contact_headers + [
-                (_("Conditions"), [
-                    "match_site", "match_folder", "match_hosttags", "match_hostgroups",
-                    "match_hosts", "match_exclude_hosts", "match_servicegroups",
-                    "match_exclude_servicegroups", "match_servicegroups_regex",
-                    "match_exclude_servicegroups_regex", "match_services", "match_exclude_services",
-                    "match_checktype", "match_contacts", "match_contactgroups",
-                    "match_plugin_output", "match_timeperiod", "match_escalation",
-                    "match_escalation_throttle", "match_sl", "match_host_event",
-                    "match_service_event", "match_ec", "match_notification_comment"
-                ]),
-            ],
+            headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,
             validate=self._validate_notification_rule,
@@ -1174,7 +1336,8 @@ class EditNotificationRuleMode(NotificationsMode):
         choices = []
         for script_name, title in watolib.notification_script_choices():
             if script_name in notification_parameter_registry:
-                vs = notification_parameter_registry[script_name]().spec
+                vs: Union[Dictionary,
+                          ListOfStrings] = notification_parameter_registry[script_name]().spec
             else:
                 vs = ListOfStrings(
                     title=_("Call with the following parameters:"),
@@ -1185,15 +1348,12 @@ class EditNotificationRuleMode(NotificationsMode):
                     orientation="horizontal",
                 )
 
-            vs_alternative = Alternative(
-                style="dropdown",
-                elements=[
-                    vs,
-                    FixedValue(None,
-                               totext=_("previous notifications of this type are cancelled"),
-                               title=_("Cancel previous notifications")),
-                ],
-            )
+            vs_alternative = Alternative(elements=[
+                vs,
+                FixedValue(None,
+                           totext=_("previous notifications of this type are cancelled"),
+                           title=_("Cancel previous notifications")),
+            ],)
 
             choices.append((script_name, title, vs_alternative))
         return choices
@@ -1217,47 +1377,19 @@ class EditNotificationRuleMode(NotificationsMode):
                     _("Legacy ASCII Emails do not support bulking. You can either disable notification "
                       "bulking or choose another notification plugin which allows bulking."))
 
-    @abc.abstractmethod
-    def _user_id(self):
-        raise NotImplementedError()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(_("Notification rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
 
-    @abc.abstractmethod
-    def _back_mode(self):
-        raise NotImplementedError()
-
-    def title(self):
-        if self._new:
-            if self._user_id():
-                return _("Create new notification rule for user %s") % self._user_id()
-            return _("Create new notification rule")
-
-        if self._user_id():
-            return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
-        return _("Edit notification rule %d") % self._edit_nr
-
-    def buttons(self):
-        html.context_button(
-            _("All Rules"),
-            watolib.folder_preserving_link([("mode", "notifications"),
-                                            ("userid", self._user_id())]), "back")
-
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
             return self._back_mode()
 
         vs = self._valuespec()
-        self._rule = vs.from_html_vars("rule")
-        if self._user_id():
-            self._rule["contact_users"] = [self._user_id()]  # Force selection of our user
-
+        self._rule = self._rule_from_valuespec(vs.from_html_vars("rule"))
         vs.validate_value(self._rule, "rule")
-
-        if self._user_id():
-            # User rules are always allow_disable
-            # The parameter is set just after the validation, since the allow_disable
-            # key isn't in the valuespec. Curiously, the validation does not fail
-            # even the allow_disable key is set before the validate_value...
-            self._rule["allow_disable"] = True
 
         if self._new and self._clone_nr >= 0:
             self._rules[self._clone_nr:self._clone_nr] = [self._rule]
@@ -1266,32 +1398,18 @@ class EditNotificationRuleMode(NotificationsMode):
         else:
             self._rules[self._edit_nr] = self._rule
 
-        if self._user_id():
-            userdb.save_users(self._users)
-        else:
-            save_notification_rules(self._rules)
+        self._save_rules(self._rules)
 
-        if self._new:
-            log_what = "new-notification-rule"
-            if self._user_id():
-                log_text = _("Created new notification rule for user %s") % self._user_id()
-            else:
-                log_text = _("Created new notification rule")
-        else:
-            log_what = "edit-notification-rule"
-            if self._user_id():
-                log_text = _("Changed notification rule %d of user %s") % (self._edit_nr,
-                                                                           self._user_id())
-            else:
-                log_text = _("Changed notification rule %d") % self._edit_nr
-        self._add_change(log_what, log_text)
+        log_what = "new-notification-rule" if self._new else "edit-notification-rule"
+        self._add_change(log_what, self._log_text(self._edit_nr))
 
         return self._back_mode()
 
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             return
 
         html.begin_form("rule", method="POST")
@@ -1299,13 +1417,13 @@ class EditNotificationRuleMode(NotificationsMode):
         vs.render_input("rule", self._rule)
         vs.set_focus("rule")
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
 
 @mode_registry.register
-class ModeEditNotificationRule(EditNotificationRuleMode):
+class ModeEditNotificationRule(ABCEditNotificationRuleMode):
+    """Edit a global notification rule"""
     @classmethod
     def name(cls):
         return "notification_rule"
@@ -1314,27 +1432,103 @@ class ModeEditNotificationRule(EditNotificationRuleMode):
     def permissions(cls):
         return ["notifications"]
 
-    def _user_id(self):
-        return html.get_unicode_input("user")
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeNotifications
 
-    def _back_mode(self):
-        if self._user_id():
-            return "user_notifications"
-        return "notifications"
+    def _load_rules(self) -> List[NotificationRule]:
+        return load_notification_rules(lock=html.is_transaction())
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        save_notification_rules(rules)
+
+    def _user_id(self):
+        return None
+
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("notifications"))
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule")
+        return _("Edit notification rule %d") % self._edit_nr
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule")
+        return _("Changed notification rule %d") % edit_nr
+
+
+class ABCEditUserNotificationRuleMode(ABCEditNotificationRuleMode):
+    def _load_rules(self) -> List[NotificationRule]:
+        self._users = userdb.load_users(lock=html.is_transaction())
+        if self._user_id() not in self._users:
+            raise MKUserError(
+                None, _("The user you are trying to edit "
+                        "notification rules for does not exist."))
+        user = self._users[self._user_id()]
+        return user.setdefault("notification_rules", [])
+
+    def _save_rules(self, rules: List[NotificationRule]) -> None:
+        userdb.save_users(self._users)
+
+    def _rule_from_valuespec(self, rule: NotificationRule) -> NotificationRule:
+        # Force selection of our user
+        rule["contact_users"] = [self._user_id()]
+
+        # User rules are always allow_disable
+        rule["allow_disable"] = True
+        return rule
+
+    def _log_text(self, edit_nr: int) -> str:
+        if self._new:
+            return _("Created new notification rule for user %s") % self._user_id()
+        return _("Changed notification rule %d of user %s") % (edit_nr, self._user_id())
 
 
 @mode_registry.register
-class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
+class ModeEditUserNotificationRule(ABCEditUserNotificationRuleMode):
+    """Edit notification rule of a given user"""
+    @classmethod
+    def name(cls):
+        return "user_notification_rule"
+
+    @classmethod
+    def permissions(cls):
+        return ["notifications"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeUserNotifications
+
+    def _user_id(self):
+        return html.request.get_unicode_input_mandatory("user")
+
+    def _back_mode(self) -> ActionResult:
+        return redirect(mode_url("user_notifications", user=self._user_id()))
+
+    def title(self) -> str:
+        if self._new:
+            return _("Add notification rule for user %s") % self._user_id()
+        return _("Edit notification rule %d of user %s") % (self._edit_nr, self._user_id())
+
+
+@mode_registry.register
+class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     @classmethod
     def name(cls):
         return "notification_rule_p"
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePersonalUserNotifications
 
     @classmethod
     def permissions(cls):
         return None
 
     def __init__(self):
-        super(ModeEditPersonalNotificationRule, self).__init__()
+        super().__init__()
         config.user.need_permission("general.edit_notifications")
 
     def _user_id(self):
@@ -1343,21 +1537,16 @@ class ModeEditPersonalNotificationRule(EditNotificationRuleMode):
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(None, log_what, log_text)
+            watolib.log_audit(log_what, log_text)
         else:
-            super(ModeEditPersonalNotificationRule, self)._add_change(log_what, log_text)
+            super()._add_change(log_what, log_text)
 
-    def _back_mode(self):
+    def _back_mode(self) -> ActionResult:
         if config.has_wato_slave_sites():
-            return
-        return "user_notifications_p"
+            return None
+        return redirect(mode_url("user_notifications_p"))
 
     def title(self):
         if self._new:
             return _("Create new notification rule")
         return _("Edit notification rule %d") % self._edit_nr
-
-    def buttons(self):
-        html.context_button(_("All Rules"),
-                            watolib.folder_preserving_link([("mode", "user_notifications_p")]),
-                            "back")

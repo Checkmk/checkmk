@@ -1,0 +1,17 @@
+title: FireEye Appliances: Mails Received
+agents: snmp
+catalog: hw/network/fireeye
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number rate of received
+ emails during a sampling period
+ on Fireeye Appliances which support the FE-FIREEYE-MIB.
+ The sampling period is displayed in the service output.
+
+ The check goes WARN or CRIT if the number of
+ received mails exceeds configurable values.
+
+inventory:
+ One service is created.
+

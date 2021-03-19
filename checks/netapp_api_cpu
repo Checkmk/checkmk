@@ -1,29 +1,19 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
 # cpu_busy        8362860064
@@ -40,22 +30,6 @@ netapp_api_cpu_default_levels = (90.0, 95.0)
 factory_settings["netapp_api_cpu_cm_default_levels"] = {"levels": (90.0, 95.0)}
 
 
-def parse_netapp_api_cpu(info):
-    cpu_info = {}
-    for line in info:
-        if line[0].startswith("cpu-info"):  # clustermode
-            _, node_name = line[0].split()
-            cpu_info.setdefault("clustermode", {})
-            for entry in line[1:]:
-                key, value = entry.split()
-                cpu_info["clustermode"].setdefault(node_name, {})
-                cpu_info["clustermode"][node_name][key] = value
-        else:
-            cpu_info.setdefault("7mode", {})
-            cpu_info["7mode"][line[0]] = line[1]
-    return cpu_info
-
-
 def inventory_netapp_api_cpu_utilization(parsed):
     if "7mode" in parsed:
         yield (None, "netapp_api_cpu_default_levels")
@@ -63,7 +37,7 @@ def inventory_netapp_api_cpu_utilization(parsed):
 
 def inventory_netapp_api_cpu(parsed):
     if "clustermode" in parsed:
-        for node in parsed.get("clustermode", {}).keys():
+        for node in parsed.get("clustermode", {}):
             yield node, {}
 
 
@@ -96,19 +70,20 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
         num_cpus = int(num_cpus_str)
         perfdata[0] = perfdata[0][:5] + (num_cpus,)
         infotext += ", %d CPUs" % num_cpus
+    else:
+        perfdata[0] = perfdata[0][:5] + (1,)
+
     return state, infotext, perfdata
 
 
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = {
-    "parse_function": parse_netapp_api_cpu,
     "inventory_function": inventory_netapp_api_cpu,
     "check_function": lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "clustermode"),
     "service_description": "CPU utilization Node %s",
     "has_perfdata": True,
     "group": "cpu_utilization_multiitem",
-    "includes": ["cpu_util.include", "netapp_api.include"]
 }
 
 # 7Mode CPU utilization
@@ -120,7 +95,6 @@ check_info["netapp_api_cpu.utilization"] = {
     "default_levels_variable": "netapp_api_cpu_cm_default_levels",
     "has_perfdata": True,
     "group": "cpu_utilization",
-    "includes": ["cpu_util.include"]
 }
 
 
@@ -157,5 +131,4 @@ check_info["netapp_api_cpu.nvram_bat"] = {
     "check_function": check_netapp_api_nvram_bat,
     "service_description": "NVRAM Battery %s",
     "has_perfdata": True,
-    "includes": ["cpu_util.include", "netapp_api.include"]
 }

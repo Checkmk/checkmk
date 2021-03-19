@@ -1,0 +1,12 @@
+Title: Proxmox: add mem usage check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588593161
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+This check is OK when memory usage is below a configurable set of levels or if no levels have
+been set. It shows the available and used memory.

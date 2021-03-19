@@ -1,4 +1,4 @@
-title: Operational status of network interfaces - DEPRECATED
+title: Operational Status of Network Interfaces - DEPRECATED
 agents: snmp
 catalog: hw/network/generic
 license: GPL
@@ -17,6 +17,5 @@ item:
  OID index is not relevant.
 
 inventory:
- checks for all interfaces found up and of the correct types (default is {ethernetCsmacd})
- are created.
+ One service is created for each interfaces if it is of the correct type (default is {ethernetCsmacd}).
 

@@ -1,0 +1,15 @@
+Title: Fix discovered host labels file names
+Class: fix
+Compatible: compat
+Component: core
+Date: 1613376199
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The discovered host labels of hosts that have a dot in their name were not
+stored correctly. Instead of "abc.tld.mk" the labels were stored in a file
+named "abc.mk". The name of these files have now been fixed. During update
+of Checkmk the names of existing will be checked and updated.

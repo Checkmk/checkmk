@@ -1,4 +1,4 @@
-title: Generic PSE device: Power over Ethernet
+title: Generic PSE Device: Power over Ethernet
 agents: snmp
 catalog: hw/power/generic
 license: GPL
@@ -8,5 +8,8 @@ description:
  This check monitors the power consumption of PoE-capable ethernet ports for Power Sourcing Equipment (PSE), Powered Devices (PD) and both.
  PoE stands for Power over Ethernet.
 
+item:
+ Index of the device
+
 inventory:
- One service for every PSE will be created.
+ One service is created for each PSE.

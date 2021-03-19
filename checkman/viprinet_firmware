@@ -8,4 +8,4 @@ description:
  if firmware updates are available
 
 inventory:
- One check is created if the host provides that information
+ One service is created.

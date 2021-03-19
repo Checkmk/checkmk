@@ -1,0 +1,12 @@
+Title: check_mk_agent.linux: exclusion of autofs in df section
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1589453467
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change introduces a new exclusion entry (autofs) for the df section. This can
+potentially resolve problems if separate autofs information are provided.

@@ -79,7 +79,7 @@ TEST(EventLogTest, Base) {
                               });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
-            EXPECT_TRUE(str.size() < 1000);  // approximately
+            EXPECT_TRUE(str.size() < 2000);  // approximately
             EXPECT_TRUE(!str.empty());
         }
     }
@@ -148,7 +148,7 @@ TEST(EventLogTest, Vista) {
                               });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
-            EXPECT_TRUE(str.size() < 1000);  // approximately
+            EXPECT_TRUE(str.size() < 2000);  // approximately
             EXPECT_TRUE(!str.empty());
         }
     }

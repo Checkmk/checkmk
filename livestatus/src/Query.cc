@@ -1,51 +1,31 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "Query.h"
+
 #include <algorithm>
+#include <cassert>
 #include <cctype>
-#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
+
 #include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
 #include "Column.h"
-#include "Filter.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "NullColumn.h"
 #include "OringFilter.h"
 #include "OutputBuffer.h"
-#include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "Triggers.h"
 #include "auth.h"
 #include "opids.h"
 #include "strutil.h"
@@ -58,7 +38,7 @@ using namespace std::chrono_literals;
 
 namespace {
 std::string nextStringArgument(char **line) {
-    if (auto value = next_field(line)) {
+    if (auto *value = next_field(line)) {
         return value;
     }
     throw std::runtime_error("missing argument");
@@ -104,7 +84,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
-    for (auto &line : lines) {
+    for (const auto &line : lines) {
         auto stripped_line = mk::rstrip(line);
         if (stripped_line.empty()) {
             break;
@@ -182,7 +162,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
-            _output.setError(OutputBuffer::ResponseCode::invalid_header,
+            _output.setError(OutputBuffer::ResponseCode::bad_request,
                              header + ": " + e.what());
         }
     }
@@ -203,6 +183,10 @@ Query::Query(const std::list<std::string> &lines, Table &table,
 
 void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
+}
+
+void Query::badGateway(const std::string &message) const {
+    _output.setError(OutputBuffer::ResponseCode::bad_gateaway, message);
 }
 
 void Query::parseAndOrLine(char *line, Filter::Kind kind,
@@ -383,7 +367,7 @@ private:
     double sum_{0};
 };
 
-std::map<std::string, AggregationFactory> stats_ops{
+const std::map<std::string, AggregationFactory> stats_ops{
     {"sum", []() { return std::make_unique<SumAggregation>(); }},
     {"min", []() { return std::make_unique<MinAggregation>(); }},
     {"max", []() { return std::make_unique<MaxAggregation>(); }},
@@ -462,7 +446,7 @@ void Query::parseColumnsLine(char *line) {
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
-                column_name, "non-existing column", -1, -1, -1, 0);
+                column_name, "non-existing column", ColumnOffsets{});
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -483,11 +467,12 @@ void Query::parseSeparatorsLine(char *line) {
 }
 
 namespace {
-std::map<std::string, OutputFormat> formats{{"CSV", OutputFormat::csv},
-                                            {"csv", OutputFormat::broken_csv},
-                                            {"json", OutputFormat::json},
-                                            {"python", OutputFormat::python},
-                                            {"python3", OutputFormat::python3}};
+const std::map<std::string, OutputFormat> formats{
+    {"CSV", OutputFormat::csv},
+    {"csv", OutputFormat::broken_csv},
+    {"json", OutputFormat::json},
+    {"python", OutputFormat::python},
+    {"python3", OutputFormat::python3}};
 }  // namespace
 
 void Query::parseOutputFormatLine(char *line) {
@@ -556,14 +541,14 @@ void Query::parseWaitTimeoutLine(char *line) {
 }
 
 void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = _table.core()->triggers().find(nextStringArgument(&line));
+    _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    auto objectspec = mk::lstrip(line);
-    _wait_object = _table.findObject(objectspec);
+    auto primary_key = mk::lstrip(line);
+    _wait_object = _table.get(primary_key);
     if (_wait_object.isNull()) {
-        throw std::runtime_error("object '" + objectspec +
+        throw std::runtime_error("primary key '" + primary_key +
                                  "' not found or not supported by this table");
     }
 }
@@ -607,6 +592,8 @@ bool Query::process() {
                        _separators, _data_encoding);
     doWait();
     QueryRenderer q(*renderer, EmitBeginEnd::on);
+    // TODO(sp) The construct below is horrible, refactor this!
+    // cppcheck-suppress danglingLifetime
     _renderer_query = &q;
     start(q);
     _table.answerQuery(this);
@@ -638,7 +625,7 @@ void Query::start(QueryRenderer &q) {
 
 bool Query::timelimitReached() const {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "Maximum query time of " +
                              std::to_string(_time_limit) +
                              " seconds exceeded!");
@@ -650,13 +637,13 @@ bool Query::timelimitReached() const {
 bool Query::processDataset(Row row) {
     if (_output.shouldTerminate()) {
         // Not the perfect response code, but good enough...
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "core is shutting down");
         return false;
     }
 
     if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "Maximum response size of " +
                              std::to_string(_max_response_size) +
                              " bytes exceeded!");
@@ -699,6 +686,7 @@ bool Query::processDataset(Row row) {
                 aggr->consume(row, _auth_user, timezoneOffset());
             }
         } else {
+            assert(_renderer_query);  // Missing call to `process()`.
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
                 column->output(row, r, _auth_user, _timezone_offset);
@@ -723,8 +711,7 @@ void Query::finish(QueryRenderer &q) {
 }
 
 std::unique_ptr<Filter> Query::partialFilter(
-    const std::string &message,
-    std::function<bool(const Column &)> predicate) const {
+    const std::string &message, columnNamePredicate predicate) const {
     auto result = _filter->partialFilter(std::move(predicate));
     Debug(_logger) << "partial filter for " << message << ": " << *result;
     return result;
@@ -804,6 +791,17 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
+    if (_wait_condition->is_contradiction() && _wait_timeout == 0ms) {
+        invalidRequest("waiting for WaitCondition would hang forever");
+        return;
+    }
+    if (!_wait_condition->is_tautology() && _wait_object.isNull()) {
+        _wait_object = _table.getDefault();
+        if (_wait_object.isNull()) {
+            invalidRequest("missing WaitObject");
+            return;
+        }
+    }
     _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition->accepts(_wait_object, _auth_user,
                                         timezoneOffset());

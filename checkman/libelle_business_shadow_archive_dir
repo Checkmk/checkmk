@@ -1,0 +1,20 @@
+title: Libelle Business Shadow: Total / Used Space in Archive Dir
+agents: linux, aix, solaris, hpux
+catalog: app/libelle
+license: GPL
+distribution: check_mk
+description:
+ Checks the total / used capacity in the Archive Dir of Libelle Business
+ Shadow.
+
+ Returns {WARN} or {CRIT} if usage is above given levels.
+
+ It uses the check logic of the {df} check, so for configuration
+ parameters and examples please refer to the man page of {df}.
+
+item:
+ The fixed statement {{Archive Dir}}
+
+inventory:
+ One service is created on every node.
+

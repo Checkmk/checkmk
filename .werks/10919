@@ -1,0 +1,13 @@
+Title: apc_symmetra_drycontact: New check plugin to monitor APC dry contact sensors
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1583480273
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+A check to monitor dry contact sensors. 
+OPEN state is Normal.
+CLOSE state is Critical.

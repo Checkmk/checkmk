@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = 'msexch_isstore'
 
 info = [[
@@ -157,7 +165,7 @@ checks = {
             'clienttype_latency': {
                 'upper': (40.0, 50.0)
             }
-        }, [(0, '0.46ms average latency', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
                                             None, None)])]),
         (u'db3', {
             'store_latency': {
@@ -169,7 +177,7 @@ checks = {
             'clienttype_latency': {
                 'upper': (40.0, 50.0)
             }
-        }, [(0, '0.46ms average latency', [('average_latency', 0.45888430902913163, 40.0, 50.0,
+        }, [(0, 'Average latency: 0.46 ms', [('average_latency', 0.45888430902913163, 40.0, 50.0,
                                             None, None)])]),
     ]
 }

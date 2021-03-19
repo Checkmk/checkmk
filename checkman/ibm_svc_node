@@ -20,5 +20,4 @@ item:
  The name of the IO Group.
 
 inventory:
- Creates one check for every IO Group in an IBM SVC / Storwize V3700 / V7000
- device.
+ One service is created for each IO Group.

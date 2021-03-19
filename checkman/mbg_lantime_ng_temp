@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Temperature (NG MIB)
+title: Meinberg LANTIME Devices: Temperature (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL
@@ -8,8 +8,8 @@ description:
  new MBG-LANTIME-NG-MIB.
 
 inventory:
- One check per device is created.
+ One service is created for each device.
 
 item:
- "System"
+ The fixed statement {{System}}
 

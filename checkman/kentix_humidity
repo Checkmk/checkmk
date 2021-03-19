@@ -8,3 +8,6 @@ description:
 
  No limits are set in the check, since limits are configured in the device
  itself. These limits are taken as the lower and upper warning levels of the check.
+
+inventory:
+ One service is created.

@@ -1,0 +1,12 @@
+Title: Network Topology: fixed exception in exception when the maximal allowed node limit has been reached
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1573222920
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

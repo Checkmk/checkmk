@@ -1,21 +1,16 @@
+def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+
 properties([
-    pipelineTriggers([triggers: [upstream(upstreamProjects: "cmk_master/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
+    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+    pipelineTriggers([triggers: [upstream(upstreamProjects: "${FOLDER_ID}/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
 ])
 
 node('windows') {
     stage('git checkout') {
         checkout(scm)
+        windows = load 'buildscripts/scripts/lib/windows.groovy'
     }
-    stage('download artifacts') {
-        dir('artefacts') {
-            script {
-                step ([$class: 'CopyArtifact',
-                projectName: 'cmk_master/windows-agent-build',
-                ]);
-            }
-        }
-    }
-    stage('windows integration test') {
-        bat 'cd agents\\wnx && call call_integration_tests.cmd'
-    }
+    windows.build(
+        TARGET: 'test_integration'
+    )
 }

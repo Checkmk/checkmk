@@ -1,0 +1,12 @@
+Title: Fix broken deletion of background jobs from background job detail page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614931790
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

@@ -1,40 +1,27 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import re
 import pprint
 import base64
-import pickle
+from typing import Any, Union, List
 
-import cmk
+from six import ensure_binary, ensure_str
+
+from cmk.gui.sites import SiteStatus
+from cmk.utils.werks import parse_check_mk_version
+
+from cmk.utils.type_defs import HostName
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 
 import cmk.gui.config as config
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
@@ -104,43 +91,32 @@ def host_attribute_matches(crit, value):
     return crit.lower() in value.lower()
 
 
-# Returns the ID of the default site. This is the site the main folder has
-# configured by default. It inherits to all folders and hosts which don't have
-# a site set on their own.
-# In standalone and master sites this defaults to the local site. In distributed
-# slave sites, we don't know the site ID of the master site. We set this explicit
-# to false to configure that this host is monitored by another site (that we don't
-# know about).
-# TODO: Find a better place later
-def default_site():
-    if config.is_wato_slave_site():
-        return False
-    return config.default_site()
+def format_config_value(value: Any) -> str:
+    return pprint.pformat(value) if config.wato_pprint_config else repr(value)
 
 
-def format_config_value(value):
-    format_func = pprint.pformat if config.wato_pprint_config else repr
-    return format_func(value)
+def mk_repr(x: Any) -> bytes:
+    return base64.b64encode(ensure_binary(repr(x)))
 
 
-def mk_repr(s):
-    if not config.wato_legacy_eval:
-        return base64.b64encode(repr(s))
-    return base64.b64encode(pickle.dumps(s))
-
-
-# TODO: Deprecate this legacy format with 1.4.0 or later?!
-def mk_eval(s):
+def mk_eval(s: Union[bytes, str]) -> Any:
     try:
-        if not config.wato_legacy_eval:
-            return ast.literal_eval(base64.b64decode(s))
-        return pickle.loads(base64.b64decode(s))
-    except:
+        return ast.literal_eval(ensure_str(base64.b64decode(s)))
+    except Exception:
         raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
 
 def has_agent_bakery():
-    return not cmk.is_raw_edition()
+    return not cmk_version.is_raw_edition()
+
+
+def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
+    if has_agent_bakery():
+        import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+        try:
+            agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
+        except BackgroundJobAlreadyRunning:
+            pass
 
 
 def site_neutral_path(path):
@@ -149,3 +125,36 @@ def site_neutral_path(path):
         parts[3] = '[SITE_ID]'
         return '/'.join(parts)
     return path
+
+
+def may_edit_ruleset(varname: str) -> bool:
+    if varname == "ignored_services":
+        return config.user.may("wato.services") or config.user.may("wato.rulesets")
+    if varname in [
+            "custom_checks",
+            "datasource_programs",
+            "agent_config:mrpe",
+            "agent_config:agent_paths",
+            "agent_config:runas",
+            "agent_config:only_from",
+    ]:
+        return config.user.may("wato.rulesets") and config.user.may(
+            "wato.add_or_modify_executables")
+    if varname == "agent_config:custom_files":
+        return config.user.may("wato.rulesets") and config.user.may(
+            "wato.agent_deploy_custom_files")
+    return config.user.may("wato.rulesets")
+
+
+def is_pre_17_remote_site(site_status: SiteStatus) -> bool:
+    """Decide which snapshot format is pushed to the given site
+
+    The sync snapshot format was changed between 1.6 and 1.7. To support migrations with a
+    new central site and an old remote site, we detect that case here and create the 1.6
+    snapshots for the old sites.
+    """
+    version = site_status.get("livestatus_version")
+    if not version:
+        return False
+
+    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")

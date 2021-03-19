@@ -1,0 +1,12 @@
+Title: Rename ruleset "Piggybacked Host Files" to "Processing of Piggybacked Host Data"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1572957833
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

@@ -1,0 +1,11 @@
+Title: printer_supply: Fixed unit of performance data which is not measured in percent in general
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1581349423
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

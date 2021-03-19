@@ -1,0 +1,17 @@
+title: HP Devices: Module Memory
+agents: snmp
+catalog: hw/network/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the memory of modules of HP devices which
+ support the HH3C-ENTITY-EXT MIB.
+
+ Upper default levels are set to 80, 90 percent.
+ These levels are configurable.
+
+item:
+ The module name from ENTITY-MIB.
+
+inventory:
+ One service is created for each module.

@@ -1,0 +1,19 @@
+Title: oracle_instance: Fix missing uptime column if status data inventory is enabled
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1600091295
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If {{Status data inventory}} is enabled via the rule {{Do hardware/software inventory}}
+then {{HW/SW inventory data}} and {{status data}} are inventorized and merged in the
+view {{Inventory of HOST}}. To make this work properly we have to identify the
+rows in both trees. Previously we only used the {{SID}} column. In newer
+{{Oracle}} agent outputs there may be several rows with the same {{SID}} but
+different {{process names}}. Thus we add the {{process name}} column and use
+it as an additional key for the identifier such that both trees can display the full
+information of each output line.

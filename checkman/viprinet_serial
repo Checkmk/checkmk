@@ -7,4 +7,5 @@ description:
  This check displays the serial number of this host and is always {OK}.
 
 inventory:
- One check is created if the host provides that information.
+ One service is created.
+

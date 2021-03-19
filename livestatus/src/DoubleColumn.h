@@ -1,58 +1,103 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef DoubleColumn_h
 #define DoubleColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
+#include <utility>
+
+#include "Aggregator.h"
 #include "Column.h"
+#include "DoubleAggregator.h"
+#include "DoubleFilter.h"
 #include "Filter.h"
+#include "Renderer.h"
+#include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
-class Aggregator;
-class Row;
-class RowRenderer;
 
 class DoubleColumn : public Column {
 public:
-    DoubleColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset, int extra_extra_offset,
-                 int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
-    virtual double getValue(Row row) const = 0;
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-    ColumnType type() const override { return ColumnType::double_; }
-    std::unique_ptr<Filter> createFilter(
+    class Constant;
+    class Reference;
+    template <class T>
+    class Callback;
+    using Column::Column;
+    ~DoubleColumn() override = default;
+
+    [[nodiscard]] virtual double getValue(Row row) const = 0;
+    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        r.output(getValue(row));
+    }
+    [[nodiscard]] ColumnType type() const override {
+        return ColumnType::double_;
+    }
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override;
-    std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
+        const std::string& value) const override {
+        return std::make_unique<DoubleFilter>(
+            kind, name(), [this](Row row) { return this->getValue(row); },
+            relOp, value, logger());
+    }
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
+        AggregationFactory factory) const override {
+        return std::make_unique<DoubleAggregator>(
+            factory, [this](Row row) { return this->getValue(row); });
+    }
+};
+
+// NOTE: The C++ spec explicitly disallows doubles as non-type template
+// parameters. We could add an int or perhaps even some std::ratio if we want.
+// Currently the default is hardwired to zero.
+// TODO(ml, sp): C++-20 should let us use double as default
+// template parameter (see P0732).
+template <class T>
+class DoubleColumn::Callback : public DoubleColumn {
+public:
+    Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets,
+             const std::function<double(const T&)>& f)
+        : DoubleColumn{name, description, offsets}, f_{f} {}
+    ~Callback() override = default;
+    [[nodiscard]] double getValue(Row row) const override {
+        const T* data = columnData<T>(row);
+        return data == nullptr ? 0.0 : f_(*data);
+    }
+
+private:
+    const std::function<double(const T&)> f_;
+};
+
+class DoubleColumn::Constant : public DoubleColumn {
+public:
+    Constant(const std::string& name, const std::string& description, double x)
+        : DoubleColumn{name, description, {}}, x_{x} {}
+    ~Constant() override = default;
+    double getValue(Row /*row*/) const override { return x_; }
+
+private:
+    const double x_;
+};
+
+class DoubleColumn::Reference : public DoubleColumn {
+public:
+    Reference(const std::string& name, const std::string& description,
+              double& x)
+        : DoubleColumn{name, description, {}}, x_{x} {}
+    ~Reference() override = default;
+    double getValue(Row /*row*/) const override { return x_; }
+
+private:
+    const double& x_;
 };
 
 #endif  // DoubleColumn_h

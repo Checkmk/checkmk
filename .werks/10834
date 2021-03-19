@@ -1,0 +1,11 @@
+Title: postgres_stats: Fix calculation of oldest analysed/vacuumed element
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1582893916
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

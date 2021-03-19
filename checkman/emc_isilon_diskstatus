@@ -12,5 +12,5 @@ item:
  The ID of the disk bay.
 
 inventory:
- Finds exactly one service per disk in an EMC Isilon Storage.
+ One service is created for each disk in an EMC Isilon Storage.
 

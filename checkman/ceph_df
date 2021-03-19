@@ -14,4 +14,4 @@ item:
  The pool name.
 
 inventory:
- One service per pool is created.
+ One service is created for each pool.

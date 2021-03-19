@@ -1,0 +1,12 @@
+Title: mk_postgres agent: No more warning when PostgreSQL Cluster is stopped
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573135026
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+When the PostgreSQL Cluster has been stopped the service did create a warning with 'Missing agent sections'.
+The agent now always provides the sections.

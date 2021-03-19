@@ -1,30 +1,23 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #include "providers/mem.h"
 
-#include <iostream>
 #include <string>
 
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 std::string Mem::makeBody() {
-    // the log output disabled because it
-    // may be quite annoying during realtime monitoring
-    // XLOG::t(XLOG_FUNC + " entering");
-
-    // windows
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof(stat);
     ::GlobalMemoryStatusEx(&stat);
+    constexpr uint32_t kilobyte = 1024;
 
-    auto string = fmt::format(
+    return fmt::format(
         "MemTotal:      {} kB\n"
         "MemFree:       {} kB\n"
         "SwapTotal:     {} kB\n"
@@ -33,17 +26,14 @@ std::string Mem::makeBody() {
         "PageFree:      {} kB\n"
         "VirtualTotal:  {} kB\n"
         "VirtualFree:   {} kB\n",
-        stat.ullTotalPhys / 1024,                            // total
-        stat.ullAvailPhys / 1024,                            // free
-        (stat.ullTotalPageFile - stat.ullTotalPhys) / 1024,  // swap total
-        (stat.ullAvailPageFile - stat.ullAvailPhys) / 1024,  // swap free
-        stat.ullTotalPageFile / 1024,                        // paged total
-        stat.ullAvailPageFile / 1024,                        // paged free
-        stat.ullTotalVirtual / 1024,                         // virtual total
-        stat.ullAvailVirtual / 1024);                        // virtual avail
-
-    return string;
+        stat.ullTotalPhys / kilobyte,                            // total
+        stat.ullAvailPhys / kilobyte,                            // free
+        (stat.ullTotalPageFile - stat.ullTotalPhys) / kilobyte,  // swap total
+        (stat.ullAvailPageFile - stat.ullAvailPhys) / kilobyte,  // swap free
+        stat.ullTotalPageFile / kilobyte,                        // paged total
+        stat.ullAvailPageFile / kilobyte,                        // paged free
+        stat.ullTotalVirtual / kilobyte,   // virtual total
+        stat.ullAvailVirtual / kilobyte);  // virtual avail
 }
 
-}  // namespace provider
-};  // namespace cma
+};  // namespace cma::provider

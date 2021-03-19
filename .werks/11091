@@ -1,0 +1,50 @@
+Title: AWS monitoring: adjustments to werk #10962 and bugfixes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1588598247
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk adjusts the output several checks for AWS
+services. With werk #10962, the output of these checks
+changed from sums over some time period to actual rates,
+which can be interpreted by the user. This werk adjusts
+the output units and metrics of these checks accordingly:
+
+- aws_elb
+
+- aws_elbv2_application.connections
+
+- aws_elbv2_application.http_redirects
+
+- aws_elbv2_application.statistics
+
+- aws_elbv2_network.connections
+
+- aws_elbv2_network.rst_packets
+
+- aws_elbv2_network.statistics
+
+- aws_elbv2_network.tls_handshakes
+
+- aws_s3_requests.select_object
+
+- aws_s3_requests.traffic_stats
+
+Furthermore, for the following checks, the agent output has
+been adjusted to be in line with what the user expects (e.g.
+averages instead of sums for latencies, also partially connected
+to werk #10962).
+
+- aws_elbv2_application
+
+- aws_elbv2_network
+
+- aws_s3_requests.latency
+
+Finally, a few bugs, such as integer instead of floating output,
+have been fixed. Where necessary, rules and manpages have also been
+updated.

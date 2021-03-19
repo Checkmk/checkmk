@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 238 240" style="enable-background:new 0 0 238 240;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#EB3030;}
+	.st1{fill:#F05353;}
+	.st2{fill:#F33232;}
+	.st3{fill:#4D606B;}
+	.st4{fill:#697C86;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-288.000000, -885.000000)">
+		<g id="siren" transform="translate(288.000000, 885.000000)">
+			<path id="Path" class="st0" d="M197,199.8h-78l-11.5-70.5L119,56.4h20.5c7.4,0,14.6,2.6,20.4,7.2s9.8,11.2,11.4,18.4L197,199.8z"
+				/>
+			<path id="Path_1_" class="st1" d="M119,56.4v143.4h-78L64.4,82.6c3-15.2,16.5-26.2,31.9-26.2H119z"/>
+			<polygon id="Path_2_" class="st2" points="111.9,0 127.9,0 127.9,39.8 111.9,39.8 			"/>
+			<polygon id="Path_3_" class="st2" points="193.7,89 235.2,80.7 238,94.5 196.5,102.8 			"/>
+			<polygon id="Path_4_" class="st2" points="170.4,46.8 200.3,16.8 210.3,26.8 180.4,56.7 			"/>
+			<g id="Group" transform="translate(0.000000, 16.457213)">
+				<polygon id="Path_5_" class="st2" points="0.1,78 2.8,64.1 44.3,72.4 41.6,86.3 				"/>
+				<polygon id="Path_6_" class="st2" points="27.6,10.3 37.6,0.4 67.5,30.3 57.5,40.3 				"/>
+				<path id="Path_7_" class="st3" d="M210.7,193.4v29.9H119l-9-24.5l9-29.6h67.6C199.8,169.3,210.7,180.1,210.7,193.4L210.7,193.4z
+					"/>
+			</g>
+			<path id="Path_8_" class="st4" d="M119,185.7v54.1H27.3v-29.9c0-13.3,10.8-24.1,24.1-24.1H119z"/>
+		</g>
+	</g>
+</g>
+</svg>

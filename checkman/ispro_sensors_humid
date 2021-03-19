@@ -1,4 +1,4 @@
-title: Interseptor Pro devices: Humidity sensors
+title: Interseptor Pro Devices: Humidity Sensors
 agents: snmp
 catalog: hw/environment/ispro
 license: GPL
@@ -15,7 +15,7 @@ description:
  Moreover upper and lower levels are configurable. No default levels are set.
 
 item:
- The sensor name.
+ The name of the humidity sensor
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

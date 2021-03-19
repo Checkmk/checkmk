@@ -1,0 +1,15 @@
+Title: aws_ec2_limits crashes on unhandled KeyError
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1591716799
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+aws_ec2_limits would crash on unknown resource keys which occur when the agent
+returns with recource identifiers which are still unknown to Checkmk.
+This fix makes the check return WARN together with a string containing the
+unknown resource key instead.

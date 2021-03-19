@@ -1,31 +1,11 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.config import theme_choices
+from cmk.gui.config import theme_choices, show_mode_choices
 from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
@@ -127,7 +107,6 @@ class StartURLUserAttribute(UserAttribute):
         return Transform(
             Alternative(
                 title=_("Start URL to display in main frame"),
-                style="dropdown",
                 orientation="horizontal",
                 elements=[
                     FixedValue(
@@ -163,12 +142,11 @@ class UIThemeUserAttribute(UserAttribute):
         return "ui_theme"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return Alternative(
             title=_("User interface theme"),
-            style="dropdown",
             orientation="horizontal",
             elements=[
                 FixedValue(
@@ -179,6 +157,106 @@ class UIThemeUserAttribute(UserAttribute):
                 DropdownChoice(
                     title=_("Set custom theme"),
                     choices=theme_choices(),
+                ),
+            ],
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UISidebarPosition(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "ui_sidebar_position"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Sidebar position"),
+            choices=[(None, _("Right")), ("left", _("Left"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIIconTitle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "nav_hide_icons_title"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Navigation bar icons"),
+            help=_("With this option you can define if icons in the navigation "
+                   "bar should show a title or not. This gives you the possibility "
+                   "to save some space in the UI."),
+            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            no_preselect_value=False,
+        )
+
+
+@user_attribute_registry.register
+class UIIconPlacement(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "icons_per_item"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Mega menu icons"),
+            help=_("In the mega menus you can select between two options: "
+                   "Have a green icon only for the headlines – the 'topics' – "
+                   "for lean design. Or have a colored icon for every entry so that "
+                   "over time you can zoom in more quickly to a specific entry."),
+            choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
+            no_preselect_value=False,
+        )
+
+    def domain(self):
+        return "multisite"
+
+
+@user_attribute_registry.register
+class UIBasicAdvancedToggle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "show_mode"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return Alternative(
+            title=_("Show more / Show less"),
+            orientation="horizontal",
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use the default show mode"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom show mode"),
+                    choices=show_mode_choices(),
                 ),
             ],
         )

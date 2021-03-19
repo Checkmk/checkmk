@@ -1,0 +1,12 @@
+title: VMWare ESX Host Systems: Usage of Physical RAM
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current usage of physical RAM by
+ an ESX host system.
+
+inventory:
+ One service is created for each ESX Host System.
+

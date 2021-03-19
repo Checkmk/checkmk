@@ -7,3 +7,6 @@ description:
  This check shows fault instances for an UCS bladecenter.
  Depending on the criticality of the fault, the check might go WARN or CRIT.
 
+inventory:
+ One service is created for each fault instance.
+

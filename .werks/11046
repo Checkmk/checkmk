@@ -1,0 +1,14 @@
+Title: Fix infinite reloads of views when the number of columns is changed
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1593528447
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+When the reload of a view was set to "off" and the number
+of columns was modified this lead to infinite reloads of
+the displayed table. This is fixed.

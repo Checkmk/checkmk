@@ -1,0 +1,17 @@
+Title: Don't discover lparstat service on host without util info
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1573221386
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+After update to 1.6 you might find a lparstat service with UNKN status on
+your AIX hosts. This service should have not been discovered as no data is
+available to run the check plugin on it.
+
+You should delete that service or perfom a rediscovery after this werk in
+case you have that service.

@@ -1,0 +1,17 @@
+title: RabbitMQ: Vhosts
+agents: rabbitmq
+catalog: app/rabbitmq
+license: GPL
+distribution: check_mk
+description:
+ This check monitors vhosts of RabbitMQ. The service output gives information
+ about the vhost description, the total number of messages, messages ready,
+ unacknowledged messages, messages published and messages delivered.
+
+ Needs the datasource "Check state of RabbitMQ" to be configured.
+
+item:
+ The name of the vhost.
+
+inventory:
+ One service for each vhost {"RabbitMQ Node my_vhost"} is created.

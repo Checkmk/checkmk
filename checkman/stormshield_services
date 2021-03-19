@@ -1,4 +1,4 @@
-title: Stormshield Services
+title: Stormshield: Services
 agents: snmp
 catalog: app/stormshield
 license: GPL
@@ -8,9 +8,8 @@ description:
  the services running on your Stormshield firewall
 
 item:
- The description of the service as provided by
- the device.
+ The name of the service
 
 inventory:
- Each service which is up will be inventorized.
- The services can be {0} (down) or {1} (up)
+ One service is created for each Stormshield Service if it is up.
+ The Stormshield Services can be {0} (down) or {1} (up).

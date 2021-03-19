@@ -1,0 +1,19 @@
+title: Checkmk Notification Spooler: Connection
+agents: linux
+catalog: app/checkmk
+license: GPL
+distribution: checkmk
+description:
+ This check checks the status of indiviual TCP connections from a
+ Checkmk Notification Spooler to a remote spooler. For each incoming
+ and outoing TCP connection one service will be created the goes
+ critical if the connection is not up.
+
+item:
+ The name of the site followed by a dash followed by either IPADDRESS{:}PORT for
+ outgoing connections or IPADDRESS for incoming connections. If more than one
+ incoming connections exist from the same remote host then an index will be
+ appended.
+
+inventory:
+ One sevice is created for each site and connection.

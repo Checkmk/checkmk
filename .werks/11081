@@ -1,0 +1,13 @@
+Title: Agent signing is now executed in background job
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1591081470
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Signing agents in a large Agent Bakery installation can take a long time.
+Therefore, the signing process is now performed in a background job, just like
+the baking of agent packages.

@@ -1,0 +1,16 @@
+Title: ucd_cpu_util: Updated check to query more values for CPU utilization
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1584715351
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Updated SNMP check for monitoring the CPU utilization for devices using the UCD-MIB.
+For example for Dell EMC ECS (cloud storage system) get now discoverd.
+The check monitors a more generalized range of devices which are not vendor specific.
+
+The two values for 'ssCpuRawKernel' and 'ssCpuRawInterrup' do no longer get queried from the SNMP host,
+since the data is already included into the 'ssCpuRawSystem' value.

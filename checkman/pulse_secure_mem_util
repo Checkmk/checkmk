@@ -1,0 +1,18 @@
+title: Pulse Secure: IVE Memory Utilization
+agents: snmp
+catalog: app/pulse_secure
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the RAM and swap utilization of
+ the IVE system for Pulse Secure appliances.
+
+ The default upper levels for the RAM utilization are
+ 90% (warning) and 95% (critical). Concerning the swap
+ utilization, there is a default upper level at 5% (warning)
+ and no default upper level for "critical". These values
+ can be changed using the rule "Pulse Secure IVE memory
+ utilization"
+
+inventory:
+ One service is created.

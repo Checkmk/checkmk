@@ -1,5 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 
 checkname = "fileinfo"
 
@@ -61,7 +68,7 @@ checks = {
     ],
     "groups": [
         ("log", {
-            "precompiled_patterns": [("*syslog*", "")],
+            "group_patterns": [("*syslog*", "")],
             "maxsize": (2, 2097152),
             "minage_newest": (5, 2),
             "maxage_oldest": (3600, 3600 * 5),
@@ -80,7 +87,7 @@ checks = {
              []),
         ]),
         ("today", {
-            "precompiled_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]
+            "group_patterns": [("/tmp/$DATE:%Y%m%d$.txt", "")]
         }, [
             (0, 'Count: 1', [('count', 1, None, None, None, None)]),
             (0, 'Size: 1235157 B', [('size', 1235157, None, None, None, None)]),

@@ -1,0 +1,25 @@
+title: APC Netbotz: Get the States of Dry Contact Sensors
+agents: snmp
+catalog: hw/power/apc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of dry contact sensors which are integrated in APC NetBotz Rack Monitor 200.
+
+ The service state is
+
+ - {OK} if the contact sensor is in state {OPEN}
+
+ - {CRIT} if the contact sensor is in state {CLOSED}
+
+ - {WARN} if the contact sensor is in state {DISABLED}
+
+ - {UNKNOWN} if the contact sensor is in state {NOT APPLICABLE}
+
+ This check uses the PowerNet-MIB.
+
+inventory:
+ One service is created for each sensor.
+
+item:
+ The input name and its index.

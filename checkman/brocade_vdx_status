@@ -7,9 +7,6 @@ description:
  This checks monitors the operational state of the switch. Also the current firmware version
  will be returned as information.
 
-
-
 inventory:
- The inventory creates one service
-
+ One service is created
 

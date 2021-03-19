@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -16,7 +20,14 @@
 
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
-static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+inline AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+
+inline auto AnswerIdToNumber(AnswerId id) {
+    return id.time_since_epoch().count();
+}
+inline std::wstring AnswerIdToWstring(AnswerId id) {
+    return std::to_wstring(AnswerIdToNumber(id));
+}
 
 // MAIN CLASS to gather all data for CMA on kick from Monitor
 // not POD
@@ -33,7 +44,7 @@ public:
     AsyncAnswer()
         : timeout_(5), awaited_segments_(0), tp_id_(GenerateAnswerId()) {}
 
-    bool isAnswerOlder(std::chrono::milliseconds Milli) const;
+    bool isAnswerOlder(std::chrono::milliseconds period) const;
 
     auto getId() const { return tp_id_; }
 
@@ -46,7 +57,7 @@ public:
     void dropAnswer();  // owner does it, reset all to initial state
 
     //
-    bool waitAnswer(std::chrono::milliseconds MillisecondsToWait);
+    bool waitAnswer(std::chrono::milliseconds to_wait);
 
     void exeKickedCount(int Count) {
         std::lock_guard lk(lock_);
@@ -61,20 +72,20 @@ public:
     // #TODO gtest
     auto getAllClear() {}
 
-    bool prepareAnswer(std::string_view Ip) noexcept;
+    bool prepareAnswer(std::string_view Ip);
     uint64_t num() const noexcept { return sw_.getCount(); }
 
     // Reporting Function, which called by the sections
     // #TODO gtest
-    bool addSegment(const std::string SegmentProviderName,  // name
-                    const AnswerId RequiredAnswerId,        // "password"
-                    const std::vector<uint8_t> data         // data for section
+    bool addSegment(const std::string& section_name,  // name
+                    const AnswerId answer_id,         // "password"
+                    const std::vector<uint8_t>& data  // data for section
     );
 
     // #TODO gtest
     bool tryBreakWait();
 
-    std::vector<std::string> segmentNameList();
+    std::vector<std::string> segmentNameList() const;
 
     // #TODO gtest
     auto awaitingSegments() const {

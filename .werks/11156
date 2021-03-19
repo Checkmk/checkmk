@@ -1,0 +1,23 @@
+Title: Monitoring of AWS RDS DBs
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1591114343
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk fixes some issues with the monitoring of AWS RDS DBs:
+<ul>
+<li>The checks aws_rds.network_io and aws_rds.disk_io now yield correct rates.</li>
+<li>The services produced by the checks aws_rds.transaction_logs_usage,
+aws_rds.replication_slot_usage and aws_rds.agent_jobs are now discoverable, which wasn't
+the case before due to a bug in the AWS special agent.</li>
+<li>For PostgreSQL databases, the check aws_rds.replica_lag now additionally reports the
+Cloudwatch metric OldestReplicationSlotLag, which wasn't the case before due to a bug in
+the AWS special agent.</li>
+<li>The rule "AWS/RDS Replica lag" for the check aws_rds.replica_lag has been adjusted to
+allow for setting levels smaller than one second on the replication lag.</li>
+This werk is incompatible. Depending on the used configuration, users should delete and
+re-create the rules "AWS/RDS Replica lag".

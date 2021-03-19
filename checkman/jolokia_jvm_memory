@@ -1,4 +1,4 @@
-title: Memory usage of a JVM
+title: Java Virtual Machine: Memory Usage
 agents: linux
 catalog: app/java
 license: GPL
@@ -19,6 +19,6 @@ item:
  The name of the application server instance as configured by the agent.
 
 inventory:
- One check is created for each Jolokia instance sent by the agent.
+ One service is created for each Jolokia instance sent by the agent.
 
 

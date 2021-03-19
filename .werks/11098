@@ -1,0 +1,15 @@
+Title: Proxmox: add VM backup status check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588593011
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+This check makes sure every VM has a recent backup. The information is taken from log entries
+collected by the agent via API since Proxmox does not provide us with backup status (yet?).
+The check plugin optionally checks against existence and age of the last backup and shows some
+additional info like date, size and bandwidth.
+

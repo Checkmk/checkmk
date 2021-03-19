@@ -1,0 +1,11 @@
+Title: mssql_counters.cache_hits: Services go stale if no data is sent from agent
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1583311179
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

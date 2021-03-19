@@ -17,4 +17,4 @@ item:
  The storage processor identifier.
 
 inventory:
- One service per storage processor is created.
+ One service is created for each storage processor.

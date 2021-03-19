@@ -1,0 +1,24 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+source "$(dirname $0)/lib-precommit"
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+printf -v files " %s" "$@"
+PYTHON3_FILES=$(python_files 3 "$files")
+
+if [ ! -z "$PYTHON3_FILES" ]; then
+    $PIPENV run pylint $PYTHON3_FILES
+fi
+
+if test -z "$PYTHON3_FILES"; then
+    $PIPENV run pylint $@
+fi

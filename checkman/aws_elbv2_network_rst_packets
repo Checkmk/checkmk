@@ -1,0 +1,15 @@
+title: AWS NetworkELB: Reset Packets
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the rate of reset TCP packets for AWS/NetworkELB
+ services.
+
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+inventory:
+ One service is created if all required metrics (TCP_Client_Reset_Count,
+ TCP_ELB_Reset_Count, TCP_Target_Reset_Count) are given.

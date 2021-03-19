@@ -1,36 +1,18 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Styles for Check_MK mobile interface */
 body.mobile {
-  div.really, div.success, div.error, div.message, div.warning {
+  div.really,
+  div.success,
+  div.error,
+  div.message,
+  div.warning {
     width: 80%;
     padding: 0.5ex 1em;
-    margin: 1em 0 3em 0;
+    margin: 1em 0 3em;
     text-align: center;
     border-style: solid;
     border-width: 2px;
@@ -38,7 +20,7 @@ body.mobile {
   }
 
   div.error {
-    color: $color-text;
+    color: $font-color;
     background-color: rgb(255, 204, 204);
   }
 
@@ -70,6 +52,16 @@ body.mobile {
       border: 1px solid rgb(170, 170, 170);
       border-radius: 5px;
     }
+  }
+
+  .ui-body-c .ui-link {
+    color: $grey-4;
+  }
+  .ui-body-c .ui-link:visited {
+    color: $grey-4;
+  }
+  .ui-body-c .ui-link:hover {
+    color: $grey-2;
   }
 
   td.nonstatus {
@@ -146,15 +138,26 @@ body.mobile {
     height: 14px;
   }
 
-  .ui-header .ui-title, .ui-footer .ui-title {
-    margin: .6em 46px .8em;
+  .ui-header .ui-title,
+  .ui-footer .ui-title {
+    margin: 0.6em 46px 0.8em;
   }
 
   .ui-li-aside.state {
+    &.state0 {
+      background-color: $color-state-success-background;
+    }
+    &.state1 {
+      background-color: $color-state-1-background;
+    }
+    &.state2 {
+      background-color: $color-state-2-background;
+    }
+
     width: 4.5em;
     text-align: center;
-    border-radius: 5px;
-    box-shadow: 0 0 2px rgb(68, 68, 68);
+    border-radius: $spacing;
+    padding: 2px;
   }
 
   td.pnpgraph img {
@@ -165,13 +168,18 @@ body.mobile {
     font-size: 25px;
   }
 
-  #loginhead, #loginfoot {
+  #loginhead,
+  #loginfoot {
     color: rgb(68, 68, 68);
     text-align: center;
   }
 
   #loginhead {
     margin: 1em;
+  }
+
+  input {
+    height: initial;
   }
 
   #loginfoot {
@@ -227,6 +235,22 @@ body.mobile {
       li {
         display: inline-block;
         margin: 0;
+      }
+    }
+  }
+
+  input.button {
+    margin-top: 0;
+    width: 100%;
+    background-color: $white;
+    border-radius: $spacing;
+  }
+
+  input[type="checkbox"] {
+    &,
+    &:checked {
+      + label::before {
+        content: none;
       }
     }
   }

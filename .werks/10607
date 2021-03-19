@@ -1,0 +1,10 @@
+Title: Dashboard: New dashlet "single metric"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.0.0i1
+Date: 1580379112
+Class: feature
+
+A new configurable dashlet can now be used, showing a single metric value and the respective service state at a glance.

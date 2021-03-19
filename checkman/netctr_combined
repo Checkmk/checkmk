@@ -1,0 +1,20 @@
+title: Errors and Traffic over Network Interfaces
+agents: linux
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This check measures the inbound and output traffic over a local
+ network interface (such as {eth0}). Levels for warning
+ and critical can be set on the {error rate}. The error rate
+ is the number of errors and collisions compared
+ to the number of packets transmitted during one check interval.
+
+ Note: this check is deprecated. Better use {lnx_if}.
+item:
+ The name of the network interface as shown by {ifconfig},
+ for example {"eth0"}
+
+inventory:
+ One service is created for each network interface except {lo} and {sit...}.
+

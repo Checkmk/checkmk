@@ -1,0 +1,17 @@
+Title: Allow regular expressions in the ruleset "Processing of Piggybacked Host Data" for piggybacked host exceptions
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 2.0.0i1
+Date: 1572965283
+Class: feature
+
+Previously the maximum cache age, period and {{Check_MK}} service state could be
+configured for single piggybacked hosts under {{Exceptions for piggybacked hosts}}.
+There you had to state an exact piggybacked host name.
+
+Now a list of piggybacked host names or regular expressions can be configured
+in order to ease the configuration for a set of piggybacked host exceptions.
+
+A regular expression must begin with {{~}}.

@@ -1,4 +1,4 @@
-title: MS Exchange Information Store Performance
+title: MS Exchange: Information Store Performance
 agents: windows
 catalog: app/exchange
 license: GPL
@@ -11,4 +11,4 @@ description:
  suggestions published on microsofts technet.
 
 inventory:
- One item per store is discovered. Stores can be mailboxes or public folders.
+ One service is created for each store. Stores can be mailboxes or public folders.

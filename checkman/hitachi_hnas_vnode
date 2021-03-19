@@ -15,7 +15,7 @@ description:
  The PNode it runs on and the admin status are displayed just for info.
 
 inventory:
- Creates one check for every VNode in the HNAS system.
+ One service is created for each VNode in the HNAS system.
 
 item:
  If SNMP returns a name of the VNode, the item is build up combining the ID

@@ -1,4 +1,4 @@
-title: DECRU NAS: Performance values
+title: DECRU NAS: Performance Values
 agents: snmp
 catalog: hw/network/decru
 license: GPL
@@ -19,5 +19,5 @@ item:
  description of the counter.
 
 inventory:
- All counters automatically detected.
+ One service is created for each counter.
 

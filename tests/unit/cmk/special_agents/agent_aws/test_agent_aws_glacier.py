@@ -1,14 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
-import pytest
-from agent_aws_fake_clients import (FakeCloudwatchClient, GlacierListVaultsIB,
-                                    GlacierVaultTaggingIB)
+import pytest  # type: ignore[import]
 
-from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, GlacierLimits,
-                                          GlacierSummary, Glacier)
+from agent_aws_fake_clients import (
+    FakeCloudwatchClient,
+    GlacierListVaultsIB,
+    GlacierVaultTaggingIB,
+)
+
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    ResultDistributor,
+    GlacierLimits,
+    GlacierSummary,
+    Glacier,
+)
 
 
-class FakeGlacierClient(object):
+class FakeGlacierClient:
     def list_vaults(self):
         return {'VaultList': GlacierListVaultsIB.create_instances(amount=4), 'Marker': 'string'}
 
@@ -17,7 +32,7 @@ class FakeGlacierClient(object):
             return {
                 'Tags': GlacierVaultTaggingIB.create_instances(amount=1),
             }
-        elif vaultName == 'VaultName-1':
+        if vaultName == 'VaultName-1':
             return {
                 'Tags': GlacierVaultTaggingIB.create_instances(amount=2),
             }
@@ -67,7 +82,6 @@ glacier_params = [(None, (None, None), 4), (['VaultName-0'], (None, None), 1),
 def test_agent_aws_glacier_limits(get_glacier_sections, names, tags, amount_vaults):
     glacier_limits, _glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results
-    assert glacier_limits.cache_interval == 86400
     assert glacier_limits.name == "glacier_limits"
 
     glacier_limits_result = glacier_limits_results[0]
@@ -87,7 +101,6 @@ def test_agent_aws_glacier_summary(get_glacier_sections, names, tags, amount_vau
     _glacier_summary_results = glacier_limits.run().results
     glacier_summary_results = glacier_summary.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
     assert glacier_summary_results == []
 
@@ -99,7 +112,6 @@ def test_agent_aws_glacier(get_glacier_sections, names, tags, amount_vaults):
     _glacier_summary_results = glacier_summary.run().results
     glacier_results = glacier.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:
@@ -113,19 +125,17 @@ def test_agent_aws_glacier_summary_without_limits(get_glacier_sections, names, t
     _glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_summary_results = glacier_summary.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
     assert glacier_summary_results == []
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary_without_limits(get_glacier_sections, names, tags, amount_vaults):
+def test_agent_aws_glacier_summary_without_limits2(get_glacier_sections, names, tags,
+                                                   amount_vaults):
     _glacier_limits, glacier_summary, glacier = get_glacier_sections(names, tags)
-    glacier_summary_results = glacier_summary.run().results
     _glacier_summary_results = glacier_summary.run().results
     glacier_results = glacier.run().results
 
-    assert glacier_summary.cache_interval == 86400
     assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:

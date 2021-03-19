@@ -1,4 +1,4 @@
-title: CPS UPS Device: Output phase
+title: CPS UPS Device: Output Phase
 agents: snmp
 catalog: hw/power/cps
 license: GPL
@@ -8,7 +8,7 @@ description:
  of the output phase.
 
 inventory:
- One check per device is created.
+ One service is created for each device.
 
 item:
- "1"
+ The fixed statement {{1}}

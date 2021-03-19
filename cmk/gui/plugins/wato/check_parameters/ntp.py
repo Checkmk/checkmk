@@ -1,33 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
+    DropdownChoice,
     Float,
     Integer,
     TextAscii,
@@ -35,11 +16,41 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
     CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem,
+    HostRulespec,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersOperatingSystem,
     rulespec_registry,
 )
+
+
+def _valuespec_ntp_rules():
+    return Transform(
+        Dictionary(
+            title=_("NTP discovery"),
+            elements=[(
+                'mode',
+                DropdownChoice(
+                    choices=[
+                        ("summary", "Discover a single summary service"),
+                        ("single", "Discover one service for every peer"),
+                        ("both", "Discover both of the above"),
+                        ("neither", "Discover neither of the above"),
+                    ],
+                    title=_("Single peers or summary"),
+                ),
+            )],
+        ))
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="merged",
+        name="ntp_discovery",
+        valuespec=_valuespec_ntp_rules,
+    ))
 
 
 def _ntp_params():
@@ -68,6 +79,18 @@ def _ntp_params():
         ])
 
 
+def _parameter_valuespec_ntp_peer():
+    return Transform(
+        Dictionary(
+            elements=[
+                ("ntp_levels", _ntp_params()),
+            ],
+            ignored_keys=["alert_delay"],  # be compatible to ntp_time defaults
+        ),
+        forth=_transform_forth,
+    )
+
+
 def _item_spec_ntp_peer():
     return TextAscii(title=_("Name of the peer"))
 
@@ -89,22 +112,31 @@ def _parameter_valuespec_ntp_time():
                 "ntp_levels",
                 _ntp_params(),
             ),
-            ("alert_delay",
-             Tuple(title=_("Phases without synchronization"),
-                   elements=[
-                       Age(
-                           title=_("Warning at"),
-                           display=["hours", "minutes"],
-                           default_value=300,
-                       ),
-                       Age(
-                           title=_("Critical at"),
-                           display=["hours", "minutes"],
-                           default_value=3600,
-                       ),
-                   ])),
+            (
+                "alert_delay",
+                Tuple(title=_("Phases without synchronization"),
+                      elements=[
+                          Age(
+                              title=_("Warning at"),
+                              display=["hours", "minutes"],
+                              default_value=300,
+                          ),
+                          Age(
+                              title=_("Critical at"),
+                              display=["hours", "minutes"],
+                              default_value=3600,
+                          ),
+                      ]),
+            ),
         ],),
-        forth=lambda params: isinstance(params, tuple) and {"ntp_levels": params} or params)
+        forth=_transform_forth,
+    )
+
+
+def _transform_forth(params):
+    if isinstance(params, dict):
+        return params
+    return {"ntp_levels": params}
 
 
 rulespec_registry.register(

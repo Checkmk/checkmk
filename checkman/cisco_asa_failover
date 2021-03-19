@@ -1,4 +1,4 @@
-title: Cisco ASA: Cluster failover
+title: Cisco ASA: Cluster Failover
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv3
@@ -19,13 +19,8 @@ description:
 
  The check is not tested against un-clustered ASA devices.
 
-
-item:
-  No item is generated.
-
-
 inventory:
-  The check detects ASA devices and saves the current cluster role on inventory.
+  One service is created for each ASA device and saves the current cluster role.
 
 
 parameters:

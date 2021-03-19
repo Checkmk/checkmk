@@ -1,0 +1,13 @@
+Title: ceph_status: OSDS check crashed when 'full' or 'nearfull' indicators are not available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 2.0.0i1
+Date: 1592297397
+Class: fix
+
+The ceph_status storage check crashed when the OSDS check function attempted to
+retrieve values for 'full' or 'nearfull' indicators, which are missing. We have
+amended this function to allow the check to complete successfully when these
+indicators are not available. This is relevant for ceph version after 13.2.7.

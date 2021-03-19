@@ -1,0 +1,12 @@
+Title: Fixed UnicodeDecodeError 'ascii codec can't  decode byte' when opening log file if file name contains non-ASCII signs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1580717814
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

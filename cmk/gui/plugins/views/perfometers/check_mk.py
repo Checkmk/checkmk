@@ -1,35 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import cmk.utils.render
 import cmk.gui.utils as utils
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from . import (
+from cmk.gui.plugins.views.perfometers import (
     perfometers,
     render_perfometer,
     perfometer_linear,
@@ -38,7 +17,7 @@ from . import (
     perfometer_logarithmic_dual_independent,
 )
 
-# Perf-O-Meters for Check_MK's checks
+# Perf-O-Meters for Checkmk's checks
 #
 # They are called with:
 # 1. row -> a dictionary of the data row with at least the
@@ -59,54 +38,11 @@ def number_human_readable(n, precision=1, unit="B"):
     f = "%." + str(precision) + "f"
     if abs(n) > base * base * base:
         return (f + "G%s") % (n / (base * base * base), unit)  # fixed: true-division
-    elif abs(n) > base * base:
+    if abs(n) > base * base:
         return (f + "M%s") % (n / (base * base), unit)  # fixed: true-division
-    elif abs(n) > base:
+    if abs(n) > base:
         return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
-
-
-def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
-    used_mb = perf_data[0][1]
-    maxx = perf_data[0][-1]
-    # perf data might be incomplete, if trending perfdata is off...
-    uncommitted_mb = 0
-    for entry in perf_data:
-        if entry[0] == "uncommitted":
-            uncommitted_mb = entry[1]
-            break
-
-    perc_used = 100 * (float(used_mb) / float(maxx))
-    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
-    perc_totally_free = 100 - perc_used - perc_uncommitted
-
-    if perc_used + perc_uncommitted <= 100:
-        # Regular handling, no overcommitt
-        data = [
-            (perc_used, "#00ffc6"),
-            (perc_uncommitted, "#eeccff"),
-            (perc_totally_free, get_themed_perfometer_bg_color()),
-        ]
-    else:
-        # Visualize overcommitted space by scaling to total overcommittment value
-        # and drawing the capacity as red line in the perfometer
-        total = perc_used + perc_uncommitted
-        perc_used_bar = perc_used * 100.0 / total
-        perc_free = (100 - perc_used) * 100.0 / total
-        data = [
-            (perc_used_bar, "#00ffc6"),
-            (perc_free, "#eeccff"),
-            (1, "red"),  # This line visualizes the capacity
-            (perc_uncommitted - perc_free, "#eeccff"),
-        ]
-
-    legend = "%0.2f%%" % perc_used
-    if uncommitted_mb:
-        legend += " (+%0.2f%%)" % perc_uncommitted
-    return legend, render_perfometer(data)
-
-
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
 
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
@@ -408,7 +344,6 @@ def perfometer_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64adm"] = perfometer_check_mk_if
 perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
 perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
 perfometers["check_mk-vms_if"] = perfometer_check_mk_if
@@ -482,7 +417,7 @@ perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
     perfdata_found = False
-    perfdata1 = ''
+    perfdata1 = 0
 
     for data in perf_data:
         if data[0] == "apply_lag":
@@ -549,8 +484,8 @@ perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
-def perfometer_ps_perf(row, check_command, perf_data):
-    perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
+def perfometer_ps(row, check_command, perf_data):
+    perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
         return "%.1f%%" % perc, perfometer_linear(perc, "#30ff80")
@@ -558,8 +493,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
         return "", ""
 
 
-perfometers["check_mk-ps"] = perfometer_ps_perf
-perfometers["check_mk-ps.perf"] = perfometer_ps_perf
+perfometers["check_mk-ps"] = perfometer_ps
 
 
 def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
@@ -692,7 +626,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
         return "", ""  # Printer does not supply a max value
 
     # If there is no 100% given, calculate the percentage
-    if maxi != 100.0 and maxi != 0.0:
+    if maxi not in (0.0, 100.0):
         left = left * 100.0 / maxi
 
     s = row['service_description'].lower()
@@ -753,21 +687,29 @@ def perfometer_fileinfo(row, check_command, perf_data):
         h += perfometer_logarithmic(val, base, scale, color)
         texts.append(verbfunc(val))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
+    # No files found in file group yields metrics('count', 'size')
+    # Files found in file group yields metrics('count', 'size', 'size_largest', 'size_smallest',
+    #                                          'age_oldest', 'age_newest')
     h = '<div class="stacked">'
     texts = []
-    for i, color, base, scale, verbfunc in [
-        (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  #age_newest
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
+    perfometer_values = {
+        'count': ("#aabb50", 10000, 10, lambda v: ("%d Tot") % v),
+        'age_newest': ("#ccff50", 3600, 10, cmk.utils.render.approx_age),
+    }
+    for name, value, _unit, _min, _max, _warn, _crit in perf_data:
+        try:
+            color, base, scale, verbfunc = perfometer_values[name]
+        except KeyError:
+            continue
+        value = float(value)
+        h += perfometer_logarithmic(value, base, scale, color)
+        texts.append(verbfunc(value))
     h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-fileinfo"] = perfometer_fileinfo
@@ -784,8 +726,9 @@ def perfometer_mssql_tablespaces(row, check_command, perf_data):
     indexes_perc = indexes / reserved * 100  # fixed: true-division
     unused_perc = unused / reserved * 100  # fixed: true-division
 
-    data = [(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"), (unused_perc, "#f0b000")]
-    return "%.1f%%" % (data_perc + indexes_perc), render_perfometer(data)
+    return ("%.1f%%" % (data_perc + indexes_perc),
+            render_perfometer([(data_perc, "#80c0ff"), (indexes_perc, "#00ff80"),
+                               (unused_perc, "#f0b000")]))
 
 
 perfometers["check_mk-mssql_tablespaces"] = perfometer_mssql_tablespaces
@@ -829,13 +772,11 @@ def perfometer_hpux_tunables(row, check_command, perf_data):
 
 
 perfometers["check_mk-hpux_tunables.nproc"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.maxfiles_lim"] = perfometer_hpux_tunables
 # this one still doesn't load. I need more test data to find out why.
 perfometers["check_mk-hpux_tunables.semmni"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.semmns"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.shmseg"] = perfometer_hpux_tunables
-perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 perfometers["check_mk-hpux_tunables.nkthread"] = perfometer_hpux_tunables
 
 
@@ -861,7 +802,7 @@ def perfometer_vms_system_ios(row, check_command, perf_data):
     h += perfometer_logarithmic(buffered, 10000, 3, "#38b0cf")
     h += perfometer_logarithmic(direct, 10000, 3, "#38808f")
     h += '</div>'
-    return "%.0f / %.0f" % (direct, buffered), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
+    return "%.0f / %.0f" % (direct, buffered), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
 
 perfometers["check_mk-vms_system.ios"] = perfometer_vms_system_ios
@@ -911,7 +852,10 @@ perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 
 def perfometer_ups_capacity(row, command, perf):
-    return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
+    value = [float(data[1]) for data in perf if data[0] == 'percent']
+    if len(value) == 1:
+        return "%0.2f%%" % value[0], perfometer_linear(value[0], '#B2FF7F')
+    return "", ""
 
 
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity
@@ -1054,7 +998,7 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
     used = float(perf_data[1][1])
     if used == 0 and licensed == 0:
         return "0 of 0 used", perfometer_linear(100, get_themed_perfometer_bg_color())
-    elif licensed == 0:
+    if licensed == 0:
         return "completely unlicensed", perfometer_linear(100, "silver")
 
     perc_used = used * 100.0 / licensed
@@ -1141,24 +1085,22 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     value = float(perf_data[0][1])
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
-
     if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    elif cap.startswith("unbalancedCurrent"):
+    if cap.startswith("unbalancedCurrent"):
         return display_str, perfometer_linear(value, display_color)
-    elif cap.startswith("rmsVoltage"):
+    if cap.startswith("rmsVoltage"):
         return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    elif cap.startswith("activePower"):
+    if cap.startswith("activePower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("apparentPower"):
+    if cap.startswith("apparentPower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap.startswith("powerFactor"):
+    if cap.startswith("powerFactor"):
         return display_str, perfometer_linear(value * 100, display_color)
-    elif cap.startswith("activeEnergy"):
+    if cap.startswith("activeEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    elif cap.startswith("apparentEnergy"):
+    if cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-
     return "unimplemented", perfometer_linear(0, get_themed_perfometer_bg_color())
 
 

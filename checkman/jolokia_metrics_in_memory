@@ -1,0 +1,19 @@
+title: JVM Ehcache Statistics: In-memory Cache Usage
+agents: linux
+catalog: app/java
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number and hit-rate of cached objects held in memory
+ (number and percentage of cache hits) as well as total number of in-memory cache
+ objects.
+
+ These metrics are purely informational, there are currently no warn/crit levels.
+
+item:
+ The name of the application server instance as configured by the agent followed
+ by the cache
+
+inventory:
+ One service is created for each cache.
+

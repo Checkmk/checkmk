@@ -1,0 +1,24 @@
+title: AWS WAFV2: Web ACL Requests
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of requests for Web ACLs based on the
+ CloudWatch metrics "AllowedRequests" and "BlockedRequests". It reports
+ the number of allowed and blocked requests as well as the sum of these
+ two, which is the total number of requests. These metrics are reported
+ as average rates measured in requests per second. Furthermore, the check
+ also reports the percentage of allowed and blocked requests with respect
+ to the total number of requests.
+
+ There are no default levels for this check. Upper levels on the percentages
+ can be configured using the rule "AWS/WAFV2 Web ACL Requests".
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}. Note that when configuring the agent,
+ there is the option to include Web ACLs in front of CloudFront resources
+ in the monitoring.
+
+inventory:
+ One service is created.

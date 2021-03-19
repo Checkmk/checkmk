@@ -17,5 +17,5 @@ item:
  The fan designation
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.
 

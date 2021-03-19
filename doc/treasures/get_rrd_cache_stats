@@ -1,29 +1,34 @@
-#!/usr/bin/env python
-#
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # Run this script within a (started) OMD site in order to
 # retrieve cache statistics of the RRD cache.
 
-from __future__ import print_function
-import socket, os, sys
+import os
+import socket
+import sys
 
 try:
     omdhome = os.environ['OMD_ROOT']
 
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(omdhome + "/tmp/run/rrdcached.sock")
-    s.send('STATS\n')
+    s.sendall(b'STATS\n')
     data = s.recv(1024)
     s.close()
 
-    lines = data.splitlines()[1:]
+    lines = data.decode("utf-8").splitlines()[1:]
     stats = {}
     for line in lines:
-        key, value = line.split(" ", 1)
-        stats[key[:len(key) - 1]] = int(value)
+        key, svalue = line.split(" ", 1)
+        stats[key[:len(key) - 1]] = int(svalue)
 
     for key, value in stats.items():
         print("%-15s :%15d" % (key, value))
 
-except:
+except Exception:
     sys.stderr.write("Unable to retrieve statistics.\n")
     sys.exit(1)

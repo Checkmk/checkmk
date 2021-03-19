@@ -1,20 +1,22 @@
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
+import contextlib
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
-import shutil
-import pytest  # type: ignore
 
-from testlib import (
-    cmk_path,
-    repo_path,
-    is_enterprise_repo,
-    is_managed_repo,
-)
+import pytest  # type: ignore[import]
+
 import testlib.pylint_cmk as pylint_cmk
+from testlib import is_enterprise_repo, repo_path
 
 
 @pytest.fixture(scope="function")
@@ -40,83 +42,75 @@ def pylint_test_dir():
     shutil.rmtree(test_dir)
 
 
-def test_pylint(pylint_test_dir):
-    # Only specify the path to python packages or modules here
-    if sys.version_info[0] >= 3:
-        modules_or_packages = []
-    else:
-        modules_or_packages = [
-            "omd/packages/omd/omdlib",
-            "livestatus/api/python/livestatus.py",
-            "cmk_base",
-            "cmk",
-            "web/app/index.wsgi",
-        ]
+def test_pylint(pylint_test_dir, capsys):
+    with capsys.disabled():
+        print("\n")
+        retcode = subprocess.call("python -m pylint --version".split(), shell=False)
+        print()
+        assert not retcode
 
-        if is_enterprise_repo():
-            modules_or_packages += [
-                # TODO: Check if this kind of "overlay" really works.
-                # TODO: Why do we have e.g. a symlink cmk_base/cee -> enterprise/cmk_base/cee?
-                "enterprise/cmk_base/automations/cee.py",
-                "enterprise/cmk_base/cee",
-                "enterprise/cmk_base/default_config/cee.py",
-                "enterprise/cmk_base/modes/cee.py",
-                # TODO: Funny links there, see above.
-                "enterprise/cmk/cee",
-                "enterprise/cmk/gui/cee",
-            ]
+    exit_code = pylint_cmk.run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
+    assert exit_code == 0, "PyLint found an error"
 
-        if is_managed_repo():
-            modules_or_packages += [
-                "managed/cmk_base/default_config/cme.py",
-                "managed/cmk/gui/cme",
-            ]
 
+def _get_files_to_check(pylint_test_dir):
     # Add the compiled files for things that are no modules yet
     open(pylint_test_dir + "/__init__.py", "w")
     _compile_check_and_inventory_plugins(pylint_test_dir)
 
-    if is_enterprise_repo():
-        _compile_bakery_plugins(pylint_test_dir)
-
     # Not checking compiled check, inventory, bakery plugins with Python 3
-    if sys.version_info[0] == 2:
-        modules_or_packages += [
-            pylint_test_dir,
-        ]
+    files = [pylint_test_dir]
 
-    # We use our own search logic to find scripts without python extension
-    search_paths = [
-        "omd/packages/omd.bin",
-        "bin",
-        "notifications",
-        "agents/plugins",
-        "agents/special",
-        "active_checks",
-    ]
+    p = subprocess.Popen(
+        ["%s/scripts/find-python-files" % repo_path()],
+        stdout=subprocess.PIPE,
+        encoding="utf-8",
+        shell=False,
+        close_fds=True,
+    )
+    stdout = p.communicate()[0]
 
-    if is_enterprise_repo():
-        search_paths += [
-            "enterprise/agents/plugins",
-            "enterprise/bin",
-            "enterprise/misc",
-        ]
+    for fname in stdout.splitlines():
+        # Thin out these excludes some day...
+        rel_path = fname[len(repo_path()) + 1:]
 
-    for path in search_paths:
-        abs_path = cmk_path() + "/" + path
-        for fname in pylint_cmk.get_pylint_files(abs_path, "*"):
-            modules_or_packages.append(path + "/" + fname)
+        # Can currently not be checked alone. Are compiled together below
+        if rel_path.startswith("checks/") or \
+           rel_path.startswith("inventory/"):
+            continue
 
-    exit_code = pylint_cmk.run_pylint(cmk_path(), modules_or_packages)
-    assert exit_code == 0, "PyLint found an error"
+        # TODO: We should also test them...
+        if rel_path == "werk" \
+            or rel_path.startswith("tests/") \
+            or rel_path.startswith("scripts/") \
+            or rel_path.startswith("agents/wnx/integration/"):
+            continue
+
+        # TODO: disable random, not that important stuff
+        if rel_path.startswith("agents/windows/it/") \
+            or rel_path.startswith("agents/windows/msibuild/") \
+            or rel_path.startswith("doc/") \
+            or rel_path.startswith("livestatus/api/python/example") \
+            or rel_path.startswith("livestatus/api/python/make_"):
+            continue
+
+        files.append(fname)
+
+    return files
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
+@contextlib.contextmanager
+def stand_alone_template(file_name):
 
-        # Fake data structures where checks register (See cmk_base/checks.py)
-        f.write("""
+    with open(file_name, "w") as file_handle:
+
+        # Fake data structures where checks register (See cmk/base/checks.py)
+        file_handle.write("""
 # -*- encoding: utf-8 -*-
+
+from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+
 check_info                         = {}
 check_includes                     = {}
 precompile_params                  = {}
@@ -139,37 +133,43 @@ def inv_tree(path, default_value=None):
         node = default_value
     else:
         node = {}
-
     return node
 """)
 
-        # add the modules
+        disable_pylint = [
+            'chained-comparison',
+            'consider-iterating-dictionary',
+            'consider-using-dict-comprehension',
+            'consider-using-in',
+            'function-redefined',
+            'no-else-break',
+            'no-else-continue',
+            'no-else-return',
+            'pointless-string-statement',
+            'redefined-outer-name',
+            'reimported',
+            'simplifiable-if-expression',
+            'ungrouped-imports',
+            'unnecessary-comprehension',
+            'unused-variable',
+            'useless-object-inheritance',
+            'wrong-import-order',
+            'wrong-import-position',
+        ]
+
         # These pylint warnings are incompatible with our "concatenation technology".
-        f.write(
-            "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position,redefined-outer-name\n"
-        )
-        pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
+        file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
 
-        # Now add the checks
-        for path in pylint_cmk.check_files(repo_path() + "/checks"):
-            pylint_cmk.add_file(f, path)
+        yield file_handle
 
-        # Now add the inventory plugins
+
+def _compile_check_and_inventory_plugins(pylint_test_dir):
+
+    for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
+        with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
+            pylint_cmk.add_file(file_handle, f_name)
+
+    with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
         for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(f, path)
-
-
-def _compile_bakery_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
-
-        pylint_cmk.add_file(
-            f,
-            os.path.realpath(
-                os.path.join(cmk_path(), "enterprise/cmk_base/cee/agent_bakery_plugins.py")))
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
-
-        # Also add bakery plugins
-        for path in pylint_cmk.check_files(os.path.join(cmk_path(), "enterprise/agents/bakery")):
-            pylint_cmk.add_file(f, path)
+            pylint_cmk.add_file(file_handle, path)

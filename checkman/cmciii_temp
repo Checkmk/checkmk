@@ -1,0 +1,23 @@
+title: Rittal CMC-III Units: Temperatures
+agents: snmp
+catalog: hw/environment/rittal
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature measured by various
+ Rittal CMC-III units.
+ It only covers single-temperature sensors while fanunits (which
+ report 3 temperatures for inflowing air and 3 temperatures for
+ outflowing air) are covered by cmciii_lcp_airin, cmciii_lcp_airout
+ and cmciii.temp_in_out.
+ Limits are configured in the Rittal device itself but can be
+ overridden. The state given by the Rittal device is
+ taken as the state of the check as follows:
+ If the Rittal device returns {OK}, the check is {OK}. Otherwise
+ the check is {CRIT}.
+
+item:
+ The unit name and the name of the temperature sensor
+
+inventory:
+ One service is created for each temperature sensor.

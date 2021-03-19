@@ -1,0 +1,14 @@
+title: Brocade FibreChannel Switches: Fans
+catalog: hw/environment/brocade
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the FAN speeds of a Brocade FC switch.
+
+item:
+ The number of the FAN (1, 2, 3 ...) as described in the SNMP output.
+
+inventory:
+ One service is created for each fan unless it is marked as absent in {swSensorStatus}
+

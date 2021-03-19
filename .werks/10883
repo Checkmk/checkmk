@@ -1,0 +1,15 @@
+Title: Prevent empty service descriptions from being activated
+Class: fix
+Compatible: compat
+Component: core
+Date: 1586354477
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+There were some very specific cases which could result in services being
+created with empty service descriptions. This could never be activated,
+since the cores refused to start. The error handling has been improved to
+display a helpful error message in this case.

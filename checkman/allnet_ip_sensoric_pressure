@@ -1,0 +1,18 @@
+title: ALLNET IP Sensoric: Pressure Sensors
+agents: allnet_ip_sensoric
+catalog: hw/environment/allnet
+license: GPL
+distribution: check_mk
+description:
+ Reports values of Pressure Sensors in ALLNET IP Sensoric devices.
+
+ This check is for creating performance data for the pressure.
+
+ The service always returns {OK}.
+
+item:
+ If a name is reported for the sensor by the device: The name and the
+ sensor ID. Otherwise the sensor ID only.
+
+inventory:
+ One service is created for every pressure sensor (function = 16).

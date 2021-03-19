@@ -5,7 +5,7 @@ Class: feature
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1563449741
 
 The agent bakery rule now allows users to select and deselect individual sections.

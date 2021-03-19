@@ -1,4 +1,4 @@
-title: CPU utilization via SNMP HOST-RESOURCES-MIB
+title: SNMP HOST-RESOURCES-MIB: CPU Utilization
 agents: snmp
 catalog: os/kernel
 license: GPL
@@ -12,6 +12,5 @@ description:
  of the current usage.
 
 inventory:
- One check is automatically created if at least one CPU
- entry is found in the SNMP output.
+ One service is created if at least one CPU entry is found.
 

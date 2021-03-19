@@ -1,0 +1,17 @@
+Title: docker_container_mem: crash during discovery: KeyError('stats')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607517756
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The docker_container_mem section plugin crashed upon output from a container that was running,
+but did not provide any memory statistics. This may happen if the memory cgroup is not enabled
+in the kernel.
+Such containers will be discovered, but the service will always be {UNKNOWN}.
+If your setup deliberately includes such hosts, you can ignore the service using the
+"Disabled services" ruleset.

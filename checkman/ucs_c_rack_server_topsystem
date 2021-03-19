@@ -28,5 +28,5 @@ description:
  This check does not support the C-Series Rack Server model Cisco UCS C125 M5 Rack Server Node
  which is used as part of a Cisco UCS C4200 Series Rack Server Chassis.
 
-Inventory:
- One service for every server requested by the Special Agent agent_ucs_bladecenter.
+inventory:
+ One service is created for each server requested by the Special Agent agent_ucs_bladecenter.

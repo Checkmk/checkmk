@@ -14,4 +14,4 @@ item:
  The controller identifier.
 
 inventory:
- One service per controller is created.
+ One service is created for each controller.

@@ -1,0 +1,13 @@
+Title: Fixed python version in multisite.profile.py for profiling
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1593152916
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If you used profiling, the script for viewing runtime statistics about the
+last processed page used python 2.7. From now on, python 3 will also be used
+here.

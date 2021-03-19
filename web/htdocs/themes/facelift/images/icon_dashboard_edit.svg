@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 240 240" style="enable-background:new 0 0 240 240;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#858A8C;}
+	.st1{fill:#F5F0FF;}
+	.st2{fill:#8BC34A;}
+	.st3{fill:#FFEB3B;}
+	.st4{fill:#FAFAFA;}
+	.st5{fill:none;stroke:#696969;stroke-width:8;stroke-dasharray:20,20;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-287.000000, -886.000000)">
+		<g id="Enter-layout-mode" transform="translate(287.000000, 886.000000)">
+			<path id="Path" class="st0" d="M240,86.7H0V20C0,9,9,0,20,0h200c11,0,20,9,20,20V86.7z"/>
+			<path id="Path_1_" class="st1" d="M0,66.7h240V220c0,11-9,20-20,20H20c-11,0-20-9-20-20V66.7z"/>
+			<path id="Path_2_" class="st2" d="M33.3,20C26,20,20,26,20,33.3s6,13.3,13.3,13.3s13.3-6,13.3-13.3S40.7,20,33.3,20z"/>
+			<path id="Path_3_" class="st3" d="M73.3,20C66,20,60,26,60,33.3s6,13.3,13.3,13.3c7.4,0,13.3-6,13.3-13.3S80.7,20,73.3,20z"/>
+			<path id="Path_4_" class="st4" d="M220,40c0,3.7-3,6.7-6.7,6.7h-100c-3.7,0-6.7-3-6.7-6.7V26.7c0-3.7,3-6.7,6.7-6.7h100
+				c3.7,0,6.7,3,6.7,6.7V40z"/>
+			<path id="Rectangle" class="st5" d="M40,120h160v80H40V120z"/>
+		</g>
+	</g>
+</g>
+</svg>

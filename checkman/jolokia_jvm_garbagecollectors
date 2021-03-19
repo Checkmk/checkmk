@@ -1,4 +1,4 @@
-title: Java virtual machine garbage collection
+title: Java Virtual Machine: Garbage Collection
 agents: linux
 catalog: app/java
 license: GPL
@@ -17,8 +17,8 @@ description:
 
 item:
  The name of the application server instance and name of the garbage collection
- as sent by the agent.
+ as sent by the agent seperated by the the statement {{GC}}.
 
 inventory:
- One check is created per garbage collector sent by the Jolokia agent.
+ One service is created for each garbage collector sent by the Jolokia agent.
 

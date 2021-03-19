@@ -1,8 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+
+
 checkname = 'esx_vsphere_hostsystem'
 
-info = [
-    [
+parsed = parse_esx_vsphere_hostsystem([
         [
             # This is output from the old API endpoint for the check esx_vsphere_hostsystem.multipath
             # which is not supported anymore.
@@ -21,9 +31,8 @@ info = [
         [u'runtime.powerState', u'poweredOn'],
         [u'summary.quickStats.overallCpuUsage', u'1930'],
         [u'summary.quickStats.overallMemoryUsage', u'79464'],
-    ],
-    None,
-]
+    ]
+)
 
 discovery = {
     '': [],
@@ -64,9 +73,9 @@ checks = {
         (80.0, 90.0),
         [(
             0,
-            '26% used - 77.60 GB/287.99 GB',
+            'Usage: 26.95% - 77.60 GB of 287.99 GB',
             [
-                ('usage', 83324043264.0, 247379227443.2, 278301630873.6, 0, 309224034304.0),
+                ('mem_used', 83324043264.0, 247379227443.2, 278301630873.60004, 0, 309224034304.0),
                 ('mem_total', 309224034304.0, None, None, None, None),
             ],
         )],

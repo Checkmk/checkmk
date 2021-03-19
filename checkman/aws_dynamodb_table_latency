@@ -1,0 +1,19 @@
+title: AWS DynamoDB: Latency
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the latency of successful requests to DynamoDB
+ tables based on the Cloudwatch metric "SuccessfulRequestLatency". It
+ reports average and maximum values of this metric for the operations
+ Query, GetItem and PutItem.
+
+ There no default levels for this check. Upper levels can be configured
+ via the WATO rule "AWS/DynamoDB Latency".
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}.
+
+inventory:
+ One service is created.

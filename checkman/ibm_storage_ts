@@ -10,4 +10,4 @@ description:
   This check is always {OK}.
 
 inventory:
-  Exactly one item is generated.
+ One service is created.

@@ -1,0 +1,36 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+#
+set -e -o pipefail
+
+declare -a fails
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    if [[ "$param" == enterprise* || "$param" == managed* ]]; then
+        if ! head -30 $param|grep -c -E "C[ME]E|Checkmk Enterprise License" > /dev/null; then
+            fails+=($param)
+        fi
+    else
+        if ! head -25 $param|grep -c -E "GNU General Public" > /dev/null; then
+            fails+=($param)
+        fi
+    fi
+done
+
+log() {
+    echo "$@" >&2
+}
+
+if [ ${#fails[*]} -ne 0 ]; then
+    log "These files are missing licence headers:"
+    log ${fails[@]}
+    log
+    exit 1
+fi

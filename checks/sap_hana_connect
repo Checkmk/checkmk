@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+
+sap_hana_connect_state_map = {
+    "Worker: OK": {
+        "cmk_state": 0,
+        "fun": lambda inp: inp == "0"
+    },
+    "Standby: OK": {
+        "cmk_state": 0,
+        "fun": lambda inp: inp == "1"
+    },
+    "No connect": {
+        "cmk_state": 2,
+        "fun": lambda inp: inp not in ("0", "1")
+    }
+}
+
+
+def parse_sap_hana_connect(info):
+
+    parsed = {}
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
+        inst = parsed.setdefault(
+            sid_instance, {
+                "server_node": "not found",
+                "driver_version": "not found",
+                "timestamp": "not found",
+                "cmk_state": 3,
+                "message": " ".join(lines[0])
+            })
+        for elem in lines[0]:
+            if "retcode" in elem:
+                retcode = elem.split(":")[1].lstrip()
+                for k, v in sap_hana_connect_state_map.items():
+                    if v["fun"](retcode):
+                        inst["cmk_state"] = v["cmk_state"]
+                        inst["message"] = k
+            if "Driver version" in elem:
+                inst["driver_version"] = elem.split("Driver version")[1].lstrip()
+            if "Connect string:" in elem:
+                inst["server_node"] = re.search('SERVERNODE=(.*),SERVERDB', elem).group(1)
+            if "Select now()" in elem:
+                inst["timestamp"] = re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}', elem).group()
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_sap_hana_connect(item, params, parsed):
+
+    state = parsed["cmk_state"]
+    message = "%s\nODBC Driver Version: %s, Server Node: %s, Timestamp: %s" % (
+        parsed["message"], parsed["driver_version"], parsed["server_node"], parsed["timestamp"])
+    yield state, message
+
+
+check_info['sap_hana_connect'] = {
+    'parse_function': parse_sap_hana_connect,
+    'inventory_function': discover(),
+    'check_function': check_sap_hana_connect,
+    'service_description': 'SAP HANA CONNECT %s',
+}

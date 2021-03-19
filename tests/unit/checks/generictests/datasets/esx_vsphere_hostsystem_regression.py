@@ -1,8 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
+
 checkname = 'esx_vsphere_hostsystem'
 
-info = [
-    [
+parsed = parse_esx_vsphere_hostsystem([
         [
             u'config.storageDevice.multipathInfo', u'6e843b6d8f2740bdecbad4676da7a9dd',
             u'vmhba66:C0:T2:L0', u'active', u'6e843b6bc5cc897d430ad40b7d9172d1',
@@ -45,9 +54,8 @@ info = [
         [u'runtime.powerState', u'poweredOn'],
         [u'summary.quickStats.overallCpuUsage', u'2946'],
         [u'summary.quickStats.overallMemoryUsage', u'110738'],
-    ],
-    None,
-]
+    ]
+)
 
 discovery = {
     '': [],
@@ -92,9 +100,9 @@ checks = {
         (80.0, 90.0),
         [(
             0,
-            '79% used - 108.14 GB/135.99 GB',
+            'Usage: 79.52% - 108.14 GB of 135.99 GB',
             [
-                ('usage', 116117209088.0, 116813103104.0, 131414740992.0, 0, 146016378880.0),
+                ('mem_used', 116117209088.0, 116813103104.0, 131414740992.0, 0, 146016378880.0),
                 ('mem_total', 146016378880.0, None, None, None, None),
             ],
         )],

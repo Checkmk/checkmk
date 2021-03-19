@@ -12,5 +12,8 @@ description:
  Otherwise the service shows the health status and reason of the volume
  and changes to WARN or CRIT.
 
+item:
+ Name of the volume
+
 inventory:
  One service is created.

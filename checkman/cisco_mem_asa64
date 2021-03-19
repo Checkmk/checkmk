@@ -25,7 +25,7 @@ description:
  5500-x platform
 
 item:
- The sytem memory.
+ Memory pool name
 
 inventory:
  One service is created.

@@ -1,0 +1,13 @@
+Title: Checks for AWS ELB, ELBv2, DynamoDB and WAFV2 go stale instead of UNKN
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588573441
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Checks for AWS ELB, ELBv2 and DynamoDB now go to stale instead of UNKN if
+AWS does currently not deliver any data (e.g. no traffic for load balancers).
+The WAFV2-monitoring has been adjusted to be consistent with this behaviour.

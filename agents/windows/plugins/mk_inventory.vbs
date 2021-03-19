@@ -4,6 +4,7 @@ If UCase(Right(Wscript.FullName, 11)) = "WSCRIPT.EXE" Then
     Wscript.Quit
 End If
 
+Const CMK_VERSION = "2.1.0i1"
 CONST HKLM = &H80000002
 
 Dim delay
@@ -187,6 +188,11 @@ Sub getRouteTable()
     Next
 End Sub
 
+Function formatMKDateTime(strDate)
+    ' %m/%d/%Y %H:%M:%S
+    formatMKDateTime = DatePart("m", strDate) & "/" & DatePart("d", strDate) & "/" & DatePart("yyyy", strDate) & " " & DatePart("h", strDate) & ":" & DatePart("n", strDate) & ":" & DatePart("s", strDate)
+End Function
+
 Sub RecurseForExecs(strFolderPath)
     Dim objFolder : Set objFolder = fso.GetFolder(strFolderPath)
     Dim objFile
@@ -196,7 +202,7 @@ Sub RecurseForExecs(strFolderPath)
         If (InStr(objFile.Name, ".") > 0) Then
             ' If the file's extension is "exe", write the path to the output file.
             If (LCase(Mid(objFile.Name, InStrRev(objFile.Name, "."))) = ".exe") Then
-                outPut(objFile.Path & "|" & objFile.DateLastModified & "|" & objFile.Size & "|" & "" & "|" & fso.GetFileVersion(objFile.path) & "|")
+                outPut(objFile.Path & "|" & formatMKDateTime(objFile.DateLastModified) & "|" & objFile.Size & "|" & "" & "|" & fso.GetFileVersion(objFile.path) & "|")
             End If
         End If
     Next

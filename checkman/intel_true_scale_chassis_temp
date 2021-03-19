@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Chassis temperature status
+title: Intel True Fabric Scale Switches: Chassis Temperature Status
 agents: snmp
 catalog: hw/network/intel
 license: GPL
@@ -10,9 +10,6 @@ description:
  The check reports OK if the status is normal, It's WARN if the status is
  high or low. The check goes CRIT if the status is excessively high or low.
  Otherwise the check is UNKNOWN.
-
-item:
- No item.
 
 inventory:
  One service is created.

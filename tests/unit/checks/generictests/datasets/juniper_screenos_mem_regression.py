@@ -1,5 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'juniper_screenos_mem'
@@ -15,4 +22,4 @@ checks = {'': [(None,
                 (80.0, 90.0),
                 [(0,
                   'Used: 150.45 MB/666.89 MB (23%)',
-                  [('usage', 157755392, 559429222.4, 629357875.2, 0, 699286528)])])]}
+                  [('mem_used', 157755392, 559429222.4, 629357875.2, 0, 699286528)])])]}

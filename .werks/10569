@@ -1,0 +1,12 @@
+Title: lnx_distro: Fixed handling of empty codename for RedHat Virtualization Host
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1573824287
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Updated lnx_distro to work with RedHat Virtualization Host, RHVH (Minimal RHEL
+release for RHEV), that displays no codename.

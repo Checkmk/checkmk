@@ -1,0 +1,23 @@
+Title: Customer-user local customizations are kept during activate changes from master
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1572857442
+Edition: cme
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+
+Customer-Users belong to a customer when working on the CME. They only work
+on the GUI of their corresponding remote site. They are allowed to
+customize their bookmarks, views, dashboards, reports, etc. These user
+local configurations are now retained when receiving files from master as
+changes are activated.
+
+
+Non-customer-users (e.g. GLOBAL users) normally work on the central
+site and thus they should be able to use their customizations when they
+log into remote sites. Thus all files are synced in their case.
+
+User notifications follow the same logic.

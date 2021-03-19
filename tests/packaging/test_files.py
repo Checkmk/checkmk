@@ -1,8 +1,18 @@
-from __future__ import print_function
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import os
 import subprocess
 import re
-import pytest  # type: ignore
+import logging
+import pytest  # type: ignore[import]
+
+from cmk.utils.misc import is_daily_build_version
+
+LOGGER = logging.getLogger()
 
 
 def _get_omd_version(cmk_version, package_path):
@@ -21,9 +31,9 @@ def _edition_short_from_pkg_path(package_path):
     file_name = os.path.basename(package_path)
     if file_name.startswith("check-mk-raw-"):
         return "cre"
-    elif file_name.startswith("check-mk-enterprise-"):
+    if file_name.startswith("check-mk-enterprise-"):
         return "cee"
-    elif file_name.startswith("check-mk-managed-"):
+    if file_name.startswith("check-mk-managed-"):
         return "cme"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
@@ -102,9 +112,11 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/opt/omd$",
             "/opt/omd/apache$",
             "/opt/omd/sites$",
+            "/var/lock/mkbackup$",
         ] + version_allowed_patterns
 
-        paths = subprocess.check_output(["rpm", "-qlp", package_path]).splitlines()
+        paths = subprocess.check_output(["rpm", "-qlp", package_path],
+                                        encoding="utf-8").splitlines()
     elif package_path.endswith(".deb"):
         allowed_patterns = [
             "/$",
@@ -129,15 +141,16 @@ def test_files_not_in_version_path(package_path, cmk_version):
         ] + version_allowed_patterns
 
         paths = []
-        for line in subprocess.check_output(["dpkg", "-c", package_path]).splitlines():
+        for line in subprocess.check_output(["dpkg", "-c", package_path],
+                                            encoding="utf-8").splitlines():
             paths.append(line.split()[5].lstrip("."))
     else:
         raise NotImplementedError()
 
-    print("Testing %s" % package_path)
+    LOGGER.info("Testing %s", package_path)
 
     omd_version = _get_omd_version(cmk_version, package_path)
-    print("Checking OMD version: %s" % omd_version)
+    LOGGER.info("Checking OMD version: %s", omd_version)
 
     for path in paths:
         is_allowed = any(
@@ -151,8 +164,8 @@ def test_cma_only_contains_version_paths(package_path, cmk_version):
 
     omd_version = _get_omd_version(cmk_version, package_path)
     files = [
-        line.split()[5]
-        for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines()
+        line.split()[5] for line in subprocess.check_output(["tar", "tvf", package_path],
+                                                            encoding="utf-8").splitlines()
     ]
     assert len(files) > 1000
     for file_path in files:
@@ -165,14 +178,15 @@ def test_cma_specific_files(package_path, cmk_version):
 
     omd_version = _get_omd_version(cmk_version, package_path)
     files = [
-        line.split()[5]
-        for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines()
+        line.split()[5] for line in subprocess.check_output(["tar", "tvf", package_path],
+                                                            encoding="utf-8").splitlines()
     ]
     assert "%s/cma.info" % omd_version in files
     assert "%s/skel/etc/apache/conf.d/cma.conf" % omd_version in files
     assert "%s/lib/cma/post-install" % omd_version in files
 
-    cma_info = subprocess.check_output(["tar", "xOvzf", package_path, "%s/cma.info" % omd_version])
+    cma_info = subprocess.check_output(
+        ["tar", "xOvzf", package_path, "%s/cma.info" % omd_version], encoding="utf-8")
     if _is_demo(package_path):
         assert "DEMO=1" in cma_info
     else:
@@ -184,7 +198,8 @@ def test_src_only_contains_relative_version_paths(package_path):
         pytest.skip("%s is not a source package" % os.path.basename(package_path))
 
     prefix = os.path.basename(package_path).replace(".tar.gz", "")
-    for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines():
+    for line in subprocess.check_output(["tar", "tvf", package_path],
+                                        encoding="utf-8").splitlines():
         path = line.split()[5]
         assert path.startswith(prefix + "/")
 
@@ -197,7 +212,8 @@ def test_src_not_contains_enterprise_sources(package_path):
     enterprise_files = []
     managed_files = []
 
-    for line in subprocess.check_output(["tar", "tvf", package_path]).splitlines():
+    for line in subprocess.check_output(["tar", "tvf", package_path],
+                                        encoding="utf-8").splitlines():
         path = line.split()[5]
         if path != "%s/enterprise/" % prefix and path.startswith("%s/enterprise/" % prefix):
             enterprise_files.append(path)
@@ -208,6 +224,22 @@ def test_src_not_contains_enterprise_sources(package_path):
     assert managed_files == []
 
 
+def test_src_windows_agent_has_correct_version(package_path, cmk_version):
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("%s is not a source package" % os.path.basename(package_path))
+
+    if is_daily_build_version(cmk_version):
+        pytest.skip("Do not test daily builds")
+
+    prefix = os.path.basename(package_path).replace(".tar.gz", "")
+    for file_path in [
+            prefix + "/agents/windows/check_mk_agent.exe",
+            prefix + "/agents/windows/check_mk_agent-64.exe",
+    ]:
+        exe_bytes = subprocess.check_output(["tar", "-xvOf", package_path, file_path])
+        assert cmk_version.encode("ascii") in exe_bytes
+
+
 def test_demo_modifications(package_path, cmk_version):
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
@@ -215,12 +247,12 @@ def test_demo_modifications(package_path, cmk_version):
     if _edition_short_from_pkg_path(package_path) != "cre":
         cmc_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")
         if _is_demo(package_path):
-            assert "THIS IS A DEMO" in cmc_bin
+            assert b"THIS IS A DEMO" in cmc_bin
         else:
-            assert "THIS IS A DEMO" not in cmc_bin
+            assert b"THIS IS A DEMO" not in cmc_bin
 
     nagios_bin = _get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")
     if _is_demo(package_path):
-        assert "in this demo" in nagios_bin
+        assert b"in this demo" in nagios_bin
     else:
-        assert "in this demo" not in nagios_bin
+        assert b"in this demo" not in nagios_bin

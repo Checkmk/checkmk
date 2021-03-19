@@ -1,0 +1,11 @@
+Title: fileinfo: now able to discover files with umlauts again
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.0.0i1
+Date: 1573732312
+
+

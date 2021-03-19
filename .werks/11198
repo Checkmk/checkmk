@@ -1,0 +1,16 @@
+Title: mk-job.solaris: Fixed MK_VARDIR
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1593155937
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The MK_VARDIR pointed to "/var/lib/check_mk" and was changed to
+"/var/lib/check_mk_agent".
+
+Please update the plugin to the new version and review and remove the possibly
+created folder "/var/lib/check_mk".

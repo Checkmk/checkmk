@@ -1,35 +1,18 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef StringUtils_h
 #define StringUtils_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <cstddef>
 #include <ostream>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -44,23 +27,45 @@ std::string unsafe_toupper(const std::string &str);
 #endif
 
 bool starts_with(const std::string &input, const std::string &test);
+bool ends_with(const std::string &input, const std::string &test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
+
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key);
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key);
 
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator);
 
-std::string lstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+constexpr auto whitespace = " \t\n\v\f\r";
 
-std::string rstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+std::string lstrip(const std::string &str, const std::string &chars);
 
-std::string strip(const std::string &str,
-                  const std::string &chars = " \t\n\v\f\r");
+inline std::string lstrip(const std::string &str) {
+    return lstrip(str, whitespace);
+}
 
-std::pair<std::string, std::string> nextField(
-    const std::string &str, const std::string &chars = " \t\n\v\f\r");
+std::string rstrip(const std::string &str, const std::string &chars);
+
+inline std::string rstrip(const std::string &str) {
+    return rstrip(str, whitespace);
+}
+
+std::string strip(const std::string &str, const std::string &chars);
+
+inline std::string strip(const std::string &str) {
+    return strip(str, whitespace);
+}
+
+std::pair<std::string, std::string> nextField(const std::string &str,
+                                              const std::string &chars);
+
+inline std::pair<std::string, std::string> nextField(const std::string &str) {
+    return nextField(str, whitespace);
+}
 
 std::string replace_first(const std::string &str, const std::string &from,
                           const std::string &to);

@@ -1,0 +1,11 @@
+Title: Drop support for Ubuntu 18.10
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1582273448
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Ubuntu 18.10 (cosmic) is end of life since July 18 2019

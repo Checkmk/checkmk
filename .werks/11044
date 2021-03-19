@@ -1,0 +1,19 @@
+Title: dell_idrac_fans: don't crash on unknown device states
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1589460197
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The check plugin crashed when fans of a device were in
+states that did not return a device reading. The plugin
+now returns only the status and the name for the states
+"other", "unknown", and "failed".
+
+Fans that are in the states "unknown" or "other" will
+now no longer be discovered. Fans that are in the state
+"failed" will still be discovered.

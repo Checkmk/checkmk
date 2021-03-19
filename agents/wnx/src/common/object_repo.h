@@ -1,6 +1,11 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
 #pragma once
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace cma {
 constexpr std::string_view kMainObject = "main";
@@ -21,15 +26,6 @@ public:
             if (val) val.reset();
             it = map_.erase(it);
         }
-    }
-
-    [[deprecated]] std::shared_ptr<T> addObject(const std::string& name,
-                                                T* object) {
-        if (object == nullptr) return {};
-
-        std::lock_guard lk(lock_);
-        map_[name].reset(object);
-        return map_[name];
     }
 
     template <typename... Types>

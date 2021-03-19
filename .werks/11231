@@ -1,0 +1,11 @@
+Title: Management Board: Use IPv6 address of the host if no management address is configured and host is IPv6
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1594188239
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

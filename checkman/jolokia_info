@@ -1,4 +1,4 @@
-title: Type and version of Java application servers
+title: Java Application Servers: Type and Version
 agents: linux
 catalog: app/java
 license: GPL
@@ -11,4 +11,4 @@ item:
  The name of the application server instance as configured by the agent.
 
 inventory:
- One check is created for each Jolokia instance sent by the agent.
+ One service is created for each Jolokia instance sent by the agent.

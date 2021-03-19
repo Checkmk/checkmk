@@ -1,0 +1,13 @@
+Title: agent_splunk: Make instance an optional parameter
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580486659
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The option "Splunk instance to query" in the related WATO rule is now optional.
+If not set, the hostname of the explicit host is used.

@@ -1,8 +1,12 @@
-title: Checkpoint Firewalls: Fan status
+title: Checkpoint Firewalls: Fan Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPL
 distribution: check_mk
+
+item:
+ Name of fan.
+
 description:
  This check monitors speed and health of fans in checkpoint firewalls.
  The status of this check is translated directly from a device status and
@@ -10,5 +14,5 @@ description:
  {UNKNOWN}.
 
 inventory:
- One service per case fan will be discovered.
+ One service is created for each case fan.
 

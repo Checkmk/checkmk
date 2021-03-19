@@ -1,0 +1,20 @@
+Title: The output formats "python" and "python3" are now explicit about string types.
+Class: feature
+Compatible: incomp
+Component: livestatus
+Date: 1582724813
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+To ease the Python 2 => Python 3 transition, Livestatus is now very explicit
+about string types when using the "python" and "python3" output formats: All
+binary strings have a "b" prefix now, and all unicode strings have a "u"
+prefix. This makes both formats effectively identical.
+
+If you don't use either format in your scripts or use a Python version >= 2.6,
+you don't have to change anything.  If you still use Python <= 2.5 (which
+doesn't undestand the "b" prefix), please upgrade.  Note that these Python
+versions have an EOL in 2011 or before, so this shouldn't be a problem in
+practice.

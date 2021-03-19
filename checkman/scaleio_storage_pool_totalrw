@@ -1,0 +1,14 @@
+title: EMC ScaleIO: Storage Pool Total Read/Write
+agents: linux
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check measures the total r/w of a Storage Pool (SP). The ruleset
+ "Levels for disk IO" can be used to set thresholds for read/write throughput.
+
+item:
+ The SP id
+
+inventory:
+ One service is created for each SP.

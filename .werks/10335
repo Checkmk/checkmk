@@ -1,0 +1,19 @@
+Title: mongodb: extension of replica set checks
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1573144125
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Additional checks and information to monitor mongodb replica sets:
+
+- replication lag between the primary and its members
+- oplog statistics
+- change of primary mode
+- missing primary node
+- total size of all indexes
+
+For using this new feature, you have to re-deploy the agent with the new mongodb plugin. 

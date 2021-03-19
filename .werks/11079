@@ -1,0 +1,15 @@
+Title: Grafana: Annotation queries were not applying host filter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1589536522
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+When using the annotations feature of our Grafana connector, the
+explicit host filter provided by Grafana was not used correctly.
+This made Checkmk respond with annotations to unrelated hosts.
+
+The host regex filter was applied correctly

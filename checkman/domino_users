@@ -8,5 +8,5 @@ description:
  Warning and critical upper limits can be set to the number of users.
 
 inventory:
- One service is created per Lotus Domino Server.
+ One service is created for each Lotus Domino Server.
 

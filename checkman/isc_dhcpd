@@ -1,4 +1,4 @@
-title: Number of free addresses in DHCP pools on ISC DHCP-Daemon on Linux
+title: Linux ISC DHCP-Deamon DHCP Pools: Number of Free Addresses
 agents: linux
 catalog: os/services
 license: GPL
@@ -14,4 +14,4 @@ item:
  The name of the DHCP pool as configured on the DHCP server.
 
 inventory:
- Each DHCP pool will result in one service on the DHCP server.
+ One service is created for each DHCP pool on the DHCP server.

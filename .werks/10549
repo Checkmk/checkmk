@@ -1,0 +1,17 @@
+Title: Log views: Replace "State type" painter / filter with "State information"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1573655985
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The "Log: State type", which was shown in the monitoring events views, was
+problematic. Depending on the type of event the painter showed either the state
+type (HARD/SOFT) or the actual state (WARNING/CRITICAL/...).
+
+The original painter and the related filter still exist for compatibility, but
+we have added a new one named "Log: State information" which presents these
+information in a more structured way.

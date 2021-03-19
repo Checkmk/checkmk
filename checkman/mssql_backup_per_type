@@ -1,0 +1,25 @@
+title: MS SQL Tablespaces: Successful Backups (by Type)
+agents: windows
+catalog: app/mssql
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the time of the last successful backup
+ of MSSQL tablespaces reported by MSSQL
+
+ You can set levels to raise alerts if the last successful backup
+ is too long ago.
+
+ The check has been developed with MSSQL Server 2008 R2 but should
+ work with other versions too.
+
+ This check needs the Checkmk mssql.vbs -plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The MSSQL instance name, the tablespace name separated by a space
+ and the backup type.
+
+inventory:
+ One service is created for each backup type for every instance.

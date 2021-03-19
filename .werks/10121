@@ -1,0 +1,13 @@
+Title: Fixed race condition regarding host information
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1573552649
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+There was a race condition wihtin the event console, which could lead to
+incomplete information about a host. Symptoms were e.g. missing host names
+for events generated via SNMP traps. This has been fixed.

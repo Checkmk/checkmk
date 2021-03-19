@@ -1,1 +1,0 @@
-check_mk-juniper_screenos_mem.php

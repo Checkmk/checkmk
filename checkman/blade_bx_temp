@@ -17,5 +17,5 @@ item:
   The index of the temperature sensor as returned by SNMP
 
 inventory:
- Creates one check per power module.
+ One service is created for each power module.
 

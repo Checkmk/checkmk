@@ -1,19 +1,37 @@
-title: Cisco Aironet access points: Client status
+title: Cisco Aironet Access Points: Client Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:
- This check monitors three aspects of the client status
- of an Cisco Aironet access point: the number of clients
- logged in, their average signal strength and their average
- signal quality. You may provide levels for strength and quality.
+ This check monitors three aspects:
+
+ - the number of clients logged in
+
+ - logged in clients average signal strength
+
+ - logged in clients average signal quality.
+
+ of an Cisco Aironet access point:
+
+ The levels of
+
+ - strength (default: -25, -20)
+
+ - quality (default: 40, 35)
+
+ are configurable.
+
  If zero clients are logged in, this check is always OK.
 
-item:
+ If the average strength or quality is under the configured level
+ the service goes {WARN}/{CRIT}.
+
+ This check uses the CISCO-DOT11-ASSOCIATION-MIB.
+
+ item:
  One of the three strings {"clients"}, {"strength"} or {"quality"}.
 
 inventory:
- If at least one client is logged in, all three checks will
- be generated.
+ All three services are created if at least one client is logged in.
 

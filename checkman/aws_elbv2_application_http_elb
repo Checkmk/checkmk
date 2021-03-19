@@ -1,0 +1,17 @@
+title: AWS ApplicationELB: HTTP ELB
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of HTTP 3XX, 4XX, 5XX, 500, 502, 503 and
+ 504 server errors returned by the AWS/ELB instance during the selected
+ time period (sum).
+
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS)}}.
+
+ No default levels are set, but upper levels can be configured.
+
+inventory:
+ One service is created if the required metric RequestCount is given.

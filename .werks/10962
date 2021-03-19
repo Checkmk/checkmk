@@ -1,0 +1,33 @@
+Title: Bugfix for AWS monitoring (conversion Sum --> rates)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1587384159
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk fixes a bug which affected the conversion of AWS
+Cloudwatch metrics with a statistics of type "Sum" into rates.
+Without this fix, the computed rates are too high by a factor
+of 10. Affected checks:
+
+- aws_elb.http_elb
+
+- aws_elb.http_backend
+
+- aws_elb.backend_connection_errors
+
+- aws_elbv2_application.http_elb
+
+- aws_elbv2_application_target_groups_http
+
+- aws_elbv2_application_target_groups_lambda
+
+- aws_s3_requests
+
+- aws_s3_requests.http_errors
+
+Note that only the absolute values were affected, no the
+computed percentages (if any).

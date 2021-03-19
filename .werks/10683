@@ -1,0 +1,14 @@
+Title: The plugin Windows tasks supports now new-line chars in task descrition
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1581408168
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Previously, the newline char in the task description broke the Windows tasks 
+check.
+
+With this version, the problem has been fixed.

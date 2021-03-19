@@ -1,8 +1,14 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 // core common functionaliaty
 // probably "file" is better name
 
 #pragma once
 
+#include <fmt/format.h>
 #include <time.h>
 
 #include <chrono>
@@ -15,12 +21,71 @@
 #include "cfg.h"
 #include "common/stop_watch.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 
 namespace cma {
+wtools::InternalUser ObtainInternalUser(std::wstring_view group);
+void KillAllInternalUsers();
+}  // namespace cma
+
+namespace cma::srv {
+class ServiceProcessor;
+}
+
+namespace cma {
+
+namespace security {
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands);
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands);
+}  // namespace security
+
 namespace tools {
+
+// add content of file to the Buf
+template <typename T>
+bool AppendFileContent(T& Buf, HANDLE h, size_t Count) noexcept {
+    // check what we have already inside
+    auto buf_size = Buf.size();
+    try {
+        Buf.resize(buf_size + Count);
+    } catch (const std::exception& e) {
+        XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
+        return false;
+    }
+
+    // add new data
+    auto read_buffer = Buf.data() + buf_size;
+    DWORD read_in_fact = 0;
+    auto count = static_cast<DWORD>(Count);
+    auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
+    if (!result) false;
+
+    if (buf_size + read_in_fact != Buf.size()) {
+        Buf.resize(buf_size + read_in_fact);
+    }
+
+    return true;
+}
+
+template <typename T>
+T ReadFromHandle(HANDLE Handle) {
+    T buf;
+    for (;;) {
+        auto read_count = wtools::DataCountOnHandle(Handle);
+
+        // now reading to the end
+        if (read_count == 0) break;  // no data
+        if (!cma::tools::AppendFileContent<T>(buf, Handle, read_count))
+            break;  // io fail
+    }
+    return buf;
+}
+
+bool AreFilesSame(const std::filesystem::path& tgt,
+                  const std::filesystem::path& src);
 
 // primitive command line checker
 bool CheckArgvForValue(int argc, const wchar_t* argv[], int pos,
@@ -30,19 +95,24 @@ using PathVector = std::vector<std::filesystem::path>;
 PathVector GatherAllFiles(const PathVector& Folders);
 // Scan one folder and add contents to the dirs and files
 void GatherMatchingFilesAndDirs(
-    const std::filesystem::path& SearchDir,    // c:\windows
-    const std::filesystem::path& DirPattern,   // c:\windows\L*
-    const std::filesystem::path& FilePattern,  // c:\windows\L*\*.log
-    PathVector& FilesFound                     // output
+    const std::filesystem::path& search_dir,    // c:\windows
+    const std::filesystem::path& dir_pattern,   // c:\windows\L*
+    const std::filesystem::path& file_pattern,  // c:\windows\L*\*.log
+    PathVector& files_found                     // output
 );
 
-void FilterPathByExtension(PathVector& Paths, std::vector<std::string> Exts);
-void RemoveDuplicatedNames(PathVector& Paths);
-PathVector SelectPathVectorByPattern(const PathVector& Paths,
-                                     const std::string& Pattern);
-const PathVector FilterPathVector(
-    const PathVector& FoundFiles,
-    const std::vector<cma::cfg::Plugins::ExeUnit>& Units, bool CheckExists);
+void FilterPathByExtension(PathVector& paths,
+                           const std::vector<std::string>& exts);
+void RemoveDuplicatedNames(PathVector& paths);
+
+/// \brief remove all forbidden files
+///
+/// Normally deletes only cmk-update-agent.exe
+void RemoveForbiddenNames(PathVector& paths);
+
+PathVector FilterPathVector(
+    const PathVector& found_files,
+    const std::vector<cma::cfg::Plugins::ExeUnit>& units, bool check_exists);
 };  // namespace cma
 
 namespace cma {
@@ -74,15 +144,17 @@ inline std::wstring FindPowershellExe() noexcept {
     // file not found on path
     auto powershell_path =
         cma::tools::win::GetSomeSystemFolder(FOLDERID_System);
-    fs::path ps(powershell_path);
-    ps /= L"WindowsPowerShell";
-    ps /= L"v1.0";
-    ps /= powershell_name;
+
     try {
+        fs::path ps(powershell_path);
+        ps /= L"WindowsPowerShell";
+        ps /= L"v1.0";
+        ps /= powershell_name;
         if (fs::exists(ps)) return ps;
         XLOG::l("Not found powershell");
     } catch (const std::exception& e) {
-        XLOG::l("malformed name {} e:{}", ps.u8string(), e.what());
+        XLOG::l("malformed name {} e:{}", wtools::ToUtf8(powershell_path),
+                e.what());
     }
     return {};
 }
@@ -117,12 +189,12 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
     } else if (extension == L".ps1") {
         wrapper = MakePowershellWrapper();
     } else {
-        XLOG::l("Not supported extension file {}", Path.u8string());
+        XLOG::l("Not supported extension file {}", Path);
         return {};
     }
 
     if (wrapper.empty()) {
-        XLOG::l("impossible to find exe for file {}", Path.u8string());
+        XLOG::l("impossible to find exe for file {}", Path);
         return {};
     }
 
@@ -130,8 +202,8 @@ inline std::wstring ConstructCommandToExec(const std::filesystem::path& Path) {
     try {
         return fmt::format(wrapper, Path.wstring());
     } catch (std::exception& e) {
-        XLOG::l("impossible to format Data for file '{}' exception: '{}'",
-                Path.u8string(), e.what());
+        XLOG::l("impossible to format Data for file '{}' exception: '{}'", Path,
+                e.what());
     }
     return {};
 }
@@ -192,51 +264,16 @@ public:
         return false;
     }
     enum class StartMode { job, updater };
-    bool start(std::wstring_view Id, std::filesystem::path ExeFile,
-               StartMode start_mode) {
-        int count = 0;
-        std::lock_guard lk(lock_);
-        if (process_) return false;
-        sw_.start();
-        id_ = Id;
-        exec_ = ExeFile.wstring();
-
-        // send exec array entries to internal
-        try {
-            // now exec
-            auto ar = new wtools::AppRunner;
-            auto exec = cma::ConstructCommandToExec(exec_);
-            XLOG::d.t("Exec app '{}', mode [{}]", wtools::ConvertToUTF8(exec),
-                      static_cast<int>(start_mode));
-
-            switch (start_mode) {
-                case StartMode::job:
-                    proc_id_ = ar->goExecAsJob(exec);
-                    break;
-                case StartMode::updater:
-                    proc_id_ = ar->goExecAsUpdater(exec);
-                    break;
-            }
-
-            if (proc_id_) {
-                process_ = ar;
-                return true;
-            }
-
-            delete ar;  // start failed
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception {}", e.what());
-        }
-        sw_.stop();
-        // cleaning up
-        id_.clear();
-        exec_.clear();
-
-        return false;
+    bool startEx(std::wstring_view Id, const std::wstring& exec,
+                 StartMode start_mode,
+                 const wtools::InternalUser& internal_user);
+    bool startStd(std::wstring_view Id, const std::wstring& exec,
+                  StartMode start_mode) {
+        return startEx(Id, exec, start_mode, {});
     }
 
     // strange?
-    uint32_t getProcessId() {
+    [[nodiscard]] uint32_t getProcessId() {
         uint32_t proc_id;
         std::unique_lock lk(lock_);
         proc_id = process_->processId();
@@ -245,7 +282,7 @@ public:
     }
 
     // really obtained proc id. Safe function
-    uint32_t startedProcId() const { return proc_id_; }
+    [[nodiscard]] uint32_t startedProcId() const { return proc_id_; }
 
     bool appendResult(HANDLE Handle, std::vector<char>& Buf) {
         if (Buf.size() == 0) return true;
@@ -267,33 +304,7 @@ public:
         return false;
     }
 
-    bool const failed() const noexcept { return failed_; }
-
-    // add content of file to the Buf
-    template <typename T>
-    bool appendFileContent(T& Buf, HANDLE h, size_t Count) const noexcept {
-        // check what we have already inside
-        auto buf_size = Buf.size();
-        try {
-            Buf.resize(buf_size + Count);
-        } catch (const std::exception& e) {
-            XLOG::l(XLOG_FLINE + " exception: '{}'", e.what());
-            return false;
-        }
-
-        // add new data
-        auto read_buffer = Buf.data() + buf_size;
-        DWORD read_in_fact = 0;
-        auto count = static_cast<DWORD>(Count);
-        auto result = ::ReadFile(h, read_buffer, count, &read_in_fact, nullptr);
-        if (!result) false;
-
-        if (buf_size + read_in_fact != Buf.size()) {
-            Buf.resize(buf_size + read_in_fact);
-        }
-
-        return true;
-    }
+    [[nodiscard]] bool const failed() const noexcept { return failed_; }
 
     // very special, only used for cmk-updater
     bool waitForUpdater(std::chrono::milliseconds Timeout);
@@ -324,8 +335,8 @@ public:
 
     // stupid wrapper
     void processResults(
-        std::function<void(const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char>& Data)>
+        std::function<void(const std::wstring cmd_line, uint32_t pid,
+                           uint32_t code, const std::vector<char>& data_block)>
             Func) {
         std::unique_lock lk(lock_);
         Func(process_->getCmdLine(), process_->processId(),
@@ -350,68 +361,50 @@ public:
     }
 
 private:
+    void readAndAppend(HANDLE read_handle, std::chrono::milliseconds timeout);
+    [[nodiscard]] bool waitForBreakLoop(std::chrono::milliseconds timeout);
     HANDLE stop_event_;
-    bool waitForStop(std::chrono::milliseconds Timeout);
+    bool waitForStop(std::chrono::milliseconds interval);
     wtools::StopWatch sw_;
     // called AFTER process finished!
     void readWhatLeft() {
         using namespace std;
         auto read_handle = getReadHandle();
-        auto buf = readFromHandle<vector<char>>(read_handle);
+        auto buf = cma::tools::ReadFromHandle<vector<char>>(read_handle);
         if (buf.size()) appendResult(read_handle, buf);
     }
 
-    template <typename T>
-    T readFromHandle(HANDLE Handle) {
-        T buf;
-        for (;;) {
-            auto read_count = wtools::DataCountOnHandle(Handle);
-
-            // now reading to the end
-            if (read_count == 0) break;                              // no data
-            if (!appendFileContent(buf, Handle, read_count)) break;  // io fail
-        }
-        return buf;
-    }
-
-    static std::string formatProcessInLog(uint32_t pid, std::wstring name) {
-        return fmt::format("Process '{}' pid [{}]", wtools::ConvertToUTF8(name),
-                           pid);
+    static std::string formatProcessInLog(uint32_t pid,
+                                          const std::wstring_view name) {
+        return fmt::format("Process '{}' pid [{}]", wtools::ToUtf8(name), pid);
     }
 
     // check processes for exit
     // updates object with exit code
     // returns true if process  exists or not accessible
     bool checkProcessExit(const uint32_t pid) {
+        auto [code, error] = wtools::GetProcessExitCode(pid);
+
         auto proc_string = formatProcessInLog(pid, exec_);
+        // check for error
+        if (error == 0) {
+            if (code == STILL_ACTIVE) return false;
 
-        auto h = ::OpenProcess(
-            PROCESS_QUERY_LIMITED_INFORMATION,  // not supported on XP
-            FALSE, pid);
-        if (!h) {
-            storeExitCode(pid, 0);  // process died
-            XLOG::d("{} is failed to open, error is [{}]", proc_string,
-                    ::GetLastError());
-            return true;
-        }
-        ON_OUT_OF_SCOPE(::CloseHandle(h));
-        DWORD exit_code = 0;
-        auto success = ::GetExitCodeProcess(h, &exit_code);
-        if (!success) {
-            XLOG::l("Error  [{}] accessing {}", ::GetLastError(), proc_string);
+            // success and valid exit code store exit code
+            XLOG::t("{} exits, code is [{}]", proc_string, code);
+            storeExitCode(pid, code);
             return true;
         }
 
-        // no logging for the case due to high noise
-        if (exit_code == STILL_ACTIVE) return false;
-
-        // success and valid exit code store exit code
-        XLOG::t("{} exits, code is [{}]", proc_string, exit_code);
-        storeExitCode(pid, exit_code);
+        if (code == 0) {
+            storeExitCode(pid, 0);  // process rather died
+            XLOG::d("{} is failed to open, error is [{}]", proc_string, error);
+        } else
+            XLOG::l("Error  [{}] accessing {}", error, proc_string);
         return true;
     }
 
-    bool isExecValid(const std::filesystem::path& FileExec) const {
+    static inline bool isExecValid(const std::filesystem::path& FileExec) {
         if (!IsValidFile(FileExec)) return false;  // sanity
 
         auto execute_string = ConstructCommandToExec(FileExec);
@@ -446,12 +439,11 @@ private:
 }  // namespace cma
 
 namespace cma {
-
 enum class HackDataMode { header, line };
 
 // build correct string for patching
 std::string ConstructPatchString(time_t time_now, int cache_age,
-                                 HackDataMode mode) noexcept;
+                                 HackDataMode mode);
 
 // 1. replaces '\r' with '\r\n'
 // 2a. HackDataMode::header :
@@ -462,14 +454,14 @@ std::string ConstructPatchString(time_t time_now, int cache_age,
 // hack every string with patch
 // "string"
 // "patch" + "string"
-bool HackDataWithCacheInfo(std::vector<char>& Out,
-                           const std::vector<char>& OriginalData,
+bool HackDataWithCacheInfo(std::vector<char>& out,
+                           const std::vector<char>& original_data,
                            const std::string& patch, HackDataMode mode);
 
 // cleans \r from string
-inline bool HackPluginDataRemoveCR(std::vector<char>& Out,
-                                   const std::vector<char>& OriginalData) {
-    return HackDataWithCacheInfo(Out, OriginalData, "", HackDataMode::header);
+inline bool HackPluginDataRemoveCR(std::vector<char>& out,
+                                   const std::vector<char>& original_data) {
+    return HackDataWithCacheInfo(out, original_data, "", HackDataMode::header);
 }
 
 class PluginEntry : public cma::cfg::PluginInfo {
@@ -550,6 +542,9 @@ public:
     // which plugin
     std::filesystem::path path() const { return path_; }
 
+    // which plugin
+    void setCmdLine(std::wstring_view name);
+
     // stored data from plugin
     std::vector<char> data() const {
         std::lock_guard lk(data_lock_);
@@ -567,6 +562,8 @@ public:
         retry_ = Unit.retry();
         cache_age_ = Unit.cacheAge();
         timeout_ = Unit.timeout();
+        group_ = Unit.group();
+        user_ = Unit.user();
         bool planned_async = Unit.async() || Unit.cacheAge() > 0;
 
         if (defined() && async() != planned_async) {
@@ -583,12 +580,16 @@ public:
             }
         }
         async_ = planned_async;
-        if (async()) {
-            if (cacheAge() && cacheAge() < cma::cfg::kMinimumCacheAge)
-                cache_age_ = cma::cfg::kMinimumCacheAge;
-        } else {
+
+        if (async() &&
+            cacheAge()) {  // for async we have cache_age either 0 or > 120
+            cache_age_ = std::max(cacheAge(), cma::cfg::kMinimumCacheAge);
+        } else {  // for sync cache_age is 0 always
             cache_age_ = 0;
         }
+
+        fillInternalUser();
+
         local_ = Local;
         defined_ = true;
     }
@@ -616,9 +617,12 @@ public:
 
     void removeFromExecution() noexcept { path_ = ""; }
 
-    static int threadCount() noexcept { return thread_count_.load(); }
+    static int threadCount() noexcept { return g_tread_count.load(); }
+
+    std::wstring cmdLine() const noexcept { return cmd_line_; }
 
 protected:
+    void fillInternalUser();
     void resetData() {
         std::lock_guard lk(data_lock_);
         return data_.clear();
@@ -626,7 +630,7 @@ protected:
     void restartAsyncThreadIfFinished(const std::wstring& Id);
 
     void markAsForRestart() {
-        XLOG::l.i("markAsForRestart {}", path().u8string());
+        XLOG::l.i("markAsForRestart {}", path());
         std::lock_guard lk(lock_);
         data_is_going_old_ = true;
     }
@@ -647,6 +651,8 @@ protected:
     // as a rule only after timeout
     void unregisterProcess();
 
+private:
+    wtools::InternalUser iu_;
     cma::TheMiniBox minibox_;
 
     std::filesystem::path path_;  // actual path to execute
@@ -662,14 +668,16 @@ protected:
 
     std::vector<char> data_;                           // cache
     std::chrono::steady_clock::time_point data_time_;  // when
-    time_t legacy_time_;                               // I'm nice guy
+    time_t legacy_time_ = 0;                           // I'm nice guy
 
     mutable std::mutex lock_;  // thread control
     std::unique_ptr<std::thread> main_thread_;
     bool thread_on_ = false;  // get before start thread, released inside thread
     bool data_is_going_old_ = false;  // when plugin finds data obsolete
 
-    static std::atomic<int> thread_count_;
+    static std::atomic<int> g_tread_count;
+
+    std::wstring cmd_line_;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class PluginTest;
@@ -679,18 +687,22 @@ protected:
     FRIEND_TEST(PluginTest, Async0DataPickup);
     FRIEND_TEST(PluginTest, AsyncLocal);
     FRIEND_TEST(PluginTest, SyncLocal);
+
+    FRIEND_TEST(PluginTest, Entry);
 #endif
 };
+wtools::InternalUser PluginsExecutionUser2Iu(std::string_view user);
 
 TheMiniBox::StartMode GetStartMode(const std::filesystem::path& filepath);
 
 // #TODO estimate class usage
 using PluginMap = std::unordered_map<std::string, cma::PluginEntry>;
 
-const PluginEntry* GetEntrySafe(const PluginMap& Pm, const std::string& Key);
-PluginEntry* GetEntrySafe(PluginMap& Pm, const std::string& Key);
+const PluginEntry* GetEntrySafe(const PluginMap& plugin_map,
+                                const std::string& key);
+PluginEntry* GetEntrySafe(PluginMap& plugin_map, const std::string& key);
 
-void InsertInPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+void InsertInPluginMap(PluginMap& plugin_map, const PathVector& found_files);
 
 using UnitMap = std::unordered_map<std::string, cma::cfg::Plugins::ExeUnit>;
 
@@ -699,37 +711,36 @@ std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
     const std::vector<std::filesystem::path>& found_files, bool local);
 
 void ApplyEverythingToPluginMap(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    const std::vector<std::filesystem::path>& files, bool Local);
+    PluginMap& plugin_map, const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+    const std::vector<std::filesystem::path>& found_files, bool local);
 
-void ApplyEverythingToPluginMapDeprecated(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    const std::vector<std::filesystem::path>& files, bool Local);
-
-void FilterPluginMap(PluginMap& Out, const PathVector& FoundFiles);
+void FilterPluginMap(PluginMap& out_map, const PathVector& found_files);
 
 void ApplyExeUnitToPluginMap(
-    PluginMap& Out, const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-    bool Local);
+    PluginMap& out_map, const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+    bool local);
 
-void RemoveDuplicatedPlugins(PluginMap& Out, bool CheckExists);
+void RemoveDuplicatedPlugins(PluginMap& plugin_map, bool check_exists);
 
-void UpdatePluginMap(PluginMap& Out,  // output is here
-                     bool Local, const PathVector& FoundFiles,
-                     const std::vector<cma::cfg::Plugins::ExeUnit>& Units,
-                     bool CheckExists = true);
+void UpdatePluginMap(PluginMap& plugin_map,  // output is here
+                     bool local, const PathVector& found_files,
+                     const std::vector<cma::cfg::Plugins::ExeUnit>& units,
+                     bool check_exists = true);
+
+void UpdatePluginMapCmdLine(PluginMap& plugin_map,
+                            cma::srv::ServiceProcessor* sp);
 
 // API call to exec all plugins and get back data and count
-std::vector<char> RunSyncPlugins(PluginMap& Plugins, int& Count, int Timeout);
-std::vector<char> RunAsyncPlugins(PluginMap& Plugins, int& Count,
-                                  bool StartImmediately);
+std::vector<char> RunSyncPlugins(PluginMap& plugins, int& total, int timeout);
+std::vector<char> RunAsyncPlugins(PluginMap& plugins, int& total,
+                                  bool start_immediately);
 
 constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(PluginMap& plugins_map, int& start_count);
 namespace provider::config {
-extern const bool G_AsyncPluginWithoutCacheAge_RunAsync;
-extern const bool G_SetLogwatchPosToEnd;
+extern const bool g_async_plugin_without_cache_age_run_async;
+extern const bool g_set_logwatch_pos_to_end;
 
 bool IsRunAsync(const PluginEntry& plugin) noexcept;
 }  // namespace provider::config
@@ -740,7 +751,8 @@ using StringSet = std::set<std::string>;
 bool AddUniqStringToSetIgnoreCase(StringSet& cache,
                                   const std::string& value) noexcept;
 // returns true if string added
-bool AddUniqStringToSetAsIs(StringSet& cache, const std::string value) noexcept;
+bool AddUniqStringToSetAsIs(StringSet& cache,
+                            const std::string& value) noexcept;
 }  // namespace tools
 
 // finds piggyback template <<<<name>>>>, if found returns 'name'
@@ -748,13 +760,5 @@ std::optional<std::string> GetPiggyBackName(const std::string& in_string);
 
 bool TryToHackStringWithCachedInfo(std::string& in_string,
                                    const std::string& value_to_insert);
-
-namespace ntfs {
-#if _MSC_VER >= 1923
-[[deprecated("Should not be used with VS 19")]]  // VS 19 has good remove
-#endif 
-bool Remove(const std::filesystem::path& Target,
-                    std::error_code& Ec) noexcept;
-}  // namespace ntfs
 
 }  // namespace cma

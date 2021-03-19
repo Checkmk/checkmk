@@ -1,0 +1,15 @@
+Title: wmi.include: Removed <tt>inventory_wmi_table</tt>
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1580301720
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This only affects users who have custom Plugins developed. The function
+<tt>inventory_wmi_table</tt> has been removed from wmi.inlude.
+Please replace it with either  <tt>inventory_wmi_table_total</tt>
+(if the service has no item) or  <tt>inventory_wmi_table_instances</tt>
+(if the service has items).

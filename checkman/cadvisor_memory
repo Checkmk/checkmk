@@ -1,0 +1,18 @@
+title: cAdvisor Pods/Containers: Memory Stats
+agents: prometheus
+catalog: containerization/cadvisor
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the memory stats of containers
+ and/or pods. The memory usage for containers is shown relative to
+ its parent pod. The memory usage for pods is shown either relative to the
+ available machine memory or, if available, relative to the pod's permitted memory cap.
+
+ This check obtains its metrics values through Prometheus. In order to allow
+ generation of cAdvisor related memory services, the user needs to enable
+ the cAdvisor option under the Prometheus Datasource Programs ruleset.
+
+inventory:
+ One service is created for each memory unit.

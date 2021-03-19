@@ -1,4 +1,4 @@
-title: NetApp Filer: vServer status
+title: NetApp Filer: vServer Status
 agents: netapp
 catalog: hw/storagehw/netapp
 license: GPL
@@ -11,9 +11,14 @@ description:
  Check status:
 
  - {OK} if the vServer status is {running}.
+
  - {OK} if the vServer status is {stopped} but the vServer subtype is {dp_destination}.
+
  - {CRIT} if the vServer status is not {running} and has not vServer subtype {dp_destination}.
 
+item:
+ Name of the virtual server
+
 inventory:
- One check is created per vServer
+ One service is created for each vServer.
 

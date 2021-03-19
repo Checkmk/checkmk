@@ -13,4 +13,4 @@ item:
  The ID of the BRRP connection from SNMP.
 
 inventory:
- Creates one check for every BRRP connection.
+ One service is created for each BRRP connection.

@@ -8,11 +8,12 @@
 #include <string_view>
 
 #include "cfg.h"
+#include "cma_core.h"
 #include "common/cfg_info.h"
 #include "windows_service_api.h"
 
 namespace cma::details {
-extern bool G_Test;
+extern bool g_is_test;
 }
 
 namespace cma {
@@ -36,8 +37,8 @@ std::pair<std::filesystem::path, std::filesystem::path> FindAlternateDirs(
     std::error_code ec;
     if (!std::filesystem::exists(data_dir, ec) &&
         !fs::create_directories(data_dir, ec)) {
-        XLOG::l.crit("Cannot create test folder {} error:{}",
-                     data_dir.u8string(), ec.value());
+        XLOG::l.crit("Cannot create test folder {} error:{}", data_dir,
+                     ec.value());
         return {};
     }
 
@@ -49,12 +50,10 @@ namespace cfg {
 void LogFolders() {
     auto root_dir = GetCfg().getRootDir();
     auto data_dir = GetCfg().getDataDir();
-    XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir.u8string(),
-              data_dir.u8string());
+    XLOG::l.t("Using root = '{}' and data = '{}' folders ", root_dir, data_dir);
 }
 
 bool FindAndPrepareWorkingFolders(AppType Type) {
-    using namespace cma::cfg;
     namespace fs = std::filesystem;
 
     switch (Type) {
@@ -92,21 +91,41 @@ bool FindAndPrepareWorkingFolders(AppType Type) {
 
 static AppType CalcAppType(AppType Type) {
     if (Type == AppType::automatic) return AppDefaultType();
-    if (Type == AppType::test) cma::details::G_Test = true;
+    if (Type == AppType::test) cma::details::g_is_test = true;
 
     return Type;
 }
 
 bool ReloadConfig() {
     //
-
     return LoadConfig(AppDefaultType(), {});
+}
+
+UninstallAlert g_uninstall_alert;
+
+// usually for testing
+void UninstallAlert::clear() noexcept {
+    //
+    set_ = false;
+}
+
+void UninstallAlert::set() noexcept {
+    //
+    if (!IsService()) {
+        XLOG::l.i("Requested clean on exit is IGNORED, not service");
+        return;
+    }
+
+    XLOG::l.i("Requested clean on exit");
+    XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 9,
+                                         "Requested Clean On Exit");
+    set_ = true;
 }
 
 bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
     cfg::details::KillDefaultConfig();
     // load config is here
-    auto cfg_files = cfg::DefaultConfigArray(Type);
+    auto cfg_files = cfg::DefaultConfigArray();
     if (!ConfigFile.empty()) {
         cfg_files.clear();
         cfg_files.push_back(ConfigFile);
@@ -120,7 +139,7 @@ bool LoadConfig(AppType Type, const std::wstring& ConfigFile) {
     }
 
     XLOG::l.i("Loaded start config {}",
-              wtools::ConvertToUTF8(cma::cfg::GetPathOfLoadedConfig()));
+              wtools::ToUtf8(cma::cfg::GetPathOfLoadedConfig()));
     return true;
 }
 
@@ -136,8 +155,15 @@ bool OnStart(AppType proposed_type, const std::wstring& config_file) {
     auto type = CalcAppType(proposed_type);
 
     auto already_loaded = S_OnStartCalled.exchange(true);
+    if (type == AppType::srv) {
+        XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 35,
+                                             "check_mk_service is loading");
+    }
 
-    if (!already_loaded) return OnStartCore(type, config_file);
+    if (!already_loaded) {
+        XLOG::setup::SetContext(cma::IsService() ? "srv" : "app");
+        return OnStartCore(type, config_file);
+    }
 
     if (AppDefaultType() == AppType::test) {
         XLOG::d.i("Second call of OnStart in test mode");

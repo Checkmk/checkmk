@@ -1,25 +1,25 @@
-# -*- encoding: utf-8
-# pylint: disable=redefined-outer-name
-import imp
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+# pylint: disable=redefined-outer-name
+
+import pytest  # type: ignore[import]
 
 from cmk.special_agents import agent_vsphere
-from testlib import cmk_path  # pylint: disable=import-error
 
 DEFAULT_AGRS = {
     "debug": False,
     "direct": False,
-    "agent": False,
     "timeout": 60,
     "port": 443,
     "hostname": None,
     "skip_placeholder_vm": False,
-    "pysphere": False,
     "host_pwr_display": None,
     "vm_pwr_display": None,
-    "snapshot_display": None,
+    "snapshots_on_host": False,
     "vm_piggyname": "alias",
     "spaces": "underscore",
     "no_cert_check": False,
@@ -40,12 +40,6 @@ DEFAULT_AGRS = {
     }),
     (['-D'], {
         "direct": True
-    }),
-    (['--agent'], {
-        "agent": True
-    }),
-    (['-a'], {
-        "agent": True
     }),
     (['--timeout', '23'], {
         "timeout": 23
@@ -68,17 +62,14 @@ DEFAULT_AGRS = {
     (['-P'], {
         "skip_placeholder_vm": True
     }),
-    (['--pysphere'], {
-        "pysphere": True
-    }),
     (['--host_pwr_display', 'vm'], {
         "host_pwr_display": "vm"
     }),
     (['--vm_pwr_display', 'esxhost'], {
         "vm_pwr_display": "esxhost"
     }),
-    (['--snapshot_display', 'vCenter'], {
-        "snapshot_display": "vCenter"
+    (['--snapshots-on-host'], {
+        "snapshots_on_host": True
     }),
     (['--vm_piggyname', 'hostname'], {
         "vm_piggyname": "hostname"
@@ -112,7 +103,7 @@ DEFAULT_AGRS = {
     }),
 ])
 def test_parse_arguments(argv, expected_non_default_args):
-    args = agent_vsphere.parse_arguments(["./agent_vsphere"] + argv + ["test_host"])
+    args = agent_vsphere.parse_arguments(argv + ["test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
         actual = getattr(args, attr)
@@ -125,9 +116,8 @@ def test_parse_arguments(argv, expected_non_default_args):
     ['--spaces', 'safe'],
     ['--host_pwr_display', 'whoopdeedoo'],
     ['--vm_pwr_display', 'whoopdeedoo'],
-    ['--snapshot_display', 'whoopdeedoo'],
     ['--vm_piggyname', 'MissPiggy'],
 ])
 def test_parse_arguments_invalid(invalid_argv):
     with pytest.raises(SystemExit):
-        agent_vsphere.parse_arguments(["./agent_vsphere"] + invalid_argv)
+        agent_vsphere.parse_arguments(invalid_argv)

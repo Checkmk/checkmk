@@ -1,5 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 
 
 checkname = 'aix_multipath'
@@ -33,5 +40,5 @@ checks = {'': [(u'hdisk0', {'paths': 1}, [(0, '1 paths total', [])]),
                 [(1, '1 paths not enabled (!), 4 paths total', [])]),
                (u'hdisk3',
                 {'paths': 6},
-                [(1, '3 paths not enabled (!), 6 paths total', [])]),
+                [(2, '3 paths not enabled (!!), 6 paths total', [])]),
                ]}

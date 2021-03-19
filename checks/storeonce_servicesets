@@ -1,29 +1,24 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # example output
 #
 # <<<storeonce_servicesets:sep(9)>>>
@@ -76,12 +71,12 @@ def _get_item(data):
 
 
 def inventory_storeonce_servicesets(parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         yield _get_item(values), {}
 
 
 def check_storeonce_servicesets(item, params, parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if not item == values["ServiceSet ID"]:
             continue
 
@@ -109,12 +104,11 @@ check_info['storeonce_servicesets'] = {
     'inventory_function': inventory_storeonce_servicesets,
     'check_function': check_storeonce_servicesets,
     'service_description': 'ServiceSet %s Status',
-    'includes': ['storeonce.include'],
 }
 
 
 def check_storeonce_servicesets_capacity(item, params, parsed):
-    for values in parsed.itervalues():
+    for values in parsed.values():
         if _get_item(values) == item:
             return check_storeonce_space(item, params, values)
 
@@ -125,5 +119,4 @@ check_info['storeonce_servicesets.capacity'] = {
     'service_description': "ServiceSet %s Capacity",
     'has_perfdata': True,
     'group': "filesystem",
-    'includes': ["size_trend.include", "df.include", "storeonce.include"],
 }

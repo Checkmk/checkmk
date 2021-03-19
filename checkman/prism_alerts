@@ -14,4 +14,4 @@ description:
  This check requires the special agent configurable through "Nutanix Prism".
 
 inventory:
- Exactly one item will be discovered.
+ One service is created.

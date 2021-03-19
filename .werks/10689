@@ -1,0 +1,44 @@
+Title: Checkmk Python may be installed with Windows Agent
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1584625844
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+With this release Checkmk monitoring software has got a possibility 
+to install and to use Python-3 together with the Windows Agent.
+
+It is now possible to develop agent plugins on Windows using Python.
+It is now also possible to build real cross-platform plugins (like e.g. 
+mk_logwatch)
+
+The Checkmk Python can be installed either automatically(the default), 
+if any of deployed plugins need it, or manually, if a user of the Checkmk 
+software needs Python-3 functionality on the host.
+
+At the moment the Checkmk Python has version 3.8.1 and will be deployed 
+in the directory <tt>%ProgramData%\checkmk\agent\modules\python-3.8</tt>.
+The Python will be updated in the future versions together with the agent.
+We also ship a collection of useful Python modules, at the moment pyyaml 
+and colorama.
+
+Also it is possible to install arbitrary Python modules using Checkmk 
+Python's pip.
+
+By default the Checkmk Python will be used as interpreter for all 
+plugins with extension .py. It is possible to change this behaviour 
+with WATO and .py scripts will be interpreted using Windows system 
+Python.
+
+All plugins with extension .checkmk.py will be interpreted with Checkmk 
+Python if Checkmk Python is installed.
+
+Important: Checkmk Python doesn't interfere with Windows Operation 
+System (registry, installer, paths, etc) and may be removed at any 
+moment. It means two important consequences:
+1. The Windows Control Panel doesn't have a dedicated entry for Python. 
+It is installed as a component of the Checkmk Windows Agent.
+2. Checkmk Python isn't added to the Windows PATH environment variable.

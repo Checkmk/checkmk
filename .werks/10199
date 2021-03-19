@@ -1,0 +1,50 @@
+Title: Bakery plugins must save the configuration into yml_store parameter
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573730508
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously the Bakery configured Windows Agent using <tt>check_mk.ini</tt>
+configuration file: every script in <tt>enterprise/agents/bakery</tt> directory
+could write own configuration data into the own file. All those files had 
+been later gathered into one <tt>check_mk.ini</tt> configuration file.
+
+Since this release the Bakery configures Windows Agent using only
+<tt>check_mk.bakery.yml</tt>. All data located in the ini file will be ignored.
+
+To correctly configure Windows Agent you must use new parameter in your 
+<tt>bake_***</tt> function named <tt>yml_store</tt>. This parameter has type 
+YamlStore and imported automatically from <tt>agent_bakery_plugins.py</tt>. 
+
+Now the configuration data of all plugins are stored in a standard Python 
+dictionary, which replicates the structure of the Windows Agent's 
+configuration file.
+
+The following sample bake function sets the agent port setting for the Yaml 
+file. It receives the configured port for the agent configuration and creates 
+two entries, "enabled" and "port" in the "global" section.
+C+:
+def bake_agent_port(opsys, conf, conf_dir, plugins_dir, yml_store):
+  #                                                     ^^^^^^^^^
+  global_section = yml_store.make_section["global"] # mandatory to get dict
+  #                                        ^^^^^^
+  global_section["enabled"] = True  # mandatory also
+
+  global_section["port"] = conf  # configures the Agent port
+  #               ^^^^     ^^^^
+C-:
+
+The function above creates the following definitions in the 
+<tt>check_mk.bakery.yml</tt>:
+C+:
+global:
+  enabled: True
+  port: 6551
+C-:
+
+
+

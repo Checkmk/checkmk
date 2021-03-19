@@ -1,0 +1,15 @@
+Title: Fixed missleading host attribute help text
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1585724920
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The help texts for "IPv4 Address" and "IPv6 Address" have given the impression
+that the field could be set with an empty value. This is not correct, the
+behaviour just differs if the field is {not} set. The help texts have been
+adjusted.

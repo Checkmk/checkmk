@@ -1,8 +1,13 @@
-# encoding: utf-8
-# pylint: disable=redefined-outer-name
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple
-import pytest  # type: ignore
+from typing import Dict, List, NamedTuple, Tuple, Union
+
+import pytest  # type: ignore[import]
+
 import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
@@ -11,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 
 def test_transform_tuple_ruleset():
-    ruleset = [
+    ruleset: Union[List[Tuple[str, List[str]]], List[Dict[str, List[str]]]] = [
         ("VAL1", ["HOSTLIST1"]),
         ("VAL2", ["HOSTLIST2"]),
     ]

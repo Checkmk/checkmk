@@ -1,0 +1,13 @@
+Title: Crashing inventory plugins on nagios core
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607813886
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In Checkmk versions 2.0.0i1 and 2.0.0b1 some inventory plugins have
+been crashing if on the nagios core.

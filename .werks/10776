@@ -1,0 +1,22 @@
+Title: Sorter for dynamic columns in view editor
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1584972200
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Dynamic columns in views, like the "Metric History" or "Metric Forecast"
+Painter could only be sorted after the view was displayed. Now directly in
+view editor you can setup a sorter for your desired column.
+
+To be able to select such a sorter, you need to configure the column first
+and save the view once. After reopening the view editor, you can select the
+sorter that is related to the just created column.
+
+Views that have been created with previous versions will result in an error
+"Internal error:uuid", because the column identifier has not yet been
+generated. To make these views work again, you need to open the view once
+in the view editor and save it again.

@@ -1,0 +1,11 @@
+Title: Check plugin to monitor temperature in Arista Switches DCS-7280
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1580918788
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Check plugin to monitor temperature sensors in Arista Switches DCS-7280

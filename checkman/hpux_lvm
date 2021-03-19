@@ -1,4 +1,4 @@
-title: Mirror state of LVM logical volumes on HP-UX
+title: HP-UX: Mirror State of LVM Logical Volumes
 agents: hpux
 catalog: os/storage
 license: GPL
@@ -11,5 +11,5 @@ item:
  The device path of the LV (e.g. {"/dev/vg00/lvol4"}).
 
 inventory:
- On service is created for each logical volume.
+ One service is created for each logical volume.
 

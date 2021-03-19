@@ -1,0 +1,11 @@
+Title: storeonce.include: Fix calculation bug
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1586324852
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+For the storeonce.include there was a wronge conversion from byte to megabyte.

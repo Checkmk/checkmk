@@ -1,1 +1,0 @@
-../../livestatus/src/Logger.cc

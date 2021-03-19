@@ -1,0 +1,18 @@
+Title: Fix potential "Request-URI Too Long" error when editing huge tag groups
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1584107703
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+When editing a tag group with a larger number of tag choices an error "Request-URI Too Long"
+could appear.
+
+When editing a tag choice that is configured for some rules or hosts, a confirm dialog with
+the tile "Your modifications affect some objects" is shown to the user that asks which action
+should be taken on the related object. When choosing an action and submitting the form, the
+error mentioned above could occur.

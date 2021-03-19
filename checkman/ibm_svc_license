@@ -18,4 +18,4 @@ item:
  license_ in the output of the lslicense command.
 
 inventory:
- Creates one check for every licensable feature.
+ One service is created for eeach licensable feature.

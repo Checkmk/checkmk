@@ -1,0 +1,16 @@
+Title: heartbeat_crm: fix vanished services for Pacemaker >= 2.0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1589286306
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+In Pacemaker 2.0 the cluster controller process was renamed
+from crmd to pacemaker-controld. Therefore, heartbeat_crm
+services vanished if the sockets /var/run/heartbeat/crm/cib_ro
+or /var/run/crm/cib_ro did not exist, since no crmd process
+was found. This is fixed.

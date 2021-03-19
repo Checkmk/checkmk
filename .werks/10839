@@ -1,0 +1,15 @@
+Title: if.include: Fix missing performance data of interface groups on clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1584446579
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Interface groups may be configured on clusters. In order to detect counter
+wraps all metrics of each interface of the cluster nodes are checked. In the
+counter names the node name was missing. This led to empty performance data
+because counter wraps were wrongly detected.

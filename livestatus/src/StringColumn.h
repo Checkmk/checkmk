@@ -1,63 +1,126 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef StringColumn_h
 #define StringColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <string>
+#include <utility>
+
 #include "Column.h"
 #include "Filter.h"
+#include "PerfdataAggregator.h"
+#include "StringFilter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregator;
 class Row;
 class RowRenderer;
 
-class StringColumn : public Column {
-public:
-    StringColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset, int extra_extra_offset,
-                 int offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset, offset) {}
+struct StringColumn : ::Column {
+    class Constant;
+    class Reference;
+    template <class T>
+    class Callback;
 
-    ColumnType type() const override { return ColumnType::string; }
+    using ::Column::Column;
+    ~StringColumn() override = default;
 
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
+    [[nodiscard]] ColumnType type() const override {
+        return ColumnType::string;
+    }
 
-    std::unique_ptr<Filter> createFilter(
+    void output(Row row, RowRenderer& r, const contact* /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        r.output(row.isNull() ? "" : getValue(row));
+    }
+
+    [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
-        const std::string &value) const override;
+        const std::string& value) const override {
+        return std::make_unique<StringFilter>(
+            kind, name(), [this](Row row) { return this->getValue(row); },
+            relOp, value);
+    }
 
-    std::unique_ptr<Aggregator> createAggregator(
-        AggregationFactory factory) const override;
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
+        AggregationFactory /*factory*/) const override {
+        throw std::runtime_error("aggregating on string column '" + name() +
+                                 "' not supported");
+    }
 
-    virtual std::string getValue(Row row) const = 0;
+    [[nodiscard]] virtual std::string getValue(Row row) const = 0;
 };
 
-#endif  // StringColumn_h
+// TODO(ml, sp): C++-20 should let us use strings as default
+// template parameter (see P0732).
+template <class T>
+class StringColumn::Callback : public StringColumn {
+public:
+    struct PerfData;
+
+    Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets,
+             const std::function<std::string(const T&)>& f)
+        : StringColumn{name, description, offsets}, f_{f} {}
+    ~Callback() override = default;
+
+    [[nodiscard]] std::string getValue(Row row) const override {
+        using namespace std::string_literals;
+        const T* data = columnData<T>(row);
+        return data == nullptr ? ""s : f_(*data);
+    }
+
+private:
+    const std::function<std::string(const T&)> f_;
+};
+
+class StringColumn::Constant : public StringColumn {
+public:
+    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
+    Constant(const std::string& name, const std::string& description,
+             // cppcheck-suppress passedByValue
+             std::string x)
+        : StringColumn{name, description, {}}, x_{std::move(x)} {}
+    ~Constant() override = default;
+
+    [[nodiscard]] std::string getValue(Row /*row*/) const override {
+        return x_;
+    }
+
+private:
+    const std::string x_;
+};
+
+class StringColumn::Reference : public StringColumn {
+public:
+    Reference(const std::string& name, const std::string& description,
+              const std::string& x)
+        : StringColumn{name, description, {}}, x_{x} {}
+    ~Reference() override = default;
+    [[nodiscard]] std::string getValue(Row /*row*/) const override {
+        return x_;
+    }
+
+private:
+    const std::string& x_;
+};
+
+template <class T>
+struct StringColumn::Callback<T>::PerfData : StringColumn::Callback<T> {
+    using StringColumn::Callback<T>::Callback;
+    [[nodiscard]] std::unique_ptr<Aggregator> createAggregator(
+        AggregationFactory factory) const override {
+        return std::make_unique<PerfdataAggregator>(
+            factory, [this](Row row) { return this->getValue(row); });
+    }
+};
+
+#endif

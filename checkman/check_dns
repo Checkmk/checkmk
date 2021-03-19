@@ -1,8 +1,12 @@
-title: DNS query to a Nameserver
+title: DNS Query to a Nameserver
 agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ Hostname or IP address
+
 description:
  This is an active check that sends a DNS query to a DNS nameserver.
 

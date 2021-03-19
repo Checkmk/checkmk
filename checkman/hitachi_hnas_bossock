@@ -12,7 +12,7 @@ description:
  for the number of fibers.
 
 inventory:
- Creates one check for every cluster node in the HNAS system.
+ One service is created for each cluster node in the HNAS system.
 
 item:
  The ID of the node

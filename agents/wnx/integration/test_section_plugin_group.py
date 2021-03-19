@@ -1,9 +1,13 @@
-#!/usr/bin/env python
-# -*- coding: utf-8; py-indent-offset: 4 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 from itertools import chain, repeat
 import os
 import platform
-import pytest
+import pytest  # type: ignore[import]
 import re
 import sys
 import time
@@ -12,12 +16,13 @@ from local import (actual_output, assert_subprocess, make_yaml_config, src_exec_
                    wait_agent, write_config, user_dir)
 
 
-class Globals(object):
+class Globals():
     executionmode = None
-    pluginname = None
+    pluginname = ""
     plugintype = None
     suffixes = None
     binaryplugin = 'monty.exe'
+    alone = False
 
 
 @pytest.fixture
@@ -74,7 +79,7 @@ def testconfig(request, testconfig_sections):
 @pytest.fixture()
 def expected_output():
     main_label = [
-        re.escape(r'<<<%s>>>' % (Globals.plugintype if Globals.plugintype == 'local' else ''))
+        re.escape(r'<<<%s>>>' % ('local:sep(0)' if Globals.plugintype == 'local' else ''))
     ]
 
     if Globals.suffixes == 'default':
@@ -133,9 +138,8 @@ def expected_output():
             (r'[^\t]+\s+([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})?\s+[^\t]+\s+[^\t]*'
              r'\s+\d*\s+\d*\s+\{[0-9A-F]+(\-[0-9A-F]+)+\}')
         ]
-        plugin_variadic = [
-            r'%s' % ('' if Globals.alone else r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+')
-        ]
+        plugin_variadic = iter(
+            [r'%s' % ('' if Globals.alone else r'|' + re.escape(r'<<<systemtime>>>') + r'|\d+')])
 
     return chain(main_label, plugin_fixed, plugin_variadic)
 

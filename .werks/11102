@@ -1,0 +1,14 @@
+Title: No OIDs found when using stored SNMP walks for simulation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1588681854
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In rare cases the simultaion of hosts using stored SNMP walks did not find any data.
+
+This was due to newline characters in the SNMP output, which lead to the search operation
+not finding the correct OIDs (depending on the position of those values within the stored walk).

@@ -1,0 +1,23 @@
+Title: lnx_if: Fixed confusion of interface state UNKNOWN, DOWN if ethtool output is missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1573314997
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If the command {{ethtool}} provides information about interfaces the
+operational state of an interfaces is UP if ethtool outputs
+{{Link detected: yes}} otherwise DOWN in case of {{Link detected: no}}.
+
+If this output is missing then the interface flags in angle brackets of the
+command {{ip}} are used to get the operational state. Out interpretation was as
+following: If the flags contain UP, the operational status of the interface is
+UP.  If the flags contain DOWN, the status is DOWN otherwise it is UNKNOWN.
+
+But we wrongly assumed that these flags contain DOWN. This has been fixed and
+now it is handled as following: If the flags contain UP, the status is UP
+otherwise it is DOWN.

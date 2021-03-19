@@ -1,36 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """The WATO folders network scan for new hosts"""
 
 import os
 import re
-import threading
 import socket
 import subprocess
-from typing import NamedTuple  # pylint: disable=unused-import
+import threading
+from typing import NamedTuple, List, Tuple
+
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
@@ -53,8 +35,7 @@ class AutomationNetworkScan(AutomationCommand):
     def command_name(self):
         return "network-scan"
 
-    def get_request(self):
-        # type: () -> NetworkScanRequest
+    def get_request(self) -> NetworkScanRequest:
         folder_path = html.request.var("folder")
         if folder_path is None:
             raise MKGeneralException(_("Folder path is missing"))
@@ -94,7 +75,7 @@ def _ip_addresses_to_scan(folder):
 
 
 def _ip_addresses_of_ranges(ip_ranges):
-    addresses = set([])
+    addresses = set()
 
     for ty, spec in ip_ranges:
         if ty == "ip_range":
@@ -115,7 +96,7 @@ _FULL_IPV4 = (2**32) - 1
 def _ip_addresses_of_range(spec):
     first_int, last_int = map(_ip_int_from_string, spec)
 
-    addresses = []
+    addresses: List[HostAddress] = []
 
     if first_int > last_int:
         return addresses  # skip wrong config
@@ -129,7 +110,7 @@ def _ip_addresses_of_range(spec):
     return addresses
 
 
-def _ip_int_from_string(ip_str):
+def _ip_int_from_string(ip_str: str) -> int:
     packed_ip = 0
     octets = ip_str.split(".")
     for oc in octets:
@@ -137,9 +118,9 @@ def _ip_int_from_string(ip_str):
     return packed_ip
 
 
-def _string_from_ip_int(ip_int):
-    octets = []
-    for _ in xrange(4):
+def _string_from_ip_int(ip_int: int) -> HostAddress:
+    octets: List[str] = []
+    for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
     return ".".join(octets)
@@ -164,7 +145,7 @@ def _mask_bits_to_int(n):
 def _known_ip_addresses():
     addresses = set()
 
-    for host in Host.all().itervalues():
+    for host in Host.all().values():
         attributes = host.attributes()
 
         address = attributes.get("ipaddress")
@@ -207,7 +188,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # Initalize all workers
     threads = []
-    found_hosts = []
+    found_hosts: List[Tuple[HostName, HostAddress]] = []
     for _t_num in range(parallel_pings):
         t = threading.Thread(target=_ping_worker, args=[ip_addresses, found_hosts])
         t.daemon = True
@@ -221,7 +202,7 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses, hosts):
+def _ping_worker(addresses: List[HostAddress], hosts: List[Tuple[HostName, HostAddress]]) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -237,8 +218,9 @@ def _ping_worker(addresses, hosts):
             hosts.append((host_name, ipaddress))
 
 
-def _ping(address):
+def _ping(address: HostAddress) -> bool:
     return subprocess.Popen(['ping', '-c2', '-w2', address],
                             stdout=open(os.devnull, "a"),
                             stderr=subprocess.STDOUT,
+                            encoding="utf-8",
                             close_fds=True).wait() == 0

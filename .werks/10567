@@ -1,0 +1,11 @@
+Title: hp_fan, hp_psu: Support for Aruba 5400R ZL2 switch series
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573733308
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+

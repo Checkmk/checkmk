@@ -1,0 +1,14 @@
+Title: mem.linux: false CRIT status when VmallocChunk is set to 0 kB
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1597322981
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+On Linux kernel 5.3 and newer versions, VmallocChunk is not set (i.e. set to
+0 kB). This causes the plugin to report a false CRIT status when evaluating the
+status of 'Largest Free VMalloc Chunk'. We have amended the plugin to ignore
+Vmalloc Chunk if it is set to 0 kB.

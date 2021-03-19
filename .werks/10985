@@ -1,0 +1,16 @@
+Title: systemd_units: Fix single service discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1585571015
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+In the ruleset {{Systemd Single Services Discovery}} you can configure
+{{Descriptions}}, {{Service unit names}} or {{States}}. If no {{States}} are
+configured but {{Descriptions}} or {{Service unit names}} Checkmk does not
+discover any service.  All three parameters are optional.  Checkmk should
+discover services if at least one entry matches. This has been fixed.

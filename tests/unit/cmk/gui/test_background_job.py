@@ -1,17 +1,24 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import logging
 import time
 import multiprocessing
 import sys
-import pytest  # type: ignore
-import testlib  # type: ignore
-import six
 
-import cmk
+import pytest  # type: ignore[import]
+
+import testlib
+
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 # Loads all GUI modules
-import cmk.gui.modules  # pylint: disable=unused-import
+import cmk.gui.modules
 
 import cmk.gui.log
 
@@ -25,6 +32,7 @@ def debug_logging():
 
 def test_registered_background_jobs():
     expected_jobs = [
+        'ActivateChangesSchedulerBackgroundJob',
         'ParentScanBackgroundJob',
         'DummyBackgroundJob',
         'RenameHostsBackgroundJob',
@@ -33,11 +41,16 @@ def test_registered_background_jobs():
         'BulkDiscoveryBackgroundJob',
         'UserSyncBackgroundJob',
         'ServiceDiscoveryBackgroundJob',
+        'ActivationCleanupBackgroundJob',
+        'CheckmkAutomationBackgroundJob',
+        'DiagnosticsDumpBackgroundJob',
+        'SearchIndexBackgroundJob',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_jobs += [
             'BakeAgentsBackgroundJob',
+            'SignAgentsBackgroundJob',
             'ReportingBackgroundJob',
         ]
 
@@ -47,7 +60,7 @@ def test_registered_background_jobs():
 def test_registered_background_jobs_attributes():
     for job_class in gui_background_job.job_registry.values():
         assert isinstance(job_class.job_prefix, str)
-        assert isinstance(job_class.gui_title(), six.text_type)
+        assert isinstance(job_class.gui_title(), str)
 
 
 @pytest.fixture(autouse=True)
@@ -55,10 +68,10 @@ def job_base_dir(tmp_path, monkeypatch):
     var_dir = tmp_path
 
     log_dir = var_dir / "log"
-    log_dir.mkdir()  # pylint: disable=no-member
+    log_dir.mkdir()
 
     job_dir = var_dir / "background_jobs"
-    job_dir.mkdir()  # pylint: disable=no-member
+    job_dir.mkdir()
 
     # Patch for web.log. Sholdn't we do this for all web tests?
     monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))
@@ -95,7 +108,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job():
+def test_start_job(register_builtin_html):
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -125,7 +138,7 @@ def test_start_job():
     assert "Hallo :-)" in output
 
 
-def test_stop_job():
+def test_stop_job(register_builtin_html):
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

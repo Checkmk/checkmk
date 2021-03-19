@@ -1,4 +1,4 @@
-title: Various Linux kernel counters
+title: Various Linux Kernel Counters
 agents: linux
 catalog: os/kernel
 license: GPL
@@ -15,11 +15,13 @@ description:
  collect performance data. Levels you set to {None} will not
  be checked.
 
+item:
+ The kernel counter
+
 inventory:
- Per default one check for {"Major Page Faults"},
- {"Context Switches"} and {"Process Creations"}
- will be created on each host providing that data. You can
- override this list globally by setting {inventory_kernel_counters}
+ One service is created for {"Major Page Faults"}, {"Context Switches"}
+ and {"Process Creations"} per default on each host.
+ You can override this list globally by setting {inventory_kernel_counters}
  to a list of strings with those counters that should be inventorized.
  Use {ignored_services} if you need a host-specific configuration
  of the inventory.

@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -8,7 +12,6 @@
 #define mrpe_h__
 
 #include <filesystem>
-#include <regex>
 #include <string>
 #include <string_view>
 
@@ -18,30 +21,13 @@
 #include "section_header.h"
 
 namespace cma::provider {
-constexpr bool kParallelMrpe = false;
-constexpr bool kMrpeRemoveAbsentFiles = false;
+constexpr bool kParallelMrpe{false};
+constexpr bool kMrpeRemoveAbsentFiles{false};
 
-// actual regex is ("([^"]+)"|'([^']+)'|[^" \t]+)
-// verified https://regex101.com/r/p89I0B/1
-// three groups "***" or '***' or
-const std::regex RegexPossiblyQuoted{"(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
+std::vector<std::string> TokenizeString(const std::string &val, int sub_match);
 
-inline std::vector<std::string> TokenizeString(const std::string &val,
-                                               const std::regex &regex_val,
-                                               int sub_match) {
-    // below a bit of magic
-    // Basic approach is:
-    // 1. std::sregex_token_iterator it(Val.begin(), Val.end(), Regex, 1);
-    // 2. std::sregex_token_iterator reg_end; // <--end
-    // 3. for (; it != reg_end; ++it) std::cout << it->str() << std::endl;
-    // we are using a bit more shortened syntax just to show that
-    // smart people works in MK.
-    return {std::sregex_token_iterator{val.cbegin(), val.cend(), regex_val,
-                                       sub_match},
-            std::sregex_token_iterator{}};
-}
-
-struct MrpeEntry {
+class MrpeEntry {
+public:
     MrpeEntry(const std::string &run_as_user,  // only from cfg
               const std::string &cmd_line,     // parsed
               const std::string &exe_name,     // parsed
@@ -57,15 +43,50 @@ struct MrpeEntry {
         loadFromString(value);
     }
 
+    bool add_age() const noexcept { return add_age_; }
+    int cache_age_max() const noexcept { return cache_max_age_; }
+
     void loadFromString(const std::string &Value);
     std::string run_as_user_;
     std::string command_line_;
     std::string exe_name_;
     std::string description_;
     std::string full_path_name_;
+
+private:
+    // caching support
+    int cache_max_age_{0};
+    bool add_age_{false};
 };
 
-// mrpe:
+class MrpeCache {
+public:
+    struct Line {
+        std::string data;
+        std::chrono::steady_clock::time_point tp;
+        int max_age{0};
+        bool add_age{false};
+    };
+
+    enum class LineState { absent, ready, old };
+
+    MrpeCache() = default;
+
+    MrpeCache(const MrpeCache &) = delete;
+    MrpeCache(MrpeCache &&) = delete;
+    MrpeCache &operator=(const MrpeCache &) = delete;
+    MrpeCache &operator=(MrpeCache &&) = delete;
+
+    void createLine(std::string_view key, int max_age, bool add_age);
+    bool updateLine(std::string_view key, std::string_view data);
+    bool eraseLine(std::string_view key);
+
+    std::tuple<std::string, LineState> getLineData(std::string_view key);
+
+private:
+    std::unordered_map<std::string, Line> cache_;
+};
+
 class MrpeProvider : public Asynchronous {
 public:
     MrpeProvider() : Asynchronous(cma::section::kMrpe) {}
@@ -73,9 +94,9 @@ public:
     MrpeProvider(const std::string_view &name, char separator)
         : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 
     const auto entries() const noexcept { return entries_; }
     const auto &includes() const noexcept { return includes_; }
@@ -93,25 +114,24 @@ protected:
     void addParsedIncludes();  // includes_ -> entries_
     bool parseAndLoadEntry(const std::string &Entry);
 
+private:
     std::vector<MrpeEntry> entries_;
 
     std::vector<std::string> checks_;    // "check = ...."
     std::vector<std::string> includes_;  // "include = ......"
 
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class SectionProviderOhm;
-    FRIEND_TEST(SectionProviderMrpe, ConfigLoad);
-    FRIEND_TEST(SectionProviderMrpe, Construction);
-    FRIEND_TEST(SectionProviderMrpe, Run);
-#endif
+    MrpeCache cache_;
 };
+
+// Important internal API as set of free functions
 std::pair<std::string, std::filesystem::path> ParseIncludeEntry(
     const std::string &entry);
 
 void FixCrCnForMrpe(std::string &str);
 std::string ExecMrpeEntry(const MrpeEntry &entry,
                           std::chrono::milliseconds timeout);
-void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
+void AddCfgFileToEntries(const std::string &user,
+                         const std::filesystem::path &path,
                          std::vector<MrpeEntry> &entries);
 }  // namespace cma::provider
 

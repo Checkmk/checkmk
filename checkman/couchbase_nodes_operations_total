@@ -1,0 +1,12 @@
+title: Couchbase Nodes: Total Operations
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the accumulated number of operations per second on all nodes.
+ Levels can be configured in the WATO rule "Couchbase Total Node Operations".
+
+inventory:
+ One service is created.

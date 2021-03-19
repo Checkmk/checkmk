@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ If set the description otherwise the IP address of the target
+
 description:
  This performs an active check with a ICMP Echo Request (Ping)
 

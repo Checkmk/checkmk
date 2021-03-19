@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: General state
+title: Meinberg LANTIME Devices: General State
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL
@@ -17,5 +17,5 @@ description:
 
 
 inventory:
- One check per device is created automatically.
+ One service is created for each device.
 

@@ -1,4 +1,4 @@
-title: Fujitsu ETERNUS DX80 S2 storage systems: Summary status
+title: Fujitsu ETERNUS DX80 S2 Storage Systems: Summary Status
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
@@ -12,4 +12,4 @@ item:
  The item is {0} (integer) in all cases because on system can only have one summary status.
 
 inventory:
- The check supports automatic inventory. Each system gets one summary checks.
+ One summary service is created for each system.

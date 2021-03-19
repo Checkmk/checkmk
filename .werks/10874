@@ -1,0 +1,14 @@
+Title: Notification rules: Fix empty "Notification method" dropdown field
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1584201849
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+After choosing a notification plugin a dropdown field appears that can be
+used to either select notification creation or cancellation. The first
+choice in the dropdown had an empty text in previous 1.6 releases.

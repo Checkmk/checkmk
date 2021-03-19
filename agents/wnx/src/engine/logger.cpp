@@ -2,9 +2,9 @@
 
 #include "logger.h"
 
-#include "common/cfg_info.h"
 #include "cfg.h"
 #include "cma_core.h"
+#include "common/cfg_info.h"
 
 namespace XLOG {
 
@@ -18,6 +18,53 @@ Emitter bp(LogType::log, true);
 bool Emitter::bp_allowed_ = tgt::IsDebug();
 
 namespace details {
+
+// this is to store latest parameters which may be
+// distributed among loggers later
+// static std::string LogFileName = cma::cfg::GetCurrentLogFileName();
+// static std::wstring LogPrefix = cma::cfg::GetDefaultPrefixName();
+static bool DebugLogEnabled = false;
+static bool TraceLogEnabled = false;
+static bool WinDbgEnabled = true;
+static bool EventLogEnabled = true;  // real global for all
+
+std::string g_log_context;
+
+void WriteToWindowsEventLog(unsigned short type, int code,
+                            std::string_view log_name, std::string_view text) {
+    auto eventSource =
+        RegisterEventSourceA(nullptr, cma::cfg::kDefaultEventLogName);
+    if (eventSource == nullptr) return;
+
+    const char *strings[2] = {log_name.data(), text.data()};
+    ReportEventA(eventSource,  // Event log handle
+                 type,         // Event type
+                 0,            // Event category
+                 code,         // Event identifier
+                 nullptr,      // No security identifier
+                 2,            // Size of lpszStrings array
+                 0,            // No binary data
+                 strings,      // Array of strings
+                 nullptr);     // No binary data
+    DeregisterEventSource(eventSource);
+}
+
+unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) {
+    switch (level) {
+        case EventLevel::success:
+            return EVENTLOG_SUCCESS;
+        case EventLevel::information:
+            return EVENTLOG_INFORMATION_TYPE;
+        case EventLevel::warning:
+            return EVENTLOG_WARNING_TYPE;
+        case EventLevel::error:
+        case EventLevel::critical:
+            return EVENTLOG_ERROR_TYPE;
+        default:
+            return EVENTLOG_INFORMATION_TYPE;
+    }
+}
+
 static std::atomic<bool> LogDuplicatedOnStdio = false;
 static std::atomic<bool> LogColoredOnStdio = false;
 static DWORD LogOldMode = -1;
@@ -128,7 +175,7 @@ CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
     if (mods & Mods::kNoPrefix) flags |= xlog::kNoPrefix;
 
     std::string prefix = lp.prefixAscii();
-    std::string marker = "";
+    std::string marker = details::g_log_context;
 
     auto mark = mods & Mods::kMarkerMask;
 
@@ -137,24 +184,24 @@ CalcLogParam(const xlog::LogParam &lp, int mods) noexcept {
 
     switch (mark) {
         case Mods::kCritError:
-            marker = "[ERROR:CRITICAL] ";
+            marker += "[ERROR:CRITICAL] ";
             flags &= ~xlog::kNoPrefix;
             directions |= xlog::kEventPrint;
             c = Colors::pink_light;
             break;
 
         case Mods::kError:
-            marker = "[Err  ] ";
+            marker += "[Err  ] ";
             c = Colors::red;
             break;
 
         case Mods::kWarning:
-            marker = "[Warn ] ";
+            marker += "[Warn ] ";
             c = Colors::yellow;
             break;
 
         case Mods::kTrace:
-            marker = "[Trace] ";
+            marker += "[Trace] ";
             break;
         case Mods::kInfo:
         default:
@@ -211,10 +258,10 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
         }
 
         // clean main file(may be required)
-        cma::ntfs::Remove(filename, ec);
+        fs::remove(filename, ec);
     }
 
-    xlog::internal_PrintStringFile(filename.data(), text.data());
+    xlog::internal_PrintStringFile(filename, text);
 }
 }  // namespace details
 
@@ -268,19 +315,6 @@ void Emitter::postProcessAndPrint(const std::string &text) {
     }
 }
 
-namespace details {
-
-// this is to store latest parameters which may be
-// distributed among loggers later
-// static std::string LogFileName = cma::cfg::GetCurrentLogFileName();
-// static std::wstring LogPrefix = cma::cfg::GetDefaultPrefixName();
-static bool DebugLogEnabled = false;
-static bool TraceLogEnabled = false;
-static bool WinDbgEnabled = true;
-static bool EventLogEnabled = true;  // real global for all
-
-}  // namespace details
-
 namespace setup {
 void DuplicateOnStdio(bool On) { details::LogDuplicatedOnStdio = On; }
 void ColoredOutputOnStdio(bool On) {
@@ -288,19 +322,26 @@ void ColoredOutputOnStdio(bool On) {
 
     if (old == On) return;
 
-    auto hStdin = GetStdHandle(STD_INPUT_HANDLE);
-    DWORD old_mode = 0;
+    auto std_input = GetStdHandle(STD_INPUT_HANDLE);
     if (On) {
-        GetConsoleMode(hStdin, &details::LogOldMode);  // store old mode
+        GetConsoleMode(std_input, &details::LogOldMode);  // store old mode
 
         //  set color output
-        old_mode = 0;  // details::LogOldMode;
-        old_mode |= ENABLE_PROCESSED_OUTPUT | ENABLE_PROCESSED_OUTPUT |
-                    ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-        SetConsoleMode(hStdin, old_mode);
+        DWORD old_mode =
+            ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+        SetConsoleMode(std_input, old_mode);
     } else {
         if (details::LogOldMode != -1)
-            SetConsoleMode(hStdin, details::LogOldMode);
+            SetConsoleMode(std_input, details::LogOldMode);
+    }
+}
+
+void SetContext(std::string_view context) {
+    if (context.empty()) {
+        details::g_log_context.clear();
+    } else {
+        details::g_log_context =
+            fmt::format("[{} {}] ", context, ::GetCurrentProcessId());
     }
 }
 

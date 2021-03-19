@@ -1,0 +1,11 @@
+Title: mk_oracle: It's now possible to specify the number of parallel tasks by setting MAX_TASKS in config
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1607413820
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+

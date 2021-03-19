@@ -1,0 +1,12 @@
+Title: Availability: Limit processed data of 0 means unlimited
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613127031
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

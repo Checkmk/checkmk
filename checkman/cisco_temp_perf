@@ -1,4 +1,4 @@
-title: Temperature sensors (by CISCO-ENVMON-MIB) including performance data
+title: Cisco Devices: Temperature Sensors and Performance Data {CISCO-ENVMON-MIB}
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -14,9 +14,5 @@ description:
  In addition to {cisco_temp} this check determines performance
  data.
 
-item:
- The description of the sensor as provided by the device.
-
 inventory:
- One check for each sensor is created by the inventory if the
- sensor is not in state {5} (not present).
+ One service is created for each sensor if the sensor is not in state {5} (not present).

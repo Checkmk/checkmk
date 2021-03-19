@@ -1,64 +1,42 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-systemtime_default_values = (30, 60)  # warn/crit sec. offset
+systemtime_default_values = (30, 60)
+factory_settings['systemtime_default_levels'] = {'levels': (30, 60)}
 
 
-def inventory_systemtime(info):
-    if len(info) >= 1:
-        return [(None, "systemtime_default_values")]
+def check_systemtime(item, params, parsed):
+    if not parsed:
+        return
 
+    systemtime = parsed['foreign_systemtime']
+    if 'our_systemtime' in parsed:
+        offset = systemtime - parsed['our_systemtime']
+    else:
+        try:
+            systemtime += get_agent_data_time()
+        except (NameError, TypeError):
+            pass
+        offset = systemtime - time.time()
 
-def check_systemtime(item, params, info):
-    if len(info) == 0:
-        return (3, "no information sent by agent")
-
-    systemtime = int(info[0][0])
-    try:
-        systemtime += get_agent_data_time()
-    except (NameError, TypeError):
-        pass
-
-    ourtime = int(time.time())
-    offset = systemtime - ourtime
-    warn, crit = params
-    infotext = "Offset is %d sec (warn/crit at %d/%d sec)" % (offset, warn, crit)
-    perfdata = [("offset", offset, warn, crit, 0)]
-
-    if abs(offset) >= crit:
-        return (2, infotext, perfdata)
-    elif abs(offset) >= warn:
-        return (1, infotext, perfdata)
-    return (0, infotext, perfdata)
+    warn, crit = params if isinstance(params, tuple) else params['levels']
+    yield check_levels(
+        offset,
+        "offset",
+        (warn, crit, -warn, -crit),
+        human_readable_func=get_age_human_readable,
+        infoname="Offset",
+    )
 
 
 check_info["systemtime"] = {
     'check_function': check_systemtime,
-    'inventory_function': inventory_systemtime,
+    'inventory_function': discover_single,
     'service_description': 'System Time',
     'has_perfdata': True,
     'group': 'systemtime',
+    'default_levels_variable': 'systemtime_default_levels',
 }

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import time
 
@@ -53,7 +33,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     AbsoluteDate,
     TextUnicode,
-    SiteChoice,
+    SetupSiteChoice,
     ID,
     Transform,
     Labels,
@@ -83,6 +63,9 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
+    def is_show_more(self) -> bool:
+        return True
+
     @classmethod
     def sort_index(cls):
         return 10
@@ -93,7 +76,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def nagios_name(self):
         return "alias"
 
-    def is_explicit(self):
+    def is_explicit(self) -> bool:
         return True
 
     def title(self):
@@ -126,11 +109,11 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return HostAddress(
-            title=_("IPv4 Address"),
+            title=_("IPv4 address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                   "1. If you leave this attribute empty, hostname resolution will be done when "
+                   "1. If you do not set this attribute, hostname resolution will be done when "
                    "you activate the configuration. "
                    "Check_MKs builtin DNS cache is activated per default in the global "
                    "configuration to speed up the activation process. The cache is normally "
@@ -168,7 +151,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IPv6 "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                   "1. If you leave this attribute empty, hostname resolution will be done when "
+                   "1. If you do not set this attribute, hostname resolution will be done when "
                    "you activate the configuration. "
                    "Check_MKs builtin DNS cache is activated per default in the global "
                    "configuration to speed up the activation process. The cache is normally "
@@ -190,6 +173,9 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 50
+
+    def is_show_more(self) -> bool:
+        return True
 
     def name(self):
         return "additional_ipv4addresses"
@@ -223,6 +209,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 60
+
+    def is_show_more(self) -> bool:
+        return True
 
     def name(self):
         return "additional_ipv6addresses"
@@ -271,13 +260,14 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return SNMPCredentials(
-                help =  _("Using this option you can configure the community which should be used when "
-                          "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
-                          "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
-                          "a community here, this will override the community defined by the rules.") % \
-                            "wato.py?mode=edit_ruleset&varname=snmp_communities",
-                default_value = None,
-            )
+            help=
+            _("Using this option you can configure the community which should be used when "
+              "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
+              "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
+              "a community here, this will override the community defined by the rules.") %
+            "wato.py?mode=edit_ruleset&varname=snmp_communities",
+            default_value=None,
+        )
 
 
 @host_attribute_registry.register
@@ -291,6 +281,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 80
+
+    def is_show_more(self) -> bool:
+        return True
 
     def show_in_table(self):
         return True
@@ -321,6 +314,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def nagios_name(self):
         return "parents"
+
+    def is_explicit(self) -> bool:
+        return True
 
     def paint(self, value, hostname):
         parts = [
@@ -724,7 +720,6 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 class IPMICredentials(Alternative):
     def __init__(self, **kwargs):
-        kwargs["style"] = "dropdown"
         kwargs["elements"] = [
             FixedValue(
                 None,
@@ -766,6 +761,9 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
 
+    def is_show_more(self) -> bool:
+        return not (cmk.gui.config.has_wato_slave_sites() or cmk.gui.config.is_wato_slave_site())
+
     def topic(self):
         return HostAttributeTopicBasicSettings
 
@@ -780,7 +778,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return True
 
     def valuespec(self):
-        return SiteChoice(
+        return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             invalid_choice_error=_("The configured site is not known to this site. In case you "
@@ -792,6 +790,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def get_tag_groups(self, value):
+        # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
+        # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
             return {"site": ""}
 
@@ -848,7 +848,7 @@ class LockedByValuespec(Tuple):
             orientation="horizontal",
             title_br=False,
             elements=[
-                SiteChoice(),
+                SetupSiteChoice(),
                 ID(title=_("Program"),),
                 ID(title=_("Connection ID"),),
             ],
@@ -994,6 +994,9 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 190
+
+    def is_show_more(self) -> bool:
+        return True
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

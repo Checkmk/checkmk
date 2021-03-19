@@ -1,0 +1,16 @@
+Title: HW/SW Inventory: Inventory data from remote sites was not always up-to-date
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1592312803
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The liveproxyd (which handles the HW/SW data synchronization) only reliably
+synchronized the HW/SW inventory data from remote sites upon restart/reload.
+
+
+Note: A liveproxyd reload is triggered whenever the user makes changes in the WATO site configuration.

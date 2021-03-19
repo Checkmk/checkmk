@@ -1,0 +1,33 @@
+Title: Linux agent service: IP Access List support for systemd
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1597916199
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously, an IP restriction for the access to the Checkmk agent, as configured in
+WATO ruleset "Allowed agent access via IP address", could only be realized with the
+help of an "only_from" entry at the xinetd service that is shipped with a baked
+agent package.
+
+With this Werk, the restriction is also realizable via "IP Access Lists" for the
+Checkmk agent systemd service/socket. Depending on the configuration of the
+"Checkmk agent network service" WATO ruleset, a configured IP restriction will be
+realized activating either the systemd service/socket, or the xinetd service, with
+the systemd service/socket being the default.
+
+There is no action needed to activate this new behavior.
+
+The benefit of this change is, that you won't need to install xinetd any more to
+realize an IP restriction, but can rely on systemd, that is standard on most Linux
+distributions.
+
+<b>Note</b>: The feature "IP Access Lists" is supported by systemd versions >= 235
+only. The agent installation will check for a sufficient version and prevent the
+systemd service/socket from being activated, if the check fails. Depending on the
+"Checkmk agent network service" configuration, the installation will try to fall
+back to the xinetd service, see also Werk #10431.
+

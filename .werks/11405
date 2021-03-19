@@ -1,0 +1,27 @@
+Title: Improved performance of agent bakery
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1603198973
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+With the introduction of the new Bakery API (see Werk #11401), the
+Agent Bakery itself has undergone a complete overhaul.
+
+While baking agents, the agent bakery now tries to reuse as many
+resources as possible, instead of collecting data for every
+package separately. If the contents for a to-be-baked package are
+identical to an already-baked one, this optimization will be communicated
+as "fast repackage" (visible at the bake-agents background
+job within the GUI or at the console directly when baking on the command
+line).
+
+Furthermore, the packaging processes for RPM and DEB packages have been
+optimized in performance.
+
+In summary, you will experience an agent bakery that runs noticeably
+faster and finishes earlier, compared to Checkmk 1.6 and before.
+

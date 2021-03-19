@@ -1,0 +1,12 @@
+Title: Move ruleset "Piggybacked Host Files" to group "Access to Agents"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1572950750
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

@@ -1,19 +1,27 @@
-title: Radios data and sessions of online access points
+title: Juniper Devices: Radios Data and Sessions of Online Access Points
 agents: snmp
 catalog: hw/network/juniper
 license: GPL
 distribution: check_mk
 description:
  Shows the status of an access point and the radios on this access point:
+
  - "operational", "redundant" will be OK,
+
  - "init", "configuring" will be WARN,
+
  - otherwise CRIT.
 
  Furthermore this checks monitors the IO, errors, resets, retries, sessions
  and the noise floor of the radios.
 
- This check is cluster-aware.
+item:
+ Status of the access point
 
 inventory:
- One service per access point is created.
+ One service is created for each access point.
 
+cluster:
+ On a cluster the check informs about the distribution of access points among
+ available nodes. Each access point is prefixed with the node it's active and
+ the one it's passive on.

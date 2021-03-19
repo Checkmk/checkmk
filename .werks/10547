@@ -1,0 +1,18 @@
+Title: Dashboard: Existing views can be linked to dashlets without copying them
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1573208324
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The new dashlet type "Link existing view" has been added. The previous dashlet view
+definitions were always holding their own view definition. When an existing view
+was added to a dashboard, the whole view definition was copied to the dashlet. Later
+edits to the view / dashboard were not affecting the other.
+
+With this change it is now possible to add a view dashlet to a dashboard that simply
+reference to a standalone view. When the referenced view is edited, this will change
+the view in the dashboard.

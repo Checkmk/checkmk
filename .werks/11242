@@ -1,0 +1,14 @@
+Title: Status of the Check_MK services: Individual, per data source configured parameters had no effect
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1598001722
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Within the ruleset {{Status of the Check_MK services}} overall parameters
+and/or individual, per data source parameters can be configured.  The latter
+ones, if configured, overwrite the overall parameters. This has been fixed.

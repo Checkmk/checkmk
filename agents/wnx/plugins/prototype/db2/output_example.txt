@@ -1,0 +1,47 @@
+<<<db2_version:sep(1)>>>
+isiebdev DB2v10.1.0.5,special_35741(IP23772_35741)
+<<<db2_hadr_role>>>
+[[[isiebdev:KAMA_ENT]]]
+isiebdev:KAMA_ENT hadr_role STANDARD 
+<<<db2_counters>>>
+TIMESTAMP 1525075716
+isiebdev:KAMA_ENT deadlocks 0
+isiebdev:KAMA_ENT lockwaits 124
+isiebdev:KAMA_ENT sortoverflows 45922
+<<<db2_logsizes>>>
+TIMESTAMP 1525075716
+[[[isiebdev:KAMA_ENT]]]
+usedspace 63864672
+logfilsiz 20000
+logprimary 25
+logsecond 175
+<<<db2_connections>>>
+[[[isiebdev:KAMA_ENT]]]
+port 0
+connections 30
+latency 0:1.03
+<<<db2_bp_hitratios>>>
+[[[isiebdev:KAMA_ENT]]]
+BP_NAME        TOTAL_HIT_RATIO_PERCENT DATA_HIT_RATIO_PERCENT INDEX_HIT_RATIO_PERCENT XDA_HIT_RATIO_PERCENT
+IBMDEFAULTBP                     99.83                  99.85                   99.82                 97.53
+BP4K                             99.75                  99.79                   82.63                     -
+BP16K                            93.42                  95.34                   92.06                     -
+BP32K                            99.65                  99.62                       -                100.00
+IBMSYSTEMBP4K                        -                      -                       -                     -
+IBMSYSTEMBP8K                        -                      -                       -                     -
+IBMSYSTEMBP16K                       -                      -                       -                     -
+IBMSYSTEMBP32K                       -                      -                       -                     -
+<<<db2_sort_overflow>>>
+[[[isiebdev:KAMA_ENT]]]
+Total sorts                                 1023028
+Sort overflows                              45922
+<<<db2_hadr_status>>>
+[[[isiebdev:KAMA_ENT]]]
+<<<db2_backup>>>
+[[[isiebdev:KAMA_ENT]]]
+2018-04-29-17.00.02.000000
+<<<db2_db_size>>>
+[[[isiebdev:KAMA_ENT]]]
+TIMESTAMP 1525075716
+isiebdev:KAMA_ENT dbsize 77592436736
+

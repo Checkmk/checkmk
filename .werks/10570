@@ -1,0 +1,11 @@
+Title: cisco_ucs: Support for Cisco ISE servers SNS-3595
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573829036
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+

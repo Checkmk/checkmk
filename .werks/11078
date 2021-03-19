@@ -1,0 +1,24 @@
+Title: Dynamic configuration: Add connector plugin API
+Class: feature
+Compatible: compat
+Component: dcd
+Date: 1589456367
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+The Dynamic configuration is now loading plugins that are located below
+the path <tt>local/lib/check_mk/cee/dcd/plugins/connectors/</tt>.
+
+You can find a minimal example connector implementation it in your site at
+<tt>lib/check_mk/cee/dcd/plugins/connectors/example_connector.py</tt>.  You may
+use this as base for your own connectors. To enable this connector, you need to
+copy it to the plugin directory mentioned above and uncomment the registry
+registration lines in the plugin (See TODO).
+
+To be able to configure connections based on this connector in the GUI, you
+also need to deploy a GUI plugin. An example can be found in your site at
+<tt>lib/check_mk/gui/cee/plugins/wato/example_dcd_connector.py</tt>.  This
+needs to be placed in the WATO plugin directory of your site. You also need to
+uncomment the registry registration line in the plugin (See TODO).

@@ -1,4 +1,4 @@
-title: Memory usage in solaris
+title: Solaris: Memory Usage
 agents: solaris
 catalog: os/kernel
 license: GPL
@@ -10,4 +10,7 @@ description:
  On the target system the top command is needed
  to get the memory information. The Agent will look in /usr/bin
  for it.
+
+inventory:
+ One service is created.
 

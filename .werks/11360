@@ -1,0 +1,13 @@
+Title: juniper_temp: Discover on additional devices
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1596710193
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The check <tt>juniper_temp</tt>, which monitors the temperatures
+of modules of Juniper devices, is now discovered on additional
+devices such as EX3400-48t switches.

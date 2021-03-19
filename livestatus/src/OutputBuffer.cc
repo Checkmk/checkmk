@@ -1,34 +1,17 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "OutputBuffer.h"
-#include <unistd.h>
+
 #include <chrono>
 #include <cstddef>
 #include <iomanip>
+#include <string_view>
+
 #include "Logger.h"
-#include "Poller.h"
+#include "POSIXUtils.h"
 
 using namespace std::chrono_literals;
 
@@ -61,30 +44,24 @@ void OutputBuffer::flush() {
     writeData(_os);
 }
 
-void OutputBuffer::writeData(std::ostringstream &os) {
-    // TODO(sp) This cruel and slightly non-portable hack avoids copying (which
-    // is important). We could do better by e.g. using asio::streambuf.
+namespace {
+// TODO(sp) This cruel and slightly non-portable hack avoids copying, which
+// is important. Note that UBSan rightly complains about it. We could do
+// better with C++20 via os.view().
+std::string_view toStringView(std::ostringstream &os) {
     struct Hack : public std::stringbuf {
         [[nodiscard]] const char *base() const { return pbase(); }
     };
-    const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
-    size_t bytes_to_write = os.tellp();
-    while (!shouldTerminate() && bytes_to_write > 0) {
-        Poller poller;
-        poller.addFileDescriptor(_fd, PollEvents::out);
-        int retval = poller.poll(100ms);
-        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
-            ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
-            if (bytes_written == -1) {
-                generic_error ge("could not write " +
-                                 std::to_string(bytes_to_write) +
-                                 " bytes to client socket");
-                Informational(_logger) << ge;
-                break;
-            }
-            buffer += bytes_written;
-            bytes_to_write -= bytes_written;
-        }
+    return {static_cast<Hack *>(os.rdbuf())->base(),
+            static_cast<size_t>(os.tellp())};
+}
+}  // namespace
+
+void OutputBuffer::writeData(std::ostringstream &os) {
+    if (writeWithTimeoutWhile(_fd, toStringView(os), 100ms,
+                              [this]() { return !shouldTerminate(); }) == -1) {
+        generic_error ge{"cannot write to client socket"};
+        Informational(_logger) << ge;
     }
 }
 
@@ -96,3 +73,5 @@ void OutputBuffer::setError(ResponseCode code, const std::string &message) {
         _response_code = code;
     }
 }
+
+std::string OutputBuffer::getError() const { return _error_message; }

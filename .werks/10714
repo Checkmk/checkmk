@@ -1,0 +1,22 @@
+Title: Raw Edition: Modernize graphing system
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1581499768
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+The Checkmk Raw Edition was using PNP4Nagios for rendering time series graphs
+since it's birth. This software did a good job for years, but is way of a being
+a state of the art system.
+
+To improve the user experience of all our Raw Edition users, we decided to make
+the basic parts of the Checkmk Enterprise graphing system available to all our
+users.
+
+The parts of the graphing system that are included with the Raw Edition ship
+the same features as the previous system did. More advanced features, like the
+combined, forecast and custom graphs are still only usable by our Enterprise
+and Managed Services Edition users.

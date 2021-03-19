@@ -1,5 +1,11 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
 
 checkname = 'graylog_nodes'
 
@@ -35,7 +41,7 @@ checks = {
                 (0, 'Load balancer state: alive', []),
                 (0, 'Lifecycle is: running', []),
                 (0, 'Is processing: yes', []),
-                (0, 'Inputs: 3', [('num_inputs', 3, None, None, None, None)]),
+                (0, 'Inputs: 3', [('num_input', 3, None, None, None, None)]),
                 (
                     1,
                     'One or more inputs not in state running, see long output for more details',

@@ -1,0 +1,19 @@
+title: IBM SVC / V7000: CPU Utilization in Total
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Reports the CPU Utilization of an IBM SVC / V7000 device in total.
+
+ The check returns {WARN} or {CRIT} if the utilization in percent is higher
+ then given levels and {OK} otherwise.
+
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
+inventory:
+ One service is created for each device.
+

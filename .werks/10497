@@ -1,0 +1,12 @@
+Title: solaris_services: Fixed discovery of services if output additionally contains time information
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1573465581
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

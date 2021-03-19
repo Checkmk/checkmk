@@ -1,29 +1,19 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # <<<jolokia_metrics>>>
 # 8080 NonHeapMemoryUsage 101078952
@@ -108,10 +98,10 @@ def inventory_jolokia_metrics_serv(info):
     levels = None
     levels = 'jolokia_metrics_serv_req_default_levels'
     needed_key = "Requests"
-    for inst, vals in parsed.iteritems():
+    for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
-        for app, val in vals.get('apps', {}).iteritems():
+        for app, val in vals.get('apps', {}).items():
             for serv, servinfo in val.get('servlets', {}).items():
                 if needed_key in servinfo:
                     inv.append(('%s %s %s' % (inst, app, serv), levels))
@@ -157,7 +147,6 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
 
 check_info["jolokia_metrics.serv_req"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_serv_req,
     "inventory_function": inventory_jolokia_metrics_serv,
@@ -203,7 +192,6 @@ def check_jolokia_metrics_app_state(item, _unused, info):
 
 
 check_info["jolokia_metrics.app_state"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s State",
     "check_function": check_jolokia_metrics_app_state,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_state"),
@@ -308,7 +296,6 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
 
 
 check_info["jolokia_metrics.app_sess"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
@@ -317,7 +304,6 @@ check_info["jolokia_metrics.app_sess"] = {
 }
 
 check_info["jolokia_metrics.requests"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "requests"),
@@ -327,7 +313,6 @@ check_info["jolokia_metrics.requests"] = {
 
 # Stuff found on BEA Weblogic
 check_info["jolokia_metrics.bea_queue"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Queue",
     "check_function": check_jolokia_metrics_bea_queue,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "queue"),
@@ -336,7 +321,6 @@ check_info["jolokia_metrics.bea_queue"] = {
 }
 
 check_info["jolokia_metrics.bea_requests"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Requests",
     "check_function": check_jolokia_metrics_bea_requests,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
@@ -345,7 +329,6 @@ check_info["jolokia_metrics.bea_requests"] = {
 }
 
 check_info["jolokia_metrics.bea_threads"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Threads",
     "check_function": check_jolokia_metrics_bea_threads,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "threads"),
@@ -354,7 +337,6 @@ check_info["jolokia_metrics.bea_threads"] = {
 }
 
 check_info["jolokia_metrics.bea_sess"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Sessions",
     "check_function": check_jolokia_metrics_app_sess,
     "inventory_function": lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
@@ -368,8 +350,8 @@ jolokia_metrics_cache_hits_default_levels = {}
 def inventory_jolokia_metrics_cache(key, metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
-    for inst, vals in [x for x in parsed.iteritems() if x[1] is not None]:
-        for cache, cache_vars in vals.get("CacheStatistics", {}).iteritems():
+    for inst, vals in [x for x in parsed.items() if x[1] is not None]:
+        for cache, cache_vars in vals.get("CacheStatistics", {}).items():
             if metrics_set.intersection(cache_vars) == metrics_set:
                 if key is None:
                     yield "%s %s" % (inst, cache), None
@@ -417,7 +399,6 @@ def check_jolokia_metrics_cache(metrics, totals, item, params, info):
 
 
 check_info["jolokia_metrics.cache_hits"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Cache Usage",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
         ["CacheHitPercentage", "ObjectCount"], ["CacheHits", "CacheMisses"], item, params, parsed),
@@ -427,7 +408,6 @@ check_info["jolokia_metrics.cache_hits"] = {
 }
 
 check_info["jolokia_metrics.in_memory"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s In Memory",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
         "InMemoryHitPercentage", "MemoryStoreObjectCount"
@@ -440,7 +420,6 @@ check_info["jolokia_metrics.in_memory"] = {
 }
 
 check_info["jolokia_metrics.on_disk"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s On Disk",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
         "OnDiskHitPercentage", "DiskStoreObjectCount"
@@ -452,7 +431,6 @@ check_info["jolokia_metrics.on_disk"] = {
 }
 
 check_info["jolokia_metrics.off_heap"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Off Heap",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache([
         "OffHeapHitPercentage", "OffHeapStoreObjectCount"
@@ -464,7 +442,6 @@ check_info["jolokia_metrics.off_heap"] = {
 }
 
 check_info["jolokia_metrics.writer"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Cache Writer",
     "check_function": lambda item, params, parsed: check_jolokia_metrics_cache(
         ["WriterQueueLength", "WriterMaxQueueSize"], [], item, params, parsed),
@@ -629,7 +606,6 @@ def check_jolokia_metrics_mem(item, params, info):
 
 
 check_info["jolokia_metrics.mem"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s Memory",
     "check_function": check_jolokia_metrics_mem,
     "inventory_function": discover_jolokia_metrics_mem,
@@ -681,7 +657,6 @@ def check_jolokia_metrics_perm_gen(item, params, info):
 
 
 check_info["jolokia_metrics.perm_gen"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s PermGen Usage",
     "check_function": check_jolokia_metrics_perm_gen,
     "inventory_function": inventory_jolokia_metrics_perm_gen,
@@ -713,7 +688,6 @@ def check_jolokia_metrics_uptime(item, params, info):
 
 
 check_info["jolokia_metrics.uptime"] = {
-    "includes": ["jolokia.include", 'uptime.include'],
     "service_description": "JVM %s Uptime",
     "check_function": check_jolokia_metrics_uptime,
     "inventory_function": discover_jolokia_metrics_uptime,
@@ -730,10 +704,10 @@ def inventory_jolokia_metrics_gc(info):
     '''
     inv = []
     parsed = jolokia_metrics_parse(info)
-    for inst, vals in parsed.iteritems():
+    for inst, vals in parsed.items():
         if vals is None:
             continue  # no data from agent
-        for gc in vals.get('gc', {}).iterkeys():
+        for gc in vals.get('gc', {}):
             inv.append(("%s GC %s" % (inst, gc), {}))
     return inv
 
@@ -810,7 +784,6 @@ def check_jolokia_metrics_gc(item, params, info):
 
 
 check_info["jolokia_metrics.gc"] = {
-    "includes": ["jolokia.include"],
     "service_description": "JVM %s",
     "check_function": check_jolokia_metrics_gc,
     "inventory_function": inventory_jolokia_metrics_gc,

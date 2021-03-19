@@ -1,4 +1,4 @@
-title: Cisco UCS: Memory temperature
+title: Cisco UCS: Memory Temperature
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -10,4 +10,4 @@ item:
  The name of the memory unit
 
 inventory:
- One service per memory unit
+ One service is created for each memory unit.

@@ -1,0 +1,13 @@
+title: Virtual Machine under ESX: VMkernel swapping on the Host System
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ Monitor the ESX Performance counters mem.swapin, mem.swapout and mem.swapused on a ESX host system.
+ mem.swapin: Sum of swapin values for all powered-on virtual machines on the host.
+ mem.swapout: Sum of swapout metrics from all powered-on virtual machines on the host.
+ mem.swapused: Amount of memory that is used by swap.
+
+inventory:
+ One service is created for the VMKernel swap metrics on the ESX host system.

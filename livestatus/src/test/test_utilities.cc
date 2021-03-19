@@ -1,28 +1,10 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "test_utilities.h"
+
 #include <type_traits>
 #include <utility>
 
@@ -44,7 +26,11 @@ TestHost::TestHost(const Attributes &cust_vars) : cust_vars_(cust_vars) {
     display_name = cc("the display name");
     alias = cc("the alias");
     address = cc("the address");
+#ifdef NAGIOS4
+    check_command = cc("the host check command");
+#else
     host_check_command = cc("the host check command");
+#endif
     custom_variables = cust_vars_.start();
     plugin_output = cc("the plugin output");
     long_plugin_output = cc("the long plugin output");
@@ -55,7 +41,11 @@ TestService::TestService(host *h, const Attributes &cust_vars)
     : cust_vars_(cust_vars) {
     description = cc("muppet_show");
     display_name = cc("The Muppet Show");
+#ifdef NAGIOS4
+    check_command = cc("check_fozzie_bear");
+#else
     service_check_command = cc("check_fozzie_bear");
+#endif
     custom_variables = cust_vars_.start();
     plugin_output = cc("plug");
     long_plugin_output = cc("long plug");

@@ -1,0 +1,15 @@
+title: cAdvisor Pods/Containers: CPU Utilisation
+agents: prometheus
+catalog: containerization/cadvisor
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the CPU utilisation of containers and/or pods.
+
+ This check obtains its metrics values through Prometheus. In order to allow
+ generation of cAdvisor related CPU services, the user needs to enable
+ the cAdvisor option under the Prometheus Datasource Programs ruleset.
+
+inventory:
+ One service is created for each CPU.

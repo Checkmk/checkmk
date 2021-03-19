@@ -1,43 +1,30 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef NagiosCore_h
 #define NagiosCore_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
+#include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
+#include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
 #include "contact_fwd.h"
-#include "data_encoding.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;
@@ -49,12 +36,13 @@ struct NagiosPaths {
     std::string _mk_inventory;
     std::string _structured_status;
     std::filesystem::path _crash_reports_path;
+    std::filesystem::path _license_usage_history_path;
     std::string _mk_logwatch;
     std::string _logfile;
     std::string _mkeventd_socket;
     std::string _rrdcached_socket;
 
-    void dump(Logger *logger);
+    void dump(Logger *logger) const;
 };
 
 struct NagiosLimits {
@@ -70,7 +58,9 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
+    NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+               std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+               NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
@@ -85,6 +75,7 @@ public:
                                            const Contact *contact) override;
 
     std::chrono::system_clock::time_point last_logfile_rotation() override;
+    std::chrono::system_clock::time_point last_config_change() override;
     size_t maxLinesPerLogFile() const override;
 
     Command find_command(const std::string &name) const override;
@@ -100,15 +91,16 @@ public:
 
     bool mkeventdEnabled() override;
 
-    std::string mkeventdSocketPath() override;
-    std::string mkLogwatchPath() override;
-    std::string mkInventoryPath() override;
-    std::string structuredStatusPath() override;
-    std::filesystem::path crashReportPath() override;
-    std::string pnpPath() override;
-    std::string historyFilePath() override;
-    std::string logArchivePath() override;
-    std::string rrdcachedSocketPath() override;
+    std::filesystem::path mkeventdSocketPath() const override;
+    std::filesystem::path mkLogwatchPath() const override;
+    std::filesystem::path mkInventoryPath() const override;
+    std::filesystem::path structuredStatusPath() const override;
+    std::filesystem::path crashReportPath() const override;
+    std::filesystem::path licenseUsageHistoryPath() const override;
+    std::filesystem::path pnpPath() const override;
+    std::filesystem::path historyFilePath() const override;
+    std::filesystem::path logArchivePath() const override;
+    std::filesystem::path rrdcachedSocketPath() const override;
 
     Encoding dataEncoding() override;
     size_t maxResponseSize() override;
@@ -129,10 +121,15 @@ public:
     Attributes customAttributes(const void *holder,
                                 AttributeKind kind) const override;
 
+    MetricLocation metricLocation(const std::string &host_name,
+                                  const std::string &service_description,
+                                  const Metric::Name &var) const override;
+    bool pnp4nagiosEnabled() const override;
+
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
+    std::map<unsigned long, std::unique_ptr<Downtime>> &_downtimes;
+    std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
     Logger *_logger_livestatus;
@@ -144,7 +141,9 @@ private:
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
 
-    void *implInternal() const override { return const_cast<Store *>(&_store); }
+    void *implInternal() const override {
+        return const_cast<NagiosCore *>(this);
+    }
 
     static const Contact *fromImpl(const contact *c) {
         return reinterpret_cast<const Contact *>(c);

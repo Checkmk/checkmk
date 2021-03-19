@@ -15,4 +15,4 @@ item:
  The fan number.
 
 inventory:
- One service per fan is created.
+ One service is created for each fan.

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Add the OID that describes 8029HEPTA devices in addition to the already supported 8030HEPTA.
 

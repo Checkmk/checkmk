@@ -7,4 +7,4 @@ description:
   This Check only reports the Unit Name and the Unit ID from the device.
 
 inventory:
- Creates one check.
+ One service is created.

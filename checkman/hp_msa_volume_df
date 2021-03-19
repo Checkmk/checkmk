@@ -1,0 +1,16 @@
+title: HP MSA 2040: Volume Disk Usage
+agents: linux
+catalog: hw/storagehw/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the disk usage of each volume of a HP MSA 2040 storage system.
+ To make it work you have to configure the hp_msa datasource program via WATO.
+ The levels are configurable.
+ Default levels are set.
+
+item:
+ The volume identifier.
+
+inventory:
+ One service is created for each volume.

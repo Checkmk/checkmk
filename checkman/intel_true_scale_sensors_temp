@@ -1,4 +1,4 @@
-title: Intel True Fabric Scale Switches: Slot temperature sensors
+title: Intel True Fabric Scale Switches: Slot Temperature Sensors
 agents: snmp
 catalog: hw/network/intel
 license: GPL
@@ -17,4 +17,4 @@ item:
  The slot ID.
 
 inventory:
- One service for each slot is created.
+ One service is created for each slot.

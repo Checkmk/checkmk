@@ -1,4 +1,4 @@
-title: Kaspersky Anti-Virus updates
+title: Kaspersky Anti-Virus: Updates (KAV4FS)
 agents: linux
 catalog: app/kaspersky
 license: GPL
@@ -10,4 +10,4 @@ description:
  This check works with KAV4FS.
 
 inventory:
- One service will be created for each system will be created.
+ One service is created for each system.

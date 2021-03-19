@@ -14,5 +14,5 @@ description:
  Levels for warning and critical state can be set.
 
 inventory:
- One checks is created for each windows host.
+ One service is created for each windows host.
 

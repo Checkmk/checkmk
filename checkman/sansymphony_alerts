@@ -10,4 +10,4 @@ description:
  The windows agent needs to be extended with the sansymphony.ps1 provided in agents/windows/plugins.
 
 inventory:
- One service will be created
+ One service is created.

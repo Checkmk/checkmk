@@ -1,0 +1,18 @@
+Title: Site attribute of hosts / folders is now limited to distributed setup sites
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1607520054
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In the host and folder attribute configuration, previous Checkmk versions
+allowed the user to select all configured remote sites. This included status
+only sites and remote sites Checkmk is replicating the configuration to.
+
+The setup is not able to replicate configurations to status only sites. For
+this reason it does not make sense to configure status only sites on hosts or
+folders. This change now excludes the status only sites from these attributes.

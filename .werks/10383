@@ -1,0 +1,19 @@
+Title: Make more background job results deletable
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1572966354
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The results of some background job types could not be deleted using the GUI.
+For example the "User synchronization" or "Agent baking" results can now be
+removed on the Background job overview page. Job results executed in versions
+previous to 1.6.0p6 will not be deletable, only the results of jobs executed
+with 1.6.0p6 or newer.
+
+If you want to delete the jobs, you can remove the job result folders from
+<tt>var/check_mk/background_jobs/[job-type]</tt> manually.

@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
@@ -32,7 +12,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     MonitoringState,
-    TextAscii,
     Transform,
     Tuple,
 )
@@ -45,10 +24,11 @@ from cmk.gui.plugins.wato import (
     HostRulespec,
 )
 
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
+
 
 def _vs_mssql_backup_age(title):
     return Alternative(title=_("%s" % title),
-                       style="dropdown",
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[
@@ -65,7 +45,7 @@ def _vs_mssql_backup_age(title):
 
 def _valuespec_discovery_mssql_backup():
     return Dictionary(
-        title=_("Discovery of MSSQL backup"),
+        title=_("MSSQL backup discovery"),
         elements=[
             ("mode",
              DropdownChoice(title=_("Backup modes"),
@@ -117,7 +97,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         parameter_valuespec=_parameter_valuespec_mssql_backup,
         title=lambda: _("MSSQL Backup summary"),
     ))

@@ -1,4 +1,4 @@
-title: Fujitsu storage systems: Channel adapters FW: 2013
+title: Fujitsu Storage Systems: Channel Adapters FW: 2013
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
@@ -14,7 +14,5 @@ item:
  integer. The first adapter has an index of {0}.
 
 inventory:
- The check supports automatic inventory. All available items which have
- a state other than {invalid} (4) during the inventory run are added to the
- configuration. The {invalid} state is excluded because it means that some adapter
- is not installed.
+ One service is created for each channel adapter
+ if the state is not {invalid} (4).

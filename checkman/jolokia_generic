@@ -1,4 +1,4 @@
-title: Jolokia: Generic numeric MBean value
+title: Jolokia: Generic Numeric MBean Value
 agents: linux
 catalog: app/java
 license: GPL
@@ -19,5 +19,8 @@ description:
  of services always in UNKNOWN state), and is therefore strongly
  discouraged.
 
+item:
+ The name of the instance and the MBean value
+
 inventory:
- One check is created for each numeric MBean value sent by the agent.
+ One service is created for each numeric MBean value sent by the agent.

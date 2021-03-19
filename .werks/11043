@@ -1,0 +1,13 @@
+Title: esx_vsphere_vm.mem_usage: add ruleset to specify levels
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1589451440
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+For services with the service description "ESX Memory" absolute
+levels for the different values like e.g. ballooning can now
+be specified.

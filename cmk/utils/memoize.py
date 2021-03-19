@@ -1,33 +1,13 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """A helper module providing simple caching mechanism (without invalidation).
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any  # pylint: disable=unused-import
+from typing import Type, Union, Callable, Tuple, Dict, Set, Any
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -37,8 +17,12 @@ from typing import Type, Union, Callable, Tuple, Dict, Set, Any  # pylint: disab
 # Algorithm borrowed from Python 3 functools
 # + Add support for "list" args
 # pylint: disable=dangerous-default-value
-def _make_key(args, kwds, kwd_mark=(object(),), fasttypes={int, str}, type=type, len=len):
-    # type: (Tuple, Dict, Tuple, Set[Type], Callable, Callable) -> Union[int, str, _HashedSeq]
+def _make_key(args: Tuple,
+              kwds: Dict,
+              kwd_mark: Tuple = (object(),),
+              fasttypes: Set[Type] = {int, str},
+              type: Callable = type,
+              len: Callable = len) -> 'Union[int, str, _HashedSeq]':
     """Make a cache key from optionally typed positional and keyword arguments
     The key is constructed in a way that is flat as possible rather than
     as a nested structure that would take more memory.
@@ -80,7 +64,7 @@ class _HashedSeq(list):
 
 
 # TODO: This may be replaced by @functools.lru_cache() in Python 3
-class MemoizeCache(object):
+class MemoizeCache:
     """Simple unbound in memory cache
 
 This decorator can be used to remember the results of single functions. These
@@ -89,15 +73,13 @@ Examples:
   @cmk.utils.memoize.MemoizeCache
 
 """
-    __slots__ = ["_logger", "_cache", "mem_func"]
+    __slots__ = ["_cache", "mem_func"]
 
-    def __init__(self, function):
-        # type: (Callable) -> None
+    def __init__(self, function: Callable) -> None:
         self.mem_func = function
-        self._cache = {}  # type: Dict[Union[int, str, _HashedSeq], Any]
+        self._cache: Dict[Union[int, str, _HashedSeq], Any] = {}
 
-    def __call__(self, *args, **kwargs):
-        # type: (Any, Any) -> Any
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         cache_id = _make_key(args, kwargs)
 
         if cache_id in self._cache:
@@ -109,3 +91,7 @@ Examples:
 
     def clear(self):
         self._cache.clear()
+
+    def clear_cache(self):
+        # naming compatible with lru_cache
+        return self.clear()

@@ -1,0 +1,12 @@
+Title: Fixed misleading snmp error message
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1591966852
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In most cases, the reason for errors is not a missing system description OID
+but missing firewall policies, misconfigured SNMP, wrong community, etc.

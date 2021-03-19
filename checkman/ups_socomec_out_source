@@ -1,4 +1,4 @@
-title: Socomec UPS Device: Power source for output phases
+title: Socomec UPS Device: Power Source for Output Phases
 agents: snmp
 catalog: hw/power/socomec
 license: GPL
@@ -12,4 +12,4 @@ description:
  your setup.
 
 inventory:
- One check per Socomec UPS is created.
+ One service is created.

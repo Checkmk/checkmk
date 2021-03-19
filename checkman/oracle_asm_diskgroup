@@ -1,4 +1,4 @@
-title: ORACLE ASM Disk Groups
+title: Oracle: ASM Disk Groups
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL
@@ -8,7 +8,7 @@ description:
  is checked against a warning and a critical level, which
  can be specified in numerous ways.
 
- {Requirements:} The {mk_oracle} is needed on the monitored machines.
+ {Requirements:} The agent_plugin {mk_oracle} is needed on the monitored machines.
  See details for mk_oracle at manpage of oracle_instance.
  All Failure Groups need the same size. Otherwise the calculation of
  total and used space is wrong. Disk Groups with Voting require 3 for
@@ -35,9 +35,11 @@ item:
  The name of the disk group as delivered by the agent without the {/} at the
  end.
 
- See also check manpage for {df}. All configurations are usable for ORACLE ASM
+ See also check manpage for {df}. All configurations are usable for Oracle ASM
  Disk Groups as well.
 
 inventory:
- Creates one check for every Disk Group in the agent's output.
+ One service is created for each Disk Group.
 
+cluster:
+ If a cluster is configured, the first found node is checked only.

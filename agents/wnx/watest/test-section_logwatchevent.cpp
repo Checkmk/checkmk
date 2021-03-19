@@ -193,9 +193,10 @@ TEST(LogWatchEventTest, LoadFrom) {
 }
 
 TEST(LogWatchEventTest, Config) {
-    using namespace std;
     using namespace cma::cfg;
-    tst::YamlLoader w;
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
+
     {
         auto enabled = GetVal(groups::kLogWatchEvent, vars::kEnabled, false);
         EXPECT_EQ(enabled, true);
@@ -212,15 +213,15 @@ TEST(LogWatchEventTest, Config) {
 
         auto max_line_length = GetVal(groups::kLogWatchEvent,
                                       vars::kLogWatchEventMaxLineLength, 444);
-        EXPECT_EQ(max_line_length, 444);
+        EXPECT_EQ(max_line_length, -1);
 
         auto tout =
             GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout, 440);
-        EXPECT_EQ(tout, 440);
+        EXPECT_EQ(tout, -1);
 
         auto max_entries =
             GetVal(groups::kLogWatchEvent, vars::kLogWatchEventTimeout, 445);
-        EXPECT_EQ(max_entries, 445);
+        EXPECT_EQ(max_entries, -1);
 
         auto sections =
             GetNode(groups::kLogWatchEvent, vars::kLogWatchEventLogFile);

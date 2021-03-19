@@ -1,0 +1,12 @@
+Title: mk_sap_hana: Fix crash in bakelet when optional value "runas" is not set
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1574065167
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

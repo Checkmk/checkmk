@@ -1,0 +1,11 @@
+Title: FIX: Oracle Inventory Tablespaces
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1586330556
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Inventory "oracle_tablespaces" crashed when trying to compare Database version.

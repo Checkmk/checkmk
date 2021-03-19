@@ -1,0 +1,18 @@
+Title: Remove failed notifications immediately
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1585661846
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Failed notifications are now removed immediately
+from the Tactical Overview when they are confirmed. 
+
+This bug only affected users without replication to
+remote sites. If your profile is synchronized with
+at least one remote site you were not affected by
+this bug.

@@ -1,0 +1,14 @@
+Title: lnx_if: Use MAC address from command 'ip' if the command 'ethtool' is not available
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1573120800
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If 'ethtool' is not installed or not available then the HW/SW inventory
+does not inventorize MAC addresses of interfaces.
+In above case we use 'link/ether' from command 'ip'.

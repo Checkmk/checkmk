@@ -16,5 +16,5 @@ description:
  Note: this check is only available for versions higher than Ubuntu 18.04
 
 inventory:
- One check is created as long as the {timedatectl timesync-status} command
+ One service is created if the {timedatectl timesync-status} command
  is available.

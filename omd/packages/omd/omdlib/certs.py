@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
@@ -25,24 +25,20 @@
 """Management of the site local CA and certificates issued by it"""
 
 import sys
-from typing import Tuple  # pylint: disable=unused-import
+from typing import List, Tuple
 import random
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path
-from OpenSSL import crypto
-from OpenSSL.SSL import FILETYPE_PEM  # type: ignore
+from pathlib import Path
+
+from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL.SSL import FILETYPE_PEM  # type: ignore[import]
 
 CERT_NOT_AFTER = 999 * 365 * 24 * 60 * 60  # 999 years by default
 CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 
 
-class CertificateAuthority(object):
+class CertificateAuthority:
     """Management of the site local CA and certificates issued by it"""
-    def __init__(self, ca_path, ca_name):
-        # type: (Path, str) -> None
+    def __init__(self, ca_path: Path, ca_name: str) -> None:
         super(CertificateAuthority, self).__init__()
         self._ca_path = ca_path
         self._ca_name = ca_name
@@ -56,8 +52,7 @@ class CertificateAuthority(object):
         return self.ca_path / "ca.pem"
 
     @property
-    def is_initialized(self):
-        # type: () -> bool
+    def is_initialized(self) -> bool:
         return self._root_cert_path.exists()
 
     def initialize(self):
@@ -67,8 +62,7 @@ class CertificateAuthority(object):
         root_cert, root_key = self._create_root_certificate()
         self._write_pem(self._root_cert_path, [root_cert], root_key)
 
-    def _create_root_certificate(self):
-        # type: () -> Tuple[crypto.PKey, str]
+    def _create_root_certificate(self) -> Tuple[crypto.X509, crypto.PKey]:
         key = self._make_private_key()
 
         cert = self._make_cert(self._ca_name, CA_CERT_NOT_AFTER)
@@ -83,20 +77,16 @@ class CertificateAuthority(object):
 
         return cert, key
 
-    def _get_root_certificate(self):
-        # type: () -> Tuple[str, str]
+    def _get_root_certificate(self) -> Tuple[crypto.X509, crypto.PKey]:
         return self._read_pem(self._root_cert_path)
 
-    def site_certificate_exists(self, site_id):
-        # type: (str) -> bool
+    def site_certificate_exists(self, site_id: str) -> bool:
         return self.site_certificate_path(site_id).exists()
 
-    def read_site_certificate(self, site_id):
-        # type: (str) -> Tuple[crypto.X509, crypto.PKey]
+    def read_site_certificate(self, site_id: str) -> Tuple[crypto.X509, crypto.PKey]:
         return self._read_pem(self.site_certificate_path(site_id))
 
-    def create_site_certificate(self, site_id):
-        # type: (str) -> None
+    def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""
         if not self.is_initialized:
             raise Exception("Certificate authority is not initialized yet")
@@ -119,17 +109,14 @@ class CertificateAuthority(object):
 
         self.write_site_certificate(site_id, cert, key)
 
-    def write_site_certificate(self, site_id, cert, key):
-        # type: (str, crypto.X509, crypto.PKey) -> None
+    def write_site_certificate(self, site_id: str, cert: crypto.X509, key: crypto.PKey) -> None:
         certificate_chain = [cert, self._get_root_certificate()[0]]
         self._write_pem(self.site_certificate_path(site_id), certificate_chain, key)
 
-    def site_certificate_path(self, site_id):
-        # type: (str) -> Path
+    def site_certificate_path(self, site_id: str) -> Path:
         return (self.ca_path / "sites" / site_id).with_suffix(".pem")
 
-    def _make_cert(self, cn, not_after):
-        # type: (str, int) -> crypto.X509
+    def _make_cert(self, cn: str, not_after: int) -> crypto.X509:
 
         cert = crypto.X509()
         cert.set_serial_number(random.randint(0, sys.maxsize))
@@ -141,14 +128,13 @@ class CertificateAuthority(object):
 
         return cert
 
-    def _make_private_key(self):
-        # type: () -> crypto.PKey
+    def _make_private_key(self) -> crypto.PKey:
         key = crypto.PKey()
         key.generate_key(crypto.TYPE_RSA, 2048)
         return key
 
-    def _write_pem(self, path, certificate_chain, key):
-        # type: (Path, List[crypto.X509], crypto.PKey) -> None
+    def _write_pem(self, path: Path, certificate_chain: List[crypto.X509],
+                   key: crypto.PKey) -> None:
         path.parent.mkdir(mode=0o770, parents=True, exist_ok=True)
         with path.open(mode="wb") as f:
             f.write(crypto.dump_privatekey(FILETYPE_PEM, key))
@@ -156,8 +142,7 @@ class CertificateAuthority(object):
                 f.write(crypto.dump_certificate(FILETYPE_PEM, cert))
         path.chmod(mode=0o660)
 
-    def _read_pem(self, path):
-        # type: (Path) -> Tuple[crypto.X509, crypto.PKey]
+    def _read_pem(self, path: Path) -> Tuple[crypto.X509, crypto.PKey]:
         with path.open(mode="rb") as f:
             file_contents = f.read()
             cert = crypto.load_certificate(FILETYPE_PEM, file_contents)

@@ -10,9 +10,9 @@
 #include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
+#include "common/yaml.h"
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
-#include "yaml-cpp/yaml.h"
 
 namespace cma::cfg {
 
@@ -175,6 +175,11 @@ void Global::updateLogNames() {
 // used to set values during start
 void Global::setLogFolder(const std::filesystem::path& forced_path) {
     std::unique_lock lk(lock_);
+    if (cma::IsService()) {
+        XLOG::details::LogWindowsEventAlways(
+            XLOG::EventLevel::information, 35,
+            "checkmk service uses log path '{}'", forced_path);
+    }
     if (forced_path.empty()) return;
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);
@@ -221,6 +226,12 @@ void WinPerf::loadFromMainConfig() {
         timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
                           cma::cfg::kDefaultWinPerfTimeout);
 
+        fork_ = GetVal(groups::kWinPerf, vars::kWinPerfFork,
+                       cma::cfg::kDefaultWinPerfFork);
+
+        trace_ = GetVal(groups::kWinPerf, vars::kWinPerfTrace,
+                        cma::cfg::kDefaultWinPerfTrace);
+
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
         auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
@@ -245,6 +256,10 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
             auto timeout =
                 entry[vars::kPluginTimeout].as<int>(kDefaultPluginTimeout);
             auto cache_age = entry[vars::kPluginCacheAge].as<int>(0);
+
+            auto group = entry[vars::kPluginGroup].as<std::string>("");
+            auto user = entry[vars::kPluginUser].as<std::string>("");
+
             if (cache_age && !async) {
                 XLOG::d.t(
                     "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
@@ -257,6 +272,10 @@ void LoadExeUnitsFromYaml(std::vector<Plugins::ExeUnit>& ExeUnit,
             else
                 ExeUnit.emplace_back(pattern, timeout, retry, run);
             ExeUnit.back().assign(entry);
+
+            ExeUnit.back().assignGroup(group);
+            ExeUnit.back().assignUser(user);
+
             // --exception control end  --
         } catch (const std::exception& e) {
             XLOG::l("bad entry at {} {} exc {}", groups::kPlugins,
@@ -277,22 +296,36 @@ void Plugins::ExeUnit::assign(const YAML::Node& entry) noexcept {
     }
 }
 
+void Plugins::ExeUnit::assignGroup(std::string_view group) noexcept {
+    group_ = group;
+}
+
+void Plugins::ExeUnit::assignUser(std::string_view user) noexcept {
+    if (group_.empty())
+        user_ = user;
+    else
+        user_.clear();
+}
+
 void Plugins::ExeUnit::apply(std::string_view filename,
                              const YAML::Node& entry) noexcept {
     try {
-        if (entry.IsMap()) {
-            ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
-            ApplyValueIfScalar(entry, run_, vars::kPluginRun);
-            ApplyValueIfScalar(entry, retry_, vars::kPluginRetry);
-            ApplyValueIfScalar(entry, cache_age_, vars::kPluginCacheAge);
-            ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
-            if (cache_age_ && !async_) {
-                XLOG::d.t(
-                    "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
-                    filename, cache_age_);
-                async_ = true;
-            }
+        if (!entry.IsMap()) return;
+
+        ApplyValueIfScalar(entry, async_, vars::kPluginAsync);
+        ApplyValueIfScalar(entry, run_, vars::kPluginRun);
+        ApplyValueIfScalar(entry, retry_, vars::kPluginRetry);
+        ApplyValueIfScalar(entry, cache_age_, vars::kPluginCacheAge);
+        ApplyValueIfScalar(entry, timeout_, vars::kPluginTimeout);
+        ApplyValueIfScalar(entry, group_, vars::kPluginGroup);
+        ApplyValueIfScalar(entry, user_, vars::kPluginUser);
+        if (cache_age_ && !async_) {
+            XLOG::d.t(
+                "Sync Plugin Entry '{}' forced to be async, due to cache_age [{}]",
+                filename, cache_age_);
+            async_ = true;
         }
+
     } catch (const std::exception& e) {
         pattern_ = "";
         source_.reset();
@@ -301,7 +334,7 @@ void Plugins::ExeUnit::apply(std::string_view filename,
     }
 }
 
-void Plugins::loadFromMainConfig(const std::string& GroupName) {
+void Plugins::loadFromMainConfig(std::string_view GroupName) {
     using namespace std;
     using namespace cma::cfg;
     auto config = GetLoadedConfig();
@@ -411,7 +444,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         cli.cmd_line_.pop_back();
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
-              wtools::ConvertToUTF8(cli.cmd_line_));
+              wtools::ToUtf8(cli.cmd_line_));
 
     return cli;
 }

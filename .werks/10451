@@ -1,0 +1,27 @@
+Title: check_http: don't set virtual host if not necessary
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1573114215
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Since version 1.6 the active check check_http automatically
+set the HTTP Host header and used HTTP/1.1 instead of HTTP/1.0
+even if no virtual host was supplied. This may lead to
+timeouts of the check_http plugin on servers which are not
+fully compliant with HTTP/1.1.
+
+This werk changes this behaviour so that the Host header is
+only set if a virtual host is given.
+
+Please note that if you rely on HTTP/1.1 or want to use it you
+have to supply a virtual host.
+
+Please also note that the virtual host will not be set
+automatically to the host name anymore. If you relied on this
+behaviour you now have to provide the virtual host in the
+affected rules.

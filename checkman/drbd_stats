@@ -1,0 +1,24 @@
+title: DR:BD Devices: Counter Statistics
+agents: linux
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check uses the contents of {/proc/drbd} as sent by the Checkmk linux
+ agent. The check records the statistic counter of each DR:BD device.
+
+ These counters are handled by this check: al (activity log updates),
+ bm (bit map updates), lo (local count requests), pe (pending requests),
+ ua (unacknowledged requests), ap (application pending requests),
+ ep (epoch objects), wo (write order), oos (KiB out of sync)
+
+ At the moment this check does not use any thresholds. So it reports {OK}
+ all the time.
+
+item:
+ The name of the DRBD device e.g. drbd0
+
+inventory:
+ One service is created for each configured DRBD device.
+ All devices with the connection state "Unconfigured" are skipped.
+

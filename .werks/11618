@@ -1,0 +1,14 @@
+Title: Fix links to hosts / services from service dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1606831780
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Since Checkmk 2.0.0b1 the links from view dashlets to hosts and service views
+were not set correctly. The display_option request parameter was accidentally
+set and resulted in "broken pages" when following the links.

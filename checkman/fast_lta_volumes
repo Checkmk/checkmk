@@ -15,5 +15,5 @@ item:
  The volumeID as returned by SNMP.
 
 inventory:
- Finds one check for each volume on a FAST LTA Storage System.
+ One service is created for each volume on a FAST LTA Storage System.
 

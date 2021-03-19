@@ -1,26 +1,6 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails.  You should have received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 import * as utils from "utils";
 import * as ajax from "ajax";
@@ -34,32 +14,26 @@ import * as ajax from "ajax";
 //#   |                      |_|                |___/ |___/                |
 //#   '--------------------------------------------------------------------'
 
-export function enable()
-{
-    var help = document.getElementById("helpbutton");
-    help.style.display = "inline-block";
+function is_help_active() {
+    const helpdivs = document.getElementsByClassName("help");
+    return helpdivs.length !== 0 && helpdivs[0].style.display === "block";
 }
 
-export function toggle()
-{
-    var help = document.getElementById("helpbutton");
-    if (utils.has_class(help, "active")) {
-        utils.remove_class(help, "active");
-        utils.add_class(help, "passive");
+export function toggle(title_show, title_hide) {
+    if (is_help_active()) {
         switch_help(false);
+        switch_help_text(title_show);
     } else {
-        utils.add_class(help, "active");
-        utils.remove_class(help, "passive");
         switch_help(true);
+        switch_help_text(title_hide);
     }
 }
 
-function switch_help(how)
-{
+function switch_help(how) {
     // recursive scan for all div class=help elements
     var helpdivs = document.getElementsByClassName("help");
     var i;
-    for (i=0; i<helpdivs.length; i++) {
+    for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "block" : "none";
     }
 
@@ -81,4 +55,9 @@ function switch_help(how)
     }
 
     ajax.get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+}
+
+function switch_help_text(title) {
+    var helpspan = document.getElementById("menu_entry_inline_help").childNodes[0].childNodes[1];
+    helpspan.textContent = title;
 }

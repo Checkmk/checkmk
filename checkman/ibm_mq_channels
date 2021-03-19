@@ -1,0 +1,22 @@
+title: IBM MQ: State of Channels
+agents: linux, solaris, aix, hpux
+catalog: app/ibm_mq
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the IBM MQ Channels. For SDR channels the XMIT queue is
+ also displayed. The state is CRITICAL if the channel is STOPPED.
+
+ The check shows the
+
+ - channel name
+
+ - type
+
+ - current status
+
+item:
+ The name of the channel, prefixed by the queue manager name.
+
+inventory:
+ One service is created for each queue manager.

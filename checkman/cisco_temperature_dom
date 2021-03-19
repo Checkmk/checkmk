@@ -1,0 +1,30 @@
+title: Cisco Modular Access Router: Digital Optical Monitoring
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the transmit and receive power status and levels of
+ Cisco Modular Access Routers.
+
+ For more information about which devices are supported restrict the search on
+ https://mibs.cloudapps.cisco.com/ITDIT/MIBS/MainServlet to MIBs {CISCO-ENVMON-MIB}
+ and {CISCO-ENTITY-SENSOR-MIB}.
+
+ Check status for transmit/receive power values:
+ {OK}, {WARN}, {CRIT} and {UNKNOWN} are determined dependent on corresponding
+ user levels configured in WATO rule {CISCO Digital Optical Monitoring (DOM)}
+ or dependent on device specific level configuration. Refer to the help text of
+ the WATO rule dropdown choices {Upper power levels} and {Lower power levels}
+ for more information about how {WARN} and {CRIT} levels are determined.
+
+item:
+ The description of the sensor as provided by the device, or the ID of the sensor,
+ if no description is available.
+
+inventory:
+ One service is created for each transmit and receive power level
+ for every sensor withadmin state 'up'.
+ Optionally it is possible to configure specific administration states ({up}, {down},
+ {testing}) that should be discovered in the WATO discovery rule {Cisco DOM Discovery}.
+

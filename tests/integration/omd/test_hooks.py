@@ -1,8 +1,10 @@
-#!/usr/bin/env python
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import stat
 
 
 def test_hooks(site):
@@ -13,7 +15,6 @@ def test_hooks(site):
         "APACHE_TCP_PORT",
         "AUTOSTART",
         "CORE",
-        "DOKUWIKI_AUTH",
         "LIVESTATUS_TCP",
         "LIVESTATUS_TCP_ONLY_FROM",
         "LIVESTATUS_TCP_PORT",

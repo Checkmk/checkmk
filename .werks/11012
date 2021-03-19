@@ -1,0 +1,14 @@
+Title: Fixed unicode usage in fileinfo baklet
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1585751243
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The use of unicode characters in bakery rule
+{Count, size and age of files (Linux, Windows)} resulted in "Non-ASCII
+characters are not allowed here" error. This has been fixed.

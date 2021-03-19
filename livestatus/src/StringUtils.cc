@@ -1,28 +1,10 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "StringUtils.h"
+
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -50,7 +32,13 @@ std::string unsafe_toupper(const std::string &str) {
 
 bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
+           input.compare(0, test.size(), test) == 0;
+}
+
+bool ends_with(const std::string &input, const std::string &test) {
+    return input.size() >= test.size() &&
+           input.compare(input.size() - test.size(), std::string::npos, test) ==
+               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
@@ -61,6 +49,25 @@ std::vector<std::string> split(const std::string &str, char delimiter) {
         result.push_back(field);
     }
     return result;
+}
+
+// Due to legacy reasons, we allow spaces as a separator between the parts of a
+// composite key. To be able to use spaces in the parts of the keys themselves,
+// we allow a semicolon, too, and look for that first.
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key) {
+    auto semicolon = composite_key.find(';');
+    return semicolon == std::string::npos
+               ? mk::nextField(composite_key)
+               : make_tuple(mk::rstrip(composite_key.substr(0, semicolon)),
+                            mk::rstrip(composite_key.substr(semicolon + 1)));
+}
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key) {
+    const auto &[part1, rest] = splitCompositeKey2(composite_key);
+    const auto &[part2, part3] = splitCompositeKey2(rest);
+    return {part1, part2, part3};
 }
 
 std::string join(const std::vector<std::string> &values,
@@ -122,7 +129,7 @@ std::string replace_all(const std::string &str, const std::string &from,
     result.reserve(str.size());
     size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
-    size_t match;
+    size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {
         result.append(str, pos, match - pos)
             .append(to)

@@ -1,4 +1,4 @@
-title: Dell Equallogic SAN Storage
+title: Dell Equallogic SAN Storage: Health- and Raid State
 agents: snmp
 catalog: hw/storagehw/dell
 license: GPL
@@ -12,5 +12,5 @@ item:
  The Name of the Member Device
 
 inventory:
- One service will be created for each member
+ One service is created for each member.
 

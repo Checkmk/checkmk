@@ -1,0 +1,15 @@
+Title: lnx_if: Fix grouping of interfaces on clusters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1584429470
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+On clusters a check plugin processes all node data at once. Interfaces may be
+grouped by index. The check plugin {{lnx_if}} serially numbered the interface
+indices across all node data. This led to missing interfaces in a group. Now
+the check plugin serially numbers the interface indices PER node.

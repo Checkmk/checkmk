@@ -1,0 +1,19 @@
+title: Kernel Tunables: Number of Processes
+agents: hpux
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check allows for monitoring of admin-tunable kernel limits on HP-UX
+ systems that support the {"kcusage"} command. The command should be available
+ from HP-UX 11.20 to the current 11.31.
+
+ The check uses the output of {kcusage -l} for monitoring the
+ current Number of processes (npoc). Per default this
+ check is always {OK}, but you can set levels for the used
+ percentage.
+
+inventory:
+ All hpux_tunable checks are combined in one service.
+ One {hpux_tunable} service is created for each supported tunable.
+

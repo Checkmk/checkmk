@@ -1,0 +1,13 @@
+Title: Docker contianer: Fix container detection in podman containers
+Class: fix
+Compatible: compat
+Component: core
+Date: 1596017455
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Checkmk needs to detect the execution in the container to be able to handle the
+site creation correctly. This failed in podman containers, because they use the
+"/.containerenv" file in the root filesystem instead of the "/.dockerenv".

@@ -1,4 +1,4 @@
-title: PostgreSQL Connection Time
+title: PostgreSQL: Connection Time
 agents: linux
 catalog: app/postgresql
 license: GPL
@@ -9,6 +9,9 @@ description:
 
  This check relies on data reported by the agent-side plugin {mk_postgres}
 
+item:
+ Name of the category
+
 inventory:
-  One service will be created.
+ One service is created.
 

@@ -1,35 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import gettext as gettext_module
-from typing import (  # pylint: disable=unused-import
-    Dict, NamedTuple, Optional, List, Tuple, Text,
-)
-from pathlib2 import Path  # pylint: disable=unused-import
-import six
+from typing import Dict, NamedTuple, Optional, List, Tuple
+from pathlib import Path
+
+from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import cmk.utils.paths
 
@@ -52,64 +31,71 @@ Translation = NamedTuple("Translation", [
 ])
 
 # Current active translation object
-_translation = None  # type: Optional[Translation]
+_translation: Optional[Translation] = None
 
 
-def _(message):
-    # type: (str) -> Text
-    if not _translation:
-        return six.text_type(message)
-    return _translation.translation.ugettext(message)
+def _(message: str) -> str:
+    if _translation:
+        return _translation.translation.gettext(message)
+    return str(message)
 
 
-def get_current_language():
-    # type: () -> Optional[str]
+def _l(string: str) -> str:
+    """Like _() but the string returned is lazy which means it will be translated when it is used as
+    an actual string."""
+    return LazyString(_, string)
+
+
+def ungettext(singular: str, plural: str, n: int) -> str:
+    if _translation:
+        return _translation.translation.ngettext(singular, plural, n)
+    if n == 1:
+        return str(singular)
+    return str(plural)
+
+
+def get_current_language() -> Optional[str]:
     if _translation:
         return _translation.name
     return None
 
 
-def _get_language_dirs():
-    # type: () -> List[Path]
+def _get_language_dirs() -> List[Path]:
     return _get_base_language_dirs() + _get_package_language_dirs()
 
 
-def _get_base_language_dirs():
-    # type: () -> List[Path]
+def _get_base_language_dirs() -> List[Path]:
     return [cmk.utils.paths.locale_dir, cmk.utils.paths.local_locale_dir]
 
 
-def _get_package_language_dirs():
-    # type: () -> List[Path]
+def _get_package_language_dirs() -> List[Path]:
     """Return a list of extension package specific localization directories
 
     It's possible for extension packages to provide custom localization files
     which are meant for localizing extension specific texts. These localizations
     are then used in addition to the builtin and local localization files.
     """
-    package_locale_dir = cmk.utils.paths.local_locale_dir.joinpath("packages")
+    package_locale_dir = cmk.utils.paths.local_locale_dir / "packages"
     if not package_locale_dir.exists():
         return []
     return list(package_locale_dir.iterdir())
 
 
-def get_language_alias(lang):
-    # type: (Optional[str]) -> Text
+def get_language_alias(lang: Optional[str]) -> str:
     if lang is None:
         return _("English")
 
     alias = lang
     for lang_dir in _get_base_language_dirs():
         try:
-            with lang_dir.joinpath(lang, "alias").open(encoding="utf-8") as f:
+            with (lang_dir / lang / "alias").open(encoding="utf-8") as f:
                 alias = f.read().strip()
         except (OSError, IOError):
             pass
     return alias
 
 
-def get_languages():
-    # type: () -> List[Tuple[str, Text]]
+def get_languages() -> List[Tuple[str, str]]:
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
@@ -128,14 +114,12 @@ def get_languages():
     return sorted(list(languages), key=lambda x: x[1])
 
 
-def unlocalize():
-    # type: () -> None
+def unlocalize() -> None:
     global _translation
     _translation = None
 
 
-def localize(lang):
-    # type: (str) -> None
+def localize(lang: Optional[str]) -> None:
     global _translation
     if lang is None:
         unlocalize()
@@ -149,13 +133,12 @@ def localize(lang):
     _translation = Translation(translation=gettext_translation, name=lang)
 
 
-def _init_language(lang):
-    # type: (str) -> Optional[gettext_module.NullTranslations]
+def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     """Load all available "multisite" translation files. All are loaded first.
     The builtin ones are used as "fallback" for the local files which means that
     the texts in the local files have precedence.
     """
-    translations = []  # type: List[gettext_module.NullTranslations]
+    translations: List[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
             translation = gettext_module.translation("multisite",
@@ -177,8 +160,7 @@ def _init_language(lang):
     return translations[-1]
 
 
-def initialize():
-    # type: () -> None
+def initialize() -> None:
     unlocalize()
 
 
@@ -194,20 +176,21 @@ def initialize():
 #   | Users can localize custom strings using the global configuration     |
 #   '----------------------------------------------------------------------'
 
-_user_localizations = {}  # type: Dict[Text, Dict[Optional[str], Text]]
+_user_localizations: Dict[str, Dict[str, str]] = {}
 
 
 # Localization of user supplied texts
-def _u(text):
-    # type: (Text) -> Text
+def _u(text: str) -> str:
     ldict = _user_localizations.get(text)
     if ldict:
-        return ldict.get(get_current_language(), text)
+        current_language = get_current_language()
+        if current_language is None:
+            return text
+        return ldict.get(current_language, text)
     return text
 
 
-def set_user_localizations(localizations):
-    # type: (Dict[Text, Dict[Optional[str], Text]]) -> None
+def set_user_localizations(localizations: Dict[str, Dict[str, str]]) -> None:
     _user_localizations.clear()
     _user_localizations.update(localizations)
 

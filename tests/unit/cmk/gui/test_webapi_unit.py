@@ -1,14 +1,21 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # force loading of web API plugins
-import cmk
-import cmk.gui.webapi  # pylint: disable=unused-import
+import cmk.utils.version as cmk_version
+import cmk.gui.webapi  # noqa: F401 # pylint: disable=unused-import
 
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
 
 
 def test_registered_api_call_collections():
-    registered_api_actions = (action \
-                              for cls in api_call_collection_registry.values()
-                              for action in cls().get_api_calls().iterkeys())
+    registered_api_actions = (
+        action  #
+        for cls in api_call_collection_registry.values()  #
+        for action in cls().get_api_calls().keys())
 
     expected_api_actions = [
         'activate_changes',
@@ -48,6 +55,7 @@ def test_registered_api_call_collections():
         'get_bi_aggregations',
         'get_combined_graph_identifications',
         'get_folder',
+        'get_graph',
         'get_graph_annotations',
         'get_graph_recipes',
         'get_host',
@@ -67,10 +75,9 @@ def test_registered_api_call_collections():
         'set_site',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_api_actions += [
             'bake_agents',
-            'get_graph',
             'get_sla',
         ]
 

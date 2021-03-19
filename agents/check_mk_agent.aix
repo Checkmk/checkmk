@@ -1,30 +1,33 @@
 #!/usr/bin/ksh93
-# Check_MK Agent for AIX
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # force load of environment
+
+read_python_version() {
+    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge "$2" ]; then
+        echo "$1"
+        return 0
+    fi
+    return 1
+}
+PYTHON3=$(read_python_version python3 4)
+PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/python_path.cfg"
+fi
+export PYTHON2 PYTHON3
+
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ "$($PYTHON3 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ "$($PYTHON2 -c 'pass' > /dev/null 2>&1; echo $?)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
+
 if [ -e $HOME/.profile ]
 then
     . $HOME/.profile >/dev/null 2>&1
@@ -78,8 +81,7 @@ fi
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
 # in time.
-function waitmax
-{
+waitmax() {
    TIMEOUT=${1}0
    SIGNAL=9
    shift
@@ -104,7 +106,7 @@ function waitmax
    return 255
 }
 
-function run_cached {
+run_cached() {
     NAME=$1
     # Be aware: Maxage was expected to be given in minutes but this was
     # confusing because all other agents use seconds here. So this has
@@ -120,10 +122,12 @@ function run_cached {
     # Check if file exists and is recent enough
     if [ -s $CACHEFILE ]
     then
-        MTIME=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
-        if (( $MTIME < $MAXAGE )) ; then
+        AGE=$(/usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' $CACHEFILE )
+        if (( $AGE < $MAXAGE )) ; then
             USE_CACHEFILE=1
         fi
+        # get file time for cache
+        MTIME=$(/usr/bin/perl -e 'print((stat shift)[9])' $CACHEFILE)
         CACHE_INFO="cached($MTIME,$MAXAGE)"
         if [[ $NAME == local_* ]]; then
             sed -e "s/^/$CACHE_INFO /" "$CACHEFILE"
@@ -139,8 +143,44 @@ function run_cached {
     fi
 }
 
+function run_agent_plugin {
+    if [ "${1:0:2}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
+            fi
+            return
+        fi
+        if [ -n "$PYTHON3" ]; then
+            $PYTHON3 "$agent_plugin"
+            return
+        fi
+        return
+    fi
+    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+    if [ -n "$PYTHON2" ]; then
+        $PYTHON2 "$agent_plugin"
+    fi
+}
+
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 2.1.0i1"
 echo "AgentOS: aix"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -301,17 +341,19 @@ then
     for skript in $(ls)
     do
         if [ -x "$skript" ] ; then
-            ./$skript
+            run_agent_plugin "$skript"
     fi
   done
 
   # Call some plugins only every X'th second
   for skript in [1-9]*/* ; do
       if [ -x "$skript" ] ; then
-          run_cached plugins_${skript//\//\#} ${skript%/*} "$skript"
+          run_cached plugins_${skript//\//\#} ${skript%/*} run_agent_plugin "$skript"
       fi
   done
 fi
+
+
 
 
 # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
@@ -385,7 +427,7 @@ then
     fi
 fi
 
-echo '<<<local>>>'
+echo '<<<local:sep(0)>>>'
 if cd $LOCALDIR 2>/dev/null
 then
   for skript in $(ls)
@@ -450,4 +492,35 @@ if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
         cat "$file"
     done
     cd - > /dev/null
+fi
+
+
+# Get statistics about monitored jobs. Below the job directory there
+# is a sub directory per user that ran a job. That directory must be
+# owned by the user so that a symlink or hardlink attack for reading
+# arbitrary files can be avoided.
+if [ -d "$MK_VARDIR/job" ]; then
+    echo '<<<job>>>'
+    CDIR=$(pwd)
+    cd "$MK_VARDIR/job" 2> /dev/null || exit
+    for username in *; do
+        if [ -d "$username" ] && cd "$username"; then
+            for i in *; do
+               echo "==> $i <=="
+               cat "$i"
+            done
+            cd .. > /dev/null
+        fi
+    done
+    cd "$CDIR" 2> /dev/null || exit
+fi
+
+if [ -n "$FAILED_PYTHON_PLUGINS" ]; then
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${FAILED_PYTHON_PLUGINS[*]}"
+    if [ -n "$NO_PYTHON" ]; then
+        echo "FailedPythonReason: No suitable python installation found."
+    elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+        echo "FailedPythonReason: Configured python command not found."
+    fi
 fi

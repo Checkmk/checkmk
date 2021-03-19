@@ -1,35 +1,33 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # 508 and 604 have the same mib
 janitza_umg_device_map = {
     ".1.3.6.1.4.1.34278.8.6": "96",
     ".1.3.6.1.4.1.34278.10.1": "604",
     ".1.3.6.1.4.1.34278.10.4": "508",
 }
+
+
+def janitza_umg_scan(oid):
+    return oid(".1.3.6.1.2.1.1.2.0") in (
+        ".1.3.6.1.4.1.34278.8.6",
+        ".1.3.6.1.4.1.34278.10.1",
+        ".1.3.6.1.4.1.34278.10.4",
+    )
 
 
 def parse_janitza_umg_inphase(info):
@@ -101,14 +99,14 @@ def parse_janitza_umg_inphase(info):
     result["Frequency"] = int(misc[0])
     # temperature not present in UMG508 and UMG604
     if len(misc) > 1:
-        result["Temperature"] = map(int, misc[1:])
+        result["Temperature"] = list(map(int, misc[1:]))
     else:
         result["Temperature"] = []
     return result
 
 
 def inventory_janitza_umg_inphase(parsed):
-    for item in parsed.keys():
+    for item in parsed:
         if item.startswith("Phase"):
             yield item, {}
 
@@ -120,7 +118,6 @@ check_info['janitza_umg'] = {
     'service_description': 'Input %s',
     'has_perfdata': True,
     'default_levels_variable': 'janitza_umg_inphase_default_levels',
-    'includes': ["elphase.include",],
     'group': 'el_inphase',
     'snmp_info': [
         (".1.3.6.1.2.1.1.2", ["0"]),  # device id
@@ -133,7 +130,7 @@ check_info['janitza_umg'] = {
         (".1.3.6.1.4.1.34278", ["7"]),  #       "
         (".1.3.6.1.4.1.34278", ["8"]),  #       "
     ],
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in janitza_umg_device_map.keys()
+    'snmp_scan_function': janitza_umg_scan,
 }
 
 
@@ -191,6 +188,5 @@ check_info['janitza_umg.temp'] = {
     'service_description': 'Temperature External %s',
     'has_perfdata': True,
     'default_levels_variable': 'janitza_umg_temp_default_levels',
-    'includes': ["temperature.include",],
     'group': 'temperature',
 }

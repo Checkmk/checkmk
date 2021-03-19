@@ -1,29 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /*-------------------------------------------------------------------------.
 |                      _                _                                  |
@@ -49,20 +27,8 @@ body.login {
     width: 770px;
     height: 605px;
     margin: auto;
+    color: $font-color;
     background: transparent;
-
-    #version::before {
-      position: absolute;
-      top: -8px;
-      left: -156px;
-      width: 200px;
-      height: 30px;
-      background-image: url("images/mk-logo.png");
-      background-position: 16px center;
-      background-repeat: no-repeat;
-      background-size: auto 30px;
-      content: " ";
-    }
   }
 
   #login_window {
@@ -72,10 +38,16 @@ body.login {
     width: 370px;
     height: 230px;
     margin: -30px auto 10px;
-    background: $color-sidebar-background;
-    border: 2px solid $color-table-border-dark;
+    background: $navigation-bg-color;
     border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  }
+
+  #logo {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    width: 120px;
+    height: auto;
   }
 
   #version {
@@ -83,23 +55,20 @@ body.login {
     top: 40px;
     right: 40px;
     width: 150px;
-    font-size: 11px;
     letter-spacing: $letter-spacing-table;
-    color: $lightgrey;
     text-align: right;
   }
 
-  label {
-    color: rgb(255, 255, 255);
-  }
-
-  #label_user, #label_pass {
+  #label_user,
+  #label_pass {
     left: 40px;
-    font-size: $font-size-global;
     letter-spacing: $letter-spacing-table;
   }
 
-  #label_user, #input_user, #label_pass, #input_pass {
+  #label_user,
+  #input_user,
+  #label_pass,
+  #input_pass {
     position: absolute;
   }
 
@@ -108,20 +77,22 @@ body.login {
   }
 
   #input_user {
-    top: 72px;
+    top: 76px;
   }
 
   #label_pass {
     top: 120px;
   }
+
   #input_pass {
-    top: 112px;
+    top: 116px;
   }
 
-  #input_user, #input_pass {
-    left: 140px;
-    width: 171px;
-    height: 17px;
+  #input_user,
+  #input_pass {
+    left: 146px;
+    width: 183px;
+    height: $input-field-height;
     background-repeat: no-repeat;
     border-radius: $theme-border-radius;
     outline: none;
@@ -134,10 +105,11 @@ body.login {
     bottom: 40px;
     left: 40px;
     width: calc(100% - 80px);
+    height: 29px;
     padding: 8px 16px;
     margin: 0;
     font-weight: $font-weight-bold;
-    border-color: rgb(19, 211, 137);
+    border-color: $success;
   }
 
   #login_error {
@@ -173,12 +145,12 @@ body.login {
     left: 10px;
     width: 350px;
     margin: 0 auto 10px;
-    font-size: 11px;
     color: $darkgrey;
     text-align: center;
   }
 
-  div#login div#foot a, div#login div#foot body.main .popup_menu span,
+  div#login div#foot a,
+  div#login div#foot body.main .popup_menu span,
   body.main .popup_menu div#login div#foot span {
     color: $darkgrey;
   }

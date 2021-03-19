@@ -1,5 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = 'cisco_mem'
 
 info = [
@@ -18,8 +25,8 @@ checks = {
             }, [
                 (
                     1,
-                    'Used (11.83 MB of 14.00 MB): 84.53% (warn/crit at 80.0%/90.0%)',
-                    [('mem_used', 84.52995845249721, 80.0, 90.0, 0, 100)]
+                    'Usage: 84.53% - 11.83 MB of 14.00 MB (warn/crit at 80.00%/90.00% used)',
+                    [('mem_used_percent', 84.52995845249721, 80.00000000000001, 90.0, 0.0, None)]
                 )
             ]
         ),
@@ -28,8 +35,8 @@ checks = {
                 'levels': (80.0, 90.0)
             }, [
                 (
-                    0, 'Used (25.83 MB of 70.50 MB): 36.64%', [
-                        ('mem_used', 36.64215435612978, 80.0, 90.0, 0, 100)
+                    0, 'Usage: 36.64% - 25.83 MB of 70.50 MB', [
+                        ('mem_used_percent', 36.64215435612978, 80.0, 90.0, 0, None)
                     ]
                 )
             ]

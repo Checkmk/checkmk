@@ -1,0 +1,13 @@
+Title: Consider timespecific parameters for manual checks
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1588753858
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If set, timespecific parameters of manual checks had no impact. From now on
+such parameters are taken into account.

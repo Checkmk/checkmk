@@ -1,0 +1,18 @@
+Title: Kubernetes: new option to add a namespace prefix
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588945723
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The special agent for Kubernetes now supports an option
+to add the namespace of namespaced objects as a prefix
+to the hostname in Checkmk. This makes it possible to
+distinguish objects with the same name in different
+namespaces. A pod inside the namespace "prod" with the
+name "redis" would then e.g. be added with the hostname
+"prod_pod_redis". You don't need to activate this
+option if you don't use namespaces in your cluster.

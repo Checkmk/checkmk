@@ -1,4 +1,4 @@
-title: Systems health via IBM Remote Supervisor Adapter (RSA)
+title: IBM Remote Supervisor Adapter (RSA): System Health
 agents: snmp
 catalog: hw/server/ibm
 license: GPL
@@ -13,4 +13,4 @@ description:
   a system level problem.
 
 inventory:
-  Returns one check per RSA.
+ One service is created for each RSA.

@@ -1,4 +1,4 @@
-title: Kubernetes persistent volume claims
+title: Kubernetes: Persistent Volume Claims
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -9,7 +9,7 @@ description:
  phase is given the check returns {UNKNOWN}.
 
 inventory:
- One service per persistent volume claim is created.
+ One service is created for each persistent volume claim.
 
 item:
  The name of the persistent volume claim.

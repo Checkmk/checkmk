@@ -1,0 +1,25 @@
+title: AWS RDS: Replica Lag
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the time a read replica DB instance lags
+ behind the source DB instance. For PostgreSQL databases, the check
+ also monitors the lagging size of the replica lagging the most in
+ terms of write-ahead log (WAL) data received (OldestReplicationSlotLag).
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+ No default levels are set. Upper levels are configurable for
+ the replica lag age and oldest replication slot lag size via
+ the rule "AWS/RDS Replica lag".
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
+
+inventory:
+ One service is created for each database if all required metrics
+ (ReplicaLag) are given.

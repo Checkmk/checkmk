@@ -1,7 +1,14 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include <string>
 #include <tuple>
 #include <utility>
+#include <variant>
 #include <vector>
+
 #include "LogEntry.h"
 #include "gtest/gtest.h"
 
@@ -11,20 +18,20 @@ namespace {
 template <class T>
 using table = std::vector<std::tuple<std::string, T>>;
 
-table<HostState> host_states{{"UP", HostState::up},
-                             {"DOWN", HostState::down},
-                             {"UNREACHABLE", HostState::unreachable}};
+const table<HostState> host_states{{"UP", HostState::up},
+                                   {"DOWN", HostState::down},
+                                   {"UNREACHABLE", HostState::unreachable}};
 
-table<ServiceState> service_states{{"OK", ServiceState::ok},
-                                   {"WARNING", ServiceState::warning},
-                                   {"CRITICAL", ServiceState::critical},
-                                   {"UNKNOWN", ServiceState::unknown}};
+const table<ServiceState> service_states{{"OK", ServiceState::ok},
+                                         {"WARNING", ServiceState::warning},
+                                         {"CRITICAL", ServiceState::critical},
+                                         {"UNKNOWN", ServiceState::unknown}};
 
 using info_table = std::vector<std::tuple<std::string, int, std::string>>;
 
 // NOTE: A few LogEntry types abuse a service state when actually the exit code
 // of a process is meant.
-info_table exit_codes{
+const info_table exit_codes{
     {"OK", static_cast<int>(ServiceState::ok), "SUCCESS"},
     {"WARNING", static_cast<int>(ServiceState::warning), "TEMPORARY_FAILURE"},
     {"CRITICAL", static_cast<int>(ServiceState::critical), "PERMANENT_FAILURE"},
@@ -32,15 +39,15 @@ info_table exit_codes{
 
 using strings = std::vector<std::string>;
 
-strings host_service_state_types{"HARD", "SOFT"};
+const strings host_service_state_types{"HARD", "SOFT"};
 
-strings downtime_flapping_state_types{"STARTED", "STOPPED"};
+const strings downtime_flapping_state_types{"STARTED", "STOPPED"};
 
-strings acknowledge_state_types{"STARTED", "EXPIRED", "CANCELLED", "END"};
+const strings acknowledge_state_types{"STARTED", "EXPIRED", "CANCELLED", "END"};
 
-strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
-                "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
-                "FLAPPINGSTOP"};
+const strings reasons{"CUSTOM",      "ACKNOWLEDGEMENT",   "DOWNTIMESTART",
+                      "DOWNTIMEEND", "DOWNTIMECANCELLED", "FLAPPINGSTART",
+                      "FLAPPINGSTOP"};
 
 std::string parens(const std::string& f, const std::string& arg) {
     return f + " (" + arg + ")";
@@ -130,7 +137,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
 }
 
 TEST(LogEntry, InitialHostStateWithMultiLine) {
-    auto line =
+    const auto* line =
         R"([1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output;Laaanger\nLong\nOutput)";
     LogEntry e{42, line};
     EXPECT_EQ(42, e._lineno);

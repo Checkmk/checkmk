@@ -1,0 +1,13 @@
+Title: Show only hosts in host dropdowns, the user is permitted for
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1588000897
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The selection of autocomplete host dropdown fields now only shows hosts, the
+user is permitted for.

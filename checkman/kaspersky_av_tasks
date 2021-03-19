@@ -1,4 +1,4 @@
-title: Kaspersky Anti-Virus tasks status
+title: Kaspersky Anti-Virus: Tasks Status
 agents: linux
 catalog: app/kaspersky
 license: GPL
@@ -8,5 +8,8 @@ description:
  Otherwise a critical state will be triggered.
  You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
 
+item:
+ Name of the job
+
 inventory:
- One service will be created for each task will be created.
+ One service is created for each task.

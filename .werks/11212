@@ -1,0 +1,11 @@
+Title: fortigate_sslvpn: could run into unhandled exception
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1592296692
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+

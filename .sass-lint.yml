@@ -35,10 +35,6 @@ rules:
     - 2
     -
       style: lowercase
-  indentation:
-    - 2
-    -
-      size: 2
   leading-zero:
     - 0
     -

@@ -1,0 +1,29 @@
+title: AWS S3: Requests
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the average per-request time
+
+ - from the first byte received to the last byte sent
+   to an Amazon S3 bucket.
+
+ - from the complete request being received by an Amazon S3
+   bucket to when the response starts to be returned.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}. Furthermore, you
+ have to enable requests metrics in the AWS/S3 console. This is
+ a paid feature.
+
+ No default levels are set. Upper levels on the first latency
+ are configurable via the rule "AWS/S3 Latency".
+
+item:
+ Name of the bucket
+
+inventory:
+ One service is created for each bucket if all required metrics
+ (TotalRequestLatency) are given.
+

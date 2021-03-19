@@ -1,28 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+import cmk.base.plugins.agent_based.utils.ps as ps
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 discovery_hr_processes_rules = []
 
@@ -66,15 +52,16 @@ def discovery_hr_ps(parsed):
             else:
                 match_groups = []
 
-            service_descr = replace_service_description(rule['descr'], match_groups,
-                                                        match_name_or_path)
+            service_descr = ps.replace_service_description(rule['descr'], match_groups,
+                                                           match_name_or_path)
+
             discovered_items.setdefault(
                 service_descr, '%r' % {
                     'match_name_or_path': match_name_or_path,
                     'match_status': match_status,
                     'match_groups': match_groups,
                 })
-    return discovered_items.items()
+    return list(discovered_items.items())
 
 
 def check_hr_ps(item, params, parsed):
@@ -97,7 +84,7 @@ def check_hr_ps(item, params, parsed):
                        human_readable_func=int)
 
     process_state_map = dict(params.get('status', []))
-    for (state_key, state_short, state_long), processes in processes_by_state.iteritems():
+    for (state_key, state_short, state_long), processes in processes_by_state.items():
         state = process_state_map.get(state_key, 0)
         if state_long:
             state_info = "%s (%s)" % (state_short, state_long)
@@ -114,12 +101,10 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
         return True
 
     match_type, match_pattern = match_name_or_path
-    if match_type == "match_name":
-        pattern_to_match = process.name
-    elif match_type == "match_name":
-        pattern_to_match = process.path
-    else:
-        pattern_to_match = None
+    pattern_to_match = {
+        'match_name': process.name,
+        'match_path': process.path,
+    }.get(match_type)
 
     if match_pattern is not None and match_pattern.startswith("~"):
         # Regex for complete process name or path
@@ -148,7 +133,6 @@ check_info['hr_ps'] = {
             '4',  # hrSWRunPath
             '7',  # hrSWRunStatus
         ]),
-    'includes': ['ucd_hr.include', 'ps.include'],
     'group': 'hr_ps',
     'default_levels_variable': 'hr_ps_default_levels',
 }

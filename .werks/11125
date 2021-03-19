@@ -1,0 +1,11 @@
+Title: f5_bigip_mem: Fix discovery of service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1589180405
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The service sometimes got falsely discovered. It will now only be discovered if both OID and a value are present.

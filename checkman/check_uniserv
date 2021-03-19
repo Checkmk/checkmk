@@ -3,6 +3,10 @@ agents: active
 catalog: agentless
 license: GPL
 distribution: check_mk
+
+item:
+ The service name and address (optional)
+
 description:
  This check uses a TCP connect to monitor the Uniserv Service.
  Uniserv ( http://www.uniserv.com/ ) is a Data Management Service which offers

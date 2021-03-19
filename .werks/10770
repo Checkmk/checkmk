@@ -1,0 +1,13 @@
+Title: Reporting graph elements have now time range as property
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1580140653
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Until now graph elements within a report rendered in the time range given
+by the report context. With this Werk it is additionaly possible to define
+a specific time range for the graph element.

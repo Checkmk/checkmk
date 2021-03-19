@@ -1,0 +1,125 @@
+Title: HW/SW Inventory views: Declared inventory views can be joined
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1583483708
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+HW/SW inventory views can be declared with {{declare_invtable_view}} in
+{{local/share/check_mk/web/plugins/views/MY_FILE_NAME.py}}. After this
+declaration a new view with sorters and filters is available.
+
+Example:
+C+:
+declare_invtable_view(
+    "invinterface",
+    ".networking.interfaces:",
+    _("Network interface"),
+    _("Network interfaces"),
+)
+C-:
+generates the view {{Search Network interfaces}} in the views sidebar below
+{{Inventory}}.
+
+Some of these tables may have common columns like {{ID}} but have different
+data sources. A new function is introduced in order to join some table-based
+views:
+C+:
+declare_joined_inventory_table_view(
+    tablename = "invMYMULTITABLE",
+    title_singular = _("TITLE SINGULAR"),
+    title_plural = _("TITLE PLURAL"),
+    tables = [
+        "invTABLE1",
+        "invTABLE2",
+        ...
+    ],
+    match_by = [
+        "KEY1",
+        "KEY2",
+        ...
+    ],
+)
+C-:
+
+In order to join some table-based views you have to
+<ul>
+<li>extend the display hints for each table path and</li>
+<li>declare own views for each table</li>
+</ul>
+
+Display hints:
+
+C+:
+inventory_displayhints.update({
+    ".PATH.TO.TABLE1:": {
+        "title": _("TITLE TABLE1"),
+        "keyorder": [
+            "id",
+            "value_1_1",
+            "value_1_2",
+            ...
+        ],
+        "view": "invTABLE1_of_host",
+    },
+    ".PATH.TO.TABLE1:*.id": {"title": _("ID")},
+    ".PATH.TO.TABLE1:*.value_1_1": {"title": _("Value 1 1")},
+    ".PATH.TO.TABLE1:*.value_1_2": {"title": _("Value 1 2")},
+    ...
+
+    ".PATH.TO.TABLE2:": {
+        "title": _("TITLE TABLE2"),
+        "keyorder": [
+            "id",
+            "value_2_1",
+            "value_2_2",
+            ...
+        ],
+        "view": "invTABLE2_of_host",
+    },
+    ".PATH.TO.TABLE2:*.id": {"title": _("ID")},
+    ".PATH.TO.TABLE2:*.value_2_1": {"title": _("Value 2 1")},
+    ".PATH.TO.TABLE2:*.value_2_2": {"title": _("Value 2 2")},
+    ...
+})
+C-:
+
+Declarations:
+
+C+:
+declare_invtable_view(
+    "invTABLE1",
+    ".PATH.TO.TABLE1:"
+    _("TITLE TABLE1 SINGULAR"),
+    _("TITLE TABLE1 PLURAL"),
+)
+
+declare_invtable_view(
+    "invTABLE2",
+    ".PATH.TO.TABLE2:"
+    _("TITLE TABLE2 SINGULAR"),
+    _("TITLE TABLE2 PLURAL"),
+)
+
+declare_joined_inventory_table_view(
+    tablename = "invMULTITABLE",
+    title_singular = _("TITLE MULTITABLE SINGULAR"),
+    title_plural = _("TITLE MULTITABLE PLURAL"),
+    tables = [
+        "invTABLE1",
+        "invTABLE2",
+        ...
+    ],
+    match_by = [
+        "id",
+        ...
+    ],
+)
+C-:
+
+The keys in {{match_by}} must be part of each table. Otherwise Checkmk does not
+known which rows belong together. Now all stated tables are merged into one and
+all columns of both are visible in the new view.

@@ -1,0 +1,14 @@
+Title: Add overview dashboard and inventory views for Checkmk servers and sites
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1579869231
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+To get a better view on the Checkmk installation itself, we have added a
+Checkmk overview dashboard which shows the most relevant information about your
+Checkmk servers (e.g. OS, load, ...) and sites (e.g. number of hosts/services,
+version, usage metrics, state of site processes).

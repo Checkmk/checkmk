@@ -1,0 +1,18 @@
+Title: Reduce long waiting times for some users when loading sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1583767206
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If users are only allowed to see folders for which they have
+permissions i.e. if the Global Setting "Hide folders without
+read permissions" is activated, some sites like e.g. the
+notifications of a user could cause long waiting times. The
+problem occured especially when users are only allowed to
+see the lowest folder level. In some rare cases users could
+even run into a GUI timeout.

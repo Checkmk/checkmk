@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 
 def inventory_win_cpuusage(info):
@@ -36,11 +16,11 @@ def inventory_win_cpuusage(info):
 
 def check_win_cpuusage(item, params, info):
     if isinstance(params, tuple):
-        warn, crit = params
+        levels = params
     elif isinstance(params, dict):
-        warn, crit = params['levels']
+        levels = params.get('levels')
     else:  # legacy: old params may be None
-        warn, crit = None, None
+        levels = None
 
     for line in info:
         if line[0] == '238:6':
@@ -67,16 +47,15 @@ def check_win_cpuusage(item, params, info):
             else:
                 num_txt = " / %d CPUs" % num_cpus
 
-            infotext = "%d%% used%s" % (int(used_perc), num_txt)
-            state = 0
-            if crit is not None and used_perc >= crit:
-                state = 2
-            elif warn is not None and used_perc >= warn:
-                state = 1
-            if state:
-                infotext += " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                                       get_percent_human_readable(crit))
-            return state, infotext, [("cpuusage", "%.2f" % used_perc, warn, crit, 0, 100)]
+            return check_levels(
+                used_perc,
+                "cpuusage",
+                levels,
+                human_readable_func=get_percent_human_readable,
+                infoname="Used%s" % num_txt,
+                boundaries=(0, 100),
+            )
+
     return (3, "counter for cpu (238:6) not found")
 
 
@@ -124,8 +103,6 @@ check_info["winperf.cpuusage"] = {
     'inventory_function': inventory_win_cpuusage,
     'service_description': 'CPU Usage',
     'has_perfdata': True,
-    'default_levels_variable': 'winperf_cpu_default_levels',
-    'includes': ["winperf.include"],
 }
 
 check_info["winperf.diskstat"] = {

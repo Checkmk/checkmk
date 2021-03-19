@@ -1,4 +1,4 @@
-title: HPE StoreOnce: General information
+title: HPE StoreOnce: General Information
 agents: storeonce
 catalog: hw/storagehw/hpe
 license: GPL
@@ -9,7 +9,7 @@ description:
  informational and will not change his state.
 
 item:
- The product class will be the item
+ The product class
 
 inventory:
- Only one service is created
+ One service is created.

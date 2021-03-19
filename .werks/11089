@@ -1,0 +1,15 @@
+Title: AWS ELB & ELBv2 host discovery based on user-specified names
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1588167864
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This werk fixes a bug with the discovery of AWS ELB/ELBv2 load balancers based
+on load balancer names specified by the user. In the case where both the overall
+services tags and specific names (which are supposed to overrule the overall tags)
+for ELB or ELBv2 were specified, all ELB/ELBv2 load balancers were fetched, ignoring
+the user-specified names. 

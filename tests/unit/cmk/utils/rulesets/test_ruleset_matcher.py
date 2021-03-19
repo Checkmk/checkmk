@@ -1,27 +1,23 @@
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 from testlib.base import Scenario
-from cmk_base.check_utils import Service
-from cmk_base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+
+from cmk.utils.type_defs import CheckPluginName
+from cmk.base.check_utils import Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-
-
-def test_ruleset_match_object_invalid_attribute_in_init():
-    with pytest.raises(TypeError, match="unexpected keyword"):
-        RulesetMatchObject(x=1)  # pylint: disable=unexpected-keyword-arg
 
 
 def test_ruleset_match_object_no_conditions():
     x = RulesetMatchObject(host_name=None, service_description=None)
     assert x.host_name is None
     assert x.service_description is None
-
-
-def test_ruleset_match_object_set_invalid_attribute():
-    x = RulesetMatchObject(host_name=None, service_description=None)
-    with pytest.raises(AttributeError, match="object has no attribute"):
-        x.xyz = 123  # pylint: disable=assigning-non-slot
 
 
 def test_ruleset_match_object_host_name():
@@ -488,7 +484,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host1")
     ts.set_autochecks("host1", [
-        Service("cpu.load",
+        Service(CheckPluginName("cpu_load"),
                 None,
                 "CPU load",
                 "{}",
@@ -501,7 +497,13 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host2")
     ts.set_autochecks("host2", [
-        Service("cpu.load", None, "CPU load", "{}", service_labels=DiscoveredServiceLabels()),
+        Service(
+            CheckPluginName("cpu_load"),
+            None,
+            "CPU load",
+            "{}",
+            service_labels=DiscoveredServiceLabels(),
+        ),
     ])
 
     config_cache = ts.apply(monkeypatch)
@@ -512,3 +514,15 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
             hostname, service_description),
                                            ruleset=service_label_ruleset,
                                            is_binary=False)) == expected_result
+
+
+def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
+    config_cache = Scenario().apply(monkeypatch)
+    ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
+    ruleset_optimizer.get_service_ruleset(ruleset, False, False)
+    ruleset_optimizer.get_host_ruleset(ruleset, False, False)
+    assert ruleset_optimizer._host_ruleset_cache
+    assert ruleset_optimizer._service_ruleset_cache
+    ruleset_optimizer.clear_ruleset_caches()
+    assert not ruleset_optimizer._host_ruleset_cache
+    assert not ruleset_optimizer._service_ruleset_cache

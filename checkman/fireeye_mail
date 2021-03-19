@@ -1,4 +1,4 @@
-title: FireEye Appliances: Mail rates
+title: FireEye Appliances: Mail Rates
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -16,9 +16,6 @@ description:
  can be configured via WATO.
 
  The check is always in OK state.
-
-item:
- No item.
 
 inventory:
  One service is created.

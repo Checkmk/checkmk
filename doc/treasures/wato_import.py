@@ -1,67 +1,49 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Author :  Bastian Kuhn bk@mathias-kettner.de
 
 # Author : Andreas Boesl ab@mathias-kettner.de
 # Updated: Set correct host_tag group for given tags
 
-from __future__ import print_function
-import os, pprint, sys, subprocess
+import os
+import sys
+from typing import Any, Dict, List, Tuple, Union
+
 try:
     path = os.environ.pop('OMD_ROOT')
     pathlokal = "~/etc/check_mk/conf.d/wato/"
     pathlokal = os.path.expanduser(pathlokal)
     csv_file = open(sys.argv[1], 'r')
-except:
+except Exception:
     print("""Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
     wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None""")
     sys.exit()
 
-folders = {}
+folders = {}  # type: Dict[str, List[Tuple[str, str, Union[str, bool]]]]
 for line in csv_file:
     if line.startswith('#'):
         continue
-    target_folder, name, alias, ipaddress = line.split(';')[:5]
+    target_folder, name, alias, ipaddress_ = line.split(';')[:5]
     if target_folder:
         try:
             os.makedirs(pathlokal + target_folder)
         except os.error:
             pass
         folders.setdefault(target_folder, [])
-        ipaddress = ipaddress.strip()
+        ipaddress = ipaddress_.strip()  # type: Union[str, bool]
         if ipaddress == "None":
             ipaddress = False
         folders[target_folder].append((name, alias, ipaddress))
 csv_file.close()
 
-host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}
-exec (open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(), globals(), host_tags_info)
+host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}  # type: Dict[str, Any]
+exec(open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(), globals(), host_tags_info)
 
 host_tag_mapping = {}
 aux_tag_mapping = {}

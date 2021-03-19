@@ -1,0 +1,13 @@
+Title: check_mk_agent.linux: option to exclude specific agent sections through agent bakery
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1588860218
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change allows the user to execute only selected sections of the Checkmk agent. For this
+option, the user must configure the "Agent sections" WATO rule. The change will be applied with
+the next deployed agent. An example of the configuration file can be found in agents/cfg_examples.

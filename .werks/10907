@@ -1,0 +1,18 @@
+Title: ucd_cpu_util: Fix CPU utilization calculation
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1588932063
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Fixed the calculation for the CPU utilization. The system value used the outdated values/OIDs.
+
+No longer query the CpuRawKernel value, since its already included in the CpuRawSystem.
+CpuRawSystem = CpuRawKernel + CpuRawWait
+
+The system value gets computed as:
+system = CpuRawSystem + CpuRawInterrupt + CpuRawSoftIRQ
+(CpuRawInterrupt in this case is equal to IRQ)

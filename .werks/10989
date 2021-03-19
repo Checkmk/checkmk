@@ -1,0 +1,11 @@
+Title: checkpoint_packets: Fixed handling of missing ESP en-/decrypted packets
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1590392173
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

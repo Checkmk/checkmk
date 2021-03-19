@@ -1,4 +1,11 @@
-import pytest
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 from checktestlib import (
     DiscoveryResult,
@@ -6,7 +13,7 @@ from checktestlib import (
     assertDiscoveryResultsEqual,
 )
 
-from cmk_base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped
 
 pytestmark = pytest.mark.checks
 
@@ -333,8 +340,8 @@ discovered_wmi_cpuload_result = [(None, None)]
     ('wmi_cpuload', info_wmi_cpuload_8, discovered_wmi_cpuload_result),
     ('dotnet_clrmemory', [[u'WMItimeout']], []),
 ])
-def test_wmi_cpu_load_discovery(check_manager, check_name, info, expected):
-    check = check_manager.get_check(check_name)
+def test_wmi_cpu_load_discovery(check_name, info, expected):
+    check = Check(check_name)
     discovery_result = DiscoveryResult(check.run_discovery(check.run_parse(info)))
     discovery_expected = DiscoveryResult(expected)
     assertDiscoveryResultsEqual(check, discovery_result, discovery_expected)
@@ -344,7 +351,7 @@ def test_wmi_cpu_load_discovery(check_manager, check_name, info, expected):
     ('wmi_webservices', info_wmi_timeout, None),
     ('wmi_cpuload', info_subsection_wmi_timeout, None),
 ])
-def test_wmi_cpuload_timeout_exceptions(check_manager, check_name, info, expected):
-    check = check_manager.get_check(check_name)
+def test_wmi_cpuload_timeout_exceptions(check_name, info, expected):
+    check = Check(check_name)
     with pytest.raises(MKCounterWrapped):
         CheckResult(check.run_check(None, {}, check.run_parse(info)))

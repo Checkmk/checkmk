@@ -1,0 +1,16 @@
+Title: Homogenize dates in Service Graphs
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1582105799
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Graph Time range title uses ISO format with day precision YEAR-MONTH-DAY
+
+Graph Time axis follows same convention dropping YEAR or YEAR-MONTH if they
+are the same within the time range.
+
+On Check 1.6 this change only affects the Enterprise Edition Graphs

@@ -1,4 +1,4 @@
-title: Liebert MPH/MPX devices: PDU AUX sensors
+title: Liebert MPH/MPX Devices: PDU AUX Sensors
 agents: snmp
 catalog: hw/environment/emerson
 license: GPL
@@ -14,11 +14,8 @@ description:
  The lower and upper thresholds configured in the device are read from the device
  and used for warning/critical states.
 
- One service is created for each AUX device.
-
 item:
- An item is created using one of the labels TEMP, HUM, DOOR, CONTACT and the internal
- aux sensor index.
+ The type, the system label and the index of the PDU seperated by a {{-}}
 
 inventory:
  One service is created for each AUX device.

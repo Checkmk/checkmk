@@ -1,4 +1,4 @@
-title: Synology NAS: System and CPU FAN status
+title: Synology NAS: System and CPU FAN Status
 agents: snmp
 catalog: hw/storagehw/synology
 license: GPL
@@ -6,7 +6,9 @@ distribution: check_mk
 description:
  This check returns {CRIT} if neither the CPU or the System FAN status is {OK}.
 
+item:
+ One of the two statements: {{System}}, {{CPU}}
 
 inventory:
- One check will be created
+ One service is created.
 

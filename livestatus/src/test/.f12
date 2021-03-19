@@ -1,5 +1,29 @@
 #!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 set -e
 
-LANG=C make -C ../../.. config.status
-LANG=C make -j4 -C .. unit-test
+CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
+REPO_DIR=$(git rev-parse --show-toplevel)
+
+execute_test() {
+    LANG=C make -C ../../.. config.status
+    (cd ../../.. && ./config.status)
+    LANG=C make -j4 -C .. unit-test
+}
+
+# same as in scripts/run-cxx-linter
+if [ -z "$RUN_HERE" ]; then
+    echo "Running in Docker Container $CONTAINER (workdir $PWD)"
+    docker run -a stdout -a stderr -t \
+        -u "$UID:$UID" \
+        -v "$REPO_DIR:$REPO_DIR" \
+        -e RUN_HERE="true" \
+        -w "$PWD" \
+        "$CONTAINER" \
+        ./.f12
+else
+    execute_test
+fi

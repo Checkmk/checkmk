@@ -1,0 +1,18 @@
+Title: Windows Agent may stop processes that interfere with plugin installation
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1581681098
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously in some rare cases, a plugin running in background could interfere Agent 
+install routine blocking plugin copy. As a result such plugin, usually
+<tt>cmk-update-agent.exe</tt>, might disappear after installation.
+
+Now the problem has been addressed. If the Windows Agent cannot create a well-known 
+plugin, it will try to stop the Windows process usiing the name of the plugin.  
+
+Well-known plugins are cmk-update-agent.exe, mk_logwatch.exe and mk_jolokia.exe

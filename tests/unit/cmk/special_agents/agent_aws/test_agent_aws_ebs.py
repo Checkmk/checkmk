@@ -1,6 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
-import pytest
+import pytest  # type: ignore[import]
+
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,
     EC2DescribeInstancesIB,
@@ -19,7 +26,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 
-class FakeEC2Client(object):
+class FakeEC2Client:
     def describe_instances(self, Filters=None, InstanceIds=None):
         return {
             'Reservations': [{
@@ -105,6 +112,7 @@ def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
     ebs_limits_results = ebs_limits.run().results
 
     assert ebs_limits.cache_interval == 300
+    assert ebs_limits.period == 600
     assert ebs_limits.name == "ebs_limits"
 
     assert len(ebs_limits_results) == 1
@@ -133,6 +141,7 @@ def test_agent_aws_ebs_summary(get_ebs_sections, names, tags, found_ebs):
     ebs_summary_results = ebs_summary.run().results
 
     assert ebs_summary.cache_interval == 300
+    assert ebs_summary.period == 600
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == found_ebs
@@ -147,6 +156,7 @@ def test_agent_aws_ebs(get_ebs_sections, names, tags, found_ebs):
     ebs_results = ebs.run().results
 
     assert ebs.cache_interval == 300
+    assert ebs.period == 600
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == found_ebs
@@ -163,6 +173,7 @@ def test_agent_aws_ebs_summary_without_limits(get_ebs_sections):
     ebs_summary_results = ebs_summary.run().results
 
     assert ebs_summary.cache_interval == 300
+    assert ebs_summary.period == 600
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == 3
@@ -175,6 +186,7 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections):
     ebs_results = ebs.run().results
 
     assert ebs.cache_interval == 300
+    assert ebs.period == 600
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == 3

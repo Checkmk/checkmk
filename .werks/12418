@@ -1,0 +1,16 @@
+Title: Monitoring of Delta InsightPower UPS
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1616135220
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This werk enables the monitoring of InsightPower UPS (Uninterruptible
+Power Supply) appliances from Delta Power Solutions via SNMP. Checkmk
+will now discover the standard UPS check plugins, <tt>ups_...</tt>,
+on such devices. This allows you to monitor quantities such as the
+input frequency, the in- and output voltage, the output load, the
+power, the status of the self test and the battery temperature.

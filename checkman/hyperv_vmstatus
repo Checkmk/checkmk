@@ -9,5 +9,5 @@ description:
  It will automaticly throw an {CRITICAL} state if there any errors.
 
 inventory:
- One service will be created for each system.
+ One service is created for each system.
 

@@ -1,0 +1,16 @@
+Title: job: Failed jobs are not OK just because a new one is running
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1602264650
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The job plugin determines its state from the age of the last job
+and its exit code.
+Previously, a job was considered {OK} regardless of its exit code
+whenever a job was running at the time of checking. This way a long
+running job could appear to be {OK} most of the time, even if it
+was constantly failing.

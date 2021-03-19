@@ -1,0 +1,14 @@
+Title: ucd_mem: make handling of swap space configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1585637166
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk makes the handling of swap space for the memory check on 
+systems running the UCD SNMP daemon configurable. The user can now
+set levels on the available swap space and configure the handling
+of swap errors.

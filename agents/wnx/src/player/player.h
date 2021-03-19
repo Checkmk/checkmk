@@ -1,6 +1,13 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 // HEADER ONLY(mostly) Player Engine
 
 #pragma once
+#include <fmt/format.h>
+
 #include <filesystem>
 #include <iostream>
 #include <optional>
@@ -8,7 +15,6 @@
 
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
@@ -311,7 +317,7 @@ private:
 
         auto execute_string = ConstructCommandToExec(FileExec);
         if (execute_string.empty()) {
-            XLOG::l("Can\'t create exe string for the {}", FileExec.u8string());
+            XLOG::l("Can\'t create exe string for the {}", FileExec);
             return false;
         }
 

@@ -1,4 +1,4 @@
-title: Linux softraid devices
+title: Linux Softraid Devices
 agents: linux
 catalog: os/storage
 license: GPL
@@ -12,6 +12,5 @@ item:
  The Linux raid device without {/dev/}, for example {"md0"}.
 
 inventory:
- All RAID devices except those with raid level 0 are automatically detected.
- The RAID 0 devices's output is completely different from the others.
- And if a disk crashes you will soon notice anyway...
+ One service is created for each RAID device unless it is a RAID-Level 0 architecture.
+ The RAID-Level 0 devices's output is completely different from the others.

@@ -7,11 +7,11 @@ description:
  This check uses snmp to extract the number of mails present in various
  mail queues of the Lotus Domino Mail Server. Warning and critical levels
  may be configured for each of the queues.
+ The names of the mailqueues are predefined in the check.
 
 item:
  The names of the mail queues as given in the Lotus Notes SNMP MIB.
 
 inventory:
- The names of the mail queues are predefined in the check. If the corresponding
- oid is found, the corresponding mail queue is inventorized.
+ One service is created for each mailqueue if the corresponding OID is found.
 

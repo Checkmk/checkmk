@@ -1,0 +1,32 @@
+title: AWS DynamoDB: Limits
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check monitors limits in terms of Read and Write Capacity Units for
+ AWS/DynamoDB. The check monitors both per-table limits for provisioned
+ tables as well as region-wide limits. Note that this service does not
+ apply to on-demand tables, since they do not have any fixed limits in
+ terms of Read or Write Capacity Units. Additionally, the check also
+ monitors the number of tables per region.
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}.
+
+ Default levels are set to 80, 90 percent and the default max. value is
+ fetched from the API or set to the default value provided by AWS, ie.:
+
+ - Account-wide Read and Write Capacity Units: usually 80,000
+
+ - Per-table Read and Write Capacity Units: usually 40,000
+
+ - Account-wide number of tables per region: 256
+
+ These levels are configurable using the WATO rule "AWS/DynamoDB Limits".
+
+ Note that if limits are enabled, all (provisioned) tables are fetched,
+ regardless of possibly configured restrictions to names or tags.
+
+inventory:
+ One service is created per monitored AWS region.

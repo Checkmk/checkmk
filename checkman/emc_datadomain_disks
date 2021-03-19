@@ -15,4 +15,4 @@ item:
  "ID of the enclosure" - "ID of the hard disk"
 
 inventory:
- Automatically configures one check for every disk found
+ One service is created for each disk found.

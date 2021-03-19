@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
 import cmk.gui.config as config
@@ -44,7 +24,7 @@ class CustomLinks(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Custom Links")
+        return _("Custom links")
 
     @classmethod
     def description(cls):
@@ -71,7 +51,8 @@ class CustomLinks(SidebarSnapin):
                         html.begin_foldable_container("customlinks",
                                                       id_,
                                                       isopen=entry[1],
-                                                      title=entry[0])
+                                                      title=entry[0],
+                                                      icon="foldable_sidebar")
                         render_list(idss, entry[2])
                         html.end_foldable_container()
                     elif isinstance(entry[1], str):
@@ -81,7 +62,7 @@ class CustomLinks(SidebarSnapin):
                             icon_file = entry[2]
 
                             # Old configs used files named "link_<name>.gif". Those .gif files have
-                            # been removed from Check_MK. Replacing such images with the default icon
+                            # been removed from Checkmk. Replacing such images with the default icon
                             if icon_file.endswith(".gif"):
                                 icon_name = "link"
                             else:

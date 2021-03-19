@@ -1,31 +1,13 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "Logger.h"
+
 #include <cstddef>
 #include <iostream>
-#include <utility>
+
 #include "ChronoUtils.h"
 
 // -----------------------------------------------------------------------------
@@ -89,6 +71,7 @@ void ConcreteLogger::setLevel(LogLevel level) { _level = level; }
 Handler *ConcreteLogger::getHandler() const { return _handler; }
 
 void ConcreteLogger::setHandler(std::unique_ptr<Handler> handler) {
+    std::scoped_lock l(_lock);
     delete _handler;
     _handler = handler.release();
 }
@@ -102,15 +85,20 @@ void ConcreteLogger::setUseParentHandlers(bool useParentHandlers) {
 
 void ConcreteLogger::emitContext(std::ostream & /*unused*/) const {}
 
+void ConcreteLogger::callHandler(const LogRecord &record) {
+    std::scoped_lock l(_lock);
+    if (Handler *handler = getHandler()) {
+        handler->publish(record);
+    }
+}
+
 void ConcreteLogger::log(const LogRecord &record) {
     if (!isLoggable(record.getLevel())) {
         return;
     }
     for (Logger *logger = this; logger != nullptr;
          logger = logger->getParent()) {
-        if (Handler *handler = logger->getHandler()) {
-            handler->publish(record);
-        }
+        logger->callHandler(record);
         if (!logger->getUseParentHandlers()) {
             break;
         }
@@ -131,6 +119,10 @@ Handler *LoggerDecorator::getHandler() const { return _logger->getHandler(); }
 
 void LoggerDecorator::setHandler(std::unique_ptr<Handler> handler) {
     _logger->setHandler(std::move(handler));
+}
+
+void LoggerDecorator::callHandler(const LogRecord &record) {
+    _logger->callHandler(record);
 }
 
 bool LoggerDecorator::getUseParentHandlers() const {
@@ -183,6 +175,7 @@ Logger *LogManager::lookup(const std::string &name, Logger *parent) {
     return it->second.get();
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 LogManager LogManager::global_log_manager;
 
 // -----------------------------------------------------------------------------

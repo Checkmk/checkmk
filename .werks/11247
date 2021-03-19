@@ -1,0 +1,25 @@
+Title: Preserve piggyback data during restart and updates
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1593756494
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+For performance reasons, the Piggyback data is stored in the tmpfs of the site
+(in tmp/check_mk/piggyback). This has the disadvantage that the files disappear
+as soon as the checkmk server is restarted or the tmpfs is unmounted (e.g.
+during an update).
+
+The lack of piggyback data can temporarily lead to incorrect check results and,
+if you use the Dynamic Configuration, even cause certain hosts/services to
+disappear from the configuration for a short time.
+
+With this change the content of tmp/check_mk/piggyback and
+tmp/check_mk/piggyback_sources is saved to var/omd/tmpfs-dump.tar during
+certain actions (currently: omd stop, omd umount).
+
+If the "omd start" detects that tmpfs needs to be reinitialized, the backup
+from var/omd/tmpfs-dump.tar is restored to the fresh tmpfs.

@@ -1,4 +1,4 @@
-title: Bluecat Adonis DHCP State
+title: Bluecat Adonis: DHCP State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL
@@ -9,5 +9,8 @@ description:
  The number of successful DHCP leases issued per second is return as information.
 
 inventory:
- One service will be created
+ One service is created if DHCP is not stopped
 
+cluster:
+  On an cluster this service will be {OK}, if at least one node is {OK}. Otherwise it will
+  assume the worst encountered state.

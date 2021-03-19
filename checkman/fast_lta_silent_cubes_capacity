@@ -1,0 +1,20 @@
+title: FAST LTA Storage Systems: Total Capacity over all Silent Cubes
+agents: snmp
+catalog: hw/storagehw/fastlta
+license: GPL
+distribution: check_mk
+description:
+ Checks the total / used capacity over all silent cubes connected to a FAST
+ LTA Storage System.
+
+ Returns {WARN} or {CRIT} if usage is above given levels.
+
+ It uses the check logic of the {df} check, so for configuration
+ parameters and examples please refer to the man page of {df}.
+
+item:
+ The fixed statement {{Total}}
+
+inventory:
+ One service is created on every system (head unit).
+

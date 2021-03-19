@@ -1,4 +1,4 @@
-title: Bluecat Adonis Command Server State
+title: Bluecat Adonis: Command Server State
 agents: snmp
 catalog: hw/network/bluecat
 license: GPL
@@ -9,5 +9,5 @@ description:
  It is possible to change the behavior in WATO.
 
 inventory:
- One service will be created
+ One service is created
 

@@ -1,0 +1,19 @@
+Title: Checkmk RRD helper: fixed exception when creating new rrd files
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1582552465
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The Checkmk RRD helper is used whenever the microcore tries to create a new rrd file.
+During this process the RRD helper tries to parse the autochecks file for the host in question.
+In some instances, the autochecks file referred to variables defined within checks.
+This caused RRD to silently crash without parsing the content of the autochecks file.
+In most instances this had no negative effect.
+
+However, the recently introduced labels might be incorrectly computed because of the missing autochecks file content.
+WATO configured RRD rules which rely on labels might be affected by this bug (but only when creating new rrd files).

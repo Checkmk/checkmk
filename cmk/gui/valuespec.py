@@ -5378,6 +5378,39 @@ class ValueEncrypter:
                                                                       tag).decode("utf-8")
 
 
+class AESKey(Password):
+    """A 256bit AES key, represented as a hex string.
+    This key can directly be used as a -K argument for OpenSSL.
+    """
+    def from_html_vars(self, varprefix: str) -> str:
+        value = html.request.get_str_input_mandatory(varprefix, "")
+        if not value:
+            return ""
+
+        if self._encrypt_value:
+            return ValueEncrypter.decrypt(value)
+
+        return value
+
+    def value_to_text(self, value: _Optional[str]) -> str:
+        if value is None:
+            return _("none")
+        return _("<i>Generated automatically</i>")
+
+    def render_input(self, varprefix: str, value: _Optional[str]) -> None:
+        html.span("<i>Generated automatically</i>", class_="vs_floating_text")
+
+        if not value:
+            value = os.urandom(32).hex()
+
+        if self._encrypt_value:
+            html.hidden_field(varprefix, value=ValueEncrypter.encrypt(value))
+        else:
+            html.hidden_field(varprefix, value=value)
+
+        self.password_plaintext_warning()
+
+
 class PasswordSpec(Password):
     # TODO: Cleanup kwargs
     def __init__(self, hidden: bool = True, **kwargs: Any) -> None:

@@ -44,13 +44,13 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     MonitoringState,
     Optional,
-    PasswordSpec,
     RegExpUnicode,
     TextAscii,
     TextUnicode,
     Transform,
     Tuple,
     ValueSpec,
+    AESKey,
 )
 
 from cmk.gui.plugins.wato import (
@@ -4578,7 +4578,22 @@ rulespec_registry.register(
 def _valuespec_agent_encryption():
     return Dictionary(
         elements=[
-            ("passphrase", PasswordSpec(title=_("Encryption secret"), allow_empty=False)),
+            (
+                "passphrase",
+                # Note: We provide a 256bit hex string here, suitable for direct usage as a -K
+                # argument for OpenSSL. However, it still may be used as a password for key
+                # derivation (pbkdf2) instead.
+                AESKey(
+                    title=_("Encryption secret"),
+                    help=_(
+                        "The agent communication is encrypted using AES. The underlying key is "
+                        "generated and stored automatically on rule creation. To enforce a new key, "
+                        "the rule must be deleted and replaced with a new one.") + "<br>" +
+                    "Note: When changing "
+                    "keys and activating the rule, the Checkmk site will expect agent data "
+                    "encrypted with the new key immediately. Hence, the new key must be rolled "
+                    "out to all hosts using encryption in order to obtain a functioning agent "
+                    "communication.")),
             ("use_regular",
              DropdownChoice(
                  title=_("Encryption for Agent"),
@@ -4603,8 +4618,12 @@ def _valuespec_agent_encryption():
                                      ("disable", _("Disable (drop encrypted data)"))])),
         ],
         optional_keys=[],
-        title=_("Encryption"),
-        help=_("Control encryption of data sent from agent to host."),
+        title=_("Encryption (Linux, Windows)"),
+        help=_("Control encryption of data sent from agents to Checkmk.") + "<br>" +
+        _("<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
+          "agent and the Windows agent. However, when setting the Encryption settings to "
+          "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
+          "Please keep this in mind when configuring this ruleset."),
     )
 
 

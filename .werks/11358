@@ -1,0 +1,13 @@
+Title: Hide "Update DNS Cache" according to current settings
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1616075747
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+The button "Update DNS Cache" under a host settings was always visible and therfore ignoring the site specific global setting "Use DNS lookup cache".
+It's now not shown anymore if the DNS Cache is not used.

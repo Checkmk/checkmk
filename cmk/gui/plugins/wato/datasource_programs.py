@@ -504,6 +504,27 @@ def _kubernetes_connection_elements():
     ]
 
 
+def _filter_kubernetes_namespace_element():
+    return (
+        "namespace_include_patterns",
+        ListOf(
+            RegExp(
+                mode=RegExp.complete,
+                title=_("Pattern"),
+                allow_empty=False,
+            ),
+            title=_("Monitor namespaces matching"),
+            add_label=_("Add new pattern"),
+            allow_empty=False,
+            help=_("If your cluster has multiple namespaces, you can specify "
+                   "a list of regex patterns. Only matching namespaces will "
+                   "be monitored. Note that this concerns everything which "
+                   "is part of the matching namespaces such as pods for "
+                   "example."),
+        ),
+    )
+
+
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
@@ -587,8 +608,9 @@ def _valuespec_special_agents_kubernetes():
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
+                _filter_kubernetes_namespace_element(),
             ],
-            optional_keys=["port", "url-prefix", "path-prefix"],
+            optional_keys=["port", "url-prefix", "path-prefix", "namespace_include_patterns"],
             title=_("Kubernetes"),
             help=
             _("This rule selects the Kubenetes special agent for an existing Checkmk host. "
@@ -635,19 +657,6 @@ def _valuespec_generic_metrics_prometheus():
             ],
         ))
 
-    filter_namespace_element = ("namespace_include_patterns",
-                                ListOf(
-                                    RegExp(mode=RegExp.complete, title=_("Pattern")),
-                                    title=_("Filter namespaces"),
-                                    add_label=_("Add new pattern"),
-                                    allow_empty=False,
-                                    help=_(
-                                        "If your cluster has multiple namespaces, you can specify "
-                                        "a list of regex patterns. Only matching namespaces will "
-                                        "be monitored. Note that this concerns everything which "
-                                        "is part of the matching namespaces such as pods for "
-                                        "example."),
-                                ))
     return Dictionary(
         elements=[
             ("connection",
@@ -749,7 +758,7 @@ def _valuespec_generic_metrics_prometheus():
                                     ),
                                )),
                               namespace_element,
-                              filter_namespace_element,
+                              _filter_kubernetes_namespace_element(),
                               ("entities",
                                ListChoice(
                                    choices=[
@@ -840,7 +849,7 @@ def _valuespec_generic_metrics_prometheus():
                                         )),
                                    ],
                                )),
-                              filter_namespace_element,
+                              _filter_kubernetes_namespace_element(),
                               (
                                   "entities",
                                   ListChoice(

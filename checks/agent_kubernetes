@@ -16,6 +16,10 @@ def agent_kubernetes_arguments(params, hostname, ipaddress):
     if params.get('namespaces'):
         args += ["--prefix-namespace"]
 
+    for namespace in params.get('namespace_include_patterns', []):
+        args.append('--namespace-include-patterns')
+        args.append(namespace)
+
     args.append('--api-server-endpoint')
     configured_endpoint_name, configured_endpoint = params['api-server-endpoint']
     if configured_endpoint_name == 'url_custom':

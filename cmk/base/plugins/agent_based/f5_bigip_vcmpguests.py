@@ -6,20 +6,20 @@
 """F5-BIGIP-Cluster-Status SNMP Sections and Checks
 """
 
-from typing import Mapping, Optional
+from typing import List, Mapping, Optional
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     SNMPTree,
     register,
     Service,
     Result,
-    state,
+    State as state,
     all_of,
 )
-from .agent_based_api.v0.type_defs import (
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
+from .agent_based_api.v1.type_defs import (
+    StringTable,
+    CheckResult,
+    DiscoveryResult,
 )
 from .utils.f5_bigip import (
     F5_BIGIP,
@@ -29,7 +29,7 @@ from .utils.f5_bigip import (
 Section = Mapping[str, str]
 
 
-def parse_f5_bigip_vcmpguests(string_table: SNMPStringTable) -> Optional[Section]:
+def parse_f5_bigip_vcmpguests(string_table: List[StringTable]) -> Optional[Section]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_vcmpguests([[['guest1', 'Active'], ['guest2', 'Inactive']]])
     {'guest1': 'active', 'guest2': 'inactive'}
@@ -37,16 +37,16 @@ def parse_f5_bigip_vcmpguests(string_table: SNMPStringTable) -> Optional[Section
     return {guest: status.lower() for guest, status in string_table[0]} or None
 
 
-def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryGenerator:
+def discovery_f5_bigip_vcmpguests(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check_f5_bigip_vcmpguests(section: Section) -> CheckGenerator:
+def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
     for guest, status in sorted(section.items()):
         yield Result(state=state.OK, summary="Guest [%s] is %s" % (guest, status))
 
 
-def cluster_check_f5_bigip_vcmpguests(section: Mapping[str, Section]) -> CheckGenerator:
+def cluster_check_f5_bigip_vcmpguests(section: Mapping[str, Section]) -> CheckResult:
     for gueststates in section.values():
         yield from check_f5_bigip_vcmpguests(gueststates)
 
@@ -55,7 +55,7 @@ register.snmp_section(
     name="f5_bigip_vcmpguests",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
     parse_function=parse_f5_bigip_vcmpguests,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.13.4.2.1",
             oids=[

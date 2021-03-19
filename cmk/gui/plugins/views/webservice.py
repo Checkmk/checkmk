@@ -82,8 +82,7 @@ def _show_json(view: "View", rows: Rows) -> None:
                 pass
 
             else:
-                content = "%s" % content
-                content = escaping.strip_tags(content.replace("<br>", "\n"))
+                content = escaping.strip_tags(str(content).replace("<br>", "\n"))
 
             painted_row.append(content)
 
@@ -154,10 +153,11 @@ class CSVRenderer:
                 html.write('"%s"' % self._format_for_csv(content))
 
     def _format_for_csv(self, raw_data):
-        # raw_data can also be int, float
-        content = "%s" % raw_data
-        stripped = escaping.strip_tags(content).replace('\n', '').replace('"', '""')
-        return stripped.encode("utf-8")
+        # raw_data can also be int, float, dict (labels)
+        if isinstance(raw_data, dict):
+            return ', '.join(["%s: %s" % (key, value) for key, value in raw_data.items()])
+
+        return escaping.strip_tags(str(raw_data)).replace('\n', '').replace('"', '""')
 
 
 def _export_csv_export(view: "View", rows: Rows) -> None:

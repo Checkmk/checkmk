@@ -5,7 +5,8 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the number of lock requests in relation to the
- number of batch requests on the MSSQL server.
+ number of batch requests on the MSSQL server. Upper levels for the locks
+ per batch ratio can be configured in Wato.
 
  This check needs the Checkmk mssql.vbs -plugin installed in
  the agent. Please refer to the online documentation
@@ -16,3 +17,7 @@ item:
 
 inventory:
  One service is created for each instance.
+
+cluster:
+ On a cluster the check just cumulates all results for each cluster node.
+ The overall result state then reflects the worst state of all nodes.

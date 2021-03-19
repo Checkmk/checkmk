@@ -1,0 +1,20 @@
+Title: mk_oracle: Fixed failed login with specific credentials
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1597993736
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+With werk #10850 we introduced a fix for possible problems with upper and
+lower case instances in 1.6.0p15. It made a match possible where the process
+is lower case but the specific login variable definition in the configuration
+file is upper case - or vice versa. This fix is incompatible with Bash
+versions that are older than 4.0 and has been enhanced with this werk.
+
+You need to replace the plugin only if you are running Oracle Databases
+on an OS that uses an older version of Bash and you noticed a failed login
+after upgrading to 1.6.0p15. Otherwise there is no need for interaction.

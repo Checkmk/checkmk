@@ -12,6 +12,7 @@ def test_openapi_livestatus_service(
     with_automation_user,
     suppress_automation_calls,
     mock_livestatus,
+    with_host,
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
@@ -43,7 +44,7 @@ def test_openapi_livestatus_service(
 
     live.expect_query([
         'GET services',
-        'Columns: host_name description last_check state state_type acknowledged',
+        'Columns: host_name description',
     ],)
 
     with live:
@@ -58,22 +59,23 @@ def test_openapi_livestatus_service(
 
     live.expect_query([
         'GET services',
-        'Columns: host_name description last_check state state_type acknowledged',
+        'Columns: host_name description',
         'Filter: host_alias ~ heute',
     ],)
 
     with live:
         resp = wsgi_app.call_method(
             'get',
-            base + "/domain-types/service/collections/all?host_alias=heute",
+            base +
+            '/domain-types/service/collections/all?query={"op": "~", "left": "host_alias", "right": "heute"}',
             status=200,
         )
         assert len(resp.json['value']) == 1
 
     live.expect_query([
         'GET services',
-        'Columns: host_name description last_check state state_type acknowledged',
-        'Filter: host_name ~ example.com',
+        'Columns: host_name description',
+        'Filter: host_name = example.com',
     ])
     with live:
         resp = wsgi_app.call_method(

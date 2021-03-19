@@ -18,8 +18,8 @@ import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.i18n import _, _l
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
@@ -37,8 +37,17 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
 from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.utils.urls import makeuri
 
 
 def get_gui_messages(user_id=None):
@@ -81,11 +90,11 @@ def save_gui_messages(messages, user_id=None):
 def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
-            'title': _('Popup Message in the GUI (shows up alert window)'),
+            'title': _('Open window in the user interface'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Send hint to message inbox (bottom of sidebar)'),
+            'title': _('Show hint in the \'User\' menu'),
             'handler': notify_gui_msg,
         },
         'mail': {
@@ -93,34 +102,21 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_mail,
         },
         'dashlet': {
-            'title': _('Send hint to dashlet'),
+            'title': _('Show notification in dashboard element \'User notifications\''),
             'handler': notify_gui_msg,
         },
     }
 
 
-@permission_registry.register
-class NotifyUsersPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionGeneral
-
-    @property
-    def permission_name(self):
-        return "notify"
-
-    @property
-    def title(self):
-        return _("Notify Users")
-
-    @property
-    def description(self):
-        return _("This permissions allows users to send notifications to the users of "
-                 "the monitoring system using the web interface.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="notify",
+        title=_l("Notify Users"),
+        description=_l("This permissions allows users to send notifications to the users of "
+                       "the monitoring system using the web interface."),
+        defaults=["admin"],
+    ))
 
 
 @cmk.gui.pages.register("notify")
@@ -130,11 +126,8 @@ def page_notify():
 
     title = _('Notify users')
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_setup(), title)
-    html.header(title, breadcrumb)
-
-    html.begin_context_buttons()
-    html.context_button(_("Users"), "wato.py?mode=users", "back")
-    html.end_context_buttons()
+    menu = _page_menu(breadcrumb)
+    html.header(title, breadcrumb, menu)
 
     vs_notify = _vs_notify()
 
@@ -149,11 +142,38 @@ def page_notify():
     html.begin_form("notify", method="POST")
     vs_notify.render_input_as_form("_notify", {})
 
-    html.button("save", _("Send notification"))
-
     html.hidden_fields()
     html.end_form()
     html.footer()
+
+
+def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    menu = make_simple_form_page_menu(_("Users"),
+                                      breadcrumb,
+                                      form_name="notify",
+                                      button_name="save",
+                                      save_title=_("Send notification"))
+
+    menu.dropdowns.insert(
+        1,
+        PageMenuDropdown(
+            name="related",
+            title=_("Related"),
+            topics=[
+                PageMenuTopic(
+                    title=_("Setup"),
+                    entries=[
+                        PageMenuEntry(
+                            title=_("Users"),
+                            icon_name="users",
+                            item=make_simple_link("wato.py?mode=users"),
+                        )
+                    ],
+                ),
+            ],
+        ))
+
+    return menu
 
 
 def _vs_notify():
@@ -167,16 +187,16 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
+        ('online', _('All online users')),
     ]
-
-    if config.save_user_access_times:
-        dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
         elements=[
             ('text',
              TextAreaUnicode(title=_('Text'),
                              help=_('Insert the text to be sent to all reciepents.'),
+                             allow_empty=False,
+                             empty_text=_('You need to provide a text.'),
                              cols=50,
                              rows=10)),
             ('dest',
@@ -189,6 +209,7 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
+                 allow_empty=False,
                  choices=[(k, v['title']) for k, v in _notify_methods().items()],
                  default_value=['popup'],
              )),
@@ -209,9 +230,6 @@ def _vs_notify():
 
 
 def _validate_msg(msg, varprefix):
-    if not msg.get('text'):
-        raise MKUserError('text', _('You need to provide a text.'))
-
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
@@ -267,11 +285,11 @@ def _process_notify_message(msg):
     message += "<table>"
     for method in msg['methods']:
         message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                        (_notify_methods()[method]["title"], num_success[method], num_recipients)
+            (_notify_methods()[method]["title"], num_success[method], num_recipients)
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+    message += '<a href="%s">%s</a>' % (makeuri(request, []), _('Back to previous page'))
     html.show_message(HTML(message))
 
     if errors:
@@ -325,7 +343,7 @@ def notify_mail(user_id, msg):
         sender_name = user_id
 
     # Code mostly taken from notify_via_email() from notify.py module
-    subject = _('Check_MK: Notification')
+    subject = _('Checkmk: Notification')
     body = _('''Greetings %s,
 
 %s sent you a notification:

@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-apc_ats_output_default_levels = {"output_voltage_max": (240, 250), "load_perc_max": (85, 95)}
-
 
 def parse_apc_ats_output(info):
     parsed = {}
@@ -23,6 +21,10 @@ def parse_apc_ats_output(info):
             instance = parsed.setdefault(index, {})
             instance[key] = value
     return parsed
+
+
+def discover_apc_ats_output(parsed):
+    yield from ((item, {}) for item in parsed)
 
 
 @get_parsed_item_data
@@ -58,11 +60,17 @@ def check_apc_ats_output(item, params, data):
         )
 
 
+factory_settings["apc_ats_output_default_levels"] = {
+    "output_voltage_max": (240, 250),
+    "load_perc_max": (85, 95),
+}
+
 check_info["apc_ats_output"] = {
-    "check_function": check_apc_ats_output,
     "parse_function": parse_apc_ats_output,
+    "inventory_function": discover_apc_ats_output,
+    "check_function": check_apc_ats_output,
     "group": "apc_ats_output",
-    "inventory_function": discover(default_params="apc_ats_output_default_levels"),
+    "default_levels_variable": "apc_ats_output_default_levels",
     "service_description": "Phase %s output",
     "has_perfdata": True,
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [

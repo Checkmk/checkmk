@@ -4,6 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cmciii import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # In order to stay compatible we have to build the items
 # this complicated way :(
 
@@ -138,12 +159,12 @@ def parse_cmciii(info):
             # neg. scale: "-X" => "/ X"
             # pos. scale: "X"  => "* X"
             # else:            => "* 1"
-            if int(scale) < 0:
-                value = float(value_int) * (-1.0 / float(scale))
-            elif int(scale) > 0:
-                value = float(value_int) * float(scale)
-            else:
-                value = int(value_int)
+            value = int(value_int)
+            if scale:
+                if (int_scale := int(scale)) < 0:
+                    value = float(value_int) * (-1.0 / float(scale))
+                elif int_scale > 0:
+                    value = float(value_int) * float(scale)
 
         if "Power" in container or "Energy" in container:
             if var_unit == "kW" or var_unit == "KWh" or var_unit == "kVA":
@@ -212,7 +233,6 @@ check_info['cmciii'] = {
     "check_function": check_cmciii_state,
     "service_description": "State %s",
     "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.2606.7" in oid(".1.3.6.1.2.1.1.2.0"),
-    "includes": ["cmciii.include"],
     "snmp_info": [
         (
             ".1.3.6.1.4.1.2606.7.4.1.2.1",
@@ -361,33 +381,34 @@ def inventory_cmciii_io(parsed):
 
 
 def check_cmciii_io(item, params, parsed):
-    if item in parsed.get("io", {}):
-        attrs = parsed["io"][item]
-        state_readable = attrs["Status"]
-        relay = attrs.get("Relay")
-        logic = attrs.get("Logic")
-        infotext = "Status: %s" % state_readable
+    if item not in parsed.get("io", {}):
+        return
 
-        if logic is not None:
-            infotext += ", Logic: %s" % attrs["Logic"]
+    attrs = parsed["io"][item]
+    state_readable = attrs["Status"]
 
-        if relay is not None:
-            if state_readable == "OK":
-                state = 0
-            else:
-                state = 2
-            infotext += ", Relay: %s" % relay
+    infotext = "Status: %s" % state_readable
+    for key in ["Logic", "Delay", "Relay"]:
+        if key in attrs:
+            infotext += ", %s: %s" % (key, attrs[key])
 
-        else:  # input relay
-            if state_readable in ["OK", "Off"]:
-                state = 0
-            elif state_readable == "On":
-                state = 1
-            else:
-                state = 2
-            infotext += ", Delay %s" % attrs.get("Delay")
+    if state_readable in ["Open", "Closed"]:
+        # Some door sensors have been mapped to Input instead of Access
+        # by the vendor
+        return {"Open": 1, "Closed": 0}[state_readable], infotext
 
-        return state, infotext
+    if "Relay" in attrs:
+        if state_readable == "OK":
+            return 0, infotext
+        return 2, infotext
+
+    if state_readable in ["OK", "Off"]:
+        return 0, infotext
+
+    if state_readable == "On":
+        return 1, infotext
+
+    return 2, infotext
 
 
 check_info['cmciii.io'] = {
@@ -448,11 +469,17 @@ check_info['cmciii.access'] = {
 
 
 def inventory_cmciii_temp(parsed):
-    for entry in parsed.get("temp", {}):
-        yield entry, {}
+    for entry, content in parsed.get("temp", {}).items():
+        # TODO: Should we not handle the dew points somewhere else?
+        # In any case, the "Setup" entries contain setpoints and
+        # cannot report a temperature to the user.
+        if "Value" in content:
+            yield entry, {}
 
 
 def check_cmciii_temp(item, params, parsed):
+    # Fields from table 8.3.2 Temperature in "Assembly and operating instructions"
+    # for software version V3.07.03.
     if item in parsed.get("temp", {}):
         attrs = parsed["temp"][item]
         state, infotext, perfdata = check_temperature(
@@ -475,7 +502,6 @@ check_info['cmciii.temp'] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"]
 }
 
 #.
@@ -506,7 +532,6 @@ check_info['cmciii.temp_in_out'] = {
     "service_description": "Temperature %s",
     "has_perfdata": True,
     "group": "temperature",
-    "includes": ["temperature.include"]
 }
 
 #.
@@ -586,7 +611,6 @@ check_info['cmciii.humidity'] = {
     "service_description": "%s",
     "has_perfdata": True,
     "group": "humidity",
-    "includes": ["humidity.include"]
 }
 
 #.
@@ -614,5 +638,4 @@ check_info['cmciii.phase'] = {
     "service_description": "Input %s",
     "has_perfdata": True,
     "group": "el_inphase",
-    "includes": ["elphase.include"],
 }

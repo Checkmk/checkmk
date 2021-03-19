@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import (
     DiscoveryResult,
     CheckResult,
@@ -12,6 +13,7 @@ from checktestlib import (
     assertCheckResultsEqual,
     MockHostExtraConf,
 )
+from cmk.base.plugins.agent_based.df_section import parse_df
 
 pytestmark = pytest.mark.checks
 
@@ -381,8 +383,8 @@ info_empty_inodes = [
             {},
         ),
     ])
-def test_df_discovery_with_parse(check_manager, info, expected_result, inventory_df_rules):
-    check = check_manager.get_check("df")
+def test_df_discovery_with_parse(info, expected_result, inventory_df_rules):
+    check = Check('df')
 
     def mocked_host_extra_conf_merged(_hostname, ruleset):
         if ruleset is check.context.get("inventory_df_rules"):
@@ -390,7 +392,7 @@ def test_df_discovery_with_parse(check_manager, info, expected_result, inventory
         raise AssertionError("Unknown/unhandled ruleset used in mock of host_extra_conf")
 
     with MockHostExtraConf(check, mocked_host_extra_conf_merged, "host_extra_conf_merged"):
-        raw_discovery_result = check.run_discovery(check.run_parse(info))
+        raw_discovery_result = check.run_discovery(parse_df(info))
         discovery_result = DiscoveryResult(raw_discovery_result)
 
     expected_result = DiscoveryResult(expected_result)
@@ -530,9 +532,9 @@ df_params = {
             [],
         ),
     ])
-def test_df_check_with_parse(check_manager, item, params, info, expected_result):
-    check = check_manager.get_check("df")
+def test_df_check_with_parse(item, params, info, expected_result):
+    check = Check('df')
 
-    actual = CheckResult(check.run_check(item, params, check.run_parse(info)))
+    actual = CheckResult(check.run_check(item, params, parse_df(info)))
     expected = CheckResult(expected_result)
     assertCheckResultsEqual(actual, expected)

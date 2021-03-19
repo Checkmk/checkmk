@@ -46,6 +46,7 @@ import pytest  # type: ignore[import]
 
 import generictests
 from generictests.regression import WritableDataset
+from testlib import Check  # type: ignore[import]
 from checktestlib import CheckResult
 
 pytestmark = pytest.mark.checks
@@ -163,10 +164,10 @@ class CrashReportList(list):
                 cr_info[3] = 'Exception: %s' % exc
 
 
-def test_crashreport(config_check_info, check_manager, crashdata):
+def test_crashreport(fix_plugin_legacy, crashdata):
     try:
-        generictests.run(config_check_info, check_manager, crashdata)
-        check = check_manager.get_check(crashdata.full_checkname)
+        generictests.run(fix_plugin_legacy.check_info, crashdata)
+        check = Check(crashdata.full_checkname)
         if 'item' in crashdata.vars:
             item = crashdata.vars['item']
             params = crashdata.vars.get('params', {})

@@ -6,7 +6,7 @@ Date: 1591684299
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk enables the monitoring of a HP StoreOnce storage system via the REST API version 4.x and upwards. It is incompatible to the previously used API 3.x.
 Use the software version of your HP StoreOnce appliance to choose the correct WATO rule:

@@ -304,9 +304,9 @@ def _save_data_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
             # we can specify the fsync on a fd, the disk cache may be flushed completely because
             # the disk does not know anything about fds, only about blocks.
             #
-            # For Check_MK 1.4 we can not introduce a good solution for this, because the changes
-            # would affect too many parts of Check_MK with possible new issues. For the moment we
-            # stick with the IO behaviour of previous Check_MK versions.
+            # For Checkmk 1.4 we can not introduce a good solution for this, because the changes
+            # would affect too many parts of Checkmk with possible new issues. For the moment we
+            # stick with the IO behaviour of previous Checkmk versions.
             #
             # In the future we'll find a solution to deal better with OS crash recovery situations.
             # for example like this:
@@ -402,6 +402,14 @@ def aquire_lock(path: Union[Path, str], blocking: bool = True) -> None:
 
     _acquired_locks[str(path)] = fd
     logger.debug("Got lock on %s", path)
+
+
+@contextmanager
+def try_locked(path: Union[Path, str]) -> Iterator[bool]:
+    try:
+        yield try_aquire_lock(path)
+    finally:
+        release_lock(path)
 
 
 def try_aquire_lock(path: Union[Path, str]) -> bool:

@@ -13,10 +13,10 @@ import cmk.utils.store as store
 import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.display_options import display_options
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.globals import html, display_options
+from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
+from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_head,
     wato_html_footer,
@@ -80,7 +80,7 @@ def page_handler() -> None:
     current_mode = html.request.var("mode") or "main"
     mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)
 
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
@@ -93,7 +93,7 @@ def page_handler() -> None:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
 
 
-def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName],
+def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[PermissionName]],
                        mode_class: Type[WatoMode]) -> None:
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
@@ -111,7 +111,6 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     mode = mode_class()
 
     # Do actions (might switch mode)
-    action_message: Optional[str] = None
     if html.is_transaction():
         try:
             config.user.need_permission("wato.edit")
@@ -127,48 +126,28 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
                 raise MKUserError(None, cmk.gui.watolib.read_only.message())
 
             result = mode.action()
-            if isinstance(result, tuple):
-                newmode, action_message = result
-            else:
-                newmode = result
+            if isinstance(result, (tuple, str, bool)):
+                raise MKGeneralException(
+                    f"WatoMode \"{current_mode}\" returns unsupported return value: {result!r}")
 
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
-            # If newmode is False, then we shall immediately abort.
-            # This is e.g. the case, if the page outputted non-HTML
-            # data, such as a tarball (in the export function). We must
-            # be sure not to output *any* further data in that case.
-            if newmode is False:
-                return
+            if config.wato_use_git:
+                do_git_commit()
 
-            # if newmode is not None, then the mode has been changed
-            if newmode is not None:
-                assert not isinstance(newmode, bool)
-                if newmode == "":  # no further information: configuration dialog, etc.
-                    if action_message:
-                        html.show_message(action_message)
-                        wato_html_footer()
-                    return
-                mode_permissions, mode_class = _get_mode_permission_and_class(newmode)
-                current_mode = newmode
-                mode = mode_class()
-                html.request.set_var("mode", newmode)  # will be used by makeuri
-
-                # Check general permissions for the new mode
-                if mode_permissions is not None and not config.user.may("wato.seeall"):
-                    for pname in mode_permissions:
-                        if '.' not in pname:
-                            pname = "wato." + pname
-                        config.user.need_permission(pname)
+            # Handle two cases:
+            # a) Don't render the page content after action
+            #    (a confirm dialog is displayed by the action, or a non-HTML content was sent)
+            # b) Redirect to another page
+            if isinstance(result, FinalizeRequest):
+                raise result
 
         except MKUserError as e:
-            action_message = "%s" % e
-            html.add_user_error(e.varname, action_message)
+            html.add_user_error(e.varname, str(e))
 
         except MKAuthException as e:
             reason = e.args[0]
-            action_message = reason
             html.add_user_error(None, reason)
 
     breadcrumb = make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
@@ -179,37 +158,29 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
                    show_body_start=display_options.enabled(display_options.H),
                    show_top_heading=display_options.enabled(display_options.T))
 
-    # As long as we migrate the buttons to the page menu keep the buttons as fallback
-    if display_options.enabled(display_options.B):
-        # Show contexts buttons
-        html.begin_context_buttons()
-        mode.buttons()
-        html.end_context_buttons()
-
     if not html.is_transaction() or (cmk.gui.watolib.read_only.is_enabled() and
                                      cmk.gui.watolib.read_only.may_override()):
         _show_read_only_warning()
 
-    # Show outcome of action
+    # Show outcome of failed action on this page
     if html.has_user_errors():
         html.show_user_errors()
-    elif action_message:
-        html.show_message(action_message)
+
+    # Show outcome of previous page (that redirected to this one)
+    for message in get_flashed_messages():
+        html.show_message(message)
 
     # Show content
     mode.handle_page()
 
     if is_sidebar_reload_needed():
-        html.reload_sidebar()
+        html.reload_whole_page()
 
-    if config.wato_use_git and html.is_transaction():
-        do_git_commit()
-
-    wato_html_footer(show_footer=display_options.enabled(display_options.Z),
-                     show_body_end=display_options.enabled(display_options.H))
+    wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_permission_and_class(mode_name: str) -> Tuple[List[PermissionName], Type[WatoMode]]:
+def _get_mode_permission_and_class(
+        mode_name: str) -> Tuple[Optional[List[PermissionName]], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 

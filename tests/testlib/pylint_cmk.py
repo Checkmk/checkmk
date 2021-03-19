@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-# Library for pylint checks of Check_MK
+# Library for pylint checks of Checkmk
 
 import os
 import getpass
@@ -110,7 +110,7 @@ def is_python_file(path, shebang_name=None):
     return False
 
 
-# Check_MK currently uses a packed version of it's files to
+# Checkmk currently uses a packed version of it's files to
 # run the pylint tests because it's not well structured in
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the

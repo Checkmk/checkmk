@@ -16,12 +16,12 @@
 #include <vector>
 
 #include "Filter.h"
+#include "Logger.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregation;
 class Aggregator;
-class Logger;
 class RowRenderer;
 
 template <typename T>
@@ -36,10 +36,19 @@ enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 
 using AggregationFactory = std::function<std::unique_ptr<Aggregation>()>;
 
+class ColumnOffsets {
+public:
+    using shifter = std::function<const void *(Row)>;
+    [[nodiscard]] ColumnOffsets add(const shifter &shifter) const;
+    [[nodiscard]] const void *shiftPointer(Row row) const;
+
+private:
+    std::vector<shifter> shifters_;
+};
+
 class Column {
 public:
-    using Offsets = std::vector<int>;
-    Column(std::string name, std::string description, Offsets);
+    Column(std::string name, std::string description, ColumnOffsets offsets);
     virtual ~Column() = default;
 
     [[nodiscard]] std::string name() const { return _name; }
@@ -62,13 +71,13 @@ public:
     [[nodiscard]] virtual std::unique_ptr<Aggregator> createAggregator(
         AggregationFactory factory) const = 0;
 
-    [[nodiscard]] Logger *logger() const { return _logger; }
+    [[nodiscard]] Logger *logger() const { return &_logger; }
 
 private:
-    Logger *const _logger;
+    mutable ContextLogger _logger;
     std::string _name;
     std::string _description;
-    Offsets _offsets;
+    ColumnOffsets _offsets;
 
     [[nodiscard]] const void *shiftPointer(Row row) const;
 };

@@ -7,11 +7,9 @@
 import os
 import pytest  # type: ignore[import]
 
-pytestmark = pytest.mark.checks
+from cmk.base.check_legacy_includes.cisco_sensor_item import *
 
-exec(
-    open(os.path.join(os.path.dirname(__file__),
-                      '../../../checks/cisco_sensor_item.include')).read())
+pytestmark = pytest.mark.checks
 
 FALLBACK = '999'
 

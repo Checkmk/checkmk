@@ -28,5 +28,5 @@ rulespec_registry.register(
         check_group_name="antivir_update_age",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_antivir_update_age,
-        title=lambda: _("Age of last AntiVirus update"),
+        title=lambda: _("AntiVirus last update age"),
     ))

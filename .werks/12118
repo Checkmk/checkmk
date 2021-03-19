@@ -1,0 +1,15 @@
+Title: Fix docker inventory: docker_node_info could not handle docker swarm
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1613463637
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The automatic api translation could not handle the data if docker swarm was
+activated. The error message was:
+
+WARNING: docker_node_info: failed: Unable to convert legacy results.
+Please migrate plugin to new API

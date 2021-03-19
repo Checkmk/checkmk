@@ -55,9 +55,6 @@ class Core;
 class Object;
 #else
 #include <mutex>
-
-#include "DowntimesOrComments.h"
-#include "nagios.h"
 #endif
 
 class Store {
@@ -72,7 +69,7 @@ public:
     void buildStatehistCache();
     void flushStatehistCache();
     void tryFinishStatehistCache();
-    bool addObjectHistcache(Object *object);
+    void addObjectHistcache(Object *object);
     void addAlertToStatehistCache(const Object &object, int state,
                                   const std::string &output,
                                   const std::string &long_output);
@@ -81,9 +78,6 @@ public:
 #else
     explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
@@ -101,14 +95,6 @@ private:
     MonitoringCore *_mc;
 #ifdef CMC
     Core *_core;
-#endif
-#ifndef CMC
-    // TODO(sp) These fields should better be somewhere else, e.g. module.cc
-public:
-    DowntimesOrComments _downtimes;
-    DowntimesOrComments _comments;
-
-private:
 #endif
     LogCache _log_cache;
 

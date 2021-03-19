@@ -21,5 +21,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         item_spec=lambda: TextAscii(title=_("Node name"), allow_empty=False),
         parameter_valuespec=fortigate_sessions_element,
-        title=lambda: _("Fortigate Active Sessions"),
+        title=lambda: _("Fortigate Cluster Active Sessions"),
     ))

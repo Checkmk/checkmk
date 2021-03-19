@@ -33,5 +33,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("MTree name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_emc_datadomain_mtree,
-        title=lambda: _("State of EMC Data Domain MTree"),
+        title=lambda: _("EMC Data Domain MTree state"),
     ))

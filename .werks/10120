@@ -6,7 +6,7 @@ Date: 1571039419
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Under various circumstances, diagnostic output from automation calls (like
 warnings etc.) got mangled with the result of the automation call itself.

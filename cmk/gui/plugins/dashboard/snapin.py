@@ -24,11 +24,11 @@ class SnapinDashlet(IFrameDashlet):
 
     @classmethod
     def title(cls):
-        return _("Sidebar Snapin")
+        return _("Sidebar element")
 
     @classmethod
     def description(cls):
-        return _("Displays a sidebar snapin.")
+        return _("Allows you to use a sidebar element in the dashboard.")
 
     @classmethod
     def sort_index(cls):
@@ -47,8 +47,8 @@ class SnapinDashlet(IFrameDashlet):
         return [
             ("snapin",
              DropdownChoice(
-                 title=_("Snapin"),
-                 help=_("Choose the snapin you would like to show."),
+                 title=_("Sidebar element"),
+                 help=_("Choose the sidebar element you would like to show."),
                  choices=cls._snapin_choices,
              )),
         ]
@@ -59,7 +59,7 @@ class SnapinDashlet(IFrameDashlet):
         return sorted([(k, v.title()) for k, v in sidebar.snapin_registry.items()],
                       key=lambda x: x[1])
 
-    def display_title(self):
+    def default_display_title(self) -> str:
         import cmk.gui.sidebar as sidebar  # pylint: disable=import-outside-toplevel
         return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
 
@@ -68,12 +68,12 @@ class SnapinDashlet(IFrameDashlet):
         dashlet = self._dashlet_spec
         snapin = sidebar.snapin_registry.get(self._dashlet_spec['snapin'])
         if not snapin:
-            raise MKUserError(None, _('The configured snapin does not exist.'))
+            raise MKUserError(None, _('The configured element does not exist.'))
         snapin_instance = snapin()
 
         html.set_browser_reload(self.refresh_interval())
-        html.html_head(_('Snapin Dashlet'))
-        html.open_body(class_="side")
+        html.html_head(_('Sidebar element'))
+        html.open_body(class_="side", data_theme=html.get_theme())
         html.open_div(id_="check_mk_sidebar")
         html.open_div(id_="side_content")
         html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")

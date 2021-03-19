@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import bluecat_dns
@@ -15,12 +15,12 @@ from cmk.base.plugins.agent_based import bluecat_dns
 def check_bluecat_dns_ok():
     assert list(
         bluecat_dns.check_bluecat_dns(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'oper_state': 1,
             },
@@ -35,12 +35,12 @@ def check_bluecat_dns_ok():
 def check_bluecat_dns_crit():
     assert list(
         bluecat_dns.check_bluecat_dns(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [5],
                 },
-            },),
+            },
             {
                 'oper_state': 5,
             },
@@ -55,12 +55,12 @@ def check_bluecat_dns_crit():
 def test_cluster_check_bluecat_all_ok():
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -72,11 +72,11 @@ def test_cluster_check_bluecat_all_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DNS is running normally',
+                notice='[node1]: DNS is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DNS is running normally',
+                notice='[node2]: DNS is running normally',
             ),
             Result(
                 state=state.OK,
@@ -88,12 +88,12 @@ def test_cluster_check_bluecat_all_ok():
 def test_cluster_check_bluecat_one_ok():
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [4],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -105,11 +105,11 @@ def test_cluster_check_bluecat_one_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DNS is running normally',
+                notice='[node1]: DNS is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DNS is currently stopping(!)',
+                notice='[node2]: DNS is currently stopping(!)',
             ),
             Result(
                 state=state.OK,
@@ -121,12 +121,12 @@ def test_cluster_check_bluecat_one_ok():
 def test_cluster_check_bluecat_none_ok():
     assert list(
         bluecat_dns.cluster_check_bluecat_dns(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [1],
                     "critical": [2, 3],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -138,11 +138,11 @@ def test_cluster_check_bluecat_none_ok():
         )) == [
             Result(
                 state=state.WARN,
-                details='[node1]: DNS is running normally(!)',
+                summary='[node1]: DNS is running normally',
             ),
             Result(
                 state=state.CRIT,
-                details='[node2]: DNS is currently starting(!!)',
+                summary='[node2]: DNS is currently starting',
             ),
             Result(
                 state=state.CRIT,

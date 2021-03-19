@@ -50,7 +50,7 @@ import livestatus
 from .actions import do_notify, do_event_action, do_event_actions, event_has_opened
 from .crash_reporting import ECCrashReport, CrashReportStore
 from .history import ActiveHistoryPeriod, History, scrub_string, quote_tab, get_logfile
-from .query import MKClientError, Query, QueryGET
+from .query import MKClientError, Query, QueryGET, filter_operator_in
 from .rule_packs import load_config as load_config_using
 from .settings import FileDescriptor, PortNumber, Settings, settings as create_settings
 from .snmp import SNMPTrapEngine
@@ -1204,7 +1204,14 @@ class EventServer(ECServerThread):
         # If there is already an incidence about this absent message, we can merge and
         # not create a new event. There is a setting for this.
         merge_event = None
+
+        reset_ack = True
         merge = rule["expect"].get("merge", "open")
+
+        # Changed "acked" to ("acked", bool) with 1.6.0p20
+        if isinstance(merge, tuple):
+            merge, reset_ack = merge
+
         if merge != "never":
             for event in self._event_status.events():
                 if event["rule_id"] == rule["id"] and \
@@ -1216,7 +1223,13 @@ class EventServer(ECServerThread):
         if merge_event:
             merge_event["last"] = now
             merge_event["count"] += 1
-            merge_event["phase"] = "open"
+
+            # This was resetting the state back to "open", even in case an
+            # "ack" event is being merged. This was made configurable in
+            # 1.6.0p20 because of SUP-4803.
+            if reset_ack:
+                merge_event["phase"] = "open"
+
             merge_event["time"] = now
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed
@@ -1842,7 +1855,7 @@ class EventServer(ECServerThread):
 
     def _get_rule_event_limit(self, rule_id):
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
-        rule_limit = self._rule_by_id[rule_id].get("event_limit")
+        rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
         if rule_limit:
             return rule_limit["limit"], rule_limit["action"]
 
@@ -2087,7 +2100,7 @@ class EventCreator:
 
             # The event simulator ships the simulated original IP address in the
             # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
-            if "|" in event["host"]:
+            if isinstance(event["host"], str) and "|" in event["host"]:
                 event["host"], event["ipaddress"] = event["host"].split("|", 1)
 
         except Exception as e:
@@ -2600,7 +2613,7 @@ class StatusTableEvents(StatusTable):
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and event["host"] not in query.only_host:
+            if query.only_host and not filter_operator_in(event["host"], query.only_host):
                 continue
 
             row = []

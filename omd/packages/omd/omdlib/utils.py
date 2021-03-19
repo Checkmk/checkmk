@@ -61,3 +61,7 @@ def delete_user_file(user_path: str) -> None:
 def delete_directory_contents(d: str) -> None:
     for f in os.listdir(d):
         delete_user_file(d + '/' + f)
+
+
+def omd_base_path() -> str:
+    return "/"

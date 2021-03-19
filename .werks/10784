@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Long named windows tasks are written over many lines in the agent
 output. The check-pluging is now able to join these lines to use the entire

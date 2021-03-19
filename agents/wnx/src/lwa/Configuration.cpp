@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "stdafx.h"
 
@@ -221,7 +222,7 @@ void Configuration::outputConfigurables(
                         else
                             out += "- include = " + entry.second + "\n";
                         cma::cfg::ReplaceInString(
-                            out, wtools::ConvertToUTF8(cma::cfg::GetUserDir()),
+                            out, wtools::ToUtf8(cma::cfg::GetUserDir()),
                             cma::cfg::vars::kProgramDataFolder);
                         mrpe_out += out;
                     }

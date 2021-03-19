@@ -64,21 +64,72 @@ def _check_for_invalid_result(metric_details, promql_expression):
     return status, "PromQL expression (%s) %s" % (promql_expression, infotext), []
 
 
+def _metric_levels(
+    metric_label,
+    datasource_levels,
+    service_levels,
+):
+    """Retrieve the relevant check levels for the relevant service metric value
+
+    Levels for Prometheus custom can be defined at two WATO places:
+        1. In Datasource Programs directly next to the custom service definition
+        2. In a separate WATO rule
+
+    The WATO rule always has priority over the Datasource rule.
+
+    Args:
+        metric_label:
+            The current metric label of the current custom Prometheus service
+
+        datasource_levels:
+            The datasource levels for the current service metric value
+
+        service_levels:
+            The separate defined WATO levels for the current service metric value
+
+    Returns:
+        The matching levels in Checkmk format
+
+    """
+    missing_levels = (None, None)
+    if service_levels:
+        for metric_entry in service_levels:
+            if metric_entry['metric_label'] == metric_label:
+                metric_levels = metric_entry.get("levels", {})
+                return (*metric_levels.get("upper_levels", missing_levels),
+                        *metric_levels.get("lower_levels", missing_levels))
+
+    if datasource_levels:
+        return (*datasource_levels.get('upper_levels', missing_levels),
+                *datasource_levels.get("lower_levels", missing_levels))
+
+
 @get_parsed_item_data
-def check_prometheus_custom(_item, _params, data):
+def check_prometheus_custom(item, params, data):
     for metric_details in data["service_metrics"]:
         promql_expression = metric_details["promql_query"]
+        metric_label = metric_details['label']
+
         metric_name = metric_details.get("name")
+        if metric_name == "null":
+            metric_name = None
 
         invalid_result = _check_for_invalid_result(metric_details, promql_expression)
         if invalid_result:
             yield invalid_result
             continue
 
-        yield check_levels(float(metric_details["value"]),
-                           metric_name,
-                           None,
-                           infoname=metric_details["label"])
+        levels = _metric_levels(
+            metric_label,
+            metric_details.get("levels"),
+            params.get('metric_list'),
+        )
+        yield check_levels(
+            float(metric_details["value"]),
+            metric_name,
+            levels,
+            infoname=metric_label,
+        )
 
 
 check_info["prometheus_custom"] = {
@@ -87,4 +138,5 @@ check_info["prometheus_custom"] = {
     'inventory_function': discover(),
     'service_description': '%s',
     'has_perfdata': True,
+    'group': 'prometheus_custom',
 }

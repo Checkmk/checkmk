@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cee
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1567416414
 
 The agent bakery rule "JMX monitoring of Java JVMs using Jolokia" created a cfg file with missing comma.

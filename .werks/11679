@@ -1,0 +1,14 @@
+Title: Wrong results of Check_MK Discovery service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606846469
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i2
+
+In Checkmk versions 2.0.0i1 and 2.0.0b1 the core config was missing some discovery rules.
+This resulted in some wrong rusults of the "Check_MK Discovery" service (in particular one 'df'
+service was wronlgy reported as vanished).

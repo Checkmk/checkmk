@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
+from testlib import Check  # type: ignore[import]
 
 import pytest  # type: ignore[import]
 
@@ -95,12 +96,12 @@ def splitter(text):
                                  },
                              ])),
                          ids=["win7", "win2012", "win2008", "win10"])
-def test_parse_win_license(check_manager, capture, result):
-    check = check_manager.get_check("win_license")
+def test_parse_win_license(capture, result):
+    check = Check("win_license")
     assert result == check.run_parse(splitter(capture))
 
 
-check_ref = namedtuple('result', ['parameters', 'check_output'])
+check_ref = namedtuple('check_ref', ['parameters', 'check_output'])
 
 
 @pytest.mark.parametrize(
@@ -154,8 +155,8 @@ check_ref = namedtuple('result', ['parameters', 'check_output'])
                                    (0, 'License will expire in 176 d')])),
         ])),
     ids=[str(x) for x in range(6)])
-def test_check_win_license(check_manager, capture, result):
-    check = check_manager.get_check("win_license")
+def test_check_win_license(capture, result):
+    check = Check("win_license")
     output = check.run_check(None, result.parameters or check.default_parameters(),
                              check.run_parse(splitter(capture)))
 

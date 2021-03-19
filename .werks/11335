@@ -6,7 +6,7 @@ Date: 1596180412
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This change introduces the build check for the Prometheus agent. The check
 lists relevant information regarding the Prometheus server itself including

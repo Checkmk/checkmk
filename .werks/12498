@@ -1,0 +1,14 @@
+Title: Agent AWS: Secrets from password store not working
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1616066304
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In Checkmk versions 1.6.0p20 to 1.6.0p22 and 2.0.0i1 to
+2.0.0p1 secrets from the password store have not been
+working for the special agent AWS.

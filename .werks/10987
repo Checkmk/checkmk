@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The state of the HW/SW Inventory service can be determined by
 {{State when inventory fails}} in the ruleset {{Do hardware/software Inventory}}.

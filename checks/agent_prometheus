@@ -12,7 +12,7 @@ import cmk.base.config
 def agent_prometheus_arguments(params, hostname, ipaddress):
     prometheus_params = copy.copy(params)
     prometheus_params.update({"host_address": ipaddress, "host_name": hostname})
-    return cmk.base.config.SpecialAgentConfiguration("", repr(prometheus_params))
+    return cmk.base.config.SpecialAgentConfiguration([], repr(prometheus_params))
 
 
 special_agent_info['prometheus'] = agent_prometheus_arguments

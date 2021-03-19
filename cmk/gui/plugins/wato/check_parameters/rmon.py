@@ -20,5 +20,5 @@ rulespec_registry.register(
             "packet sizes transferred over the port. Note: currently, this additional RMON check "
             "does not honor the inventory settings for switch ports."),
         name="rmon_discovery",
-        title=lambda: _("Monitor RMON statistics"),
+        title=lambda: _("RMON statistics"),
     ))

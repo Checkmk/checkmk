@@ -6,6 +6,7 @@
 
 import json
 
+from cmk.gui.plugins.sidebar import snapin_width
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 import cmk.gui.sites as sites
@@ -32,8 +33,8 @@ class Speedometer(SidebarSnapin):
 
     def show(self):
         html.open_div(class_="speedometer")
-        html.img(html.theme_url("images/speedometer.png"), id_="speedometerbg")
-        html.canvas('', width="228", height="136", id_="speedometer")
+        html.img(html.theme_url("images/speedometer.svg"), id_="speedometerbg")
+        html.canvas('', width=str(snapin_width), height="146", id_="speedometer")
         html.close_div()
 
         html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
@@ -71,7 +72,7 @@ class Speedometer(SidebarSnapin):
             # That way we save CPU resources since the computation of the
             # scheduled checks rate needs to loop over all hosts and services.
             if last_program_start != program_start:
-                # These days, we configure the correct check interval for Check_MK checks.
+                # These days, we configure the correct check interval for Checkmk checks.
                 # We do this correctly for active and for passive ones. So we can simply
                 # use the check_interval of all services. Hosts checks are ignored.
                 #

@@ -5,7 +5,56 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import re
 import uuid
+
+import pytest
+
+from cmk.gui.plugins.openapi.fields import FolderField, FOLDER_PATTERN
+from cmk.gui.plugins.openapi.utils import BaseSchema
+
+
+@pytest.mark.parametrize(
+    "given, expected",
+    [
+        ('%%%%', False),
+        ('root', False),
+        ('/', True),
+        ('/foo', True),
+        ('/foo/bar', True),
+        ('//', False),
+        ('///', False),
+        ('\\', True),
+        ('\\foo', True),
+        ('\\foo\\bar', True),
+        ('\\\\', False),
+        ('\\\\\\', False),
+        ('~', True),
+        ('~foo', True),
+        ('~foo~bar', True),
+        ('~~', False),
+        ('~~~', False),
+        # This really should be false, but it is tricky to implement. Skipped for now.
+        # ('/foo~bar\\baz', False),
+        ('0123456789ABCDEF0123456789ABCDEF', True),
+        ('0123456789ABCDEF0123456789ABCDEFG', False),
+        ('0123456789abcdef0123456789abcdef', True),
+        ('0123456789abcdef0123456789abcdefg', False),
+    ])
+def test_folder_regexp(given, expected):
+    regexp = re.compile(f"(?:^{FOLDER_PATTERN})$")
+    match = regexp.findall(given)
+    assert bool(match) == expected, match
+
+
+def test_folder_schema(register_builtin_html):
+    class FolderSchema(BaseSchema):
+        folder = FolderField(required=True)
+
+    schema = FolderSchema()
+    assert schema.load({'folder': '/'})['folder']
+    assert schema.load({'folder': '\\'})['folder']
+    assert schema.load({'folder': '~'})['folder']
 
 
 def test_openapi_folder_validation(wsgi_app, with_automation_user):
@@ -24,8 +73,7 @@ def test_openapi_folder_validation(wsgi_app, with_automation_user):
     wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params=
-        '{"name": "new_folder", "title": "foo", "parent": "root", "attributes": {"foo": "bar"}}',
+        params='{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"foo": "bar"}}',
         status=400,
         content_type='application/json',
     )
@@ -42,23 +90,40 @@ def test_openapi_folders(wsgi_app, with_automation_user):
     )
     assert resp.json['value'] == []
 
-    resp = wsgi_app.call_method(
+    other_folder = wsgi_app.call_method(
         'post',
         "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "root"}',
+        params='{"name": "other_folder", "title": "bar", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = new_folder = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "foo", "parent": "~"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
+        params=r'{"name": "sub_folder", "title": "foo", "parent": "~new_folder"}',
         status=200,
         content_type='application/json',
     )
 
     base = '/NO_SITE/check_mk/api/v0'
 
-    # First test without the proper ETag, fails with 412 (precondition failed)
+    # First test without an ETag, fails with 428 (precondition required)
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,
-                         status=400,
+                         status=428,
                          params='{"title": "foobar"}',
                          content_type='application/json')
+    # First test without the proper ETag, fails with 412 (precondition failed)
     wsgi_app.follow_link(resp,
                          '.../update',
                          base=base,
@@ -83,15 +148,13 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                                 params='{"title": "foobar"}',
                                 content_type='application/json')
 
-    # Invoke directly for now. Ideally this should be a 2-stage step:
-    #   1. fetch the resource description
-    #   2. send the argument as in the specification
+    # Move to the same source should give a 400
     wsgi_app.follow_link(resp,
                          '.../invoke;action="move"',
                          base=base,
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
-                         params=json.dumps({"destination": 'root'}),
+                         params=json.dumps({"destination": '~'}),
                          content_type='application/json')
 
     # Check that unknown folders also give a 400
@@ -103,12 +166,38 @@ def test_openapi_folders(wsgi_app, with_automation_user):
                          params=json.dumps({"destination": 'asdf'}),
                          content_type='application/json')
 
+    # Check that moving onto itself gives a 400
+    wsgi_app.follow_link(other_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': other_folder.headers['ETag']},
+                         params=json.dumps({"destination": '~other_folder'}),
+                         content_type='application/json')
+
+    # Check that moving into it's own subfolder is not possible.
+    wsgi_app.follow_link(new_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=400,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": '/new_folder/sub_folder'}),
+                         content_type='application/json')
+
+    wsgi_app.follow_link(new_folder,
+                         '.../invoke;action="move"',
+                         base=base,
+                         status=200,
+                         headers={'If-Match': resp.headers['ETag']},
+                         params=json.dumps({"destination": '\\other_folder'}),
+                         content_type='application/json')
+
     # Delete all folders.
     coll = wsgi_app.get("/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
                         status=200)
     for entry in coll.json['value']:
         # Fetch the new E-Tag.
-        resp = wsgi_app.get("/NO_SITE/check_mk/api/v0" + entry['href'], status=200)
+        resp = wsgi_app.get(entry['href'], status=200)
         # With the right ETag, the operation shall succeed
         wsgi_app.follow_link(resp,
                              '.../delete',
@@ -120,50 +209,6 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 def test_openapi_missing_folder(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder_config/asdf" + uuid.uuid4().hex,
-                 status=404)
-
-
-def test_openapi_bulk_folder(wsgi_app, with_automation_user):
-    username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-
-    resp = wsgi_app.call_method(
-        'get',
-        "/NO_SITE/check_mk/api/v0/domain-types/folder_config/collections/all",
-        status=200,
-    )
-    assert resp.json['value'] == []
-
-    base = '/NO_SITE/check_mk/api/v0'
-
-    resp = wsgi_app.call_method(
-        'post',
-        base + "/domain-types/folder_config/actions/bulk-create/invoke",
-        params='{"entries": [{"name": "new_folder", "title": "foo", "parent": "root"}, \
-                {"name": "another_folder", "title": "fio", "parent": "root"}]}',
-        status=200,
-        content_type='application/json',
-    )
-    assert len(resp.json['value']) == 2
-
-    folder_ids = [folder_info["href"].split("/")[-1] for folder_info in resp.json["value"]]
-    _resp = wsgi_app.call_method(
-        'put',
-        base + "/domain-types/folder_config/actions/bulk-update/invoke",
-        params=json.dumps({
-            "entries": [{
-                "folder": folder_ids[0],
-                "title": "foobar",
-            }],
-        }),
-        status=200,
-        content_type='application/json',
-    )
-
-    resp = wsgi_app.call_method(
-        'get',
-        base + f"/objects/folder_config/{folder_ids[0]}",
-        status=200,
-    )
-    assert resp.json['title'] == "foobar"
+    resp = wsgi_app.get("/NO_SITE/check_mk/api/v0/objects/folder_config/asdf" + uuid.uuid4().hex,
+                        status=404)
+    assert 'title' in resp.json

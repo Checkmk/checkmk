@@ -7,7 +7,7 @@
 from typing import Dict, Tuple, Any
 import cmk.gui.bi as bi
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 
 from cmk.gui.plugins.sidebar import (
@@ -15,6 +15,8 @@ from cmk.gui.plugins.sidebar import (
     snapin_registry,
     bulletlink,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @snapin_registry.register
@@ -25,7 +27,7 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups")
+        return _("BI aggregation groups")
 
     @classmethod
     def description(cls) -> str:
@@ -46,7 +48,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups Tree")
+        return _("BI aggregation groups tree")
 
     @classmethod
     def description(cls) -> str:
@@ -69,19 +71,27 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     def _render_tree(self, tree):
         for group, attrs in tree.items():
-            fetch_url = html.makeuri_contextless([
-                ("view_name", "aggr_all"),
-                ("aggr_group_tree", "/".join(attrs["__path__"])),
-            ], "view.py")
+            fetch_url = makeuri_contextless(
+                request,
+                [
+                    ("view_name", "aggr_all"),
+                    ("aggr_group_tree", "/".join(attrs["__path__"])),
+                ],
+                filename="view.py",
+            )
 
             if attrs.get('__children__'):
                 html.begin_foldable_container(
-                    "bi_aggregation_group_trees", group, False,
+                    "bi_aggregation_group_trees",
+                    group,
+                    False,
                     HTML(html.render_a(
                         group,
                         href=fetch_url,
                         target="main",
-                    )))
+                    )),
+                    icon="foldable_sidebar",
+                )
                 self._render_tree(attrs['__children__'])
                 html.end_foldable_container()
             else:

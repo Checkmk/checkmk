@@ -32,7 +32,13 @@ std::string unsafe_toupper(const std::string &str) {
 
 bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
+           input.compare(0, test.size(), test) == 0;
+}
+
+bool ends_with(const std::string &input, const std::string &test) {
+    return input.size() >= test.size() &&
+           input.compare(input.size() - test.size(), std::string::npos, test) ==
+               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
@@ -43,6 +49,25 @@ std::vector<std::string> split(const std::string &str, char delimiter) {
         result.push_back(field);
     }
     return result;
+}
+
+// Due to legacy reasons, we allow spaces as a separator between the parts of a
+// composite key. To be able to use spaces in the parts of the keys themselves,
+// we allow a semicolon, too, and look for that first.
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key) {
+    auto semicolon = composite_key.find(';');
+    return semicolon == std::string::npos
+               ? mk::nextField(composite_key)
+               : make_tuple(mk::rstrip(composite_key.substr(0, semicolon)),
+                            mk::rstrip(composite_key.substr(semicolon + 1)));
+}
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key) {
+    const auto &[part1, rest] = splitCompositeKey2(composite_key);
+    const auto &[part2, part3] = splitCompositeKey2(rest);
+    return {part1, part2, part3};
 }
 
 std::string join(const std::vector<std::string> &values,
@@ -67,22 +92,6 @@ std::string lstrip(const std::string &str, const std::string &chars) {
 std::string rstrip(const std::string &str, const std::string &chars) {
     auto pos = str.find_last_not_of(chars);
     return pos == std::string::npos ? "" : str.substr(0, pos + 1);
-}
-
-// TODO (sk): unit tests
-std::string_view rstrip(std::string_view str, std::string_view chars) {
-    auto pos = str.find_last_not_of(chars);
-    return (pos == std::string_view::npos)
-               ? std::string_view{str.data(), 0}         // empty
-               : std::string_view{str.data(), pos + 1};  // with data
-}
-
-// TODO (sk): unit tests
-std::string_view lstrip(std::string_view str, std::string_view chars) {
-    auto pos = str.find_first_not_of(chars);
-    return (pos == std::string_view::npos)
-               ? std::string_view{str.data(), 0}
-               : std::string_view{str.data() + pos, str.size() - pos};
 }
 
 std::string strip(const std::string &str, const std::string &chars) {

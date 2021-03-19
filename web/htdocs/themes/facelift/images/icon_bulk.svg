@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 246 232" style="enable-background:new 0 0 246 232;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FF9901;}
+	.st1{fill:#FFC473;}
+	.st2{fill:#FF8900;}
+	.st3{fill:#E67500;}
+	.st4{fill:#FFB74F;}
+	.st5{fill:#FFDBA9;}
+	.st6{fill:#57555C;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-284.000000, -890.000000)">
+		<g id="bulk" transform="translate(284.000000, 890.000000)">
+			<path id="Path" class="st0" d="M245.8,53.1l-5.8,2L3,54.5l-3-1.5L29.7,1.9c0.5-0.9,1.4-1.4,2.4-1.4h182.7c1,0,2,0.6,2.5,1.5
+				L245.8,53.1z"/>
+			<path id="Path_1_" class="st1" d="M242.9,231.9H2.8c-1.6,0-2.8-1.3-2.8-2.8v-176h245.8v176C245.8,230.6,244.5,231.9,242.9,231.9z
+				"/>
+			<path id="Path_2_" class="st2" d="M214.8,0.5h-34.4l29.3,52.6h36.1L217.3,1.9C216.8,1,215.8,0.5,214.8,0.5z"/>
+			<polygon id="Path_3_" class="st3" points="147.1,53.1 98.7,53.1 104.7,0.5 141.3,0.5 			"/>
+			<path id="Path_4_" class="st4" d="M143.5,101.5h-41.2c-2,0-3.6-1.6-3.6-3.6V53.1h48.4v44.8C147.1,99.9,145.5,101.5,143.5,101.5z"
+				/>
+			<path id="Path_5_" class="st5" d="M74,207.6H26.4c-1.7,0-3-1.4-3-3v-41c0-1.7,1.4-3,3-3H74c1.7,0,3,1.4,3,3v41
+				C77,206.2,75.6,207.6,74,207.6z"/>
+			<g id="Group" transform="translate(19.200000, 72.000000)">
+				<path id="Path_6_" class="st3" d="M54.7,7.9H4.2C2,7.9,0.3,6.2,0.3,4.1S2,0.2,4.2,0.2h50.5c2.1,0,3.9,1.7,3.9,3.9
+					C58.5,6.2,56.8,7.9,54.7,7.9z"/>
+				<path id="Path_7_" class="st3" d="M37.8,24.6H4.2c-2.1,0-3.9-1.7-3.9-3.9s1.7-3.9,3.9-3.9h33.6c2.1,0,3.9,1.7,3.9,3.9
+					C41.7,22.8,39.9,24.6,37.8,24.6z"/>
+			</g>
+			<path id="Path_8_" class="st6" d="M223.9,171.5l-20.8-20.8c-1.3-1.3-3.4-1.3-4.6,0l-20.8,20.8c-1.4,1.4-0.4,3.7,1.5,3.7h10.4
+				c1,0,1.9,0.8,1.9,1.9V205c0,1.4,1.2,2.6,2.6,2.6h13.4c1.4,0,2.6-1.2,2.6-2.6v-27.9c0-1,0.8-1.9,1.9-1.9h10.4
+				C224.3,175.2,225.3,172.9,223.9,171.5z"/>
+		</g>
+	</g>
+</g>
+</svg>

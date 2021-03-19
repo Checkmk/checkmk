@@ -16,10 +16,6 @@
 
 namespace fs = std::filesystem;
 
-namespace {
-void touch(fs::path&& p) { std::ofstream{p}; };
-}  // namespace
-
 bool operator<(const Metric::MangledName& x, const Metric::MangledName& y) {
     return x.string() < y.string();
 }
@@ -45,7 +41,7 @@ public:
         fs::create_directories(basepath);
         // Create the metrics we use for the test.
         std::for_each(std::begin(metrics), std::end(metrics),
-                      [&](auto&& m) { touch(filename(desc, m)); });
+                      [&](auto&& m) { std::ofstream{filename(desc, m)}; });
         // Add non-matching metrics to the directory.
         std::for_each(
             std::begin(other_m), std::end(other_m),

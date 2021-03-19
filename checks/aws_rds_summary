@@ -4,6 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
+
 
 def parse_aws_rds_summary(info):
     try:
@@ -42,7 +49,6 @@ check_info['aws_rds_summary'] = {
     'inventory_function': discover_single,
     'check_function': check_aws_rds_summary,
     'service_description': 'AWS/RDS Summary',
-    'includes': ['aws.include'],
 }
 
 #.
@@ -83,5 +89,4 @@ check_info['aws_rds_summary.db_status'] = {
     'inventory_function': lambda p: inventory_aws_generic(p, ['DBInstanceStatus']),
     'check_function': check_aws_rds_summary_db,
     'service_description': 'AWS/RDS %s Info',
-    'includes': ['aws.include'],
 }

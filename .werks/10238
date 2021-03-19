@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When having a folder named "prefix" together with a folder named
 "prefix_suffix" on the same folder level with a rule on the

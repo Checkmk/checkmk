@@ -10,7 +10,6 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Percentage,
-    TextAscii,
     Tuple,
 )
 
@@ -19,6 +18,8 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
 
 
 def _parameter_valuespec_mssql_file_sizes():
@@ -67,7 +68,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_file_sizes",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_file_sizes,
         title=lambda: _("MSSQL Log and Data File Sizes"),

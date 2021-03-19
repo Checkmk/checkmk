@@ -18,6 +18,7 @@ import requests
 
 import dockerpty  # type: ignore[import]
 import docker  # type: ignore[import]
+from docker.models.images import Image  # type: ignore[import]
 
 import testlib
 from testlib.version import CMKVersion
@@ -119,27 +120,22 @@ def _docker_client():
     return docker.from_env(timeout=1200)
 
 
-def _get_or_load_image(client: 'docker.DockerClient',
-                       image_name_with_tag: str) -> Optional['docker.Image']:
+def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
     try:
         image = client.images.get(image_name_with_tag)
         logger.info("  Available locally (%s)", image.short_id)
 
         # Verify that this is in sync with remote version
-        try:
-            registry_data = client.images.get_registry_data(image_name_with_tag)
-            reg_image = registry_data.pull()
-            if reg_image.short_id == image.short_id:
-                logger.info("  Is in sync with registry")
-                return image
+        registry_data = _get_registry_data(client, image_name_with_tag)
+        if not registry_data:
+            logger.info("  Registry state is unknown, using local image")
+            return image
 
-            logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
-        except docker.errors.NotFound:
-            logger.info("  Not available from registry")
+        if registry_data.short_id == image.short_id:
+            logger.info("  Is in sync with registry, using local image")
             return image
-        except docker.errors.APIError as e:
-            _handle_api_error(e)
-            return image
+
+        logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
 
     except docker.errors.ImageNotFound:
         logger.info("  Not available locally, try to pull "
@@ -157,6 +153,18 @@ def _get_or_load_image(client: 'docker.DockerClient',
     return None
 
 
+def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) -> Optional[Image]:
+    try:
+        registry_data = client.images.get_registry_data(image_name_with_tag)
+        return registry_data.pull()
+    except docker.errors.NotFound:
+        logger.info("  Not available from registry")
+        return None
+    except docker.errors.APIError as e:
+        _handle_api_error(e)
+        return None
+
+
 def _handle_api_error(e):
     if "no basic auth" in "%s" % e:
         raise Exception(
@@ -171,23 +179,29 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docker_tag: str,
+def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_tag: str,
                       version: CMKVersion) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
+    logger.info("Preparing base image [%s]", base_image_name_with_tag)
+    base_image = _get_or_load_image(client, base_image_name_with_tag)
 
     # This installs the requested Checkmk Edition+Version into the new image, for this reason we add
     # these parts to the target image name. The tag is equal to the origin image.
     image_name = "%s-%s-%s" % (base_image_name, version.edition_short, version.version)
     image_name_with_tag = "%s:%s" % (image_name, docker_tag)
 
-    logger.info("Preparing [%s]", image_name_with_tag)
-    # First try to get the image from the local or remote registry
+    logger.info("Preparing image [%s]", image_name_with_tag)
+    # First try to get the pre-built image from the local or remote registry
     image = _get_or_load_image(client, image_name_with_tag)
     if image:
-        return image_name_with_tag  # already found, nothing to do.
+        # We found something locally or remote and ensured it's available locally.
+        #
+        # Only use it when it's based on the latest available base image. Otherwise
+        # skip it. The following code will re-build one based on the current base image
+        if _is_based_on_current_base_image(client, image, base_image):
+            return image_name_with_tag  # already found, nothing to do.
 
-    logger.info("  Create from [%s]", base_image_name_with_tag)
-    base_image = _get_or_load_image(client, base_image_name_with_tag)
+    logger.info("Build image from [%s]", base_image_name_with_tag)
     if base_image is None:
         raise Exception(
             "Image [%s] is not available locally and the registry \"%s\" is not reachable. It is "
@@ -256,6 +270,23 @@ def _create_cmk_image(client: 'docker.DockerClient', base_image_name: str, docke
             _handle_api_error(e)
 
     return image_name_with_tag
+
+
+def _is_based_on_current_base_image(client: docker.DockerClient, image: Image,
+                                    base_image: Optional[Image]) -> bool:
+    logger.info("  Check whether or not image is based on the current base image")
+    if base_image is None:
+        logger.info("  Base image not available, assuming it's up-to-date")
+        return False
+
+    image_base_hash = image.labels.get("org.tribe29.base_image_hash")
+    if base_image.short_id != image_base_hash:
+        logger.info("  Is based on an outdated base image (%s), current is (%s)", image_base_hash,
+                    base_image.short_id)
+        return False
+
+    logger.info("  Is based on current base image (%s)", base_image.short_id)
+    return True
 
 
 def _image_build_volumes():

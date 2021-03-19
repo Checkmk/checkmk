@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In version 1.6.0p1 the mk_logwatch plugin was not python 2.6 compatible.

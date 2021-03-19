@@ -11,17 +11,20 @@
 #include <chrono>
 #include <cstddef>
 #include <filesystem>
-#include <functional>  // IWYU pragma: keep
+#include <functional>
+#include <map>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "Metric.h"
 #include "MonitoringCore.h"
 #include "Store.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 class InputBuffer;
 class Logger;
@@ -33,6 +36,7 @@ struct NagiosPaths {
     std::string _mk_inventory;
     std::string _structured_status;
     std::filesystem::path _crash_reports_path;
+    std::filesystem::path _license_usage_history_path;
     std::string _mk_logwatch;
     std::string _logfile;
     std::string _mkeventd_socket;
@@ -54,7 +58,9 @@ struct NagiosAuthorization {
 
 class NagiosCore : public MonitoringCore {
 public:
-    NagiosCore(NagiosPaths paths, const NagiosLimits &limits,
+    NagiosCore(std::map<unsigned long, std::unique_ptr<Downtime>> &downtimes,
+               std::map<unsigned long, std::unique_ptr<Comment>> &comments,
+               NagiosPaths paths, const NagiosLimits &limits,
                NagiosAuthorization authorization, Encoding data_encoding);
 
     Host *find_host(const std::string &name) override;
@@ -90,6 +96,7 @@ public:
     std::filesystem::path mkInventoryPath() const override;
     std::filesystem::path structuredStatusPath() const override;
     std::filesystem::path crashReportPath() const override;
+    std::filesystem::path licenseUsageHistoryPath() const override;
     std::filesystem::path pnpPath() const override;
     std::filesystem::path historyFilePath() const override;
     std::filesystem::path logArchivePath() const override;
@@ -117,11 +124,12 @@ public:
     MetricLocation metricLocation(const std::string &host_name,
                                   const std::string &service_description,
                                   const Metric::Name &var) const override;
+    bool pnp4nagiosEnabled() const override;
 
     // specific for NagiosCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
+    std::map<unsigned long, std::unique_ptr<Downtime>> &_downtimes;
+    std::map<unsigned long, std::unique_ptr<Comment>> &_comments;
 
 private:
     Logger *_logger_livestatus;
@@ -133,7 +141,9 @@ private:
     std::unordered_map<std::string, host *> _hosts_by_designation;
     Triggers _triggers;
 
-    void *implInternal() const override { return const_cast<Store *>(&_store); }
+    void *implInternal() const override {
+        return const_cast<NagiosCore *>(this);
+    }
 
     static const Contact *fromImpl(const contact *c) {
         return reinterpret_cast<const Contact *>(c);

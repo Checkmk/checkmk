@@ -1,0 +1,12 @@
+Title: Duplicate service description 'CPU Load' on FreeBSD
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614260567
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

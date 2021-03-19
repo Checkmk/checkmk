@@ -1,8 +1,9 @@
+$CMK_VERSION = "2.1.0i1"
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Check_MK agent plugin for monitoring ORACLE databases
+# Checkmk agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns, Andrew Lacy
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking, Andrew for the powershell...
@@ -174,53 +175,27 @@ $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
 #   '----------------------------------------------------------------------'
 
 
-
-
 $SQL_START = @"
-set pages 0 trimspool on;
-set linesize 1024;
-set feedback off;
-whenever OSERROR EXIT failure;
-whenever sqlerror exit failure;
+set pages 0 trimspool on feedback off lines 8000
+set echo on
 
 "@
 
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
-Function get_dbversion_software {
-     # Get the database version
-     # variable res contains the banner including the version number
-     $res = (sqlplus -v)
-     # Example: SQL*Plus: Release 12.1.0.2.0 Production
-     $res = [string]$res
-     $verarr = $res.split(' ')
-     $version = $verarr[3]
-     # remove all '.' from string
-     $version = ($version -replace '\D+', '')
-
-     $version
-}
-
 
 Function get_dbversion_database ($ORACLE_HOME) {
-     # Get the database version
-     # variable res contains the banner including the version number
-     $SQLPLUS = $ORACLE_HOME + '\bin\sqlplus.exe -v'
-     $result = (iex $ORACLE_HOME'\bin\sqlplus.exe -v')
-     # Example: SQL*Plus: Release 12.1.0.2.0 Production
-     $res = [string]$result
-     $verarr = $res.split(' ')
-     #$verpos=$verarr.indexof('Release')
-     $version = $verarr
-     $verpos = 2
-     if ($verpos -gt 0) {
-          $version = $verarr[$verpos + 1]
-          # remove all '.' from string
-          $version = ($version -replace '\D+', '')
-     }
+     # The output of this command contains -- among others -- the version
+     $version_str = (Invoke-Expression $ORACLE_HOME'\bin\sqlplus.exe -v')
+     debug_echo "xx $version_str xx"
 
-     $version
+
+     # The output string can have arbitrary content. We rely on the assumption that the first
+     # three elements have always the same syntax, e.g.: SQL*Plus: Release 12.1.0.2.0
+     # so we take the third element separated by a whitespace as the version number and remove
+     # all dots resulting in: 121020
+     (([string]$version_str).split(' '))[3] -replace '\D+', ''
 }
 
 
@@ -494,9 +469,9 @@ Function sqlcall {
                     # add the SID and "FAILURE" to the output
                     $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
                     # write the output to the file
+                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
                     $res | Set-Content $fullpath
                     # show the contents of the file
-                    echo '<<<oracle_instance:sep(124)>>>'
                     cat $fullpath
                }
           }
@@ -508,9 +483,9 @@ Function sqlcall {
                     # add the SID and "FAILURE" to the output
                     $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
                     # write the output to the file
+                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
                     $res | Set-Content $fullpath
                     # show the contents of the file
-                    echo '<<<oracle_instance:sep(124)>>>'
                     cat $fullpath
                }
 
@@ -548,7 +523,7 @@ Function sqlcall {
 Function sql_performance {
      if ($DBVERSION -gt 121000) {
           $query_performance = @'
-          PROMPT <<<oracle_performance:sep(124)>>>'
+          PROMPT <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                ||'|'|| 'sys_time_model'
                ||'|'|| S.STAT_NAME
@@ -1095,7 +1070,7 @@ Function sql_recovery_status {
      }
      elseif ($DBVERSION -gt 92000) {
           $query_recovery_status = @'
-          prompt <<<oracle_recovery_status:sep(124)>>>
+          prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(d.NAME)
                      ||'|'|| d.NAME
                      ||'|'|| d.DATABASE_ROLE
@@ -1433,22 +1408,22 @@ Function sql_resumable {
                begin
                     execute immediate
                          'select upper(i.INSTANCE_NAME)
-                              ||'|'|| u.username
-                              ||'|'|| a.SESSION_ID
-                              ||'|'|| a.status
-                              ||'|'|| a.TIMEOUT
-                              ||'|'|| round((sysdate-to_date(a.SUSPEND_TIME,'mm/dd/yy hh24:mi:ss'))*24*60*60)
-                              ||'|'|| a.ERROR_NUMBER
-                              ||'|'|| to_char(to_date(a.SUSPEND_TIME, 'mm/dd/yy hh24:mi:ss'),'mm/dd/yy_hh24:mi:ss')
-                              ||'|'|| a.RESUME_TIME
-                              ||'|'|| a.ERROR_MSG
+                              ||''|''|| u.username
+                              ||''|''|| a.SESSION_ID
+                              ||''|''|| a.status
+                              ||''|''|| a.TIMEOUT
+                              ||''|''|| round((sysdate-to_date(a.SUSPEND_TIME,''mm/dd/yy hh24:mi:ss''))*24*60*60)
+                              ||''|''|| a.ERROR_NUMBER
+                              ||''|''|| to_char(to_date(a.SUSPEND_TIME, ''mm/dd/yy hh24:mi:ss''),''mm/dd/yy_hh24:mi:ss'')
+                              ||''|''|| a.RESUME_TIME
+                              ||''|''|| a.ERROR_MSG
                          from dba_resumable a, v$instance i, dba_users u
                          where a.INSTANCE_ID = i.INSTANCE_NUMBER
                          and u.user_id = a.user_id
                          and a.SUSPEND_TIME is not null
                          union all
                          select upper(i.INSTANCE_NAME)
-                              || '|||||||||'
+                              || ''|||||||||''
                          from v$instance i'
                     bulk collect into xx;
                     if xx.count >= 1 then
@@ -1550,16 +1525,16 @@ Function sql_jobs {
           begin
                begin
                     execute immediate
-                         'SELECT upper(d.NAME)
-                              ||'|'|| j.OWNER
-                              ||'|'|| j.JOB_NAME
-                              ||'|'|| j.STATE
-                              ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                              ||'|'|| j.RUN_COUNT
-                              ||'|'|| j.ENABLED
-                              ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                              ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                              ||'|'|| d.STATUS
+                         'SELECT upper(vd.NAME)
+                              ||''|''|| j.OWNER
+                              ||''|''|| j.JOB_NAME
+                              ||''|''|| j.STATE
+                              ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                              ||''|''|| j.RUN_COUNT
+                              ||''|''|| j.ENABLED
+                              ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                              ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                              ||''|''|| jd.STATUS
                          FROM dba_scheduler_jobs j
                          join v$database vd on 1 = 1
                          join v$instance i on 1 = 1
@@ -2144,10 +2119,6 @@ $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size (512, 150
 $NO_SID = "NO_SID"
 
 
-$DBVERSION = get_dbversion_software
-debug_echo "value of DBVERSION software= xxx${DBVERSION}xx"
-
-
 if ( $SYNC_SECTIONS.count -gt 0) {
      foreach ($section in $SYNC_SECTIONS) {
           echo "<<<oracle_${section}>>>"
@@ -2188,10 +2159,6 @@ if ($the_count -gt 0) {
 
           # reset errors found for this instance to zero
           $ERROR_FOUND = 0
-
-          $SQLPLUS = $ORACLE_HOME + '\bin\sqlplus.exe -v'
-          $res = ($SQLPLUS)
-          debug_echo "xx $res xx"
 
           $DBVERSION = get_dbversion_database($ORACLE_HOME)
           debug_echo "value of inst_name= ${inst_name}"

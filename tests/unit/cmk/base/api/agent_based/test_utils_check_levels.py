@@ -9,17 +9,17 @@ import math
 
 import pytest  # type: ignore[import]
 from cmk.base.api.agent_based import utils, render
-from cmk.base.api.agent_based.checking_classes import state, Metric, Result
+from cmk.base.api.agent_based.checking_classes import State, Metric, Result
 
 
 @pytest.mark.parametrize("value, levels_upper, levels_lower, render_func, result", [
-    (5, (3, 6), None, int, (state.WARN, " (warn/crit at 3/6)")),
-    (7, (3, 6), None, lambda x: "%.1f m" % x, (state.CRIT, " (warn/crit at 3.0 m/6.0 m)")),
-    (7, (3, 6), None, lambda x: "%.1f" % x, (state.CRIT, " (warn/crit at 3.0/6.0)")),
-    (2, (3, 6), (1, 0), int, (state.OK, "")),
-    (1, (3, 6), (1, 0), int, (state.OK, "")),
-    (0, (3, 6), (1, 0), int, (state.WARN, " (warn/crit below 1/0)")),
-    (-1, (3, 6), (1, 0), int, (state.CRIT, " (warn/crit below 1/0)")),
+    (5, (3, 6), None, int, (State.WARN, " (warn/crit at 3/6)")),
+    (7, (3, 6), None, lambda x: "%.1f m" % x, (State.CRIT, " (warn/crit at 3.0 m/6.0 m)")),
+    (7, (3, 6), None, lambda x: "%.1f" % x, (State.CRIT, " (warn/crit at 3.0/6.0)")),
+    (2, (3, 6), (1, 0), int, (State.OK, "")),
+    (1, (3, 6), (1, 0), int, (State.OK, "")),
+    (0, (3, 6), (1, 0), int, (State.WARN, " (warn/crit below 1/0)")),
+    (-1, (3, 6), (1, 0), int, (State.CRIT, " (warn/crit below 1/0)")),
 ])
 def test_boundaries(value, levels_upper, levels_lower, render_func, result):
     assert utils._do_check_levels(value, levels_upper, levels_lower, render_func) == result
@@ -30,7 +30,7 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "metric_name": "battery",
         "render_func": render.percent,
     }, [
-        Result(state=state.OK, summary="5.00%"),
+        Result(state=State.OK, summary="5.00%"),
         Metric("battery", 5.0),
     ]),
     (6, {
@@ -39,7 +39,7 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "render_func": lambda x: "%.2f years" % x,
         "label": "Disk Age",
     }, [
-        Result(state=state.WARN,
+        Result(state=State.WARN,
                summary="Disk Age: 6.00 years (warn/crit at 4.00 years/8.00 years)"),
         Metric("disk", 6.0, levels=(4., 8.)),
     ]),
@@ -51,7 +51,7 @@ def test_boundaries(value, levels_upper, levels_lower, render_func, result):
         "label": "Water acidity",
         "boundaries": (0, None),
     }, [
-        Result(state=state.WARN, summary="Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)"),
+        Result(state=State.WARN, summary="Water acidity: pH 6.3 (warn/crit at pH 6.4/pH 6.1)"),
         Metric("H_concentration", 5e-7, levels=(4e-7, 8e-7), boundaries=(0, None)),
     ]),
 ])

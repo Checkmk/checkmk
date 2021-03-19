@@ -1,0 +1,18 @@
+Title: unitrends_replication.py: support for Python 2/Python 3
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614336503
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+In Python version 2 the agent plugin 'unitrends_replication' crashed with the error message:
+Traceback (most recent call last):
+  File "unitrends_replication.py", line 11, in <module>
+    import urllib.request
+ImportError: No module named request
+The reason for this is that in previous Python versions "urllib.request" did not exist.
+This werk introduces an alternative handling of "urllib" for affected python versions.

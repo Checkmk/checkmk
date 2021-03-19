@@ -10,12 +10,13 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 import abc
 import argparse
 import errno
+import hashlib
 import json
 import logging
 from pathlib import Path
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable, Optional
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -401,14 +402,58 @@ class AWSSection(DataCache):
         The default resolution of AWS S3 metrics is 1 day (86400 sec)
         We use interval property for cached section.
         """
+        raise NotImplementedError
 
     @property
     def region(self):
         return self._region
 
     @property
+    def granularity(self) -> int:
+        """
+        The granularity of the returned data in seconds.
+        """
+        raise NotImplementedError
+
+    @property
     def period(self):
-        return 2 * self.cache_interval
+        return self.validate_period(2 * self.granularity)
+
+    @staticmethod
+    def validate_period(period: int, resolution_type: str = "low") -> int:
+        """
+        What this is all about:
+        https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html
+        >>> import pytest
+        >>> with pytest.raises(AssertionError):
+        ...     [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        >>> AWSSection.validate_period(1234, resolution_type="foo bar")
+        Traceback (most recent call last):
+            ...
+        ValueError: Unknown resolution type: 'foo bar'
+        >>> AWSSection.validate_period(120)
+        120
+        >>> AWSSection.validate_period(30, "high")
+        30
+        >>> AWSSection.validate_period(180, "high")
+        180
+        """
+        if not isinstance(period, int):
+            raise AssertionError(f"Period must be an integer, got {type(period)}.")
+
+        allowed_multiples = 60
+        additional_allowed = []
+
+        if resolution_type == "high":
+            additional_allowed.extend([1, 5, 10, 30, 60])
+        elif resolution_type != "low":
+            raise ValueError("Unknown resolution type: '%s'" % resolution_type)
+
+        if not (not period % allowed_multiples or period in additional_allowed):
+            raise AssertionError(
+                f"Period must be a multiple of {allowed_multiples} or equal to 1, 5, "
+                f"10, 30, 60 in case of high resolution.")
+        return period
 
     def _send(self, content):
         self._distributor.distribute(self, content)
@@ -499,6 +544,7 @@ class AWSSection(DataCache):
         - '<KEY>'
         Return raw_result['<KEY>'].
         """
+        raise NotImplementedError
 
     @abc.abstractmethod
     def _compute_content(self, raw_content: AWSRawContent,
@@ -685,18 +731,22 @@ class CostsAndUsage(AWSSectionGeneric):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        granularity, interval = 'DAILY', 86400
+        granularity_name, granularity_interval = 'DAILY', self.granularity
         fmt = "%Y-%m-%d"
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': datetime.strftime(NOW - timedelta(seconds=interval), fmt),
+                'Start': datetime.strftime(NOW - timedelta(seconds=granularity_interval), fmt),
                 'End': datetime.strftime(NOW, fmt),
             },
-            Granularity=granularity,
+            Granularity=granularity_name,
             Metrics=['UnblendedCost'],
             GroupBy=[{
                 'Type': 'DIMENSION',
@@ -733,6 +783,10 @@ class EC2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1004,6 +1058,10 @@ class EC2Summary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_limits')
         if colleague and colleague.content:
@@ -1083,6 +1141,10 @@ class EC2Labels(AWSSectionLabels):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
@@ -1132,6 +1194,10 @@ class EC2SecurityGroups(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1185,6 +1251,10 @@ class EC2(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1263,6 +1333,10 @@ class EBSLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1374,6 +1448,10 @@ class EBSSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ebs_limits')
         volumes = []
@@ -1417,7 +1495,7 @@ class EBSSummary(AWSSectionGeneric):
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            return [v for v in col_volumes for tag in v['Tags'] if tag in tags]
+            return [v for v in col_volumes for tag in v.get('Tags', []) if tag in tags]
 
         volumes = []
         for chunk in _chunks(self._tags, length=200):
@@ -1469,6 +1547,10 @@ class EBS(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1592,6 +1674,10 @@ class S3Limits(AWSSectionLimits):
 
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -1629,6 +1715,10 @@ class S3Summary(AWSSectionGeneric):
         cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
+
+    @property
+    def granularity(self):
+        return 86400
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_limits')
@@ -1710,6 +1800,10 @@ class S3(AWSSectionCloudwatch):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
@@ -1769,6 +1863,10 @@ class S3Requests(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1859,6 +1957,10 @@ class GlacierLimits(AWSSectionLimits):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -1900,6 +2002,10 @@ class GlacierSummary(AWSSectionGeneric):
         cache_interval = get_seconds_since_midnight(NOW)
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
+
+    @property
+    def granularity(self):
+        return 86400
 
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_limits')
@@ -1986,6 +2092,10 @@ class Glacier(AWSSectionGeneric):
         logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
         return cache_interval
 
+    @property
+    def granularity(self):
+        return 86400
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('glacier_summary')
         if colleague and colleague.content:
@@ -2022,6 +2132,10 @@ class ELBLimits(AWSSectionLimits):
     def cache_interval(self):
         # If you change this, you might have to adjust factory_settings['levels_spillover'] in
         # checks/aws_elb
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2104,6 +2218,10 @@ class ELBSummaryGeneric(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('%s_limits' % self._resource)
         if colleague and colleague.content:
@@ -2182,6 +2300,10 @@ class ELBLabelsGeneric(AWSSectionLabels):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('%s_summary' % self._resource)
         if colleague and colleague.content:
@@ -2207,6 +2329,10 @@ class ELBHealth(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2243,6 +2369,10 @@ class ELB(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2320,6 +2450,10 @@ class ELBv2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2466,6 +2600,10 @@ class ELBv2TargetGroups(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2532,6 +2670,10 @@ class ELBv2Application(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2611,6 +2753,10 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2727,6 +2873,10 @@ class ELBv2Network(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2829,6 +2979,10 @@ class RDSLimits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -2868,6 +3022,10 @@ class RDSSummary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2938,6 +3096,10 @@ class RDS(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3031,6 +3193,10 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -3060,6 +3226,10 @@ class CloudwatchAlarms(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3109,6 +3279,10 @@ class DynamoDBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3203,6 +3377,10 @@ class DynamoDBSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('dynamodb_limits')
         if colleague and colleague.content:
@@ -3274,6 +3452,10 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3382,6 +3564,10 @@ class WAFV2Limits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -3457,6 +3643,10 @@ class WAFV2Summary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3547,6 +3737,10 @@ class WAFV2WebACL(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('wafv2_summary')
         if colleague and colleague.content:
@@ -3603,11 +3797,12 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False):
+    def __init__(self, hostname, session, debug=False, config=None):
         self._hostname = hostname
         self._session = session
         self._debug = debug
         self._sections = []
+        self.config = config
 
     @abc.abstractmethod
     def init_sections(self, services, region, config, s3_limits_distributor=None):
@@ -3615,7 +3810,7 @@ class AWSSections(abc.ABC):
 
     def _init_client(self, client_key):
         try:
-            return self._session.client(client_key)
+            return self._session.client(client_key, config=self.config)
         except (ValueError, botocore.exceptions.ClientError,
                 botocore.exceptions.UnknownServiceError) as e:
             # If region name is not valid we get a ValueError
@@ -3677,9 +3872,12 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (
+                    int(cache_timestamp),
+                    int(section_interval + 60),
+                )
 
-            if any([r.content for r in result]):
+            if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):
@@ -4106,12 +4304,13 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
-    parser.add_argument("--access-key-id",
-                        required=True,
-                        help="The access key ID for your AWS account.")
-    parser.add_argument("--secret-access-key",
-                        required=True,
-                        help="The secret access key for your AWS account.")
+    parser.add_argument("--access-key-id", help="The access key ID for your AWS account")
+    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
+    parser.add_argument("--proxy-host", help="The address of the proxy server")
+    parser.add_argument("--proxy-port", help="The port of the proxy server")
+    parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
+    parser.add_argument("--proxy-password",
+                        help="The password for authentication of the proxy server")
     parser.add_argument("--assume-role",
                         action="store_true",
                         help="Use STS AssumeRole to assume a different IAM role")
@@ -4262,7 +4461,10 @@ class AWSConfig:
         filtered_sys_argv = [
             arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
         ]
-        return hash(tuple(sorted(filtered_sys_argv)))
+        # Be careful to use a hashing mechanism that generates the same hash across
+        # different python processes! Otherwise the config file will always be
+        # out-of-date
+        return hashlib.sha256(''.join(sorted(filtered_sys_argv)).encode()).hexdigest()
 
     def is_up_to_date(self):
         old_config_hash = self._load_config_hash()
@@ -4285,7 +4487,7 @@ class AWSConfig:
     def _load_config_hash(self):
         try:
             with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
-                return int(f.read().strip())
+                return f.read().strip()
         except IOError as e:
             if e.errno != errno.ENOENT:
                 # No such file or directory
@@ -4332,14 +4534,61 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
     return global_services, regional_services
 
 
+def _proxy_address(
+    server_address: str,
+    port: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+) -> str:
+    address = server_address
+    authentication = ""
+    if port:
+        address += f":{port}"
+    if username and password:
+        authentication = f"{username}:{password}@"
+    return f"{authentication}{address}"
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    access_key_id = stdin_args.get('access_key_id') or args.access_key_id
+    secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
+
+    has_exceptions = False
+
+    if not access_key_id:
+        has_exceptions = True
+        sys.stderr.write('access key id is not set\n')
+
+    if not secret_access_key:
+        has_exceptions = True
+        sys.stderr.write('secret access key is not set\n')
+
+    if has_exceptions:
+        return 1
+
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
+    proxy_config = None
+    if args.proxy_host:
+        proxy_user = stdin_args.get('proxy_user') or args.proxy_user
+        proxy_password = stdin_args.get('proxy_password') or args.proxy_password
+        proxy_config = botocore.config.Config(proxies={
+            'https': _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        })
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
@@ -4381,12 +4630,12 @@ def main(sys_argv=None):
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
-                                              args.role_arn, args.external_id, region)
+                    session = sts_assume_role(access_key_id, secret_access_key, args.role_arn,
+                                              args.external_id, region)
                 else:
-                    session = create_session(args.access_key_id, args.secret_access_key, region)
+                    session = create_session(access_key_id, secret_access_key, region)
 
-                sections = aws_sections(hostname, session, debug=args.debug)
+                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(aws_services,
                                        region,
                                        aws_config,
@@ -4399,12 +4648,12 @@ def main(sys_argv=None):
                 return 0
             except AssertionError:
                 if args.debug:
-                    return 1
+                    raise
             except Exception as e:
                 logging.info(e)
                 has_exceptions = True
                 if args.debug:
-                    return 1
+                    raise
     if has_exceptions:
         return 1
     return 0

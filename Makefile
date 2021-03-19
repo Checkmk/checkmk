@@ -3,7 +3,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 #
-
 include defines.make
 
 NAME               := check_mk
@@ -54,6 +53,10 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                               $(foreach edir,. enterprise managed, \
                                   $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
 
+SCSS_SOURCES := $(wildcard \
+					$(foreach edir,. enterprise managed, \
+						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
+
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
@@ -74,10 +77,10 @@ LOCK_FD := 200
 LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc cppcheck dist documentation format format-c \
-        format-python format-shell GTAGS headers help install \
-        iwyu mrproper mrclean optimize-images packages setup setversion tidy version \
-        am--refresh skel openapi openapi-doc
+        clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
+        documentation-quick format format-c format-python format-shell format-js \
+        GTAGS headers help install iwyu mrproper mrclean optimize-images packages \
+        setup setversion tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -158,12 +161,12 @@ endif
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
-$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog agents/windows/plugins/mk_logwatch.exe agents/windows/plugins/mk_jolokia.exe
+$(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) $(THEME_RESOURCES) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
-	$(MAKE) -C doc/plugin-api apidoc html
+	$(MAKE) -C doc/plugin-api html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
 	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
@@ -224,6 +227,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.zip \
+		windows/python-3.4.zip \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
@@ -237,16 +241,13 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
-agents/windows/plugins/%.exe:
-	@echo "ERROR: The build artifact $@ is missing. Needs to be created by CI system first."
-	@echo "In case you want to proceed without these files, you may simply execute \"touch $@\""
-	@echo "to create a package without that file."
-	exit 1
-
 omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
+
+ntop-mkp:
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
 
 .werks/werks: $(WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
@@ -294,7 +295,7 @@ headers:
 	doc/helpers/headrify
 
 
-$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi -name "*.py") $(shell find cmk/gui/cee/plugins/openapi -name "*.py")
+$(OPENAPI_SPEC): $(shell find cmk/gui/plugins/openapi $(wildcard cmk/gui/cee/plugins/openapi) -name "*.py")
 	@export PYTHONPATH=${REPO_PATH} ; \
 	export TMPFILE=$$(mktemp);  \
 	$(PIPENV) run python -m cmk.gui.openapi > $$TMPFILE && \
@@ -356,17 +357,24 @@ node_modules/.bin/redoc-cli: .ran-npm
 	npm install --audit=false --unsafe-perm $$REGISTRY
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
+# NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
+# list all targets separately.
+#
+# NOTE 2: For the touch command refer to the notes above.
+#
+# NOTE 3: The cma_facelift.scss target is used to generate a css file for the virtual
+# appliance. It is called from the cma git's makefile and the built css file is moved
+# to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+.INTERMEDIATE: .ran-webpack
+web/htdocs/js/main_min.js: .ran-webpack
+web/htdocs/js/side_min.js: .ran-webpack
+web/htdocs/js/mobile_min.js: .ran-webpack
+web/htdocs/themes/facelift/theme.css: .ran-webpack
+web/htdocs/themes/modern-dark/theme.css: .ran-webpack
+web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
+.ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-# This target is used to generate a css file for the virtual appliance. It is
-# called from the cma git's Makefile and the built css file is moved to
-# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -385,19 +393,21 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea"\
-	    --exclude='\.werks/.last'\
-	    --exclude='\.werks/.my_ids'
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea" \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids"
 
 mrclean:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea" \
-	    --exclude='\.werks/.last' \
-	    --exclude='\.werks/.my_ids' \
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea"  \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids" \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock"
+	    --exclude=".venv.lock" \
+	    --exclude="livestatus/src/doc/plantuml.jar" \
+	    --exclude="enterprise/core/src/doc/plantuml.jar"
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
@@ -411,6 +421,7 @@ setup:
 	    clang-tidy-10 \
 	    clang-tools-10 \
 	    clangd-10 \
+	    curl \
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \
@@ -438,7 +449,7 @@ setup:
 	    ksh \
 	    p7zip-full \
 	    zlib1g-dev
-	sudo -H pip install -U pipenv wheel
+	sudo -H pip3 install -U pipenv wheel
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
@@ -508,6 +519,9 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
 
+compile-neb-cmc-docker:
+	scripts/run-in-docker.sh make compile-neb-cmc
+
 tidy: config.h
 	$(MAKE) -C livestatus/src tidy
 ifeq ($(ENTERPRISE),yes)
@@ -523,7 +537,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++2a"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h
@@ -539,7 +553,7 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src cppcheck-xml
 endif
 
-format: format-python format-c format-shell
+format: format-python format-c format-shell format-js format-css
 
 # TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
 # src/configure.ac, but this needs at least automake-1.13, which in turn is only
@@ -560,6 +574,11 @@ format-python:
 format-shell:
 	$(MAKE)	-C tests format-shell
 
+format-js:
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
+
+format-css:
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
@@ -568,14 +587,12 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
-# TODO: The line: sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
-# can be removed if pipenv fixes this issue.
-# See: https://github.com/pypa/pipenv/issues/3140
-#      https://github.com/pypa/pipenv/issues/3026
-# The recent pipenv version 2018.10.13 has a bug that places wrong markers in the
-# Pipfile.lock. This leads to an error when installing packages with this
-# markers and prints an error message. Example:
-# Ignoring pyopenssl: markers 'extra == "security"' don't match your environment
+documentation-quick: config.h
+	$(MAKE) -C livestatus/src documentation-quick
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src documentation-quick
+endif
+
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
@@ -585,8 +602,7 @@ Pipfile.lock: Pipfile
 	@( \
 	    echo "Locking Python requirements..." ; \
 	    flock $(LOCK_FD); \
-	    $(PIPENV) lock; \
-	    sed -i "/\"markers\": \"extra == /d" Pipfile.lock; \
+	    SKIP_MAKEFILE_CALL=1 $(PIPENV) lock; \
 	    rm -rf .venv \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
@@ -607,5 +623,5 @@ Pipfile.lock: Pipfile
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh:
-	@:
+am--refresh: config.status
+	./config.status

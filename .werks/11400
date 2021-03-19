@@ -6,7 +6,7 @@ Date: 1597916199
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously, an IP restriction for the access to the Checkmk agent, as configured in
 WATO ruleset "Allowed agent access via IP address", could only be realized with the

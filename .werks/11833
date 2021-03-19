@@ -1,0 +1,13 @@
+Title: Pagerduty notifications: HTTP 400, "'payload.source' is missing or blank"
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1610958561
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+For hosts without an IP address, the pagerduty notification plugin failed with
+HTTP 400 (Bad Request), "'payload.source' is missing or blank"
+This has been fixed.

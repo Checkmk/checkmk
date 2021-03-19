@@ -7,7 +7,7 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple as _Tuple, Optional, Type
+from typing import List, Tuple as _Tuple, Optional, Type, Iterator
 
 from six import ensure_str
 
@@ -25,16 +25,19 @@ from cmk.gui.watolib.rulespecs import (
     rulespec_group_registry,
     rulespec_registry,
 )
-from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+)
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
 
 from cmk.gui.plugins.wato import (
     WatoMode,
     mode_registry,
-)
-
-from cmk.gui.plugins.wato.utils.context_buttons import (
-    host_status_button,
-    service_status_button,
 )
 
 
@@ -71,30 +74,36 @@ class ModeObjectParameters(WatoMode):
             title += " / " + self._service
         return title
 
-    def buttons(self):
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="hosts",
+                    title=_("Hosts"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this host"),
+                            entries=list(page_menu_host_entries(self.name(), self._host)),
+                        ),
+                    ],
+                ),
+                PageMenuDropdown(
+                    name="services",
+                    title=_("Services"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("For this service"),
+                            entries=list(self._page_menu_service_entries()),
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+        )
+
+    def _page_menu_service_entries(self) -> Iterator[PageMenuEntry]:
         if self._service:
-            prefix = _("Host-")
-        else:
-            prefix = u""
-        html.context_button(_("Folder"), watolib.folder_preserving_link([("mode", "folder")]),
-                            "back")
-        if self._service:
-            service_status_button(self._hostname, self._service)
-        else:
-            host_status_button(self._hostname, "hoststatus")
-        html.context_button(
-            prefix + _("Properties"),
-            watolib.folder_preserving_link([("mode", "edit_host"), ("host", self._hostname)]),
-            "edit")
-        html.context_button(
-            _("Services"),
-            watolib.folder_preserving_link([("mode", "inventory"), ("host", self._hostname)]),
-            "services")
-        if not self._host.is_cluster():
-            html.context_button(
-                prefix + _("Diagnostic"),
-                watolib.folder_preserving_link([("mode", "diag_host"), ("host", self._hostname)]),
-                "diagnose")
+            yield make_service_status_link(self._host.name(), self._service)
 
     def page(self):
         all_rulesets = watolib.AllRulesets()
@@ -110,7 +119,7 @@ class ModeObjectParameters(WatoMode):
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
             for rulespec in sorted(rulespec_registry.get_by_group(groupname),
-                                   key=lambda x: x.title):
+                                   key=lambda x: x.title or ""):
                 if (rulespec.item_type == 'service') == (not self._service):
                     continue  # This rule is not for hosts/services
 
@@ -255,7 +264,7 @@ class ModeObjectParameters(WatoMode):
                     None,
                     _("Failed to determine origin rule of %s / %s") %
                     (self._hostname, self._service))
-            rule_folder, rule_index, _rule = origin_rule_result
+            rule_folder, rule_index, rule = origin_rule_result
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),
@@ -264,7 +273,7 @@ class ModeObjectParameters(WatoMode):
             url = watolib.folder_preserving_link([('mode', 'edit_rule'),
                                                   ('varname', "custom_checks"),
                                                   ('rule_folder', rule_folder.path()),
-                                                  ('rulenr', rule_index), ('host', self._hostname)])
+                                                  ('rule_id', rule.id), ('host', self._hostname)])
 
             html.open_table(class_="setting")
             html.open_tr()
@@ -351,12 +360,12 @@ class ModeObjectParameters(WatoMode):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
-        def rule_url(rule):
+        def rule_url(rule: Rule) -> str:
             return watolib.folder_preserving_link([
                 ('mode', 'edit_rule'),
                 ('varname', varname),
                 ('rule_folder', rule.folder.path()),
-                ('rulenr', rule.index()),
+                ('rule_id', rule.id),
                 ('host', self._hostname),
                 ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
                 ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
@@ -464,7 +473,7 @@ class ModeObjectParameters(WatoMode):
             # Binary rule, no valuespec, outcome is True or False
             else:
                 icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else '')
-                html.icon(title=_("yes") if setting else _("no"), icon=icon_name)
+                html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()
         html.close_table()

@@ -79,5 +79,5 @@ rulespec_registry.register(
         item_spec=_item_spec_esx_vsphere_objects,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_objects,
-        title=lambda: _("State of ESX hosts and virtual machines"),
+        title=lambda: _("ESX host and virtual machine states"),
     ))

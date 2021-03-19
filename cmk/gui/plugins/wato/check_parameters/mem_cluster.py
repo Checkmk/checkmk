@@ -12,7 +12,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
+    RulespecGroupEnforcedServicesNetworking,
     rulespec_registry,
     ManualCheckParameterRulespec,
 )
@@ -37,7 +37,7 @@ def _parameter_valuespec_mem_cluster():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="mem_cluster",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_mem_cluster,
         title=lambda: _("Memory Usage of Clusters"),
     ))

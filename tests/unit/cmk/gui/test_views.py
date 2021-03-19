@@ -6,6 +6,7 @@
 
 # yapf: disable
 
+from cmk.gui.plugins.visuals.utils import Filter
 import copy
 from typing import Any, Dict
 
@@ -13,6 +14,7 @@ import pytest  # type: ignore[import]
 
 import cmk.gui.config as config
 import cmk.utils.version as cmk_version
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -27,7 +29,7 @@ import cmk.gui.views
 @pytest.fixture(name="view")
 def view_fixture(register_builtin_html):
     view_name = "allhosts"
-    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name])
+    view_spec = transform_painter_spec(cmk.gui.views.multisite_builtin_views[view_name].copy())
     return cmk.gui.views.View(view_name, view_spec, view_spec.get("context", {}))
 
 
@@ -181,7 +183,7 @@ def test_registered_commands():
             'group': 'acknowledge',
             'permission': 'action.acknowledge',
             'tables': ['host', 'service', 'aggr'],
-            'title': u'Acknowledge Problems'
+            'title': u'Acknowledge problems'
         },
         'ec_custom_actions': {
             'permission': 'mkeventd.actions',
@@ -293,7 +295,7 @@ def test_registered_commands():
         cmd_spec = expected[cmd.ident]
         assert cmd.title == cmd_spec["title"]
         assert cmd.tables == cmd_spec["tables"], cmd.ident
-        assert cmd.permission().name == cmd_spec["permission"]
+        assert cmd.permission.name == cmd_spec["permission"]
 
 
 def test_legacy_register_command(monkeypatch):
@@ -1395,8 +1397,8 @@ def test_registered_painters():
         },
         'host_plugin_output': {
             'columns': ['host_plugin_output', 'host_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Output of host check plugin'
+            'short': u'Summary',
+            'title': u'Summary'
         },
         'host_pnpgraph': {
             'columns': ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command'],
@@ -2883,8 +2885,8 @@ def test_registered_painters():
         },
         'svc_long_plugin_output': {
             'columns': ['service_long_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
-            'title': u'Long output of check plugin (multiline)'
+            'short': u'Details',
+            'title': u'Details',
         },
         'svc_metrics': {
             'columns': ['service_check_command', 'service_perf_data'],
@@ -2984,9 +2986,9 @@ def test_registered_painters():
         },
         'svc_plugin_output': {
             'columns': ['service_plugin_output', 'service_custom_variables'],
-            'short': u'Status detail',
+            'short': u'Summary',
             'sorter': 'svcoutput',
-            'title': u'Output of check plugin'
+            'title': u'Summary'
         },
         'svc_pnpgraph': {
             'columns': [
@@ -5700,42 +5702,61 @@ def test_register_sorter(monkeypatch):
 
 
 def test_get_needed_regular_columns(view):
+    class SomeFilter(Filter):
+        def display(self):
+            return
 
-    columns = cmk.gui.views._get_needed_regular_columns(view.group_cells + view.row_cells, view.sorters, view.datasource)
+        def columns_for_filter_table(self, context):
+            return ["some_column"]
+
+    columns = cmk.gui.views._get_needed_regular_columns(
+        [
+            SomeFilter(
+                ident="some_filter",
+                title="Some filter",
+                sort_index=1,
+                info="info",
+                htmlvars=[],
+                link_columns=[],
+            )
+        ],
+        view,
+    )
     assert sorted(columns) == sorted([
-        'host_scheduled_downtime_depth',
-        'host_in_check_period',
-        'host_num_services_pending',
-        'host_downtimes_with_extra_info',
-        'host_pnpgraph_present',
-        'host_check_type',
         'host_accept_passive_checks',
-        'host_num_services_crit',
-        'host_icon_image',
-        'host_is_flapping',
-        'host_in_notification_period',
-        'host_check_command',
-        'host_modified_attributes_list',
-        'host_downtimes',
-        'host_filename',
         'host_acknowledged',
-        'host_custom_variable_names',
-        'host_state',
         'host_action_url_expanded',
-        'host_comments_with_extra_info',
-        'host_in_service_period',
-        'host_num_services_ok',
-        'host_has_been_checked',
-        'host_address',
-        'host_staleness',
-        'host_num_services_unknown',
-        'host_notifications_enabled',
         'host_active_checks_enabled',
-        'host_perf_data',
+        'host_address',
+        'host_check_command',
+        'host_check_type',
+        'host_comments_with_extra_info',
+        'host_custom_variable_names',
         'host_custom_variable_values',
+        'host_downtimes',
+        'host_downtimes_with_extra_info',
+        'host_filename',
+        'host_has_been_checked',
+        'host_icon_image',
+        'host_in_check_period',
+        'host_in_notification_period',
+        'host_in_service_period',
+        'host_is_flapping',
+        'host_modified_attributes_list',
         'host_name',
-        'host_num_services_warn',
         'host_notes_url_expanded',
+        'host_notifications_enabled',
+        'host_num_services_crit',
+        'host_num_services_ok',
+        'host_num_services_pending',
+        'host_num_services_unknown',
+        'host_num_services_warn',
+        'host_perf_data',
+        'host_pnpgraph_present',
+        'host_scheduled_downtime_depth',
+        'host_staleness',
+        'host_state',
+        'some_column',
     ])
 
 
@@ -6069,6 +6090,8 @@ def test_registered_display_hints():
     '.software.applications.check_mk.sites:*.npcd',
     '.software.applications.check_mk.sites:*.check_helper_usage',
     '.software.applications.check_mk.sites:*.check_mk_helper_usage',
+    '.software.applications.check_mk.sites:*.fetcher_helper_usage',
+    '.software.applications.check_mk.sites:*.checker_helper_usage',
     '.software.applications.check_mk.sites:*.livestatus_usage',
     '.software.applications.check_mk.sites:*.num_hosts',
     '.software.applications.check_mk.sites:*.num_services',
@@ -6095,6 +6118,7 @@ def test_registered_display_hints():
     '.software.applications.docker.images:',
     '.software.applications.docker.images:*.size',
     '.software.applications.docker.images:*.amount_containers',
+    '.software.applications.docker.images:*.creation',
     '.software.applications.docker.images:*.id',
     '.software.applications.docker.images:*.labels',
     '.software.applications.docker.images:*.repodigests',
@@ -6105,28 +6129,48 @@ def test_registered_display_hints():
     '.software.applications.docker.networks.*.containers:*.ipv4_address',
     '.software.applications.docker.networks.*.containers:*.ipv6_address',
     '.software.applications.docker.networks.*.containers:*.mac_address',
+    '.software.applications.docker.networks.*.labels',
+    '.software.applications.docker.networks.*.name',
     '.software.applications.docker.networks.*.network_id',
+    '.software.applications.docker.networks.*.scope',
+    '.software.applications.docker.node_labels:',
+    '.software.applications.docker.node_labels:*.label',
     '.software.applications.docker.num_containers_paused',
     '.software.applications.docker.num_containers_running',
     '.software.applications.docker.num_containers_stopped',
     '.software.applications.docker.num_containers_total',
     '.software.applications.docker.num_images',
+    '.software.applications.docker.registry',
+    '.software.applications.docker.swarm_manager:',
+    '.software.applications.docker.swarm_manager:*.Addr',
+    '.software.applications.docker.swarm_manager:*.NodeID',
+    '.software.applications.docker.swarm_node_id',
+    '.software.applications.docker.swarm_state',
     '.software.applications.docker.version',
+    '.software.applications.fortinet.fortigate_high_availability.',
+    '.software.applications.fortinet.fortisandbox:',
+    '.software.applications.fortinet.fortisandbox:*.name',
+    '.software.applications.fortinet.fortisandbox:*.version',
     '.software.applications.ibm_mq.',
     '.software.applications.ibm_mq.channels:',
+    '.software.applications.ibm_mq.channels:*.monchl',
     '.software.applications.ibm_mq.channels:*.name',
     '.software.applications.ibm_mq.channels:*.qmgr',
     '.software.applications.ibm_mq.channels:*.status',
     '.software.applications.ibm_mq.channels:*.type',
     '.software.applications.ibm_mq.managers:',
+    '.software.applications.ibm_mq.managers:*.ha',
     '.software.applications.ibm_mq.managers:*.instname',
     '.software.applications.ibm_mq.managers:*.instver',
     '.software.applications.ibm_mq.managers:*.name',
     '.software.applications.ibm_mq.managers:*.standby',
     '.software.applications.ibm_mq.managers:*.status',
     '.software.applications.ibm_mq.queues:',
+    '.software.applications.ibm_mq.queues:*.altered',
+    '.software.applications.ibm_mq.queues:*.created',
     '.software.applications.ibm_mq.queues:*.maxdepth',
     '.software.applications.ibm_mq.queues:*.maxmsgl',
+    '.software.applications.ibm_mq.queues:*.monq',
     '.software.applications.ibm_mq.queues:*.name',
     '.software.applications.ibm_mq.queues:*.qmgr',
     '.software.applications.kubernetes.assigned_pods:',
@@ -6184,6 +6228,7 @@ def test_registered_display_hints():
     '.software.applications.oracle.instance:*.logins',
     '.software.applications.oracle.instance:*.logmode',
     '.software.applications.oracle.instance:*.openmode',
+    '.software.applications.oracle.instance:*.pname',
     '.software.applications.oracle.instance:*.sid',
     '.software.applications.oracle.instance:*.version',
     '.software.applications.oracle.recovery_area:',
@@ -6278,3 +6323,73 @@ def test_registered_display_hints():
 def test_get_inventory_display_hint():
     hint = cmk.gui.plugins.views.inventory_displayhints.get(".software.packages:*.summary")
     assert isinstance(hint, dict)
+
+
+def test_view_page(logged_in_wsgi_app, mock_livestatus):
+    wsgi_app = logged_in_wsgi_app
+
+    def _prepend(prefix, dict_):
+        d = {}
+        for key, value in dict_.items():
+            d[key] = value
+            d[prefix + key] = value
+        return d
+
+    live: MockLiveStatusConnection = mock_livestatus
+    live.add_table('hosts', [_prepend('host_', {
+        'accept_passive_checks': 0,
+        'acknowledged': 0,
+        'action_url_expanded': '',
+        'active_checks_enabled': 1,
+        'address': '127.0.0.1',
+        'check_command': 'check-mk-host-smart',
+        'check_type': 0,
+        'comments_with_extra_info': '',
+        'custom_variable_name': '',
+        'custom_variable_names': ['FILENAME', 'ADDRESS_FAMILY', 'ADDRESS_4', 'ADDRESS_6', 'TAGS'],
+        'custom_variable_values': ['/wato/hosts.mk', 4, '127.0.0.1', '', '/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp'],
+        'downtimes': '',
+        'downtimes_with_extra_info': '',
+        'filename': '/wato/hosts.mk',
+        'has_been_checked': 1,
+        'icon_image': '',
+        'in_check_period': 1,
+        'in_notification_period': 1,
+        'in_service_period': 1,
+        'is_flapping': 0,
+        'modified_attributes_list': '',
+        'name': 'heute',
+        'notes_url_expanded': '',
+        'notifications_enabled': 1,
+        'num_services_crit': 2,
+        'num_services_ok': 37,
+        'num_services_pending': 0,
+        'num_services_unknown': 0,
+        'num_services_warn': 2,
+        'perf_data': '',
+        'pnpgraph_present': 0,
+        'scheduled_downtime_depth': 0,
+        'staleness': 0.833333,
+        'state': 0,
+        'host_labels': {"cmk/os_family": "linux","cmk/check_mk_server": "yes",},
+    })])
+    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
+    live.expect_query(
+        "GET hosts\n"
+        "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "
+        "host_active_checks_enabled host_address host_check_command host_check_type "
+        "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values "
+        "host_downtimes host_downtimes_with_extra_info host_filename host_has_been_checked "
+        "host_icon_image host_in_check_period host_in_notification_period host_in_service_period "
+        "host_is_flapping host_labels host_modified_attributes_list host_name host_notes_url_expanded "
+        "host_notifications_enabled host_num_services_crit host_num_services_ok "
+        "host_num_services_pending host_num_services_unknown host_num_services_warn host_perf_data "
+        "host_pnpgraph_present host_scheduled_downtime_depth host_staleness host_state\n"
+        "Limit: 1001"
+    )
+    live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
+    with live():
+        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
+        assert 'heute' in resp
+        assert 'query=null' not in resp
+        assert '/domain-types/host/collections/all' in resp

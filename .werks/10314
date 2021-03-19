@@ -1,0 +1,12 @@
+Title: Remove deprecated check_multi plugin
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1598360797
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The check_multi plugin is deprecated and not maintained anymore and therefor removed from the Checkmk package.
+If you are still using this plugin you can install it manually in your local hierarchy.

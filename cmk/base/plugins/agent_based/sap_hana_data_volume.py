@@ -3,29 +3,29 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping
 from contextlib import suppress
 from .utils import (
     sap_hana,
     df,
 )
 
-from .agent_based_api.v0 import (
+from .agent_based_api.v1 import (
     register,
     Service,
     Result,
-    state,
+    State as state,
     get_value_store,
 )
 
-from .agent_based_api.v0.type_defs import (
-    DiscoveryGenerator,
-    AgentStringTable,
-    CheckGenerator,
-    Parameters,
+from .agent_based_api.v1.type_defs import (
+    DiscoveryResult,
+    StringTable,
+    CheckResult,
 )
 
 
-def parse_sap_hana_data_volume(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
     MB = 1024**2
@@ -61,13 +61,13 @@ register.agent_section(
 )
 
 
-def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_sap_hana_data_volume(item: str, params: Parameters,
-                               section: sap_hana.ParsedSection) -> CheckGenerator:
+def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
+                               section: sap_hana.ParsedSection) -> CheckResult:
     item_data = section.get(item)
     if item_data is None:
         return
@@ -75,8 +75,12 @@ def check_sap_hana_data_volume(item: str, params: Parameters,
     used = item_data['used']
     avail = size - used
 
-    yield from df.df_check_filesystem_list(get_value_store(), "sap_hana_data_volume", item, params,
-                                           [(item, size, avail, 0)])
+    yield from df.df_check_filesystem_list(
+        get_value_store(),
+        item,
+        params,
+        [(item, size, avail, 0)],
+    )
 
     service = item_data.get('service')
     if service:

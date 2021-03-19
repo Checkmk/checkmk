@@ -42,6 +42,10 @@ class BookmarkList(pagetypes.Overridable):
         return "bookmark_list"
 
     @classmethod
+    def type_icon(cls):
+        return "bookmark_list"
+
+    @classmethod
     def phrase(cls, phrase):
         return {
             "title": _("Bookmark list"),
@@ -102,7 +106,7 @@ class BookmarkList(pagetypes.Overridable):
                                         allow_empty=False,
                                         validate=cls.validate_url,
                                     )),
-                                    (IconSelector(title=_("Icon"),)),
+                                    (IconSelector(title=_("Icon"), with_emblem=False)),
                                     (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
@@ -138,7 +142,6 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
-            style="dropdown",
             orientation="horizontal",
         )
 
@@ -218,8 +221,9 @@ class BookmarkList(pagetypes.Overridable):
 
     def bookmarks_by_topic(self):
         topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
@@ -247,12 +251,19 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            html.begin_foldable_container(
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
+            )
 
             for bookmark in bookmarks:
                 icon = bookmark["icon"]
                 if not icon:
-                    icon = "kdict"
+                    icon = "bookmark_list"
 
                 iconlink(bookmark["title"], bookmark["url"], icon)
 

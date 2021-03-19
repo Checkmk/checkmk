@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <ostream>
 #include <string>
-#include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -27,28 +27,45 @@ std::string unsafe_toupper(const std::string &str);
 #endif
 
 bool starts_with(const std::string &input, const std::string &test);
+bool ends_with(const std::string &input, const std::string &test);
 
 std::vector<std::string> split(const std::string &str, char delimiter);
+
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key);
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key);
 
 std::string join(const std::vector<std::string> &values,
                  const std::string &separator);
 
-std::string lstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+constexpr auto whitespace = " \t\n\v\f\r";
 
-std::string rstrip(const std::string &str,
-                   const std::string &chars = " \t\n\v\f\r");
+std::string lstrip(const std::string &str, const std::string &chars);
 
-// TODO (sk): unit tests
-std::string_view rstrip(std::string_view str, std::string_view chars);
-// TODO (sk): unit tests
-std::string_view lstrip(std::string_view str, std::string_view chars);
+inline std::string lstrip(const std::string &str) {
+    return lstrip(str, whitespace);
+}
 
-std::string strip(const std::string &str,
-                  const std::string &chars = " \t\n\v\f\r");
+std::string rstrip(const std::string &str, const std::string &chars);
 
-std::pair<std::string, std::string> nextField(
-    const std::string &str, const std::string &chars = " \t\n\v\f\r");
+inline std::string rstrip(const std::string &str) {
+    return rstrip(str, whitespace);
+}
+
+std::string strip(const std::string &str, const std::string &chars);
+
+inline std::string strip(const std::string &str) {
+    return strip(str, whitespace);
+}
+
+std::pair<std::string, std::string> nextField(const std::string &str,
+                                              const std::string &chars);
+
+inline std::pair<std::string, std::string> nextField(const std::string &str) {
+    return nextField(str, whitespace);
+}
 
 std::string replace_first(const std::string &str, const std::string &from,
                           const std::string &to);

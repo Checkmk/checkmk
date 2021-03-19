@@ -9,13 +9,11 @@ GIT_ROOT=$(git rev-parse --show-toplevel)
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
+    --exclude="flycheck*" \
     -aR \
     . \
     $ROOT/lib/python3/cmk/gui/plugins/openapi
 
-pushd $GIT_ROOT
-make openapi
 pushd $GIT_ROOT/web/htdocs/openapi/
 f12
-popd
 popd

@@ -13,7 +13,9 @@ import re
 import hashlib
 from pathlib import Path
 import traceback
-from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
+from typing import (Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional,
+                    Union, Dict, Type, cast, Sequence)
+from contextlib import suppress
 
 from six import ensure_str
 
@@ -23,6 +25,7 @@ from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     Timestamp,
     TimeRange,
@@ -44,19 +47,22 @@ from cmk.gui.permissions import Permission
 from cmk.gui.valuespec import ValueSpec, DropdownChoice
 from cmk.gui.log import logger
 from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _, _u
-from cmk.gui.globals import g, html
+from cmk.gui.i18n import _, _u, ungettext
+from cmk.gui.globals import g, html, request, display_options
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.display_options import display_options
 from cmk.gui.permissions import permission_registry
 from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
 from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.plugins.visuals.utils import (
+    visual_info_registry,
+    visual_type_registry,
+    VisualType,
+)
 
 from cmk.gui.type_defs import (
     ColumnName,
-    ViewName,
     LivestatusQuery,
     SorterName,
     HTTPVariables,
@@ -70,7 +76,13 @@ from cmk.gui.type_defs import (
     PermittedViewSpecs,
     VisualContext,
     PainterParameters,
+    Visual,
+    VisualLinkSpec,
+    SingleInfos,
+    VisualName,
 )
+
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 if TYPE_CHECKING:
     from cmk.gui.views import View
@@ -78,6 +90,11 @@ if TYPE_CHECKING:
 
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
+CommandSpecWithoutSite = str
+CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
+CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
+CommandActionResult = Optional[Tuple[Union[CommandSpecWithoutSite, Sequence[CommandSpec]], str]]
+CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -249,15 +266,14 @@ class PainterOptions:
             return
 
         html.begin_form("painteroptions")
-        forms.header(_("Display options"))
+        forms.header("", show_table_head=False)
         for name in self._used_option_names:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())
-            # TODO: Possible improvement for vars which default is specified
-            # by the view: Don't just default to the valuespecs default. Better
-            # use the view default value here to get the user the current view
-            # settings reflected.
-            vs.render_input("po_%s" % name, self.get(name))
+            if name == "refresh":
+                vs.render_input("po_%s" % name, view.spec.get("browser_reload", self.get(name)))
+                continue
+            vs.render_input("po_%s" % name, view.spec.get(name, self.get(name)))
         forms.end()
 
         html.button("_update_painter_options", _("Submit"), "submit")
@@ -267,7 +283,7 @@ class PainterOptions:
         html.end_form()
 
 
-def row_id(view_spec: Dict[str, Any], row: Row) -> str:
+def row_id(view_spec: ViewSpec, row: Row) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''
@@ -299,7 +315,7 @@ def _create_dict_key(value: Any) -> Hashable:
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     if isinstance(value, dict):
-        return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
+        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
     return value
 
 
@@ -465,7 +481,7 @@ class Command(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def permission(self) -> Type[Permission]:
+    def permission(self) -> Permission:
         raise NotImplementedError()
 
     @abc.abstractproperty
@@ -473,12 +489,30 @@ class Command(metaclass=abc.ABCMeta):
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        what = "host" if cmdtag == "HOST" else "service"
+        return title + " the following %(count)d %(what)s?" % {
+            "count": len_action_rows,
+            "what": ungettext(what, what + "s", len_action_rows)
+        }
+
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
+        return [(_("Confirm"), "_do_confirm")]
+
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
+    def action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+               num_rows: int) -> CommandActionResult:
+        result = self._action(cmdtag, spec, row, row_index, num_rows)
+        if result:
+            commands, title = result
+            return commands, self.user_dialog_suffix(title, num_rows, cmdtag)
+        return None
+
     @abc.abstractmethod
-    def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-               num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         raise NotImplementedError()
 
     @property
@@ -496,12 +530,23 @@ class Command(metaclass=abc.ABCMeta):
         return "commands"
 
     @property
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return False
 
-    def executor(self, command: str, site: str) -> None:
+    @property
+    def is_shortcut(self) -> bool:
+        return False
+
+    @property
+    def is_suggested(self) -> bool:
+        return False
+
+    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
+        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
+        # object type for the command
+        assert isinstance(command, str)
+        sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
 class CommandRegistry(cmk.utils.plugin_registry.Registry[Type[Command]]):
@@ -526,6 +571,8 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
             "render": lambda s: s._spec["render"](),
             "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"]
                       (cmdtag, spec, row),
+            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"]
+                       (cmdtag, spec, row),
             "group": lambda s: command_group_registry[s._spec.get("group", "various")],
             "only_view": lambda s: s._spec.get("only_view"),
         })
@@ -717,8 +764,9 @@ class RowTableLivestatus(RowTable):
                 if c not in columns:
                     columns.append(c)
 
-        # Remove columns which are implicitely added by the datasource
-        return [c for c in columns if c not in datasource.add_columns], dynamic_columns
+        # Remove columns which are implicitly added by the datasource. We sort the remaining
+        # columns to allow for repeatable tests.
+        return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
     def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
         query = "GET %s\n" % self.table_name
@@ -803,8 +851,12 @@ class Painter(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def title(self, cell: 'Cell') -> str:
-        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
+
+    def title_classes(self) -> List[str]:
+        """Additional css classes used to render the title"""
+        return []
 
     @abc.abstractproperty
     def columns(self) -> List[ColumnName]:
@@ -857,6 +909,11 @@ class Painter(metaclass=abc.ABCMeta):
 
     def short_title(self, cell: 'Cell') -> str:
         """Used as display string for the painter e.g. as table header
+        Falls back to the full title if no short title is given"""
+        return self.title(cell)
+
+    def list_title(self, cell: 'Cell') -> str:
+        """Override this to define a custom title for the painter in the view editor
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
@@ -1009,8 +1066,8 @@ inventory_displayhints: Dict = {}
 view_is_enabled: Dict = {}
 
 
-def view_title(view_spec: ViewSpec) -> str:
-    return visuals.visual_title('view', view_spec)
+def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
+    return visuals.visual_title('view', view_spec, context)
 
 
 def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:
@@ -1020,7 +1077,8 @@ def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Op
 
 
 def is_stale(row: Row) -> bool:
-    return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
+    staleness = row.get('service_staleness', row.get('host_staleness', 0)) or 0
+    return staleness >= config.staleness_threshold
 
 
 def paint_stalified(row: Row, text: CellContent) -> CellSpec:
@@ -1040,68 +1098,152 @@ def format_plugin_output(output: CellContent, row: Row) -> str:
                                                    shall_escape=config.escape_plugin_output)
 
 
-def link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
+def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
     assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
 
-    url = url_to_view(row, view_name)
+    url = url_to_visual(row, link_spec)
     if url:
         return html.render_a(content, href=url)
     return content
 
 
-# TODO: There is duplicated logic with visuals.collect_context_links_of()
-def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
+def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     if display_options.disabled(display_options.I):
         return None
 
-    view = get_permitted_views().get(view_name)
-    if not view:
+    visual = _get_visual_by_link_spec(link_spec)
+    if not visual:
         return None
 
-    # Get the context type of the view to link to, then get the parameters of this
-    # context type and try to construct the context from the data of the row
-    url_vars: HTTPVariables = []
-    datasource = data_source_registry[view['datasource']]()
-    for info_key in datasource.infos:
-        if info_key in view['single_infos']:
-            # Determine which filters (their names) need to be set
-            # for specifying in order to select correct context for the
-            # target view.
-            for filter_name in visuals.info_params(info_key):
-                filter_object = visuals.get_filter(filter_name)
-                # Get the list of URI vars to be set for that filter
-                new_vars = filter_object.variable_settings(row)
-                url_vars += new_vars
+    visual_type = visual_type_registry[link_spec.type_name]()
+
+    if visual_type.ident == "views":
+        datasource = data_source_registry[visual['datasource']]()
+        infos = datasource.infos
+        link_filters = datasource.link_filters
+    elif visual_type.ident == "dashboards":
+        # TODO: Is this "infos" correct?
+        infos = []
+        link_filters = {}
+    else:
+        raise NotImplementedError(f"Unsupported visual type: {visual_type}")
+
+    singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
+        visual["name"], row, infos, visual["single_infos"], link_filters)
+
+    return make_linked_visual_url(visual_type, visual, singlecontext_request_vars, html.mobile)
+
+
+def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Visual]:
+    if link_spec is None:
+        return None
+
+    visual_type = visual_type_registry[link_spec.type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
+
+    with suppress(KeyError):
+        return available_visuals[link_spec.name]
+
+    return None
+
+
+def _get_singlecontext_html_vars_from_row(
+    visual_name: VisualName,
+    row: Row,
+    infos: List[str],
+    single_infos: SingleInfos,
+    link_filters: Dict[str, str],
+) -> Dict[str, str]:
+    # Get the context type of the view to link to, then get the parameters of this context type
+    # and try to construct the context from the data of the row
+    url_vars: Dict[str, str] = {}
+    for info_key in single_infos:
+        # Determine which filters (their names) need to be set for specifying in order to select
+        # correct context for the target view.
+        for filter_name in visuals.info_params(info_key):
+            filter_object = visuals.get_filter(filter_name)
+            # Get the list of URI vars to be set for that filter
+            try:
+                url_vars.update(filter_object.request_vars_from_row(row))
+            except KeyError:
+                # The information needed for a mandatory filter (single context) is not available.
+                # Continue without failing: The target site will show up a warning and ask for the
+                # missing information.
+                pass
 
     # See get_link_filter_names() comment for details
-    for src_key, dst_key in visuals.get_link_filter_names(view, datasource.infos,
-                                                          datasource.link_filters):
+    for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
         try:
-            url_vars += visuals.get_filter(src_key).variable_settings(row)
+            url_vars.update(visuals.get_filter(src_key).request_vars_from_row(row))
         except KeyError:
             pass
 
         try:
-            url_vars += visuals.get_filter(dst_key).variable_settings(row)
+            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row).items())
         except KeyError:
             pass
 
-    add_site_hint = visuals.may_add_site_hint(view_name,
-                                              info_keys=datasource.infos,
-                                              single_info_keys=view["single_infos"],
-                                              filter_names=[v for v, _ in url_vars])
-    if add_site_hint and row.get('site'):
-        url_vars.append(('site', row['site']))
+    add_site_hint = visuals.may_add_site_hint(visual_name,
+                                              info_keys=list(visual_info_registry.keys()),
+                                              single_info_keys=single_infos,
+                                              filter_names=list(url_vars.keys()))
+    if add_site_hint and row.get("site"):
+        url_vars["site"] = row["site"]
 
-    do = html.request.var("display_options")
-    if do:
-        url_vars.append(("display_options", do))
+    return url_vars
 
-    filename = "mobile_view.py" if html.mobile else "view.py"
-    url_vars.insert(0, ("view_name", view_name))
-    return filename + "?" + html.urlencode_vars(url_vars)
+
+def make_linked_visual_url(visual_type: VisualType, visual: Visual,
+                           singlecontext_request_vars: Dict[str, str], mobile: bool) -> str:
+    """Compute URLs to link from a view to other dashboards and views"""
+    name = visual["name"]
+    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
+
+    filename = visual_type.show_url
+    if mobile and visual_type.show_url == 'view.py':
+        filename = 'mobile_' + visual_type.show_url
+
+    # add context link to this visual. For reports we put in
+    # the *complete* context, even the non-single one.
+    if visual_type.multicontext_links:
+        return makeuri(request, [(visual_type.ident_attr, name)], filename=filename)
+
+    # For views and dashboards currently the current filter settings
+    return makeuri_contextless(
+        request,
+        vars_values + [(visual_type.ident_attr, name)],
+        filename=filename,
+    )
+
+
+def get_linked_visual_request_vars(visual: Visual,
+                                   singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
+    vars_values: HTTPVariables = []
+    for var in visuals.get_single_info_keys(visual["single_infos"]):
+        try:
+            vars_values.append((var, singlecontext_request_vars[var]))
+        except KeyError:
+            # The information needed for a mandatory filter (single context) is not available.
+            # Continue without failing: The target site will show up a warning and ask for the
+            # missing information.
+            pass
+
+    if "site" in singlecontext_request_vars:
+        vars_values.append(("site", singlecontext_request_vars["site"]))
+    else:
+        # site may already be added earlier from the livestatus row
+        add_site_hint = visuals.may_add_site_hint(visual["name"],
+                                                  info_keys=list(visual_info_registry.keys()),
+                                                  single_info_keys=visual["single_infos"],
+                                                  filter_names=list(dict(vars_values).keys()))
+
+        if add_site_hint and html.request.var('site'):
+            vars_values.append(('site', html.request.get_ascii_input_mandatory('site')))
+
+    return vars_values
 
 
 def get_tag_groups(row: Row, what: str) -> TagGroups:
@@ -1180,7 +1322,7 @@ def paint_age(timestamp: Timestamp,
 def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> CellSpec:
     nonzero = row[field] != 0
     return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
-            _("yes") if nonzero else _("no"))
+            html.render_span(_("yes") if nonzero else _("no")))
 
 
 def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
@@ -1326,6 +1468,7 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
             mergefunc = worst_host_state
         else:
             mergefunc = lambda a, b: a
+
         mergefuncs.append(mergefunc)
 
     for row in data:
@@ -1363,12 +1506,15 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
         macros.update({
             "SERVICEDESC": row['service_description'],
         })
-
-    for key, val in macros.items():
-        url = url.replace("$%s$" % key, val)
-        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode(val))
-
-    return url
+    return replace_macros_in_str(
+        url,
+        {
+            k_mod: v_mod for k_orig, v_orig in macros.items() for k_mod, v_mod in (
+                (f"${k_orig}$", v_orig),
+                (f"${k_orig}_URL_ENCODED$", html.urlencode(v_orig)),
+            )
+        },
+    )
 
 
 def render_cache_info(what: str, row: Row) -> str:
@@ -1623,7 +1769,7 @@ class Cell:
         self._view = view
         self._painter_name: Optional[PainterName] = None
         self._painter_params: Optional[PainterParameters] = None
-        self._link_view_name: Optional[ViewName] = None
+        self._link_spec: Optional[VisualLinkSpec] = None
         self._tooltip_painter_name: Optional[PainterName] = None
         self._custom_title: Optional[str] = None
 
@@ -1636,7 +1782,7 @@ class Cell:
             self._painter_params = painter_spec[0][1]
             self._custom_title = self._painter_params.get('column_title', None)
 
-        self._link_view_name = painter_spec.link_view
+        self._link_spec = painter_spec.link_spec
 
         tooltip_painter_name = painter_spec.tooltip
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
@@ -1647,16 +1793,14 @@ class Cell:
 
         columns = set(self.painter().columns)
 
-        if self._link_view_name:
-            if self._has_link():
-                link_view = self._link_view()
-                if link_view:
-                    # TODO: Clean this up here
-                    for filt in [
-                            visuals.get_filter(fn)
-                            for fn in visuals.get_single_info_keys(link_view["single_infos"])
-                    ]:
-                        columns.update(filt.link_columns)
+        link_view = self._link_view()
+        if link_view:
+            # TODO: Clean this up here
+            for filt in [
+                    visuals.get_filter(fn)
+                    for fn in visuals.get_single_info_keys(link_view["single_infos"])
+            ]:
+                columns.update(filt.link_columns)
 
         if self.has_tooltip():
             columns.update(self.tooltip_painter().columns)
@@ -1669,15 +1813,12 @@ class Cell:
     def join_service(self) -> Optional[ServiceName]:
         return None
 
-    def _has_link(self) -> bool:
-        return self._link_view_name is not None
-
     def _link_view(self) -> Optional[ViewSpec]:
-        if self._link_view_name is None:
+        if self._link_spec is None:
             return None
 
         try:
-            return get_permitted_views()[self._link_view_name]
+            return get_permitted_views()[self._link_spec.name]
         except KeyError:
             return None
 
@@ -1740,7 +1881,7 @@ class Cell:
         assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name]()
 
-    def paint_as_header(self, is_last_column_header: bool = False) -> None:
+    def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
         # Use explicit defined sorter or implicit the sorter with the painter name
         # Important for links:
@@ -1754,16 +1895,16 @@ class Cell:
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
             params: HTTPVariables = [
                 ('sort', self._sort_url()),
+                ('_show_filter_form', 0),
             ]
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
             classes += ["sort"]
-            onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
+            onclick = "location.href=\'%s\'" % makeuri(
+                request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
-
-        if is_last_column_header:
-            classes.append("last_col")
+        classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
         html.write(self.title())
@@ -1840,8 +1981,8 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._has_link() and self._link_view_name is not None:
-            content = link_to_view(content, row, self._link_view_name)
+        if content and self._link_spec is not None:
+            content = render_link_to_view(content, row, self._link_spec)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
@@ -1933,16 +2074,10 @@ class Cell:
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 
-    def paint(self, row: Row, tdattrs: str = "", is_last_cell: bool = False) -> bool:
+    def paint(self, row: Row, tdattrs: str = "") -> bool:
         tdclass, content = self.render(row)
         has_content = content != ""
         assert not isinstance(content, dict)
-
-        if is_last_cell:
-            if tdclass is None:
-                tdclass = "last_col"
-            else:
-                tdclass += " last_col"
 
         if tdclass:
             html.write("<td %s class=\"%s\">" % (tdattrs, tdclass))
@@ -2038,7 +2173,7 @@ class EmptyCell(Cell):
     def render(self, row):
         return "", ""
 
-    def paint(self, row, tdattrs="", is_last_cell=False):
+    def paint(self, row, tdattrs=""):
         return False
 
 
@@ -2106,10 +2241,12 @@ def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> B
     # Add service home page
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(service_view_spec),
-            url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
-                                          ("service", service_name)],
-                                         filename="view.py"),
+            title=view_title(service_view_spec, context={}),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "service"), ("host", host_name), ("service", service_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb
@@ -2127,16 +2264,23 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     breadcrumb.append(
         BreadcrumbItem(
             title=_u(allhosts_view_spec["title"]),
-            url=html.makeuri_contextless([("view_name", "allhosts")], filename="view.py"),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "allhosts")],
+                filename="view.py",
+            ),
         ))
 
     # 2. level: host home page
     host_view_spec = permitted_views["host"]
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(host_view_spec),
-            url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)],
-                                         filename="view.py"),
+            title=view_title(host_view_spec, context={}),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "host"), ("host", host_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb

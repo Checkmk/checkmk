@@ -8,7 +8,7 @@ set -e
 CONTAINER="artifacts.lan.tribe29.com:4000/ubuntu-20.04:master-latest"
 REPO_DIR=$(git rev-parse --show-toplevel)
 
-function execute_test() {
+execute_test() {
     LANG=C make -C ../../.. config.status
     (cd ../../.. && ./config.status)
     LANG=C make -j4 -C .. unit-test

@@ -6,15 +6,13 @@
 
 import abc
 import re
-import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from six import ensure_str
 
 import cmk.gui.utils as utils
 import cmk.gui.config as config
-import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
@@ -29,22 +27,6 @@ from cmk.gui.plugins.views import (
     EmptyCell,
     output_csv_headers,
 )
-
-
-def init_rowselect(view):
-    # Don't make rows selectable when no commands can be fired
-    # Ignore "C" display option here. Otherwise the rows will not be selectable
-    # after view reload.
-    if not config.user.may("general.act"):
-        return
-
-    selected = config.user.get_rowselection(weblib.selection_id(), 'view-' + view['name'])
-    selection_properties = {
-        "page_id": "view-%s" % view['name'],
-        "selection_id": weblib.selection_id(),
-        "selected_rows": selected,
-    }
-    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
 
 
 def render_checkbox(view, row, num_tds):
@@ -168,15 +150,8 @@ class GroupedBoxesLayout(Layout):
                       show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
-        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
-        html.open_tr(class_="groupheader")
-        painted = False
-        for cell in group_cells:
-            if painted:
-                html.td(",&nbsp;")
-            painted = cell.paint(rows_with_ids[0][1])
-        html.close_tr()
-        html.close_table()
+        if group_cells:
+            self._show_group_header_table(group_cells, rows_with_ids[0][1])
 
         html.open_table(class_="data")
         odd = "odd"
@@ -242,7 +217,24 @@ class GroupedBoxesLayout(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        # Don't make rows selectable when no commands can be fired
+        # Ignore "C" display option here. Otherwise the rows will not be selectable
+        # after view reload.
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
+
+    def _show_group_header_table(self, group_cells, first_row):
+        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
+        html.open_tr(class_="groupheader")
+        painted = False
+        for cell in group_cells:
+            if painted:
+                html.td(",&nbsp;")
+            painted = cell.paint(first_row)
+        html.close_tr()
+        html.close_table()
 
     def _show_header_line(self, cells, show_checkboxes):
         html.open_tr()
@@ -272,7 +264,7 @@ class GroupedBoxesLayout(Layout):
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
-    is_open = html.foldable_container_is_open("grouped_rows", index, False)
+    is_open = config.user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
         class_=["data", "grouped_row_header", "closed" if not is_open else '',
                 "%s0" % trclass])
@@ -280,7 +272,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_closed.png"),
+    html.img(html.theme_url("images/tree_closed.svg"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
@@ -527,7 +519,10 @@ class LayoutTiled(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
 
 @layout_registry.register
@@ -611,6 +606,7 @@ class LayoutTable(Layout):
                         html.close_table()
                         html.close_td()
                         html.close_tr()
+                        odd = "odd"
 
                     # Table headers
                     if view.get("column_headers") != "off":
@@ -677,9 +673,8 @@ class LayoutTable(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint(row, is_last_cell=last_cell == cell)
+                cell.paint(row)
 
             column += 1
 
@@ -689,7 +684,10 @@ class LayoutTable(Layout):
                 html.td('', class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
-        init_rowselect(view)
+        if not config.user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
     def _show_header_line(self, cells, num_columns, show_checkboxes):
         html.open_tr()
@@ -700,14 +698,17 @@ class LayoutTable(Layout):
                 else:
                     html.th('')
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint_as_header(is_last_column_header=cell == last_cell)
+                cell.paint_as_header()
 
             if n < num_columns:
                 html.td('', class_="gap")
 
         html.close_tr()
+
+
+def _get_view_name(view) -> str:
+    return "view-%s" % view["name"]
 
 
 @layout_registry.register
@@ -779,7 +780,7 @@ class LayoutMatrix(Layout):
 
         painter_options = PainterOptions.get_instance()
         for groups, unique_row_ids, matrix_cells in \
-                 create_matrices(rows, group_cells, cells, num_columns):
+                create_matrices(rows, group_cells, cells, num_columns):
 
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")

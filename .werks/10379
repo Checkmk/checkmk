@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When using the WATO host search to filter hosts by a host name pattern, the
 resulting page showed the correctly matched hosts. When performing a bulk

@@ -39,5 +39,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_citrix_state,
-        title=lambda: _("State of Citrix VMs"),
+        title=lambda: _("Citrix VM state"),
     ))

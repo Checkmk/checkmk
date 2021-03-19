@@ -29,7 +29,10 @@ RUN yum -y --enablerepo=extras install \
 
 RUN yum -y makecache \
     && yum -y install \
+    autoconf \
+    automake \
     bind-utils \
+    chrpath \
     curl \
     curl-devel \
     expat-devel \
@@ -41,7 +44,9 @@ RUN yum -y makecache \
     gd-devel \
     gettext \
     groff \
+    gtk-doc \
     httpd-devel \
+    joe \
     libXpm-devel \
     libdbi-devel \
     libevent-devel \
@@ -50,10 +55,12 @@ RUN yum -y makecache \
     libjpeg-devel \
     libmcrypt-devel \
     libpcap-devel \
+    libtool \
     libtool-ltdl \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
+    libxmlsec1-devel \
     mariadb-devel \
     ncurses-devel \
     openssh-clients \
@@ -67,6 +74,7 @@ RUN yum -y makecache \
     perl-Time-HiRes \
     perl-devel \
     php \
+    ping \
     postgresql-devel \
     readline-devel \
     rpcbind \
@@ -76,12 +84,12 @@ RUN yum -y makecache \
     sqlite-devel \
     texinfo \
     tk-devel \
+    valgrind \
+    vim \
     wget \
     which \
-    chrpath \
-    joe \
-    ping \
-    vim \
+    xmlsec1-devel \
+    xmlsec1-openssl-devel \
     && yum clean all
 
 # Install our standard tool chain for building
@@ -105,6 +113,7 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can

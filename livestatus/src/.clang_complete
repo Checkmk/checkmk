@@ -4,6 +4,6 @@
 -isystem includes/asio
 -I../../omd/packages/re2/destdir/include
 -DHAVE_CONFIG_H
--std=c++20
+-std=c++17
 -Wall
 -Wextra

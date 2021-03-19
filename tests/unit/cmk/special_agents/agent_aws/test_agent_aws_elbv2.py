@@ -220,6 +220,7 @@ def test_agent_aws_elbv2_limits(get_elbv2_sections, names, tags, found_instances
     elbv2_limits_results = elbv2_limits.run().results
 
     assert elbv2_limits.cache_interval == 300
+    assert elbv2_limits.period == 600
     assert elbv2_limits.name == "elbv2_limits"
     assert len(elbv2_limits_results) == 4
     for result in elbv2_limits_results:
@@ -239,6 +240,7 @@ def test_agent_aws_elbv2_summary(get_elbv2_sections, names, tags, found_instance
     elbv2_summary_results = elbv2_summary.run().results
 
     assert elbv2_summary.cache_interval == 300
+    assert elbv2_summary.period == 600
     assert elbv2_summary.name == "elbv2_summary"
 
     if found_instances:
@@ -261,6 +263,7 @@ def test_agent_aws_elbv2_labels(get_elbv2_sections, names, tags, found_instances
     elbv2_labels_results = elbv2_labels.run().results
 
     assert elbv2_labels.cache_interval == 300
+    assert elbv2_labels.period == 600
     assert elbv2_labels.name == "elbv2_generic_labels"
     assert len(elbv2_labels_results) == len(found_instances_with_labels)
     for result in elbv2_labels_results:
@@ -277,6 +280,7 @@ def test_agent_aws_elbv2_target_groups(get_elbv2_sections, names, tags, found_in
     elbv2_target_groups_results = elbv2_target_groups.run().results
 
     assert elbv2_target_groups.cache_interval == 300
+    assert elbv2_target_groups.period == 600
     assert elbv2_target_groups.name == "elbv2_target_groups"
     assert len(elbv2_target_groups_results) == len(found_instances)
     for result in elbv2_target_groups_results:
@@ -299,6 +303,7 @@ def test_agent_aws_elbv2_application(get_elbv2_sections, names, tags, found_inst
     ).results
 
     assert elbv2_application.cache_interval == 300
+    assert elbv2_application.period == 600
     assert elbv2_application.name == "elbv2_application"
     assert len(elbv2_application_results) == len(found_instances)
     for result in elbv2_application_results:
@@ -307,7 +312,9 @@ def test_agent_aws_elbv2_application(get_elbv2_sections, names, tags, found_inst
         assert len(result.content) == 20
 
     assert elbv2_application_target_groups_http.cache_interval == 300
+    assert elbv2_application_target_groups_http.period == 600
     assert elbv2_application_target_groups_lambda.cache_interval == 300
+    assert elbv2_application_target_groups_lambda.period == 600
     assert elbv2_application_target_groups_http.name == "elbv2_application_target_groups_http"
     assert elbv2_application_target_groups_lambda.name == "elbv2_application_target_groups_lambda"
 
@@ -327,6 +334,7 @@ def test_agent_aws_elbv2_network(get_elbv2_sections, names, tags, found_instance
     elbv2_network_results = elbv2_network.run().results
 
     assert elbv2_network.cache_interval == 300
+    assert elbv2_network.period == 600
     assert elbv2_network.name == "elbv2_network"
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:
@@ -343,6 +351,7 @@ def test_agent_aws_elbv2_summary_without_limits(get_elbv2_sections, names, tags,
     elbv2_summary_results = elbv2_summary.run().results
 
     assert elbv2_summary.cache_interval == 300
+    assert elbv2_summary.period == 600
     assert elbv2_summary.name == "elbv2_summary"
 
     if found_instances:
@@ -364,6 +373,7 @@ def test_agent_aws_elbv2_labels_without_limits(get_elbv2_sections, names, tags, 
     elbv2_labels_results = elbv2_labels.run().results
 
     assert elbv2_labels.cache_interval == 300
+    assert elbv2_labels.period == 600
     assert elbv2_labels.name == "elbv2_generic_labels"
     assert len(elbv2_labels_results) == len(found_instances_with_labels)
     for result in elbv2_labels_results:
@@ -379,6 +389,7 @@ def test_agent_aws_elbv2_target_groups_without_limits(get_elbv2_sections, names,
     elbv2_target_groups_results = elbv2_target_groups.run().results
 
     assert elbv2_target_groups.cache_interval == 300
+    assert elbv2_target_groups.period == 600
     assert elbv2_target_groups.name == "elbv2_target_groups"
     assert len(elbv2_target_groups_results) == len(found_instances)
     for result in elbv2_target_groups_results:
@@ -400,6 +411,7 @@ def test_agent_aws_elbv2_application_without_limits(get_elbv2_sections, names, t
     ).results
 
     assert elbv2_application.cache_interval == 300
+    assert elbv2_application.period == 600
     assert elbv2_application.name == "elbv2_application"
     assert len(elbv2_application_results) == len(found_instances)
     for result in elbv2_application_results:
@@ -408,7 +420,9 @@ def test_agent_aws_elbv2_application_without_limits(get_elbv2_sections, names, t
         assert len(result.content) == 20
 
     assert elbv2_application_target_groups_http.cache_interval == 300
+    assert elbv2_application_target_groups_http.period == 600
     assert elbv2_application_target_groups_lambda.cache_interval == 300
+    assert elbv2_application_target_groups_lambda.period == 600
     assert elbv2_application_target_groups_http.name == "elbv2_application_target_groups_http"
     assert elbv2_application_target_groups_lambda.name == "elbv2_application_target_groups_lambda"
 
@@ -427,6 +441,7 @@ def test_agent_aws_elbv2_network_without_limits(get_elbv2_sections, names, tags,
     elbv2_network_results = elbv2_network.run().results
 
     assert elbv2_network.cache_interval == 300
+    assert elbv2_network.period == 600
     assert elbv2_network.name == "elbv2_network"
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:

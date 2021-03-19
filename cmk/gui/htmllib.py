@@ -46,7 +46,21 @@ import json.encoder  # type: ignore[import]
 import abc
 import pprint
 from contextlib import contextmanager
-from typing import Union, Optional, List, Dict, Tuple, Any, Iterator, cast, Mapping, Set, TYPE_CHECKING, TypeVar, NamedTuple, Text
+from typing import (
+    Union,
+    Optional,
+    List,
+    Dict,
+    Tuple,
+    Any,
+    Iterator,
+    cast,
+    Mapping,
+    Set,
+    Sequence,
+    TYPE_CHECKING,
+    TypeVar,
+)
 from pathlib import Path
 import urllib.parse
 
@@ -108,6 +122,11 @@ from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.urls import (
+    makeactionuri,
+    makeactionuri_contextless,
+    requested_file_name,
+)
 from cmk.gui.i18n import _
 from cmk.gui.http import Response
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
@@ -118,7 +137,13 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
-from cmk.gui.type_defs import CSSSpec
+from cmk.gui.type_defs import (
+    CSSSpec,
+    Icon,
+    Choices,
+    ChoiceGroup,
+    GroupedChoices,
+)
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -132,14 +157,7 @@ HTMLContent = Union[None, int, HTML, str]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[str]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, str]
-Choices = List[Tuple[Optional[str], str]]
 DefaultChoice = str
-
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
-GroupedChoices = List[ChoiceGroup]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -221,6 +239,9 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
                 continue
 
             key = escaping.escape_attribute(key_unescaped.rstrip('_'))
+
+            if key.startswith('data_'):
+                key = key.replace('_', '-', 1)  # HTML data attribute: 'data-name'
 
             if v == '':
                 options.append(key)
@@ -979,7 +1000,6 @@ class html(ABCHTMLGenerator):
 
         # rendering state
         self._header_sent = False
-        self._context_buttons_open = False
 
         # style options
         self._body_classes = ['main']
@@ -999,7 +1019,6 @@ class html(ABCHTMLGenerator):
 
         # Browser options
         self.user_errors: Dict[Optional[str], str] = {}
-        self.focus_object: Union[None, Tuple[Optional[str], str], str] = None
         self.final_javascript_code = ""
         self.page_context: 'VisualContext' = {}
 
@@ -1026,7 +1045,7 @@ class html(ABCHTMLGenerator):
 
         self.init_mobile()
 
-        self.myfile = self._requested_file_name()
+        self.myfile = requested_file_name(self.request)
 
         # Disable caching for all our pages as they are mostly dynamically generated,
         # user related and are required to be up-to-date on every refresh
@@ -1070,13 +1089,21 @@ class html(ABCHTMLGenerator):
     def get_theme(self) -> str:
         return self._theme
 
+    def icon_themes(self) -> List[str]:
+        """Returns the themes where icons of a theme can be found in increasing order of importance.
+        By default the facelift theme provides all icons. If a theme wants to use different icons it
+        only needs to add those icons under the same name. See detect_icon_path for a detailed list
+        of paths.
+        """
+        return ["facelift"] if self._theme == "facelift" else ["facelift", self._theme]
+
     def theme_url(self, rel_url: str) -> str:
         return "themes/%s/%s" % (self._theme, rel_url)
 
     def _verify_not_using_threaded_mpm(self) -> None:
         if self.request.is_multithread:
             raise MKGeneralException(
-                _("You are trying to Check_MK together with a threaded Apache multiprocessing module (MPM). "
+                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
                   "Check_MK is only working with the prefork module. Please change the MPM module to make "
                   "Check_MK work."))
 
@@ -1092,34 +1119,14 @@ class html(ABCHTMLGenerator):
         if self.request.var("screenshotmode", "1" if config.screenshotmode else ""):
             self.screenshotmode = True
 
-    def _requested_file_name(self) -> str:
-        parts = self.request.requested_file.rstrip("/").split("/")
-
-        if len(parts) == 3 and parts[-1] == "check_mk":
-            # Load index page when accessing /[site]/check_mk
-            myfile = "index"
-
-        elif parts[-1].endswith(".py"):
-            # Regular pages end with .py - Stript it away to get the page name
-            myfile = parts[-1][:-3]
-            if myfile == "":
-                myfile = "index"
-
-        else:
-            myfile = "index"
-
-        # Redirect to mobile GUI if we are a mobile device and the index is requested
-        if myfile == "index" and self.mobile:
-            myfile = "mobile"
-
-        return myfile
-
     def init_mobile(self) -> None:
         if self.request.has_var("mobile"):
             # TODO: Make private
             self.mobile = bool(self.request.var("mobile"))
             # Persist the explicitly set state in a cookie to have it maintained through further requests
-            self.response.set_http_cookie("mobile", str(int(self.mobile)))
+            self.response.set_http_cookie("mobile",
+                                          str(int(self.mobile)),
+                                          secure=self.request.is_secure)
 
         elif self.request.has_cookie("mobile"):
             self.mobile = self.request.cookie("mobile", "0") == "1"
@@ -1329,10 +1336,11 @@ class html(ABCHTMLGenerator):
         self.link_target = framename
 
     def set_focus(self, varname: str) -> None:
-        self.focus_object = (self.form_name, varname)
+        self.final_javascript("cmk.utils.set_focus_by_name(%s, %s)" %
+                              (json.dumps(self.form_name), json.dumps(varname)))
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.focus_object = dom_id
+        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
 
     def set_render_headfoot(self, render: bool) -> None:
         self.render_headfoot = render
@@ -1360,16 +1368,12 @@ class html(ABCHTMLGenerator):
     def final_javascript(self, code: str) -> None:
         self.final_javascript_code += code + "\n"
 
-    def reload_sidebar(self) -> None:
+    def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            self.write_html(self.render_reload_sidebar())
-
-    def render_reload_sidebar(self) -> HTML:
-        return self.render_javascript("cmk.utils.reload_sidebar()")
+            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
 
     def finalize(self) -> None:
         """Finish the HTTP request processing before handing over to the application server"""
-        self.transaction_manager.store_new()
         self.disable_request_timeout()
 
     #
@@ -1406,16 +1410,12 @@ class html(ABCHTMLGenerator):
             cls = 'error'
             prefix = _('ERROR')
 
-        code = HTML()
-
         if self.output_format == "html":
-            code += self.render_div(self.render_text(msg), class_=cls)
+            code = self.render_div(self.render_text(msg), class_=cls)
             if self.mobile:
-                code += self.render_center(code)
-        else:
-            code += self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
-
-        return code
+                return self.render_center(code)
+            return code
+        return self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -1488,47 +1488,27 @@ class html(ABCHTMLGenerator):
     # URL building
     #
 
-    def makeuri(self,
-                addvars: 'HTTPVariables',
-                remove_prefix: Optional[str] = None,
-                filename: Optional[str] = None,
-                delvars: Optional[List[str]] = None) -> str:
-        new_vars = [nv[0] for nv in addvars]
-        vars_: 'HTTPVariables' = [
-            (v, val)
-            for v, val in self.request.itervars()
-            if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars)
-        ]
-        if remove_prefix is not None:
-            vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
-        vars_ = vars_ + addvars
-        if filename is None:
-            filename = self.urlencode(self.myfile) + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
-
-    def makeuri_contextless(self, vars_: 'HTTPVariables', filename: Optional[str] = None) -> str:
-        if not filename:
-            assert self.myfile is not None
-            filename = self.myfile + ".py"
-        if vars_:
-            return filename + "?" + self.urlencode_vars(vars_)
-        return filename
-
     def makeactionuri(self,
                       addvars: 'HTTPVariables',
                       filename: Optional[str] = None,
-                      delvars: Optional[List[str]] = None) -> str:
-        return self.makeuri(addvars + [("_transid", self.transaction_manager.get())],
-                            filename=filename,
-                            delvars=delvars)
+                      delvars: Optional[Sequence[str]] = None) -> str:
+        return makeactionuri(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+            delvars=delvars,
+        )
 
     def makeactionuri_contextless(self,
                                   addvars: 'HTTPVariables',
                                   filename: Optional[str] = None) -> str:
-        return self.makeuri_contextless(addvars + [("_transid", self.transaction_manager.get())],
-                                        filename=filename)
+        return makeactionuri_contextless(
+            self.request,
+            self.transaction_manager,
+            addvars,
+            filename=filename,
+        )
 
     #
     # HTML heading and footer rendering
@@ -1600,7 +1580,7 @@ class html(ABCHTMLGenerator):
 
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shal not be loaded
-    # b) in OMD environments, add the Check_MK version to the version (prevents update problems)
+    # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
     # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> Optional[str]:
         filename_for_browser = None
@@ -1672,14 +1652,12 @@ class html(ABCHTMLGenerator):
                    javascripts: Optional[List[str]] = None,
                    force: bool = False) -> None:
         self.html_head(title, javascripts, force)
-        self.open_body(class_=self._get_body_css_classes())
+        self.open_body(class_=self._get_body_css_classes(), data_theme=self.get_theme())
 
     def _get_body_css_classes(self) -> List[str]:
         classes = self._body_classes[:]
         if self.screenshotmode:
             classes += ["screenshotmode"]
-        if not self.foldable_container_is_open("suggestions", "all", True):
-            classes += ["hide_suggestions"]
         return classes
 
     def html_foot(self) -> None:
@@ -1715,7 +1693,10 @@ class html(ABCHTMLGenerator):
         self.close_div()  # titlebar
 
         if page_menu:
-            PageMenuRenderer().show(page_menu)
+            PageMenuRenderer().show(
+                page_menu,
+                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True),
+            )
 
         self.close_div()  # top_heading
 
@@ -1731,53 +1712,28 @@ class html(ABCHTMLGenerator):
             return None
 
         return PageState(
-            top_line=_("%d sec. update") % self.browser_reload,
-            bottom_line=self.render_a(_("Reload now"),
-                                      href="javascript:void(0)",
-                                      onclick="this.innerHTML=\'%s\'; document.location.reload();" %
-                                      _("Reloading...")),
+            text=self.render_span("%d" % self.browser_reload),
             icon_name="trans",
             css_classes=["default"],
+            url="javascript:document.location.reload()",
+            tooltip_text=_("Automatic page reload in %d seconds." % self.browser_reload) + "\n" +
+            _("Click for instant reload."),
         )
 
     def begin_page_content(self):
         content_id = "main_page_content"
         self.open_div(id_=content_id)
-        self.final_javascript("cmk.utils.add_simplebar_scrollbar(%s)" % json.dumps(content_id))
+        self.final_javascript("cmk.utils.content_scrollbar(%s)" % json.dumps(content_id))
 
     def end_page_content(self):
         self.close_div()
 
-    def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
+    def footer(self, show_body_end: bool = True) -> None:
         if self.output_format == "html":
             self.end_page_content()
-            if show_footer:
-                self.bottom_footer()
 
             if show_body_end:
                 self.body_end()
-
-    def bottom_footer(self) -> None:
-        self.bottom_focuscode()
-
-    def bottom_focuscode(self) -> None:
-        if self.focus_object:
-            if isinstance(self.focus_object, tuple):
-                formname, varname = self.focus_object
-                assert formname is not None
-                obj_ident = formname + "." + varname
-            else:
-                obj_ident = "getElementById(\"%s\")" % self.focus_object
-
-            js_code = "<!--\n" \
-                      "var focus_obj = document.%s;\n" \
-                      "if (focus_obj) {\n" \
-                      "    focus_obj.focus();\n" \
-                      "    if (focus_obj.select)\n" \
-                      "        focus_obj.select();\n" \
-                      "}\n" \
-                      "// -->\n" % obj_ident
-            self.javascript(js_code)
 
     def focus_here(self) -> None:
         self.a("", href="#focus_me", id_="focus_me")
@@ -1816,12 +1772,21 @@ class html(ABCHTMLGenerator):
                        enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
-            self.hidden_field("_transid", str(self.transaction_manager.get()))
+            self.hidden_field(
+                "_transid",
+                str(self.transaction_manager.get()),
+                add_var=True,
+            )
         self.form_name = name
 
     def end_form(self) -> None:
         self.close_form()
         self.form_name = None
+
+    def add_confirm_on_submit(self, form_name: str, msg: str) -> None:
+        """Adds a confirm dialog to a form that is shown before executing a form submission"""
+        self.javascript("cmk.forms.add_confirm_on_submit(%s, %s)" %
+                        (json.dumps("form_%s" % form_name), json.dumps(escaping.escape_text(msg))))
 
     def in_form(self) -> bool:
         return self.form_name is not None
@@ -1919,8 +1884,16 @@ class html(ABCHTMLGenerator):
                cssclass: Optional[str] = None,
                style: Optional[str] = None,
                help_: Optional[str] = None,
-               form: Optional[str] = None) -> None:
-        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_, form=form))
+               form: Optional[str] = None,
+               formnovalidate: bool = False) -> None:
+        self.write_html(
+            self.render_button(varname,
+                               title,
+                               cssclass,
+                               style,
+                               help_=help_,
+                               form=form,
+                               formnovalidate=formnovalidate))
 
     def render_button(self,
                       varname: str,
@@ -1928,7 +1901,8 @@ class html(ABCHTMLGenerator):
                       cssclass: Optional[str] = None,
                       style: Optional[str] = None,
                       help_: Optional[str] = None,
-                      form: Optional[str] = None) -> HTML:
+                      form: Optional[str] = None,
+                      formnovalidate: bool = False) -> HTML:
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -1937,7 +1911,8 @@ class html(ABCHTMLGenerator):
                                  value=title,
                                  title=help_,
                                  style=style,
-                                 form=form)
+                                 form=form,
+                                 formnovalidate='' if formnovalidate else None)
 
     def buttonlink(self,
                    href: str,
@@ -2064,7 +2039,9 @@ class html(ABCHTMLGenerator):
                    onblur: Optional[str] = None,
                    placeholder: Optional[str] = None,
                    data_world: Optional[str] = None,
-                   data_max_labels: Optional[int] = None) -> None:
+                   data_max_labels: Optional[int] = None,
+                   required: bool = False,
+                   title: Optional[str] = None) -> None:
 
         # Model
         error = self.user_errors.get(varname)
@@ -2076,6 +2053,7 @@ class html(ABCHTMLGenerator):
         self.form_vars.append(varname)
 
         # View
+        # TODO: Move styling away from py code
         style_size: Optional[str] = None
         field_size: Optional[str] = None
         if try_max_width:
@@ -2112,6 +2090,8 @@ class html(ABCHTMLGenerator):
             "placeholder": placeholder,
             "data-world": data_world,
             "data-max-labels": None if data_max_labels is None else str(data_max_labels),
+            "required": "" if required else None,
+            "title": title,
         }
 
         if error:
@@ -2119,7 +2099,7 @@ class html(ABCHTMLGenerator):
 
         if label:
             assert id_ is not None
-            self.label(label, for_=id_)
+            self.label(label, for_=id_, class_="required" if required else None)
 
         input_type = "text" if type_ is None else type_
         assert isinstance(input_type, str)
@@ -2178,7 +2158,8 @@ class html(ABCHTMLGenerator):
                        submit: Optional[str] = None,
                        try_max_width: bool = False,
                        read_only: bool = False,
-                       autocomplete: Optional[str] = None) -> None:
+                       autocomplete: Optional[str] = None,
+                       placeholder: Optional[str] = None) -> None:
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2189,7 +2170,8 @@ class html(ABCHTMLGenerator):
                         type_="password",
                         try_max_width=try_max_width,
                         read_only=read_only,
-                        autocomplete=autocomplete)
+                        autocomplete=autocomplete,
+                        placeholder=placeholder)
 
     def text_area(self,
                   varname: str,
@@ -2334,48 +2316,6 @@ class html(ABCHTMLGenerator):
             self.close_x()
         self.form_vars.append(varname)
 
-    # The confirm dialog is normally not a dialog which need to be protected
-    # by a transid itselfs. It is only a intermediate step to the real action
-    # But there are use cases where the confirm dialog is used during rendering
-    # a normal page, for example when deleting a dashlet from a dashboard. In
-    # such cases, the transid must be added by the confirm dialog.
-    # add_header: A title can be given to make the confirm method render the HTML
-    #             header when showing the confirm message.
-    def confirm(self,
-                msg: Union[str, HTML],
-                method: str = "POST",
-                action: Optional[str] = None,
-                add_transid: bool = False,
-                add_header: Optional[str] = None) -> Optional[bool]:
-        if self.request.var("_do_actions") == _("No"):
-            # User has pressed "No", now invalidate the unused transid
-            self.check_transaction()
-            return None  # None --> "No"
-
-        if not self.request.has_var("_do_confirm"):
-            if add_header:
-                # TODO: Find the call sites and enforce them to provide a breadcrumb
-                self.header(add_header, Breadcrumb())
-
-            if self.mobile:
-                self.open_center()
-            self.open_div(class_="really")
-            self.write_text(msg)
-            # FIXME: When this confirms another form, use the form name from self.request.itervars()
-            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
-            self.hidden_fields(add_action_vars=True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.close_div()
-            if self.mobile:
-                self.close_center()
-
-            return False  # False --> "Dialog shown, no answer yet"
-
-        # Now check the transaction. True: "Yes", None --> Browser reload of "yes" page
-        return True if self.check_transaction() else None
-
     #
     # Radio groups
     #
@@ -2470,41 +2410,50 @@ class html(ABCHTMLGenerator):
                                  icon: Optional[str] = None,
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
-                                 title_target: Optional[str] = None) -> bool:
-        isopen = self.foldable_container_is_open(treename, id_, isopen)
+                                 title_target: Optional[str] = None,
+                                 padding: int = 15) -> bool:
+        isopen = config.user.get_tree_state(treename, id_, isopen)
         onclick = self.foldable_container_onclick(treename, id_, fetch_url)
         img_id = self.foldable_container_img_id(treename, id_)
         container_id = self.foldable_container_id(treename, id_)
 
         self.open_div(class_=["foldable", "open" if isopen else "closed"])
 
-        if not icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
-                     align="absbottom",
-                     onclick=onclick)
         if isinstance(title, HTML):  # custom HTML code
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                         onclick=onclick)
             self.write_text(title)
-            if indent != "form":
-                self.br()
+
         else:
             self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+
             if title_url:
                 self.a(title, href=title_url, target=title_target)
             else:
                 self.write_text(title)
             self.close_b()
+
+        if icon:
+            self.img(
+                id_=img_id,
+                class_=[
+                    "treeangle",
+                    "title",
+                    # Although foldable_sidebar is given via the argument icon it should not be
+                    # displayed as big as an icon.
+                    "icon" if icon != "foldable_sidebar" else None,
+                    "open" if isopen else "closed",
+                ],
+                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                onclick=onclick)
+        else:
+            self.img(id_=img_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     src="themes/%s/images/tree_closed.svg" % (self._theme),
+                     onclick=onclick)
+
+        if indent != "form" or not isinstance(title, HTML):
             self.br()
 
-        indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
+        indent_style = "padding-left: %dpx; " % (padding if indent else 0)
         if indent == "form":
             self.close_td()
             self.close_tr()
@@ -2520,14 +2469,6 @@ class html(ABCHTMLGenerator):
         self.close_ul()
         self.close_div()
 
-    def foldable_container_is_open(self, treename: str, id_: str, isopen: bool) -> bool:
-        # try to get persisted state of tree
-        tree_state = config.user.get_tree_states(treename)
-
-        if id_ in tree_state:
-            isopen = tree_state[id_] == "on"
-        return isopen
-
     def foldable_container_onclick(self, treename: str, id_: str, fetch_url: Optional[str]) -> str:
         return "cmk.foldable_container.toggle(%s, %s, %s)" % (
             json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
@@ -2537,73 +2478,6 @@ class html(ABCHTMLGenerator):
 
     def foldable_container_id(self, treename: str, id_: str) -> str:
         return "tree.%s.%s" % (treename, id_)
-
-    #
-    # Context Buttons
-    #
-
-    def begin_context_buttons(self) -> None:
-        if not self._context_buttons_open:
-            self.open_div(class_="contextlinks")
-            self._context_buttons_open = True
-
-    def end_context_buttons(self) -> None:
-        if self._context_buttons_open:
-            self.div("", class_="end")
-            self.close_div()
-        self._context_buttons_open = False
-
-    def context_button(self,
-                       title: str,
-                       url: str,
-                       icon: Optional[str] = None,
-                       hot: bool = False,
-                       id_: Optional[str] = None,
-                       hover_title: Optional[str] = None,
-                       class_: CSSSpec = None) -> None:
-        self._context_button(title,
-                             url,
-                             icon=icon,
-                             hot=hot,
-                             id_=id_,
-                             hover_title=hover_title,
-                             class_=class_)
-
-    def _context_button(self,
-                        title: str,
-                        url: str,
-                        icon: Optional[str] = None,
-                        hot: bool = False,
-                        id_: Optional[str] = None,
-                        hover_title: Optional[str] = None,
-                        class_: CSSSpec = None) -> None:
-        title = escaping.escape_attribute(title)
-        display = "block"
-
-        if not self._context_buttons_open:
-            self.begin_context_buttons()
-
-        css_classes: List[Optional[str]] = ["contextlink"]
-        if hot:
-            css_classes.append("hot")
-        if class_:
-            if isinstance(class_, list):
-                css_classes.extend(class_)
-            else:
-                css_classes.append(class_)
-
-        self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
-
-        self.open_a(href=url, title=hover_title)
-
-        if icon:
-            self.icon('', icon, cssclass="inline", middle=False)
-
-        self.span(title)
-
-        self.close_a()
-
-        self.close_div()
 
     #
     # Floating Options
@@ -2622,29 +2496,21 @@ class html(ABCHTMLGenerator):
     # HTML icon rendering
     #
 
-    # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self,
-             title: Optional[str],
-             icon: str,
-             middle: bool = True,
+             icon: Icon,
+             title: Optional[str] = None,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
              class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon(icon_name=icon,
-                             title=title,
-                             middle=middle,
-                             id_=id_,
-                             cssclass=cssclass,
-                             class_=class_))
+            self.render_icon(icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_))
 
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
 
     def render_icon(self,
-                    icon_name: str,
+                    icon: Icon,
                     title: Optional[str] = None,
-                    middle: bool = True,
                     id_: Optional[str] = None,
                     cssclass: Optional[str] = None,
                     class_: CSSSpec = None) -> HTML:
@@ -2654,19 +2520,55 @@ class html(ABCHTMLGenerator):
         else:
             classes.append(class_)
 
-        return self._render_start_tag(
+        icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        if src.endswith(".png"):
+            classes.append("png")
+        if src.endswith("/icon_missing.svg") and title:
+            title += " (%s)" % _("icon not found")
+
+        icon_element = self._render_start_tag(
             'img',
             close_tag=True,
             title=title,
             id_=id_,
             class_=classes,
-            align='absmiddle' if middle else None,
-            src=(icon_name if "/" in icon_name else self._detect_icon_path(icon_name)),
+            src=src,
         )
 
-    def _detect_icon_path(self, icon_name: str) -> str:
-        """Detect from which place an icon shall be used and return it's path relative to
- htdocs/
+        if isinstance(icon, dict) and icon["emblem"] is not None:
+            return self.render_emblem(icon["emblem"], title, id_, icon_element)
+
+        return icon_element
+
+    def render_emblem(
+        self,
+        emblem: str,
+        title: Optional[str],
+        id_: Optional[str],
+        icon_element: Optional[HTML] = None,
+    ) -> HTML:
+        """ Render emblem to corresponding icon (icon_element in function call)
+        or render emblem itself as icon image, used e.g. in view options."""
+
+        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        if not icon_element:
+            return self._render_start_tag(
+                'img',
+                close_tag=True,
+                title=title,
+                id_=id_,
+                class_="icon",
+                src=emblem_path,
+            )
+
+        return self.render_span(
+            icon_element + self.render_img(emblem_path, class_="emblem"),
+            class_="emblem",
+        )
+
+    def detect_icon_path(self, icon_name: str, prefix: str) -> str:
+        """Detect from which place an icon shall be used and return it's path relative to htdocs/
 
         Priority:
         1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
@@ -2678,33 +2580,32 @@ class html(ABCHTMLGenerator):
         7. images/icons/[name].png in site local hierarchy
         8. images/icons/[name].png in standard hierarchy
         """
-
-        if self._theme == "modern-dark":
-            # in the modern-dark theme facelift images act as fallbacks
-            themes = [self._theme, "facelift"]
-        else:
-            themes = [self._theme]
-        for theme in themes:
-            rel_path = "share/check_mk/web/htdocs/themes/%s/images/icon_%s" % (theme, icon_name)
+        path = "share/check_mk/web/htdocs"
+        for theme in self.icon_themes():
+            theme_path = path + "/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
             for file_type in ["svg", "png"]:
-                for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                    if os.path.exists(base_dir + "/" + rel_path + "." + file_type):
-                        return "themes/%s/images/icon_%s.%s" % (self._theme, icon_name, file_type)
+                for base_dir in [
+                        cmk.utils.paths.omd_root + "/", cmk.utils.paths.omd_root + "/local/"
+                ]:
+                    if os.path.exists(base_dir + theme_path + "." + file_type):
+                        return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
+                                                              file_type)
+                    if os.path.exists(base_dir + path + "/images/icons/%s.%s" %
+                                      (icon_name, file_type)):
+                        return "images/icons/%s.%s" % (icon_name, file_type)
 
-        # TODO: This fallback is odd. Find use cases and clean this up
-        return "images/icons/%s.png" % icon_name
+        return "themes/facelift/images/icon_missing.svg"
 
     def render_icon_button(self,
                            url: Union[None, str, str],
                            title: str,
-                           icon: str,
+                           icon: Icon,
                            id_: Optional[str] = None,
                            onclick: Optional[HTMLTagAttributeValue] = None,
                            style: Optional[str] = None,
                            target: Optional[str] = None,
                            cssclass: Optional[str] = None,
                            class_: CSSSpec = None) -> HTML:
-
         # Same API as other elements: class_ can be a list or string/None
         classes = [cssclass]
         if isinstance(class_, list):
@@ -2730,7 +2631,7 @@ class html(ABCHTMLGenerator):
     def icon_button(self,
                     url: Optional[str],
                     title: str,
-                    icon: str,
+                    icon: Icon,
                     id_: Optional[str] = None,
                     onclick: Optional[HTMLTagAttributeValue] = None,
                     style: Optional[str] = None,
@@ -2741,18 +2642,28 @@ class html(ABCHTMLGenerator):
             self.render_icon_button(url, title, icon, id_, onclick, style, target, cssclass,
                                     class_))
 
-    def more_button(self, id_: str, dom_levels_up: int, additional_js: str = "") -> None:
-        if config.user.get_attribute("ui_basic_advanced_mode") in ("enforce_basic",
-                                                                   "enforce_advanced"):
+    def more_button(self,
+                    id_: str,
+                    dom_levels_up: int,
+                    additional_js: str = "",
+                    with_text: bool = False) -> None:
+        if config.user.show_mode == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",
-                    class_="more",
+                    id_="more_%s" % id_,
+                    class_=["more", "has_text" if with_text else ""],
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.icon(title=_("Show more items"), icon="show_more", class_="show_more")
-        self.icon(title=_("Show less items"), icon="show_less", class_="show_less")
+        self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
+        if with_text:
+            self.write_text(_("show more"))
+        self.close_div()
+        self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
+        if with_text:
+            self.write_text(_("show less"))
+        self.close_div()
         self.close_a()
 
     def popup_trigger(self,
@@ -2763,11 +2674,13 @@ class html(ABCHTMLGenerator):
                       style: Optional[str] = None,
                       cssclass: CSSSpec = None,
                       onclose: Optional[str] = None,
+                      onopen: Optional[str] = None,
                       resizable: bool = False,
-                      popup_group: Optional[str] = None) -> None:
+                      popup_group: Optional[str] = None,
+                      hover_switch_delay: Optional[int] = None) -> None:
         self.write_html(
             self.render_popup_trigger(content, ident, method, data, style, cssclass, onclose,
-                                      resizable, popup_group))
+                                      onopen, resizable, popup_group, hover_switch_delay))
 
     def render_popup_trigger(self,
                              content: HTML,
@@ -2777,21 +2690,27 @@ class html(ABCHTMLGenerator):
                              style: Optional[str] = None,
                              cssclass: CSSSpec = None,
                              onclose: Optional[str] = None,
+                             onopen: Optional[str] = None,
                              resizable: bool = False,
-                             popup_group: Optional[str] = None) -> HTML:
+                             popup_group: Optional[str] = None,
+                             hover_switch_delay: Optional[int] = None) -> HTML:
 
-        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s);' % \
+        onclick = 'cmk.popup_menu.toggle_popup(event, this, %s, %s, %s, %s, %s,  %s);' % \
                     (json.dumps(ident),
                      json.dumps(method.asdict()),
                      json.dumps(data if data else None),
                      json.dumps(onclose.replace("'", "\\'") if onclose else None),
+                     json.dumps(onopen.replace("'", "\\'") if onopen else None),
                      json.dumps(resizable))
 
         if popup_group:
-            onmouseenter: Optional[
-                str] = "cmk.popup_menu.switch_popup_menu_group(this, %s)" % json.dumps(popup_group)
+            onmouseenter: Optional[str] = (
+                "cmk.popup_menu.switch_popup_menu_group(this, %s, %s)" %
+                (json.dumps(popup_group), json.dumps(hover_switch_delay)))
+            onmouseleave: Optional[str] = "cmk.popup_menu.stop_popup_menu_group_switch(this)"
         else:
             onmouseenter = None
+            onmouseleave = None
 
         atag = self.render_a(
             content,
@@ -2801,6 +2720,7 @@ class html(ABCHTMLGenerator):
             target="_self",
             onclick=onclick,
             onmouseenter=onmouseenter,
+            onmouseleave=onmouseleave,
         )
 
         classes: List[Optional[str]] = ["popup_trigger"]

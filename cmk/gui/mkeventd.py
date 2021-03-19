@@ -30,7 +30,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.valuespec import DropdownChoices
+from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
 
 
 def _socket_path() -> Path:
@@ -50,7 +50,7 @@ def mib_dirs() -> List[Tuple[Path, str]]:
     ]
 
 
-syslog_priorities: DropdownChoices = [
+syslog_priorities: List[DropdownChoiceEntry] = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),
@@ -295,8 +295,11 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" %
-                                           " ".join(stats_keys)):
+        # Do not mark the site as dead in case the Event Console is not available.
+        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                      livestatus.MKLivestatusBadGatewayError))
+        for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)

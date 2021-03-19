@@ -15,8 +15,10 @@ from typing import Any, Dict, Union, Iterator
 
 from six import ensure_str
 
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.store as store
 import cmk.utils.paths
+from cmk.utils.version import __version__
 import cmk.utils.werks
 
 import cmk.gui.pages
@@ -25,7 +27,7 @@ import cmk.gui.config as config
 from cmk.gui.table import table_element
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     ListChoice,
     Timerange,
@@ -47,10 +49,12 @@ from cmk.gui.page_menu import (
     PageMenuDropdown,
     PageMenuTopic,
     PageMenuEntry,
-    PageMenuPopup,
+    PageMenuSidePopup,
     make_simple_link,
     make_display_options_dropdown,
 )
+from cmk.gui.page_state import PageState
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -58,24 +62,87 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 g_werks: Dict[int, Dict[str, Any]] = {}
 
 
-@cmk.gui.pages.register("version")
-def page_version():
-    breadcrumb = _release_notes_breadcrumb()
+def _release_switch(major: bool) -> PageState:
+    patch_link = html.render_a(_("Patch release"),
+                               href=makeuri(request, [], remove_prefix=""),
+                               class_="active" if not major else None)
+    major_link = html.render_a(_("Major release"),
+                               href=makeuri(request, [("major", 1)]),
+                               class_="active" if major else None)
+    content = html.render_span(patch_link + major_link, id_="release_version_switch")
+    return PageState(text=content)
 
-    load_werks()
-    werk_table_options = _werk_table_options_from_request()
 
-    html.header(_("Release notes"), breadcrumb,
-                _release_notes_page_menu(breadcrumb, werk_table_options))
+@cmk.gui.pages.page_registry.register_page("version")
+class ModeReleaseNotesPage(cmk.gui.pages.Page):
+    def _title(self) -> str:
+        return _("Welcome to Checkmk %s" % __version__)
 
-    handle_acknowledgement()
-    render_werks_table(werk_table_options)
+    def page(self) -> cmk.gui.pages.PageResult:
+        if html.request.get_integer_input_mandatory("major", 0):
+            self._major_page()
+        else:
+            self._patch_page()
 
-    html.footer()
+    def _major_page(self) -> None:
+        html.header(self._title(),
+                    breadcrumb=_release_notes_breadcrumb(),
+                    page_state=_release_switch(major=True))
+
+        html.open_div(id_="release_title")
+        html.h1(_("Everything") + html.render_br() + _("monitored"))
+        html.img(html.theme_url("images/tribe29.svg"))
+        html.close_div()
+
+        html.div(None, id_="release_underline")
+
+        html.open_div(id_="release_content")
+        for icon, headline, subline in [
+            ("release_deploy", _("Deploy in minutes"), _("From 0 to Monitoring in <10min")),
+            ("release_scale", _("With unlimited scale"), _("Hundred thousands of hosts")),
+            ("release_automated", _("Highly automated"), _("Let Checkmk do the work for you")),
+        ]:
+            html.open_div(class_="container")
+            html.img(html.theme_url(f'images/{icon}.svg'))
+            html.div(headline)
+            html.div(subline)
+            html.close_div()
+        html.close_div()
+
+        html.open_div(id_="release_footer")
+        html.span(_("© 2020 tribe29 GmbH. All Rights Reserved."))
+        html.a(_("License aggreement"), href="https://checkmk.com/legal.html", target="_blank")
+        html.a(_("Imprint"), href="https://checkmk.com/impressum.html", target="_blank")
+        html.close_div()
+
+    def _patch_page(self) -> None:
+        breadcrumb = _release_notes_breadcrumb()
+
+        load_werks()
+        werk_table_options = _werk_table_options_from_request()
+
+        html.header(self._title(),
+                    breadcrumb,
+                    _release_notes_page_menu(breadcrumb, werk_table_options),
+                    page_state=_release_switch(major=False))
+
+        for message in get_flashed_messages():
+            html.show_message(message)
+
+        handle_acknowledgement()
+
+        html.open_div(class_="wato")
+        render_werks_table(werk_table_options)
+        html.close_div()
+
+        html.footer()
 
 
 def handle_acknowledgement():
-    if html.request.var("_werk_ack") and html.check_transaction():
+    if not html.check_transaction():
+        return
+
+    if html.request.var("_werk_ack"):
         werk_id = html.request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
@@ -86,19 +153,15 @@ def handle_acknowledgement():
             html.show_message(
                 _("Werk %s - %s has been acknowledged.") %
                 (render_werk_id(werk, with_link=True), render_werk_title(werk)))
-            html.reload_sidebar()
             load_werks()  # reload ack states after modification
+            render_unacknowleged_werks()
 
     elif html.request.var("_ack_all"):
-        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
-                        method="GET"):
-            num = len(unacknowledged_incompatible_werks())
-            acknowledge_all_werks()
-            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
-            html.reload_sidebar()
-            load_werks()  # reload ack states after modification
-
-    render_unacknowleged_werks()
+        num = len(unacknowledged_incompatible_werks())
+        acknowledge_all_werks()
+        flash(_("%d incompatible Werks have been acknowledged.") % num)
+        load_werks()  # reload ack states after modification
+        html.reload_whole_page()
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:
@@ -145,7 +208,13 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Acknowledge all"),
         icon_name="werk_ack",
-        item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
+        is_shortcut=True,
+        is_suggested=True,
+        item=make_simple_link(
+            make_confirm_link(
+                url=html.makeactionuri([("_ack_all", "1")]),
+                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+            )),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )
 
@@ -158,12 +227,9 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
             title=_("Filter"),
             entries=[
                 PageMenuEntry(
-                    title=_("Filter view"),
-                    icon_name="filters",
-                    item=PageMenuPopup(
-                        _render_werk_options_form(werk_table_options),
-                        css_classes=["side_popup"],
-                    ),
+                    title=_("Filter"),
+                    icon_name="filter",
+                    item=PageMenuSidePopup(_render_werk_options_form(werk_table_options)),
                     name="filters",
                     is_shortcut=True,
                 ),
@@ -194,7 +260,7 @@ def _show_werk_options_controls() -> None:
 
     html.open_div(class_="update_buttons")
     html.button("apply", _("Apply"), "submit")
-    html.buttonlink(html.makeuri([], remove_prefix=""), _("Reset"))
+    html.buttonlink(makeuri(request, [], remove_prefix=""), _("Reset"))
     html.close_div()
 
     html.close_div()
@@ -274,6 +340,8 @@ def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
         is_enabled=werk["compatible"] == "incomp_unack",
+        is_shortcut=True,
+        is_suggested=True,
     )
 
 
@@ -423,7 +491,7 @@ def render_unacknowleged_werks():
         html.br()
         html.br()
         html.a(_("Show unacknowledged incompatible werks"),
-               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+               href=makeuri_contextless(request, [("show_unack", "1"), ("wo_compatibility", "3")]))
         html.close_div()
 
 
@@ -558,7 +626,7 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 
 def render_werk_id(werk, with_link):
     if with_link:
-        url = html.makeuri([("werk", werk["id"])], filename="werk.py")
+        url = makeuri(request, [("werk", werk["id"])], filename="werk.py")
         return html.render_a(render_werk_id(werk, with_link=False), url)
     return "#%04d" % werk["id"]
 

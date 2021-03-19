@@ -6,7 +6,7 @@ Date: 1586436197
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 All currently set V$SYSTEM_PARAMETERs (except underscore parameters) are now obtained via HW/SW inventory plugin.
 For every SID and every V$SYSTEM_PARAMETERs (except underscore parameters), the NAME, VALUE and ISDEFAULT data is recorded.

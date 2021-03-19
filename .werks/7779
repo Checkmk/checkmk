@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1560325557
 
 The LDAP sync failed with an exception like this in 1.6.0b1 when only the password

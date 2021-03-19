@@ -1,12 +1,12 @@
 DISTRO_CODE       = stretch
 #
-# Check_MK build specific packages below
+# Checkmk build specific packages below
 #
 OS_PACKAGES       =
 OS_PACKAGES      += libcap2-bin # needed for setting special file permissions
 OS_PACKAGES      += cron # needed for sites cron jobs
 OS_PACKAGES      += time # needed for mk-job
-OS_PACKAGES      += traceroute # needed for Check_MK parent scan
+OS_PACKAGES      += traceroute # needed for Checkmk parent scan
 OS_PACKAGES      += curl
 OS_PACKAGES      += dialog
 OS_PACKAGES      += dnsutils
@@ -20,7 +20,7 @@ OS_PACKAGES      += libpango1.0-0
 OS_PACKAGES      += libperl5.24
 OS_PACKAGES      += libreadline7
 OS_PACKAGES      += libuuid1
-OS_PACKAGES      += binutils # Needed by Check_MK Agent Bakery
+OS_PACKAGES      += binutils # Needed by Checkmk Agent Bakery
 OS_PACKAGES      += rpm
 OS_PACKAGES      += php
 OS_PACKAGES      += php-cgi

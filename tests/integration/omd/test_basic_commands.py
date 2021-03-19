@@ -17,6 +17,9 @@ def test_basic_commands(site):
         "bin/cmk-update-config",
     ]
 
+    if site.version.edition() == "enterprise":
+        commands.append("bin/fetcher")
+
     for rel_path in commands:
         path = os.path.join(site.root, rel_path)
         assert os.path.exists(path)

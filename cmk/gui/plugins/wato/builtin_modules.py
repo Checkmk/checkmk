@@ -9,13 +9,20 @@
 # fields: mode, title, icon, permission, help
 
 import time
+from typing import Iterable
 import cmk.utils.version as cmk_version
 
+from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.i18n import _
+from cmk.gui.globals import request
+from cmk.gui.utils.urls import (
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+)
 
 from cmk.gui.plugins.wato import (
     main_module_registry,
-    MainModule,
+    ABCMainModule,
     MainModuleTopicHosts,
     MainModuleTopicServices,
     MainModuleTopicUsers,
@@ -27,7 +34,7 @@ from cmk.gui.plugins.wato import (
 
 
 @main_module_registry.register
-class MainModuleFolder(MainModule):
+class MainModuleFolder(ABCMainModule):
     @property
     def mode_or_url(self):
         return "folder"
@@ -57,12 +64,12 @@ class MainModuleFolder(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleTags(MainModule):
+class MainModuleTags(ABCMainModule):
     @property
     def mode_or_url(self):
         return "tags"
@@ -94,12 +101,12 @@ class MainModuleTags(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleGlobalSettings(MainModule):
+class MainModuleGlobalSettings(ABCMainModule):
     @property
     def mode_or_url(self):
         return "globalvars"
@@ -122,19 +129,19 @@ class MainModuleGlobalSettings(MainModule):
 
     @property
     def description(self):
-        return _("Global settings for Check_MK, Multisite and the monitoring core.")
+        return _("Global settings for Checkmk, Multisite and the monitoring core.")
 
     @property
     def sort_index(self):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleReadOnly(MainModule):
+class MainModuleReadOnly(ABCMainModule):
     @property
     def mode_or_url(self):
         return "read_only"
@@ -164,12 +171,12 @@ class MainModuleReadOnly(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleRuleSearch(MainModule):
+class MainModuleRuleSearch(ABCMainModule):
     @property
     def mode_or_url(self):
         return "rule_search"
@@ -180,7 +187,7 @@ class MainModuleRuleSearch(MainModule):
 
     @property
     def title(self):
-        return _("Search rules")
+        return _("Rule search")
 
     @property
     def icon(self):
@@ -196,15 +203,15 @@ class MainModuleRuleSearch(MainModule):
 
     @property
     def sort_index(self):
-        return 28
+        return 5
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModulePredefinedConditions(MainModule):
+class MainModulePredefinedConditions(ABCMainModule):
     @property
     def mode_or_url(self):
         return "predefined_conditions"
@@ -234,15 +241,15 @@ class MainModulePredefinedConditions(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleHostAndServiceParameters(MainModule):
+class MainModuleHostAndServiceParameters(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=host_monconf"
+        return makeuri_contextless_rulespec_group(request, 'host_monconf')
 
     @property
     def topic(self):
@@ -250,11 +257,11 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Host monitoring rules")
 
     @property
     def icon(self):
-        return "rulesets"
+        return {"icon": "folder", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -262,22 +269,22 @@ class MainModuleHostAndServiceParameters(MainModule):
 
     @property
     def description(self):
-        return _("Check parameters and other configuration variables on hosts and services")
+        return _("Check parameters and other configuration variables for hosts")
 
     @property
     def sort_index(self):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleHWSWInventory(MainModule):
+class MainModuleHWSWInventory(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=inventory"
+        return makeuri_contextless_rulespec_group(request, 'inventory')
 
     @property
     def topic(self):
@@ -304,15 +311,15 @@ class MainModuleHWSWInventory(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleNetworkingServices(MainModule):
+class MainModuleNetworkingServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=activechecks"
+        return makeuri_contextless_rulespec_group(request, 'activechecks')
 
     @property
     def topic(self):
@@ -320,11 +327,11 @@ class MainModuleNetworkingServices(MainModule):
 
     @property
     def title(self):
-        return _("Check networking services")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def icon(self):
-        return "rulesets"
+        return "network_services"
 
     @property
     def permission(self):
@@ -340,15 +347,15 @@ class MainModuleNetworkingServices(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleIntegrateNagiosPlugins(MainModule):
+class MainModuleOtherServices(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=custom_checks"
+        return makeuri_contextless_rulespec_group(request, 'custom_checks')
 
     @property
     def topic(self):
@@ -356,11 +363,11 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
     @property
     def title(self):
-        return _("Integrate Nagios plugins")
+        return _("Other Services")
 
     @property
     def icon(self):
-        return "rulesets"
+        return "nagios"
 
     @property
     def permission(self):
@@ -368,54 +375,20 @@ class MainModuleIntegrateNagiosPlugins(MainModule):
 
     @property
     def description(self):
-        return _("Integrate custom nagios plugins (so called active checks)")
+        return _("Integrate [cms_active_checks#mrpe|custom nagios plugins] into the "
+                 "monitoring as active checks.")
 
     @property
     def sort_index(self):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleStaticChecks(MainModule):
-    @property
-    def mode_or_url(self):
-        return "static_checks"
-
-    @property
-    def topic(self):
-        return MainModuleTopicServices
-
-    @property
-    def title(self):
-        return _("Manual services")
-
-    @property
-    def icon(self):
-        return "static_checks"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Configure fixed checks without using service discovery")
-
-    @property
-    def sort_index(self):
-        return 50
-
-    @property
-    def is_advanced(self):
-        return True
-
-
-@main_module_registry.register
-class MainModuleCheckPlugins(MainModule):
+class MainModuleCheckPlugins(ABCMainModule):
     @property
     def mode_or_url(self):
         return "check_plugins"
@@ -434,7 +407,7 @@ class MainModuleCheckPlugins(MainModule):
 
     @property
     def permission(self):
-        return None
+        return "check_plugins"
 
     @property
     def description(self):
@@ -445,12 +418,12 @@ class MainModuleCheckPlugins(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleHostGroups(MainModule):
+class MainModuleHostGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "host_groups"
@@ -461,7 +434,7 @@ class MainModuleHostGroups(MainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Host groups")
 
     @property
     def icon(self):
@@ -480,12 +453,12 @@ class MainModuleHostGroups(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleHostCustomAttributes(MainModule):
+class MainModuleHostCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self):
         return "host_attrs"
@@ -496,7 +469,7 @@ class MainModuleHostCustomAttributes(MainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom host attributes")
 
     @property
     def icon(self):
@@ -515,12 +488,12 @@ class MainModuleHostCustomAttributes(MainModule):
         return 55
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleServiceGroups(MainModule):
+class MainModuleServiceGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "service_groups"
@@ -531,7 +504,7 @@ class MainModuleServiceGroups(MainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Service groups")
 
     @property
     def icon(self):
@@ -550,12 +523,12 @@ class MainModuleServiceGroups(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleUsers(MainModule):
+class MainModuleUsers(ABCMainModule):
     @property
     def mode_or_url(self):
         return "users"
@@ -585,12 +558,12 @@ class MainModuleUsers(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleRoles(MainModule):
+class MainModuleRoles(ABCMainModule):
     @property
     def mode_or_url(self):
         return "roles"
@@ -620,12 +593,12 @@ class MainModuleRoles(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleLDAP(MainModule):
+class MainModuleLDAP(ABCMainModule):
     @property
     def mode_or_url(self):
         return "ldap_config"
@@ -640,7 +613,7 @@ class MainModuleLDAP(MainModule):
 
     @property
     def icon(self):
-        return "roles"
+        return "ldap"
 
     @property
     def permission(self):
@@ -655,12 +628,12 @@ class MainModuleLDAP(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleUserCustomAttributes(MainModule):
+class MainModuleUserCustomAttributes(ABCMainModule):
     @property
     def mode_or_url(self):
         return "user_attrs"
@@ -671,7 +644,7 @@ class MainModuleUserCustomAttributes(MainModule):
 
     @property
     def title(self):
-        return _("Custom attributes")
+        return _("Custom user attributes")
 
     @property
     def icon(self):
@@ -690,12 +663,12 @@ class MainModuleUserCustomAttributes(MainModule):
         return 55
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleContactGroups(MainModule):
+class MainModuleContactGroups(ABCMainModule):
     @property
     def mode_or_url(self):
         return "contact_groups"
@@ -706,7 +679,7 @@ class MainModuleContactGroups(MainModule):
 
     @property
     def title(self):
-        return _("Groups")
+        return _("Contact groups")
 
     @property
     def icon(self):
@@ -725,12 +698,12 @@ class MainModuleContactGroups(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleNotifications(MainModule):
+class MainModuleNotifications(ABCMainModule):
     @property
     def mode_or_url(self):
         return "notifications"
@@ -760,12 +733,12 @@ class MainModuleNotifications(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleTimeperiods(MainModule):
+class MainModuleTimeperiods(ABCMainModule):
     @property
     def mode_or_url(self):
         return "timeperiods"
@@ -796,47 +769,12 @@ class MainModuleTimeperiods(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleUserInterface(MainModule):
-    @property
-    def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=user_interface"
-
-    @property
-    def topic(self):
-        return MainModuleTopicGeneral
-
-    @property
-    def title(self):
-        return _("User interface rules")
-
-    @property
-    def icon(self):
-        return "rulesets"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Configure rulesets setting user interface related settings")
-
-    @property
-    def sort_index(self):
-        return 60
-
-    @property
-    def is_advanced(self):
-        return True
-
-
-@main_module_registry.register
-class MainModuleSites(MainModule):
+class MainModuleSites(ABCMainModule):
     @property
     def mode_or_url(self):
         return "sites"
@@ -859,19 +797,19 @@ class MainModuleSites(MainModule):
 
     @property
     def description(self):
-        return _("Distributed monitoring using multiple Check_MK sites")
+        return _("Distributed monitoring using multiple Checkmk sites")
 
     @property
     def sort_index(self):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleBackup(MainModule):
+class MainModuleBackup(ABCMainModule):
     @property
     def mode_or_url(self):
         return "backup"
@@ -901,12 +839,12 @@ class MainModuleBackup(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModulePasswords(MainModule):
+class MainModulePasswords(ABCMainModule):
     @property
     def mode_or_url(self):
         return "passwords"
@@ -936,12 +874,12 @@ class MainModulePasswords(MainModule):
         return 50
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleAuditLog(MainModule):
+class MainModuleAuditLog(ABCMainModule):
     @property
     def mode_or_url(self):
         return "auditlog"
@@ -971,12 +909,12 @@ class MainModuleAuditLog(MainModule):
         return 80
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleIcons(MainModule):
+class MainModuleIcons(ABCMainModule):
     @property
     def mode_or_url(self):
         return "icons"
@@ -1006,12 +944,12 @@ class MainModuleIcons(MainModule):
         return 85
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
 
 @main_module_registry.register
-class MainModuleAnalyzeConfig(MainModule):
+class MainModuleAnalyzeConfig(ABCMainModule):
     @property
     def mode_or_url(self):
         return "analyze_config"
@@ -1041,47 +979,12 @@ class MainModuleAnalyzeConfig(MainModule):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleReleaseNotes(MainModule):
-    @property
-    def mode_or_url(self):
-        return "version.py"
-
-    @property
-    def topic(self):
-        return MainModuleTopicMaintenance
-
-    @property
-    def title(self):
-        return _("Release notes")
-
-    @property
-    def icon(self):
-        return "release_notes"
-
-    @property
-    def permission(self):
-        return None
-
-    @property
-    def description(self):
-        return _("Learn something about what changed at Checkmk.")
-
-    @property
-    def sort_index(self):
-        return 60
-
-    @property
-    def is_advanced(self):
-        return False
-
-
-@main_module_registry.register
-class MainModuleDiagnostics(MainModule):
+class MainModuleDiagnostics(ABCMainModule):
     @property
     def mode_or_url(self):
         return "diagnostics"
@@ -1114,15 +1017,15 @@ class MainModuleDiagnostics(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleMonitoringRules(MainModule):
+class MainModuleMonitoringRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=monconf"
+        return makeuri_contextless_rulespec_group(request, 'monconf')
 
     @property
     def topic(self):
@@ -1130,11 +1033,11 @@ class MainModuleMonitoringRules(MainModule):
 
     @property
     def title(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def icon(self):
-        return "rulesets"
+        return {"icon": "services", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1142,22 +1045,22 @@ class MainModuleMonitoringRules(MainModule):
 
     @property
     def description(self):
-        return _("Monitoring rules")
+        return _("Service monitoring rules")
 
     @property
     def sort_index(self):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleDiscoveryRules(MainModule):
+class MainModuleDiscoveryRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=checkparams"
+        return makeuri_contextless_rulespec_group(request, 'checkparams')
 
     @property
     def topic(self):
@@ -1169,7 +1072,7 @@ class MainModuleDiscoveryRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "service_discovery"
 
     @property
     def permission(self):
@@ -1184,11 +1087,46 @@ class MainModuleDiscoveryRules(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
-class MainModuleAgentsWindows(MainModule):
+@main_module_registry.register
+class MainModuleEnforcedServices(ABCMainModule):
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_rulespec_group(request, 'static')
+
+    @property
+    def topic(self):
+        return MainModuleTopicServices
+
+    @property
+    def title(self):
+        return _("Enforced services")
+
+    @property
+    def icon(self):
+        return "static_checks"
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configure enforced checks without using service discovery")
+
+    @property
+    def sort_index(self):
+        return 25
+
+    @property
+    def is_show_more(self):
+        return True
+
+
+class MainModuleAgentsWindows(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents_windows"
@@ -1203,7 +1141,7 @@ class MainModuleAgentsWindows(MainModule):
 
     @property
     def icon(self):
-        return "download_agents_windows"
+        return "download_agents"
 
     @property
     def permission(self):
@@ -1218,11 +1156,11 @@ class MainModuleAgentsWindows(MainModule):
         return 15
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
-class MainModuleAgentsLinux(MainModule):
+class MainModuleAgentsLinux(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents_linux"
@@ -1237,7 +1175,7 @@ class MainModuleAgentsLinux(MainModule):
 
     @property
     def icon(self):
-        return "download_agents_linux"
+        return "download_agents"
 
     @property
     def permission(self):
@@ -1252,7 +1190,7 @@ class MainModuleAgentsLinux(MainModule):
         return 10
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
@@ -1264,7 +1202,57 @@ if cmk_version.is_raw_edition():
 
 
 @main_module_registry.register
-class MainModuleOtherAgents(MainModule):
+class MainModuleAgentRules(ABCMainModule):
+    @property
+    def enabled(self) -> bool:
+        return False
+
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_rulespec_group(request, "agents")
+
+    @property
+    def topic(self):
+        return MainModuleTopicAgents
+
+    @property
+    def title(self):
+        return _("Agent rules")
+
+    @property
+    def icon(self):
+        return {"icon": "agents", "emblem": "rulesets"}
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Configuration of monitoring agents for Linux, Windows and Unix")
+
+    @property
+    def sort_index(self):
+        return 80
+
+    @property
+    def is_show_more(self):
+        return True
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        yield BreadcrumbItem(
+            title="Windows, Linux, Solaris, AIX",
+            url=makeuri_contextless(
+                request,
+                [("mode", "agents")],
+                filename="wato.py",
+            ),
+        )
+
+
+@main_module_registry.register
+class MainModuleOtherAgents(ABCMainModule):
     @property
     def mode_or_url(self):
         return "download_agents"
@@ -1279,7 +1267,7 @@ class MainModuleOtherAgents(MainModule):
 
     @property
     def icon(self):
-        return "download_agents"
+        return "os_other"
 
     @property
     def permission(self):
@@ -1294,15 +1282,15 @@ class MainModuleOtherAgents(MainModule):
         return 20
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleAgentAccessRules(MainModule):
+class MainModuleAgentAccessRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=agent"
+        return makeuri_contextless_rulespec_group(request, 'agent')
 
     @property
     def topic(self):
@@ -1314,7 +1302,7 @@ class MainModuleAgentAccessRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return {"icon": "agents", "emblem": "rulesets"}
 
     @property
     def permission(self):
@@ -1329,15 +1317,15 @@ class MainModuleAgentAccessRules(MainModule):
         return 60
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleSNMPRules(MainModule):
+class MainModuleSNMPRules(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=snmp"
+        return makeuri_contextless_rulespec_group(request, 'snmp')
 
     @property
     def topic(self):
@@ -1349,7 +1337,7 @@ class MainModuleSNMPRules(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "snmp"
 
     @property
     def permission(self):
@@ -1364,15 +1352,15 @@ class MainModuleSNMPRules(MainModule):
         return 70
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleVMCloudContainer(MainModule):
+class MainModuleVMCloudContainer(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=vm_cloud_container"
+        return makeuri_contextless_rulespec_group(request, 'vm_cloud_container')
 
     @property
     def topic(self):
@@ -1384,7 +1372,7 @@ class MainModuleVMCloudContainer(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "cloud"
 
     @property
     def permission(self):
@@ -1399,15 +1387,15 @@ class MainModuleVMCloudContainer(MainModule):
         return 30
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
 
 
 @main_module_registry.register
-class MainModuleOtherIntegrations(MainModule):
+class MainModuleOtherIntegrations(ABCMainModule):
     @property
     def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=datasource_programs"
+        return makeuri_contextless_rulespec_group(request, 'datasource_programs')
 
     @property
     def topic(self):
@@ -1419,7 +1407,7 @@ class MainModuleOtherIntegrations(MainModule):
 
     @property
     def icon(self):
-        return "rulesets"
+        return "integrations_other"
 
     @property
     def permission(self):
@@ -1427,47 +1415,12 @@ class MainModuleOtherIntegrations(MainModule):
 
     @property
     def description(self):
-        return _("Integrate platforms using special agents, e.g. SAP R/3")
+        return _("Monitoring of applications such as processes, services or databases")
 
     @property
     def sort_index(self):
         return 40
 
     @property
-    def is_advanced(self):
+    def is_show_more(self):
         return False
-
-
-@main_module_registry.register
-class MainModuleCustomIntegrations(MainModule):
-    @property
-    def mode_or_url(self):
-        return "wato.py?mode=rulesets&group=custom_integrations"
-
-    @property
-    def topic(self):
-        return MainModuleTopicAgents
-
-    @property
-    def title(self):
-        return _("Custom integrations")
-
-    @property
-    def icon(self):
-        return "rulesets"
-
-    @property
-    def permission(self):
-        return "rulesets"
-
-    @property
-    def description(self):
-        return _("Integrate custom platform connections (special agents)")
-
-    @property
-    def sort_index(self):
-        return 50
-
-    @property
-    def is_advanced(self):
-        return True

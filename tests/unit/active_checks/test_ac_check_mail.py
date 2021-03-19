@@ -7,7 +7,10 @@
 # pylint: disable=protected-access,redefined-outer-name
 import email
 import pytest  # type: ignore[import]
-from testlib import import_module  # pylint: disable=import-error
+from argparse import Namespace as Args
+from testlib import import_module  # type: ignore[import]
+
+from cmk.utils.mailbox import _active_check_main_core  # type: ignore[import]
 
 
 @pytest.fixture(scope="module")
@@ -21,19 +24,13 @@ def create_test_email(subject):
 
 
 def test_ac_check_mail_main_failed_connect(check_mail):
-    state, info, perf = check_mail.main(
-        ['--server', 'foo', '--username', 'bar', '--password', 'baz'])
-    assert state == 3
-    assert info.startswith('Failed connect to foo:143:')
-    assert perf is None
-
-
-def test_ac_check_mail_main_successfully_connect(monkeypatch, check_mail):
-    monkeypatch.setattr('check_mail.connect', lambda server, port, username, password, ssl: None)
-    state, info, perf = check_mail.main(
-        ['--server', 'foo', '--username', 'bar', '--password', 'baz'])
-    assert state == 0
-    assert info == 'Successfully logged in to mailbox'
+    state, info, perf = _active_check_main_core(
+        check_mail.create_argument_parser(),
+        check_mail.check_mail,
+        ['--fetch-server', 'foo', '--fetch-username', 'bar', '--fetch-password', 'baz'],
+    )
+    assert state == 2
+    assert info.startswith('Failed to connect to foo:143:')
     assert perf is None
 
 
@@ -57,11 +54,24 @@ def test_ac_check_mail_main_successfully_connect(monkeypatch, check_mail):
         '2',
     ]),
 ])
-def test_ac_check_mail_prepare_messages_for_ec(check_mail, mails, expected_messages,
-                                               expected_forwarded):
-    # Use default parameters
-    messages, forwarded = check_mail.prepare_messages_for_ec(mails, None, None, 16, '', None, 1000)
+def test_ac_check_mail_prepare_messages_for_ec(
+    check_mail,
+    mails,
+    expected_messages,
+    expected_forwarded,
+):
+    args = Args(
+        body_limit=1000,
+        forward_app=None,
+        forward_host=None,
+        fetch_server=None,
+        forward_facility=2,
+    )
+    messages, forwarded = check_mail.prepare_messages_for_ec(args, mails)
     assert forwarded == expected_forwarded
     for message, (expected_priority, expected_message) in zip(messages, expected_messages):
         assert message.startswith(expected_priority)
         assert message.endswith(expected_message)
+
+
+_ = __name__ == "__main__" and pytest.main(["-svv", "-T=unit", __file__])

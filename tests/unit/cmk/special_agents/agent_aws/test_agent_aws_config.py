@@ -27,3 +27,19 @@ def test_agent_aws_config_hash_names(sys_argv_1, sys_argv_2, expected_result):
     assert bool(
         aws_config_1._compute_config_hash(sys_argv_1) == aws_config_2._compute_config_hash(
             sys_argv_2)) is expected_result
+
+
+@pytest.mark.parametrize(
+    "sys_argv, hashed_val, expected_result",
+    [
+        # Generated hash: hashlib.sha256(b'--fooFoo').hexdigest()
+        (['--foo', 'Foo'], '690d85a83cb4f3c81540ce013e3e23db1a7ded3b596e8f59b2809b8b1c91ebf9', True
+        ),
+        # Generated hash: hashlib.sha256(b'--barBar').hexdigest()
+        (['--foo', 'Foo'], '3a852cfa8c5054d4c54685f9fab4b1213dfe05ab670f16445d0d41ec66628d0c', False
+        ),
+    ])
+def test_agent_aws_config_hash_processes(sys_argv, hashed_val, expected_result):
+    '''Test whether the hash is the same across different python processes'''
+    aws_config_1 = AWSConfig('heute1', sys_argv, (None, None))
+    assert bool(aws_config_1._compute_config_hash(sys_argv) == hashed_val) is expected_result

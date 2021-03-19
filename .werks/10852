@@ -6,7 +6,7 @@ Date: 1594799498
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 For Oracle databases with version lower than 12.1 there has been some missing
 sqls in the plugin for Windows. This has been fixed with this werk. To

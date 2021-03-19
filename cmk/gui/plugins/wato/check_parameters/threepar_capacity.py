@@ -41,5 +41,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("Device type"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_threepar_capacity,
-        title=lambda: _("3Par Capacity (used space and growth)"),
+        title=lambda: _("3PAR Capacity (used space and growth)"),
     ))

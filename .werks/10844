@@ -6,7 +6,7 @@ Date: 1580815372
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The TNS Alias for an oracle instance is now configurable through the
 bakery. This alias can be used if you use ldap for the login. The support

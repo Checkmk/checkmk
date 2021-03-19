@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Check_MK agent plugin for monitoring ORACLE databases
+# Checkmk agent plugin for monitoring ORACLE databases
 
 # Get list of all running databases
 SIDS=$(UNIX95=true ps ax -o args | sed -n '/^\(ora\|xe\)_pmon_\([^ ]*\)/s//\2/p')
@@ -61,8 +61,7 @@ fi
 # The cache is used for $CACHE_MAXAGE seconds. The CACHE_MAXAGE
 # option is pre-set to 120 seconds but can be changed in mk_oracle.cfg.
 
-function sqlplus ()
-{
+sqlplus() {
     if OUTPUT=$({ echo 'set pages 0' ; echo 'whenever sqlerror exit 1'; echo 'set lines 8000' ; echo 'set feedback off'; cat ; } | $MK_CONFDIR/sqlplus.sh $1)
     then
         echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"

@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 from typing import Union
 
+from cmk.utils.type_defs import ConfigSerial, OptionalConfigSerial
+
 
 # One bright day, when every path is really a Path, this can die... :-)
 def _path(*args: Union[str, Path]) -> str:
@@ -38,9 +40,8 @@ modules_dir = _omd_path("share/check_mk/modules")
 var_dir = _omd_path("var/check_mk")
 log_dir = _omd_path("var/log")
 precompiled_checks_dir = _omd_path("var/check_mk/precompiled_checks")
-core_autochecks_dir = _omd_path("var/check_mk/core/autochecks")
 base_autochecks_dir = _omd_path("var/check_mk/autochecks")
-core_fetcher_config_dir = _omd_path("var/check_mk/core/fetcher-config")
+core_helper_config_dir = Path(_omd_path("var/check_mk/core/helper_config"))
 autochecks_dir = base_autochecks_dir
 precompiled_hostchecks_dir = _omd_path("var/check_mk/precompiled")
 snmpwalks_dir = _omd_path("var/check_mk/snmpwalks")
@@ -62,12 +63,10 @@ nagios_binary = _omd_path("bin/nagios")
 apache_config_dir = _omd_path("etc/apache")
 htpasswd_file = _omd_path("etc/htpasswd")
 livestatus_unix_socket = _omd_path("tmp/run/live")
-pnp_rraconf_dir = _omd_path("share/check_mk/pnp-rraconf")
 livebackendsdir = _omd_path("share/check_mk/livestatus")
 inventory_output_dir = _omd_path("var/check_mk/inventory")
 inventory_archive_dir = _omd_path("var/check_mk/inventory_archive")
 status_data_dir = _omd_path("tmp/check_mk/status_data")
-core_discovered_host_labels_dir = Path(_omd_path("var/check_mk/core/discovered_host_labels"))
 base_discovered_host_labels_dir = Path(_omd_path("var/check_mk/discovered_host_labels"))
 discovered_host_labels_dir = base_discovered_host_labels_dir
 piggyback_dir = Path(tmp_dir, "piggyback")
@@ -90,6 +89,7 @@ bin_dir = _omd_path("bin")
 lib_dir = _omd_path("lib")
 mib_dir = Path(_omd_path("share/snmp/mibs"))
 optional_packages_dir = Path(_omd_path("share/check_mk/optional_packages"))
+disabled_packages_dir = Path(_omd_path("var/check_mk/disabled_packages"))
 
 _base_plugins_dir = Path(lib_dir, "check_mk", "base", "plugins")
 agent_based_plugins_dir = _base_plugins_dir / "agent_based"
@@ -108,5 +108,14 @@ local_bin_dir = _local_path(bin_dir)
 local_lib_dir = _local_path(lib_dir)
 local_mib_dir = _local_path(mib_dir)
 
-_local_base_plugins_dir = Path(local_lib_dir, "check_mk", "base", "plugins")
-local_agent_based_plugins_dir = _local_base_plugins_dir / "agent_based"
+local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
+
+license_usage_dir = Path(var_dir, "license_usage")
+
+
+def make_helper_config_path(serial: OptionalConfigSerial) -> Path:
+    return core_helper_config_dir / serial
+
+
+def make_fetchers_config_path(serial: ConfigSerial) -> Path:
+    return make_helper_config_path(serial) / "fetchers"

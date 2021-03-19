@@ -8,7 +8,7 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Callable, List, Optional, Tuple
+from typing import Dict, Callable, List, Optional, Tuple, Iterator
 
 from six import ensure_str
 
@@ -87,11 +87,14 @@ class TimeSeries:
             Includes [start, end, step, *values]
         timewindow: tuple
             describes (start, end, step), in this case data has only values
+        **metadata:
+            additional information arguments
 
     """
     def __init__(self,
                  data: TimeSeriesValues,
-                 timewindow: Optional[Tuple[float, float, float]] = None) -> None:
+                 timewindow: Optional[Tuple[float, float, float]] = None,
+                 **metadata: str) -> None:
         if timewindow is None:
             if data[0] is None or data[1] is None or data[2] is None:
                 raise ValueError("timewindow must not contain None")
@@ -103,6 +106,7 @@ class TimeSeries:
         self.end = int(timewindow[1])
         self.step = int(timewindow[2])
         self.values = data
+        self.metadata = metadata
 
     @property
     def twindow(self) -> TimeWindow:
@@ -176,6 +180,9 @@ class TimeSeries:
 
     def __len__(self) -> int:
         return len(self.values)
+
+    def __iter__(self) -> Iterator[TimeSeriesValue]:
+        yield from self.values
 
 
 def lq_logic(filter_condition: str, values: List[str], join: str) -> str:

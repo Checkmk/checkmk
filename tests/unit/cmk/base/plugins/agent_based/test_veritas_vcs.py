@@ -6,10 +6,10 @@
 
 import pytest  # type: ignore[import]
 
-from cmk.base.plugins.agent_based.agent_based_api.v0 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Service,
-    state,
+    State as state,
     type_defs,
 )
 from cmk.base.plugins.agent_based import veritas_vcs
@@ -311,24 +311,23 @@ def test_veritas_vcs_boil_down_states_in_cluster(states, exp_res):
     assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == exp_res
 
 
-PARAMS = type_defs.Parameters(
-    {
-        'map_frozen': {
-            'frozen': 2,
-            'tfrozen': 1
-        },
-        'map_states': {
-            'FAULTED': 2,
-            'RUNNING': 0,
-            'OK': 0,
-            'ONLINE': 0,
-            'default': 1,
-            'PARTIAL': 1,
-            'OFFLINE': 1,
-            'UNKNOWN': 3,
-            'EXITED': 1,
-        },
-    },)
+PARAMS = {
+    'map_frozen': {
+        'frozen': 2,
+        'tfrozen': 1
+    },
+    'map_states': {
+        'FAULTED': 2,
+        'RUNNING': 0,
+        'OK': 0,
+        'ONLINE': 0,
+        'default': 1,
+        'PARTIAL': 1,
+        'OFFLINE': 1,
+        'UNKNOWN': 3,
+        'EXITED': 1,
+    },
+}
 
 
 def test_check_veritas_vcs():
@@ -403,7 +402,7 @@ def test_cluster_check_veritas_vcs():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: running',
+                notice='[node1]: running',
             ),
             Result(
                 state=state.OK,
@@ -424,11 +423,11 @@ def test_cluster_check_veritas_vcs_system():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: running',
+                notice='[node1]: running',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: running',
+                notice='[node2]: running',
             ),
             Result(
                 state=state.OK,
@@ -454,12 +453,15 @@ def test_cluster_check_veritas_vcs_group():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: online',
+                notice='[node1]: online',
             ),
             Result(
                 state=state.CRIT,
-                summary='[node2]: frozen(!!), online',
-                details='[node2]: frozen(!!)\n[node2]: online',
+                notice='[node2]: frozen',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: online',
             ),
             Result(
                 state=state.OK,
@@ -488,15 +490,15 @@ def test_cluster_check_veritas_vcs_resource():
         )) == [
             Result(
                 state=state.WARN,
-                summary='[node1]: offline(!)',
+                summary='[node1]: offline',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: online',
+                notice='[node2]: online',
             ),
             Result(
                 state=state.WARN,
-                summary='[node3]: offline(!)',
+                summary='[node3]: offline',
             ),
             Result(
                 state=state.OK,

@@ -1,0 +1,11 @@
+Title: Fixed agent file links to always trigger a download
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0i1
+Date: 1615289166
+Class: fix
+
+Some agent files were displayed as plain text within the browser and showed black font color on dark background in the dark theme.
+Now all agent file links consistently trigger the respective file download.

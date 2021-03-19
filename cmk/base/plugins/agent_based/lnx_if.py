@@ -5,11 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
+    Iterable,
+    Mapping,
     Sequence,
+    Tuple,
     Union,
 )
-from .agent_based_api.v0 import register
+from .agent_based_api.v1 import (
+    register,
+    type_defs,
+)
+from .utils import interfaces
 
 # Example output from agent:
 
@@ -52,9 +60,12 @@ from .agent_based_api.v0 import register
 #         Auto-negotiation: on
 #         Link detected: yes
 
+SectionInventory = Dict[str, Dict[str, Union[str, Sequence[str]]]]
+Section = Tuple[interfaces.Section, SectionInventory]
 
-def _parse_lnx_if_ipaddress(lines):
-    ip_stats: Dict[str, Dict[str, Union[str, Sequence[str]]]] = {}
+
+def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
+    ip_stats: SectionInventory = {}
     iface = None
     for line in lines:
         if line == ['[end_iplink]']:
@@ -92,7 +103,7 @@ def _parse_lnx_if_ipaddress(lines):
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table):
+def _parse_lnx_if_sections(string_table: type_defs.StringTable):
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None
@@ -130,7 +141,7 @@ def _parse_lnx_if_sections(string_table):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table):
+def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []
@@ -154,18 +165,18 @@ def parse_lnx_if(string_table):
         # Compute speed
         speed_text = attr.get("Speed")
         if speed_text is None:
-            ifSpeed = ''
+            ifSpeed = 0
         else:
             if speed_text == '65535Mb/s':  # unknown
-                ifSpeed = ''
+                ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000
             elif speed_text.endswith("Mb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000
             elif speed_text.endswith("Gb/s"):
-                ifSpeed = str(int(float(speed_text[:-4])) * 1000000000)
+                ifSpeed = int(float(speed_text[:-4])) * 1000000000
             else:
-                ifSpeed = ''
+                ifSpeed = 0
 
         # Performance counters
         ifInOctets = counters[0]
@@ -200,7 +211,11 @@ def parse_lnx_if(string_table):
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
             else:
-                if "UP" in state_infos:
+                # Assumption:
+                # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
+                # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
+                # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
+                if "UP" in state_infos and "LOWER_UP" in state_infos:
                     ifOperStatus = 1
                 else:
                     ifOperStatus = 2
@@ -209,36 +224,33 @@ def parse_lnx_if(string_table):
         if ":" in raw_phys_address:
             # We saw interface entries of tunnels for the address
             # is an integer, eg. '1910236'; especially on OpenBSD.
-            ifPhysAddress = "".join([chr(int(x, 16)) for x in raw_phys_address.split(":")])
+            ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
             ifPhysAddress = ''
 
-        row = [
-            str(i) for i in (
-                ifIndex,
-                ifDescr,
-                ifType,
-                ifSpeed,
-                ifOperStatus,
-                ifInOctets,
-                inucast,
-                inmcast,
-                inbcast,
-                ifInDiscards,
-                ifInErrors,
-                ifOutOctets,
-                outucast,
-                outmcast,
-                outbcast,
-                ifOutDiscards,
-                ifOutErrors,
-                ifOutQLen,
-                ifAlias,
-                ifPhysAddress,
-            )
-        ]
-
-        if_table.append(row)
+        if_table.append(
+            interfaces.Interface(
+                index=str(ifIndex),
+                descr=str(ifDescr),
+                type=str(ifType),
+                speed=ifSpeed,
+                oper_status=str(ifOperStatus),
+                in_octets=ifInOctets,
+                in_ucast=inucast,
+                in_mcast=inmcast,
+                in_bcast=inbcast,
+                in_discards=ifInDiscards,
+                in_errors=ifInErrors,
+                out_octets=ifOutOctets,
+                out_ucast=outucast,
+                out_mcast=outmcast,
+                out_bcast=outbcast,
+                out_discards=ifOutDiscards,
+                out_errors=ifOutErrors,
+                out_qlen=ifOutQLen,
+                alias=ifAlias,
+                phys_address=ifPhysAddress,
+            ))
 
     return if_table, ip_stats
 
@@ -246,4 +258,55 @@ def parse_lnx_if(string_table):
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+    supersedes=["if", "if64"],
+)
+
+
+def discover_lnx_if(
+    params: Sequence[Mapping[str, Any]],
+    section: Section,
+) -> type_defs.DiscoveryResult:
+    # Always exclude dockers veth* interfaces on docker nodes
+    if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
+    yield from interfaces.discover_interfaces(
+        params,
+        if_table,
+    )
+
+
+def check_lnx_if(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> type_defs.CheckResult:
+    yield from interfaces.check_multiple_interfaces(
+        item,
+        params,
+        section[0],
+    )
+
+
+def cluster_check_lnx_if(
+    item: str,
+    params: Mapping[str, Any],
+    section: Mapping[str, Section],
+) -> type_defs.CheckResult:
+    yield from interfaces.cluster_check(
+        item,
+        params,
+        {node: node_section[0] for node, node_section in section.items()},
+    )
+
+
+register.check_plugin(
+    name="lnx_if",
+    service_name="Interface %s",
+    discovery_ruleset_name="inventory_if_rules",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_function=discover_lnx_if,
+    check_ruleset_name="if",
+    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
+    check_function=check_lnx_if,
+    cluster_check_function=cluster_check_lnx_if,
 )

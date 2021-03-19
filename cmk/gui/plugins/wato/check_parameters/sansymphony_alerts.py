@@ -40,5 +40,5 @@ rulespec_registry.register(
         check_group_name="sansymphony_alerts",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_sansymphony_alerts,
-        title=lambda: _("Sansymphony: Number of unacknowlegded alerts"),
+        title=lambda: _("Sansymphony unacknowlegded alerts"),
     ))

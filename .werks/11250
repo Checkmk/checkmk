@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check was showing "host event limit active" for hosts which have not
 reached the host event limit. This happened for hosts that had a host

@@ -16,6 +16,7 @@ _NEGATE = '@negate'  # negation in boolean lists
 
 monitoring_core = "nagios"  # other option: "cmc"
 mkeventd_enabled = False  # Set by OMD hook
+pnp4nagios_enabled = True  # Set by OMD hook
 # TODO: Is this one deprecated for a long time?
 agent_port = 6556
 agent_ports: _List = []
@@ -58,15 +59,21 @@ predefined_conditions: _Dict = {}
 http_proxies: _Dict = {}
 
 # SNMP communities and encoding
-use_inline_snmp = True
-# Ruleset to disable Inline-SNMP per host when use_inline_snmp is enabled.
+
+# Global config for SNMP Backend
+snmp_backend_default: str = "inline"
+# Deprecated: Replaced by snmp_backend_hosts
+use_inline_snmp: bool = True
+
+# Ruleset to enable specific SNMP Backend for each host.
+snmp_backend_hosts: _List = []
+# Deprecated: Replaced by snmp_backend_hosts
 non_inline_snmp_hosts: _List = []
 
 # Ruleset to recduce fetched OIDs of a check, only inline SNMP
 snmp_limit_oid_range: _List = []
 # Ruleset to customize bulk size
 snmp_bulk_size: _List = []
-record_inline_snmp_stats = False
 snmp_default_community = 'public'
 snmp_communities: _List = []
 # override the rule based configuration
@@ -86,6 +93,8 @@ management_protocol: _Dict = {}
 management_snmp_credentials: _Dict = {}
 # Mapping from hostname to IPMI credentials
 management_ipmi_credentials: _Dict = {}
+# Ruleset to specify whether or not to use bulkwalk
+management_bulkwalk_hosts: _List = []
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation = None  # also: "terse", "full"
@@ -97,7 +106,6 @@ cmc_service_rrd_config: _List = []
 # Inventory and inventory checks
 inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
-inventory_check_do_scan = True  # include SNMP scan for SNMP devices
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 # TODO: Remove this already deprecated option
@@ -120,7 +128,7 @@ service_dependency_template = 'check_mk'
 generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
-nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
+nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()=\t'  # Tab is an illegal character for CMC
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {
@@ -215,7 +223,7 @@ explicit_host_conf: _Dict = {}
 extra_service_conf: _Dict = {}
 extra_nagios_conf = ""
 service_descriptions: _Dict = {}
-# needed by WATO, ignored by Check_MK
+# needed by WATO, ignored by Checkmk
 host_attributes: _Dict = {}
 # special parameters for host/PING check_command
 ping_levels: _List = []
@@ -229,6 +237,7 @@ check_mk_exit_status: _List = []
 check_mk_agent_target_versions: _List = []
 check_periods: _List = []
 snmp_check_interval: _List = []
+snmp_exclude_sections: _List = []
 # Rulesets for inventory export hooks
 inv_exports: _Dict = {}
 # Rulesets for parameters of notification scripts
@@ -264,3 +273,5 @@ aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multili
 aggr_summary_hostname = "%s-s"
 status_data_inventory: _List = []
 legacy_checks: _List = []
+
+logwatch_rules: _List = []

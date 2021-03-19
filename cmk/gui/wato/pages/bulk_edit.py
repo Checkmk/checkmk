@@ -27,8 +27,9 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
 from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.utils.flashed_messages import flash
 
 
 @mode_registry.register
@@ -49,15 +50,14 @@ class ModeBulkEdit(WatoMode):
         return _("Bulk edit hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="edit_host",
-            button_name="_save",
-        )
+        return make_simple_form_page_menu(_("Hosts"),
+                                          breadcrumb,
+                                          form_name="edit_host",
+                                          button_name="_save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         config.user.need_permission("wato.edit_hosts")
 
@@ -70,7 +70,8 @@ class ModeBulkEdit(WatoMode):
             # Either offer API in class Host for bulk change or
             # delay saving until end somehow
 
-        return "folder", _("Edited %d hosts") % len(host_names)
+        flash(_("Edited %d hosts") % len(host_names))
+        return redirect(watolib.Folder.current().url())
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
@@ -127,16 +128,16 @@ class ModeBulkCleanup(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         hosts = get_hosts_from_checkboxes()
 
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="bulkcleanup",
-            button_name="_save",
-            save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
-        )
+        return make_simple_form_page_menu(_("Attributes"),
+                                          breadcrumb,
+                                          form_name="bulkcleanup",
+                                          button_name="_save",
+                                          save_is_enabled=bool(
+                                              self._get_attributes_for_bulk_cleanup(hosts)))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         config.user.need_permission("wato.edit_hosts")
         to_clean = self._bulk_collect_cleaned_attributes()
@@ -152,7 +153,7 @@ class ModeBulkCleanup(WatoMode):
         for host in hosts:
             host.clean_attributes(to_clean)
 
-        return "folder"
+        return redirect(self._folder.url())
 
     def _bulk_collect_cleaned_attributes(self):
         to_clean = []

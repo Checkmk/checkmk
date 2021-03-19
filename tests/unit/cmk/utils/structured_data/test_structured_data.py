@@ -8,6 +8,9 @@ from typing import Dict, List
 
 import shutil
 import pytest  # type: ignore[import]
+from pathlib import Path
+import gzip
+
 from testlib import cmk_path  # type: ignore[import]
 
 from cmk.utils.exceptions import MKGeneralException
@@ -446,6 +449,28 @@ def test_structured_data_StructuredDataTree_get_list():
 @pytest.mark.parametrize("tree_name", old_trees + new_trees)
 def test_structured_data_StructuredDataTree_load_from(tree_name):
     StructuredDataTree().load_from(tree_name)
+
+
+def test_structured_data_StructuredDataTree_save_gzip(tmp_path):
+    filename = "heute"
+    target = Path(tmp_path).joinpath(filename)
+    raw_tree = {
+        "node": {
+            "foo": 1,
+            "bär": 2,
+        },
+    }
+    tree = StructuredDataTree().create_tree_from_raw_tree(raw_tree)
+
+    tree.save_to(tmp_path, filename)
+
+    assert target.exists()
+
+    gzip_filepath = target.with_suffix('.gz')
+    assert gzip_filepath.exists()
+
+    with gzip.open(str(gzip_filepath), 'rb') as f:
+        f.read()
 
 
 tree_old_addresses_arrays_memory = StructuredDataTree().load_from(

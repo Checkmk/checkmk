@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import re
 import time
 from typing import List, Optional, Tuple, Callable
@@ -29,24 +28,27 @@ from cmk.gui.plugins.visuals import (
     visual_info_registry,
 )
 from cmk.gui.type_defs import (
-    Rows,)
+    Rows,
+    VisualContext,
+)
 
 
-class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableText, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableText(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.get_unicode_input(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else '')
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         htmlvar = self.htmlvars[0]
         request_var = html.request.var(htmlvar)
         if request_var is None:
@@ -61,7 +63,7 @@ class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
         except re.error:
             raise MKUserError(
                 htmlvar,
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
@@ -72,17 +74,16 @@ class FilterInvtableText(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        self._from_varprefix = self.ident + "_from"
-        self._to_varprefix = self.ident + "_to"
-        super(FilterInvtableTimestampAsAge,
-              self).__init__(self._invinfo,
-                             [self._from_varprefix + "_days", self._to_varprefix + "_days"], [])
+class FilterInvtableTimestampAsAge(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        self._from_varprefix = ident + "_from"
+        self._to_varprefix = ident + "_to"
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[self._from_varprefix + "_days", self._to_varprefix + "_days"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.open_table()
@@ -106,9 +107,6 @@ class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
     def _valuespec(self) -> ValueSpec:
         return Age(display=["days"])
 
-    def double_height(self) -> bool:
-        return True
-
     def filter_table_with_conversion(self, rows: Rows, conv: Callable[[float], float]) -> Rows:
         from_value = self._valuespec().from_html_vars(self._from_varprefix)
         to_value = self._valuespec().from_html_vars(self._to_varprefix)
@@ -128,20 +126,21 @@ class FilterInvtableTimestampAsAge(Filter, metaclass=abc.ABCMeta):
                 newrows.append(row)
         return newrows
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         now = time.time()
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
 
 
-# Filter for choosing a range in which a certain integer lies
-class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableIDRange, self).__init__(self._invinfo,
-                                                    [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvtableIDRange(Filter):
+    """Filter for choosing a range in which a certain integer lies"""
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.write_text(_("from:") + " ")
@@ -149,7 +148,8 @@ class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
         html.write_text("&nbsp; %s: " % _("to"))
         html.text_input(self.ident + "_to", size=8, cssclass="number")
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         from_value = utils.saveint(html.request.var(self.ident + "_from"))
         to_value = utils.saveint(html.request.var(self.ident + "_to"))
 
@@ -169,14 +169,14 @@ class FilterInvtableIDRange(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        varnames = [self.ident + "_" + str(x) for x in defines.interface_oper_states()]
-        super(FilterInvtableOperStatus, self).__init__(self._invinfo, varnames, [])
+class FilterInvtableOperStatus(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_" + str(x) for x in defines.interface_oper_states()],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_checkbox_group()
@@ -191,10 +191,8 @@ class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
                 html.br()
         html.end_checkbox_group()
 
-    def double_height(self) -> bool:
-        return True
-
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # We consider the filter active if not all checkboxes
         # are either on (default) or off (unset)
         settings = set([])
@@ -212,13 +210,14 @@ class FilterInvtableOperStatus(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableAdminStatus, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableAdminStatus(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_radio_group(horizontal=True)
@@ -226,7 +225,8 @@ class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
             html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
         html.end_radio_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = html.request.var(self.ident)
         if current not in ("1", "2"):
             return rows
@@ -239,13 +239,14 @@ class FilterInvtableAdminStatus(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableAvailable, self).__init__(self._invinfo, [self.ident], [])
+class FilterInvtableAvailable(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def display(self) -> None:
         html.begin_radio_group(horizontal=True)
@@ -253,7 +254,8 @@ class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
             html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
         html.end_radio_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = html.request.var(self.ident)
         if current not in ("no", "yes"):
             return rows
@@ -268,16 +270,14 @@ class FilterInvtableAvailable(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableInterfaceType, self).__init__(self._invinfo, [self.ident], [])
-
-    def double_height(self) -> bool:
-        return True
+class FilterInvtableInterfaceType(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident],
+                         link_columns=[])
 
     def valuespec(self) -> ValueSpec:
         sorted_choices = [
@@ -305,7 +305,8 @@ class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
         self.valuespec().render_input(self.ident, self.selection())
         html.close_div()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = self.selection()
         if len(current) == 0:
             return rows  # No types selected, filter is unused
@@ -316,14 +317,14 @@ class FilterInvtableInterfaceType(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invinfo(self) -> str:
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvtableVersion, self).__init__(self._invinfo,
-                                                    [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvtableVersion(Filter):
+    def __init__(self, *, inv_info: str, ident: str, title: str) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info=inv_info,
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[])
 
     def display(self) -> None:
         html.write_text(_("Min.&nbsp;Version:"))
@@ -332,7 +333,8 @@ class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
         html.write_text(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], size=7)
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         from_version = html.request.var(self.htmlvars[0])
         to_version = html.request.var(self.htmlvars[1])
         if not from_version and not to_version:
@@ -350,13 +352,16 @@ class FilterInvtableVersion(Filter, metaclass=abc.ABCMeta):
         return new_rows
 
 
-class FilterInvText(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvText, self).__init__("host", [self.ident], [])
+class FilterInvText(Filter):
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         htmlvars=[ident],
+                         link_columns=[],
+                         is_show_more=is_show_more)
+        self._invpath = inv_path
 
     @property
     def filtertext(self):
@@ -369,10 +374,10 @@ class FilterInvText(Filter, metaclass=abc.ABCMeta):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.var(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else "")
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         filtertext = self.filtertext
         if not filtertext:
             return rows
@@ -382,7 +387,7 @@ class FilterInvText(Filter, metaclass=abc.ABCMeta):
         except re.error:
             raise MKUserError(
                 self.htmlvars[0],
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
@@ -396,21 +401,25 @@ class FilterInvText(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def _unit(self):
-        raise NotImplementedError()
-
-    @abc.abstractproperty
-    def _scale(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvFloat, self).__init__("host", [self.ident + "_from", self.ident + "_to"], [])
+class FilterInvFloat(Filter):
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 inv_path: str,
+                 unit: Optional[str],
+                 scale: Optional[float],
+                 is_show_more: bool = True) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         htmlvars=[ident + "_from", ident + "_to"],
+                         link_columns=[],
+                         is_show_more=is_show_more)
+        self._invpath = inv_path
+        self._unit = unit
+        self._scale = scale if scale is not None else 1.0
 
     def display(self) -> None:
         html.write_text(_("From: "))
@@ -418,14 +427,14 @@ class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
         current_value = html.request.var(htmlvar, "")
         html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write(" %s" % self._unit)
 
     def filter_configs(self):
         "Returns scaled lower and upper bounds"
@@ -441,7 +450,8 @@ class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
     def need_inventory(self) -> bool:
         return any(self.filter_configs())
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         lower, upper = self.filter_configs()
         if not any((lower, upper)):
             return rows
@@ -457,13 +467,15 @@ class FilterInvFloat(Filter, metaclass=abc.ABCMeta):
         return newrows
 
 
-class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
-    def _invpath(self):
-        raise NotImplementedError()
-
-    def __init__(self) -> None:
-        super(FilterInvBool, self).__init__("host", self.ident)
+class FilterInvBool(FilterTristate):
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         column=ident,
+                         is_show_more=is_show_more)
+        self._invpath = inv_path
 
     def need_inventory(self) -> bool:
         return self.tristate_value() != -1
@@ -471,7 +483,8 @@ class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         tri = self.tristate_value()
         if tri == -1:
             return rows
@@ -485,22 +498,15 @@ class FilterInvBool(FilterTristate, metaclass=abc.ABCMeta):
         return newrows
 
 
-@filter_registry.register
+@filter_registry.register_instance
 class FilterHasInv(FilterTristate):
-    @property
-    def ident(self) -> str:
-        return "has_inv"
-
-    @property
-    def title(self) -> str:
-        return _("Has Inventory Data")
-
-    @property
-    def sort_index(self) -> int:
-        return 801
-
     def __init__(self) -> None:
-        FilterTristate.__init__(self, "host", "host_inventory")
+        super().__init__(ident="has_inv",
+                         title=_("Has Inventory Data"),
+                         sort_index=801,
+                         info="host",
+                         column="host_inventory",
+                         is_show_more=True)
 
     def need_inventory(self) -> bool:
         return self.tristate_value() != -1
@@ -508,7 +514,8 @@ class FilterHasInv(FilterTristate):
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         tri = self.tristate_value()
         if tri == -1:
             return rows
@@ -518,31 +525,22 @@ class FilterHasInv(FilterTristate):
         return [row for row in rows if not row["host_inventory"]]
 
 
-@filter_registry.register
+@filter_registry.register_instance
 class FilterInvHasSoftwarePackage(Filter):
-    @property
-    def ident(self) -> str:
-        return "invswpac"
-
-    @property
-    def title(self) -> str:
-        return _("Host has software package")
-
-    @property
-    def sort_index(self) -> int:
-        return 801
-
     def __init__(self) -> None:
         self._varprefix = "invswpac_host_"
-        Filter.__init__(self, "host", [
-            self._varprefix + "name",
-            self._varprefix + "version_from",
-            self._varprefix + "version_to",
-            self._varprefix + "negate",
-        ], [])
-
-    def double_height(self) -> bool:
-        return True
+        super().__init__(ident="invswpac",
+                         title=_("Host has software package"),
+                         sort_index=801,
+                         info="host",
+                         htmlvars=[
+                             self._varprefix + "name",
+                             self._varprefix + "version_from",
+                             self._varprefix + "version_to",
+                             self._varprefix + "negate",
+                         ],
+                         link_columns=[],
+                         is_show_more=True)
 
     @property
     def filtername(self):
@@ -562,17 +560,20 @@ class FilterInvHasSoftwarePackage(Filter):
                          label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
-        html.write_text(_("Min.&nbsp;Version:"))
+        html.open_span(class_="min_max_row")
+        html.write_text(_("Min.&nbsp;Version: "))
         html.text_input(self._varprefix + "version_from", size=9)
         html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Vers.:"))
+        html.write_text(_("Max.&nbsp;Vers.: "))
         html.text_input(self._varprefix + "version_to", size=9)
+        html.close_span()
         html.br()
         html.checkbox(self._varprefix + "negate",
                       False,
                       label=_("Negate: find hosts <b>not</b> having this package"))
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         name = self.filtername
         if not name:
             return rows
@@ -587,7 +588,7 @@ class FilterInvHasSoftwarePackage(Filter):
             except re.error:
                 raise MKUserError(
                     self._varprefix + "name",
-                    _('You search statement is not valid. You need to provide a regular '
+                    _('Your search statement is not valid. You need to provide a regular '
                       'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                       'if you like to search for a single backslash.'))
 

@@ -6,7 +6,7 @@ Date: 1590585005
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk extends the special agent for monitoring UCS C-Series Rack Servers
 to output information about LEDs and fault objects. It also adds two new checks

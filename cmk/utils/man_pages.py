@@ -64,6 +64,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
             "tinkerforge"  : "Tinkerforge",
+            "vutlan"       : "Vutlan EMS",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
         "time"        : "Clock Devices",
@@ -200,6 +201,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
+        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
@@ -557,7 +559,7 @@ def load_man_page(name: str) -> Optional[ManPage]:
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = ['unsorted']
+        header['catalog'] = 'unsorted'
     man_page['header'] = header
 
     return man_page
@@ -796,7 +798,7 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_header(self):
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
-        # of the man page here. More useful would be the Check_MK version where
+        # of the man page here. More useful would be the Checkmk version where
         # the plugin first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")

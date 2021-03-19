@@ -33,7 +33,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     AbsoluteDate,
     TextUnicode,
-    SiteChoice,
+    SetupSiteChoice,
     ID,
     Transform,
     Labels,
@@ -63,7 +63,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -76,7 +76,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def nagios_name(self):
         return "alias"
 
-    def is_explicit(self):
+    def is_explicit(self) -> bool:
         return True
 
     def title(self):
@@ -109,7 +109,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return HostAddress(
-            title=_("IPv4 Address"),
+            title=_("IPv4 address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
@@ -174,7 +174,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 50
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def name(self):
@@ -209,6 +209,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 60
+
+    def is_show_more(self) -> bool:
+        return True
 
     def name(self):
         return "additional_ipv6addresses"
@@ -279,7 +282,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 80
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def show_in_table(self):
@@ -311,6 +314,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
 
     def nagios_name(self):
         return "parents"
+
+    def is_explicit(self) -> bool:
+        return True
 
     def paint(self, value, hostname):
         parts = [
@@ -689,9 +695,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
-    def is_advanced(self) -> bool:
-        return True
-
     def name(self):
         return "management_snmp_community"
 
@@ -717,7 +720,6 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
 
 class IPMICredentials(Alternative):
     def __init__(self, **kwargs):
-        kwargs["style"] = "dropdown"
         kwargs["elements"] = [
             FixedValue(
                 None,
@@ -741,9 +743,6 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 140
 
-    def is_advanced(self) -> bool:
-        return True
-
     def show_in_table(self):
         return False
 
@@ -762,8 +761,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
 
-    def is_advanced(self) -> bool:
-        return True
+    def is_show_more(self) -> bool:
+        return not (cmk.gui.config.has_wato_slave_sites() or cmk.gui.config.is_wato_slave_site())
 
     def topic(self):
         return HostAttributeTopicBasicSettings
@@ -779,7 +778,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return True
 
     def valuespec(self):
-        return SiteChoice(
+        return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             invalid_choice_error=_("The configured site is not known to this site. In case you "
@@ -791,6 +790,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def get_tag_groups(self, value):
+        # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
+        # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
             return {"site": ""}
 
@@ -847,7 +848,7 @@ class LockedByValuespec(Tuple):
             orientation="horizontal",
             title_br=False,
             elements=[
-                SiteChoice(),
+                SetupSiteChoice(),
                 ID(title=_("Program"),),
                 ID(title=_("Connection ID"),),
             ],
@@ -994,7 +995,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 190
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def help(self):

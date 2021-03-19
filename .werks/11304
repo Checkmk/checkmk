@@ -6,7 +6,7 @@ Date: 1597840833
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The plugin mysql.connections shows the maximum number of parallel connections
 since the server was started in relation to the maximum number of parallel

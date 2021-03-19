@@ -9,6 +9,8 @@ export UNIT_SH_PLUGINS_DIR="../agents/plugins"
 _failed_tests=""
 while IFS= read -r -d '' test_file
 do
+    echo "--------------------------------------------------------------------------------"
+    echo Running "$test_file"
     "$test_file" || _failed_tests="$_failed_tests $test_file"
 done <  <(find ./agent-plugin-unit -name "test*.sh" -print0)
 

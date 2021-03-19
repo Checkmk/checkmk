@@ -6,7 +6,7 @@ Date: 1592895891
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Within the ruleset {{Hostname translation for piggybacked hosts}} the option
 {{Convert FQHN}} drops the domain part, eg. "host123.foobar.de -> host123".  If

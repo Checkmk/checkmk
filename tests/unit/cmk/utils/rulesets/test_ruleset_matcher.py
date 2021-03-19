@@ -514,3 +514,15 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
             hostname, service_description),
                                            ruleset=service_label_ruleset,
                                            is_binary=False)) == expected_result
+
+
+def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
+    config_cache = Scenario().apply(monkeypatch)
+    ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
+    ruleset_optimizer.get_service_ruleset(ruleset, False, False)
+    ruleset_optimizer.get_host_ruleset(ruleset, False, False)
+    assert ruleset_optimizer._host_ruleset_cache
+    assert ruleset_optimizer._service_ruleset_cache
+    ruleset_optimizer.clear_ruleset_caches()
+    assert not ruleset_optimizer._host_ruleset_cache
+    assert not ruleset_optimizer._service_ruleset_cache

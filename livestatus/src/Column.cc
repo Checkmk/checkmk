@@ -5,29 +5,35 @@
 
 #include "Column.h"
 
-#include <iterator>
+#include <ostream>
 #include <utility>
 
-#include "Logger.h"
+#include "POSIXUtils.h"
 
-Column::Column(std::string name, std::string description, Offsets offsets)
-    : _logger(Logger::getLogger("cmk.livestatus"))
+Column::Column(std::string name, std::string description, ColumnOffsets offsets)
+    : _logger(Logger::getLogger("cmk.livestatus"),
+              [](std::ostream &os) { os << "[" << getThreadName() << "] "; })
     , _name(std::move(name))
     , _description(std::move(description))
     , _offsets(std::move(offsets)) {}
 
 const void *Column::shiftPointer(Row row) const {
-    const void *data = row.rawData<void>();
-    const auto last = std::prev(std::cend(_offsets));
-    for (auto iter = std::begin(_offsets); iter != std::end(_offsets); iter++) {
-        if (data == nullptr) {
+    return _offsets.shiftPointer(row);
+}
+
+ColumnOffsets ColumnOffsets::add(const shifter &shifter) const {
+    ColumnOffsets result{*this};
+    result.shifters_.emplace_back(shifter);
+    return result;
+}
+
+const void *ColumnOffsets::shiftPointer(Row row) const {
+    for (const auto &s : shifters_) {
+        // TODO(sp) Figure out what is actually going on regarding nullptr...
+        if (row.isNull()) {
             break;
         }
-        if (*iter < 0) {
-            continue;
-        }
-        data = iter == last ? offset_cast<const void>(data, *iter)
-                            : *offset_cast<const void *>(data, *iter);
+        row = Row{s(row)};
     }
-    return data;
+    return row.rawData<void>();
 }

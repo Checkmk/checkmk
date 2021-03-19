@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When a service discovery is performed previous 1.6 versions showed
 incompatibility warnings of checks that are not related to the current host.

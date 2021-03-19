@@ -43,6 +43,8 @@ from cmk.gui.plugins.wato import (
     wato_fileheader,
 )
 
+from cmk.gui.type_defs import ConfigDomainName
+
 
 @config_variable_group_registry.register
 class ConfigVariableGroupSiteManagement(ConfigVariableGroup):
@@ -109,7 +111,7 @@ class ConfigVariableSiteCore(ConfigVariable):
     def _monitoring_core_choices(self):
         cores = []
         if not cmk_version.is_raw_edition():
-            cores.append(("cmc", _("Check_MK Micro Core")))
+            cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
             ("nagios", _("Nagios 3")),
@@ -223,8 +225,11 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "diskspace"
     diskspace_config = cmk.utils.paths.omd_root + '/etc/diskspace.conf'
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "diskspace"
 
     def activate(self):
         pass
@@ -395,7 +400,10 @@ add_replication_paths([
 class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "apache"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "apache"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
@@ -514,7 +522,10 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "rrdcached"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "rrdcached"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"

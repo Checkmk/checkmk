@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "Renderer.h"
-#include "data_encoding.h"
 class Logger;
 
 class RendererPython : public Renderer {

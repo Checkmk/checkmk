@@ -44,5 +44,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_mysql_db_size,
         parameter_valuespec=_parameter_valuespec_mysql_db_size,
-        title=lambda: _("Size of MySQL databases"),
+        title=lambda: _("MySQL database sizes"),
     ))

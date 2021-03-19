@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The new section ps_lnx was introduced in version 1.6.0. Unfortunately,
 counters of processes which do not exist anymore were not cleaned

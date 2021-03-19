@@ -6,7 +6,7 @@ Date: 1574930286
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The old plugin was first executing the 64 bit check. If there is no output it
 executes the 32 bit check. If no registry entries are found, it prints an error

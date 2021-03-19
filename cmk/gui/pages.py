@@ -5,14 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import json
+import http.client as http_client
 import inspect
+import json
 from typing import Any, Callable, Dict, Mapping, Optional, Type
 
 import cmk.utils.plugin_registry
-from cmk.gui.globals import html
-import cmk.gui.config as config
 from cmk.utils.exceptions import MKException
+
+import cmk.gui.config as config
+from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.globals import g, html
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]
@@ -69,20 +72,48 @@ class AjaxPage(Page, metaclass=abc.ABCMeta):
         """Override this to implement the page functionality"""
         raise NotImplementedError()
 
+    def _handle_exc(self, method) -> None:
+        # FIXME: cyclical link between crash_reporting.py and pages.py
+        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+        try:
+            # FIXME: These methods write to the response themselves. This needs to be refactored.
+            method()
+        except MKException as e:
+            html.response.status_code = http_client.BAD_REQUEST
+            html.write(str(e))
+        except Exception as e:
+            html.response.status_code = http_client.INTERNAL_SERVER_ERROR
+            if config.debug:
+                raise
+            logger.exception("error calling AJAX page handler")
+            handle_exception_as_gui_crash_report(
+                plain_error=True,
+                show_crash_link=getattr(g, "may_see_crash_reports", False),
+            )
+            html.write(str(e))
+
     def handle_page(self) -> None:
         """The page handler, called by the page registry"""
+        # FIXME: cyclical link between crash_reporting.py and pages.py
+        from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
         html.set_output_format("json")
         try:
             action_response = self.page()
-            response = {"result_code": 0, "result": action_response}
+            response = {"result_code": 0, "result": action_response, "severity": "success"}
+        except MKMissingDataError as e:
+            response = {"result_code": 1, "result": "%s" % e, "severity": "success"}
         except MKException as e:
-            response = {"result_code": 1, "result": "%s" % e}
+            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
         except Exception as e:
             if config.debug:
                 raise
             logger.exception("error calling AJAX page handler")
-            response = {"result_code": 1, "result": "%s" % e}
+            handle_exception_as_gui_crash_report(
+                plain_error=True,
+                show_crash_link=getattr(g, "may_see_crash_reports", False),
+            )
+            response = {"result_code": 1, "result": "%s" % e, "severity": "error"}
 
         html.write(json.dumps(response))
 

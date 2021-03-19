@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
+import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 
 
 def check_ucs_c_rack_server_faultinst(
@@ -17,7 +18,10 @@ def check_ucs_c_rack_server_faultinst(
         yield 0, "No fault instances found"
         return
 
-    states = [UCS_FAULTINST_SEVERITY_TO_STATE.get(severity, 3) for severity in parsed['Severity']]
+    states = [
+        ucs_bladecenter.UCS_FAULTINST_SEVERITY_TO_STATE.get(severity, 3)
+        for severity in parsed['Severity']
+    ]
     if 2 in states:
         overall_state = 2
     else:
@@ -44,5 +48,4 @@ check_info['ucs_c_rack_server_faultinst'] = {
     'inventory_function': lambda p: [(None, {})],
     'check_function': check_ucs_c_rack_server_faultinst,
     'service_description': 'Fault Instances',
-    'includes': ['ucs_bladecenter.include'],
 }

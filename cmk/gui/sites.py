@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union
+from typing import Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple
 
 from livestatus import (
     MultiSiteConnection,
@@ -13,6 +13,7 @@ from livestatus import (
     SiteId,
     SiteConfiguration,
     SiteConfigurations,
+    lqencode,
 )
 
 from cmk.utils.version import is_managed_edition
@@ -21,8 +22,10 @@ from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
+from cmk.gui.i18n import _
 from cmk.gui.globals import g, request
 from cmk.gui.config import LoggedInUser
+from cmk.gui.log import logger
 
 #   .--API-----------------------------------------------------------------.
 #   |                             _    ____ ___                            |
@@ -55,8 +58,26 @@ def states(user: Optional[LoggedInUser] = None,
     return g.site_status
 
 
+@contextmanager
+def cleanup_connections() -> Iterator[None]:
+    """Context-manager to cleanup livestatus connections"""
+    try:
+        yield
+    finally:
+        try:
+            disconnect()
+        except Exception:
+            logger.exception("Error during livestatus cleanup")
+            raise
+
+
+# TODO: This is not really shutting down or closing connections. It only removes references to
+# sockets and connection classes. This should really be cleaned up (context managers, ...)
 def disconnect() -> None:
     """Actively closes all Livestatus connections."""
+    logger.debug("Disconnecing site connections")
+    if "live" in g:
+        g.live.disconnect()
     g.pop('live', None)
     g.pop('site_status', None)
 
@@ -72,6 +93,28 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
     return sorted([(name, alias or name) for name, alias in dict(groups).items()],
                   key=lambda e: e[1].lower())
+
+
+# TODO: this too does not really belong here...
+def get_alias_of_host(site: Optional[SiteId], host_name: str) -> str:
+    query = ("GET hosts\n"
+             "Cache: reload\n"
+             "Columns: alias\n"
+             "Filter: name = %s" % lqencode(host_name))
+
+    with only_sites(site):
+        try:
+            return live().query_value(query)
+        except Exception as e:
+            logger.warning(
+                "Could not determine alias of host %s on site %s: %s",
+                host_name,
+                site,
+                e,
+            )
+            if config.debug:
+                raise
+            return host_name
 
 
 #.
@@ -97,8 +140,8 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
 # "program_version"    --> Version of Nagios if "online"
 
 
-# Build up a connection to livestatus to either a single site or multiple sites.
 def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[UserId]) -> None:
+    """Build up a connection to livestatus to either a single site or multiple sites."""
     if 'live' in g:
         return
 
@@ -109,9 +152,14 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         request_force_authuser = request.get_unicode_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
+    logger.debug("Initializing livestatus connections as user %s (forced auth user: %s)", user.id,
+                 force_authuser)
+
     g.site_status = {}
     _connect_multiple_sites(user)
     _set_livestatus_auth(user, force_authuser)
+
+    logger.debug("Site states: %r", g.site_status)
 
 
 def _connect_multiple_sites(user: LoggedInUser) -> None:
@@ -130,10 +178,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     for response in g.live.query(
             "GET status\n"
             "Cache: reload\n"
-            "Columns: livestatus_version program_version program_start num_hosts num_services"):
+            "Columns: livestatus_version program_version program_start num_hosts num_services "
+            "core_pid"):
 
         try:
-            site_id, v1, v2, ps, num_hosts, num_services = response
+            site_id, v1, v2, ps, num_hosts, num_services, pid = response
         except ValueError:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
@@ -153,6 +202,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             "num_hosts": num_hosts,
             "num_services": num_services,
             "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+            "core_pid": pid,
         })
     g.live.set_prepend_site(False)
 
@@ -241,6 +291,18 @@ _STATUS_NAMES = {
 }
 
 
+def site_state_titles() -> Dict[str, str]:
+    return {
+        "online": _("This site is online."),
+        "disabled": _("The connection to this site has been disabled."),
+        "down": _("This site is currently down."),
+        "unreach": _("This site is currently not reachable."),
+        "dead": _("This site is not responding."),
+        "waiting": _("The status of this site has not yet been determined."),
+        "missing": _("This site does not exist."),
+    }
+
+
 def _set_initial_site_states(enabled_sites, disabled_sites):
     # (SiteConfigurations, SiteConfigurations) -> None
     for site_id, site in enabled_sites.items():
@@ -322,3 +384,50 @@ def set_limit(limit: Optional[int]) -> Iterator[None]:
         yield
     finally:
         live().set_limit()  # removes limit
+
+
+GroupedSiteState = NamedTuple("GroupedSiteState", [
+    ("readable", str),
+    ("site_ids", List[SiteId]),
+])
+
+
+def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
+    grouped_states = {
+        'ok': GroupedSiteState(
+            readable=_("OK"),
+            site_ids=[],
+        ),
+        'disabled': GroupedSiteState(
+            readable=_("disabled"),
+            site_ids=[],
+        ),
+        'error': GroupedSiteState(
+            readable=_("disconnected"),
+            site_ids=[],
+        ),
+    }
+    for site_id, info in states().items():
+        grouped_states[_map_site_state(info["state"])].site_ids.append(site_id)
+    return grouped_states
+
+
+def _map_site_state(state: str) -> str:
+    if state in ('online', 'waiting'):
+        return 'ok'
+    if state == 'disabled':
+        return 'disabled'
+    return 'error'
+
+
+def filter_available_site_choices(choices: List[Tuple[SiteId, str]]) -> List[Tuple[SiteId, str]]:
+    # Only add enabled sites to choices
+    all_site_states = states()
+    sites_enabled = []
+    for entry in choices:
+        site_id, _desc = entry
+        site_state = all_site_states.get(site_id, SiteStatus({})).get("state")
+        if site_state is None:
+            continue
+        sites_enabled.append(entry)
+    return sites_enabled

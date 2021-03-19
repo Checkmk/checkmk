@@ -46,7 +46,6 @@ def _parameter_valuespec_postgres_maintenance():
             ("never_analyze_vacuum",
              Alternative(
                  title=_("Never analyzed/vacuumed tables"),
-                 style="dropdown",
                  elements=[
                      Tuple(
                          title=_("Age of never analyzed/vacuumed tables"),

@@ -52,7 +52,11 @@ checks = {
                     ]
                 ), (0, 'Total local: 326.99 TB', []),
                 (0, 'Free local: 235.32 TB', []),
-                (0, 'Dedup ratio: 10.06', [])
+                (
+                    0, 'Dedup ratio: 10.06', [
+                        ('dedup_rate', 10.06372, None, None, None, None)
+                    ]
+                )
             ]
         )
     ],

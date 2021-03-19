@@ -114,6 +114,8 @@ const char* const kWinPerfExe = "exe";                // string
 const char* const kWinPerfPrefixName = "prefix";      // string
 const char* const kWinPerfPrefixDefault = "winperf";  // string
 const char* const kWinPerfTimeout = "timeout";        // int
+const char* const kWinPerfTrace = "trace";            // bool
+const char* const kWinPerfFork = "fork";              // bool
 
 // group "logwatch"
 // root
@@ -188,6 +190,7 @@ constexpr std::string_view kModulesExec = "exec";    // string
 constexpr std::string_view kModulesDir = "dir";      // string
 
 constexpr std::string_view kModulesPython = "python";  // string
+constexpr std::string_view kModulesQuickReinstall = "quick_reinstall";  // bool
 
 // group "system"
 constexpr const char* const kFirewall = "firewall";  // dictionary
@@ -206,8 +209,9 @@ constexpr const char* const kWaitNetwork = "wait_network";  // int, seconds
 
 namespace values {
 // modules.table
-constexpr std::string_view kModulesNamePython = "python-3.8";             //
-constexpr std::string_view kModulesCmdPython = "Scripts\\python.exe {}";  //
+constexpr std::string_view kModulesNamePython = "python-3.8";  //
+constexpr std::string_view kModulesCmdPython =
+    ".venv\\Scripts\\python.exe {}";  //
 
 // modules...
 constexpr std::string_view kModuleUsageSystem = "system";

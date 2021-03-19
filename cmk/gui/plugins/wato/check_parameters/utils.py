@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple
+from typing import List, Tuple as _Tuple, Union
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import (
@@ -21,6 +21,7 @@ from cmk.gui.valuespec import (
     ListOf,
     Optional,
     Percentage,
+    TextAscii,
     Transform,
     Tuple,
     ValueSpec,
@@ -45,10 +46,17 @@ def match_dual_level_type(value):
     return 0
 
 
-def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
+def get_free_used_dynamic_valuespec(
+        what,
+        name,
+        default_value=(80.0, 90.0),
+        *,
+        maxvalue: Union[None, int, float] = 101.0,
+):
     if what == "used":
         title = _("used space")
         course = _("above")
+
     else:
         title = _("free space")
         course = _("below")
@@ -56,23 +64,40 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
     vs_subgroup: List[ValueSpec] = [
         Tuple(title=_("Percentage %s") % title,
               elements=[
-                  Percentage(title=_("Warning if %s") % course, unit="%", minvalue=0.0),
-                  Percentage(title=_("Critical if %s") % course, unit="%", minvalue=0.0),
+                  Percentage(
+                      title=_("Warning if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
+                  Percentage(
+                      title=_("Critical if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
               ]),
         Tuple(title=_("Absolute %s") % title,
               elements=[
-                  Integer(title=_("Warning if %s") % course, unit=_("MB"), minvalue=0),
-                  Integer(title=_("Critical if %s") % course, unit=_("MB"), minvalue=0),
+                  Integer(
+                      title=_("Warning if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
+                  Integer(
+                      title=_("Critical if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
               ])
     ]
 
     def validate_dynamic_levels(value, varprefix):
         if [v for v in value if v[0] < 0]:
-            raise MKUserError(varprefix, _("You need to specify levels " "of at least 0 bytes."))
+            raise MKUserError(varprefix, _("You need to specify levels of at least 0 bytes."))
 
     return Alternative(
         title=_("Levels for %s %s") % (name, title),
-        style="dropdown",
         show_alternative_title=True,
         default_value=default_value,
         elements=vs_subgroup + [
@@ -311,7 +336,7 @@ def vs_filesystem(extra_elements=None):
         help=_("This ruleset allows to set parameters for space and inodes usage"),
         elements=filesystem_elements + extra_elements,
         hidden_keys=["flex_levels"],
-        ignored_keys=["patterns"],
+        ignored_keys=["patterns", "include_volume_name"],
     )
 
 
@@ -341,3 +366,19 @@ def vs_interface_traffic():
                                  ("upper", _("Upper"), vs_abs_perc()),
                                  ("lower", _("Lower"), vs_abs_perc()),
                              ])
+
+
+def mssql_item_spec_instance_tablespace() -> TextAscii:
+    return TextAscii(
+        title=_("Instance & tablespace name"),
+        help=_("The MSSQL instance name and the tablespace name separated by a space."),
+        allow_empty=False,
+    )
+
+
+def mssql_item_spec_instance_database_file() -> TextAscii:
+    return TextAscii(
+        title=_("Instance, database & file name"),
+        help=_("A combination of the instance, database and (logical) file name."),
+        allow_empty=False,
+    )

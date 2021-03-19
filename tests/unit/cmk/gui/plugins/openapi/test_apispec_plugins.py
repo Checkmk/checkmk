@@ -7,7 +7,7 @@
 import pytest  # type: ignore[import]
 
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load  # type: ignore[import]
+from marshmallow import Schema, fields, post_load
 
 from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
 
@@ -91,10 +91,10 @@ def test_apispec_plugin_value_typed_dict(spec):
 
 
 def test_apispec_load():
-    result = MoviesSchema().load(MOVIES).data
+    result = MoviesSchema().load(MOVIES)
     assert sorted(result) == sorted(EXPECTED_MOVIES)
 
 
 def test_apispec_dump():
-    result = MoviesSchema().dump(EXPECTED_MOVIES).data
+    result = MoviesSchema().dump(EXPECTED_MOVIES)
     assert result == MOVIES

@@ -30,7 +30,6 @@ def _parameter_valuespec_memory_pagefile_win():
                 "memory",
                 Alternative(
                     title=_("Memory Levels"),
-                    style="dropdown",
                     elements=[
                         Tuple(
                             title=_("Memory usage in percent"),
@@ -58,7 +57,6 @@ def _parameter_valuespec_memory_pagefile_win():
                 "pagefile",
                 Alternative(
                     title=_("Commit charge Levels"),
-                    style="dropdown",
                     elements=[
                         Tuple(
                             title=_("Commit charge in percent (relative to commit limit)"),

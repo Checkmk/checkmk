@@ -16,11 +16,10 @@
 #include <vector>
 
 #include "Metric.h"
-#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
+enum class Encoding;
 class Logger;
 
 struct Command {
@@ -113,6 +112,8 @@ public:
     [[nodiscard]] virtual std::filesystem::path structuredStatusPath()
         const = 0;
     [[nodiscard]] virtual std::filesystem::path crashReportPath() const = 0;
+    [[nodiscard]] virtual std::filesystem::path licenseUsageHistoryPath()
+        const = 0;
     [[nodiscard]] virtual std::filesystem::path pnpPath() const = 0;
     [[nodiscard]] virtual std::filesystem::path historyFilePath() const = 0;
     [[nodiscard]] virtual std::filesystem::path logArchivePath() const = 0;
@@ -144,6 +145,7 @@ public:
     [[nodiscard]] virtual MetricLocation metricLocation(
         const std::string &host_name, const std::string &service_description,
         const Metric::Name &var) const = 0;
+    [[nodiscard]] virtual bool pnp4nagiosEnabled() const = 0;
 
     // Our escape hatch, this should die in the long run...
     template <typename T>

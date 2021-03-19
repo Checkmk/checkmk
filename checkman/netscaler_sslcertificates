@@ -16,3 +16,6 @@ inventory:
  One service is created for each SSL certificate.
 
  Use {ignored_services} if you need a host-specific configuration.
+
+cluster:
+ On a cluster, the service state is set to to the worst encountered node state.

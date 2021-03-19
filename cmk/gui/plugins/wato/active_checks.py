@@ -19,6 +19,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Age,
     TextUnicode,
+    TextAreaUnicode,
     DropdownChoice,
     RegExp,
     RegExpUnicode,
@@ -29,7 +30,6 @@ from cmk.gui.valuespec import (
     Password,
     Percentage,
     CascadingDropdown,
-    UploadOrPasteTextFile,
     Hostname,
     Optional,
 )
@@ -49,18 +49,19 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
-class RulespecGroupIntegrateNagiosPlugins(RulespecGroup):
+class RulespecGroupIntegrateOtherServices(RulespecGroup):
     @property
     def name(self):
         return "custom_checks"
 
     @property
     def title(self):
-        return _("Integrate Nagios plugins")
+        return _("Other services")
 
     @property
     def help(self):
-        return _("Integrate custom nagios plugins (so called active checks)")
+        return _("This services are provided by so called active checks. "
+                 "You can also integrate custom nagios plugins.")
 
 
 @rulespec_group_registry.register
@@ -71,29 +72,13 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Check networking services")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def help(self):
-        return _("Configure active networking checks like HTTP and TCP")
-
-
-@rulespec_group_registry.register
-class RulespecGroupBI(RulespecGroup):
-    @property
-    def name(self):
-        return "bi"
-
-    @property
-    def title(self):
-        return _("Check state of BI aggregations")
-
-    @property
-    def help(self):
-        return _(
-            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
-            "several states to a single BI aggregation, which you want to show up as a single "
-            "service.")
+        return _("Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+                 "monitoring. The services are provided by so called active checks that allow "
+                 "you to monitor network services directly from the outside.")
 
 
 # These elements are also used in check_parameters.py
@@ -264,7 +249,7 @@ def _valuespec_active_checks_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:ssh",
         valuespec=_valuespec_active_checks_ssh,
@@ -615,29 +600,31 @@ def _valuespec_active_checks_sql():
                  help=_('The password used to connect to the database'),
                  allow_empty=False,
              )),
-            ("sql",
-             Alternative(
-                 title=_("Query or SQL statement"),
-                 elements=[
-                     TextAscii(
-                         title=_("SQL statement or procedure name"),
-                         help=
-                         _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
-                           'a result table with one row and at least two columns. The first column must be '
-                           'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
-                           'Alternatively the first column can be interpreted as number value and you can '
-                           'define levels for this number. The '
-                           'second column is used as check output. The third column is optional and can '
-                           'contain performance data.'),
-                         allow_empty=False,
-                     ),
-                     UploadOrPasteTextFile(
-                         title=_("Import Query"),
-                         file_title=_("File including Query"),
-                         default_mode="upload",
-                     ),
-                 ],
-             )),
+            (
+                "sql",
+                Transform(
+                    TextAreaUnicode(
+                        title=_("Query or SQL statement"),
+                        help=
+                        _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                          'a result table with one row and at least two columns. The first column must be '
+                          'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                          'Alternatively the first column can be interpreted as number value and you can '
+                          'define levels for this number. The '
+                          'second column is used as check output. The third column is optional and can '
+                          'contain performance data.'),
+                        allow_empty=False,
+                        monospaced=True,
+                    ),
+                    # Former Alternative(Text, Alternative(FileUpload, Text)) based implementation
+                    # would save a string or a tuple with a string or a binary array as third element
+                    # which would then be turned into a string.
+                    # Just make all this a string
+                    forth=lambda old_val: [
+                        elem.decode() if isinstance(elem, bytes) else str(elem)
+                        for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
+                    ][0],
+                )),
             (
                 "procedure",
                 Dictionary(
@@ -697,7 +684,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_tcp():
     return Tuple(
-        title=_("Check connecting to a TCP port"),
+        title=_("Check TCP port connection"),
         help=_("This check tests the connection to a TCP port. It uses "
                "<tt>check_tcp</tt> from the standard Nagios plugins."),
         elements=[
@@ -868,7 +855,7 @@ def _valuespec_active_checks_uniserv():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         name="active_checks:uniserv",
         valuespec=_valuespec_active_checks_uniserv,
     ))
@@ -877,14 +864,19 @@ rulespec_registry.register(
 def _ip_address_family_element():
     return (
         "address_family",
-        DropdownChoice(title=_("IP Address Family"),
+        DropdownChoice(title=_("IP address family"),
                        choices=[
-                           (None, _("Primary Address Family")),
+                           (None, _("Primary address family")),
                            ('ipv4', _("Enforce IPv4")),
                            ('ipv6', _("Enforce IPv6")),
                        ],
                        default_value=None),
     )
+
+
+def _transform_add_address_family(v):
+    v.setdefault("address_family", None)
+    return v
 
 
 def _active_checks_http_proxyspec():
@@ -1263,7 +1255,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_ldap():
     return Tuple(
-        title=_("Check access to LDAP service"),
+        title=_("Check LDAP service access"),
         help=_("This check uses <tt>check_ldap</tt> from the standard "
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
@@ -1380,7 +1372,7 @@ def _active_checks_smtp_transform_smtp_address_family(val):
 
 def _valuespec_active_checks_smtp():
     return Tuple(
-        title=_("Check access to SMTP services"),
+        title=_("Check SMTP service access"),
         help=_("This check uses <tt>check_smtp</tt> from the standard "
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
@@ -1522,7 +1514,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_disk_smb():
     return Dictionary(
-        title=_("Check access to SMB share"),
+        title=_("Check SMB share access"),
         help=_("This ruleset helps you to configure the classical Nagios "
                "plugin <tt>check_disk_smb</tt> that checks the access to "
                "filesystem shares that are exported via SMB/CIFS."),
@@ -1666,7 +1658,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1787,7 +1779,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupBI,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,
@@ -1894,7 +1886,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_notify_count():
     return Tuple(
-        title=_("Check Number of Notifications per Contact"),
+        title=_("Check notification number per contact"),
         help=
         _("Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
           "provided with Check_MK. This plugin counts the total number of notifications sent by the local "
@@ -1927,7 +1919,7 @@ def _valuespec_active_checks_notify_count():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:notify_count",
         valuespec=_valuespec_active_checks_notify_count,
@@ -1935,50 +1927,54 @@ rulespec_registry.register(
 
 
 def _valuespec_active_checks_traceroute():
-    return Dictionary(
-        title=_("Check current routing (uses <tt>traceroute</tt>)"),
-        help=_("This active check uses <tt>traceroute</tt> in order to determine the current "
-               "routing from the monitoring host to the target host. You can specify any number "
-               "of missing or expected routes in that way detect e.g. an (unintended) failover "
-               "to a secondary route."),
-        elements=[
-            ("dns",
-             Checkbox(
-                 title=_("Name resolution"),
-                 label=_("Use DNS to convert IP addresses into hostnames"),
-                 help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
-                        "called with the option <tt>-n</tt>. That means that all IP addresses "
-                        "are tried to be converted into names. This usually adds additional "
-                        "execution time. Also DNS resolution might fail for some addresses."),
-             )),
-            _ip_address_family_element(),
-            ("routers",
-             ListOf(
-                 Tuple(elements=[
-                     TextAscii(
-                         title=_("Router (FQDN, IP-Address)"),
-                         allow_empty=False,
-                     ),
-                     DropdownChoice(title=_("How"),
-                                    choices=[
-                                        ('W', _("WARN - if this router is not being used")),
-                                        ('C', _("CRIT - if this router is not being used")),
-                                        ('w', _("WARN - if this router is being used")),
-                                        ('c', _("CRIT - if this router is being used")),
-                                    ]),
-                 ]),
-                 title=_("Router that must or must not be used"),
-                 add_label=_("Add Condition"),
-             )),
-            ("method",
-             DropdownChoice(title=_("Method of probing"),
-                            choices=[
-                                (None, _("UDP (default behaviour of tcpdump)")),
-                                ("icmp", _("ICMP Echo Request")),
-                                ("tcp", _("TCP SYN")),
-                            ])),
-        ],
-        optional_keys=False,
+    return Transform(
+        Dictionary(
+            title=_("Check current routing"),
+            help=_(
+                "This active check uses <tt>traceroute</tt> in order to determine the current "
+                "routing from the monitoring host to the target host. You can specify any number "
+                "of missing or expected routes in order to detect e.g. an (unintended) failover "
+                "to a secondary route."),
+            elements=[
+                ("dns",
+                 Checkbox(
+                     title=_("Name resolution"),
+                     label=_("Use DNS to convert IP addresses into hostnames"),
+                     help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
+                            "called with the option <tt>-n</tt>. That means that all IP addresses "
+                            "are tried to be converted into names. This usually adds additional "
+                            "execution time. Also DNS resolution might fail for some addresses."),
+                 )),
+                _ip_address_family_element(),
+                ("routers",
+                 ListOf(
+                     Tuple(elements=[
+                         TextAscii(
+                             title=_("Router (FQDN, IP-Address)"),
+                             allow_empty=False,
+                         ),
+                         DropdownChoice(title=_("How"),
+                                        choices=[
+                                            ('W', _("WARN - if this router is not being used")),
+                                            ('C', _("CRIT - if this router is not being used")),
+                                            ('w', _("WARN - if this router is being used")),
+                                            ('c', _("CRIT - if this router is being used")),
+                                        ]),
+                     ]),
+                     title=_("Router that must or must not be used"),
+                     add_label=_("Add Condition"),
+                 )),
+                ("method",
+                 DropdownChoice(title=_("Method of probing"),
+                                choices=[
+                                    (None, _("UDP (default behaviour of traceroute)")),
+                                    ("icmp", _("ICMP Echo Request")),
+                                    ("tcp", _("TCP SYN")),
+                                ])),
+            ],
+            optional_keys=False,
+        ),
+        forth=_transform_add_address_family,
     )
 
 
@@ -2373,7 +2369,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupIntegrateNagiosPlugins,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,
@@ -2489,7 +2485,7 @@ def _valuespec_active_checks_elasticsearch_query():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:elasticsearch_query",
         valuespec=_valuespec_active_checks_elasticsearch_query,

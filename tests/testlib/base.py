@@ -4,78 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict
+from pathlib import Path
+
+from testlib.utils import get_standard_linux_agent_output
+
 import cmk.base.config as config
 import cmk.base.autochecks as autochecks
 import cmk.utils.tags
-
-KNOWN_AUTO_MIGRATION_FAILURES = [
-    # this is a list of auto conversions currently
-    # failing. These are used in various tests, to predict the
-    # expected console output. In an ideal world, this list will (!)
-    # be empty. If that is the case, please remove it entirely.
-    ('section', 'if'),
-    ('section', 'if64'),
-    ('section', 'if64adm'),
-    ('section', 'if_brocade'),
-    ('section', 'if_fortigate'),
-    ('section', 'if_lancom'),
-    ('section', 'juniper_trpz_aps'),
-    ('section', 'juniper_trpz_aps_sessions'),
-    ('section', 'logwatch'),
-    ('section', 'mssql_counters'),
-    ('section', 'netscaler_sslcertificates'),
-    ('section', 'netscaler_vserver'),
-    ('section', 'oracle_asm_diskgroup'),
-    ('section', 'oracle_rman'),
-    ('section', 'oracle_tablespaces'),
-    ('section', 'printer_pages'),
-    ('section', 'services'),
-    ('section', 'site_object_status'),
-    ('section', 'site_object_counts'),
-    ('section', 'tsm_stagingpools'),
-    ('check', 'docker_container_status'),
-    ('check', 'docker_container_status_health'),
-    ('check', 'docker_container_status_uptime'),
-    ('check', 'if64'),
-    ('check', 'if64adm'),
-    ('check', 'if_fortigate'),
-    ('check', 'ipmi'),
-    ('check', 'juniper_trpz_aps'),
-    ('check', 'juniper_trpz_aps_sessions'),
-    ('check', 'k8s_stats_fs'),
-    ('check', 'k8s_stats_network'),
-    ('check', 'livestatus_status'),
-    ('check', 'logwatch'),
-    ('check', 'logwatch_ec'),
-    ('check', 'logwatch_ec_single'),
-    ('check', 'logwatch_groups'),
-    ('check', 'mssql_counters'),
-    ('check', 'mssql_counters_cache_hits'),
-    ('check', 'mssql_counters_file_sizes'),
-    ('check', 'mssql_counters_locks'),
-    ('check', 'mssql_counters_locks_per_batch'),
-    ('check', 'mssql_counters_pageactivity'),
-    ('check', 'mssql_counters_sqlstats'),
-    ('check', 'mssql_counters_transactions'),
-    ('check', 'netapp_api_vf_stats'),
-    ('check', 'netapp_api_vf_stats_traffic'),
-    ('check', 'netscaler_sslcertificates'),
-    ('check', 'netscaler_vserver'),
-    ('check', 'oracle_asm_diskgroup'),
-    ('check', 'oracle_rman'),
-    ('check', 'oracle_tablespaces'),
-    ('check', 'ps_perf'),
-    ('check', 'services'),
-    ('check', 'services_summary'),
-    ('check', 'site_object_counts'),
-    ('check', 'tsm_stagingpools'),
-]
 
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
     def __init__(self, site_id="unit"):
-        super(Scenario, self).__init__()
+        super().__init__()
 
         tag_config = cmk.utils.tags.sample_tag_config()
         self.tags = cmk.utils.tags.get_effective_tag_config(tag_config)
@@ -93,7 +35,12 @@ class Scenario:
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None):
+    def add_host(self,
+                 hostname,
+                 tags=None,
+                 host_path="/wato/hosts.mk",
+                 labels=None,
+                 ipaddress=None):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -106,7 +53,26 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
         self.config["host_labels"][hostname] = labels
+
+        if ipaddress is not None:
+            self.config.setdefault("ipaddresses", {})[hostname] = ipaddress
+
         return self
+
+    def fake_standard_linux_agent_output(self, *test_hosts):
+        self.set_ruleset(
+            "datasource_programs",
+            [
+                ("cat %s/<HOST>" % cmk.utils.paths.tcp_cache_dir, [], test_hosts, {}),
+            ],
+        )
+        linux_agent_output = get_standard_linux_agent_output()
+
+        for h in test_hosts:
+            cache_path = Path(cmk.utils.paths.tcp_cache_dir, h)
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            with cache_path.open("w", encoding="utf-8") as f:
+                f.write(linux_agent_output)
 
     def add_cluster(self, hostname, tags=None, host_path="/wato/hosts.mk", nodes=None):
         if tags is None:
@@ -173,11 +139,16 @@ class Scenario:
         self._autochecks[hostname] = services
 
     def apply(self, monkeypatch):
+        check_vars: Dict = {}
         for key, value in self.config.items():
+            if key in config._check_variables:
+                check_vars.setdefault(key, value)
+                continue
             monkeypatch.setattr(config, key, value)
 
         self.config_cache = config.get_config_cache()
         self.config_cache.initialize()
+        config.set_check_variables(check_vars)
 
         if self._autochecks:
             # TODO: This monkeypatching is horrible, it totally breaks any abstraction!

@@ -646,6 +646,7 @@ graph_info["bufferpool_hitratios"] = {
 }
 
 graph_info["deadlocks_and_waits"] = {
+    "title": _("Dead- and waitlocks"),
     "metrics": [
         ("deadlocks", "area"),
         ("lockwaits", "stack"),

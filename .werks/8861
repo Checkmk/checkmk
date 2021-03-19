@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1565961114
 
 When one of multiple hosts could not be created or modified by a execution,

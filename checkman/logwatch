@@ -29,4 +29,5 @@ inventory:
  is not configured or set to {False}.
  Please use standard inventory configuration methods if you want to ignore certain log files.
 
-
+cluster:
+ In a cluster setup all messages are aggregated across the nodes.

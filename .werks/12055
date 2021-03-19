@@ -1,0 +1,14 @@
+Title: API: fixing the password behaviour where no activate change states were previously registered
+Class: fix
+Compatible: compat
+Component: core
+Date: 1612798519
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+In the previous version, when creating, editing or deleting a password
+via the API, the change was not registered as a pending change state. This
+werk fixes this behaviour. Furthermore, it also fixes the behaviour 
+of the delete endpoint.

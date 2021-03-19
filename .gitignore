@@ -4,6 +4,8 @@
 *.py.*.py
 *kate-swp
 *~
+*.cookie
+*.timer
 .*.swo
 .*.swp
 .DS_Store
@@ -65,3 +67,4 @@ web/htdocs/js/*_min.js.map
 .mypy_cache/
 .vscode/
 .testmondata
+*.code-workspace

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In case a backup file was created from a site which contained hardlinks in the local directory, the restore mechnism will crash with the following message:
 <code>KeyError: "linkname 'SITE-NAME/local/LINK-NAME' not found"</code>

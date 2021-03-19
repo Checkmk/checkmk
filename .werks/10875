@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The service details (aka plugin output) was escaped in an unusual way
 on the service discovery page. It allowed some tags to be rendered

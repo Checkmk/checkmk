@@ -7,8 +7,11 @@
 from typing import Dict
 import ipaddress
 
+from six import ensure_str
+
+from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.type_defs import HostName, ServiceName
 
 TranslationOptions = Dict  # TODO: Improve this type
 
@@ -25,6 +28,23 @@ def translate_service_description(translation: TranslationOptions,
          "Check_MK HW/SW Inventory"]:
         return service_description.strip()
     return _translate(translation, service_description)
+
+
+def translate_piggyback_host(
+    backedhost: HostName,
+    translation: TranslationOptions,
+    *,
+    encoding_fallback: str,
+) -> HostName:
+    # To make it possible to match umlauts we need to change the hostname
+    # to a unicode string which can then be matched with regexes etc.
+    # We assume the incoming name is correctly encoded in UTF-8
+    decoded_backedhost = ensure_str_with_fallback(
+        backedhost,
+        encoding="utf-8",
+        fallback=encoding_fallback,
+    )
+    return ensure_str(translate_hostname(translation, decoded_backedhost))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:

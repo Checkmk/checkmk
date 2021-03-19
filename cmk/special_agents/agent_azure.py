@@ -97,7 +97,7 @@ def parse_arguments(argv):
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -126,18 +126,18 @@ def parse_arguments(argv):
         args.sequential = True
 
     # LOGGING
-    if args.verbose >= 3:
+    if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
-    elif args.verbose == 2:
+    elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
         fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
-    elif args.verbose == 1:
+    elif args.verbose:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
@@ -196,14 +196,33 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        request_url = self._base_url + uri_end
-        response = requests.get(request_url, params=params, headers=self._headers)
-        self._update_ratelimit(response)
-        json_data = response.json()
-        LOGGER.debug('response: %r', json_data)
+        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
 
         if key is None:
             return json_data
+
+        data = self._lookup(json_data, key)
+
+        # The API will not send more than 1000 recources at once.
+        # See if we must fetch another page:
+        next_link = json_data.get('nextLink')
+        while next_link is not None:
+            json_data = self._get_json_from_url(next_link)
+            # we only know of lists. Let exception happen otherwise
+            data += self._lookup(json_data, key)
+            next_link = json_data.get('nextLink')
+
+        return data
+
+    def _get_json_from_url(self, url, *, params=None):
+        response = requests.get(url, params=params, headers=self._headers)
+        self._update_ratelimit(response)
+        json_data = response.json()
+        LOGGER.debug('response: %r', json_data)
+        return json_data
+
+    @staticmethod
+    def _lookup(json_data, key):
         try:
             return json_data[key]
         except KeyError:
@@ -412,7 +431,7 @@ class Section:
         self._piggytargets = list(piggytargets)
         self._cont = []
         section_options = ':'.join(['sep(%d)' % separator] + options)
-        self._title = '<<<%s:%s>>>\n' % (name, section_options)
+        self._title = '<<<%s:%s>>>\n' % (self._cleanse_section_header(name), section_options)
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -431,11 +450,14 @@ class Section:
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write('<<<<%s>>>>\n' % self._cleanse_section_header(piggytarget))
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')
             sys.stdout.flush()
+
+    def _cleanse_section_header(self, section_name):
+        return section_name.replace('-', '_')
 
 
 class AzureSection(Section):
@@ -849,10 +871,10 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
+def main_graph_client(args, secret):
     graph_client = GraphApiClient()
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        graph_client.login(args.tenant, args.client, secret)
         write_section_ad(graph_client)
     except Exception as exc:
         if args.debug:
@@ -860,10 +882,11 @@ def main_graph_client(args):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def main_subscription(args, selector, subscription):
+def main_subscription(args, secret, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
+
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(args.tenant, args.client, secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
@@ -897,10 +920,19 @@ def main(argv=None):
         return
     LOGGER.debug("%s", selector)
 
-    main_graph_client(args)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
+
+    if not secret:
+        raise RuntimeError('secret is not set')
+
+    main_graph_client(args, secret)
 
     for subscription in args.subscriptions:
-        main_subscription(args, selector, subscription)
+        main_subscription(args, secret, selector, subscription)
 
 
 if __name__ == "__main__":

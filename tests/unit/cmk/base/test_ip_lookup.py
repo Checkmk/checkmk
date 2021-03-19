@@ -12,17 +12,20 @@ import pytest  # type: ignore[import]
 
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
-import cmk.base.ip_lookup as ip_lookup
+
 import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
 
 
 # TODO: Can be removed when this is not executed through a symlink anymore.
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch):
-    from cmk.base.caching import config_cache as _config_cache, runtime_cache as _runtime_cache  # pylint: disable=import-outside-toplevel
-    _config_cache.reset()
-    _runtime_cache.reset()
+    from cmk.utils.caching import (  # pylint: disable=import-outside-toplevel
+        config_cache as _config_cache,)
+    from cmk.utils.caching import runtime_cache as _runtime_cache
+    _config_cache.clear()
+    _runtime_cache.clear()
 
 
 @pytest.fixture()
@@ -34,6 +37,11 @@ def _cache_file():
 
     if p.exists():
         p.unlink()
+
+
+def test_repr():
+    ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
+    assert isinstance(repr(ip_lookup_cache), str)
 
 
 def test_get_ip_lookup_cache_not_existing(_cache_file):
@@ -55,9 +63,9 @@ def test_get_ip_lookup_cache_invalid_syntax(_cache_file):
 
 
 def test_get_ip_lookup_cache_existing(_cache_file):
-    cache_id1 = "host1", 4
+    cache_id1 = "host1", socket.AF_INET
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {cache_id1: "1"})
+        f.write(u"%r" % {ip_lookup.serialize_cache_id(cache_id1): "1"})
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
 
@@ -65,7 +73,7 @@ def test_get_ip_lookup_cache_existing(_cache_file):
 
 
 def test_update_ip_lookup_cache_empty_file(_cache_file):
-    cache_id = "host1", 4
+    cache_id = "host1", socket.AF_INET
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id, "127.0.0.1")
 
@@ -77,8 +85,8 @@ def test_update_ip_lookup_cache_empty_file(_cache_file):
 
 
 def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
@@ -90,11 +98,14 @@ def test_update_ip_lookup_cache_extend_existing_file(_cache_file):
 
 
 def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {cache_id1: "1", cache_id2: "2"})
+        f.write(u"%r" % {
+            ip_lookup.serialize_cache_id(cache_id1): "1",
+            ip_lookup.serialize_cache_id(cache_id2): "2",
+        })
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.update_cache(cache_id1, "127.0.0.1")
@@ -105,7 +116,7 @@ def test_update_ip_lookup_cache_update_existing_entry(_cache_file):
 
 
 def test_ip_lookup_cache_update_without_persistence(_cache_file):
-    cache_id1 = "host1", 4
+    cache_id1 = "host1", socket.AF_INET
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
     ip_lookup_cache.persist_on_update = False
@@ -116,8 +127,8 @@ def test_ip_lookup_cache_update_without_persistence(_cache_file):
 
 
 def test_load_legacy_lookup_cache(_cache_file):
-    cache_id1 = "host1", 4
-    cache_id2 = "host2", 4
+    cache_id1 = "host1", socket.AF_INET
+    cache_id2 = "host2", socket.AF_INET
 
     with _cache_file.open("w", encoding="utf-8") as f:
         f.write(u"%r" % {"host1": "127.0.0.1", "host2": "127.0.0.2"})
@@ -145,22 +156,29 @@ def test_update_dns_cache(monkeypatch, _cache_file):
     ts.add_host("dual", tags={"address_family": "ip-v4v6"})
     ts.apply(monkeypatch)
 
-    assert ip_lookup.update_dns_cache() == (3, ["dual"])
+    config_cache = config.get_config_cache()
+    assert ip_lookup.update_dns_cache(
+        host_configs=(config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+        configured_ipv4_addresses={},
+        configured_ipv6_addresses={},
+        simulation_mode=False,
+        override_dns=None,
+    ) == (3, ["dual"])
 
     # Check persisted data
     cache = ip_lookup._load_ip_lookup_cache(lock=False)
-    assert cache[("blub", 4)] == "127.0.0.13"
-    assert ("dual", 6) not in cache
+    assert cache[("blub", socket.AF_INET)] == "127.0.0.13"
+    assert ("dual", socket.AF_INET6) not in cache
 
 
 def test_clear_ip_lookup_cache(_cache_file):
     with _cache_file.open(mode="w", encoding="utf-8") as f:
-        f.write(u"%r" % {("host1", 4): "127.0.0.1"})
+        f.write(u"%r" % {ip_lookup.serialize_cache_id(("host1", socket.AF_INET)): "127.0.0.1"})
 
     ip_lookup_cache = ip_lookup._get_ip_lookup_cache()
-    assert ip_lookup_cache[("host1", 4)] == "127.0.0.1"
+    assert ip_lookup_cache[("host1", socket.AF_INET)] == "127.0.0.1"
 
-    ip_lookup._clear_ip_lookup_cache(ip_lookup_cache)
+    ip_lookup_cache.clear()
 
     assert len(ip_lookup_cache) == 0
     assert not _cache_file.exists()
@@ -185,7 +203,7 @@ def test_lookup_mgmt_board_ip_address_ipv4_host(monkeypatch, hostname, tags, res
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.skipif(
@@ -202,7 +220,7 @@ def test_lookup_mgmt_board_ip_address_ipv6_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("hostname, result_address", [
@@ -216,20 +234,20 @@ def test_lookup_mgmt_board_ip_address_dual_host(monkeypatch, hostname, result_ad
     })
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) == result_address
+    assert config.lookup_mgmt_board_ip_address(host_config) == result_address
 
 
 @pytest.mark.parametrize("tags, family", [
-    ({}, 4),
+    ({}, socket.AF_INET),
     ({
         "address_family": "ip-v4-only",
-    }, 4),
+    }, socket.AF_INET),
     ({
         "address_family": "ip-v6-only",
-    }, 6),
+    }, socket.AF_INET6),
     ({
         "address_family": "ip-v4v6",
-    }, 4),
+    }, socket.AF_INET),
 ])
 def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     hostname = "unresolveable-hostname"
@@ -237,10 +255,4 @@ def test_lookup_mgmt_board_ip_address_unresolveable(monkeypatch, tags, family):
     ts.add_host(hostname, tags=tags)
     ts.apply(monkeypatch)
     host_config = config.get_config_cache().get_host_config(hostname)
-    assert ip_lookup.lookup_mgmt_board_ip_address(host_config) is None
-
-
-def test_normalize_ip():
-    assert ip_lookup.normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
-    assert ip_lookup.normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
-    assert ip_lookup.normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]
+    assert config.lookup_mgmt_board_ip_address(host_config) is None

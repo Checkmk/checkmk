@@ -6,7 +6,7 @@ Date: 1596710193
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check <tt>juniper_temp</tt>, which monitors the temperatures
 of modules of Juniper devices, is now discovered on additional

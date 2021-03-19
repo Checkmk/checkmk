@@ -16,5 +16,5 @@ description:
  section "docker_container_status" (the default setting is fine).
 
 inventory:
- One service is created for each active container (running or restart policy 'always')
+ One service is created for each active container (running or exited or restart policy 'always')
  that has a health test configured.

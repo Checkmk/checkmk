@@ -7,14 +7,19 @@
 import abc
 import numbers
 import os
+import socket
 import sys
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union
+import shutil
+from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator, Final, Iterable
+from contextlib import contextmanager, suppress
+from pathlib import Path
 
 import cmk.utils.version as cmk_version
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.password_store
+import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -24,8 +29,11 @@ from cmk.utils.type_defs import (
     Labels,
     LabelSources,
     ServiceName,
+    ConfigSerial,
+    LATEST_SERIAL,
 )
 
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -37,21 +45,87 @@ from cmk.base.config import (
     ObjectAttributes,
 )
 from cmk.base.check_utils import Service, LegacyCheckParameters
+from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
+CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
+
+
+class HelperConfig:
+    """Managing the helper core config generations below var/check_mk/core/helper-config/[serial]
+
+    The context manager ensures that the directory for the config serial is created and the "latest"
+    link is only created in case the context is left without exception.
+    """
+    def __init__(self, serial: ConfigSerial) -> None:
+        self.serial: Final = serial
+        self.serial_path: Final = cmk.utils.paths.make_helper_config_path(serial)
+        self.latest_path: Final = cmk.utils.paths.make_helper_config_path(LATEST_SERIAL)
+
+    @contextmanager
+    def create(self) -> Iterator["HelperConfig"]:
+        self._cleanup()
+
+        self.serial_path.mkdir(parents=True, exist_ok=True)
+        yield self
+        self._create_latest_link()
+
+    def _create_latest_link(self) -> None:
+        with suppress(FileNotFoundError):
+            self.latest_path.unlink()
+        self.latest_path.symlink_to(self.serial_path.name)
+
+    def _cleanup(self) -> None:
+        """Cleanup old helper configs
+
+        This is only used when using the Nagios core. The Microcore cares about the cleanup on it's
+        own, because the Microcore holds the information which configs are still needed."""
+        if config.monitoring_core == "cmc":
+            return
+
+        if not cmk.utils.paths.core_helper_config_dir.exists():
+            return
+
+        latest_config_path = self.latest_path.resolve()
+        for config_path in cmk.utils.paths.core_helper_config_dir.iterdir():
+            if config_path.is_symlink() or not config_path.is_dir():
+                continue
+
+            if config_path == latest_config_path:
+                continue
+
+            shutil.rmtree(config_path)
+
+
+def new_helper_config_serial() -> ConfigSerial:
+    """Acquire and return the next helper config serial
+
+    This ID is used to identify a core helper configuration generation. It is used to store the
+    helper config on the file system below var/check_mk/core/helper_config/[serial]. It needs to
+    be unique compared to all currently known serials (the ones that exist in the directory
+    mentioned above).
+    """
+    serial_file = cmk.utils.paths.core_helper_config_dir / "serial.mk"
+
+    serial: int = store.load_object_from_file(serial_file, default=0, lock=True)
+    serial += 1
+
+    store.save_object_to_file(serial_file, serial)
+    return ConfigSerial(str(serial))
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
+    @classmethod
     @abc.abstractmethod
-    def create_config(self) -> None:
-        pass
+    def name(cls) -> str:
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def precompile(self) -> None:
-        pass
+    def create_config(self, serial: ConfigSerial) -> None:
+        raise NotImplementedError
 
 
 _ignore_ip_lookup_failures = False
@@ -92,6 +166,20 @@ def get_configuration_warnings() -> ConfigurationWarnings:
         warnings = g_configuration_warnings
 
     return warnings
+
+
+def duplicate_service_warning(
+    *,
+    checktype: str,
+    description: str,
+    host_name: HostName,
+    first_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+    second_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+) -> None:
+    return warning("ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+                   " - 1st occurrence: check plugin / item: %s / %r\n"
+                   " - 2nd occurrence: check plugin / item: %s / %r\n" %
+                   (checktype, description, host_name, *first_occurrence, *second_occurrence))
 
 
 # TODO: Just for documentation purposes for now, add typing_extensions and use this.
@@ -238,37 +326,99 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 #   '----------------------------------------------------------------------'
 
 
-# TODO: Move to modes?
-def do_create_config(core: MonitoringCore, with_agents: bool) -> None:
-    out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
-    create_core_config(core)
-    out.output(tty.ok + "\n")
+def do_create_config(core: MonitoringCore) -> None:
+    """Creating the monitoring core configuration and additional files
 
-    if with_agents:
+    Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
+    and available for starting the monitoring.
+    """
+    out.output("Generating configuration for core (type %s)..." % core.name())
+    try:
+        _create_core_config(core)
+        out.output(tty.ok + "\n")
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException("Error creating configuration: %s" % e)
+
+    _bake_on_restart()
+
+
+def _bake_on_restart():
+    try:
+        # Local import is needed, because this is not available in all environments
+        import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        agent_bakery.bake_on_restart()
+    except ImportError:
+        pass
+
+
+@contextmanager
+def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
+    if config.monitoring_core == "nagios":
+        objects_file = cmk.utils.paths.nagios_objects_file
+    else:
+        objects_file = cmk.utils.paths.var_dir + "/core/config"
+
+    backup_path = None
+    if os.path.exists(objects_file):
+        backup_path = objects_file + ".save"
+        os.rename(objects_file, backup_path)
+
+    try:
         try:
-            import cmk.base.cee.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-            cmk.base.cee.agent_bakery.bake_on_restart()
-        except ImportError:
-            pass
+            yield None
+        except Exception:
+            if backup_path:
+                os.rename(backup_path, objects_file)
+            raise
+
+        if (config.monitoring_core == "nagios" and
+                Path(cmk.utils.paths.nagios_config_file).exists() and not do_check_nagiosconfig()):
+            broken_config_path = Path(cmk.utils.paths.tmp_dir) / "check_mk_objects.cfg.broken"
+            shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
+
+            if backup_path:
+                os.rename(backup_path, objects_file)
+            elif os.path.exists(objects_file):
+                os.remove(objects_file)
+
+            raise MKGeneralException("Configuration for monitoring core is invalid. Rolling back. "
+                                     "The broken file has been copied to \"%s\" for analysis." %
+                                     broken_config_path)
+    finally:
+        if backup_path and os.path.exists(backup_path):
+            os.remove(backup_path)
 
 
-def create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
+def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    core.create_config()
+
+    with HelperConfig(
+            new_helper_config_serial()).create() as helper_config, _backup_objects_file(core):
+        core.create_config(helper_config.serial)
+
     cmk.utils.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
 
 
-# Verify that the user has no deprecated check groups configured.
 def _verify_non_deprecated_checkgroups() -> None:
-    groups = config.checks_by_checkgroup()
+    """Verify that the user has no deprecated check groups configured.
+    """
+    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an ABCName (good),
+    # but config.checkgroup_parameters contains strings (todo)
+    check_ruleset_names_with_plugin = {
+        str(plugin.check_ruleset_name)
+        for plugin in agent_based_register.iter_all_check_plugins()
+        if plugin.check_ruleset_name
+    }
 
     for checkgroup in config.checkgroup_parameters:
-        if checkgroup not in groups:
+        if checkgroup not in check_ruleset_names_with_plugin:
             warning(
                 "Found configured rules of deprecated check group \"%s\". These rules are not used "
                 "by any check. Maybe this check group has been renamed during an update, "
@@ -286,19 +436,6 @@ def _verify_non_duplicate_hosts() -> None:
                 ", ".join(duplicates))
 
 
-def do_update(core: MonitoringCore, with_precompile: bool) -> None:
-    try:
-        do_create_config(core, with_agents=with_precompile)
-        if with_precompile:
-            core.precompile()
-
-    except Exception as e:
-        console.error("Configuration Error: %s\n" % e)
-        if cmk.utils.debug.enabled():
-            raise
-        sys.exit(1)
-
-
 #.
 #   .--Active Checks-------------------------------------------------------.
 #   |       _        _   _              ____ _               _             |
@@ -314,25 +451,68 @@ def do_update(core: MonitoringCore, with_precompile: bool) -> None:
 
 def active_check_arguments(hostname: HostName, description: Optional[ServiceName],
                            args: config.SpecialAgentInfoFunctionResult) -> str:
+    if isinstance(args, str):
+        return args
+
+    cmd_args: CheckCommandArguments = []
     if isinstance(args, config.SpecialAgentConfiguration):
-        # TODO: Silly dispatching because of broken types/variance.
-        if isinstance(args.args, str):
-            cmd_args: Union[str, List[Union[int, float, str, Tuple[str, str, str]]]] = args.args
-        elif isinstance(args.args, list):
-            cmd_args = [arg for arg in args.args if isinstance(arg, str)]
-        else:
-            raise Exception("funny SpecialAgentConfiguration args %r" % (args.args,))
-    elif isinstance(args, str):
-        cmd_args = args
-    elif isinstance(args, list):
-        cmd_args = [arg for arg in args if isinstance(arg, (str, tuple))]
+        cmd_args = args.args
     else:
+        cmd_args = args
+
+    if not isinstance(cmd_args, list):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %
             (hostname, description))
 
-    return config.prepare_check_command(cmd_args, hostname, description)
+    return _prepare_check_command(cmd_args, hostname, description)
+
+
+def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
+                           description: Optional[ServiceName]) -> str:
+    """Prepares a check command for execution by Checkmk
+
+    In case a list is given it quotes the single elements. It also prepares password store entries
+    for the command line. These entries will be completed by the executed program later to get the
+    password from the password store.
+    """
+    passwords: List[Tuple[str, str, str]] = []
+    formated: List[str] = []
+    for arg in command_spec:
+        if isinstance(arg, (int, float)):
+            formated.append("%s" % arg)
+
+        elif isinstance(arg, str):
+            formated.append(cmk.utils.quote_shell_string(arg))
+
+        elif isinstance(arg, tuple) and len(arg) == 3:
+            pw_ident, preformated_arg = arg[1:]
+            try:
+                password = config.stored_passwords[pw_ident]["password"]
+            except KeyError:
+                if hostname and description:
+                    descr = " used by service \"%s\" on host \"%s\"" % (description, hostname)
+                elif hostname:
+                    descr = " used by host host \"%s\"" % (hostname)
+                else:
+                    descr = ""
+
+                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
+                                (pw_ident, descr))
+                password = "%%%"
+
+            pw_start_index = str(preformated_arg.index("%s"))
+            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+            passwords.append((str(len(formated)), pw_start_index, pw_ident))
+
+        else:
+            raise MKGeneralException("Invalid argument for command line: %r" % (arg,))
+
+    if passwords:
+        formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
+
+    return " ".join(formated)
 
 
 #.
@@ -449,7 +629,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = ip_address_of(host_config, 4)
+        v4address = ip_address_of(host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -457,7 +637,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = ip_address_of(host_config, 6)
+        v6address = ip_address_of(host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -513,23 +693,25 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     }
     node_ips_4 = []
     if host_config.is_ipv4_host:
+        family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 4)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
-                node_ips_4.append(fallback_ip_for(node_config, 4))
+                node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
     node_ips_6 = []
     if host_config.is_ipv6_host:
+        family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 6)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
-                node_ips_6.append(fallback_ip_for(node_config, 6))
+                node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
     node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
 
@@ -597,9 +779,9 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
+def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) -> Optional[str]:
     try:
-        return ip_lookup.lookup_ip_address(host_config, family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
         if host_config.is_cluster:
             return ""
@@ -608,7 +790,7 @@ def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) 
         if not _ignore_ip_lookup_failures:
             warning("Cannot lookup IP address of '%s' (%s). "
                     "The host will not be monitored correctly." % (host_config.hostname, e))
-        return fallback_ip_for(host_config, family)
+        return ip_lookup.fallback_ip_for(family)
 
 
 def ignore_ip_lookup_failures() -> None:
@@ -618,16 +800,6 @@ def ignore_ip_lookup_failures() -> None:
 
 def failed_ip_lookups() -> List[HostName]:
     return _failed_ip_lookups
-
-
-def fallback_ip_for(host_config: HostConfig, family: Optional[int] = None) -> str:
-    if family is None:
-        family = 6 if host_config.is_ipv6_primary else 4
-
-    if family == 4:
-        return "0.0.0.0"
-
-    return "::"
 
 
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:

@@ -5,10 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
 import collections.abc
+import json
 import re
-from typing import Any, Optional, Tuple
+import typing
+from typing import Any, Optional, Tuple, Callable
 
-from marshmallow import fields as _fields  # type: ignore[import]
+from marshmallow import fields as _fields, ValidationError
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+
+from cmk.gui import watolib, valuespec as valuespec, sites, config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr, QueryExpression
+from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+from cmk.gui.plugins.openapi.livestatus_helpers.types import Table
+
+from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.utils.exceptions import MKException
 
 
 class String(_fields.String):
@@ -94,7 +108,7 @@ The maximum length is 3.
         'minimum': "{value!r} is smaller than the minimum ({minimum}).",
     }
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         enum = self.metadata.get('enum')
         if enum and value not in enum:
@@ -182,7 +196,7 @@ class Integer(_fields.Integer):
         'multipleOf': "{value!r} is not a multiple of {multipleOf!r}."
     }
 
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
 
         enum = self.metadata.get('enum')
@@ -238,7 +252,7 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
                          if not partial or key in partial)
 
     if isinstance(obj, list):
-        return tuple([_freeze(entry) for entry in obj])
+        return tuple(_freeze(entry) for entry in obj)
 
     return obj
 
@@ -249,6 +263,7 @@ class UniqueFields:
     Currently supported Fields are `List` and `Nested(..., many=True, ...)`
 
     """
+    fail: Callable[..., None]
 
     default_error_messages = {
         'duplicate': "Duplicate entry found at entry #{idx}: {entry!r}",
@@ -256,8 +271,8 @@ class UniqueFields:
                            "(optional fields {optional!r})"),
     }
 
-    def _verify_unique_schema_entries(self: _fields.Field, value, fields):
-        required_fields = tuple([name for name, field in fields.items() if field.required])
+    def _verify_unique_schema_entries(self, value, fields):
+        required_fields = tuple(name for name, field in fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
             # If some fields are required, we only freeze the required fields. This has the effect
@@ -286,7 +301,7 @@ class UniqueFields:
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self: _fields.Field, value):
+    def _verify_unique_scalar_entries(self, value):
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()
@@ -311,7 +326,11 @@ class List(_fields.List, UniqueFields):
             ...      id = String()
             ...      lists = List(String(), uniqueItems=True)
 
-            >>> Foo().load({'lists': ['2', '2']}).errors
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Foo().load({'lists': ['2', '2']})
+            >>> exc.value.messages
             {'lists': ["Duplicate entry found at entry #2: '2'"]}
 
         With nested schemas:
@@ -319,10 +338,14 @@ class List(_fields.List, UniqueFields):
             >>> class Bar(Schema):
             ...      entries = List(Nested(Foo), allow_none=False, required=True, uniqueItems=True)
 
-            >>> Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'id': '1'}, {'id': '2'}, {'id': '2'}]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #3: {'id': '2'}"]}
 
-            >>> Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bar().load({'entries': [{'lists': ['2']}, {'lists': ['2']}]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: {'lists': ['2']}"]}
 
         Some more examples:
@@ -335,20 +358,22 @@ class List(_fields.List, UniqueFields):
             >>> class Bulk(Schema):
             ...      entries = List(Nested(Service), uniqueItems=True)
 
-            >>> Bulk().load({"entries": [
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
-            ...     {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
-            ...     {'host': 'host', 'description': 'CPU load'}
-            ... ]}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bulk().load({"entries": [
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
+            ...         {'host': 'example', 'description': 'CPU load', 'recur': 'day'},
+            ...         {'host': 'host', 'description': 'CPU load'}
+            ...     ]})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: \
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
     """
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
         if self.metadata.get('uniqueItems'):
-            if isinstance(self.container, Nested):
-                self._verify_unique_schema_entries(value, self.container.schema.fields)
+            if isinstance(self.inner, Nested):
+                self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
                 self._verify_unique_scalar_entries(value)
 
@@ -370,8 +395,13 @@ class Nested(_fields.Nested, UniqueFields):
 
         Setting the `many` param will turn this into a list:
 
+            >>> import pytest
+            >>> from marshmallow import ValidationError
+
             >>> class Bulk(Schema):
-            ...      entries = Nested(Service, many=True, uniqueItems=True)
+            ...      entries = Nested(Service,
+            ...                       many=True, uniqueItems=True,
+            ...                       required=False, missing=lambda: [])
 
             >>> entries = [
             ...     {'host': 'example', 'description': 'CPU load', 'recur': 'week'},
@@ -379,12 +409,29 @@ class Nested(_fields.Nested, UniqueFields):
             ...     {'host': 'host', 'description': 'CPU load'}
             ... ]
 
-            >>> Bulk().load({'entries': entries}).errors
+            >>> with pytest.raises(ValidationError) as exc:
+            ...     Bulk().load({'entries': entries})
+            >>> exc.value.messages
             {'entries': ["Duplicate entry found at entry #2: \
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
+            >>> schema = Bulk()
+            >>> assert schema.fields['entries'].missing is not _fields.missing_
+            >>> schema.load({})
+            {'entries': []}
+
     """
-    def _deserialize(self, value, attr, data):
+
+    # NOTE:
+    # Sometimes, when using `missing` fields, a broken OpenAPI spec may be the result.
+    # In this situation, it should be sufficient to replace the `missing` parameter with
+    # a `lambda` which returns the same object, as callables are ignored by apispec.
+
+    def _deserialize(self, value, attr, data, partial=None, **kwargs):
+        self._validate_missing(value)
+        if value is _fields.missing_:
+            _miss = self.missing
+            value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)
         if self.many and self.metadata.get('uniqueItems'):
             self._verify_unique_schema_entries(value, self.schema.fields)
@@ -392,11 +439,385 @@ class Nested(_fields.Nested, UniqueFields):
         return value
 
 
+# NOTE
+# All these non-capturing match groups are there to properly distinguish the alternatives.
+FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9]+)+)|[0-9a-fA-F]{32})"
+
+
+class FolderField(String):
+    """This field represents a WATO Folder.
+
+    It will return a Folder instance, ready to use.
+    """
+    default_error_messages = {
+        'not_found': "The folder {folder_id!r} could not be found.",
+    }
+
+    def __init__(
+        self,
+        **kwargs,
+    ):
+        if 'description' not in kwargs:
+            kwargs['description'] = (
+                "The folder identifier. This can be a path name or the folder-specific 128 bit "
+                "identifier. This identifier is unique to the folder and stays the same, even if "
+                "the folder has been moved. When identifying a folder by it's path, delimiters can "
+                "be either `~`, `/` or `\\`. Please use the one most appropriate for your "
+                "quoting/escaping needs. A good default choice is `~`.")
+        super().__init__(pattern=FOLDER_PATTERN, **kwargs)
+
+    @classmethod
+    def _normalize_folder(cls, folder_id):
+        r"""
+
+        Args:
+            folder_id:
+        Examples:
+
+            >>> FolderField._normalize_folder("\\")
+            '/'
+
+            >>> FolderField._normalize_folder("/foo/bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("\\foo\\bar")
+            '/foo/bar'
+
+            >>> FolderField._normalize_folder("~foo~bar")
+            '/foo/bar'
+
+        Returns:
+
+        """
+        prev = folder_id
+        separators = ['\\', '~']
+        while True:
+            for sep in separators:
+                folder_id = folder_id.replace(sep, "/")
+            if prev == folder_id:
+                break
+            prev = folder_id
+        return folder_id
+
+    @classmethod
+    def load_folder(cls, folder_id: str) -> watolib.CREFolder:
+        folder_id = cls._normalize_folder(folder_id)
+
+        def _ishexdigit(hex_string: str) -> bool:
+            try:
+                int(hex_string, 16)
+                return True
+            except ValueError:
+                return False
+
+        if folder_id == '/':
+            folder = watolib.Folder.root_folder()
+        elif _ishexdigit(folder_id):
+            folder = watolib.Folder.by_id(folder_id)
+        else:
+            folder = watolib.Folder.folder(folder_id[1:])
+
+        return folder
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data)
+        try:
+            return self.load_folder(value)
+        except MKException:
+            if self.required:
+                self.fail("not_found", folder_id=value)
+
+
+class BinaryExprSchema(BaseSchema):
+    """
+
+    >>> q = {'left': 'name', 'op': '=', 'right': 'foo'}
+    >>> result = BinaryExprSchema().load(q)
+    >>> assert result == q
+
+    """
+    op = String(description="The operator.")
+    left = String(description="The LiveStatus column name.",
+                  pattern=r"([a-z]+\.)?[_a-z]+",
+                  example="name")
+    right = String(
+        description="The value to compare the column to.")  # should be AnyOf(all openapi types)
+
+
+class NotExprSchema(BaseSchema):
+    """Expression negating another query expression.
+
+    Examples:
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> input_expr = {'op': '=', 'left': 'hosts.name', 'right': 'foo'}
+        >>> q = {'op': 'not', 'expr': input_expr}
+        >>> result = NotExprSchema(context={'table': Hosts}).load(q)
+        >>> assert result == q
+
+    """
+
+    op = String(description="The operator. In this case `not`.")
+    expr = Nested(
+        lambda: ExprSchema(),  # pylint: disable=unnecessary-lambda
+        description="The query expression to negate.",
+    )
+
+
+class LogicalExprSchema(BaseSchema):
+    """Expression combining multiple other query expressions.
+    """
+    op = String(description="The operator.")
+    # many=True does not work here for some reason.
+    expr = List(
+        Nested(
+            lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
+            description="A list of query expressions to combine.",
+        ))
+
+
+class ExprSchema(OneOfSchema):
+    """Top level class for query expression schema
+
+    Operators can be one of: AND, OR
+
+    Examples:
+
+        >>> q = {'op': 'and', 'expr': [
+        ...         {'op': 'not', 'expr':
+        ...             {'op': 'or', 'expr': [
+        ...                 {'op': '=', 'left': 'name', 'right': 'foo'},
+        ...                 {'op': '=', 'left': 'name', 'right': 'bar'},
+        ...             ]},
+        ...         },
+        ...     ]}
+
+        >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+        >>> schema = ExprSchema(context={'table': Hosts})
+        >>> assert schema.load(q) == schema.load(json.dumps(q))
+
+        >>> q = {'op': '=', 'left': 'foo', 'right': 'bar'}
+        >>> schema.load(q)
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Table 'hosts' has no column 'foo'.
+
+    """
+    type_field = 'op'
+    type_field_remove = False
+    type_schemas = {
+        'and': LogicalExprSchema,
+        'or': LogicalExprSchema,
+        'not': NotExprSchema,
+        '=': BinaryExprSchema,
+        '~': BinaryExprSchema,
+        '~~': BinaryExprSchema,
+        '<': BinaryExprSchema,
+        '>': BinaryExprSchema,
+        '>=': BinaryExprSchema,
+        '<=': BinaryExprSchema,
+        '!=': BinaryExprSchema,
+        '!~': BinaryExprSchema,
+        '!~~': BinaryExprSchema,
+        '!<': BinaryExprSchema,
+        '!>': BinaryExprSchema,
+        '!>=': BinaryExprSchema,
+        '!<=': BinaryExprSchema,
+    }
+
+    def load(self, data, *, many=None, partial=None, unknown=None):
+        # When being passed in via the query string, we may get the raw JSON string instead of
+        # the deserialized dictionary. We need to unpack it ourselves.
+        if isinstance(data, str):
+            try:
+                data = json.loads(data)
+            except json.decoder.JSONDecodeError as exc:
+                raise ValidationError({
+                    '_schema': [
+                        f"Invalid JSON value: '{data}'",
+                        str(exc),
+                    ],
+                })
+        elif isinstance(data, QueryExpression):
+            return data
+
+        if not self.context or 'table' not in self.context:
+            raise RuntimeError(f"No table in context for field {self}")
+
+        try:
+            tree_to_expr(data, self.context['table'])
+        except ValueError as e:
+            raise ValidationError(str(e)) from e
+        return super().load(data, many=many, partial=partial, unknown=unknown)
+
+
+class _ExprNested(Nested):
+    def _load(self, value, data, partial=None):
+        _data = super()._load(value, data, partial=partial)
+        return tree_to_expr(_data, table=self.metadata['table'])
+
+
+def query_field(table: typing.Type[Table], required: bool = False) -> Nested:
+    """Returns a Nested ExprSchema Field which validates a Livestatus query.
+
+    Args:
+        table:
+            A Livestatus Table class.
+        required:
+            Whether the field shall be required.
+
+    Returns:
+        A marshmallow Nested field.
+
+    """
+    return _ExprNested(
+        ExprSchema(context={'table': table}),
+        table=table,
+        description=(
+            f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
+            "dictionary form. If you want to use multiple expressions, nest them with the "
+            "AND/OR operators."),
+        many=False,
+        example=json.dumps({
+            'op': 'and',
+            'expr': [{
+                'op': '=',
+                'left': 'name',
+                'right': 'example.com'
+            }, {
+                'op': '!=',
+                'left': 'state',
+                'right': '0'
+            }],
+        }),
+        required=required,
+    )
+
+
+class LiveStatusColumn(String):
+    """Represents a LiveStatus column.
+
+    >>> from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts
+    >>> LiveStatusColumn(table=Hosts).deserialize('name')
+    'name'
+
+    >>> import pytest
+    >>> with pytest.raises(ValidationError) as exc:
+    ...     LiveStatusColumn(table=Hosts).deserialize('bar')
+    >>> exc.value.messages
+    ['Unknown column: hosts.bar']
+
+    """
+    default_error_messages = {
+        'unknown_column': "Unknown column: {table_name}.{column_name}",
+    }
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        table = self.metadata['table']
+        if value not in table.__columns__():
+            self.fail(
+                "unknown_column",
+                table_name=table.__tablename__,
+                column_name=value,
+            )
+        for column in self.metadata.get('mandatory', []):
+            if column not in value:
+                value.append(column)
+        return value
+
+
+HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+
+
+class HostField(String):
+    """A field representing a hostname.
+
+    """
+    default_error_messages = {
+        'should_exist': 'Host not found: {host_name!r}',
+        'should_not_exist': 'Host {host_name!r} already exists.',
+        'should_be_monitored': 'Host {host_name!r} exists, but is not monitored. '
+                               'Activate the configuration?',
+        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
+    }
+
+    def __init__(
+        self,
+        example='example.com',
+        pattern=HOST_NAME_REGEXP,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        should_be_monitored: Optional[bool] = None,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        self._should_be_monitored = should_be_monitored
+        super().__init__(
+            example=example,
+            pattern=pattern,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        try:
+            valuespec.Hostname().validate_value(value, self.name)
+        except MKUserError as e:
+            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
+
+        host = watolib.Host.host(value)
+        if self._should_exist and not host:
+            self.fail("should_exist", host_name=value)
+
+        if not self._should_exist and host:
+            self.fail("should_not_exist", host_name=value)
+
+        if self._should_be_monitored is not None and not host_is_monitored(value):
+            self.fail("should_be_monitored", host_name=value)
+
+
+def host_is_monitored(host_name: str) -> bool:
+    return bool(Query([Hosts.name], Hosts.name == host_name).value(sites.live()))
+
+
+class AttributesField(_fields.Dict):
+    default_error_messages = {
+        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
+    }
+
+    def _validate(self, value):
+        # Special keys:
+        #  - site -> validate against config.allsites().keys()
+        #  - tag_* -> validate_host_tags
+        #  - * -> validate against host_attribute_registry.keys()
+        try:
+            validate_host_attributes(value, new=True)
+            if 'meta_data' in value:
+                self.fail("attribute_forbidden", attribute='meta_data', value=value)
+        except MKUserError as exc:
+            raise ValidationError(str(exc))
+
+
+class SiteField(_fields.String):
+    default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
+
+    def _validate(self, value):
+        if value not in config.allsites().keys():
+            self.fail("unknown_site", site=value)
+
+
 Boolean = _fields.Boolean
 Decimal = _fields.Decimal
 DateTime = _fields.DateTime
 Dict = _fields.Dict
 Constant = _fields.Constant
+Time = _fields.Time
+Date = _fields.Date
+Field = _fields.Field
 
 # Shortcuts
 Int = Integer
@@ -408,6 +829,7 @@ __all__ = [
     'Boolean',
     'Constant',
     'DateTime',
+    'Date',
     'Decimal',
     'Dict',
     'Int',
@@ -416,4 +838,12 @@ __all__ = [
     'Nested',
     'Str',
     'String',
+    'Time',
+    'Field',
+    'ExprSchema',
+    'FolderField',
+    'HostField',
+    'FOLDER_PATTERN',
+    'query_field',
+    'AttributesField',
 ]

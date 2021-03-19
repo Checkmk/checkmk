@@ -12,6 +12,7 @@
 #ifndef wtools_service_h__
 #define wtools_service_h__
 
+#include "tools/_win.h"
 #include "wtools.h"
 
 namespace wtools {
@@ -46,7 +47,7 @@ public:
         lk.unlock();
 
         std::lock_guard l(lock_);
-        if (IsHandleValid(handle_)) ::CloseServiceHandle(handle_);
+        if (IsGoodHandle(handle_)) ::CloseServiceHandle(handle_);
         handle_ = handle;
     }
 
@@ -56,7 +57,7 @@ public:
 
     bool isOpened() const noexcept {
         std::lock_guard lk(lock_);
-        return IsHandleValid(handle_);
+        return IsGoodHandle(handle_);
     }
     LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions();
 

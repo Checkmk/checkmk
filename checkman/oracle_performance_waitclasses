@@ -4,7 +4,7 @@ catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This subcheck is active if configured in the WATO rules 'Oracle Performance Discovery'.
+ This subcheck is active if configured in the WATO rules 'Oracle performance discovery'.
  If this subcheck is active the performance data of wait times for all existent wait classes is collected.
 
  For this subcheck it is possible to configure levels for these wait times with the WATO rule 'Oracle Performance'.

@@ -8,12 +8,13 @@ This module handles tree structures for HW/SW inventory system and
 structured monitoring data of Check_MK.
 """
 
+import io
 import gzip
 import re
 import pprint
 from typing import AnyStr, Dict, List, Optional
 
-from six import ensure_binary, ensure_str
+from six import ensure_str
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -109,9 +110,12 @@ class StructuredDataTree:
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
         store.save_object_to_file(filepath, output, pretty=pretty)
-        # TODO: Can be set to encoding="utf-8" once we are on Python 3 only
-        with gzip.open(filepath + ".gz", "wb") as f:
-            f.write(ensure_binary(repr(output) + "\n"))
+
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write((repr(output) + "\n").encode("utf-8"))
+        store.save_bytes_to_file(filepath + ".gz", buf.getvalue())
+
         # Inform Livestatus about the latest inventory update
         store.save_text_to_file("%s/.last" % path, u"")
 

@@ -6,17 +6,8 @@
 import cmk.base.plugins.agent_based.utils.docker as docker
 
 
-def parse_docker_container_node_name(info):
-    # pylint: disable=undefined-variable
-    version = docker.get_version(info)
-    if version is None:
-        return {"NodeName": parse_legacy_docker_container_node_name(info)}
-
-    return docker.json_get_obj(info[1]) or {}
-
-
 def inv_docker_container_node_name(info, inventory_tree):
-    parsed = parse_docker_container_node_name(info)
+    parsed = docker.parse(info).data
     container = inventory_tree.get_dict("software.applications.docker.container.")
 
     if parsed.get("NodeName") is not None:
@@ -24,6 +15,5 @@ def inv_docker_container_node_name(info, inventory_tree):
 
 
 inv_info['docker_container_node_name'] = {  # pylint: disable=undefined-variable
-    'includes': ['legacy_docker.include'],
     'inv_function': inv_docker_container_node_name,
 }

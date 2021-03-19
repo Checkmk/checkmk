@@ -6,7 +6,7 @@ Date: 1593615993
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When adding all the metrics from a graph into a Custom Graph, the metrics
 that where combine through a certain operation would remain as such in the

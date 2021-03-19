@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The transaction IDs (CSRF tokens) were not validated while processing the upload of icons.
 This alone is not a security hole, rather a lack of validation of this call.

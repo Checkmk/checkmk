@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Check SQL Database active check uses the convention for upper levels where
 warn/crit happen at value, and lower levels are active below value. Now

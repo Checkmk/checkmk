@@ -328,11 +328,13 @@ def get_configured_hosts():
 
     if file_vars.get("is_wato_slave_site", False):
         host_names.update(
-            subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"]).splitlines())
+            subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"],
+                                    encoding="utf-8").splitlines())
     else:
         host_names.update(
             subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"]).splitlines())
+                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                encoding="utf-8").splitlines())
 
     return host_names
 

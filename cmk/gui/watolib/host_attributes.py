@@ -14,15 +14,20 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
+from cmk.gui.htmllib import HTML
 from cmk.gui.globals import html
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
     TextAscii,
+    Transform,
     Checkbox,
     DropdownChoice,
+    Dictionary,
+    ListOf,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
+from cmk.gui.type_defs import Choices
 
 
 class HostAttributeTopic(metaclass=abc.ABCMeta):
@@ -215,6 +220,16 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         if this is a Nagios-bound attribute (e.g. "alias" or "_SERIAL")"""
         return None
 
+    def is_explicit(self) -> bool:
+        """The return value indicates if this attribute represents an explicit set
+        value. Explicit attributes do not require cpu-intensive rule evaluations.
+        Instead, an exclicit_host_config entry will be generated, e.g.
+        explicit_host_config["alias"][hostname] = value
+
+        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
+        """
+        return False
+
     def help(self) -> Optional[str]:
         """Return an optional help text"""
         return None
@@ -354,8 +369,9 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
     def is_tag_attribute(self) -> bool:
         return False
 
-    def is_advanced(self) -> bool:
-        """Whether or not this attribute is treated as advanced element in the GUI"""
+    def is_show_more(self) -> bool:
+        """Whether or not this attribute is treated as an element only shown on
+        show more button in the GUI"""
         return False
 
 
@@ -381,14 +397,14 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[ABCHostAttri
         else:
             self.__class__._index = max(instance.sort_index(), self.__class__._index)
 
-    def attributes(self):
+    def attributes(self) -> List[ABCHostAttribute]:
         return [cls() for cls in self.values()]
 
     def get_sorted_host_attributes(self) -> List[ABCHostAttribute]:
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
+        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()().title))
 
-    def get_choices(self):
+    def get_choices(self) -> Choices:
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
 
 
@@ -523,9 +539,14 @@ def undeclare_host_tag_attribute(tag_id):
     undeclare_host_attribute(attrname)
 
 
-def _update_config_based_host_attributes():
-    def _compute_config_hash():
-        return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+_update_config_based_host_attributes_config_hash: Optional[str] = None
+
+
+def _update_config_based_host_attributes() -> None:
+    global _update_config_based_host_attributes_config_hash
+
+    def _compute_config_hash() -> str:
+        return str(hash(repr(config.tags.get_dict_format()))) + repr(config.wato_host_attrs)
 
     # The topic conversion needs to take place before the _compute_config_hash runs
     # The actual generated topics may be pre-1.5 converted topics
@@ -533,8 +554,7 @@ def _update_config_based_host_attributes():
     # If we do not convert the topics here, the config_hash comparison will always fail
     transform_pre_16_host_topics(config.wato_host_attrs)
 
-    if getattr(_update_config_based_host_attributes, "_config_hash",
-               None) == _compute_config_hash():
+    if _update_config_based_host_attributes_config_hash == _compute_config_hash():
         return  # No re-register needed :-)
 
     _clear_config_based_host_attributes()
@@ -544,7 +564,7 @@ def _update_config_based_host_attributes():
     from cmk.gui.watolib.hosts_and_folders import Folder  # pylint: disable=import-outside-toplevel
     Folder.invalidate_caches()
 
-    setattr(_update_config_based_host_attributes, "._config_hash", _compute_config_hash())
+    _update_config_based_host_attributes_config_hash = _compute_config_hash()
 
 
 # Make the config module initialize the host attributes after loading the config
@@ -723,13 +743,6 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
 
 class ABCHostAttributeText(ABCHostAttribute, metaclass=abc.ABCMeta):
     """A simple text attribute. It is stored in a Python unicode string"""
-
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
-
     @property
     def _allow_empty(self):
         return True
@@ -788,18 +801,19 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
     def default_value(self):
         return self.valuespec().default_value()
 
-    def is_explicit(self):
-        """The return value indicates if this attribute represents an explicit set
-        value. Explicit attributes do not require cpu-intensive rule evaluations.
-        Instead, an exclicit_host_config entry will be generated, e.g.
-        explicit_host_config["alias"][hostname] = value
-
-        Used in: cmk.gui.watolib.hosts_and_folders:CREFolder:_save_hosts_file
-        """
-        return False
-
     def paint(self, value, hostname):
-        return "", self.valuespec().value_to_text(value)
+        vs = self.valuespec()
+        content = vs.value_to_text(value)
+
+        # This should be the job of the valuespec: value_to_text should either
+        # return a str (which is then escaped during rendering or a HTML object
+        # which is not escaped). For Dictionary we know that it cares about
+        # escaping it's values. For this reason it is OK to wrap it into HTML
+        # to prevent escaping during rendering.
+        if isinstance(vs, (ListOf, Dictionary)):
+            content = HTML(content)
+
+        return "", content
 
     def render_input(self, varprefix, value):
         self.valuespec().render_input(varprefix + self.name(), value)
@@ -817,13 +831,6 @@ class ABCHostAttributeFixedText(ABCHostAttributeText, metaclass=abc.ABCMeta):
     It can be used to store context information from other
     systems (e.g. during an import of a host database from
     another system)."""
-
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
-
     def render_input(self, varprefix, value):
         if value is not None:
             html.hidden_field(varprefix + "attr_" + self.name(), value)
@@ -888,21 +895,21 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
     """A selection dropdown for a host tag"""
-
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
-
     def valuespec(self):
-        choices = self._tag_group.get_tag_choices()
-        return DropdownChoice(
-            title=self._tag_group.title,
-            choices=choices,
-            default_value=choices[0][0],
-            on_change="cmk.wato.fix_visibility();",
-            encode_value=False,
+        # Since encode_value=False is set it is not possible to use empty tag
+        # ID selections (Value: "None"). Transform that back and forth to make
+        # that work.
+        choices = [(k or "", v) for k, v in self._tag_group.get_tag_choices()]
+        return Transform(
+            DropdownChoice(
+                title=self._tag_group.title,
+                choices=choices,
+                default_value=choices[0][0],
+                on_change="cmk.wato.fix_visibility();",
+                encode_value=False,
+            ),
+            forth=lambda s: "" if s is None else s,
+            back=lambda s: None if s == "" else s,
         )
 
     @property
@@ -916,13 +923,6 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
 
 class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, metaclass=abc.ABCMeta):
     """A checkbox for a host tag group"""
-
-    # NOTE: This class is obviously still abstract, but pylint fails to see
-    # this, even in the presence of the meta class assignment below, see
-    # https://github.com/PyCQA/pylint/issues/179.
-
-    # pylint: disable=abstract-method
-
     def valuespec(self):
         choice = self._tag_group.get_tag_choices()[0]
         return Checkbox(
@@ -964,6 +964,9 @@ class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):
         if value:
             return value
         return None
+
+    def is_explicit(self) -> bool:
+        return True
 
 
 # TODO: Kept for pre 1.6 plugin compatibility

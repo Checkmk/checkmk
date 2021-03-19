@@ -1,0 +1,21 @@
+Title: check_mailboxes: Handle invalid mailbox names
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1600940330
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+A space character in a mailbox name provided via {--mailbox=<NAME>}, e.g. "My Inbox"
+would lead to a known exception:
+
+imaplib.IMAP4.error: SELECT command error: BAD [b"parse error: wrong character; expected '(' but got 'I'"]
+
+see https://bugs.python.org/issue13940
+
+This fix quotes mailbox names and thus fixes the described behaviour.
+
+Also, provided mailbox names which do not exist on the server would have been ignored silently. This
+fix will render the check UNKNOWN in case any non-existent names are encountered.

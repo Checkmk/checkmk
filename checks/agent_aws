@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import json
+from cmk.utils import password_store
 
 
 def _get_tag_options(tag_values, prefix):
@@ -70,9 +71,12 @@ def _get_services_config(services):
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
+    secret_type, secret_key = params["secret_access_key"]
     secrets = {
         "access_key_id": params["access_key_id"],
-        "secret_access_key": passwordstore_get_cmdline("%s", params["secret_access_key"]),
+        "secret_access_key": (
+            password_store.extract(secret_key)  #
+            if secret_type == "store" else secret_key),
     }
     args = []
     regions = params.get("regions")

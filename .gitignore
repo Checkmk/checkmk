@@ -57,3 +57,4 @@ web/htdocs/js/*_min.js.map
 *.code-workspace
 .venv.lock
 .idea
+/venv/

@@ -632,15 +632,15 @@ class DiscoveryPageRenderer:
         html.close_li()
         html.close_ul()
 
-        html.jsbutton("_fixall",
-                      _("Fix all"),
-                      onclick=_fix_all_entries(
-                          self._host,
-                          self._options,
-                          bool(undecided_services) or bool(vanished_services),
-                          bool(new_host_labels) or bool(vanished_host_labels) or
-                          bool(changed_host_labels),
-                      ))
+        html.jsbutton(
+            "_fixall",
+            _("Fix all"),
+            cssclass="action",
+            onclick=_start_js_call(
+                self._host,
+                self._options._replace(action=DiscoveryAction.FIX_ALL),
+            ),
+        )
 
         html.close_div()
 
@@ -1499,17 +1499,6 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
         is_suggested=True,
         css_classes=["action"],
     )
-
-
-def _fix_all_entries(host: watolib.CREHost, options: DiscoveryOptions, services: bool,
-                     labels: bool) -> str:
-    if services and labels:
-        return _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))
-    if services:
-        return _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
-    if labels:
-        return _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
-    return ""
 
 
 def _start_js_call(host: watolib.CREHost,

@@ -350,7 +350,6 @@ check_info["bluenet2_powerrail.sockets"] = {
                                                                 ),
     "service_description": "Socket %s",
     "has_perfdata": True,
-    'includes': ["elphase.include"],
     'group': 'ups_outphase',
 }
 
@@ -372,7 +371,6 @@ check_info["bluenet2_powerrail.fuses"] = {
                                                                 ),
     "service_description": "Fuse %s",
     "has_perfdata": True,
-    'includes': ["elphase.include"],
     'group': 'ups_outphase',
 }
 

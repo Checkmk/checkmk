@@ -474,7 +474,7 @@ def _update_settings_of_user(
     is_customer_user = local_users.get(user) is not None
     _cleanup_user_dir(path, is_customer_user)
     if is_customer_user:
-        user_tars = [m for m in user_tars if not _is_user_file(m.name)]
+        user_tars = [m for m in user_tars if not is_user_file(m.name)]
 
     tar_file.extractall(os.path.dirname(path), members=user_tars)
 
@@ -484,13 +484,13 @@ def _cleanup_user_dir(path, is_customer_user) -> None:
         p = path + "/" + entry
         if os.path.isdir(p):
             _cleanup_user_dir(p, is_customer_user)
-        elif is_customer_user and _is_user_file(entry):
+        elif is_customer_user and is_user_file(entry):
             continue
         else:
             os.remove(p)
 
 
-def _is_user_file(filepath) -> bool:
+def is_user_file(filepath) -> bool:
     entry = os.path.basename(filepath)
     return entry.startswith('user_') or entry in ['tableoptions.mk', 'treestates.mk', 'sidebar.mk']
 

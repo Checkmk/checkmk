@@ -3014,11 +3014,11 @@ def main(sys_argv=None):
 
     if not access_key_id:
         has_exceptions = True
-        logging.error('access key id is not set')
+        sys.stderr.write('access key id is not set\n')
 
     if not secret_access_key:
         has_exceptions = True
-        logging.error('secret access key is not set')
+        sys.stderr.write('secret access key is not set\n')
 
     if has_exceptions:
         return 1

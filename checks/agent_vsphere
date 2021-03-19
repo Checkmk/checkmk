@@ -21,17 +21,9 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     args += ["-s", passwordstore_get_cmdline("%s", params["secret"])]
     args += ["-i", ",".join(params["infos"])]
 
-    # Available options. Don't ask...
-    #  True,               _("Queried host is a host system" ) ),
-    #  "hostsystem_agent", _("Queried host is a host system with Checkmk Agent installed") ),
-    #  False,              _("Queried host is the vCenter") ),
-    #  "agent",            _("Queried host is the vCenter with Checkmk Agent installed") ),
-    direct = params.get("direct", False)
-    if direct == "agent":
-        args.append('--agent')
-    elif direct == "hostsystem_agent":
-        args += ['--agent', '--direct', '--hostname', hostname]
-    elif direct:
+    #  True: Queried host is a host system
+    #  False: Queried host is the vCenter
+    if params["direct"]:
         args += ['--direct', '--hostname', hostname]
 
     if params.get("skip_placeholder_vms", True):

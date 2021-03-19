@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.docker import parse, parse_multiline
+from cmk.base.plugins.agent_based.utils.docker import parse, parse_multiline, _cleanup_oci_error_message
 
 
 def test_parse_strict():
@@ -52,3 +52,43 @@ def test_parse_multiline():
                               ['{"value": 3}']])
     assert result.version == {}
     assert list(result.data) == [{"value": 1}, {"value": 2}, {"value": 3}]
+
+
+@pytest.mark.parametrize(
+    "data_in, data_out",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            [["1"]],
+            [["1"]],
+        ),
+        (
+            [["1", "2"]],
+            [["1", "2"]],
+        ),
+        (
+            # this is the original error message
+            [["1", "2"],
+             [
+                 'OCI runtime exec failed: exec failed: container_linux.go:344: starting container '
+                 'process caused "exec: \"check_mk_agent\": executable file not found in $PATH": unknown'
+             ]],
+            [["1", "2"]],
+        ),
+        (
+            # this is the prefix it is tested with
+            [["1", "2"], ['OCI runtime exec failed: exec failed:']],
+            [["1", "2"]],
+        ),
+        (
+            # only replace if last element is of size 1
+            [["1", "2"], ['1', 'OCI runtime exec failed: exec failed:']],
+            [["1", "2"], ['1', 'OCI runtime exec failed: exec failed:']],
+        ),
+    ])
+def test_parse_remove_error_message(data_in, data_out):
+    cleaned_up = _cleanup_oci_error_message(data_in)
+    assert cleaned_up == data_out

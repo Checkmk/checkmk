@@ -313,6 +313,11 @@ std::wstring GetRootInstallDir() noexcept {
     return root / dirs::kFileInstallDir;
 }
 
+std::wstring GetRootUtilsDir() noexcept {
+    auto root = GetCfg().getRootDir();
+    return root / dirs::kAgentUtils;
+}
+
 std::wstring GetLocalDir() noexcept { return GetCfg().getLocalDir(); }
 
 std::wstring GetStateDir() noexcept { return GetCfg().getStateDir(); }
@@ -482,6 +487,7 @@ static std::filesystem::path ExtractPathFromTheExecutable() {
     if (!fs::exists(exe, ec)) return {};  // something wrong probably
 
     fs::path path = FindServiceImagePath(cma::srv::kServiceName);
+    // TODO (sk): fix it with equivalent
     if (path == exe) return path.parent_path().lexically_normal();
 
     return {};
@@ -627,11 +633,12 @@ bool Folders::setRootEx(
 }  // namespace cma::cfg::details
 
 void Folders::createDataFolderStructure(const std::wstring& proposed_folder,
-                                        CreateMode mode) {
+                                        CreateMode mode,
+                                        Protection protection) {
     try {
         std::filesystem::path folder = proposed_folder;
-        data_ =
-            makeDefaultDataFolder(folder.lexically_normal().wstring(), mode);
+        data_ = makeDefaultDataFolder(folder.lexically_normal().wstring(), mode,
+                                      protection);
     } catch (const std::exception& e) {
         XLOG::l.bp("Cannot create Default Data Folder , exception : {}",
                    e.what());
@@ -684,7 +691,7 @@ static int CreateTree(const std::filesystem::path& base_path) noexcept {
 // 1. ProgramData/CorpName/AgentName
 //
 std::filesystem::path Folders::makeDefaultDataFolder(
-    std::wstring_view AgentDataFolder, CreateMode mode) {
+    std::wstring_view AgentDataFolder, CreateMode mode, Protection protection) {
     using namespace cma::tools;
     namespace fs = std::filesystem;
     auto draw_folder = [mode](std::wstring_view DataFolder) -> auto {
@@ -697,12 +704,23 @@ std::filesystem::path Folders::makeDefaultDataFolder(
     };
 
     if (AgentDataFolder.empty()) {
+        /// automatic data path, used ProgramData folder
         auto app_data_folder = win::GetSomeSystemFolder(FOLDERID_ProgramData);
-        // Program Data, normal operation
+
         auto app_data = draw_folder(app_data_folder);
         auto ret = CreateTree(app_data);
+        if (protection == Protection::yes) {
+            XLOG::l.i("Protection requested");
+            std::vector<std::wstring> commands;
+
+            cma::security::ProtectAll(
+                fs::path(app_data_folder) / cma::cfg::kAppDataCompanyName,
+                commands);
+            wtools::ExecuteCommandsAsync(L"all", commands);
+        }
+
         if (ret == 0) return app_data;
-        XLOG::l.bp("Failed to access ProgramData Folder {}", ret);
+        XLOG::l("Failed to access ProgramData Folder {}", ret);
 
         if constexpr (false) {
             // Public fallback
@@ -715,7 +733,7 @@ std::filesystem::path Folders::makeDefaultDataFolder(
         return {};
     }
 
-    // testing path
+    // path with a custom folder
     auto app_data = draw_folder(AgentDataFolder);
     auto ret = CreateTree(app_data);
     if (ret == 0) return app_data;
@@ -1044,7 +1062,8 @@ void SetupPluginEnvironment() {
     using namespace std;
 
     const std::pair<const std::string, const std::wstring> env_pairs[] = {
-        // string conversion  is required because of string used in interfaces
+        // string conversion  is required because of string used in
+        // interfaces
         // of SetEnv and ConvertToUTF8
         {string(envs::kMkLocalDirName), cma::cfg::GetLocalDir()},
         {string(envs::kMkStateDirName), cma::cfg::GetStateDir()},
@@ -1157,8 +1176,10 @@ void ConfigInfo::initFolders(
     const std::wstring& AgentDataFolder)   // look in dis
 {
     cleanFolders();
-    folders_.createDataFolderStructure(AgentDataFolder,
-                                       Folders::CreateMode::with_path);
+    folders_.createDataFolderStructure(
+        AgentDataFolder, Folders::CreateMode::with_path,
+        ServiceValidName.empty() ? Folders::Protection::no
+                                 : Folders::Protection::yes);
 
     // This is not very good idea, but we want
     // to start logging as early as possible
@@ -1170,6 +1191,14 @@ void ConfigInfo::initFolders(
 
     folders_.setRoot(ServiceValidName, RootFolder);
     auto root = folders_.getRoot();
+
+    if (!ServiceValidName.empty()) {
+        auto exe_path = FindServiceImagePath(ServiceValidName);
+        std::vector<std::wstring> commands;
+        wtools::ProtectFileFromUserWrite(exe_path, commands);
+        wtools::ProtectPathFromUserAccess(root, commands);
+        wtools::ExecuteCommandsAsync(L"data", commands);
+    }
 
     if (folders_.getData().empty())
         XLOG::l.crit("Data folder is empty.This is bad.");
@@ -1219,7 +1248,8 @@ bool ConfigInfo::pushFolders(const std::filesystem::path& root,
     }
     folders_stack_.push(folders_);
     folders_.setRoot({}, root.wstring());
-    folders_.createDataFolderStructure(data, Folders::CreateMode::direct);
+    folders_.createDataFolderStructure(data, Folders::CreateMode::direct,
+                                       Folders::Protection::no);
 
     return true;
 }
@@ -1921,13 +1951,16 @@ std::filesystem::path CreateWmicUninstallFile(
 
 bool UninstallProduct(std::string_view name) {
     if constexpr (tgt::IsWindows()) {
-        std::filesystem::path temp = cma::cfg::GetTempDir();
+        std::filesystem::path temp{cma::cfg::GetTempDir()};
         auto fname = CreateWmicUninstallFile(temp, name);
         if (fname.empty()) return false;
+        XLOG::l("Starting '{}'", fname.u8string());
         auto pid = cma::tools::RunStdCommand(fname.wstring(), true);
         if (pid == 0) {
             XLOG::l("Failed to start '{}'", fname.u8string());
+            return false;
         }
+        XLOG::l("Started '{}' with pid [{}]", fname.u8string(), pid);
         return true;
     }
 

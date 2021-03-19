@@ -1,0 +1,14 @@
+Title: Agent Azure: Deal with over 1000 resources
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p21
+Date: 1612531002
+
+The speacial agent azure was unable to deal with responses
+containing more than 1000 resources, which could lead to
+missing data in large environments.

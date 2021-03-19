@@ -8,18 +8,43 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "tools/_tgt.h"
 
 namespace cma {
 
 namespace install {
-enum class UpdateType { exec_normal, exec_quiet };
+bool UseScriptToInstall();
+
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
 InstallMode GetInstallMode();
-std::pair<std::wstring, std::wstring> MakeCommandLine(
-    const std::filesystem::path& msi, UpdateType update_type);
+
+class ExecuteUpdate {
+public:
+    ExecuteUpdate() { determineFilePaths(); }
+    void prepare(const std::filesystem::path& exe,
+                 const std::filesystem::path& msi, bool validate_script_exists);
+
+    bool copyScriptToTemp() const;
+    void backupLog() const;
+
+    std::wstring getCommand() const noexcept { return command_; }
+    std::wstring getLogFileName() const noexcept { return log_file_name_; }
+
+    std::filesystem::path getTempScriptFile() const noexcept {
+        return temp_script_file_;
+    }
+
+private:
+    void determineFilePaths();
+
+    std::wstring command_;
+    std::wstring log_file_name_;
+    std::filesystem::path base_script_file_;
+    std::filesystem::path temp_script_file_;
+};
 
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 
@@ -45,13 +70,13 @@ inline const std::wstring GetMsiRegistryPath() {
 }
 };  // namespace registry
 
-// TEST(InstallAuto, TopLevel)
+/// Returns command and success status
 // set StartUpdateProcess to 'skip' to test functionality
 // BackupPath may be empty, normally points out on the install folder
 // DirWithMsi is update dir in ProgramData
-bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
-                        UpdateType Update, UpdateProcess StartUpdateProcess,
-                        std::wstring_view BackupPath = L"");
+std::pair<std::wstring, bool> CheckForUpdateFile(
+    std::wstring_view msi_name, std::wstring_view msi_dir,
+    UpdateProcess start_update_process, std::wstring_view backup_dir = L"");
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);

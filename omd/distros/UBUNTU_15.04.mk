@@ -27,7 +27,6 @@ OS_PACKAGES    += php5-cgi
 OS_PACKAGES    += php5-gd
 OS_PACKAGES    += php5-sqlite
 OS_PACKAGES    += php-pear
-OS_PACKAGES    += pyro
 OS_PACKAGES    += rsync
 OS_PACKAGES    += smbclient
 OS_PACKAGES    += rpcbind # otherwise missing path in util.pm

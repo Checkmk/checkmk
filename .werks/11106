@@ -1,0 +1,13 @@
+Title: winperf_processor.util: Crash in case of services disovered pre 1.6
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1589956096
+
+Serives discovered in checkmk version pre 1.6 crashed upon a missing parameter default
+variable. This has been fixed.

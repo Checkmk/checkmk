@@ -216,6 +216,24 @@ def test_get_ruleset(web):
         'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
     }
 
+    response = web.get_ruleset("inventory_df_rules")
+    assert response == {
+        'ruleset': {
+            '': [{
+                'condition': {
+                    'host_labels': {
+                        u'cmk/check_mk_server': u'yes',
+                    },
+                },
+                'value': {
+                    'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
+                }
+            }]
+        },
+        'configuration_hash': '385d0f340a33b95bb0d58622d2304fe8',
+    }
+
 
 def test_set_ruleset(web):
     orig_ruleset = web.get_ruleset("bulkwalk_hosts")

@@ -1,6 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 import sys, os, time, termios, tty, subprocess
+
+RESERVED_IDS_FILE_PATH = os.getenv('HOME') + "/.cmk-werk-ids"
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -752,8 +754,8 @@ def werk_cherry_pick(commit_id, no_commit):
 
 def get_werk_ids():
     try:
-        return eval(file('.my_ids', 'r').read())
-    except:
+        return eval(open(RESERVED_IDS_FILE_PATH, 'r').read())
+    except Exception:
         return []
 
 
@@ -764,7 +766,8 @@ def invalidate_my_werkid(id):
 
 
 def store_werk_ids(l):
-    file('.my_ids', 'w').write(repr(l) + "\n")
+    open(RESERVED_IDS_FILE_PATH, 'w').write(repr(l) + "\n")
+    sys.stdout.write('Werk IDs stored in the file: ' + RESERVED_IDS_FILE_PATH + '\n')
 
 
 def current_branch():

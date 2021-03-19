@@ -1576,6 +1576,7 @@ class LDAPConnectionValuespec(Transform):
                    "directory he is assigned to. Users without name conflict just need to provide their "
                    "regular username as usual."),
                  regex=re.compile(r'^[A-Z0-9.-]+(?:\.[A-Z]{2,24})?$', re.I),
+                 validate=self._validate_ldap_connection_suffix,
              )),
         ]
 
@@ -1824,7 +1825,7 @@ class LDAPConnectionValuespec(Transform):
         if value in [c['id'] for c in config.user_connections]:
             raise MKUserError(
                 varprefix,
-                _("This ID is already user by another connection. Please choose another one."))
+                _("This ID is already used by another connection. Please choose another one."))
 
     def _validate_ldap_connection(self, value, varprefix):
         import cmk.gui.userdb as userdb  # TODO: Cleanup
@@ -1856,6 +1857,17 @@ class LDAPConnectionValuespec(Transform):
                                                                                            index)
                     raise MKUserError(varname,
                                       _("The configured DN does not match the group base DN."))
+
+    def _validate_ldap_connection_suffix(self, value, varprefix):
+        for connection in config.user_connections:
+            suffix = connection.get("suffix")
+            if suffix is None:
+                continue
+            if connection["id"] != self._connection_id and value == suffix:
+                raise MKUserError(
+                    varprefix,
+                    _("This suffix is already used by connection %s."
+                      "Please choose another one.") % connection["id"])
 
 
 #.
@@ -2049,7 +2061,11 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
 
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
-        return {user_attr: ldap_user[attr][0]}
+        attr_value = ldap_user[attr][0]
+        # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
+        if user_attr == 'disable_notifications':
+            return {user_attr: {'disable': attr_value == "TRUE"}}
+        return {user_attr: attr_value}
     return {}
 
 

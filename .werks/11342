@@ -1,0 +1,12 @@
+Title: postgres_instances: Set status to CRIT in case no instance is running
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p17
+Date: 1597846446
+
+

@@ -576,17 +576,20 @@ TEST(AgentConfig, FoldersTest) {
 
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(fs::exists(folders.getData()));
-        EXPECT_TRUE(
-            folders.getData() ==
-            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
+                                             L"",
+                                             Folders::CreateMode::with_path,
+                                             Folders::Protection::no));
     }  // namespace fs=std::filesystem;
 
     {
         Folders folders;
         auto ret = folders.setRoot(L"WinDefend", L"");  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -595,7 +598,8 @@ TEST(AgentConfig, FoldersTest) {
     {
         Folders folders;
         auto ret = folders.setRoot(L"", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -605,13 +609,15 @@ TEST(AgentConfig, FoldersTest) {
         Folders folders;
         auto ret =
             folders.setRoot(L"WinDefend", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        EXPECT_TRUE(
-            folders.getData() ==
-            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
+                                             L"",
+                                             Folders::CreateMode::with_path,
+                                             Folders::Protection::no));
     }
 }
 }  // namespace cma::cfg::details

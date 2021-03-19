@@ -417,7 +417,7 @@ set_ora_env () {
                 ORACLE_HOME=${crs_home}
             else
                 # get ORACLE_HOME with crsctl from Oracle Grid Infrastructure / Restart
-                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep "^ORACLE_HOME=" | cut -d"=" -f2)
+                ORACLE_HOME=$("${crs_home}"/bin/crsctl stat res -p -w "((TYPE = ora.database.type) and (GEN_USR_ORA_INST_NAME = ${ORACLE_SID}))" | grep -m1 "^ORACLE_HOME=" | cut -d"=" -f2)
             fi
         else
             # Single Instance with oratab
@@ -2221,10 +2221,26 @@ mk_ora_db_connect () {
 
         else
             # use an individuel user or the default DBUSER from mk_oracle.cfg
-            dummy="DBUSER_${ORACLE_SID}"
-            ORACFGLINE=${!dummy}
-            if [ "$ORACFGLINE" = '' ]; then
-                ORACFGLINE=${DBUSER}
+            # It's possible that the config file uses only upper case, but
+            # the fetched SID is lower case. And vice versa. To handle this, we
+            # need to try both cases.
+            # Important: This does not cover config variables that uses both
+            # upper and lower case letters. We simply cannot handle that!
+            #
+            # Disabling shellcheck because false-positive warning regarding
+            # single quotes. AWK needs these single quotes to work as inteded.
+            # shellcheck disable=SC2016
+            dummy_upper="DBUSER_$(echo "$ORACLE_SID" | "$AWK" '{ print toupper($0) }')"
+            # shellcheck disable=SC2016
+            dummy_lower="DBUSER_$(echo "$ORACLE_SID" | "$AWK" '{ print tolower($0) }')"
+            if [ "${!dummy_upper}" = '' ]; then
+                if [ "${!dummy_lower}" = '' ]; then
+                    ORACFGLINE=${DBUSER}
+                else
+                    ORACFGLINE=${!dummy_lower}
+                fi
+            else
+                ORACFGLINE=${!dummy_upper}
             fi
         fi
 
@@ -2389,9 +2405,10 @@ mk_ora_sqlplus () {
         logging -w "[${MK_SID}] [${from_where}] [mk_ora_sqlplus]" "OUTPUT '$output'"
         output=$(echo -e "$output" | "${GREP}" -v "^ERROR at line" | tr '\n' ' ' |\
                                      sed "s/^/$(echo "$MK_SID" | tr '[:lower:]' '[:upper:]')|FAILURE|/" ; echo)
-        if [ "$MK_ORA_DEBUG_CONNECT" ]; then
-            echo "Logindetails: ${DBCONNECT}" >&2
-            echo -e "$output"
+
+        if $MK_ORA_DEBUG_CONNECT; then
+            echo "    Logindetails:           ${MK_DB_CONNECT}" >&2
+            echo -e "    Error Message:          ${output:0:100}"
         else
             echo '<<<oracle_instance:sep(124)>>>'
             echo -e "$output"
@@ -2498,7 +2515,7 @@ do_checks () {
         MK_ASYNC_SECTIONS_QUERY=
 
     else
-        excluded=$(eval "echo \$EXCLUDE_$MK_SID")
+        excluded=$(eval "echo \$EXCLUDE_$ORACLE_SID")
         sections=$(remove_excluded_sections "$do_sync_sections" "$excluded")
         asections=$(remove_excluded_sections "$do_async_sections" "$excluded")
         logging "[${MK_SID}] [do_checks]" "Excluded: $excluded"\

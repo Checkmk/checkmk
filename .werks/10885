@@ -1,0 +1,12 @@
+Title: check_sftp: Fix possible command injection from the WATO configuration
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586429384
+Class: security
+
+User which are permitted to configure the active check check_sftp via WATO
+could inject commands to Checkmk. These were executed on the Checkmk server the
+rule was applied on with the permissions of the Checkmk site user.

@@ -1,0 +1,12 @@
+Title: msoffice_serviceplans: Fix discovery and checking if plan contains spaces
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1603696979
+
+

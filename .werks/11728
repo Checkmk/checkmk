@@ -1,0 +1,15 @@
+Title: zfsget: handle datasets with no available space correctly
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p22
+Date: 1606379908
+
+The check plugin <tt>zfsget</tt> did not handle datasets with
+zero available space correctly. This resulted in incorrect
+output for example concerning the overall size of the dataset.
+This has been fixed.

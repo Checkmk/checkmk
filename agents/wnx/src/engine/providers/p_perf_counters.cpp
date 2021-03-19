@@ -107,7 +107,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& Key,
     if (ret.has_value()) {
         result = wtools::perf::ReadPerformanceDataFromRegistry(Key);
         if (result.len_ == 0) {
-            XLOG::t.t("Obtained no data from counter {}", ConvertToUTF8(Key));
+            XLOG::d.t("Obtained no data from counter {}", ConvertToUTF8(Key));
             return {};
         }
 
@@ -117,7 +117,7 @@ wtools::perf::DataSequence LoadWinPerfData(const std::wstring& Key,
                 wtools::ConvertToUTF8(Key));
         ret = wtools::perf::FindPerfIndexInRegistry(Key);
         if (!ret.has_value()) {
-            XLOG::t.t("Key value cannot be processed '{}'", ConvertToUTF8(Key));
+            XLOG::d.t("Key value cannot be processed '{}'", ConvertToUTF8(Key));
             return {};
         }
 
@@ -139,7 +139,8 @@ std::string MakeWinPerfNakedList(const PERF_OBJECT_TYPE* Object,
     using namespace wtools;
 
     if (Object == nullptr) {
-        XLOG::t("Object is null for index [{}]", KeyIndex);
+        // can't happen - still defensive programming for Windows Agent
+        XLOG::l.crit("Object is null for index [{}]", KeyIndex);
         return {};
     }
 
@@ -194,7 +195,11 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
     auto result = details::LoadWinPerfData(std::wstring(key), key_index);
 
     auto object = wtools::perf::FindPerfObject(result, key_index);
-    if (!object) return {};
+    if (object == nullptr) {
+        XLOG::d("Winperf Object name '{}' index [{}] is not found",
+                ConvertToUTF8(key), key_index);
+        return {};
+    }
 
     // now we have data and we are building body
 

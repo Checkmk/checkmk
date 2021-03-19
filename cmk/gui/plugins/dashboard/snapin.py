@@ -81,7 +81,8 @@ class SnapinDashlet(IFrameDashlet):
 
     def display_title(self):
         import cmk.gui.sidebar as sidebar
-        return sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
+        title = sidebar.snapin_registry[self._dashlet_spec["snapin"]].title()
+        return self._dashlet_spec.get("title", title)
 
     def update(self):
         import cmk.gui.sidebar as sidebar

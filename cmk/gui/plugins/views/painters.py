@@ -126,6 +126,7 @@ class PainterOptionTimestampFormat(PainterOption):
         return DropdownChoice(
             title=_("Time stamp format"),
             default_value=config.default_ts_format,
+            encode_value=False,
             choices=[
                 ("mixed", _("Mixed")),
                 ("abs", _("Absolute")),
@@ -5186,6 +5187,9 @@ class PainterHostLabels(Painter):
         return "host_labels"
 
     def render(self, row, cell):
+        if html.is_api_call():
+            return "", get_labels(row, "host")
+
         return "", render_labels(get_labels(row, "host"),
                                  "host",
                                  with_links=True,
@@ -5215,6 +5219,9 @@ class PainterServiceLabels(Painter):
         return "service_labels"
 
     def render(self, row, cell):
+        if html.is_api_call():
+            return "", get_labels(row, "service")
+
         return "", render_labels(get_labels(row, "service"),
                                  "service",
                                  with_links=True,

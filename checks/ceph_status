@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import json
+
 
 def parse_ceph_status(info):
-    import json
 
     joined_lines = [" ".join(line) for line in info]
     parsed = json.loads(''.join(joined_lines))
@@ -123,7 +124,8 @@ def inventory_ceph_status_osds(parsed):
 
 
 def check_ceph_status_osds(_no_item, params, parsed):
-    data = parsed["osdmap"]["osdmap"]
+    # some instances of ceph give out osdmap data in a flat structure
+    data = parsed["osdmap"].get("osdmap") or parsed["osdmap"]
     num_osds = int(data["num_osds"])
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 
@@ -131,9 +133,9 @@ def check_ceph_status_osds(_no_item, params, parsed):
         ('full', 'Full', 2),
         ('nearfull', 'Near full', 1),
     ]:
-        ds_value = data[ds]
-        if ds_value:
-            yield state, "%s: %s" % (title, ", ".join(ds_value))
+        if data.get(ds, False):
+            # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
+            yield state, title
 
     yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
 
@@ -259,6 +261,8 @@ def inventory_ceph_status_mgrs(parsed):
 
 def check_ceph_status_mgrs(_no_item, params, parsed):
     data = parsed["mgrmap"]
+    if "epoch" not in data:
+        return
     yield ceph_check_epoch("ceph_mgrs", data["epoch"], params)
 
 

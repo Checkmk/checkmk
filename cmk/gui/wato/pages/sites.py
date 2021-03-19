@@ -224,7 +224,7 @@ class ModeEditSite(WatoMode):
                            domains=watolib.ConfigDomain.enabled_domains())
 
         # In case a site is not being replicated anymore, confirm all changes for this site!
-        if not site_spec["replication"]:
+        if not site_spec["replication"] and not config.site_is_local(self._site_id):
             clear_site_replication_status(self._site_id)
 
         if self._site_id != config.omd_site():
@@ -436,7 +436,7 @@ class ModeEditSite(WatoMode):
                      'When enabled, this site is marked for synchronisation every time a Web GUI '
                      'related option is changed in the master site.'),
              )),
-            ("user_sync", self._site_mgmt.user_sync_valuespec()),
+            ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id)),
             ("replicate_ec",
              Checkbox(
                  title=_("Replicate Event Console config"),

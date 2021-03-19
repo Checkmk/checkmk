@@ -731,6 +731,7 @@ def vs_mkeventd_rule(customer=None):
          RegExpUnicode(
              title=_("Match syslog application (tag)"),
              help=_("Regular expression for matching the syslog tag (case insenstive)"),
+             size=64,
              mode=RegExp.infix,
              case_sensitive=False,
          )),
@@ -1508,8 +1509,12 @@ class ModeEventConsoleRulePacks(EventConsoleMode):
                or search_expression in rule_pack["title"].lower():
                 found_packs.setdefault(rule_pack["id"], [])
             for rule in rule_pack.get("rules", []):
-                if search_expression in rule["id"].lower() \
-                   or search_expression in rule.get("description", "").lower():
+                if any(search_expression in searchable_rule_item.lower()
+                       for searchable_rule_item in (
+                           rule["id"],
+                           rule.get("description", ""),
+                           rule.get("match", ""),
+                       )):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs
@@ -3482,7 +3487,7 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
             Dictionary(
                 elements=[
                     ("description", TextUnicode(title=_("Description"),)),
-                    ("credentials", SNMPCredentials()),
+                    ("credentials", SNMPCredentials(for_ec=True)),
                     ("engine_ids",
                      ListOfStrings(
                          valuespec=TextAscii(

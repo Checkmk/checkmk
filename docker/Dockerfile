@@ -2,11 +2,11 @@ FROM debian:stretch-slim
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="1.6.0p11"
+ARG CMK_VERSION="1.6.0p23"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
 
-ARG CMK_DL_URL="https://checkmk.com/support"
+ARG CMK_DL_URL="https://download.checkmk.com/checkmk"
 
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID
@@ -81,7 +81,7 @@ RUN set -e \
        fi \
     && dpkg-sig --verify "${PKG_FILE}" \
     && dpkg -i "${PKG_FILE}" \
-    && dpkg -i "/omd/versions/default/share/check_mk/agents/check-mk-agent_${CMK_VERSION}-1_all.deb" \
+    && dpkg -i "$(ls /omd/versions/default/share/check_mk/agents/check-mk-agent_*-1_all.deb)" \
     && rm -f -- *.deb *.gpg needed-packages \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \

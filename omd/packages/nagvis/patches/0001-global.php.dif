@@ -6,9 +6,9 @@
  
 +$_path_parts = explode('/', dirname($_SERVER["SCRIPT_FILENAME"]));
 +if($_path_parts[count($_path_parts) - 6] == 'local') // handle OMD local/ hierarchy
-+    $_base_dir = join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -6), '/');
++    $_base_dir = join('/', array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -6));
 +else
-+    $_base_dir = join(array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5), '/');
++    $_base_dir = join('/', array_slice(explode('/' ,dirname($_SERVER["SCRIPT_FILENAME"])), 0, -5));
 +
  /**
   * Set the search path for included files

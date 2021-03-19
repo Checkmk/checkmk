@@ -1,0 +1,12 @@
+Title: Core restart: fixed race condition causing the core to stop
+Class: fix
+Compatible: compat
+Component: core
+Date: 1607671170
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p20
+
+There was a small chance that the configuration file was missing during the restart phase of the core.
+This could happen when multiple restart commands were triggered at the same time.

@@ -3,6 +3,8 @@
 //
 #include "pch.h"
 
+#include <string_view>
+
 #include "carrier.h"
 #include "cfg.h"
 #include "cfg_details.h"
@@ -134,9 +136,16 @@ TEST(WinPerfTest, RootCalls) {
 }
 
 TEST(WinPerfTest, Calls) {
+    using namespace std::string_view_literals;
     auto index_iofts = GetIndexOfTS();
     ASSERT_TRUE(ValidIndexOfTs(index_iofts))  // windows 10 latest
         << "not supported index " << index_iofts << std::endl;
+    {
+        auto name = L"ifxz"sv;
+        auto index = L"12345510"sv;
+        auto x = BuildWinPerfSection(L"winp", name, index);
+        ASSERT_TRUE(x.empty());
+    }
     {
         constexpr const char* name = "if";
         constexpr const char* index = "510";

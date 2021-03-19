@@ -1,0 +1,12 @@
+Title: cifsmounts: fix erroneous display of 'stale fs handle'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586174881
+Class: fix
+
+On CIFS mounts that exceeded a blocksize of 1MB the error
+'stale fs handle' was shown. Now a blocksize up to 16MB
+is considered valid.

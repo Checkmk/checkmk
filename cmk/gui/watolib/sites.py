@@ -206,7 +206,7 @@ class SiteManagement(object):
         )
 
     @classmethod
-    def user_sync_valuespec(cls):
+    def user_sync_valuespec(cls, site_id):
         return CascadingDropdown(
             title=_("Sync with LDAP connections"),
             orientation="horizontal",
@@ -219,6 +219,7 @@ class SiteManagement(object):
                      allow_empty=False,
                  )),
             ],
+            default_value="all" if config.site_is_local(site_id) else None,
             help=_(
                 'By default the users are synchronized automatically in the interval configured '
                 'in the connection. For example the LDAP connector synchronizes the users every '
@@ -295,7 +296,7 @@ class SiteManagement(object):
                                   _("You cannot do replication with the local site."))
 
         # User synchronization
-        user_sync_valuespec = cls.user_sync_valuespec()
+        user_sync_valuespec = cls.user_sync_valuespec(site_id)
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
     @classmethod

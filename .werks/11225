@@ -1,0 +1,14 @@
+Title: Add permissions for rulesets which can have access to commandline execution
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1592911643
+
+For the rulesets {{Execute MRPE checks}}, {{Plugins, local checks and MRPE for non-root users}},
+{{Installation paths for agent files (Linux, UNIX)}} and {{Allowed agent access via IP addres}}
+you need the permission {{Can add or modiy executables}} in order to prevent code injection.

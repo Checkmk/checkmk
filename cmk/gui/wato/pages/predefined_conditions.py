@@ -46,7 +46,7 @@ from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
-    ConfigDomainGUI,
+    ConfigDomainCore,
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,
@@ -85,7 +85,7 @@ class PredefinedConditionModeType(SimpleModeType):
         return False
 
     def affected_config_domains(self):
-        return [ConfigDomainGUI]
+        return [ConfigDomainCore]
 
 
 @mode_registry.register

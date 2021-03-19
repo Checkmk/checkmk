@@ -8,6 +8,7 @@ def test_registered_jobs():
         'cmk.gui.cee.reporting.do_scheduled_reports',
         'cmk.gui.inventory.run',
         'cmk.gui.plugins.cron.gui_background_job.housekeeping',
+        'cmk.gui.plugins.cron.wato_folder_lookup_cache.rebuild_folder_lookup_cache',
         'cmk.gui.userdb.execute_userdb_job',
         'cmk.gui.wato.execute_network_scan_job',
     ])

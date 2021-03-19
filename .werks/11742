@@ -1,0 +1,14 @@
+Title: mssql_instance: add MSSQL 2019 to known instances
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1610434579
+
+The mssql_instance check returned unknown version information for
+MSSQL 2019 instances (version number 15.0.[...]). MSSQL 2019 has
+been added to the list of known instances.

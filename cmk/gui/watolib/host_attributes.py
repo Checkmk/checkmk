@@ -34,7 +34,8 @@ import six
 import cmk.utils.plugin_registry
 
 import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
+from cmk.gui.globals import html, current_app
 from cmk.gui.i18n import _, _u
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.valuespec import (
@@ -42,6 +43,7 @@ from cmk.gui.valuespec import (
     Transform,
     Checkbox,
     DropdownChoice,
+    Dictionary,
 )
 from cmk.gui.watolib.utils import host_attribute_matches
 
@@ -438,7 +440,11 @@ class HostAttributeRegistry(cmk.utils.plugin_registry.ClassRegistry):
     def get_sorted_host_attributes(self):
         # type: () -> List[ABCHostAttribute]
         """Return host attribute objects in the order they should be displayed (in edit dialogs)"""
-        return sorted(self.attributes(), key=lambda a: (a.sort_index(), a.topic()))
+        cache_id = "sorted_host_attributes"
+        if cache_id not in current_app.g:
+            current_app.g[cache_id] = sorted(self.attributes(),
+                                             key=lambda a: (a.sort_index(), a.topic()))
+        return current_app.g[cache_id]
 
     def get_choices(self):
         return [(a.name(), a.title()) for a in self.get_sorted_host_attributes()]
@@ -579,6 +585,12 @@ def undeclare_host_tag_attribute(tag_id):
 def _update_config_based_host_attributes():
     def _compute_config_hash():
         return hash(repr(config.tags.get_dict_format()) + repr(config.wato_host_attrs))
+
+    # The topic conversion needs to take place before the _compute_config_hash runs
+    # The actual generated topics may be pre-1.5 converted topics
+    # e.g. "Custom attributes" -> "custom_attributes"
+    # If we do not convert the topics here, the config_hash comparison will always fail
+    transform_pre_16_host_topics(config.wato_host_attrs)
 
     if hasattr(_update_config_based_host_attributes, "_config_hash") \
        and _update_config_based_host_attributes._config_hash == _compute_config_hash():
@@ -828,7 +840,18 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         return self.valuespec().default_value()
 
     def paint(self, value, hostname):
-        return "", self.valuespec().value_to_text(value)
+        vs = self.valuespec()
+        content = vs.value_to_text(value)
+
+        # This should be the job of the valuespec: value_to_text should either
+        # return a str (which is then escaped during rendering or a HTML object
+        # which is not escaped). For Dictionary we know that it cares about
+        # escaping it's values. For this reason it is OK to wrap it into HTML
+        # to prevent escaping during rendering.
+        if isinstance(vs, Dictionary):
+            content = HTML(content)
+
+        return "", content
 
     def render_input(self, varprefix, value):
         self.valuespec().render_input(varprefix + self.name(), value)

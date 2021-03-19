@@ -23,6 +23,7 @@ OS_PACKAGES      += php-xml
 OS_PACKAGES      += php-mbstring
 OS_PACKAGES      += php-pdo
 OS_PACKAGES      += php-gd
+OS_PACKAGES      += php-json
 OS_PACKAGES      += readline
 OS_PACKAGES      += rsync
 OS_PACKAGES      += uuid

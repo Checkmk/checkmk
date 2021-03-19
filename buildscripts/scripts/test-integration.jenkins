@@ -37,8 +37,7 @@ properties([
 
 // TODO: Duplicate code (sync buildscripts/scripts/os-nodes.jenkins, buildscripts/scripts/integration-daily-master.jenkins)
 DISTRO_LIST = DISTROS.split(' ');
-// CMK-1705: SLES-15 is missing xinitd and should therefore not be tested
-DISTRO_LIST = DISTRO_LIST - ['sles-15']
+
 // Testing CMA is not needed
 DISTRO_LIST = DISTRO_LIST - ['cma']
 
@@ -129,6 +128,9 @@ try {
                                         ;;
                                     'ubuntu-19.10')
                                         DISTRO_CODE='_0.eoan_amd64.deb'
+                                        ;;
+                                    'ubuntu-20.04')
+                                        DISTRO_CODE='_0.focal_amd64.deb'
                                         ;;
                                     'centos-6')
                                         DISTRO_CODE='-el6-38.x86_64.rpm'

@@ -302,8 +302,9 @@ class RulesetCollection(object):
 
         rules_file_path = folder.rules_file_path()
         # Remove rules files if it has no content. This prevents needless reads
-        if not has_content and os.path.exists(rules_file_path):
-            os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+        if not has_content:
+            if os.path.exists(rules_file_path):
+                os.unlink(rules_file_path)  # Do not keep empty rules.mk files
             return
 
         # Adding this instead of the full path makes it easy to move config

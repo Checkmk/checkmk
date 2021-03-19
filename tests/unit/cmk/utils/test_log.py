@@ -55,5 +55,8 @@ def test_set_verbosity():
     assert l.is_verbose() is True
     assert l.is_very_verbose() is True
 
-    with pytest.raises(NotImplementedError):
-        cmk.utils.log.set_verbosity(3)
+    # Use debug level (highest supported)
+    cmk.utils.log.set_verbosity(3)
+    assert l.getEffectiveLevel() == cmk.utils.log.DEBUG
+    assert l.is_verbose() is True
+    assert l.is_very_verbose() is True

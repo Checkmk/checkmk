@@ -1,0 +1,20 @@
+Title: Optional package: Replace Kubernetes extension package
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1593158872
+Class: feature
+
+This change replaces the optional extension package
+k8s_ingress_and_job_info for Kubernetes by the extension
+package k8s_extensions.
+
+It fixes the bug that the Kubernetes Ingresses and Jobs
+could not be selected in the datasource ruleset of the
+former extension package.
+
+Furthermore, the ruleset now contains an option to use a
+namespace prefix for the hosts that are created in
+Checkmk and Endpoints can now be monitored.

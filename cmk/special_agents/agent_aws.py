@@ -1178,7 +1178,8 @@ class EBSSummary(AWSSectionGeneric):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
             return {
-                vol['VolumeId']: vol for vol in col_volumes for tag in vol['Tags'] if tag in tags
+                vol['VolumeId']: vol
+                for vol in col_volumes for tag in vol.get('Tags', []) if tag in tags
             }
 
         volumes = []
@@ -1530,7 +1531,7 @@ class S3Requests(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Sum',  #reports per period
+                        'Stat': 'Sum',  # reports per period
                         'Unit': unit,
                     },
                 })
@@ -2242,7 +2243,7 @@ class RDSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(RDSSummary, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['rds_names']
-        self._tags = self._config.service_config['rds_tags']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['rds_tags'])
 
     @property
     def name(self):
@@ -2256,19 +2257,49 @@ class RDSSummary(AWSSectionGeneric):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, colleague_contents):
-        response = self._describe_db_instances()
-        return self._get_response_content(response, 'DBInstances')
+
+        db_instances = []
+
+        for instance in self._describe_db_instances():
+            tags = self._get_instance_tags(instance)
+            if self._matches_tag_conditions(tags):
+                instance['Region'] = self._region
+                db_instances.append(instance)
+
+        return db_instances
 
     def _describe_db_instances(self):
-        if self._names is not None:
-            return [
-                self._client.describe_db_instances(DBInstanceIdentifier=name)
-                for name in self._names
-            ]
-        elif self._tags is not None:
+        instances = []
 
-            return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
-        return self._client.describe_db_instances()
+        if self._names is None:
+            for page in self._client.get_paginator('describe_db_instances').paginate():
+                instances.extend(self._get_response_content(page, 'DBInstances'))
+            return instances
+
+        for name in self._names:
+            try:
+                for page in self._client.get_paginator('describe_db_instances').paginate(
+                        DBInstanceIdentifier=name):
+                    instances.extend(self._get_response_content(page, 'DBInstances'))
+            except self._client.exceptions.DBInstanceNotFoundFault:
+                pass
+
+        return instances
+
+    def _get_instance_tags(self, instance):
+        # list_tags_for_resource cannot be paginated
+        return self._get_response_content(
+            self._client.list_tags_for_resource(ResourceName=instance['DBInstanceArn']), 'TagList')
+
+    def _matches_tag_conditions(self, tagging):
+        if self._names is not None:
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(
@@ -2280,6 +2311,10 @@ class RDSSummary(AWSSectionGeneric):
 
 
 class RDS(AWSSectionCloudwatch):
+    def __init__(self, client, region, config, distributor=None):
+        super(RDS, self).__init__(client, region, config, distributor=distributor)
+        self._separator = " "
+
     @property
     def name(self):
         return "rds"
@@ -2296,7 +2331,7 @@ class RDS(AWSSectionCloudwatch):
 
     def _get_metrics(self, colleague_contents):
         metrics = []
-        for idx, instance_id in enumerate(colleague_contents.content.iterkeys()):
+        for idx, (instance_id, instance) in enumerate(colleague_contents.content.items()):
             for metric_name, unit in [
                 ("BinLogDiskUsage", "Bytes"),
                 ("BurstBalance", "Percent"),
@@ -2326,7 +2361,7 @@ class RDS(AWSSectionCloudwatch):
             ]:
                 metric = {
                     'Id': self._create_id_for_metric_data_query(idx, metric_name),
-                    'Label': instance_id,
+                    'Label': instance_id + self._separator + instance['Region'],
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/RDS',
@@ -2347,7 +2382,8 @@ class RDS(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
         for row in raw_content.content:
-            row.update(colleague_contents.content.get(row['Label'], {}))
+            instance_id = row['Label'].split(self._separator)[0]
+            row.update(colleague_contents.content.get(instance_id, {}))
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -2516,7 +2552,10 @@ class AWSSections(object):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (
+                    int(cache_timestamp),
+                    int(section_interval + 60),
+                )
 
             if any([r.content for r in result]):
                 self._write_section_result(section_name, cached_suffix, result)
@@ -2529,7 +2568,7 @@ class AWSSections(object):
 
         for row in result:
             write_piggyback_header = row.piggyback_hostname\
-                                     and row.piggyback_hostname != self._hostname
+                and row.piggyback_hostname != self._hostname
             if write_piggyback_header:
                 sys.stdout.write("<<<<%s>>>>\n" % row.piggyback_hostname)
             sys.stdout.write(section_header)
@@ -2810,12 +2849,8 @@ def parse_arguments(argv):
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
 
-    parser.add_argument("--access-key-id",
-                        required=True,
-                        help="The access key ID for your AWS account.")
-    parser.add_argument("--secret-access-key",
-                        required=True,
-                        help="The secret access key for your AWS account.")
+    parser.add_argument("--access-key-id", help="The access key ID for your AWS account.")
+    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
     parser.add_argument("--regions",
                         nargs='+',
                         help="Regions to use:\n%s" %
@@ -2968,6 +3003,26 @@ def main(sys_argv=None):
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    access_key_id = stdin_args.get('access_key_id') or args.access_key_id
+    secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
+
+    has_exceptions = False
+
+    if not access_key_id:
+        has_exceptions = True
+        logging.error('access key id is not set')
+
+    if not secret_access_key:
+        has_exceptions = True
+        logging.error('secret access key is not set')
+
+    if has_exceptions:
+        return 1
+
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
 
@@ -2998,18 +3053,18 @@ def main(sys_argv=None):
             continue
         for region in aws_regions:
             try:
-                session = create_session(args.access_key_id, args.secret_access_key, region)
+                session = create_session(access_key_id, secret_access_key, region)
                 sections = aws_sections(hostname, session, debug=args.debug)
                 sections.init_sections(aws_services, region, aws_config)
                 sections.run(use_cache=use_cache)
             except AssertionError:
                 if args.debug:
-                    return 1
+                    raise
             except Exception as e:
                 logging.info(e)
                 has_exceptions = True
                 if args.debug:
-                    return 1
+                    raise
     if has_exceptions:
         return 1
     return 0

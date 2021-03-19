@@ -1,7 +1,9 @@
 # pylint: disable=redefined-outer-name
 
+import os
 import pytest  # type: ignore
-from testlib.base import Scenario
+# No stub file
+from testlib.base import Scenario  # type: ignore[import]
 
 import cmk_base
 import cmk_base.caching
@@ -53,43 +55,59 @@ def test_disable_data_source_cache_no_write(mocker, monkeypatch):
     disabled_checker.assert_called_once()
 
 
-def test_mgmt_board_data_source_is_ip_address():
-    _is_ipaddress = cmk_base.data_sources.abstract.ManagementBoardDataSource._is_ipaddress
-    assert _is_ipaddress(None) is False
-    assert _is_ipaddress("localhost") is False
-    assert _is_ipaddress("abc 123") is False
-    assert _is_ipaddress("127.0.0.1") is True
-    assert _is_ipaddress("::1") is True
-    assert _is_ipaddress("fe80::807c:f8ff:fea9:9f12") is True
-
-
-@pytest.mark.parametrize("result,address,resolvable", [
-    (None, None, True),
-    ("127.0.0.1", "127.0.0.1", True),
-    ("127.0.1.1", "lolo", True),
-    (None, "lolo", False),
+@pytest.mark.parametrize("address", [
+    None,
+    "",
+    "any-address",
+    "1.2.3.4",
 ])
-def test_mgmt_board_data_source_management_board_ipaddress(monkeypatch, result, address,
-                                                           resolvable):
-    Scenario().add_host("hostname").apply(monkeypatch)
-    source = cmk_base.data_sources.snmp.SNMPManagementBoardDataSource("hostname", "ipaddress")
-
-    if resolvable:
-        monkeypatch.setattr(ip_lookup, "lookup_ip_address", lambda h: "127.0.1.1")
-    else:
-
-        def raise_exc(h):
-            raise cmk_base.exceptions.MKIPAddressLookupError("Failed to...")
-
-        monkeypatch.setattr(ip_lookup, "lookup_ip_address", raise_exc)
-
+def test_management_board_address_explicit(monkeypatch, address):
+    hostname = "hostname"
+    Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(config, "host_attributes", {
-        "hostname": {
+        hostname: {
             "management_address": address
         },
     })
 
-    assert source._management_board_ipaddress("hostname") == result
+    if address:
+        assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == address
+
+    else:
+
+        def fake_lookup_ip_address(hostname, family=None, for_mgmt_board=True):
+            raise cmk_base.exceptions.MKIPAddressLookupError("Failed to...")
+
+        monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
+        assert ip_lookup.lookup_mgmt_board_ip_address(hostname) is None
+
+
+@pytest.mark.parametrize("tags, result", [
+    ({
+        "address_family": "ip-v4-only"
+    }, "127.0.0.1"),
+    ({
+        "address_family": "ip-v4v6"
+    }, "127.0.0.1"),
+])
+def test_management_board_address_ipv4_resolvable(monkeypatch, tags, result):
+    hostname = "localhost"
+    Scenario().add_host(hostname, tags=tags).apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result
+
+
+@pytest.mark.skipif(
+    os.environ.get('TRAVIS') == 'true',
+    reason="Travis may not resolve localhost -> IPv6 (https://github.com/njh/travis-ipv6-test)")
+@pytest.mark.parametrize("tags, result", [
+    ({
+        "address_family": "ip-v6-only"
+    }, "::1"),
+])
+def test_management_board_address_ipv6_resolvable(monkeypatch, tags, result):
+    hostname = "localhost"
+    Scenario().add_host(hostname, tags=tags).apply(monkeypatch)
+    assert ip_lookup.lookup_mgmt_board_ip_address(hostname) == result
 
 
 @pytest.mark.parametrize("ip_in,ips_out", [
@@ -224,3 +242,39 @@ def test_data_sources_of_hosts(monkeypatch, hostname, settings):
     sources = cmk_base.data_sources.DataSources(hostname, "127.0.0.1")
     source_names = [s.__class__.__name__ for s in sources.get_data_sources()]
     assert settings["sources"] == source_names, "Wrong sources for %s" % hostname
+
+
+@pytest.mark.parametrize("live_data", [
+    {},
+    {
+        "live": "LIVE",
+    },
+])
+def test_data_sources_snmp__get_raw_data_live(monkeypatch, live_data):
+    Scenario().add_host("hostname").apply(monkeypatch)
+    source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
+    monkeypatch.setattr(source, "_read_cache_file", lambda: {})
+    monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
+    monkeypatch.setattr(source, "_execute", lambda: live_data)
+
+    assert source._get_raw_data() == (live_data, False)
+
+
+@pytest.mark.parametrize("cached_data, live_data", [
+    ({
+        "cached": "CACHED",
+    }, {}),
+    ({
+        "cached": "CACHED",
+    }, {
+        "live": "LIVE",
+    }),
+])
+def test_data_sources_snmp__get_raw_data_cached(monkeypatch, cached_data, live_data):
+    Scenario().add_host("hostname").apply(monkeypatch)
+    source = cmk_base.data_sources.snmp.SNMPDataSource("hostname", "ipaddress")
+    monkeypatch.setattr(source, "_read_cache_file", lambda: cached_data)
+    monkeypatch.setattr(source, "_write_cache_file", lambda raw_data: None)
+    monkeypatch.setattr(source, "_execute", lambda: live_data)
+
+    assert source._get_raw_data() == (cached_data, True)

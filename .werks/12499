@@ -1,0 +1,10 @@
+Title: agent_innovaphone: Do not crash upon less than 4 PRI channels
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1616077321
+Class: fix
+
+

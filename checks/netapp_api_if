@@ -69,7 +69,12 @@ def netapp_convert_to_if64(info):
 
         # Reported by Clustermode
         if "operational-speed" in values:
-            values["speed"] = int(values["operational-speed"]) * 1000 * 1000
+            raw_speed = values["operational-speed"]
+            if raw_speed == "auto":
+                # For ONTAP systems, we may receive "auto" for the operational speed
+                values["speed"] = raw_speed
+            else:
+                values["speed"] = int(raw_speed) * 1000 * 1000
 
         if "mac-address" in values:
             if_mac_list.setdefault(values["mac-address"], [])

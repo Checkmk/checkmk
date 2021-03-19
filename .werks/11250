@@ -1,0 +1,13 @@
+Title: mkeventd_status: Check was showing wrong list of active host limits
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1594284724
+Class: fix
+
+The check was showing "host event limit active" for hosts which have not
+reached the host event limit. This happened for hosts that had a host
+individual limit configured (Using the ruleset "Host event limit") because
+the check was only respecting the global host event limits.

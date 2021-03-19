@@ -66,6 +66,7 @@ import signal
 import json
 import abc
 import pprint
+import urlparse
 from contextlib import contextmanager
 
 import six
@@ -122,8 +123,9 @@ class Escaper(object):
         super(Escaper, self).__init__()
         self._unescaper_text = re.compile(
             r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-        self._quote = re.compile(r"(?:&quot;|&#x27;)")
-        self._a_href = re.compile(r'&lt;a href=((?:&quot;|&#x27;).*?(?:&quot;|&#x27;))&gt;')
+        self._a_href = re.compile(
+            r'&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;'
+        )
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
     # For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -161,8 +163,20 @@ class Escaper(object):
         text = self.escape_attribute(text)
         text = self._unescaper_text.sub(r'<\1\2>', text)
         for a_href in self._a_href.finditer(text):
-            text = text.replace(a_href.group(0),
-                                "<a href=%s>" % self._quote.sub("\"", a_href.group(1)))
+            href = a_href.group(1)
+
+            parsed = urlparse.urlparse(href)
+            if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
+                continue  # Do not unescape links containing disallowed URLs
+
+            target = a_href.group(2)
+
+            if target:
+                unescaped_tag = "<a href=\"%s\" target=\"%s\">" % (href, target)
+            else:
+                unescaped_tag = "<a href=\"%s\">" % href
+
+            text = text.replace(a_href.group(0), unescaped_tag)
         return text.replace("&amp;nbsp;", "&nbsp;")
 
 
@@ -519,10 +533,14 @@ class HTMLGenerator(OutputFunnel):
         # Links require href to be first attribute
         href = attrs.pop('href', None)
         if href:
-            yield ' href=\"%s\"' % href
+            attributes = [("href", href)]
+        else:
+            attributes = []
+
+        attributes += attrs.iteritems()
 
         # render all attributes
-        for k, v in attrs.iteritems():
+        for k, v in attributes:
 
             if v is None:
                 continue

@@ -97,7 +97,7 @@ class RoleManagement(object):
     def _rename_user_role(self, uid, new_id):
         users = userdb.load_users(lock=True)
         for user in users.values():
-            if id in user["roles"]:
+            if uid in user["roles"]:
                 user["roles"].remove(uid)
                 if new_id:
                     user["roles"].append(new_id)
@@ -131,6 +131,12 @@ class ModeRoles(RoleManagement, WatoMode):
 
             if html.transaction_valid() and self._roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
+
+            users = userdb.load_users()
+            for user in users.values():
+                if delid in user["roles"]:
+                    raise MKUserError(
+                        None, _("You cannot delete roles, that are still in use (%s)!" % delid))
 
             c = wato_confirm(
                 _("Confirm deletion of role %s") % delid,

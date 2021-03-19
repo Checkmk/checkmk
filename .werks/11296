@@ -1,0 +1,14 @@
+Title: juniper_alarm: crashed when not applicable to device
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594225772
+
+The discovery function of this plugin crashed when it was not applicable to a
+device. This fix allows the plugin to complete error-free when it is not
+applicable. 

@@ -22,10 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <type_traits>
 #include "TimeperiodsCache.h"
-#include <ostream>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include "Logger.h"
 

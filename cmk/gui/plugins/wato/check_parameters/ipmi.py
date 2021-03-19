@@ -124,10 +124,10 @@ def _parameter_valuespec_ipmi():
              )),
             ("numerical_sensor_levels",
              ListOf(Tuple(elements=[
-                 TextAscii(title=_("Sensor name (only summary)"),
+                 TextAscii(title=_("Sensor name"),
                            help=_(
-                               "In summary mode you have to state the sensor name. "
-                               "In single mode the sensor name comes from service description.")),
+                               "Enter the name of the sensor. In single mode, this can be read off "
+                               "from the service descriptions of the services 'IPMI Sensor ...'.")),
                  Dictionary(elements=[
                      ("lower", Tuple(
                          title=_("Lower levels"),

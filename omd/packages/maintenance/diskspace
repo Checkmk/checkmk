@@ -266,14 +266,29 @@ def do_cleanup_abandoned_host_files():
         "%s/var/pnp4nagios/perfdata" % omd_root,
     ]
 
-    cleaned_up_hosts = set([])
+    path_patterns = [path_pattern for path_pattern in path_patterns if os.path.isdir(path_pattern)]
+
+    hosts_to_cleanup = set()
+    hosts_within_timelimit = set()
+
+    # Phase 1: Determine cleanup candidates
     for base_path in path_patterns:
-        cleaned_up_hosts.update(cleanup_host_directory(site_hosts, base_path))
+        cleanup_results, within_timelimit_results = determine_cleanup_hosts(site_hosts, base_path)
+        hosts_to_cleanup.update(cleanup_results)
+        hosts_within_timelimit.update(within_timelimit_results)
+
+    # Phase 2: Only cleanup hosts when none of their files are within the timelimit
+    hosts_to_cleanup -= hosts_within_timelimit
+    for base_path in path_patterns:
+        for host_name in hosts_to_cleanup:
+            path = "%s/%s" % (base_path, host_name)
+            if os.path.exists(path):
+                delete_files_and_base_directory(path, "abandoned host")
 
     # Now call Check_MK to clean up other files for the hosts which we have
     # cleaned up abandoned files for.
-    if cleaned_up_hosts:
-        command = ["check_mk", "--automation", "delete-hosts"] + list(cleaned_up_hosts)
+    if hosts_to_cleanup:
+        command = ["check_mk", "--automation", "delete-hosts"] + list(hosts_to_cleanup)
         verbose("Calling \"%s\"" % " ".join(command))
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if p.wait() != 0:
@@ -281,10 +296,7 @@ def do_cleanup_abandoned_host_files():
                   (" ".join(command), p.returncode, p.stdout.read()))
 
 
-def cleanup_host_directory(site_hosts, base_path):
-    if not os.path.isdir(base_path):
-        return []
-
+def determine_cleanup_hosts(site_hosts, base_path):
     # First find all directories not related to a known host
     unrelated_dirs = []
     for host_dir in os.listdir(base_path):
@@ -294,17 +306,18 @@ def cleanup_host_directory(site_hosts, base_path):
     # Then find the latest modified file for each directory. When the latest
     # modified file is older than the threshold, delete all files including
     # the host base directory.
-    cleaned_up_hosts = []
+    hosts_to_cleanup = set()
+    hosts_within_timelimit = set()
     for unrelated_dir in unrelated_dirs:
         path = "%s/%s" % (base_path, unrelated_dir)
         mtime = newest_modification_time_in_dir(path)
         if mtime < time.time() - cleanup_abandoned_host_files:
-            delete_files_and_base_directory(path, "abandoned host")
-            cleaned_up_hosts.append(unrelated_dir)
+            hosts_to_cleanup.add(unrelated_dir)
         else:
+            hosts_within_timelimit.add(unrelated_dir)
             verbose("Found abandoned host path (but not old enough): %s" % path)
 
-    return cleaned_up_hosts
+    return hosts_to_cleanup, hosts_within_timelimit
 
 
 def newest_modification_time_in_dir(dir_path):

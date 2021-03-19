@@ -1,0 +1,18 @@
+Title: Windows Agent: additional protection of the working directories
+Knowledge: doc
+Level: 2
+Component: checks
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1601452258
+
+With this fix some deirectories used by windows Agent are protected from 
+any access of Windows Standart User:
+Program Files (x86)\checkmk\service
+ProgramData\checkmk\agent\backup
+ProgramData\checkmk\agent\config
+ProgramData\checkmk\agent\install
+ProgramData\checkmk\agent\update

@@ -52,7 +52,6 @@ def test_registered_pages():
         'automation_login',
         'bi',
         'bi_map',
-        'bi_debug',
         'bi_render_tree',
         'bi_save_treestate',
         'bi_set_assumption',

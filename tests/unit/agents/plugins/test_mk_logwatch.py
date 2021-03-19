@@ -206,6 +206,8 @@ def test_read_config_logfiles(mk_logwatch, config_lines, logfiles_files, logfile
         ("1762:0:0:0:0:B03:1:AF18", False, "/path/to/config/logwatch.state.another_cluster"),
         ("", True, "/path/to/config/logwatch.state.local"),
         ("", False, "/path/to/config/logwatch.state"),
+        ("::ffff:192.168.1.2", False,
+         "/path/to/config/logwatch.state.my_cluster"),  # tty doesnt matter
     ])
 def test_get_status_filename(mk_logwatch, env_var, istty, statusfile, monkeypatch, mocker):
     """
@@ -259,10 +261,10 @@ def test_save_status(mk_logwatch, tmpdir):
 
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
     ("/*",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlink_to_file.log"]),
     ("/**",
-     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlinked_file.log"]),
-    ("/subdir/*", ["/subdir/another_symlinked_file.log"]),
+     ["/file.log", "/hard_linked_file_a.log", "/hard_linked_file_b.log", "/symlink_to_file.log"]),
+    ("/subdir/*", ["/subdir/symlink_to_file.log"]),
     ("/symlink_to_dir/*", ["/symlink_to_dir/yet_another_file.log"]),
 ])
 def test_find_matching_logfiles(mk_logwatch, fake_filesystem, pattern_suffix, file_suffixes):

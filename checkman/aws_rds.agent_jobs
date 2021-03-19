@@ -8,7 +8,11 @@ description:
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- If at least one jobs fails the check goes WARN.
+ The service goes {WARN} if at least one jobs fails.
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
 
 inventory:
  One service per database will be created.

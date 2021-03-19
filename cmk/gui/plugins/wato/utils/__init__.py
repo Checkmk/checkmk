@@ -198,6 +198,9 @@ from cmk.gui.plugins.watolib.utils import (
     SampleConfigGenerator,
     sample_config_generator_registry,
 )
+
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+
 import cmk.gui.forms as forms
 from cmk.gui.permissions import (
     permission_section_registry,
@@ -314,6 +317,19 @@ class SNMPCredentials(Alternative):
             none_elements = []
             match = alternative_match
 
+        priv_protocol_choices = [
+            ("DES", _("CBC-DES")),
+            ("AES", _("AES-128")),
+        ]
+        if kwargs.get("for_ec", False):
+            priv_protocol_choices.extend([
+                ("3DES-EDE", _("3DES-EDE")),
+                ("AES-192", _("AES-192")),
+                ("AES-256", _("AES-256")),
+                ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
+                ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
+            ])
+
         kwargs.update({
             "elements": none_elements + [
                 Password(
@@ -349,11 +365,10 @@ class SNMPCredentials(Alternative):
                               totext=_("authentication and encryption"),
                           ),
                       ] + self._snmpv3_auth_elements() + [
-                          DropdownChoice(choices=[
-                              ("DES", _("DES")),
-                              ("AES", _("AES")),
-                          ],
-                                         title=_("Privacy protocol")),
+                          DropdownChoice(
+                              choices=priv_protocol_choices,
+                              title=_("Privacy protocol"),
+                          ),
                           Password(
                               title=_("Privacy pass phrase"),
                               minlen=8,
@@ -378,11 +393,17 @@ class SNMPCredentials(Alternative):
 
     def _snmpv3_auth_elements(self):
         return [
-            DropdownChoice(choices=[
-                ("md5", _("MD5")),
-                ("sha", _("SHA1")),
-            ],
-                           title=_("Authentication protocol")),
+            DropdownChoice(
+                choices=[
+                    ("md5", _("MD5 (MD5-96)")),
+                    ("sha", _("SHA-1 (SHA-96)")),
+                    ("SHA-224", _("SHA-2 (SHA-224)")),
+                    ("SHA-256", _("SHA-2 (SHA-256)")),
+                    ("SHA-384", _("SHA-2 (SHA-384)")),
+                    ("SHA-512", _("SHA-2 (SHA-512)")),
+                ],
+                title=_("Authentication protocol"),
+            ),
             TextAscii(title=_("Security name"), attrencode=True),
             Password(
                 title=_("Authentication password"),
@@ -1053,7 +1074,14 @@ def Levels(**kwargs):
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    elif varname in ["custom_checks", "datasource_programs"]:
+    if varname in [
+            "custom_checks",
+            "datasource_programs",
+            "agent_config:mrpe",
+            "agent_config:agent_paths",
+            "agent_config:runas",
+            "agent_config:only_from",
+    ]:
         return config.user.may("wato.rulesets") and config.user.may(
             "wato.add_or_modify_executables")
     elif varname == "agent_config:custom_files":
@@ -1091,7 +1119,12 @@ class ConfigHostname(TextAsciiAutocomplete):
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
         all_hosts = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        return [(h, h) for h in all_hosts.keys() if match_pattern.search(h) is not None]
+        match_list = []
+        for host_name, host_object in all_hosts.items():
+            if match_pattern.search(host_name) is not None and host_object.may("read"):
+                match_list.append(tuple((host_name, host_name)))
+
+        return match_list
 
 
 class EventsMode(WatoMode):
@@ -1649,7 +1682,7 @@ def configure_attributes(new,
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write(content)
+                    html.write_text(content)
                     html.close_b()
                 else:
                     html.b(_u(content))
@@ -2228,19 +2261,6 @@ def get_hosts_from_checkboxes(filterfunc=None):
     This is needed for bulk operations."""
     folder = watolib.Folder.current()
     return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
-
-
-class WatoBackgroundProcess(gui_background_job.GUIBackgroundProcess):
-    def initialize_environment(self):
-        super(WatoBackgroundProcess, self).initialize_environment()
-
-        if self._jobstatus.get_status_from_file().get("lock_wato"):
-            cmk.utils.store.release_all_locks()
-            cmk.utils.store.lock_exclusive()
-
-
-class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
-    _background_process_class = WatoBackgroundProcess
 
 
 class FullPathFolderChoice(DropdownChoice):

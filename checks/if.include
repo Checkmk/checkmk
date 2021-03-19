@@ -942,6 +942,8 @@ def check_if_common_single(item,
                     state = max(state, 1)
             elif targetspeed:
                 infotext += "assuming %s" % get_nic_speed_human_readable(targetspeed)
+            elif ifSpeed == "auto":
+                infotext += "speed auto"
             else:
                 infotext += "speed unknown"
 

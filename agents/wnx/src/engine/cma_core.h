@@ -20,6 +20,14 @@
 #include "tools/_misc.h"
 
 namespace cma {
+
+namespace security {
+void ProtectFiles(const std::filesystem::path& root,
+                  std::vector<std::wstring>& commands);
+void ProtectAll(const std::filesystem::path& root,
+                std::vector<std::wstring>& commands);
+}  // namespace security
+
 namespace tools {
 
 // primitive command line checker

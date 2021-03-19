@@ -93,7 +93,8 @@ TEST(SectionPerf, Runner) {
     using namespace std;
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
-    mailbox.ConstructThread(MailboxCallbackPerfTest, 20, &S_Storage);
+    mailbox.ConstructThread(MailboxCallbackPerfTest, 20, &S_Storage,
+                            wtools::SecurityLevel::standard);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
     // prepare parameters

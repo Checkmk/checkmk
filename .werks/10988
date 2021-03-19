@@ -1,0 +1,13 @@
+Title: Periodic service discovery: Fix not working "rediscovery scheduled" on clusters
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588921712
+
+Please note that if you have configured rules {{Periodic service discovery}}
+for clusters then the service discovery is executed on the cluster nodes.
+This may overlap with rules of the nodes.

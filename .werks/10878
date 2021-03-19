@@ -1,0 +1,12 @@
+Title: Fix BI aggregation state export (Regression caused by #10879)
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586173556
+Class: fix
+
+The export of BI aggregation tree states e.g. using calls like
+<tt>check_mk/view.py?view_name=aggr_all&output_format=python</tt>)
+was broken in 1.6.0p11.

@@ -796,6 +796,10 @@ class APICallRules(APICallCollection):
 #   +----------------------------------------------------------------------+
 
 
+def _format_missing_tags(tags):
+    return ", ".join(["%s:%s" % p for p in sorted(tags)])
+
+
 @api_call_collection_registry.register
 class APICallHosttags(APICallCollection):
     def get_api_calls(self):
@@ -858,11 +862,12 @@ class APICallHosttags(APICallCollection):
 
         missing_tags = used_tags - new_tags
         if missing_tags:
+            tags = _format_missing_tags(missing_tags)
             raise MKUserError(
                 None,
                 _("Unable to apply new hosttag configuration. The following tags "
                   "are still in use, but not mentioned in the updated "
-                  "configuration: %s") % ", ".join([":".join(p) for p in missing_tags]))
+                  "configuration: %s") % tags)
 
     def _get_used_tags_from_hosts_and_folders(self):
         used_tags = set()
@@ -891,6 +896,17 @@ class APICallHosttags(APICallCollection):
                         if "$ne" in tag_spec:
                             used_tags.add((tag_group_id, tag_spec["$ne"]))
                             continue
+
+                        if "$or" in tag_spec:
+                            for tag_id in tag_spec["$or"]:
+                                used_tags.add((tag_group_id, tag_id))
+                            continue
+
+                        if "$nor" in tag_spec:
+                            for tag_id in tag_spec["$nor"]:
+                                used_tags.add((tag_group_id, tag_id))
+                            continue
+
                         raise NotImplementedError()
 
                     used_tags.add((tag_group_id, tag_spec))
@@ -1026,7 +1042,19 @@ class APICallSites(APICallCollection):
         if not site:
             raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
 
-        secret = watolib.do_site_login(request["site_id"], request["username"], request["password"])
+        response = watolib.do_site_login(request["site_id"], request["username"],
+                                         request["password"])
+
+        if isinstance(response, dict):
+            if cmk.is_managed_edition() and response["edition_short"] != "cme":
+                raise MKUserError(
+                    None,
+                    _("The Check_MK Managed Services Edition can only "
+                      "be connected with other sites using the CME."))
+            secret = response["login_secret"]
+        else:
+            secret = response
+
         site["secret"] = secret
         site_mgmt.save_sites(all_sites)
 

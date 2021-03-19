@@ -1,0 +1,19 @@
+Title: Fix unstable, inperformant livestatus communication (1.6.0p12 regression)
+Level: 2
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.6.0p15
+Date: 1596521144
+Class: fix
+
+With the versions starting with Checkmk 1.6.0p12 there were frequent problems
+with the stability of live status connections, which did not occur permanently
+but rather sporadically.
+
+These problems manifested themselves in various ways (peaks in live status
+usage graphs, slow responses from live status, slow reaction of the GUI or even
+timeouts).
+
+We have now reversed the relevant changes for the time being, so these problems
+no longer occur with 1.6.0p15.

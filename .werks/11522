@@ -1,0 +1,10 @@
+Title: fileinfo.groups: Fix scale of newest age in Perf-O-meter
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1607441012
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: Site maintenance: Cleanup crashed checks files older than 90 days
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1593698808
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p14
+
+Crash reports for crashed checks in <tt>~/var/check_mk/crashed_checks/{hostname}/</tt> are now deleted after 90 days.

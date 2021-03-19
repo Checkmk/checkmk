@@ -216,6 +216,8 @@ $(PYTHON_MODULES_BUILD): $(PYTHON_BUILD) $(FREETDS_BUILD) $(PYTHON_MODULES_PATCH
 		    --install-purelib=/lib ; \
 		cd .. ; \
 	    done
+# For some highly obscure unknown reason some files end up world-writable. Fix that!
+	chmod -R o-w $(PACKAGE_PYTHON_MODULES_DESTDIR)/lib
 	$(TOUCH) $@
 
 $(PYTHON_MODULES_PATCHING): $(PYTHON_MODULES_UNPACK)
@@ -265,6 +267,8 @@ $(PYTHON_MODULES_INSTALL): $(PYTHON_MODULES_BUILD)
 		    --install-purelib=/lib/python ; \
 		cd .. ; \
 	    done
+# For some highly obscure unknown reason some files end up world-writable. Fix that!
+	chmod -R o-w $(DESTDIR)$(OMD_ROOT)/lib/python
 # Cleanup some unwanted files (example scripts)
 	find $(DESTDIR)$(OMD_ROOT)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
 # These files break the integration tests on the CI server. Don't know exactly

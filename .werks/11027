@@ -1,0 +1,13 @@
+Title: LDAP: Validate usage of suffix
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588769526
+
+If you configure multiple LDAP connections with the same suffix, the 'Users'
+page is broken and can not be accessed any more. From now on, you will be
+warned, if a suffix is already in use by another connection.

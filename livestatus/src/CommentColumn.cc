@@ -25,7 +25,6 @@
 #include "CommentColumn.h"
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
 #include <iterator>
 #include "MonitoringCore.h"
 #include "Renderer.h"

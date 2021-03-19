@@ -177,9 +177,12 @@ def do_inv_check(hostname, options):
 
     for source in sources.get_data_sources():
         source_state, source_output, _source_perfdata = source.get_summary_result_for_inventory()
-        # Do not output informational (state = 0) things. These information are shown by the "Check_MK" service
         if source_state != 0:
-            status = max(source_state, status)
+            # Do not output informational things (state == 0). Also do not use source states
+            # which would overwrite "State when inventory fails" in the ruleset
+            # "Do hardware/software Inventory".
+            # These information and source states are handled by the "Check_MK" service
+            status = max(_inv_fail_status, status)
             infotexts.append("[%s] %s" % (source.id(), source_output))
 
     return status, infotexts, long_infotexts, perfdata

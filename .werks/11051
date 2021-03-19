@@ -1,0 +1,14 @@
+Title: crash in notifications if "Exclude Service Groups (regex)" is used
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p16
+Date: 1597061167
+Class: fix
+
+If a notification rule used the option "Exclude Service Groups (regex)" and
+no service group was defined for a service the notification rule processing
+crashed. In the var/log/notify.log a traceback that contains the line
+"TypeError: 'NoneType' object has no attribute '__getitem__'" was shown.
+This is fixed.

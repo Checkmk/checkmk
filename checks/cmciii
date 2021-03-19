@@ -381,33 +381,34 @@ def inventory_cmciii_io(parsed):
 
 
 def check_cmciii_io(item, params, parsed):
-    if item in parsed.get("io", {}):
-        attrs = parsed["io"][item]
-        state_readable = attrs["Status"]
-        relay = attrs.get("Relay")
-        logic = attrs.get("Logic")
-        infotext = "Status: %s" % state_readable
+    if item not in parsed.get("io", {}):
+        return
 
-        if logic is not None:
-            infotext += ", Logic: %s" % attrs["Logic"]
+    attrs = parsed["io"][item]
+    state_readable = attrs["Status"]
 
-        if relay is not None:
-            if state_readable == "OK":
-                state = 0
-            else:
-                state = 2
-            infotext += ", Relay: %s" % relay
+    infotext = "Status: %s" % state_readable
+    for key in ["Logic", "Delay", "Relay"]:
+        if key in attrs:
+            infotext += ", %s: %s" % (key, attrs[key])
 
-        else:  # input relay
-            if state_readable in ["OK", "Off"]:
-                state = 0
-            elif state_readable == "On":
-                state = 1
-            else:
-                state = 2
-            infotext += ", Delay %s" % attrs.get("Delay")
+    if state_readable in ["Open", "Closed"]:
+        # Some door sensors have been mapped to Input instead of Access
+        # by the vendor
+        return {"Open": 1, "Closed": 0}[state_readable], infotext
 
-        return state, infotext
+    if "Relay" in attrs:
+        if state_readable == "OK":
+            return 0, infotext
+        return 2, infotext
+
+    if state_readable in ["OK", "Off"]:
+        return 0, infotext
+
+    if state_readable == "On":
+        return 1, infotext
+
+    return 2, infotext
 
 
 check_info['cmciii.io'] = {

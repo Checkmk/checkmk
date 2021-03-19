@@ -8,7 +8,14 @@ description:
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- No default levels are set. These are configurable.
+ No default levels are set, but levels are configurable via the
+ rule "Levels for disk IO".
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
 
 inventory:
- One service per databse will be created.
+ One service is created for each database if all required metrics
+ (DiskQueueDepth, ReadIOPS, ReadLatency, ReadThroughput, WriteIOPS,
+ WriteLatency and WriteThroughput) are given.

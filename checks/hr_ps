@@ -114,12 +114,10 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
         return True
 
     match_type, match_pattern = match_name_or_path
-    if match_type == "match_name":
-        pattern_to_match = process.name
-    elif match_type == "match_name":
-        pattern_to_match = process.path
-    else:
-        pattern_to_match = None
+    pattern_to_match = {
+        'match_name': process.name,
+        'match_path': process.path,
+    }.get(match_type)
 
     if match_pattern is not None and match_pattern.startswith("~"):
         # Regex for complete process name or path

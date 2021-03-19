@@ -1,0 +1,16 @@
+Title: Bulk import: Improve validation of imported attributes
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1605859452
+Class: fix
+
+When setting e.g. tag attributes during the bulk import, the values from the
+CSV file were not validated using the normal validation logic of the host
+attribute. This made it possible to import attributed with invalid values,
+leading to errors in different situations.
+
+The import now applies the same validation logic as the host edit forms and
+prevent importing data which does not pass this validation.

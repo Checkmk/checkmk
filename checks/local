@@ -190,18 +190,21 @@ def _parse_local_line(result):
     if result.state != 'P':
         return [(result.state, result.text, [p.tuple for p in result.perfdata])]
 
-    local_results = [(0, result.text, [])] if result.text else []
+    computed_results = local_compute_state(result.perfdata)
+    if not result.text:
+        return computed_results
 
-    return local_results + local_compute_state(result.perfdata)
+    if not computed_results:
+        return [(0, result.text, [])]
+
+    pstate, ptext, pmetric = computed_results[0]
+    return [(pstate, "%s, %s" % (result.text, ptext), pmetric)] + computed_results[1:]
 
 
 def _calculate_local_best_state(collected_stats):
     states, infotexts, perfdata = zip(*_iterate_all_check_results(collected_stats))
 
-    # First element might be dummy info, need to drop when calculating best state
-    best_state = min(states[1:]) if len(states) > 1 and not perfdata[0] else states[0]
-
-    return best_state, ", ".join(infotexts), sum(perfdata, [])
+    return min(states), ", ".join(infotexts), sum(perfdata, [])
 
 
 def _iterate_all_check_results(collected_stats):

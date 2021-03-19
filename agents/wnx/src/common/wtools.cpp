@@ -47,6 +47,45 @@ void AppRunner::cleanResources() noexcept {
     stderr_.shutdown();
 }
 
+// #TODO test this(directly not tested)
+void AppRunner::kill() {
+    auto proc_id = process_id_.exchange(0);
+    if (proc_id == 0) {
+        XLOG::d(
+            "Attempt to kill process which is not started or already killed: '{}'",
+            wtools::ConvertToUTF8(getCmdLine()));
+        return;
+    }
+
+    if (job_handle_) {
+        // this is normal case but with job
+        TerminateJobObject(job_handle_, 0);
+
+        // job:
+        CloseHandle(job_handle_);
+        job_handle_ = nullptr;
+
+        // process:
+        CloseHandle(process_handle_);  // must
+        process_handle_ = nullptr;
+
+        return;
+    }
+
+    // normally only updater here, be careful
+    if (true) {
+        constexpr std::wstring_view updater_name{L"cmk-update-agent.exe"};
+        KillProcessTreeSafe(proc_id, updater_name);
+        auto success = KillProcessSafe(proc_id, updater_name, -1);
+        XLOG::d.i("Process [{}] '{}' had been {}", proc_id,
+                  wtools::ConvertToUTF8(cmd_line_),
+                  success ? "killed SUCCESSFULLY" : "FAILED to kill");
+    } else {
+        XLOG::l.i("Killing of updater [{}]  is disabled '{}'", proc_id,
+                  wtools::ConvertToUTF8(cmd_line_));
+    }
+}
+
 // returns PID or 0,
 uint32_t AppRunner::goExecAsJob(std::wstring_view CommandLine) noexcept {
     try {
@@ -460,8 +499,6 @@ void ServiceController::Start(DWORD Argc, wchar_t** Argv) {
         // Tell SCM that the service is started.
         setServiceStatus(SERVICE_RUNNING);
 
-        cma::cfg::rm_lwa::Execute();
-
     } catch (DWORD dwError) {
         // Log the error.
         xlog::SysLogEvent(processor_->getMainLogName(), xlog::LogEvents::kError,
@@ -818,6 +855,8 @@ DataSequence ReadPerformanceDataFromRegistry(
         try {
             buffer = new BYTE[buf_size];
         } catch (...) {
+            XLOG::l(XLOG_FUNC + " Out of memory allocating [{}] bytes",
+                    buf_size);
             return cma::tools::DataBlock<BYTE>();  // ups
         }
 
@@ -829,12 +868,14 @@ DataSequence ReadPerformanceDataFromRegistry(
 
         if (ret == ERROR_SUCCESS) break;  // normal exit
 
-        if (ret == ERROR_MORE_DATA) {
-            buf_size *= 2;    // :)
-            delete[] buffer;  // realloc part one
-            continue;         // to be safe
-        } else
+        if (ret != ERROR_MORE_DATA) {
+            XLOG::l("Can't read counter '{}' error [{}]",
+                    wtools::ConvertToUTF8(CounterName), ret);
             return {};
+        }
+
+        buf_size *= 2;    // this is not optimal, may be reworked
+        delete[] buffer;  // realloc part one
     }
 
     return DataSequence((int)buf_size, buffer);
@@ -1666,118 +1707,129 @@ std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath) {
 
 // gtest [+]
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept {
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept {
     HKEY hkey = nullptr;
-    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
     if (ERROR_SUCCESS == ret && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         DWORD type = REG_DWORD;
-        uint32_t buffer;
+        uint32_t buffer = dflt;
         DWORD count = sizeof(buffer);
-        ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                               reinterpret_cast<LPBYTE>(&buffer), &count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                 reinterpret_cast<LPBYTE>(&buffer), &count);
         if (ret == ERROR_SUCCESS && 0 != count && type == REG_DWORD) {
             return buffer;
         }
     }
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]",
-              ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()), ret);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query [{}]", ConvertToUTF8(path),
+              ConvertToUTF8(value_name), ret);
+    return dflt;
 }
 
+namespace {
 // returns true on success
-bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
-                      std::wstring_view value) {
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      std::wstring_view value, DWORD type) {
     HKEY hKey;
     auto ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, path.data(), 0L, nullptr,
                               REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL,
                               &hKey, NULL);
     if (ERROR_SUCCESS != ret) return false;
 
-    /** Set full application path with a keyname to registry */
-    ret = RegSetValueEx(hKey, key.data(), 0, REG_SZ,
+    // Set full application path with a keyname to registry
+    ret =
+        ::RegSetValueEx(hKey, value_name.data(), 0, type,
                         reinterpret_cast<const BYTE*>(value.data()),
                         static_cast<uint32_t>(value.size() * sizeof(wchar_t)));
     return ERROR_SUCCESS == ret;
 }
+}  // namespace
+
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_SZ);
+}
+
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value) {
+    return SetRegistryValue(path, value_name, value, REG_EXPAND_SZ);
+}
 
 // returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept {
-    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, Key.c_str(), Value.c_str(),
-                              REG_DWORD, &Data, 4);
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t data) noexcept {
+    auto ret = RegSetKeyValue(HKEY_LOCAL_MACHINE, path.data(),
+                              value_name.data(), REG_DWORD, &data, 4);
     if (ret != 0) XLOG::d("Bad with reg set value {}", ret);
 
     return ret == ERROR_SUCCESS;
 }
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept {
+std::wstring GetRegistryValue(std::wstring_view path,
+                              std::wstring_view value_name,
+                              std::wstring_view dflt) noexcept {
     HKEY hkey = nullptr;
-    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, Key.c_str(), &hkey);
-    if (ERROR_SUCCESS == result && nullptr != hkey) {
-        ON_OUT_OF_SCOPE(RegCloseKey(hkey));
+    auto result = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS != result || nullptr == hkey) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Cannot open Key '{}' query return code [{}]",
+                  ConvertToUTF8(path), result);
+        return dflt.data();
+    }
+
+    ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+    DWORD type = REG_SZ;
+    wchar_t buffer[512];
+    DWORD count = sizeof(buffer);
+    auto ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
+                                  reinterpret_cast<LPBYTE>(buffer), &count);
+
+    // check for errors
+    auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+    if (count == 0 || !type_ok) {
+        // failure here
+        XLOG::t.t(XLOG_FLINE + "Can't open '{}\\{}' query returns [{}]",
+                  ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return dflt.data();
+    }
+
+    if (ret == ERROR_SUCCESS)
+        return type == REG_SZ ? buffer : ExpandStringWithEnvironment(buffer);
+
+    if (ret == ERROR_MORE_DATA) {
+        // realloc required
         DWORD type = REG_SZ;
-        wchar_t buffer[512];
-        DWORD count = sizeof(buffer);
-        auto ret = RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
-                                    reinterpret_cast<LPBYTE>(buffer), &count);
-
-        // check for errors
-        auto type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-        if (count == 0 || !type_ok) {
-            // failure here
-            XLOG::t.t(XLOG_FLINE + "Absent on {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
-        }
-
-        if (ret == ERROR_SUCCESS) {
-            return buffer;
-        }
-
-        if (ret == ERROR_MORE_DATA) {
-            // realloc required
-            DWORD type = REG_SZ;
-            auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
-            ON_OUT_OF_SCOPE(delete[] buffer_big);
-            DWORD count = sizeof(count);
-            ret =
-                RegQueryValueExW(hkey, Value.c_str(), nullptr, &type,
+        auto buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
+        ON_OUT_OF_SCOPE(delete[] buffer_big);
+        DWORD count = sizeof(count);
+        ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
-            // check for errors
-            type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
-            if (count == 0 || !type_ok) {
-                // failure here
-                XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
-                          ConvertToUTF8(Key.c_str()),
-                          ConvertToUTF8(Value.c_str()), ret);
-                return Default;
-            }
-
-            if (ret == ERROR_SUCCESS) {
-                return buffer_big;
-            }
+        // check for errors
+        type_ok = type == REG_SZ || type == REG_EXPAND_SZ;
+        if (count == 0 || !type_ok) {
             // failure here
-            XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
-                      ConvertToUTF8(Key.c_str()), ConvertToUTF8(Value.c_str()),
-                      ret);
-            return Default;
+            XLOG::t.t(XLOG_FLINE + "Absent {}\\{} query return [{}]",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+            return dflt.data();
         }
+
+        if (ret == ERROR_SUCCESS)
+            return type == REG_SZ ? buffer_big
+                                  : ExpandStringWithEnvironment(buffer_big);
     }
+
     // failure here
-    XLOG::t.t(XLOG_FLINE + "Cannot open Key {} query return code {}",
-              ConvertToUTF8(Key.c_str()), result);
-    return Default;
+    XLOG::t.t(XLOG_FLINE + "Bad key {}\\{} query return [{}]",
+              ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+    return dflt.data();
 }
 
 // process terminators
-bool KillProcess(uint32_t ProcessId, int Code) noexcept {
+bool KillProcessUnsafe(uint32_t ProcessId, int Code) noexcept {
     auto handle = OpenProcess(PROCESS_TERMINATE, FALSE, ProcessId);
     if (nullptr == handle) {
         if (GetLastError() == 5) {
@@ -1797,6 +1849,63 @@ bool KillProcess(uint32_t ProcessId, int Code) noexcept {
     }
 
     return true;
+}
+
+bool KillProcessSafe(uint32_t process_id, std::wstring_view process_name,
+                     int exit_code) {
+    if (process_id < 128 || process_name.empty()) {
+        XLOG::d("Cannot kill process '{}' [{}] - bad parameters",
+                wtools::ConvertToUTF8(process_name), process_id);
+        return false;
+    }
+    auto handle = ::OpenProcess(PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                                FALSE, process_id);
+    if (nullptr == handle) {
+        if (GetLastError() == 5) {
+            XLOG::d(
+                "Cannot open process '{}' [{}]  for termination ACCESS is DENIED ",
+                wtools::ConvertToUTF8(process_name), process_id);
+        }
+        return false;
+    }
+    ON_OUT_OF_SCOPE(::CloseHandle(handle));
+
+    char buf[512];
+    auto name_length = GetProcessImageFileNameA(handle, buf, sizeof(buf) - 1);
+    if (name_length == 0) {
+        XLOG::l("Impossible to kill '{}' [{}], error [{}] getting name",
+                wtools::ConvertToUTF8(process_name), process_id,
+                ::GetLastError());
+        return false;
+    }
+    try {
+        std::filesystem::path p{buf};
+        auto image_name = p.filename().wstring();
+        _wcslwr(image_name.data());
+        auto expected_name = std::wstring(process_name);
+        _wcslwr(expected_name.data());
+
+        if (image_name != expected_name) {
+            XLOG::l("Impossible to kill '{}' [{}], real name '{}'",
+                    wtools::ConvertToUTF8(process_name), process_id, buf);
+            return false;
+        }
+
+        if (FALSE == TerminateProcess(handle, exit_code)) {
+            // - we have no problem(process already dead) - ignore
+            // - we have problem: either code is invalid or something wrong
+            // with Windows in all cases just report
+            XLOG::d("Cannot terminate process '{}' [{}] gracefully, error [{}]",
+                    wtools::ConvertToUTF8(process_name), process_id,
+                    GetLastError());
+            return false;
+        }
+
+        return true;
+    } catch (const std::exception& /*e*/) {
+        // this process can't be terminated(impossible to check image name)
+        return false;
+    }
 }
 
 // process terminator
@@ -1930,8 +2039,8 @@ bool KillProcessFully(const std::wstring& process_name,
         });
 
     for (auto proc_id : processes_to_kill) {
-        KillProcessTree(proc_id);
-        KillProcess(proc_id, exit_code);
+        KillProcessTreeUnsafe(proc_id);
+        KillProcessUnsafe(proc_id, exit_code);
     }
 
     return true;
@@ -1954,7 +2063,7 @@ int FindProcess(std::wstring_view process_name) noexcept {
     return count;
 }
 
-void KillProcessTree(uint32_t ProcessId) {
+void KillProcessTreeUnsafe(uint32_t ProcessId) {
     // snapshot
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
@@ -1968,10 +2077,30 @@ void KillProcessTree(uint32_t ProcessId) {
     do {
         // process.th32ProcessId is the PID.
         if (process.th32ParentProcessID == ProcessId) {
-            KillProcess(process.th32ProcessID);
+            KillProcessUnsafe(process.th32ProcessID);
         }
 
     } while (Process32Next(snapshot, &process));
+}
+
+size_t KillProcessTreeSafe(uint32_t process_id,
+                           std::wstring_view expected_name) {
+    HANDLE snapshot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    ON_OUT_OF_SCOPE(::CloseHandle(snapshot));
+
+    PROCESSENTRY32 process;
+    ZeroMemory(&process, sizeof(process));
+    process.dwSize = sizeof(process);
+    Process32First(snapshot, &process);
+    size_t count = 0;
+    do {
+        if (process.th32ParentProcessID == process_id &&
+            KillProcessSafe(process.th32ProcessID, expected_name, -1)) {
+            count++;
+        }
+
+    } while (Process32Next(snapshot, &process));
+    return count;
 }
 
 std::wstring GetArgv(uint32_t index) noexcept {
@@ -2340,6 +2469,243 @@ bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept {
         XLOG::l("Error during patching file line ending {}", e.what());
         return false;
     }
+}
+
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands) {
+    // CONTEXT: to prevent malicious file creation or modification  in folder
+    // "programdata/checkmk" we must remove inherited write rights for
+    // Users in checkmk root data folder.
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect path from User write '{}'", path.u8string());
+}
+
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands) {
+    // CONTEXT: to prevent malicious file creation or modification  in folder
+    // "programdata/checkmk" we must remove inherited write rights for
+    // Users in checkmk root data folder.
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",           // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c",  // remove all user rights
+        L"icacls \"{}\" /grant:r *S-1-5-32-545:(RX) /c"};  // read/exec
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), path.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect file from User write '{}'", path.u8string());
+}
+
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands) {
+    // CONTEXT: some files must be protected from the user fully
+
+    constexpr std::wstring_view command_templates[] = {
+        L"icacls \"{}\" /inheritance:d /c",          // disable inheritance
+        L"icacls \"{}\" /remove:g *S-1-5-32-545 /c"  // remove all user rights
+    };
+
+    for (auto const t : command_templates) {
+        auto cmd = fmt::format(t.data(), entry.wstring());
+        commands.emplace_back(cmd);
+    }
+    XLOG::l.i("Protect path from User access '{}'", entry.u8string());
+}
+
+namespace {
+std::filesystem::path MakeCmdFileInTemp(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    namespace fs = std::filesystem;
+    try {
+        auto pid = ::GetCurrentProcessId();
+        static int counter = 0;
+        counter++;
+
+        std::error_code ec;
+        auto temp_folder = fs::temp_directory_path(ec);
+        auto tmp_file =
+            temp_folder / fmt::format(L"cmk_{}_{}_{}.cmd", name, pid, counter);
+        std::ofstream ofs(tmp_file, std::ios::trunc);
+        for (const auto& c : commands) {
+            ofs << ConvertToUTF8(c) << "\n";
+        }
+
+        return tmp_file;
+    } catch (const std::exception& e) {
+        XLOG::l("Exception creating file '{}'", e.what());
+        return {};
+    }
+}
+}  // namespace
+
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands) {
+    XLOG::l.i("'{}' Starting executing commands [{}]", ConvertToUTF8(name),
+              commands.size());
+    if (commands.empty()) {
+        return {};
+    }
+
+    auto to_exec = MakeCmdFileInTemp(name, commands);
+    if (!to_exec.empty()) {
+        auto pid = cma::tools::RunStdCommand(to_exec.wstring(), false);
+        if (pid != 0) {
+            XLOG::l.i("Process is started '{}'  with pid [{}]",
+                      to_exec.u8string(), pid);
+            return to_exec;
+        }
+
+        XLOG::l("Process is failed to start '{}'", to_exec.u8string());
+    }
+
+    return {};
+}
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str) {
+    if (str.empty()) return std::wstring{str};
+
+    auto log_error_and_return_default = [](std::wstring_view str) {
+        XLOG::l("Can't expand the string #1 '{}' [{}]", ConvertToUTF8(str),
+                GetLastError());
+        return std::wstring{str};
+    };
+
+    std::wstring result;
+    auto ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), 0);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    result.resize(ret - 1);
+    ret = ::ExpandEnvironmentStringsW(str.data(), result.data(), ret);
+    if (ret == 0) return log_error_and_return_default(str);
+
+    return result;
+}
+
+namespace {
+ACL* CombineSidsIntoACl(SID* first_sid, size_t first_sub_count, SID* second_sid,
+                        size_t second_sub_count) {
+    // compute size of acl
+    auto acl_size = sizeof(ACL) +
+                    2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+                    GetSidLengthRequired(static_cast<UCHAR>(first_sub_count)) +
+                    GetSidLengthRequired(static_cast<UCHAR>(second_sub_count));
+
+    // create ACL
+    auto acl = static_cast<ACL*>(ProcessHeapAlloc(acl_size));
+
+    // init ACL
+    if (acl && InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) &&
+        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, first_sid) &&
+        AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS, second_sid))
+        return acl;
+    XLOG::l("Failed ACL creation");
+    ProcessHeapFree(acl);
+    return nullptr;
+}
+}  // namespace
+
+ACL* BuildSDAcl() {
+    SID_IDENTIFIER_AUTHORITY sia_world = SECURITY_WORLD_SID_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
+
+    char buf_everyone_sid[32];
+    char buf_creator_sid[32];
+
+    auto everyone_sid = reinterpret_cast<SID*>(buf_everyone_sid);
+    auto owner_sid = reinterpret_cast<SID*>(buf_creator_sid);
+
+    // initialize well known SID's
+    if (!InitializeSid(everyone_sid, &sia_world, 1) == FALSE ||
+        !InitializeSid(owner_sid, &sia_creator, 1) == FALSE)
+        return nullptr;
+
+    *GetSidSubAuthority(everyone_sid, 0) = SECURITY_WORLD_RID;
+    *GetSidSubAuthority(owner_sid, 0) = SECURITY_CREATOR_OWNER_RID;
+
+    return CombineSidsIntoACl(everyone_sid, 1, owner_sid, 1);
+}
+
+ACL* BuildAdminSDAcl() {
+    SID_IDENTIFIER_AUTHORITY sia_admin = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY sia_creator = SECURITY_CREATOR_SID_AUTHORITY;
+
+    char buf_admin_sid[32];
+    char buf_creator_sid[32];
+
+    auto sid_admin = reinterpret_cast<SID*>(buf_admin_sid);
+    auto sid_owner = reinterpret_cast<SID*>(buf_creator_sid);
+
+    // initialize well known SID's
+    if (InitializeSid(sid_admin, &sia_admin, 2) == FALSE ||
+        InitializeSid(sid_owner, &sia_creator, 1) == FALSE)
+        return nullptr;
+
+    *GetSidSubAuthority(sid_admin, 0) = SECURITY_BUILTIN_DOMAIN_RID;
+    *GetSidSubAuthority(sid_admin, 1) = DOMAIN_ALIAS_RID_ADMINS;
+
+    *GetSidSubAuthority(sid_owner, 0) = SECURITY_CREATOR_OWNER_RID;
+
+    return CombineSidsIntoACl(sid_admin, 2, sid_owner, 1);
+}
+
+SecurityAttributeKeeper::SecurityAttributeKeeper(SecurityLevel sl) {
+    if (!allocAll(sl)) {
+        cleanupAll();
+    }
+}
+
+SecurityAttributeKeeper::~SecurityAttributeKeeper() {
+    cleanupAll();  //
+}
+
+bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
+    // this trash is referenced in the Security
+    // Descriptor, we should keep it safe
+    switch (sl) {
+        case SecurityLevel::standard:
+            acl_ = BuildAdminSDAcl();
+            break;
+        case SecurityLevel::admin:
+            acl_ = BuildAdminSDAcl();
+            break;
+    }
+
+    sd_ = static_cast<SECURITY_DESCRIPTOR*>(
+        ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
+    sa_ = static_cast<SECURITY_ATTRIBUTES*>(
+        ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
+
+    if (acl_ != nullptr && sd_ != nullptr &&
+        sa_ != nullptr &&  // <--- alloc check
+        ::InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) ==
+            TRUE &&
+        ::SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE) == TRUE) {
+        sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_->lpSecurityDescriptor = sd_;
+        sa_->bInheritHandle = FALSE;
+        return true;
+    }
+    return false;
+}
+
+void SecurityAttributeKeeper::cleanupAll() {
+    ProcessHeapFree(acl_);
+    ProcessHeapFree(sd_);
+    ProcessHeapFree(sa_);
+    acl_ = nullptr;
+    sd_ = nullptr;
+    sa_ = nullptr;
 }
 
 }  // namespace wtools

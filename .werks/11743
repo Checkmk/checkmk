@@ -1,0 +1,19 @@
+Title: mk_logwatch: log files with special characters are ignored or cause crash
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p21
+Date: 1610545245
+Class: fix
+
+Log files with special characters (e.g. ä) are ignored by the mk_logwatch
+plugin in the event that the locale of the host is set to POSIX. On certain
+operating systems (SLES 12), crashes have been observed due to the same issue.
+They present with the following error message:
+
+UnicodeDecodeError: 'ascii' codec can't decode byte 0xe4 in position 2: ordinal
+not in range(128).
+
+This is due to a missing character encoding and has been fixed. The plugin
+needs to be redistributed if this fix is needed.

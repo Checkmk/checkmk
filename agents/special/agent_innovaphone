@@ -61,16 +61,21 @@ def get_informations(name, xml_id, org_name):
 def get_pri_channel(channel_name):
     data_url = "/%s/mod_cmd.xml" % channel_name
     address = "http://%s%s" % (server, data_url)
-    data = etree.parse(get_url(address)).getroot()
+    raw_data = get_url(address).read()
+    if not raw_data:  # no such channel.
+        return
+
+    data = etree.parse(raw_data).getroot()
     link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
         print "%s %s %s 0 0 0" % (channel_name, link, physical)
         return
+
     idle = 0
     total = 0
-    for channel in data.findall('ch'):
-        if channel.get('state') == 'Idle':
+    for channel_info in data.findall('ch'):
+        if channel_info.get('state') == 'Idle':
             idle += 1
         total += 1
     total -= 1
@@ -79,7 +84,12 @@ def get_pri_channel(channel_name):
 
 def get_licenses():
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
-    data = etree.parse(get_url(address)).getroot()
+    try:
+        data = etree.parse(get_url(address)).getroot()
+    except urllib2.HTTPError:  # 401 Unauthorized
+        return
+
+    print "<<<innovaphone_licenses>>>"
     for child in data.findall('lic'):
         if child.get('name') == "Port":
             count = child.get('count')
@@ -106,8 +116,7 @@ for what in ["CPU", "MEM", "TEMP"]:
         get_informations(section_name, informations[what], what)
 
 print "<<<%schannels>>>" % s_prefix
-for channel_num in range(1, 5):
-    get_pri_channel('PRI' + str(channel_num))
+for channel in ('PRI1', 'PRI2', 'PRI3', 'PRI4'):
+    get_pri_channel(channel)
 
-print "<<<%slicenses>>>" % s_prefix
 get_licenses()

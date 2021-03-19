@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+winperf_cpu_default_levels = {}  # old discovery refered to variable by name!
+
 
 def inventory_winperf_util(info):
     if len(info) <= 1:
@@ -123,6 +125,5 @@ check_info["winperf_processor.util"] = {
     'has_perfdata': True,
     'handle_real_time_checks': True,
     'group': 'cpu_utilization_os',
-    'default_levels_variable': 'winperf_cpu_default_levels',
-    'includes': ["cpu_util.include", "winperf.include"],
+    'includes': ["cpu_util.include"],
 }

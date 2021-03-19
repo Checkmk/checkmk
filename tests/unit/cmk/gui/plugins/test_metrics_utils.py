@@ -92,12 +92,13 @@ def test_normalize_perf_data(perf_data, check_command, result):
 
 
 @pytest.mark.parametrize("canonical_name, perf_data_names", [
-    ('user', {'user'}),
-    ('io_wait', {'wait', 'io_wait'}),
-    ('mem_used', {'mem_used', 'memory', 'memory_used', 'memused', 'ramused', 'usage'}),
+    ('user', [('user', 1)]),
+    ('io_wait', [('io_wait', 1), ('wait', 1)]),
+    ('mem_used', [('mem_used', 1), ('memory', 1048576), ('memory_used', 1), ('memused', 1),
+                  ('ramused', 1048576), ('usage', 1)]),
 ])
 def test_reverse_translation_metric_name(canonical_name, perf_data_names):
-    assert utils.reverse_translate_metric_name, (canonical_name) == perf_data_names
+    assert utils.reverse_translate_metric_name(canonical_name) == perf_data_names
 
 
 @pytest.mark.parametrize(
@@ -118,6 +119,8 @@ def test_reverse_translation_metric_name(canonical_name, perf_data_names):
         ([u'user', u'system', u'idle', u'nice'], None, ['cpu_utilization_3']),
         ([u'user', u'system', u'idle', u'io_wait'], None, ['cpu_utilization_4']),
         ([u'user', u'system', u'io_wait'], None, ['cpu_utilization_5']),
+        (['util_average', 'util', 'wait', 'user', 'system', 'guest'
+         ], "check_mk-kernel.util", ['util_average_1', 'cpu_utilization_6_guest_util']),
         ([u'user', u'system', u'io_wait', 'guest', 'steal'
          ], 'check_mk-statgrab_cpu', ['cpu_utilization_7']),
         ([u'user', u'system', u'interrupt'], None, ['cpu_utilization_8']),

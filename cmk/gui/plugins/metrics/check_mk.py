@@ -791,7 +791,7 @@ metric_info["pagefile_used"] = {
 
 metric_info["mem_used_percent"] = {
     "color": "#80ff40",
-    "title": _("RAM used"),
+    "title": _("RAM used %"),
     "unit": "%",
 }
 
@@ -1742,7 +1742,7 @@ metric_info["connections_duration_max"] = {
 }
 
 metric_info["connections_duration_mean"] = {
-    "title": _("Connections duration max"),
+    "title": _("Connections duration mean"),
     "unit": "s",
     "color": "25/a"
 }
@@ -3244,6 +3244,12 @@ metric_info["checkpoint_age"] = {
     "title": _("Time since last checkpoint"),
     "unit": "s",
     "color": "#006040",
+}
+
+metric_info["file_age"] = {
+    "title": _("File age"),
+    "unit": "s",
+    "color": "13/a",
 }
 
 metric_info["file_age_oldest"] = {
@@ -6610,6 +6616,8 @@ check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats.fs"] = df_translation
+check_metrics["check_mk-sap_hana_diskusage"] = df_translation
+check_metrics["check_mk-nimble_volumes"] = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in ["nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
@@ -7498,6 +7506,9 @@ check_metrics["check_mk-postgres_sessions"] = {
 check_metrics["check_mk-fileinfo"] = {
     "size": {
         "name": "file_size"
+    },
+    "age": {
+        "name": "file_age"
     },
 }
 
@@ -9373,6 +9384,36 @@ perfometer_info.append({
     'exponent': 2.0,
 })
 
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [{
+        "type": "logarithmic",
+        "metric": "file_size",
+        "half_value": 1000000,
+        "exponent": 10,
+    }, {
+        "type": "logarithmic",
+        "metric": "file_age",
+        "half_value": 3600,
+        "exponent": 5,
+    }],
+})
+
+perfometer_info.append({
+    "type": "stacked",
+    "perfometers": [{
+        "type": "logarithmic",
+        "metric": "file_count",
+        "half_value": 10000,
+        "exponent": 10,
+    }, {
+        "type": "logarithmic",
+        "metric": "file_age_newest",
+        "half_value": 3600,
+        "exponent": 5,
+    }],
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -9837,7 +9878,7 @@ graph_info["cpu_utilization_4"] = {
     "range": (0, 100),
 }
 
-# The following 6 graphs come in pairs.
+# The following 8 graphs come in pairs.
 # If possible, we display the "util" metric,
 # otherwise we display the sum of the present metrics.
 
@@ -9879,7 +9920,7 @@ graph_info["cpu_utilization_5_util"] = {
 }
 
 #TODO which warn,crit?
-graph_info["cpu_utilization_6"] = {
+graph_info["cpu_utilization_6_steal"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -9896,7 +9937,7 @@ graph_info["cpu_utilization_6"] = {
     "range": (0, 100),
 }
 
-graph_info["cpu_utilization_6_util"] = {
+graph_info["cpu_utilization_6_steal_util"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -9910,6 +9951,41 @@ graph_info["cpu_utilization_6_util"] = {
         "util:crit",
     ],
     "conflicting_metrics": ["cpu_util_guest",],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+#TODO which warn,crit?
+graph_info["cpu_utilization_6_guest"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total")),
+    ],
+    "conflicting_metrics": [
+        "util",
+        "cpu_util_steal",
+    ],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+
+graph_info["cpu_utilization_6_guest_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
+    "conflicting_metrics": ["cpu_util_steal",],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
@@ -9948,7 +10024,7 @@ graph_info["cpu_utilization_7_util"] = {
     "range": (0, 100),
 }
 
-# ^-- last six graphs go pairwise together (see above)
+# ^-- last eight graphs go pairwise together (see above)
 
 #TODO which warn,crit?
 graph_info["cpu_utilization_8"] = {
@@ -10806,9 +10882,9 @@ graph_info["number_of_processes"] = {
 graph_info["size_of_processes"] = {
     "title": _("Size of processes"),
     "metrics": [
-        ("process_resident_size", "area"),
         ("process_virtual_size", "stack"),
         ("process_mapped_size", "stack"),
+        ("process_resident_size", "area"),
     ],
     "optional_metrics": ["process_mapped_size"]
 }

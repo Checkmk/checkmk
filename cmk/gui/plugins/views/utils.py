@@ -1943,10 +1943,16 @@ class Cell(object):
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
     def render_for_export(self, row):
-        # type: (Row) -> CellContent
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""
+
+        # The aggr_treestate painters are returning a dictionary data structure
+        # (see paint_aggregated_tree_state()) in case the output_format is not
+        # HTML. Hand over the whole data structure to the caller. It will be
+        # converted to str during rendering.
+        if isinstance(rendered_txt, dict):
+            return rendered_txt
 
         txt = rendered_txt.strip()  # type: Text
 

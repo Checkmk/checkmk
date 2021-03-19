@@ -1,0 +1,13 @@
+Title: Opsgenie: Fixed help text for domain
+Level: 1
+Component: notifications
+Compatible: incomp
+Edition: cre
+Version: 1.6.0p14
+Date: 1593004633
+Class: fix
+
+
+If an european account is used, you have to use a domain like
+"https://api.eu.opsgenie.com", not "https://my.app.eu.opsgenie.com" as stated
+before.

@@ -24,32 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+DELL_IDRAC_FANS_STATE_MAP = {
+    "1": (3, "OTHER"),
+    "2": (3, "UNKNOWN"),
+    "3": (0, "OK"),
+    "4": (1, "NON CRITICAL UPPER"),
+    "5": (2, "CRITICAL UPPER"),
+    "6": (2, "NON RECOVERABLE UPPER"),
+    "7": (1, "NON CRITICAL LOWER"),
+    "8": (2, "CRITICAL LOWER"),
+    "9": (2, "NON RECOVERABLE LOWER"),
+    "10": (2, "FAILED"),
+}
+
 
 def inventory_dell_idrac_fans(info):
-    for line in info:
-        yield line[0], {}
+    for index, state, _value, _name, _warn_upper, _crit_upper, \
+            _warn_lower, _crit_lower in info:
+        # don't discover fans with a state of other or unknown
+        if DELL_IDRAC_FANS_STATE_MAP[state][1] not in ("OTHER", "UNKNOWN"):
+            yield index, {}
 
 
 def check_dell_idrac_fans(item, params, info):
-    translate_status = {
-        "1": (3, "OTHER"),
-        "2": (3, "UNKNOWN"),
-        "3": (0, "OK"),
-        "4": (1, "NON CRITICAL UPPER"),
-        "5": (2, "CRITICAL UPPER"),
-        "6": (2, "NON RECOVERABLE UPPER"),
-        "7": (1, "NON CRITICAL LOWER"),
-        "8": (2, "CRITICAL LOWER"),
-        "9": (2, "NON RECOVERABLE LOWER"),
-        "10": (2, "FAILED"),
-    }
-
     for index, status, value, name, warn_upper, crit_upper, \
             warn_lower, crit_lower in info:
         if index == item:
-            state, state_readable = translate_status[status]
+            state, state_readable = DELL_IDRAC_FANS_STATE_MAP[status]
             yield state, "Status: %s, Name: %s" % \
                             (state_readable, name)
+            if state_readable in ("OTHER", "UNKNOWN", "FAILED"):
+                return
 
             value = int(value)
             if not params:

@@ -1,0 +1,20 @@
+Title: Auto monitor checkmks tmpfs during site creation
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586869601
+Class: feature
+
+Checkmk uses a tmpfs internally. This can grow over time. To prevent running out-of-memory on this filesystem, checkmk's tmpfs is automatically added to the monitoring after site creation.
+
+The rule "Discovery parameters for filesystem checks" now supports regex for "Mountpoints to never ignore".
+
+There is <b>no change</b> for already existing Checkmk installation. If the available tmpfs of an already existing installation should be monitored, the following procedure can be followed:
+
+<ul>
+ <li>Create a rule "Discovery parameters for filesystem checks"</li>
+ <li>Under "Mountpoints to never ignore" add the regex ".*/omd/sites/[^/]+/tmp$"</li>
+ <li>Perform a Check_MK Discovery on your Checkmk server</li>
+</ul>

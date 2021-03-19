@@ -1,0 +1,13 @@
+Title: chrony: Do not discover if chrony can't connect but ntp section is present
+Knowledge: undoc
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1570705240
+
+Avoid duplicate services for systems that have both chrony and ntp installed
+but are using ntp, in fact.

@@ -1,0 +1,10 @@
+Title: Fixed wrong filter in different hostgroup views
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1593094907
+Class: fix
+
+The filter "hostgroup" was not set correctly in views "Host Group of Down Hosts" and "Host Group of Unreachable Hosts".

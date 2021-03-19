@@ -1,0 +1,14 @@
+Title: Restore event helper time out to 3s
+Knowledge: doc
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p22
+Date: 1613552587
+
+Werk 10619 erroneously changed the event helper time out 
+from 3 s (seconds) to 3 ms (milliseconds).  This patch
+restores the original time out of 3 s.

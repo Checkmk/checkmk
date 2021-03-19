@@ -23,5 +23,6 @@ public:
     MOCK_METHOD1(setUseParentHandlers, void(bool useParentHandlers));
     MOCK_CONST_METHOD1(emitContext, void(std::ostream &));
     MOCK_METHOD1(log, void(const LogRecord &record));
+    MOCK_METHOD1(callHandler, void(const LogRecord &record));
 };
 #endif  // MockLogger_h

@@ -62,6 +62,11 @@ rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
 rm -f $RPM_BUILD_ROOT/etc/init.d/omd
 rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 
+# Some distros don't have the sticky bit set on /var/lock. This means we need to
+# pre create that directory for the sites to be able to write it's lock file to
+# to it. Not needed for Ubuntu/Debian.
+mkdir -p $RPM_BUILD_ROOT/var/lock/mkbackup
+
 %files
 %defattr(-,root,root)
 /opt/omd
@@ -75,6 +80,7 @@ rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpsender
 %attr(0750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
 %caps(cap_net_raw+ep) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
+%attr(0770,root,omd) /var/lock/mkbackup
 
 %pre
 groupadd -r omd 2>/dev/null || true
@@ -230,6 +236,24 @@ if [ $1 = 0 ] ; then
             exit 1
         fi
     done
+    # Remove decoded file
+    # setup "root" path in the same manner as in DEB package
+    BASE_PATH=/omd/versions/%{version}
+
+    # names
+    CMK_DECODED_DIR_NAME=decoded
+    CMK_UPDATE_EXE_NAME=cmk-update-agent.exe
+
+    # dirs
+    CMK_PLUGINS_DIR=$BASE_PATH/share/check_mk/agents/windows/plugins
+    CMK_DECODED_DIR=$CMK_PLUGINS_DIR/$CMK_DECODED_DIR_NAME
+
+    # files
+    CMK_DECODED_EXE_PATH=$CMK_DECODED_DIR/$CMK_UPDATE_EXE_NAME
+
+    # remove cmk-update-agent.exe and dir:
+    rm -f $CMK_DECODED_EXE_PATH
+    rmdir $CMK_DECODED_DIR 2>/dev/null || true
 fi
 
 

@@ -15,8 +15,64 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "yaml-cpp/yaml.h"
+using namespace std::chrono_literals;
 
 namespace wtools {  // to become friendly for cma::cfg classes
+
+TEST(WtoolsKillSafe, ProcessIntegration) {
+    EXPECT_FALSE(KillProcessSafe(127, L"power.exe", -1));
+    EXPECT_FALSE(KillProcessSafe(512, L"", -1));
+    std::wstring cmd{L"powershell.exe Start-Sleep 10000"};
+    auto proc_id = cma::tools::RunStdCommand(cmd, false);
+    EXPECT_FALSE(KillProcessSafe(proc_id, L"power.exe", -1));
+    EXPECT_FALSE(
+        KillProcessSafe(::GetCurrentProcessId(), L"powershell.exe", -1));
+    EXPECT_TRUE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
+    EXPECT_FALSE(KillProcessSafe(proc_id, L"PowerShell.exe", -1));
+}
+
+TEST(WtoolsKillSafe, KillAllIntegration_Long) {
+    wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
+        EXPECT_EQ(
+            KillProcessTreeSafe(entry.th32ProcessID, L"cmk-agent-updater.exe"),
+            0);
+        EXPECT_FALSE(
+            KillProcessSafe(entry.th32ProcessID, L"cmk-agent-updater.exe", -1));
+        return true;
+    });
+}
+
+namespace {
+std::pair<uint32_t, std::wstring> RunSelfWithParam(std::wstring_view param) {
+    auto exe = wtools::GetArgv(0);
+    // fork creates child process
+    std::wstring cmd{fmt::format(L"\"{}\" {}", exe, param)};
+    auto proc_id = cma::tools::RunStdCommand(cmd, false);
+    auto name = std::filesystem::path(exe).filename().wstring();
+    cma::tools::sleep(500ms);
+    return {proc_id, name};
+}
+}  // namespace
+TEST(WtoolsKillSafe, TreeExistsIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"fork");
+
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 1);
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
+}
+
+TEST(WtoolsKillSafe, TreeExistsReverseIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"fork");
+
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 1);
+}
+
+TEST(WtoolsKillSafe, TreeIsAbsentIntegration) {
+    auto [proc_id, name] = RunSelfWithParam(L"wait20");
+
+    EXPECT_EQ(KillProcessTreeSafe(proc_id, name), 0);
+    EXPECT_TRUE(KillProcessSafe(proc_id, name, -1));
+}
 
 TEST(Wtools, ScanProcess) {
     using namespace std::chrono;
@@ -84,8 +140,8 @@ TEST(Wtools, ScanProcess) {
             EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
 
             // killing
-            KillProcessTree(proc_id);
-            KillProcess(proc_id);
+            KillProcessTreeUnsafe(proc_id);
+            KillProcessUnsafe(proc_id);
             cma::tools::sleep(500ms);
 
             found = false;
@@ -381,11 +437,6 @@ TEST(Wtools, ParentPid) {
     //    EXPECT_TRUE(pid == 0);
 }
 
-TEST(Wtools, KillTree) {
-    //
-    EXPECT_FALSE(kProcessTreeKillAllowed);
-}
-
 TEST(Wtools, Acl) {
     wtools::ACLInfo info("c:\\windows\\notepad.exe");
     auto ret = info.query();
@@ -425,6 +476,129 @@ TEST(Wtools, LineEnding) {
 
     auto result = ReadWholeFile(work_file);
     EXPECT_EQ(result, expected);
+}
+
+namespace {
+// copy paste from the 2.0
+bool DeleteRegistryValue(std::wstring_view path,
+                         std::wstring_view value_name) noexcept {
+    HKEY hkey = nullptr;
+    auto ret = ::RegOpenKeyW(HKEY_LOCAL_MACHINE, path.data(), &hkey);
+    if (ERROR_SUCCESS == ret && nullptr != hkey) {
+        ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
+        ret = ::RegDeleteValue(hkey, value_name.data());
+        if (ret == ERROR_SUCCESS) return true;
+        if (ret == ERROR_FILE_NOT_FOUND) {
+            XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}",
+                      ConvertToUTF8(path), ConvertToUTF8(value_name));
+            return true;
+        }
+
+        XLOG::l(XLOG_FLINE + "Failed to delete {}\\{} error [{}]",
+                ConvertToUTF8(path), ConvertToUTF8(value_name), ret);
+        return false;
+    }
+    //  here
+    XLOG::t.t(XLOG_FLINE + "No need to delete {}\\{}", ConvertToUTF8(path),
+              ConvertToUTF8(value_name));
+    return true;
+}
+}  // namespace
+
+TEST(Wtools, Registry) {
+    constexpr std::wstring_view path = LR"(SOFTWARE\checkmk_tst\unit_test)";
+    constexpr std::wstring_view name = L"cmk_test";
+
+    // clean
+    DeleteRegistryValue(path, name);
+    EXPECT_TRUE(DeleteRegistryValue(path, name));
+    ON_OUT_OF_SCOPE(DeleteRegistryValue(path, name));
+
+    {
+        constexpr uint32_t value = 2;
+        constexpr uint32_t weird_value = 546'444;
+        constexpr std::wstring_view str_value = L"aaa";
+        ASSERT_TRUE(SetRegistryValue(path, name, value));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value);
+        EXPECT_EQ(GetRegistryValue(path, name, str_value), str_value);
+        ASSERT_TRUE(SetRegistryValue(path, name, value + 1));
+        EXPECT_EQ(GetRegistryValue(path, name, weird_value), value + 1);
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+
+    {
+        constexpr std::wstring_view expand_value{
+            LR"(%ProgramFiles(x86)%\checkmk\service\)"};
+        ASSERT_TRUE(SetRegistryValueExpand(path, name, expand_value));
+        std::filesystem::path in_registry(
+            GetRegistryValue(path, name, expand_value));
+        std::filesystem::path expected(
+            LR"(c:\Program Files (x86)\\checkmk\service\)");
+        EXPECT_TRUE(std::filesystem::equivalent(in_registry.lexically_normal(),
+                                                expected.lexically_normal()));
+        EXPECT_TRUE(DeleteRegistryValue(path, name));
+    }
+}
+
+TEST(Wtools, ExpandString) {
+    using namespace std::string_literals;
+    EXPECT_EQ(L"*Windows_NTWindows_NT*"s,
+              ExpandStringWithEnvironment(L"*%OS%%OS%*"));
+    EXPECT_EQ(L"%_1_2_a%"s, ExpandStringWithEnvironment(L"%_1_2_a%"));
+}
+
+namespace {
+// waiter for the result. In fact polling with grane 20ms
+template <typename T, typename B>
+bool WaitForSuccess(std::chrono::duration<T, B> allowed_wait,
+                    std::function<bool()> func) {
+    using namespace std::chrono;
+
+    constexpr auto grane = 20ms;
+    auto wait_time = allowed_wait;
+
+    while (wait_time >= 0ms) {
+        auto success = func();
+        if (success) return true;
+
+        cma::tools::sleep(grane);
+        wait_time -= grane;
+    }
+
+    return false;
+}
+
+}  // namespace
+
+TEST(Wtools, ExecuteCommandsAsync) {
+    namespace fs = std::filesystem;
+    using namespace std::chrono_literals;
+
+    auto output_file = fmt::format(L"{}cmk_test_{}.output",
+                                   fs::temp_directory_path().wstring(),
+                                   ::GetCurrentProcessId());
+    std::vector<std::wstring> commands{L"echo x>" + output_file,
+                                       L"@echo powershell Start-Sleep 1"};
+    auto script_file = ExecuteCommandsAsync(L"test", commands);
+    std::error_code ec;
+    ON_OUT_OF_SCOPE({
+        if (!script_file.empty()) {
+            fs::remove(script_file, ec);
+        }
+        fs::remove(output_file, ec);
+    });
+    EXPECT_FALSE(script_file.empty());
+    EXPECT_TRUE(fs::exists(script_file));
+    auto table = tst::ReadFileAsTable(script_file.u8string());
+    EXPECT_EQ(table[0], ConvertToUTF8(commands[0]));
+    EXPECT_EQ(table[1], ConvertToUTF8(commands[1]));
+
+    WaitForSuccess(5000ms, [output_file]() {
+        std::error_code ec;
+        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+    });
+    auto output = tst::ReadFileAsTable(ConvertToUTF8(output_file));
+    EXPECT_EQ(output[0], "x");
 }
 
 }  // namespace wtools

@@ -86,6 +86,31 @@ class HostMode(WatoMode):
                     "nodes_%d" % nr,
                     _("The node <b>%s</b> does not exist "
                       " (must be a host that is configured with WATO)") % cluster_node)
+
+            attributes = watolib.collect_attributes("cluster", new=False)
+            cluster_agent_ds_type = attributes.get("tag_agent", "cmk-agent")
+            cluster_snmp_ds_type = attributes.get("tag_snmp_ds", "no-snmp")
+
+            node_agent_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "agent")
+            node_snmp_ds_type = watolib.hosts_and_folders.Host.host(cluster_node).tag_groups().get(
+                "snmp_ds")
+
+            if node_agent_ds_type != cluster_agent_ds_type or \
+                    node_snmp_ds_type != cluster_snmp_ds_type:
+                raise MKUserError(
+                    "nodes_%d" % nr,
+                    _("Cluster and nodes must have the same "
+                      "datasource! The node <b>%s</b> has datasources "
+                      "<b>%s</b> and <b>%s</b> while the cluster has datasources "
+                      "<b>%s</b> and <b>%s</b>.") % (
+                          cluster_node,
+                          node_agent_ds_type,
+                          node_snmp_ds_type,
+                          cluster_agent_ds_type,
+                          cluster_snmp_ds_type,
+                      ))
+
         return cluster_nodes
 
     # TODO: Extract cluster specific parts from this method
@@ -248,12 +273,14 @@ class ModeEditHost(HostMode):
                 _("Diagnostic"),
                 watolib.folder_preserving_link([("mode", "diag_host"),
                                                 ("host", self._host.name())]), "diagnose")
-        html.context_button(_("Update DNS Cache"), html.makeactionuri([("_update_dns_cache", "1")]),
-                            "update")
+
+        if self._should_use_dns_cache():
+            html.context_button(_("Update DNS Cache"),
+                                html.makeactionuri([("_update_dns_cache", "1")]), "update")
 
     def action(self):
         if html.request.var("_update_dns_cache"):
-            if html.check_transaction():
+            if html.check_transaction() and self._should_use_dns_cache():
                 config.user.need_permission("wato.update_dns_cache")
                 num_updated, failed_hosts = watolib.check_mk_automation(
                     self._host.site_id(), "update-dns-cache", [])
@@ -279,7 +306,7 @@ class ModeEditHost(HostMode):
         if html.request.var("services"):
             return "inventory"
         elif html.request.var("diag_host"):
-            html.request.set_var("_try", "1")
+            html.request.set_var("_start_on_load", "1")
             return "diag_host"
         return "folder"
 
@@ -288,6 +315,11 @@ class ModeEditHost(HostMode):
             self._host.name(),
             title=_("Hostname"),
         )
+
+    def _should_use_dns_cache(self):
+        site = self._host.effective_attributes().get("site")
+        return watolib.analyze_configuration.ACTest()._get_effective_global_setting(
+            "use_dns_cache", site)
 
 
 class CreateHostMode(HostMode):
@@ -359,7 +391,7 @@ class CreateHostMode(HostMode):
             raise HTTPRedirect(inventory_url)
 
         if html.request.var("diag_host"):
-            html.request.set_var("_try", "1")
+            html.request.set_var("_start_on_load", "1")
             return "diag_host", create_msg
 
         return "folder", create_msg

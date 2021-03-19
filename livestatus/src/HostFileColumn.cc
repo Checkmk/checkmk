@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <cerrno>
 #include <cstring>
-#include <ostream>
 #include <utility>
 #include "Logger.h"
 #include "Row.h"

@@ -579,6 +579,15 @@ class NotificationParameterJIRA_ISSUES(NotificationParameter):
                      help=_("The numerical JIRA custom field ID for service problems."),
                      size=10,
                  )),
+                ("site_customid",
+                 TextAscii(
+                     title=_("Site custom field ID"),
+                     help=_("The numerical ID of the JIRA custom field for sites. "
+                            "Please use this option if you have multiple sites in a "
+                            "distributed setup which send their notifications "
+                            "to the same JIRA instance."),
+                     size=10,
+                 )),
                 ("monitoring",
                  HTTPUrl(
                      title=_("Monitoring URL"),
@@ -649,16 +658,19 @@ class NotificationParameterServiceNow(NotificationParameter):
             elements=[
                 ("url",
                  HTTPUrl(
-                     title=_("Servicenow URL"),
-                     help=_("Configure your servicenow URL here (eg. https://myservicenow.com)."),
+                     title=_("ServiceNow URL"),
+                     help=_("Configure your ServiceNow URL here (eg. https://myservicenow.com)."),
                      allow_empty=False,
                  )),
                 ("proxy_url", HTTPProxyReference()),
-                ("username", TextAscii(
-                    title=_("Username"),
-                    size=40,
-                    allow_empty=False,
-                )),
+                ("username",
+                 TextAscii(
+                     title=_("Username"),
+                     help=_("The user, used for login, has to have at least the "
+                            "role 'itil' in ServiceNow."),
+                     size=40,
+                     allow_empty=False,
+                 )),
                 ("password", PasswordFromStore(
                     title=_("Password of the user"),
                     allow_empty=False,
@@ -667,7 +679,13 @@ class NotificationParameterServiceNow(NotificationParameter):
                  TextAscii(
                      title=_("Caller ID"),
                      help=_("Caller is the user on behalf of whom the incident is being reported "
-                            "within servicenow. Please enter the name of the caller here."),
+                            "within ServiceNow. Please enter the name of the caller here. "
+                            "It is recommended to use the same user as used for login. "
+                            "Otherwise, your ACL rules in ServiceNow must be "
+                            "adjusted, so that the user who is used for login "
+                            "can create/edit/resolve incidents on behalf of the "
+                            "caller. Please have a look at ServiceNow "
+                            "documentation for details."),
                  )),
                 ("host_short_desc",
                  TextAscii(
@@ -805,7 +823,7 @@ $LONGSERVICEOUTPUT$
                      ],
                  )),
                 ("timeout",
-                 TextAscii(title=_("Set optional timeout for connections to servicenow"),
+                 TextAscii(title=_("Set optional timeout for connections to ServiceNow"),
                            help=_("Here you can configure timeout settings in seconds."),
                            default_value=10,
                            size=3)),
@@ -839,11 +857,12 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      title=_("Domain (only used for european accounts)"),
                      help=_("If you have an european account, please set the "
                             "domain of your opsgenie. Specify an absolute URL like "
-                            "https://my.app.eu.opsgenie.com "),
+                            "https://api.eu.opsgenie.com."),
                      regex="^https://.*",
                      regex_error=_("The URL must begin with <tt>https</tt>."),
                      size=64,
                  )),
+                ("proxy_url", HTTPProxyReference()),
                 ("owner",
                  TextUnicode(
                      title=_("Owner"),

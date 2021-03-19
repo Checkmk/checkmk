@@ -40,7 +40,7 @@ checks = {
             (0, '6 MB physical', [('rss', 6140)]),
             (0, '0.0% CPU', [('pcpu', 0.0)]),
             (0, '105 process handles', [('process_handles', 105)]),
-            (0, 'running for 275 m', []),
+            (0, 'running for: 275 m', []),
         ]),
     ],
 }

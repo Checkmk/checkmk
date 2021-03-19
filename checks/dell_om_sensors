@@ -53,6 +53,10 @@ def check_dell_om_sensors(item, params, info):
 
             dev_warn, dev_crit, dev_warn_lower, dev_crit_lower = \
                [float(v)/10 if v else None for v in [ dev_warn, dev_crit, dev_warn_lower, dev_crit_lower ]]
+            if not dev_warn_lower:
+                dev_warn_lower = dev_crit_lower
+            if not dev_warn:
+                dev_warn = dev_crit
 
             return check_temperature(temp,
                                      params,

@@ -1,0 +1,14 @@
+Title: Automatic page refresh on graph collections and combined graphs
+Knowledge: undoc
+Level: 1
+Component: metrics
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p23
+Date: 1615548764
+
+For users that constantly want to review a group of performance graphs on
+the graph collections and combined graphs can now leave their page on
+display and they will refresh automatically.

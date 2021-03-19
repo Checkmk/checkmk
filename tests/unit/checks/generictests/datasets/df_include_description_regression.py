@@ -25,8 +25,7 @@ mock_host_conf_merged = {
 # TODO: this should only discover C and the Group
 discovery = {'': [(r'C:\\ C://', {}),  # TODO: make this even more beautiful
                   ('SQL_Database_[GROUPME] D://', {}),
-                  ('Scratch_Volume_[GROUPME] E://', {}),
-                  ('myGroup', {'patterns': ['GROUPME']})]}
+                  ('Scratch_Volume_[GROUPME] E://', {})]}
 
 
 checks = {'': [(r'C:\\ C://',
@@ -44,20 +43,7 @@ checks = {'': [(r'C:\\ C://',
                   [('C://', 16502.328125, 48869.596875, 54978.296484375, 0, 61086.99609375),
                    ('fs_size', 61086.99609375, None, None, None, None),
                    ('growth', 0.0, None, None, None, None),
-                   ('trend', 0, None, None, 0, 2545.29150390625)])]),
-
-               ('myGroup',
-                {'inodes_levels': (10.0, 5.0),
-                 'levels': (80.0, 90.0),
-                 'levels_low': (50.0, 60.0),
-                 'magic_normsize': 20,
-                 'patterns': ['GROUPME'],
-                 'show_inodes': 'onlow',
-                 'show_levels': 'onmagic',
-                 'show_reserved': False,
-                 'trend_perfdata': True,
-                 'trend_range': 24},
-                [(3, 'No filesystem matching the patterns', [])])]}
+                   ('trend', 0, None, None, 0, 2545.29150390625)])])]}
 
 
 mock_host_conf = {'': [[('myGroup', 'GROUPME')]]}

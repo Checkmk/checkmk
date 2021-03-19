@@ -661,6 +661,10 @@ table.data.single {
       white-space: nowrap;
     }
 
+    td:not(.left) {
+      width: auto;
+    }
+
     td.invtree table {
       margin: 8px 0 12px;
       border: 1px solid $theme-color-table-border;

@@ -33,6 +33,9 @@ from cmk.utils.i18n import _
 
 g_compiled_regexes = {}  # type: Dict[str, Pattern]
 
+REGEX_HOST_NAME_CHARS = r'-0-9a-zA-Z_.'
+REGEX_HOST_NAME = r'^[%s]+$' % REGEX_HOST_NAME_CHARS
+
 
 def regex(pattern, flags=0):
     """Compile regex or look it up in already compiled regexes.

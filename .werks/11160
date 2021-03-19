@@ -1,0 +1,16 @@
+Title: CSV/JSON/Python exports of views: improve formatting of labels
+Knowledge: doc
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1590573920
+
+When exporting a view using %output_format=csv|json|python labels would not
+get exported properly (concatenated key/value pairs like 
+"key1:value1key2:value2").
+This fix turns the export for labels into raw data structures like
+{'key1':'value1', 'key2':'value2'}.

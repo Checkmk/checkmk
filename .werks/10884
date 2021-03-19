@@ -1,0 +1,10 @@
+Title: check_http: Add better validation for empty service names when using "^" prefix
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1586356006
+Class: fix
+
+

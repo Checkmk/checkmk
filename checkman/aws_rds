@@ -8,8 +8,12 @@ description:
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
- Upper default levels are set to 80, 90 percent. These levels
- are configurable.
+ Upper default levels are set to 80, 90 percent. These levels are
+ configurable via the rule "CPU utilization of Devices with Modules".
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
 
 inventory:
  One service per database will be created.

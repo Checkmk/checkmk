@@ -1,0 +1,12 @@
+Title: f5_bigip_mem: Fix crash on discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1587460379
+Class: fix
+
+The check gets discoverd but no longer crashes.
+The discovery of the memory check did crash when the memory information where missing.
+

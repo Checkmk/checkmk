@@ -1,0 +1,16 @@
+Title: Fix rendering of ruleset page if user error is raised
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p18
+Date: 1599733425
+
+If validation on values failed on rule creation, the ruleset page was not
+rendered completely. Only a user error was visible.
+
+From now on, you will see a user error and the complete ruleset page in such
+cases.

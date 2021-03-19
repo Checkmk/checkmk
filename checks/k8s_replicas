@@ -49,7 +49,9 @@ def parse_k8s_unavailability(value, total):
 
 
 def inventory_k8s_replicas(parsed):
-    if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
+    # the deployment must either be paused or return numbers for running pods
+    if (parsed['ready_replicas'] is not None and
+            parsed['replicas'] is not None) or parsed['paused']:
         return [(None, {})]
 
 

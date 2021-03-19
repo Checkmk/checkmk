@@ -1,0 +1,8 @@
+Title: systemd_units.services could run into unhandled TypeError
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p14
+Date: 1592210377
+Class: fix

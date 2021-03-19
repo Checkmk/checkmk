@@ -453,6 +453,7 @@ wato_hide_hosttags = False
 wato_upload_insecure_snapshots = False
 wato_hide_varnames = True
 wato_hide_help_in_lists = True
+wato_activate_changes_concurrency = "auto"
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15

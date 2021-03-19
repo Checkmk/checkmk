@@ -1,0 +1,11 @@
+Title: Folder changes from normal monitoring users were not always applied on the first save
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1602168912
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p18
+
+Users without the role Read access to all hosts and folders had to save folders twice to get their changes applied.

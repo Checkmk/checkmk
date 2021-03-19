@@ -1,0 +1,10 @@
+Title: Make hr_mem work with corrupt memory units (e.g. '4096 Bytes') 
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1588255821
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 1.6.0p12
+

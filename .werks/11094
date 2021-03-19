@@ -1,0 +1,37 @@
+Title: AWS RDS
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1589199945
+
+This werk fixes several issues with the AWS RDS monitoring:
+
+- User-defined instance names crashed the AWS special agent
+  if the instance did not exist.
+
+- The restriction of the monitored instances using tags did
+  not work.
+
+- Monitoring two or more regions which contained instances
+  with the same names resulted in duplicate service names.
+  As a result, only the services corresponding to one of the
+  monitored regions were displayed. This is fixed by changing
+  the corresponding service items to contain both the instance
+  name and the region, which makes them unique. For this fix to
+  take effect, users have to re-discover the affected services.
+  Note that this renaming results in a loss of historically
+  recorded metrics. Furthermore, any user-defined rules for
+  these services which use service items might have to be
+  adjusted.
+
+The following services are affected by the change described
+in the last point above: aws_rds_summary.db_status, aws_rds,
+aws_rds.cpu_credits, aws_rds.network_io, aws_rds.bin_log_usage,
+aws_rds.transaction_logs_usage, aws_rds.replication_slot_usage,
+aws_rds.disk_io, aws_rds.connections, aws_rds.agent_jobs, 
+aws_rds.replica_lag.

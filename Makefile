@@ -43,6 +43,7 @@ export CPPCHECK    := cppcheck
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
 PIPENV             := PIPENV_NO_INHERIT=true PIPENV_VENV_IN_PROJECT=true pipenv
+ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -328,9 +329,10 @@ optimize-images:
 # tests and building versions. Once we have the then build system this should not
 # be necessary anymore.
 node_modules: package.json package-lock.json
-	@if curl --silent --output /dev/null --head 'http://nexus:8081/#browse/browse:npm-proxy'; then \
-	    REGISTRY=--registry=http://nexus:8081/repository/npm-proxy/ ; \
-	    echo "Installing from local registry" ; \
+	@if curl --silent --output /dev/null --head '${ARTIFACT_STORAGE}/#browse/browse:npm-proxy'; then \
+	    REGISTRY=--registry=${ARTIFACT_STORAGE}/repository/npm-proxy/ ; \
+            export SASS_BINARY_SITE='${ARTIFACT_STORAGE}/repository/archives/'; \
+	    echo "Installing from local registry ${ARTIFACT_STORAGE}" ; \
 	else \
 	    REGISTRY= ; \
 	    echo "Installing from public registry" ; \
@@ -387,17 +389,22 @@ setup:
 	    pngcrush \
 	    valgrind \
 	    direnv \
-	    python-pip \
+	    python2 \
+	    python2-dev \
 	    chrpath \
 	    enchant \
 	    ksh \
 	    p7zip-full
+	curl -O https://bootstrap.pypa.io/pip/2.7/get-pip.py
+	sudo python2 get-pip.py
+	rm get-pip.py
+	python2 -m pip install --upgrade pip
 	sudo -H pip install -U pipenv
-	$(MAKE) -C web setup
+	$(MAKE) -C web setup #  broken in 1.6
 	$(MAKE) -C omd setup
 	$(MAKE) -C omd openhardwaremonitor-setup
 	$(MAKE) -C docker setup
-	$(MAKE) -C locale setup
+	$(MAKE) -C locale setup  #  broken in 1.6
 
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n

@@ -22,13 +22,13 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <type_traits>
 #include "InputBuffer.h"
 #include <unistd.h>
 #include <cctype>
 #include <cerrno>
 #include <cstring>
 #include <ostream>
-#include <type_traits>
 #include "Logger.h"
 #include "Poller.h"
 

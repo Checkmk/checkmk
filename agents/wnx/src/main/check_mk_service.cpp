@@ -355,15 +355,17 @@ int RunService(std::wstring_view app_name) {
         // 1. Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
         // scripting is possible but complicated
-        auto ret = CheckForUpdateFile(
+        auto [command, install] = CheckForUpdateFile(
             kDefaultMsiFileName,     // file we are looking for
             GetUpdateDir(),          // dir where file we're searching
-            UpdateType::exec_quiet,  // quiet for production
             UpdateProcess::execute,  // start update when file found
             GetUserInstallDir());    // dir where file to backup
 
-        if (ret)
-            XLOG::l.i("Install process was initiated - waiting for restart");
+        if (install) {
+            XLOG::l.i(
+                "Install process with command '{}' was initiated - waiting for restart",
+                wtools::ConvertToUTF8(command));
+        }
 
         return true;
     });

@@ -79,7 +79,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_databases",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database identifier"),),
+        item_spec=lambda: TextAscii(title=_("Database identifier"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_databases,
         title=lambda: _("MSSQL Databases properties"),

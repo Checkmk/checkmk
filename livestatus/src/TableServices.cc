@@ -25,7 +25,6 @@
 #include "TableServices.h"
 #include <memory>
 #include <optional>
-#include <ostream>
 #include <utility>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"

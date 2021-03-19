@@ -1,0 +1,14 @@
+Title: victorops: Fix invalid message_type (OK to RECOVERY)
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1589218249
+Class: fix
+
+VictorOps seems to have tightened their webhook handling: OK is no longer
+accepted as a message_type, according to their webhook docs it has to be
+RECOVERY instead.
+
+As a result, VictorOps incidents no longer were resolved by checkmk.

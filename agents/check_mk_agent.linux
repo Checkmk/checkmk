@@ -407,7 +407,7 @@ run_real_time_checks() {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.6.0p11"
+echo "Version: 1.6.0p23"
 echo "AgentOS: linux"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -743,12 +743,13 @@ fi
 if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
     echo '<<<drbd>>>'
     cat /proc/drbd
+    cat /sys/kernel/debug/drbd/resources/*/connections/*/0/proc_drbd 2>/dev/null
 fi
 
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1; then
+if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
     echo '<<<heartbeat_crm>>>'
     TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi
@@ -851,9 +852,6 @@ fi
 
 # Check status of OMD sites and Check_MK Notification spooler
 if inpath omd; then
-    echo '<<<labels:sep(0)>>>'
-    echo '{"cmk/check_mk_server": "yes"}'
-
     run_cached -s omd_status 60 "omd status --bare --auto || true"
     echo '<<<mknotifyd:sep(0)>>>'
     date +%s

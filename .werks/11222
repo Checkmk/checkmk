@@ -1,0 +1,17 @@
+Title: apc_rackpdu_power: Discover correct bank numbers
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1593703914
+
+This werk corrects the bank numbers in the service descriptions of the check
+<tt>apc_rackpdu_power<\tt> (services "PDU Bank ..."). These numbers were
+incorrect.
+
+This werk is incompatible. Users have to re-discover the services of affected
+hosts.

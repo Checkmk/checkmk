@@ -456,22 +456,38 @@ class HostConfig(object):
 
     def get_config_for_host(self, host_name, deflt):
         with self._lock:
+            if not self._update_cache_after_core_restart():
+                return deflt
+
             return self._hosts_by_name.get(host_name, deflt)
 
     def get_canonical_name(self, event_host_name):
         # type: (str) -> str
         with self._lock:
-            try:
-                timestamp = self._get_config_timestamp()
-                if timestamp > self._cache_timestamp:
-                    self._update_cache()
-                    self._cache_timestamp = timestamp
-            except Exception:
-                self._logger.exception("Failed to get host info from core. Try again later.")
+            if not self._update_cache_after_core_restart():
                 return ""
+
             return self._hosts_by_designation.get(event_host_name.lower(), "")
 
+    def _update_cache_after_core_restart(self):
+        # type: () -> bool
+        """Once the core reports a restart update the cache
+
+        Returns:
+            False in case the update failed, otherwise True.
+        """
+        try:
+            timestamp = self._get_config_timestamp()
+            if timestamp > self._cache_timestamp:
+                self._update_cache()
+                self._cache_timestamp = timestamp
+        except Exception:
+            self._logger.exception("Failed to get host info from core. Try again later.")
+            return False
+        return True
+
     def _update_cache(self):
+        # type: () -> None
         self._logger.debug("Fetching host config from core")
         self._hosts_by_name.clear()
         self._hosts_by_designation.clear()
@@ -1755,19 +1771,17 @@ class EventServer(ECServerThread):
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_existing_events in self._event_status.num_existing_events_by_host.iteritems(
-        ):
-            if num_existing_events >= self._config["event_limit"]["by_host"]["limit"]:
-                hosts.append(hostname)
+        for (host, core_host), count in self._event_status.num_existing_events_by_host.iteritems():
+            if count >= self._get_host_event_limit(core_host)[0]:
+                hosts.append(host)
         return hosts
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_existing_events in self._event_status.num_existing_events_by_rule.iteritems(
-        ):
+        for rule_id, num_events in self._event_status.num_existing_events_by_rule.iteritems():
             if rule_id is None:
                 continue  # Ignore rule unrelated overflow events. They have no rule id associated.
-            if num_existing_events >= self._config["event_limit"]["by_rule"]["limit"]:
+            if num_events >= self._get_rule_event_limit(rule_id)[0]:
                 rule_ids.append(rule_id)
         return rule_ids
 
@@ -1806,6 +1820,7 @@ class EventServer(ECServerThread):
         assert ty in ["overall", "by_rule", "by_host"]
 
         num_already_open = self._event_status.get_num_existing_events_by(ty, event)
+
         limit, action = self._get_event_limit(ty, event)
         self._logger.verbose("  Type: %s, already open events: %d, Limit: %d" %
                              (ty, num_already_open, limit))
@@ -1853,24 +1868,37 @@ class EventServer(ECServerThread):
 
     # protected by self._event_status.lock
     def _get_event_limit(self, ty, event):
-        # Prefer the rule individual limit for by_rule limit (in case there is some)
+        if ty == "overall":
+            return self._get_overall_event_limit()
         if ty == "by_rule":
-            rule_limit = self._rule_by_id[event["rule_id"]].get("event_limit")
-            if rule_limit:
-                return rule_limit["limit"], rule_limit["action"]
-
-        # Prefer the host individual limit for by_host limit (in case there is some)
+            return self._get_rule_event_limit(event["rule_id"])
         if ty == "by_host":
-            host_config = self.host_config.get_config_for_host(event["core_host"], {})
-            host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
-            if host_limit:
-                limit, action = host_limit.split(":", 1)
-                return int(limit), action
+            return self._get_host_event_limit(event["core_host"])
+        raise NotImplementedError()
 
-        limit = self._config["event_limit"][ty]["limit"]
-        action = self._config["event_limit"][ty]["action"]
+    def _get_overall_event_limit(self):
+        return (self._config["event_limit"]["overall"]["limit"],
+                self._config["event_limit"]["overall"]["action"])
 
-        return limit, action
+    def _get_rule_event_limit(self, rule_id):
+        """Prefer the rule individual limit for by_rule limit (in case there is some)"""
+        rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
+        if rule_limit:
+            return rule_limit["limit"], rule_limit["action"]
+
+        return (self._config["event_limit"]["by_rule"]["limit"],
+                self._config["event_limit"]["by_rule"]["action"])
+
+    def _get_host_event_limit(self, core_host):
+        """Prefer the host individual limit for by_host limit (in case there is some)"""
+        host_config = self.host_config.get_config_for_host(core_host, {})
+        host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+        if host_limit:
+            limit, action = host_limit.split(":", 1)
+            return int(limit), action
+
+        return (self._config["event_limit"]["by_host"]["limit"],
+                self._config["event_limit"]["by_host"]["action"])
 
     def _create_overflow_event(self, ty, event, limit):
         now = time.time()
@@ -2529,6 +2557,13 @@ class Query(object):
         return repr("\n".join(self._raw_query))
 
 
+def filter_operator_in(a, b):
+    # implemented as a named function, as it is used in a second filter
+    # StatusTableEvents._enumerate
+    # not implemented as regex/IGNORECASE due to performance
+    return a.lower() in (e.lower() for e in b)
+
+
 class QueryGET(Query):
     _filter_operators = {
         "=": (lambda a, b: a == b),
@@ -2539,7 +2574,7 @@ class QueryGET(Query):
         "~": (lambda a, b: cmk.utils.regex.regex(b).search(a)),
         "=~": (lambda a, b: a.lower() == b.lower()),
         "~~": (lambda a, b: cmk.utils.regex.regex(b.lower()).search(a.lower())),
-        "in": (lambda a, b: a in b),
+        "in": filter_operator_in,
     }
 
     def _from_raw_query(self, status_server):
@@ -2784,7 +2819,7 @@ class StatusTableEvents(StatusTable):
         for event in self._event_status.get_events():
             # Optimize filters that are set by the check_mkevents active check. Since users
             # may have a lot of those checks running, it is a good idea to optimize this.
-            if query.only_host and event["host"] not in query.only_host:
+            if query.only_host and not filter_operator_in(event["host"], query.only_host):
                 continue
 
             row = []
@@ -3441,7 +3476,6 @@ class EventStatus(object):
                 self._events = status["events"]
                 self._rule_stats = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
-                self._initialize_event_limit_status()
                 self._logger.info("Loaded event state from %s." % path)
             except Exception as e:
                 self._logger.exception("Error loading event state from %s: %s" % (path, e))
@@ -3455,6 +3489,9 @@ class EventStatus(object):
                 event_server.add_core_host_to_event(event)
                 event["host_in_downtime"] = False
 
+        # core_host is needed to initialize the status
+        self._initialize_event_limit_status()
+
     # Called on Event Console initialization from status file to initialize
     # the current event limit state -> Sets internal counters which are
     # updated during runtime.
@@ -3467,10 +3504,11 @@ class EventStatus(object):
             self._count_event_add(event)
 
     def _count_event_add(self, event):
-        if event["host"] not in self.num_existing_events_by_host:
-            self.num_existing_events_by_host[event["host"]] = 1
+        host_key = (event["host"], event["core_host"])
+        if host_key not in self.num_existing_events_by_host:
+            self.num_existing_events_by_host[host_key] = 1
         else:
-            self.num_existing_events_by_host[event["host"]] += 1
+            self.num_existing_events_by_host[host_key] += 1
 
         if event["rule_id"] not in self.num_existing_events_by_rule:
             self.num_existing_events_by_rule[event["rule_id"]] = 1
@@ -3478,8 +3516,10 @@ class EventStatus(object):
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
     def _count_event_remove(self, event):
+        host_key = (event["host"], event["core_host"])
+
         self.num_existing_events -= 1
-        self.num_existing_events_by_host[event["host"]] -= 1
+        self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
     def new_event(self, event):
@@ -3543,7 +3583,7 @@ class EventStatus(object):
         elif ty == "by_rule":
             return self.num_existing_events_by_rule.get(event["rule_id"], 0)
         elif ty == "by_host":
-            return self.num_existing_events_by_host.get(event["host"], 0)
+            return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
         else:
             raise NotImplementedError()
 

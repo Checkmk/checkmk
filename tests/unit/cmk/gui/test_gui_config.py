@@ -15,6 +15,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     permission_registry,
 )
+from cmk.gui.plugins.wato import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -882,3 +883,71 @@ def test_default_aux_tags():
         'snmp',
         'tcp',
     ])
+
+
+MONITORING_USER_CACHED_PROFILE = {
+    'alias': u'Test user',
+    'authorized_sites': ['heute', 'heute_slave_1'],
+    'contactgroups': ['all'],
+    'disable_notifications': {},
+    'email': u'test_user@tribe29.com',
+    'fallback_contact': False,
+    'force_authuser': False,
+    'locked': False,
+    'language': 'de',
+    'pager': '',
+    'roles': ['user'],
+    'start_url': None,
+    'ui_theme': 'modern-dark',
+}
+
+MONITORING_USER_SITECONFIG = {
+    'heute_slave_1': {
+        'disabled': False
+    },
+    'heute_slave_2': {
+        'disabled': True
+    }
+}
+
+MONITORING_USER_BUTTONCOUNTS = {
+    'cb_host': 1.9024999999999999,
+    'cb_hoststatus': 1.8073749999999997,
+}
+
+MONITORING_USER_FAVORITES = ['heute;CPU load']
+
+
+@pytest.fixture
+def monitoring_user(tmp_path, mocker):
+    """Returns a "Normal monitoring user" object."""
+    config_dir = tmp_path / 'config_dir'
+    user_dir = config_dir / 'test'
+    user_dir.mkdir(parents=True)
+    user_dir.joinpath('cached_profile.mk').write_text(unicode(MONITORING_USER_CACHED_PROFILE))
+    # SITE STATUS snapin settings:
+    user_dir.joinpath('siteconfig.mk').write_text(unicode(MONITORING_USER_SITECONFIG))
+    # Ordering of the buttons:
+    user_dir.joinpath('buttoncounts.mk').write_text(unicode(MONITORING_USER_BUTTONCOUNTS))
+    # Favorites set in the commands menu:
+    user_dir.joinpath('favorites.mk').write_text(unicode(MONITORING_USER_FAVORITES))
+
+    mocker.patch.object(config, 'config_dir', str(config_dir))
+    mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])
+
+    assert config.builtin_role_ids == ['user', 'admin', 'guest']
+    assert 'test' not in config.admin_users
+
+    return config.LoggedInUser('test')
+
+
+@pytest.mark.parametrize("varname", [
+    "custom_checks",
+    "datasource_programs",
+    "agent_config:mrpe",
+    "agent_config:agent_paths",
+    "agent_config:runas",
+    "agent_config:only_from",
+])
+def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
+    assert may_edit_ruleset(varname) is False

@@ -1,0 +1,14 @@
+Title: Wrong age reported for ESX snapshots
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594104291
+
+When calculating age of snapshots timezone was not taken into account. With
+this fix a time_reference will be stored together with the snapshot timestamps
+to be able to calculate a correct and accurate snapshot age

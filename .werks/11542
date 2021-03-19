@@ -1,0 +1,15 @@
+Title: WATO rules for active check check_sql forgets values for SQL queries
+Knowledge: doc
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p19
+Date: 1604920812
+
+Parameters for {check_sql} have been specified in an overly complicated and buggy way which allowed
+specification of single line and multi line SQL query statements as well as uploading content from
+local files.
+This fix replaces all this with a single multi-line text input field.

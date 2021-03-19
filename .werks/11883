@@ -1,0 +1,14 @@
+Title: local: Wrong state in 'best' aggregation of clustered services
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1609168942
+Class: fix
+
+For clustered 'local' checks' services the aggregation mode 'best'
+returned the wrong state in certain situations.
+Some service results have been discarded inadvertently, leading to
+an overall state that was worse that desired.
+

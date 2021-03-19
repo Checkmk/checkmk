@@ -28,38 +28,42 @@
 def check_sftp_arguments(params):
     args = []
     host, user, secret, settings = params
-    args = ["--host=%s" % host]
-    args += ["--user=%s" % user]
-    args += [passwordstore_get_cmdline("--secret=%s", secret[1])]
+
+    args.append("--host=%s" % host)
+    args.append("--user=%s" % user)
+    _choice, password = secret
+    args.append(passwordstore_get_cmdline("--secret=%s", password))
 
     if "port" in settings:
-        args += ["--port=%s" % settings['port']]
+        args.append("--port=%s" % settings["port"])
 
     if "timeout" in settings:
-        args += ["--timeout=%s" % settings['timeout']]
+        args.append("--timeout=%s" % settings["timeout"])
 
     if "timestamp" in settings:
-        args += ["--get-timestamp=%s" % settings['timestamp']]
+        args.append("--get-timestamp=%s" % settings["timestamp"])
 
     if "put" in settings:
-        args += ["--put-local=%s" % settings['put'][0]]
-        args += ["--put-remote=%s" % settings['put'][1]]
+        local, remote = settings["put"]
+        args.append("--put-local=%s" % local)
+        args.append("--put-remote=%s" % remote)
 
     if "get" in settings:
-        args += ["--get-remote=%s" % settings['get'][0]]
-        args += ["--get-local=%s" % settings['get'][1]]
+        remote, local = settings["get"]
+        args.append("--get-remote=%s" % remote)
+        args.append("--get-local=%s" % local)
 
-    return " ".join(args)
+    return args
 
 
 def check_sftp_desc(params):
     if "description" in params[3]:
-        return params[3]['description']
+        return params[3]["description"]
     return "SFTP %s" % params[0]
 
 
-active_check_info['sftp'] = {
-    'command_line': "$USER1$/check_sftp $ARG1$",
-    'argument_function': check_sftp_arguments,
-    'service_description': check_sftp_desc,
+active_check_info["sftp"] = {
+    "command_line": "$USER1$/check_sftp $ARG1$",
+    "argument_function": check_sftp_arguments,
+    "service_description": check_sftp_desc,
 }

@@ -1,0 +1,14 @@
+Title: [mgmt_]hp_proliant_temp: Fix unknown temperature sensor condition state
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1593084273
+
+Moreover if the temperature sensor reports the cpqHeTemperatureCondition status
+"other(1)" ("Temperature could not be determined") then the sensor will not be
+discovered.

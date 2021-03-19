@@ -1,0 +1,10 @@
+Title: fileinfo: Fixed checking during specific times of the day
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1599838824
+Class: fix
+
+This will fix a regression since werk #11200. The options for "Only check during the following times of the day" where not taken into account any more.

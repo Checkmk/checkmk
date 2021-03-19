@@ -82,7 +82,8 @@ def check_sap_hana_license(item, params, node_data):
     for data in node_data.itervalues():
         enforced = data['enforced']
         if enforced.bool:
-            yield _check_product_usage(data['size'], data['limit'], params)
+            for subresult in _check_product_usage(data['size'], data['limit'], params):
+                yield subresult
         elif enforced.bool is None:
             yield 3, "Status: unknown[%s]" % enforced.value
         else:
@@ -120,7 +121,7 @@ def _check_product_usage(size, limit, params):
         yield 1, 'Usage: cannot calculate'
     else:
         yield check_levels(usage_perc,
-                           "license_usage_perc",
+                           "license_percentage",
                            params.get('license_usage_perc', (None, None)),
                            human_readable_func=get_percent_human_readable,
                            infoname="Usage")

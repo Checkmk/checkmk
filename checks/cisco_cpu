@@ -24,23 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1") is depreceated by
-# oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
-
 cisco_cpu_default_levels = (80.0, 90.0)
 
 
 def inventory_cisco_cpu(info):
-    if info and \
-    (info[0][0].isdigit() or \
-    info[0][1].isdigit()):
+    if info and (info[0][0].isdigit() or info[0][1].isdigit()):
         return [(None, 'cisco_cpu_default_levels')]
 
 
 def check_cisco_cpu(item, params, info):
     # Value of info could be (None, None) or ("", "").
-    if not info[0][0].isdigit() and \
-       not info[0][1].isdigit():
+    if not info[0][0].isdigit() and not info[0][1].isdigit():
         return 3, 'No information about the CPU utilization available'
 
     if info[0][1]:
@@ -48,18 +42,12 @@ def check_cisco_cpu(item, params, info):
     else:
         util = float(info[0][0])
 
-    state = 0
-    infotext = "%.1f%% utilization in the last 5 minutes" % util
+    warn, crit = params.get("util", (None, None)) if isinstance(params, dict) else params
 
-    warn, crit = params
-    if util >= crit:
-        state = 2
-    elif util >= warn:
-        state = 1
-    if state > 0:
-        infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
-
-    return state, infotext, [("util", util, warn, crit, 0, 100)]
+    return check_levels(util,
+                        "util", (warn, crit),
+                        human_readable_func=get_percent_human_readable,
+                        infoname="Utilization in the last 5 minutes")
 
 
 check_info["cisco_cpu"] = {
@@ -68,7 +56,12 @@ check_info["cisco_cpu"] = {
     "service_description": "CPU utilization",
     "has_perfdata": True,
     "group": "cpu_utilization",
-    "snmp_info": (".1.3.6.1.4.1.9.9.109.1.1.1.1", [5, 8]),
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.109.1.1.1.1",
+        [
+            5,  # cpmCPUTotal5min; is depreceated by
+            8,  # cpmCPUTotal5minRev
+        ]),
     "snmp_scan_function": snmp_scan_cisco_cpu,
     "includes": ["cisco_cpu_scan_functions.include"],
 }

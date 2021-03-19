@@ -28,8 +28,11 @@ static long long convert(std::string Val) {
     }
 }
 
-std::vector<std::string> SpecialProcesses = {
-    {"System Idle Process"}, {"Memory"}, {"Registry"}, {"Memory Compression"}};
+std::vector<std::string> SpecialProcesses = {{"System Idle Process"},
+                                             {"Memory"},
+                                             {"Registry"},
+                                             {"Memory Compression"},
+                                             {"Secure System"}};
 
 TEST(PsTest, Time) {
     {
@@ -161,8 +164,12 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[9]) > 0);
+            if (!special) {
+                EXPECT_TRUE(convert(by_comma[8]) > 0)
+                    << "Process is " << by_comma[0] << " name" << process_name;
+                EXPECT_TRUE(convert(by_comma[9]) > 0)
+                    << "Process is " << by_comma[0] << " name" << process_name;
+            }
             EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }
@@ -197,8 +204,12 @@ TEST(PsTest, All) {  //
             EXPECT_TRUE(convert(by_comma[5]) >= 0);
             EXPECT_TRUE(convert(by_comma[6]) >= 0);
             EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[9]) > 0);
+            if (!special) {
+                EXPECT_TRUE(convert(by_comma[8]) > 0)
+                    << "Process is " << by_comma[0] << " name" << process_name;
+                EXPECT_TRUE(convert(by_comma[9]) > 0)
+                    << "Process is " << by_comma[0] << " name" << process_name;
+            }
             EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
         }
     }

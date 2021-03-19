@@ -1,0 +1,17 @@
+Title: Fix stored XSS triggered by received syslog messages
+Level: 2
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1606992315
+Class: security
+
+You are only affected by this issue in case you use the Event Console.
+
+An attacker could send messages to the Event Console, e.g. via syslog,
+containing arbitrary HTML code. This was executed in the browser context of any
+user viewing the event in the Checkmk user interface.
+
+The information is now properly escaped in a generic way to prevent these
+issues.

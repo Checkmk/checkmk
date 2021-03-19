@@ -6129,6 +6129,7 @@ def test_registered_display_hints(load_plugins):
     '.software.applications.oracle.instance:*.logins',
     '.software.applications.oracle.instance:*.logmode',
     '.software.applications.oracle.instance:*.openmode',
+    '.software.applications.oracle.instance:*.pname',
     '.software.applications.oracle.instance:*.sid',
     '.software.applications.oracle.instance:*.version',
     '.software.applications.oracle.recovery_area:',

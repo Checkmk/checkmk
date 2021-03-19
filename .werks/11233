@@ -1,0 +1,19 @@
+Title: Manual checks: Do not overwrite static parameters with check group parameters
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1594814478
+
+Example:
+If you have configured the manual check {{State and count of processes}} and
+there's another rule {{State and count of processes}} from {{Parameters for
+discovered services}} which also matches on the manual check then the manual
+parameters are overwritten with the parameters for discovered services.
+
+This may concern all manual checks and the related parameters for discovered
+services.

@@ -1,0 +1,11 @@
+Title: nfsiostat: Fix broken configuration
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p12
+Date: 1587654771
+Class: fix
+
+The ruleset intended for the nfsiostat plugin did not apply to the check.
+This has been fixed.

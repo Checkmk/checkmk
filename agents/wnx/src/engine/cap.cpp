@@ -169,8 +169,6 @@ bool StoreFile(const std::wstring &Name, const std::vector<char> &Data) {
             }
             XLOG::l("'{}' is failed to be decoded", fname);
         }
-        XLOG::l.crit("Cannot create file to '{}', status = {}",
-                     fpath.u8string(), ::GetLastError());
 
         ofs.write(Data.data(), Data.size());
         return true;
@@ -330,8 +328,7 @@ bool Process(const std::string CapFileName, ProcMode Mode,
             return false;
         }
         if (data.empty()) {
-            XLOG::l("CAP file {} looks as bad for file {}", CapFileName, name);
-            return false;
+            XLOG::l.w("CAP file {} has emty file file {}", CapFileName, name);
         }
         const auto full_path = ProcessPluginPath(name);
 

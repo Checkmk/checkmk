@@ -56,7 +56,7 @@ def inv_mssql_clusters(info):
         instance.update({
             "name": instance_id,
             "active_node": active_node,
-            "node_names": nodes,
+            "node_names": ", ".join(nodes),
         })
 
 

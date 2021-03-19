@@ -25,7 +25,6 @@
 #include "TableHosts.h"
 #include <memory>
 #include <optional>
-#include <ostream>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"

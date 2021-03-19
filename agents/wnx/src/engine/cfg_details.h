@@ -37,8 +37,9 @@ public:
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
     enum class CreateMode { with_path, direct };
+    enum class Protection { no, yes };
     void createDataFolderStructure(const std::wstring& AgentDataFolder,
-                                   CreateMode mode);
+                                   CreateMode mode, Protection protection);
 
     // for testing and reloading
     void cleanAll();
@@ -109,7 +110,8 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder, CreateMode mode);
+        std::wstring_view AgentDataFolder, CreateMode mode,
+        Protection protection);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //

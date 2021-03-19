@@ -366,8 +366,8 @@ def check_mem_linux(_no_item, params, info):
 
     # VMalloc,
     # newer kernel version report wrong data,
-    # i.d. both VmallocUsed and Chunk equal zero
-    if not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
+    # i.d. Vmalloc Chunk equal zero
+    if meminfo["VmallocChunk"]:
         r = check_mem_levels("Largest Free VMalloc Chunk",
                              meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
                              meminfo["VmallocTotal"],
@@ -650,9 +650,8 @@ def inventory_mem_vmalloc(info):
         return  # handled by new Linux memory check
 
     # newer kernel version report wrong data,
-    # i.d. both VmallocUsed and Chunk equal zero
-    if "VmallocTotal" in meminfo and \
-        not (meminfo["VmallocUsed"] == 0 and meminfo["VmallocChunk"] == 0):
+    # i.d. VMalloc Chunk equal zero
+    if "VmallocTotal" in meminfo and meminfo["VmallocChunk"]:
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
         vmalloc = meminfo["VmallocTotal"] / 1024.4

@@ -40,12 +40,15 @@ description:
 
  - DB cluster roles: 5
 
- From above API method we addtionally get the amount of used
+ From above API method we additionally get the amount of used
  instances/space per limit type.
 
  With both values we calculate the usage of each limit type
- in percent. Default levels are set to 80, 90 percent per type.
- For each limit type the limit and usage levels are configurable.
+ in percent.
+
+ Default levels are set to 80, 90 percent for each type.
+ For each limit type, the limit and usage levels are configurable
+ via the rule "AWS/RDS Limits".
 
  If limits are enabled account attributes of RDS resource are
  additionally fetched.

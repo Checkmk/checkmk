@@ -28,6 +28,7 @@ This module handles tree structures for HW/SW inventory system and
 structured monitoring data of Check_MK.
 """
 
+import io
 import gzip
 import re
 # Just for tests
@@ -125,7 +126,12 @@ class StructuredDataTree(object):
         filepath = "%s/%s" % (path, filename)
         output = self.get_raw_tree()
         store.save_data_to_file(filepath, output, pretty=pretty)
-        gzip.open(filepath + ".gz", "w").write(repr(output) + "\n")
+
+        buf = io.BytesIO()
+        with gzip.GzipFile(fileobj=buf, mode="wb") as f:
+            f.write((repr(output) + "\n").encode("utf-8"))
+        store.save_file(filepath + ".gz", buf.getvalue())
+
         # Inform Livestatus about the latest inventory update
         store.save_file("%s/.last" % path, "")
 

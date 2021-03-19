@@ -5,6 +5,7 @@ currentBuild.description = '\nBuilding the CMK docker container\n'
 properties([
   parameters([
     string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'DEMO', defaultValue: 'no', description: 'Demo: yes or no' ),
     string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
     string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' )
   ])
@@ -16,6 +17,7 @@ def CMK_VERS = get_cmk_version(BRANCH, VERSION)
 def PACKAGE_DIR = '/bauwelt/download'
 def GPG_KEY_DIR = '/bauwelt/etc/.gnupg'
 def RELEASE_KEY_DIR = '/bauwelt/git/release/release.key'
+def UPLOAD_DEST = 'deploy@archive.tribe29.com:/var/downloads/checkmk/'
 
 def ARCHIVE_DIR = ''
 def DAILY_DATA = ''
@@ -51,7 +53,7 @@ node {
                 withCredentials([usernamePassword(credentialsId: '11fb3d5f-e44e-4f33-a651-274227cc48ab', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
                     sh """
                         cd ${DAILY_DATA}/git/
-                        ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG}
+                        ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${DEMO}
                     """
                 }
                 withCredentials([usernamePassword(credentialsId: '9d7aca31-0043-4cd0-abeb-26a249d68261', passwordVariable: 'GPG_PASSPHRASE', usernameVariable: 'GPG_USERNAME')]) {
@@ -59,12 +61,11 @@ node {
                         cd ${PACKAGE_DIR}/${CMK_VERS}
                         rm -f HASHES
                         ${DAILY_DATA}/git/buildscripts/scripts/sign-packages.sh ${CMK_VERS}
-                        rsync -av \
+                        rsync -av --relative \
                             --exclude '*dbgsym*.deb' \
-                            -e "ssh -o StrictHostKeyChecking=no \
-                            -i ${RELEASE_KEY_DIR}" \
-                            ${PACKAGE_DIR}/${CMK_VERS}/check-mk-*-docker-*.tar.gz \
-                            bauwelt@mathias-kettner.de:${PACKAGE_DIR}/${CMK_VERS}/
+                            -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY_DIR} -p 52022" \
+                            ${PACKAGE_DIR}/./${CMK_VERS}/check-mk-*-docker-*.tar.gz \
+                            ${UPLOAD_DEST}
                     """
                 }
             }

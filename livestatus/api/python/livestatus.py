@@ -203,12 +203,12 @@ class Helpers(object):
 
     def query_column_unique(self, query):
         """Issues a query that returns exactly one column and returns the values
-           of all lines with duplicates removed"""
-        result = []
+           of all lines with duplicates removed. The "natural order" of the rows is
+           not preserved."""
+        result = set()
         for line in self.query(query, "ColumnHeaders: off\n"):
-            if line[0] not in result:
-                result.append(line[0])
-        return result
+            result.add(line[0])
+        return list(result)
 
     def query_table(self, query):
         """Issues a query that may return multiple lines and columns and returns
@@ -513,6 +513,14 @@ class SingleSiteConnection(Helpers):
             # In case of an IO error or the other side having
             # closed the socket do a reconnect and try again
             self.disconnect()
+
+            # In case of unix socket connections, do not start any reconnection attempts
+            # The other side (liveproxyd) might have had a good reason to disconnect
+            # Note: In most scenarios the liveproxyd still tries to send back a reasonable
+            # error response back to the client
+            if self.socket and self.socket.family == socket.AF_UNIX:
+                raise MKLivestatusSocketError("Unix socket was closed by peer")
+
             now = time.time()
             if query and (not timeout_at or timeout_at > now):
                 if timeout_at is None:

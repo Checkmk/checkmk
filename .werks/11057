@@ -1,0 +1,15 @@
+Title: AWS: restriction by tag caused exception
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1607006033
+
+If the option "Restrict monitoring services by one of these AWS tags"
+was used the AWS special agent raised an exception. This exception
+was displayed in the service "AWS Exceptions" on the monitored host.
+This is fixed.

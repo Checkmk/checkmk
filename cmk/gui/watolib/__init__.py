@@ -506,6 +506,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                     'description': u'Perform every two hours a service discovery'
                 },
             },],
+
+            # Include monitoring of checkmk's tmpfs
+            'inventory_df_rules': [{
+                'condition': {
+                    'host_labels': {
+                        u'cmk/check_mk_server': u'yes',
+                    },
+                },
+                'value': {
+                    'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
+                }
+            },],
         }
 
         rulesets = FolderRulesets(Folder.root_folder())

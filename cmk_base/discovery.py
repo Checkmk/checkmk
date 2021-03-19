@@ -125,12 +125,8 @@ def do_discovery(hostnames, check_plugin_names, only_new):
             # yet (do not have autochecks), we enable SNMP scan.
             do_snmp_scan = not use_caches or not autochecks.has_autochecks(hostname)
 
-            sources = _get_sources_for_discovery(hostname,
-                                                 ipaddress,
-                                                 check_plugin_names,
-                                                 do_snmp_scan,
-                                                 on_error,
-                                                 for_check_discovery=True)
+            sources = _get_sources_for_discovery(hostname, ipaddress, check_plugin_names,
+                                                 do_snmp_scan, on_error)
             multi_host_sections = _get_host_sections_for_discovery(sources, use_caches=use_caches)
 
             _do_discovery_for(hostname, ipaddress, sources, multi_host_sections, check_plugin_names,
@@ -239,14 +235,18 @@ def _perform_host_label_discovery(hostname, discovered_host_labels, check_plugin
 
     # Take over old items if -I is selected or if -II is selected with
     # --checks= and the check type is not one of the listed ones
+    label_texts = []
     for existing_label in existing_host_labels.itervalues():
         if only_new or (check_plugin_names and
                         existing_label.plugin_name not in check_plugin_names):
             new_host_labels.add_label(existing_label)
+            label_texts.append(existing_label.label)
 
     host_labels_per_plugin = {}  # type: Dict[check_table.CheckPluginName, int]
     for discovered_label in discovered_host_labels.itervalues():
-        if discovered_label.name not in new_host_labels:
+        if discovered_label.label not in label_texts:
+            # Add label overrides any existing label with the same plugin_name
+            # For example foo:bar1 -> foo:bar2
             new_host_labels.add_label(discovered_label)
             host_labels_per_plugin.setdefault(discovered_label.plugin_name, 0)
             host_labels_per_plugin[discovered_label.plugin_name] += 1
@@ -282,7 +282,7 @@ def discover_on_host(config_cache,
         "clustered_vanished": 0,
     }
 
-    if hostname not in config_cache.all_active_realhosts():
+    if hostname not in config_cache.all_active_hosts():
         return counts, ""
 
     if service_filter is None:
@@ -870,12 +870,7 @@ def _discover_services(hostname, ipaddress, sources, multi_host_sections, on_err
         raise MKGeneralException("Interrupted by Ctrl-C.")
 
 
-def _get_sources_for_discovery(hostname,
-                               ipaddress,
-                               check_plugin_names,
-                               do_snmp_scan,
-                               on_error,
-                               for_check_discovery=False):
+def _get_sources_for_discovery(hostname, ipaddress, check_plugin_names, do_snmp_scan, on_error):
     sources = data_sources.DataSources(hostname, ipaddress)
 
     for source in sources.get_data_sources():
@@ -884,14 +879,6 @@ def _get_sources_for_discovery(hostname,
             source.set_do_snmp_scan(do_snmp_scan)
             source.set_use_snmpwalk_cache(False)
             source.set_ignore_check_interval(True)
-
-            # During discovery, the snmp datasource can never fully rely on the locally cached data,
-            # since the available oid trees depend on the current running checks
-            # We can not disable the data_source_cache per default when caching is set
-            # since this would affect the WATO service discvoery page.
-            if for_check_discovery and source.get_may_use_cache_file():
-                source.disable_data_source_cache()
-
             source.set_check_plugin_name_filter(snmp_scan.gather_snmp_check_plugin_names)
 
     # When check types are specified via command line, enforce them and disable auto detection
@@ -1271,7 +1258,6 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     for check_source, discovered_service in services.values():
         params = None
         exitcode = None
-        perfdata = []  # type: List[Tuple]
         if check_source not in ['legacy', 'active', 'custom']:
             if discovered_service.check_plugin_name not in config.check_info:
                 continue  # Skip not existing check silently
@@ -1358,11 +1344,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                         3, u"UNKNOWN - invalid output from agent or error in check implementation")
                 if len(result) == 2:
                     result = (result[0], result[1], [])
-                exitcode, output, perfdata = result
+                exitcode, output, _perfdata = result
         else:
             exitcode = None
             output = u"WAITING - %s check, cannot be done offline" % check_source.title()
-            perfdata = []
 
         if check_source == "active":
             params = autochecks.resolve_paramstring(discovered_service.check_plugin_name,
@@ -1383,6 +1368,11 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 }
             }
 
+        # Service discovery never uses the perfdata in the check table. That entry
+        # is constantly discarded, yet passed around(back and forth) as part of the
+        # discovery result in the request elements. Some perfdata VALUES are not parsable
+        # by ast.literal_eval such as "inf" it lead to ValueErrors. Thus keep perfdata empty
+        perfdata = []  # type: List[Tuple]
         table.append((check_source, discovered_service.check_plugin_name, checkgroup,
                       discovered_service.item, discovered_service.parameters_unresolved, params,
                       discovered_service.description, exitcode, output, perfdata,

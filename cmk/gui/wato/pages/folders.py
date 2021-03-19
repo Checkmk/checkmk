@@ -233,9 +233,10 @@ class ModeFolder(WatoMode):
         self._folder.show_breadcrump()
 
         if not self._folder.may("read"):
-            html.message(
-                html.render_icon("autherr", cssclass="authicon") + " " +
-                self._folder.reason_why_may_not("read"))
+            reason = self._folder.reason_why_may_not("read")
+            if reason:
+                html.message(
+                    html.render_icon("autherr", cssclass="authicon") + html.render_text(reason))
 
         self._folder.show_locking_information()
         self._show_subfolders_of()
@@ -297,9 +298,7 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon(html.strip_tags(subfolder.reason_why_may_not("read")),
-                      "autherr",
-                      class_=["autherr"])
+            html.icon(subfolder.reason_why_may_not("read"), "autherr", class_=["autherr"])
             html.div('', class_="hoverarea")
 
     def _show_subfolder_title(self, subfolder):
@@ -458,7 +457,11 @@ class ModeFolder(WatoMode):
             rendered_hosts = []
 
             # Now loop again over all hosts and display them
+            max_hosts = len(hostnames)
             for hostname in hostnames:
+                if table.limit_reached:
+                    table.limit_hint = max_hosts
+                    continue
                 self._show_host_row(rendered_hosts, table, hostname, search_text, show_checkboxes,
                                     colspan, host_errors, contact_group_names)
 
@@ -471,7 +474,7 @@ class ModeFolder(WatoMode):
 
         selected = weblib.get_rowselection('wato-folder-/' + self._folder.path())
 
-        row_count = len(rendered_hosts)
+        row_count = len(hostnames)
         headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
         html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
 
@@ -554,7 +557,7 @@ class ModeFolder(WatoMode):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = html.strip_tags(reason)
+            title = reason
 
         table.cell(_('Auth'), html.render_icon(icon, title), css="buttons", sortable=False)
 

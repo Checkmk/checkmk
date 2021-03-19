@@ -60,6 +60,17 @@ def parse_docker_node_images(info):
     return {'images': images, 'containers': containers}
 
 
+def _find_labels(data):
+    # docker.format_labels expects a dictionary with a 'Labels' key
+    if 'Labels' in data:
+        # for the legacy parser 'Labels' key is in the root
+        return data
+    if 'Config' in data:
+        # for docker json api 'Labels' key is in 'Config'.
+        return data['Config']
+    return {}
+
+
 def inv_docker_node_images(info, inventory_tree, status_data_tree):
     parsed = parse_docker_node_images(info)
     images = parsed.get("images", {})
@@ -76,7 +87,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "id": docker_get_short_id(image_id),  # pylint: disable=undefined-variable
             "creation": image["Created"],
             "size": image["VirtualSize"],
-            "labels": docker_format_labels(image),  # pylint: disable=undefined-variable
+            "labels": docker_format_labels(_find_labels(image)),  # pylint: disable=undefined-variable
         })
 
         status_node.append({
@@ -93,7 +104,7 @@ def inv_docker_node_images(info, inventory_tree, status_data_tree):
             "image": docker_get_short_id(container["Image"]),  # pylint: disable=undefined-variable
             "name": container["Name"],
             "creation": container["Created"],
-            "labels": docker_format_labels(container),  # pylint: disable=undefined-variable
+            "labels": docker_format_labels(_find_labels(container)),  # pylint: disable=undefined-variable
             "status": container.get("State", {}).get("Status"),
         })
 

@@ -37,7 +37,7 @@ from cmk.notification_plugins.utils import host_url_from_context, service_url_fr
 
 def translate_states(state):
     if state in ['OK', 'UP']:
-        return 'OK'
+        return 'RECOVERY'
     if state in ['CRITICAL', 'DOWN']:
         return 'CRITICAL'
     if state in ['UNKNOWN', 'UNREACHABLE']:
@@ -47,7 +47,7 @@ def translate_states(state):
 
 def victorops_msg(context):
     # type: (Dict) -> Dict
-    """Build the message for slack"""
+    """Build the message for VictorOps"""
 
     if context.get('WHAT', None) == "SERVICE":
         state = translate_states(context["SERVICESTATE"])

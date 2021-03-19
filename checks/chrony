@@ -85,7 +85,17 @@ def is_error_message(info):
     return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 
-def check_chrony(_item, params, parsed):
+def discover_chrony(parsed_extra):
+    parsed, extra_ntp_section = parsed_extra
+    if not parsed:
+        return
+    if extra_ntp_section and "error" in parsed:
+        # an error is OK if npt sync is present
+        return
+    yield None, {}
+
+
+def check_chrony(_item, params, parsed_extra):
     """
     check if agent returned error message
     check if chrony can reach NTP servers
@@ -93,11 +103,11 @@ def check_chrony(_item, params, parsed):
     check if stratum is too high
 
     :param _item: <not used>
-    :param params: stratum and offset limits
-    :param parsed: dictionary
+    :param params: stratum and sys_time_offset_offset limits
+    :param parsed_extra: list
     :return: status
     """
-    # Check error message
+    parsed, _extra_ntp_section = parsed_extra  # only needed for discovery
     if "error" in parsed:
         yield 2, "%s" % parsed.get("error")
         return
@@ -140,8 +150,9 @@ check_info["chrony"] = {
     "default_levels_variable": "ntp_time_default_levels",
     "parse_function": parse_chrony,
     "check_function": check_chrony,
-    "inventory_function": discover_single,
+    "inventory_function": discover_chrony,
     "service_description": "NTP Time",
     "has_perfdata": True,
-    "group": "ntp_time"
+    "group": "ntp_time",
+    "extra_sections": ["ntp"],
 }

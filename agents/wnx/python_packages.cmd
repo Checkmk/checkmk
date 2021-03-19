@@ -19,7 +19,7 @@ powershell Write-Host "Pip Upgraded" -Foreground Green
 ) else (
   powershell Write-Host "Pip Upgrade Failed"  -Foreground Red
 )
-@!ppath!\pip install pyinstaller > nul 2>&1 
+@!ppath!\pip install pyinstaller==3.6 > nul 2>&1 
 if "%errorlevel%" == "0" (
 powershell Write-Host "pyinstaller installed" -Foreground Green 
 ) else (

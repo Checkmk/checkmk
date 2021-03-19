@@ -1,0 +1,19 @@
+Title: Sites can not be assigned to global scope
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.6.0p12
+Date: 1574758570
+
+Users can be assigned to configured customers and the provider or to a
+global scope to have access to all sites. The same option generators is
+used for passwords and sites.
+
+In the case of users and passwords, this objects are available for a
+customer or globally. For site the global scope does not make sense as the
+site is not available globally, but assigned to a global customer which
+doesn't exist. Thus this option is removed to avoid misconfiguration.

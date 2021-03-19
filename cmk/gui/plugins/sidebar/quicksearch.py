@@ -32,6 +32,7 @@ import livestatus
 
 import cmk.utils.plugin_registry
 
+import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
 from cmk.gui.log import logger
@@ -108,13 +109,8 @@ class QuicksearchSnapin(SidebarSnapin):
 # and then tries to verify it is a regex
 def _to_regex(s):
     s = s.replace('*', '.*')
-    try:
-        re.compile(s)
-    except re.error:
-        raise MKGeneralException(
-            _('You search statement is not valid. You need to provide a regular '
-              'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
-              'if you like to search for a single backslash.'))
+    cmk.gui.utils.validate_regex(s)
+
     return s
 
 
@@ -878,14 +874,14 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             else:
                 tag_key, tag_value = entry.split(":", 1)
 
-            # here we check which *_to_group_dict containes the tag_key
+            # here we check which *_to_group_dict containes the tag_value
             # we do not care about the actual data
             # its purpose is to decide which 'url info' to use
-            if tag_key in hosttag_to_group_dict:
+            if tag_value in hosttag_to_group_dict:
                 url_infos.append(("host_tag_%d_grp" % idx, tag_key))
                 url_infos.append(("host_tag_%d_op" % idx, "is"))
                 url_infos.append(("host_tag_%d_val" % idx, tag_value))
-            elif tag_key in auxtag_to_group_dict:
+            elif tag_value in auxtag_to_group_dict:
                 url_infos.append(("host_auxtags_%d" % idx, tag_key))
 
         return "", url_infos

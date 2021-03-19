@@ -76,6 +76,7 @@ from cmk.gui.plugins.wato import (
     ConfigDomainGUI,
     ConfigDomainCore,
     ConfigDomainCACertificates,
+    ConfigDomainOMD,
     site_neutral_path,
     rulespec_registry,
     HostRulespec,
@@ -627,9 +628,12 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
                    "code received from external sources, like plugin output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
-                   "for several injection attacks.") +
-            _("This setting can either be set globally or individually for selected hosts "
-              "or services using the host or service rulesets."),
+                   "for several injection attacks. ") +
+            _("Instead of disabling this option globally it is highly recommended to "
+              "disable the escaping selectively for individual hosts and services with "
+              "the rulesets \"Escape HTML codes in host output\" and \"Escape HTML codes in "
+              "service output\". The rulesets have the additional advantage that the "
+              "configured value is accessible in the notification context."),
             label=_("Prevent loading HTML from plugin output or log messages"),
         )
 
@@ -1734,6 +1738,33 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableActivateChangesConcurrency(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupWATO
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "wato_activate_changes_concurrency"
+
+    def valuespec(self):
+        return CascadingDropdown(
+            title=_("Maximum parallel site activations"),
+            choices=[("auto", _("Start new activations untils 90% of RAM is used")),
+                     (
+                         "maximum",
+                         _("Limit maximum number to"),
+                         Integer(minvalue=5, default_value=20, orientation="horizontal"),
+                     )],
+            help=
+            _("Specifies the maximum number of parallel running site activate changes processes. "
+              "Each site activation is handled in a separate apache process. If your configuration setup includes "
+              "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates."
+              "Note: The hardcoded minimum is set to 5."))
+
+
+@config_variable_registry.register
 class ConfigVariableWATOActivationMethod(ConfigVariable):
     def group(self):
         return ConfigVariableGroupWATO
@@ -2170,7 +2201,8 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 
         if cmk.is_managed_edition():
             import cmk.gui.cme.managed as managed
-            elements += managed.customer_choice_element()
+            default_value = cmk.gui.utils.set_cme_default_customer(default_value={})
+            elements += managed.customer_choice_element(default_value)
 
         return elements + [
             ('roles',
@@ -3032,9 +3064,13 @@ rulespec_registry.register(
     ))
 
 
+def _default_check_interval():
+    return 6.0 if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else 60.0
+
+
 def _valuespec_extra_host_conf_check_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Normal check interval for host checks"),
@@ -3056,7 +3092,7 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf_retry_interval():
     return Transform(
-        Age(minvalue=1, default_value=60),
+        Age(minvalue=1, default_value=_default_check_interval()),
         forth=lambda v: int(v * 60),
         back=lambda v: float(v) / 60.0,
         title=_("Retry check interval for host checks"),
@@ -3129,7 +3165,8 @@ def _valuespec_host_check_commands():
         _("The option to use a custom command can only be configured with the permission "
           "\"Can add or modify executables\"."),
         choices=_host_check_commands_host_check_command_choices,
-        default_value="ping",
+        default_value="smart"
+        if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else "ping",
         orientation="horizontal",
     )
 
@@ -3979,11 +4016,11 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML codes in host output"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
                "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
+               "If you are really sure what you are doing and need to have HTML code, like "
                "links rendered, disable this option. Be aware, you might open the way "
                "for several injection attacks.") +
-        _("This setting can either be set globally or individually for selected hosts "
-          "or services using the host or service rulesets."),
+        _("The configured value for a host is accessible in notifications as well via the "
+          "variable <tt>HOST_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
             ("1", _("Escape HTML codes")),
             ("0", _("Don't escape HTML codes (insecure)")),
@@ -4005,11 +4042,11 @@ def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
         title=_("Escape HTML codes in service output"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
                "code received from external sources, like plugin output or log messages. "
-               "If you are really sure what you are doing and need to have HTML codes, like "
+               "If you are really sure what you are doing and need to have HTML code, like "
                "links rendered, disable this option. Be aware, you might open the way "
-               "for several injection attacks.") +
-        _("This setting can either be set globally or individually for selected hosts "
-          "or services using the host or service rulesets."),
+               "for several injection attacks. ") +
+        _("The configured value for a service is accessible in notifications as well via the "
+          "variable <tt>SERVICE_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
             ("1", _("Escape HTML codes")),
             ("0", _("Don't escape HTML codes (insecure)")),
@@ -4554,8 +4591,21 @@ def _valuespec_check_mk_exit_status():
                                  Dictionary(title=_("Piggyback"),
                                             elements=_common_check_mk_exit_status_elements())),
                             ])),
+                ("restricted_address_mismatch",
+                 MonitoringState(
+                     title=_("State in case of restricted address missmatch"),
+                     help=
+                     _("If a Checkmk site is updated to a newer version but the agents of some "
+                       "hosts are not, then the warning <i>Unexpected allowed IP ranges</i> may "
+                       "be displayed in the details of the <i>Check_MK</i> service and the "
+                       "service state changes to <i>WARN</i> (by default).<br>"
+                       "With this setting you can overwrite the default service state. This will help "
+                       "you to reduce above warnings during the update process of your Checkmk sites "
+                       "and agents."),
+                     default_value=1,
+                 )),
             ],
-            optional_keys=["individual"],
+            optional_keys=["individual", "restricted_address_mismatch"],
         ),
         forth=transform_exit_code_spec,
         title=_("Status of the Check_MK services"),
@@ -4657,13 +4707,21 @@ def _valuespec_agent_config_only_from():
                "in the form <tt>1.2.3.4</tt> or networks in the style "
                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
                "or create no rule then <b>all</b> addresses are allowed to "
-               "access the agent. IPv6 addresses and networks are also allowed.") \
-            + _("If you are using the Agent bakery, the configuration will be "
-                "used for restricting network access to the baked agents. Even "
-                "if you don't use the bakery, the configured IP address "
+               "access the agent. IPv6 addresses and networks are also allowed. ") \
+            + _("If you are using the Agent bakery and deploying for Windows or Linux, "
+                "the configuration will be used for restricting network access to the "
+                "baked agents. Even if you don't use the bakery, the configured IP address "
                 "restrictions of a host will be verified against the allowed "
                 "IP addresses reported by the agent. This is done during "
-                "monitoring by the Check_MK service."),
+                "monitoring by the Check_MK service.") + "<br><br>" \
+            + _("<b>Caution</b>: When deploying via agent bakery for Solaris, <b>no</b> "
+                "network restriction will be applied!<br>"
+                "Also, in order to have the network "
+                "restriction applied on Linux, xinetd or systemd with a version of at least 235 "
+                "must be installed on the target hosts. In order to prevent accidentally "
+                "accessible hosts, the Checkmk service will not be activated on Linux hosts "
+                "with a systemd installation < version 235 and no xinetd. I.e., the Checkmk "
+                "agent will be completely unaccessible via systemd in that case.") + "<br><br>",
     )
 
 
@@ -4877,7 +4935,7 @@ def _valuespec_piggybacked_host_files():
 
 def _vs_max_cache_age(max_cache_age_title):
     return Alternative(
-        title=_("Set maximum age how long piggyback files are kept"),
+        title=_("Keep hosts while piggyback source sends piggyback data only for other hosts for"),
         elements=[
             FixedValue(
                 "global",

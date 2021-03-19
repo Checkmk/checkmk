@@ -1,0 +1,18 @@
+Title: Rename hosts: folders names for changed rules in audit log
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p20
+Date: 1607587359
+Class: fix
+
+When renaming hosts, Checkmk adjusts the conditions of rules which
+include the renamed host. Such changes are recorded in the audit log,
+including the name of the folders which contain the adjusted rules.
+Up to now, these folder names were not displayed correctly. The audit
+log showed something like
+"Renamed host in 3 rulesets of folder <bound method CREFolder.title of
+Folder('', u'Main directory')>".
+With this werk, this becomes
+"Renamed host in 3 rulesets of folder Main directory".

@@ -1,0 +1,12 @@
+Title: Add support for SLES 15 SP2
+Knowledge: undoc
+Level: 1
+Component: distros
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p20
+Date: 1606217610
+
+Support for SLES 15 SP2 is added

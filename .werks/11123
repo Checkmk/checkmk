@@ -1,0 +1,14 @@
+Title: ups_capacity can handle battery/time_left = 0
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588916924
+
+Analogous to ups_modulys_battery ups_capacity will check whether
+time_on_battery is set and valid. If not we assume we're on main
+power supply and return OK.

@@ -1,0 +1,12 @@
+Title: Improved speed of loading of rows shown in table
+Knowledge: doc
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p14
+Date: 1593104322
+
+Previously, all rows of a view in wato where rendered, even there was a limit set (default: 100). From now on, only the rows within the limit are shown. This should be a performance improvement, e.g. in folders with a lot of hosts.

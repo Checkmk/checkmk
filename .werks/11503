@@ -1,0 +1,14 @@
+Title: IPMI management board: Fix UDP file descriptor leak
+Knowledge: doc
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p19
+Date: 1603370440
+
+In previous versions the IPMI management board monitoring could make the
+Checkmk or fetcher (in Checkmk 2.0) helper processes use more and more UDP
+sockets.

@@ -346,7 +346,10 @@ class ModeTags(ABCTagMode):
         for tag_group in self._effective_config.tag_groups:
             for tag in tag_group.tags:
                 if aux_tag.id in tag.aux_tag_ids:
-                    used_tags.add(tag.id)
+                    tag_info = tag.id
+                    if tag_info is None:
+                        tag_info = _("Default choice of tag group %s") % tag_group.id
+                    used_tags.add(tag_info)
         return sorted(used_tags)
 
 

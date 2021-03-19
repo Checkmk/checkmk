@@ -53,13 +53,18 @@ import urlparse
 from UserDict import DictMixin
 from StringIO import StringIO
 from PIL import Image  # type: ignore
+from pathlib2 import Path
 
 from Cryptodome.PublicKey import RSA
+from Cryptodome.Cipher import AES
+import bcrypt  # type: ignore[import]
+
 import six
 
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.defines as defines
+import cmk.utils.regex
 
 import cmk.gui.forms as forms
 import cmk.gui.utils as utils
@@ -844,7 +849,7 @@ class PageVsAutocomplete(Page):
 class Hostname(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
+        self._regex = re.compile(cmk.utils.regex.REGEX_HOST_NAME)
         self._regex_error = _("Please enter a valid hostname or IPv4 address. "
                               "Only letters, digits, dash, underscore and dot are allowed.")
         if "allow_empty" not in kwargs:
@@ -3153,6 +3158,7 @@ class Timerange(CascadingDropdown):
 def DateFormat(**args):
     args.setdefault("title", _("Date format"))
     args.setdefault("default_value", "%Y-%m-%d")
+    args.setdefault("encode_value", False)
     args["choices"] = [
         ("%Y-%m-%d", "1970-12-18"),
         ("%d.%m.%Y", "18.12.1970"),
@@ -4137,14 +4143,14 @@ class Password(TextAscii):
             html.write(self._label)
             html.nbsp()
 
-        kwargs = {
-            "size": self._size,
-        }
-
-        if self._autocomplete is False:
-            kwargs["autocomplete"] = "new-password"
-
-        html.password_input(varprefix, str(value), **kwargs)
+        html.hidden_field(varprefix + "_orig", value=ValueEncrypter.encrypt(value) if value else "")
+        html.password_input(
+            varprefix,
+            default_value="",
+            size=self._size,
+            autocomplete="new-password" if self._autocomplete is False else None,
+            attrs={"placeholder": "******" if value else ""},
+        )
 
     def password_plaintext_warning(self):
         if self._is_stored_plain:
@@ -4157,6 +4163,74 @@ class Password(TextAscii):
         if value is None:
             return _("none")
         return '******'
+
+    def from_html_vars(self, varprefix):
+        value = super(Password, self).from_html_vars(varprefix)
+        if value:
+            return value  # New password entered
+
+        # Gather the value produced by render_input() and use it.
+        value = html.request.var(varprefix + "_orig", "")
+        if not value:
+            return value
+
+        return ValueEncrypter.decrypt(value)
+
+
+class ValueEncrypter(object):  # pylint: disable=no-init
+    """Helping to secure transport of secrets
+
+    A basic concept of valuespecs is that they transport ALL data back and forth between
+    different states. This has also the consequence that also secrets, like passwords, must be
+    transported to the client, which should remain better only on the server.
+
+    To deal with this in a reasonably secure way, we encrypt passwords for transport from backend =>
+    HTML => backend.
+
+    If it turns out that the approach is not sufficient, then we will have to soften this principle
+    of valuespecs and somehow leave the passwords on the server.
+
+    The encrypted values are only used for transactions and not persisted. This means you can change
+    the algorithm at any time.
+    """
+    @staticmethod
+    def _secret_key(salt):
+        """Build some secret for the ecryption
+
+        Use the sites auth.secret for encryption. This secret is only known to the current site
+        and other distributed sites.
+        """
+
+        secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+        # Is fixed in newer pathlib / mypy
+        with secret_path.open(mode="rb") as f:  # pylint: disable=no-member
+            passphrase = f.read().strip()
+            # Checkmk 2.0 uses hashlib.scrypt, but Checkmk 1.6 has to use
+            # another algorithm, because of the old Python 2.7 and different
+            # SSL dependencies.
+            bcrypt_passphrase = bcrypt.hashpw(passphrase, salt)
+            return hashlib.sha256(bcrypt_passphrase).digest()
+
+    @staticmethod
+    def _cipher(salt, nonce):
+        return AES.new(ValueEncrypter._secret_key(salt), AES.MODE_GCM, nonce=nonce)
+
+    @staticmethod
+    def encrypt(value):
+        salt = bcrypt.gensalt()
+        nonce = os.urandom(AES.block_size)
+        cipher = ValueEncrypter._cipher(salt, nonce)
+        encrypted, tag = cipher.encrypt_and_digest(value)
+        return base64.b64encode(salt + nonce + tag + encrypted)
+
+    @staticmethod
+    def decrypt(value):
+        raw = base64.b64decode(value)
+        salt, rest = raw[:29], raw[29:]
+        nonce, rest = rest[:AES.block_size], rest[AES.block_size:]
+        tag, encrypted = rest[:AES.block_size], rest[AES.block_size:]
+
+        return ValueEncrypter._cipher(salt, nonce).decrypt_and_verify(encrypted, tag)
 
 
 class PasswordSpec(Password):
@@ -4439,16 +4513,20 @@ class PageAutocompleteLabels(AjaxPage):
             self._get_labels(Labels.World(request["world"]), request["search_label"]))
 
     def _get_labels(self, world, search_label):
-        if world == Labels.World.CONFIG:
+        if world is Labels.World.CONFIG:
             return self._get_labels_from_config(search_label)
 
-        if world == Labels.World.CORE:
+        if world is Labels.World.CORE:
             return self._get_labels_from_core(search_label)
 
         raise NotImplementedError()
 
     def _get_labels_from_config(self, search_label):
-        return []  # TODO: Implement me
+        # TODO: Until we have a config specific implementation we now use the labels known to the
+        # core. This is not optimal, but better than doing nothing.
+        # To implement a setup specific search, we need to decide which occurrences of labels we
+        # want to search: hosts / folders, rules, ...?
+        return self._get_labels_from_core(search_label)
 
     # TODO: Provide information about the label source
     # Would be better to optimize this kind of query somehow. The best we can
@@ -4605,10 +4683,9 @@ class IconSelector(ValueSpec):
         html.open_ul()
         for category_name, category_alias, icons in available_icons:
             html.open_li(class_="active" if active_category == category_name else None)
-            # TODO: TEST
             html.a(category_alias,
-                   href="javascript:cmk.valuespecs.iconselector_toggle(\'%s\', \'%s\')" %
-                   (varprefix, category_name),
+                   href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)" %
+                   (json.dumps(varprefix), json.dumps(category_name)),
                    id_="%s_%s_nav" % (varprefix, category_name),
                    class_="%s_nav" % varprefix)
             html.close_li()
@@ -4625,8 +4702,8 @@ class IconSelector(ValueSpec):
                 html.open_a(
                     href=None,
                     class_="icon",
-                    onclick='cmk.valuespecs.iconselector_select(event, \'%s\', \'%s\')' %
-                    (varprefix, icon),
+                    onclick='cmk.valuespecs.iconselector_select(event, %s, %s)' %
+                    (json.dumps(varprefix), json.dumps(icon)),
                     title=icon,
                 )
 

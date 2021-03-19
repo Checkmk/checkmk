@@ -1,0 +1,12 @@
+Title: heartbeat_crm: go to CRIT if data is too old
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p12
+Date: 1588868492
+
+The service previously went to UNKNOWN instead of CRIT.

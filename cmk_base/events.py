@@ -573,7 +573,7 @@ def event_match_exclude_servicegroups(rule, context, is_regex=False):
 
     if excluded_groups is not None:
         context_sgn = context.get("SERVICEGROUPNAMES")
-        if context_sgn is None:
+        if not context_sgn:
             # No actual groups means no possible negative match
             return
 

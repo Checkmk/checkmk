@@ -1854,6 +1854,7 @@ class RuleConditionRenderer(object):
 
         condition.append(_("Host name"))
 
+        folder_lookup_cache = watolib.Folder.get_folder_lookup_cache()
         if regex_count == len(host_name_conditions) or regex_count == 0:
             # Entries are either complete regex or no regex at all
             is_regex = regex_count > 0
@@ -1868,8 +1869,11 @@ class RuleConditionRenderer(object):
                     host_spec = host_spec["$regex"]
 
                 if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
+                    # Make sure that the host exists and the lookup will not fail
+                    # Otherwise the entire config would be read
+                    folder_hint = folder_lookup_cache.get(host_spec)
+                    if folder_hint is not None:
+                        host = watolib.Host.host(host_spec)
                         host_spec = html.render_a(host_spec, host.edit_url())
 
                 text_list.append(html.render_b(host_spec))
@@ -1882,8 +1886,11 @@ class RuleConditionRenderer(object):
                     host_spec = host_spec["$regex"]
 
                 if not is_regex:
-                    host = watolib.Host.host(host_spec)
-                    if host:
+                    # Make sure that the host exists and the lookup will not fail
+                    # Otherwise the entire config would be read
+                    folder_hint = folder_lookup_cache.get(host_spec)
+                    if folder_hint is not None:
+                        host = watolib.Host.host(host_spec)
                         host_spec = html.render_a(host_spec, host.edit_url())
 
                 if is_negate:
@@ -2025,8 +2032,11 @@ class ModeNewRule(EditRuleMode):
             self._folder = watolib.Folder.current()
 
         else:
-            # Submitting the create dialog
-            self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+            try:
+                self._folder = watolib.Folder.folder(self._get_folder_path_from_vars())
+            except MKUserError:
+                # Folder can not be gathered from form if an error occurs
+                self._folder = watolib.Folder.folder(html.request.var("rule_folder"))
 
     def _get_folder_path_from_vars(self):
         return self._get_rule_conditions_from_vars().host_folder

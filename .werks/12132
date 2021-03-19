@@ -1,0 +1,11 @@
+Title: NagVis: Fix incompatibility with PHP 7.4 or newer
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.6.0p22
+Date: 1613463157
+Class: fix
+
+An error "Deprecated: join(): Passing glue string after array is deprecated"
+could break NagVis and the NagVis sidebar snapin.

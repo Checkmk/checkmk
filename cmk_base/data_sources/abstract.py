@@ -26,7 +26,6 @@
 
 import errno
 import os
-import socket
 import time
 import abc
 
@@ -38,6 +37,7 @@ import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.cpu_tracking as cpu_tracking
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
 
 import cmk_base.utils
 import cmk_base.agent_simulator
@@ -92,6 +92,7 @@ class DataSource(object):
 
         self._config_cache = config.get_config_cache()
         self._host_config = self._config_cache.get_host_config(self._hostname)
+        self._exit_code_spec = self._host_config.exit_code_spec(self.id())
 
     def _setup_logger(self):
         """Add the source log prefix to the class logger"""
@@ -390,16 +391,16 @@ class DataSource(object):
         exc_msg = "%s" % self._exception
 
         if isinstance(self._exception, MKEmptyAgentData):
-            status = self._host_config.exit_code_spec().get("empty_output", 2)
+            status = self._exit_code_spec.get("empty_output", 2)
 
         elif isinstance(self._exception, (MKAgentError, MKIPAddressLookupError, MKSNMPError)):
-            status = self._host_config.exit_code_spec().get("connection", 2)
+            status = self._exit_code_spec.get("connection", 2)
 
         elif isinstance(self._exception, MKTimeout):
-            status = self._host_config.exit_code_spec().get("timeout", 2)
+            status = self._exit_code_spec.get("timeout", 2)
 
         else:
-            status = self._host_config.exit_code_spec().get("exception", 3)
+            status = self._exit_code_spec.get("exception", 3)
 
         return status, exc_msg + check_api_utils.state_markers[status], []
 
@@ -666,8 +667,7 @@ class CheckMKAgentDataSource(DataSource):
         # Protect Check_MK against unallowed host names. Normally source scripts
         # like agent plugins should care about cleaning their provided host names
         # up, but we need to be sure here to prevent bugs in Check_MK code.
-        # a) Replace spaces by underscores
-        return piggybacked_hostname.replace(" ", "_")
+        return regex("[^%s]" % REGEX_HOST_NAME_CHARS).sub("_", piggybacked_hostname)
 
     def _add_cached_info_to_piggybacked_section_header(self, orig_section_header, cached_at,
                                                        cache_age):
@@ -735,12 +735,12 @@ class CheckMKAgentDataSource(DataSource):
                     expected += ' release %s' % expected_version[1]['release']
             else:
                 expected = expected_version
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
             return (status, "unexpected agent version %s (should be %s)%s" %
                     (agent_version, expected, state_markers[status]))
 
         elif config.agent_min_version and agent_version < config.agent_min_version:
-            status = self._host_config.exit_code_spec().get("wrong_version", 1)
+            status = self._exit_code_spec.get("wrong_version", 1)
             return (status, "old plugin version %s (should be at least %s)%s" %
                     (agent_version, config.agent_min_version, state_markers[status]))
 
@@ -759,11 +759,15 @@ class CheckMKAgentDataSource(DataSource):
         exceeding = allowed_nets - expected_nets
         if exceeding:
             infotexts.append("exceeding: %s" % " ".join(sorted(exceeding)))
+
         missing = expected_nets - allowed_nets
         if missing:
             infotexts.append("missing: %s" % " ".join(sorted(missing)))
 
-        return 1, "Unexpected allowed IP ranges (%s)%s" % (", ".join(infotexts), state_markers[1])
+        mismatch_state = self._exit_code_spec.get("restricted_address_mismatch", 1)
+        assert isinstance(mismatch_state, int)
+        return mismatch_state, "Unexpected allowed IP ranges (%s)%s" % (
+            ", ".join(infotexts), state_markers[mismatch_state])
 
     def _is_expected_agent_version(self, agent_version, expected_version):
         try:
@@ -821,42 +825,8 @@ class ManagementBoardDataSource(DataSource):
         super(ManagementBoardDataSource, self).__init__(hostname, ipaddress)
         # Do not use the (custom) ipaddress for the host. Use the management board
         # address instead
-        self._ipaddress = self._management_board_ipaddress(hostname)
+        self._ipaddress = ip_lookup.lookup_mgmt_board_ip_address(hostname)
         self._credentials = self._host_config.management_credentials
-
-    def _management_board_ipaddress(self, hostname):
-        mgmt_ipaddress = self._host_config.management_address
-
-        if mgmt_ipaddress is None:
-            return None
-
-        if not self._is_ipaddress(mgmt_ipaddress):
-            try:
-                return ip_lookup.lookup_ip_address(mgmt_ipaddress)
-            except MKIPAddressLookupError:
-                return None
-        else:
-            return mgmt_ipaddress
-
-    # TODO: Why is it used only here?
-    @staticmethod
-    def _is_ipaddress(address):
-        if address is None:
-            return False
-
-        try:
-            socket.inet_pton(socket.AF_INET, address)
-            return True
-        except socket.error:
-            # not a ipv4 address
-            pass
-
-        try:
-            socket.inet_pton(socket.AF_INET6, address)
-            return True
-        except socket.error:
-            # no ipv6 address either
-            return False
 
 
 def has_persisted_agent_sections(datasource_id, hostname):

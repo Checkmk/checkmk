@@ -480,7 +480,7 @@ perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
     perfdata_found = False
-    perfdata1 = ''
+    perfdata1 = 0
 
     for data in perf_data:
         if data[0] == "apply_lag":
@@ -740,38 +740,6 @@ def perfometer_msx_queues(row, check_command, perf_data):
 perfometers["check_mk-winperf_msx_queues"] = perfometer_msx_queues
 
 
-def perfometer_fileinfo(row, check_command, perf_data):
-    h = '<div class="stacked">'
-    texts = []
-    for i, color, base, scale, verbfunc in [
-        (0, "#ffcc50", 1000000, 10, lambda v: number_human_readable(v, precision=0)),  # size
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  # age
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
-    h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
-
-
-def perfometer_fileinfo_groups(row, check_command, perf_data):
-    h = '<div class="stacked">'
-    texts = []
-    for i, color, base, scale, verbfunc in [
-        (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  #age_newest
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
-    h += '</div>'
-    return " / ".join(texts), h  #  perfometer_logarithmic(100, 200, 2, "#883875")
-
-
-perfometers["check_mk-fileinfo"] = perfometer_fileinfo
-perfometers["check_mk-fileinfo.groups"] = perfometer_fileinfo_groups
-
-
 def perfometer_mssql_tablespaces(row, check_command, perf_data):
     reserved = float(perf_data[2][1])
     data = float(perf_data[3][1])
@@ -909,7 +877,10 @@ perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 
 def perfometer_ups_capacity(row, command, perf):
-    return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
+    value = [float(data[1]) for data in perf if data[0] == 'percent']
+    if len(value) == 1:
+        return "%0.2f%%" % value[0], perfometer_linear(value[0], '#B2FF7F')
+    return "", ""
 
 
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity

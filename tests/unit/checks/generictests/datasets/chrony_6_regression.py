@@ -8,7 +8,10 @@ checkname = 'chrony'
 info = [[u'506', u'Cannot', u'talk', u'to', u'daemon']]
 
 
-discovery = {'': [(None, {})]}
+extra_sections = {'': [[['I am truish']]]}
+
+
+discovery = {'': []}
 
 
 checks = {'': [(None,

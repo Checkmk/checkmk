@@ -47,6 +47,16 @@ int wmain(int argc, wchar_t** argv) {
         XLOG::l.bp("WaTest is Terminated.");
         abort();
     });
+    if (argc >= 2 && std::wstring(argv[1]) == L"fork") {
+        cma::tools::RunCommandAndWait(fmt::format(L"{} wait20", argv[0]));
+        Sleep(20000);
+        return 0;
+    }
+
+    if (argc >= 2 && std::wstring(argv[1]) == L"wait20") {
+        Sleep(20000);
+        return 0;
+    }
 
     XLOG::setup::ColoredOutputOnStdio(true);
     ::SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);

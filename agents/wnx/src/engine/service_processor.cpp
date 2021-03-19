@@ -30,6 +30,11 @@ void ServiceProcessor::startService() {
         return;
     }
 
+    // service must reload config, because service may reconfigure itself
+    cma::ReloadConfig();
+
+    rm_lwa_thread_ = std::thread(&cma::cfg::rm_lwa::Execute);
+
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_);
 
     XLOG::l.t("Successful start of thread");
@@ -56,6 +61,7 @@ void ServiceProcessor::stopService() {
 
     if (thread_.joinable()) thread_.join();
     if (process_thread_.joinable()) thread_.join();
+    if (rm_lwa_thread_.joinable()) rm_lwa_thread_.join();
 }
 
 // #TODO - implement
@@ -231,20 +237,6 @@ void ServiceProcessor::preLoadConfig() {
                                            cma::cfg::vars::kPluginsExecution);
     std::vector<Plugins::ExeUnit> exe_units;
     cma::cfg::LoadExeUnitsFromYaml(exe_units, yaml_units);
-}
-
-static void ReloadConfigInServiceMode() {
-    // service may install cap, install ini or upgrade installation and
-    // continue to work, config must be reloaded
-    auto app_type = AppDefaultType();
-    if (app_type == AppType::srv) {
-        XLOG::l.i("Reloading config for SERVICE is required");
-        cma::ReloadConfig();  // service on start
-        return;
-    }
-
-    XLOG::l.i("Reloading config for application type [{}] is NOT required",
-              static_cast<int>(app_type));
 }
 
 void ServiceProcessor::preStartBinaries() {
@@ -517,8 +509,8 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     using namespace std::chrono;
     // Periodically checks if the service is stopping.
     // mail slot name selector "service" or "not service"
-    auto mailslot_name = cma::IsService() ? cma::cfg::kServiceMailSlot
-                                          : cma::cfg::kTestingMailSlot;
+    using namespace cma::cfg;
+    auto mailslot_name = cma::IsService() ? kServiceMailSlot : kTestingMailSlot;
 
 #if 0
     // ARtificial memory allocator in thread
@@ -546,11 +538,13 @@ void ServiceProcessor::mainThread(world::ExternalPort* ex_port) noexcept {
     internal_port_ = BuildPortName(kCarrierMailslotName, mailbox.GetName());
     try {
         // start and stop for mailbox thread
-        mailbox.ConstructThread(SystemMailboxCallback, 20, this);
+        mailbox.ConstructThread(SystemMailboxCallback, 20, this,
+                                cma::IsService()
+                                    ? wtools::SecurityLevel::admin
+                                    : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         // preparation if any
-        ReloadConfigInServiceMode();
         preStartBinaries();
         // *******************
 
@@ -762,10 +756,13 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        if (wtools::kProcessTreeKillAllowed) wtools::KillProcessTree(pid);
+        if (wtools::kProcessTreeKillAllowed) {
+            // we do not kill tree, this is dangerous on older OS's
+            wtools::KillProcessTreeUnsafe(pid);
+        }
 
-        wtools::KillProcess(pid);
         XLOG::l.t("Killing process [{}] '{}'", pid, name);
+        wtools::KillProcessUnsafe(pid);
         return true;
     }
 

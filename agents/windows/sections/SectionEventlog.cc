@@ -435,7 +435,7 @@ std::unique_ptr<EventLogBase> SectionEventlog::openEventlog(
         out << "[[[" << logname << "]]]\n";
         return log;
     } catch (const std::exception &e) {
-        Error(_logger) << "failed to read event log: " << e.what() << std::endl;
+        Error(_logger) << "failed to read event log: " << e.what();
         out << "[[[" << logname << ":missing]]]\n";
         return nullptr;
     }

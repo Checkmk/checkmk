@@ -30,6 +30,7 @@ import sys
 import os
 import subprocess
 import pytest  # type: ignore
+import requests
 from requests.exceptions import ConnectionError
 import docker  # type: ignore
 
@@ -329,7 +330,7 @@ def test_start_enable_mail(request, client):
     assert c.exec_run(["postconf", "relayhost"])[1].rstrip() == "relayhost = mailrelay.mydomain.com"
 
 
-def test_http_access(request, client):
+def test_http_access_base_redirects_work(request, client):
     c = _start(request, client)
 
     assert "Location: http://127.0.0.1:5000/cmk/\r\n" in c.exec_run(
@@ -340,6 +341,68 @@ def test_http_access(request, client):
         ["curl", "-D", "-", "-s", "http://127.0.0.1:5000/cmk"])[-1]
     assert "Location: /cmk/check_mk/login.py?_origtarget=index.py\r\n" in c.exec_run(
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/"])[-1]
+
+
+# Would like to test this from the outside of the container, but this is not possible
+# because most of our systems already have something listening on port 80
+def test_redirects_work_with_standard_port(request, client):
+    c = _start(request, client)
+
+    # Use no explicit port
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
+        "curl", "-D", "-", "-s", "--connect-to", "127.0.0.1:80:127.0.0.1:5000", "http://127.0.0.1"
+    ])[-1]
+
+    # Use explicit standard port
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
+        "curl", "-D", "-", "-s", "--connect-to", "127.0.0.1:80:127.0.0.1:5000",
+        "http://127.0.0.1:80"
+    ])[-1]
+
+    # Use explicit host header with standard port
+    assert "Location: http://127.0.0.1/cmk/\r\n" in c.exec_run([
+        "curl", "-D", "-", "-s", "-H", "Host: 127.0.0.1:80", "--connect-to",
+        "127.0.0.1:80:127.0.0.1:5000", "http://127.0.0.1"
+    ])[-1]
+
+
+def test_redirects_work_with_custom_port(request, client):
+    # Use some free address port to be able to bind to. For the moment there is no
+    # conflict with others, since this test is executed only once at the same time.
+    # TODO: We'll have to use some branch specific port in the future.
+    address = ("127.3.3.7", 8555)
+    address_txt = ":".join(map(str, address))
+
+    _start(request, client, ports={
+        '5000/tcp': address,
+    })
+
+    # Use explicit port
+    response = requests.get("http://%s" % address_txt, allow_redirects=False)
+    assert response.status_code == 302
+    assert response.headers["Location"] == "http://%s/cmk/" % address_txt
+
+    # Use explicit port and host header with port
+    response = requests.get("http://%s" % address_txt,
+                            allow_redirects=False,
+                            headers={
+                                "Host": address_txt,
+                            })
+    assert response.status_code == 302
+    assert response.headers["Location"] == "http://%s/cmk/" % address_txt
+
+    # Use explicit port and host header without port
+    response = requests.get("http://%s" % address_txt,
+                            allow_redirects=False,
+                            headers={
+                                "Host": address[0],
+                            })
+    assert response.status_code == 302
+    assert response.headers["Location"] == "http://%s/cmk/" % address[0]
+
+
+def test_http_access_login_screen(request, client):
+    c = _start(request, client)
 
     assert "Location: \r\n" not in c.exec_run(
         ["curl", "-D", "-", "http://127.0.0.1:5000/cmk/check_mk/login.py?_origtarget=index.py"])[-1]

@@ -1799,12 +1799,13 @@ def discoverable_snmp_checks():
 # Compute parameters for a check honoring factory settings,
 # default settings of user in main.mk, check_parameters[] and
 # the values code in autochecks (given as parameter params)
-def compute_check_parameters(host, checktype, item, params):
+def compute_check_parameters(host, checktype, item, params, for_static_checks=False):
     if checktype not in check_info:  # handle vanished checktype
         return None
 
     params = _update_with_default_check_parameters(checktype, params)
-    params = _update_with_configured_check_parameters(host, checktype, item, params)
+    if not for_static_checks:
+        params = _update_with_configured_check_parameters(host, checktype, item, params)
 
     return params
 
@@ -1862,10 +1863,10 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     entries += config_cache.service_extra_conf(host, descr, check_parameters)
 
     if entries:
-        if _has_timespecific_params(entries):
+        if has_timespecific_params(entries):
             # some parameters include timespecific settings
             # these will be executed just before the check execution
-            return TimespecificParamList(entries + [params])
+            return set_timespecific_param_list(entries, params)
 
         # loop from last to first (first must have precedence)
         for entry in entries[::-1]:
@@ -1881,11 +1882,22 @@ def _update_with_configured_check_parameters(host, checktype, item, params):
     return params
 
 
-def _has_timespecific_params(entries):
-    for entry in entries:
-        if isinstance(entry, dict) and "tp_default_value" in entry:
-            return True
+def has_timespecific_params(entries):
+    if entries is None:
+        return False
+    if isinstance(entries, dict) and "tp_default_value" in entries:
+        return True
+    try:
+        for entry in entries:
+            if isinstance(entry, dict) and "tp_default_value" in entry:
+                return True
+    except TypeError:
+        return False
     return False
+
+
+def set_timespecific_param_list(entries, params):
+    return TimespecificParamList(entries + [params])
 
 
 def _get_checkgroup_parameters(config_cache, host, checktype, item, descr):
@@ -2644,9 +2656,12 @@ class HostConfig(object):
     @property
     def management_address(self):
         # type: () -> Optional[str]
-        attributes_of_host = host_attributes.get(self.hostname, {})
-        if attributes_of_host.get("management_address"):
-            return attributes_of_host["management_address"]
+        mgmt_ip_address = host_attributes.get(self.hostname, {}).get("management_address")
+        if mgmt_ip_address:
+            return mgmt_ip_address
+
+        if self.is_ipv6_primary:
+            return ipv6addresses.get(self.hostname)
 
         return ipaddresses.get(self.hostname)
 
@@ -2723,7 +2738,9 @@ class HostConfig(object):
         specs = self._config_cache.host_extra_conf(self.hostname, check_mk_exit_status)
         for entry in specs[::-1]:
             spec.update(entry)
-        return self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+
+        merged_spec = self._merge_with_data_source_exit_code_spec(spec, data_source_id)
+        return self._merge_with_optional_exit_code_parameters(spec, merged_spec)
 
     def _merge_with_data_source_exit_code_spec(self, spec, data_source_id):
         # type: (Dict, Optional[str]) -> Dict[str, int]
@@ -2740,6 +2757,15 @@ class HostConfig(object):
 
         # Old configuration format
         return spec
+
+    def _merge_with_optional_exit_code_parameters(self, spec, merged_spec):
+        # Additional optional parameters which are not part of individual
+        # or overall parameters
+        for key in ('restricted_address_mismatch',):
+            value = spec.get(key)
+            if value is not None:
+                merged_spec[key] = value
+        return merged_spec
 
     @property
     def do_status_data_inventory(self):

@@ -75,14 +75,32 @@ class SNMPTrapEngine(object):
             return pysnmp.entity.config.usmHMACMD5AuthProtocol
         if proto_name == "sha":
             return pysnmp.entity.config.usmHMACSHAAuthProtocol
+        if proto_name == "SHA-224":
+            return pysnmp.entity.config.usmHMAC128SHA224AuthProtocol
+        if proto_name == "SHA-256":
+            return pysnmp.entity.config.usmHMAC192SHA256AuthProtocol
+        if proto_name == "SHA-384":
+            return pysnmp.entity.config.usmHMAC256SHA384AuthProtocol
+        if proto_name == "SHA-512":
+            return pysnmp.entity.config.usmHMAC384SHA512AuthProtocol
         raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
 
     @staticmethod
     def _priv_proto_for(proto_name):
         if proto_name == "DES":
             return pysnmp.entity.config.usmDESPrivProtocol
+        if proto_name == "3DES-EDE":
+            return pysnmp.entity.config.usm3DESEDEPrivProtocol
         if proto_name == "AES":
             return pysnmp.entity.config.usmAesCfb128Protocol
+        if proto_name == "AES-192":
+            return pysnmp.entity.config.usmAesCfb192Protocol
+        if proto_name == "AES-256":
+            return pysnmp.entity.config.usmAesCfb256Protocol
+        if proto_name == "AES-192-Blumenthal":
+            return pysnmp.entity.config.usmAesBlumenthalCfb192Protocol
+        if proto_name == "AES-256-Blumenthal":
+            return pysnmp.entity.config.usmAesBlumenthalCfb256Protocol
         raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
 
     def _initialize_snmp_credentials(self, config):

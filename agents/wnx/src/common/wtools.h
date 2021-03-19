@@ -7,7 +7,7 @@
 #ifndef wtools_h__
 #define wtools_h__
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
+#include <aclapi.h>
 #include <comdef.h>
 
 #include "windows.h"
@@ -34,6 +34,61 @@
 
 namespace wtools {
 constexpr const wchar_t* kWToolsLogName = L"check_mk_wtools.log";
+
+inline void* ProcessHeapAlloc(size_t size) {
+    return ::HeapAlloc(::GetProcessHeap(), HEAP_ZERO_MEMORY, size);
+}
+
+inline void ProcessHeapFree(void* data) {
+    if (data != nullptr) {
+        ::HeapFree(::GetProcessHeap(), 0, data);
+    }
+}
+
+enum class SecurityLevel { standard, admin };
+
+// RAII class to keep MS Windows Security Descriptor temporary
+class SecurityAttributeKeeper {
+public:
+    SecurityAttributeKeeper(SecurityLevel sl);
+    ~SecurityAttributeKeeper();
+
+    const SECURITY_ATTRIBUTES* get() const { return sa_; }
+    SECURITY_ATTRIBUTES* get() { return sa_; }
+
+private:
+    bool allocAll(SecurityLevel sl);
+    void cleanupAll();
+    // below are allocated using ProcessHeapAlloc values
+    SECURITY_DESCRIPTOR* sd_{nullptr};
+    SECURITY_ATTRIBUTES* sa_{nullptr};
+    ACL* acl_{nullptr};
+};
+
+// this is functor to kill any pointer allocated with ::LocalAlloc
+// usually this pointer comes from Windows API
+template <typename T>
+struct LocalAllocDeleter {
+    void operator()(T* r) noexcept {
+        if (r != nullptr) ::LocalFree(reinterpret_cast<HLOCAL>(r));
+    }
+};
+
+// usage
+#if (0)
+LocalResource<SERVICE_FAILURE_ACTIONS> actions(
+    ::WindowsApiToGetActions(handle_to_service));
+#endif
+//
+template <typename T>
+using LocalResource = std::unique_ptr<T, LocalAllocDeleter<T>>;
+
+// returns <exit_code, 0>, <0, error> or <-1, error>
+std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
+
+[[nodiscard]] std::wstring GetProcessPath(uint32_t pid) noexcept;
+
+[[nodiscard]] int KillProcessesByDir(const std::filesystem::path& dir) noexcept;
 
 uint32_t GetParentPid(uint32_t pid);
 
@@ -217,7 +272,10 @@ private:
 bool ScanProcessList(std::function<bool(const PROCESSENTRY32&)> op);
 
 // standard process terminator
-bool KillProcess(uint32_t process_id, int exit_code = -1) noexcept;
+bool KillProcessUnsafe(uint32_t process_id, int exit_code = -1) noexcept;
+
+bool KillProcessSafe(uint32_t process_id, std::wstring_view process_name,
+                     int exit_code);
 
 // process terminator
 // used to kill OpenHardwareMonitor
@@ -233,8 +291,12 @@ int FindProcess(std::wstring_view process_name) noexcept;
 
 constexpr bool kProcessTreeKillAllowed = false;
 
-// WIN32 described method of killing process tree
-void KillProcessTree(uint32_t ProcessId);
+/// This function is extremely dangerous on older OSes and actually doesn't used
+void KillProcessTreeUnsafe(uint32_t ProcessId);
+
+// Kills forks: cmk-update-agent.exe, for example
+size_t KillProcessTreeSafe(uint32_t process_id,
+                           std::wstring_view expected_name);
 
 class AppRunner {
 public:
@@ -251,7 +313,7 @@ public:
     AppRunner& operator=(AppRunner&&) = delete;
 
     ~AppRunner() {
-        kill(true);
+        kill();
         stdio_.shutdown();
         stderr_.shutdown();
     }
@@ -262,39 +324,7 @@ public:
     // returns process id
     uint32_t goExecAsUpdater(std::wstring_view CommandLine) noexcept;
 
-    void kill(bool KillTreeToo) {
-        auto proc_id = process_id_.exchange(0);
-        if (proc_id == 0) {
-            xlog::v(
-                "Attempt to kill process which is not started or already killed");
-            return;
-        }
-
-        if (KillTreeToo) {
-            if (job_handle_) {
-                // this is normal case but with job
-                TerminateJobObject(job_handle_, 0);
-
-                // job:
-                CloseHandle(job_handle_);
-                job_handle_ = nullptr;
-
-                // process:
-                CloseHandle(process_handle_);  // must
-                process_handle_ = nullptr;
-            } else {
-                if (kProcessTreeKillAllowed) KillProcessTree(proc_id);
-            }
-
-            return;
-        }
-
-        if (exit_code_ == STILL_ACTIVE) {
-            auto success = KillProcess(proc_id, -1);
-            if (!success)
-                xlog::v("Failed kill {} status {}", proc_id, GetLastError());
-        }
-    }
+    void kill();
 
     const auto getCmdLine() const { return cmd_line_; }
     const auto processId() const { return process_id_.load(); }
@@ -956,20 +986,23 @@ HMODULE LoadWindowsLibrary(const std::wstring& DllPath);
 std::vector<std::string> EnumerateAllRegistryKeys(const char* RegPath);
 
 // returns data from the root machine registry
-uint32_t GetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                          uint32_t Default) noexcept;
+uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                          uint32_t dflt) noexcept;
 
 // returns true on success
 bool SetRegistryValue(std::wstring_view path, std::wstring_view key,
                       std::wstring_view value);
 
-// returns true on success
-bool SetRegistryValue(const std::wstring& Key, const std::wstring& Value,
-                      uint32_t Data) noexcept;
+bool SetRegistryValueExpand(std::wstring_view path,
+                            std::wstring_view value_name,
+                            std::wstring_view value);
 
-std::wstring GetRegistryValue(const std::wstring& Key,
-                              const std::wstring& Value,
-                              const std::wstring& Default) noexcept;
+// returns true on success
+bool SetRegistryValue(std::wstring_view path, std::wstring_view value_name,
+                      uint32_t data) noexcept;
+
+std::wstring GetRegistryValue(std::wstring_view key, std::wstring_view value,
+                              std::wstring_view dflt) noexcept;
 std::wstring GetArgv(uint32_t index) noexcept;
 
 size_t GetOwnVirtualSize() noexcept;
@@ -1015,6 +1048,27 @@ private:
 std::string ReadWholeFile(const std::filesystem::path& fname) noexcept;
 
 bool PatchFileLineEnding(const std::filesystem::path& fname) noexcept;
+
+
+/// \brief Add command to set correct access rights for the path
+void ProtectPathFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
+
+/// \brief Add command to remove user write to the path
+void ProtectFileFromUserWrite(const std::filesystem::path& path,
+                              std::vector<std::wstring>& commands);
+
+/// \brief Add command to remove user access to the path
+void ProtectPathFromUserAccess(const std::filesystem::path& entry,
+                               std::vector<std::wstring>& commands);
+
+/// \brief Create cmd file in %Temp% and run it.
+///
+/// Returns script name path to be executed
+std::filesystem::path ExecuteCommandsAsync(
+    std::wstring_view name, const std::vector<std::wstring>& commands);
+
+std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 }  // namespace wtools
 

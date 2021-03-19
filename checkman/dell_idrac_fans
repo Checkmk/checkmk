@@ -15,4 +15,5 @@ description:
  the defaults from this device will be used.
 
 item:
- One service for each fan will be created
+ One service for each fan that is not in the state "other" or "unknown" will
+ be created.

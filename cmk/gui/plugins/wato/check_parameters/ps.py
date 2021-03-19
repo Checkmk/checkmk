@@ -149,14 +149,26 @@ def process_level_elements():
                  Percentage(title=_("Critical at"), default_value=98, maxvalue=10000),
              ],
          )),
+        ("min_age",
+         Tuple(
+             title=_("Minimum allowed age"),
+             help=_("Set lower levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=1800),
+             ],
+         )),
         ("max_age",
-         Tuple(title=_("Maximum allowed age"),
-               help=_("Alarms you if the age of the process (not the consumed CPU "
-                      "time, but the real time) exceed the configured levels."),
-               elements=[
-                   Age(title=_("Warning at"), default_value=3600),
-                   Age(title=_("Critical at"), default_value=7200),
-               ])),
+         Tuple(
+             title=_("Maximum allowed age"),
+             help=_("Set upper levels on the age of the process (not the consumed CPU time, "
+                    "but the real time)."),
+             elements=[
+                 Age(title=_("Warning at"), default_value=3600),
+                 Age(title=_("Critical at"), default_value=7200),
+             ],
+         )),
         ("virtual_levels",
          Tuple(
              title=_("Virtual memory usage"),
@@ -199,13 +211,16 @@ def process_level_elements():
          DropdownChoice(
              title=_("Enable per-process details in long-output"),
              label=_("Enable per-process details"),
-             help=_("If active, the long output of this service will contain a list of all the "
-                    "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                    "Please note that HTML output will only work if \"Escape HTML codes in "
-                    "plugin output\" is disabled in global settings. This might expose you to "
-                    "Cross-Site-Scripting (everyone with write-access to checks could get "
-                    "scripts executed on the monitoring site in the context of the user of the "
-                    "monitoring site) so please do this if you understand the consequences."),
+             help=_(
+                 "If active, the long output of this service will contain a list of all the "
+                 "matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                 "Please note that HTML output will only work if rules in the rulesets "
+                 "\"Escape HTML codes in host output\" or \"Escape HTML codes in service output\" "
+                 "are created or the global setting \"Escape HTML codes in plugin output\" "
+                 "is disabled. This might expose you to "
+                 "Cross-Site-Scripting attacks (everyone with write-access to checks could get "
+                 "scripts executed on the monitoring site in the context of the user of the "
+                 "monitoring site) so please do this if you understand the consequences."),
              choices=[
                  (None, _("Disable")),
                  ("text", _("Text output")),

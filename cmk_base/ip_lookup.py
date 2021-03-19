@@ -69,14 +69,22 @@ def lookup_ipv6_address(hostname):
     return lookup_ip_address(hostname, 6)
 
 
+def lookup_mgmt_board_ip_address(hostname):
+    # type(str) -> Optional[str]
+    try:
+        return lookup_ip_address(hostname, for_mgmt_board=True)
+    except MKIPAddressLookupError:
+        return None
+
+
 # Determine the IP address of a host. It returns either an IP address or, when
 # a hostname is configured as IP address, the hostname.
 # Or raise an exception when a hostname can not be resolved on the first
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname, family=None):
-    # type: (str, Optional[int]) -> Optional[str]
+def lookup_ip_address(hostname, family=None, for_mgmt_board=False):
+    # type: (str, Optional[int], bool) -> Optional[str]
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
@@ -98,8 +106,16 @@ def lookup_ip_address(hostname, family=None):
         return "::1"
 
     # Now check, if IP address is hard coded by the user
-    if family == 4:
+    if for_mgmt_board:
+        # TODO Cleanup:
+        # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
+        # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
+        # here.
+        ipa = host_config.management_address
+
+    elif family == 4:
         ipa = config.ipaddresses.get(hostname)
+
     else:
         ipa = config.ipv6addresses.get(hostname)
 

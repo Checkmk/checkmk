@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-from typing import List, Tuple, Type
+from typing import List, Tuple, Type, Optional
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -13,9 +13,8 @@ import cmk.utils.store as store
 import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.type_defs import PermissionName
-from cmk.gui.display_options import display_options
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, display_options
 from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.plugins.wato.utils.html_elements import (
@@ -81,7 +80,7 @@ def page_handler() -> None:
     current_mode = html.request.var("mode") or "main"
     mode_permissions, mode_class = _get_mode_permission_and_class(current_mode)
 
-    display_options.load_from_html()
+    display_options.load_from_html(html)
 
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
@@ -94,7 +93,7 @@ def page_handler() -> None:
         _wato_page_handler(current_mode, mode_permissions, mode_class)
 
 
-def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName],
+def _wato_page_handler(current_mode: str, mode_permissions: Optional[List[PermissionName]],
                        mode_class: Type[WatoMode]) -> None:
     try:
         init_wato_datastructures(with_wato_lock=not html.is_transaction())
@@ -134,6 +133,9 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
             # We assume something has been modified and increase the config generation ID by one.
             update_config_generation()
 
+            if config.wato_use_git:
+                do_git_commit()
+
             # Handle two cases:
             # a) Don't render the page content after action
             #    (a confirm dialog is displayed by the action, or a non-HTML content was sent)
@@ -172,16 +174,13 @@ def _wato_page_handler(current_mode: str, mode_permissions: List[PermissionName]
     mode.handle_page()
 
     if is_sidebar_reload_needed():
-        html.reload_sidebar()
+        html.reload_whole_page()
 
-    if config.wato_use_git and html.is_transaction():
-        do_git_commit()
-
-    wato_html_footer(show_footer=display_options.enabled(display_options.Z),
-                     show_body_end=display_options.enabled(display_options.H))
+    wato_html_footer(show_body_end=display_options.enabled(display_options.H))
 
 
-def _get_mode_permission_and_class(mode_name: str) -> Tuple[List[PermissionName], Type[WatoMode]]:
+def _get_mode_permission_and_class(
+        mode_name: str) -> Tuple[Optional[List[PermissionName]], Type[WatoMode]]:
     mode_class = mode_registry.get(mode_name, ModeNotImplemented)
     mode_permissions = mode_class.permissions()
 

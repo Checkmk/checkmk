@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     Iterable,
     Mapping,
@@ -210,7 +211,11 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
             else:
-                if "UP" in state_infos:
+                # Assumption:
+                # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
+                # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
+                # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
+                if "UP" in state_infos and "LOWER_UP" in state_infos:
                     ifOperStatus = 1
                 else:
                     ifOperStatus = 2
@@ -253,11 +258,12 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_lnx_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
@@ -270,7 +276,7 @@ def discover_lnx_if(
 
 def check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
@@ -282,7 +288,7 @@ def check_lnx_if(
 
 def cluster_check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
@@ -296,7 +302,7 @@ register.check_plugin(
     name="lnx_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_lnx_if,
     check_ruleset_name="if",

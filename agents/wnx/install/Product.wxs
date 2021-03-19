@@ -60,9 +60,21 @@ just to signal that real build script was not called -->
     <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
     
      <!-- Administrative rights is mandatory -->
-    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />        
-    
-    <!-- Other links
+    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+
+      <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
+      <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
+          <![CDATA[Installed OR  (VersionNT >= 600)]]>
+      </Condition>
+
+      <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->
+      <!-- This string may be patched by WATO, check cmk/utils/msi_patch.py -->
+      <!-- See: https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values -->
+      <Condition Message="Agent update failed: OS is too old. Please, check the agent rule &quot;Python environment&quot; and set it to &quot;Deploy legacy environment&quot;">
+          <![CDATA[Installed OR  ( VersionNT >= 600 )]]>
+      </Condition>
+
+      <!-- Other links
     <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
     <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
      -->
@@ -323,6 +335,18 @@ just to signal that real build script was not called -->
 
     </DirectoryRef>
 
+    <DirectoryRef Id="utils">
+
+        <Component Id="execute_update.cmd" Guid="{3DD686FF-B151-4498-B853-3EB591EBB0C3}">
+              <File Id="execute_update.cmd"
+                      Source="resources\execute_update.cmd"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="1" />
+            </Component>
+
+    </DirectoryRef>
+
     <DirectoryRef Id="plugins">
       <Component Id="cmp14A70A7296CB588F156BBC06BA51D2E3" Guid="{55386E71-BCE4-4E58-A7C1-7506317CF388}">
         <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" DiskId="1" />
@@ -446,6 +470,7 @@ just to signal that real build script was not called -->
       <ComponentRef Id="check_mk_install_yml_" />
       <ComponentRef Id="plugins_cap_" />
       <ComponentRef Id="checkmk.dat" />
+      <ComponentRef Id="execute_update.cmd" />
       <ComponentRef Id="check_mk.user.yml" />
         
       <!-- Modules -->
@@ -605,17 +630,21 @@ just to signal that real build script was not called -->
                          Name="Remove_Legacy"
                          Value="[WIXUI_REMOVELEGACY]"/>
 
-            <RegistryValue Type="string"
-                           Name="Clean_Installation"
-                           Value="[WIXUI_CLEANINSTALL]"/>
+          <RegistryValue Type="string"
+                         Name="Clean_Installation"
+                         Value="[WIXUI_CLEANINSTALL]"/>
 
-            <RegistryValue Type="string"
-                           Name="Migration"
-                           Value="[WIXUI_MIGRATELEGACY]"/>
+          <RegistryValue Type="string"
+                         Name="Migration_Required"
+                         Value="[WIXUI_MIGRATELEGACY]"/>
 
-            <RegistryValue Type="string"
+          <RegistryValue Type="string"
                          Name="Install_Service"
                          Value="[INSTALLSERVICE]"/>
+            
+          <RegistryValue Type="string"
+                         Name="PostInstall_Required"
+                         Value="yes"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

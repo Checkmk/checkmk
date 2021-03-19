@@ -94,6 +94,25 @@ SECTION_2: job.Section = {
     },
 }
 
+SECTION_3: job.Section = {
+    'process1minrtu': {
+        'running': False,
+        'start_time': 1560925321,
+        'exit_code': 0,
+        'metrics': {
+            'real_time': 2.63,
+            'user_time': 0.62,
+            'system_time': 0.31,
+            'reads': 90736,
+            'writes': 0,
+            'max_res_bytes': 109380000,
+            'avg_mem_bytes': 0,
+            'invol_context_switches': 203407,
+            'vol_context_switches': 2025,
+        },
+    },
+}
+
 TIME = 1594300620.0, "CET"
 
 
@@ -118,80 +137,120 @@ def test_job_parse_real_time(timestr, expected_result):
     assert job._job_parse_real_time(timestr) == expected_result
 
 
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
-    (
-        [
-            ['==>', 'SHREK', '<=='],
-            ['start_time', '1547301201'],
-            ['exit_code', '0'],
-            ['real_time', '2:00.00'],
-            ['user_time', '1.00'],
-            ['system_time', '0.00'],
-            ['reads', '0'],
-            ['writes', '0'],
-            ['max_res_kbytes', '1234'],
-            ['avg_mem_kbytes', '1'],
-            ['invol_context_switches', '12'],
-            ['vol_context_switches', '23'],
-            ['==>', 'SNOWWHITE', '<=='],
-            ['start_time', '1557301201'],
-            ['exit_code', '1'],
-            ['real_time', '6:00.00'],
-            ['user_time', '0.00'],
-            ['system_time', '0.00'],
-            ['reads', '0'],
-            ['writes', '0'],
-            ['max_res_kbytes', '2224'],
-            ['avg_mem_kbytes', '0'],
-            ['invol_context_switches', '1'],
-            ['vol_context_switches', '2'],
-            ['==>', 'SNOWWHITE.27997running', '<=='],
-            ['start_time', '1557301261'],
-            ['==>', 'SNOWWHITE.28912running', '<=='],
-            ['start_time', '1557301321'],
-            ['==>', 'SNOWWHITE.29381running', '<=='],
-            ['start_time', '1557301381'],
-            ['==>', 'SNOWWHITE.30094running', '<=='],
-            ['start_time', '1557301441'],
-            ['==>', 'SNOWWHITE.30747running', '<=='],
-            ['start_time', '1537301501'],
-            ['==>', 'SNOWWHITE.31440running', '<=='],
-            ['start_time', '1557301561'],
-        ],
-        SECTION_1,
-    ),
-    (
-        [
-            ['==>', 'backup.sh', '<=='],
-            ['start_time', '1415204091'],
-            ['exit_code', '0'],
-            ['real_time', '4:41.65'],
-            ['user_time', '277.70'],
-            ['system_time', '32.12'],
-            ['reads', '0'],
-            ['writes', '251792'],
-            ['max_res_kbytes', '130304'],
-            ['avg_mem_kbytes', '0'],
-            ['invol_context_switches', '16806'],
-            ['vol_context_switches', '32779'],
-            ['==>', 'backup.sh.running', '<=='],
-            ['start_time', '1415205713'],
-            ['==>', 'cleanup_remote_logs', '<=='],
-            ['start_time', '1415153430'],
-            ['exit_code', '0'],
-            ['real_time', '0:09.90'],
-            ['user_time', '8.85'],
-            ['system_time', '0.97'],
-            ['reads', '96'],
-            ['writes', '42016'],
-            ['max_res_kbytes', '11456'],
-            ['avg_mem_kbytes', '0'],
-            ['invol_context_switches', '15'],
-            ['vol_context_switches', '274'],
-        ],
-        SECTION_2,
-    ),
-])
+@pytest.mark.parametrize(
+    "string_table,expected_parsed_data",
+    [
+        (
+            [
+                ['==>', 'SHREK', '<=='],
+                ['start_time', '1547301201'],
+                ['exit_code', '0'],
+                ['real_time', '2:00.00'],
+                ['user_time', '1.00'],
+                ['system_time', '0.00'],
+                ['reads', '0'],
+                ['writes', '0'],
+                ['max_res_kbytes', '1234'],
+                ['avg_mem_kbytes', '1'],
+                ['invol_context_switches', '12'],
+                ['vol_context_switches', '23'],
+                ['==>', 'SNOWWHITE', '<=='],
+                ['start_time', '1557301201'],
+                ['exit_code', '1'],
+                ['real_time', '6:00.00'],
+                ['user_time', '0.00'],
+                ['system_time', '0.00'],
+                ['reads', '0'],
+                ['writes', '0'],
+                ['max_res_kbytes', '2224'],
+                ['avg_mem_kbytes', '0'],
+                ['invol_context_switches', '1'],
+                ['vol_context_switches', '2'],
+                ['==>', 'SNOWWHITE.27997running', '<=='],
+                ['start_time', '1557301261'],
+                ['==>', 'SNOWWHITE.28912running', '<=='],
+                ['start_time', '1557301321'],
+                ['==>', 'SNOWWHITE.29381running', '<=='],
+                ['start_time', '1557301381'],
+                ['==>', 'SNOWWHITE.30094running', '<=='],
+                ['start_time', '1557301441'],
+                ['==>', 'SNOWWHITE.30747running', '<=='],
+                ['start_time', '1537301501'],
+                ['==>', 'SNOWWHITE.31440running', '<=='],
+                ['start_time', '1557301561'],
+            ],
+            SECTION_1,
+        ),
+        (
+            [
+                ['==>', 'backup.sh', '<=='],
+                ['start_time', '1415204091'],
+                ['exit_code', '0'],
+                ['real_time', '4:41.65'],
+                ['user_time', '277.70'],
+                ['system_time', '32.12'],
+                ['reads', '0'],
+                ['writes', '251792'],
+                ['max_res_kbytes', '130304'],
+                ['avg_mem_kbytes', '0'],
+                ['invol_context_switches', '16806'],
+                ['vol_context_switches', '32779'],
+                ['==>', 'backup.sh.running', '<=='],
+                ['start_time', '1415205713'],
+                ['==>', 'cleanup_remote_logs', '<=='],
+                ['start_time', '1415153430'],
+                ['exit_code', '0'],
+                ['real_time', '0:09.90'],
+                ['user_time', '8.85'],
+                ['system_time', '0.97'],
+                ['reads', '96'],
+                ['writes', '42016'],
+                ['max_res_kbytes', '11456'],
+                ['avg_mem_kbytes', '0'],
+                ['invol_context_switches', '15'],
+                ['vol_context_switches', '274'],
+            ],
+            SECTION_2,
+        ),
+        (
+            [
+                ['==>', 'process1minrtu', '<=='],
+                ['start_time', '1560925321'],
+                ['exit_code', '0'],
+                ['real_time', '0:02.63'],
+                ['user_time', '0.62'],
+                ['system_time', '0.31'],
+                ['reads', '90736'],
+                ['writes', '0'],
+                ['max_res_kbytes', '109380'],
+                ['avg_mem_kbytes', '0'],
+                ['invol_context_switches', '203407'],
+                ['vol_context_switches', '2025'],
+                ['==>', 'process1minrtu.30166running', '<=='],
+                ['start_time', '1560921361'],
+                ['Command', 'terminated', 'by', 'signal', '9'],
+                ['exit_code', '0'],
+                ['real_time', '1:32:44'],
+                ['user_time', '2249.08'],
+                ['system_time', '334.76'],
+                ['reads', '34325712'],
+                ['writes', '256'],
+                ['max_res_kbytes', '7404976'],
+                ['avg_mem_kbytes', '0'],
+                ['invol_context_switches', '510568'],
+                ['vol_context_switches', '1344324'],
+            ],
+            SECTION_3,
+        ),
+        (
+            # I am not sure how that happened, but we have seen empty files
+            [[
+                '==>',
+                'empty_file.123running',
+                '<==',
+            ]],
+            {}),
+    ])
 def test_parse(string_table, expected_parsed_data):
     assert job.parse_job(string_table) == expected_parsed_data
 
@@ -199,35 +258,27 @@ def test_parse(string_table, expected_parsed_data):
 RESULTS_SHREK: List[Union[Metric, Result]] = [
     Result(state=state.OK, summary='Latest exit code: 0'),
     Result(state=state.OK, summary='Real time: 2 minutes 0 seconds'),
-    Metric('real_time', 120.0),
+    Metric('real_time', 120.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Latest job started at Jan 12 2019 14:53:21'),
     Metric('start_time', 1547301201.0),
     Result(state=state.OK, summary='Job age: 1 year 178 days'),
     Result(state=state.OK, notice='Avg. memory: 1000 B'),
-    Metric('avg_mem_bytes', 1000.0),
+    Metric('avg_mem_bytes', 1000.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Invol. context switches: 12'),
-    Metric('invol_context_switches', 12.0),
+    Metric('invol_context_switches', 12.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Max. memory: 1.18 MiB'),
-    Metric('max_res_bytes', 1234000.0),
+    Metric('max_res_bytes', 1234000.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Filesystem reads: 0'),
-    Metric('reads', 0.0),
+    Metric('reads', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='System time: 0 seconds'),
-    Metric('system_time', 0.0),
+    Metric('system_time', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='User time: 1 second'),
-    Metric('user_time', 1.0),
+    Metric('user_time', 1.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Vol. context switches: 23'),
-    Metric('vol_context_switches', 23.0),
+    Metric('vol_context_switches', 23.0, boundaries=(0.0, None)),
     Result(state=state.OK, notice='Filesystem writes: 0'),
-    Metric('writes', 0.0),
+    Metric('writes', 0.0, boundaries=(0.0, None)),
 ]
-
-
-def _aggr_shrek_result(node: str) -> Result:
-    return Result(**dict(
-        zip(  # type: ignore
-            ("state", "notice"),
-            clusterize.aggregate_node_details(node, RESULTS_SHREK),
-        )))
 
 
 @pytest.mark.parametrize(
@@ -323,13 +374,17 @@ def test_process_job_stats(
     [
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             SECTION_1,
             RESULTS_SHREK,
         ),
         (
             'item',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'item': {}
             },
@@ -337,42 +392,46 @@ def test_process_job_stats(
         ),
         (
             'cleanup_remote_logs',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             SECTION_2,
             [
                 Result(state=state.OK, summary='Latest exit code: 0',
                        details='Latest exit code: 0'),
                 Result(state=state.OK, summary='Real time: 10 seconds'),
-                Metric('real_time', 9.9),
+                Metric('real_time', 9.9, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Latest job started at Nov 05 2014 03:10:30'),
                 Metric('start_time', 1415153430.0),
                 Result(state=state.OK, summary='Job age: 5 years 248 days'),
                 Result(state=state.OK, notice='Avg. memory: 0 B'),
-                Metric('avg_mem_bytes', 0.0),
+                Metric('avg_mem_bytes', 0.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Invol. context switches: 15'),
-                Metric('invol_context_switches', 15.0),
+                Metric('invol_context_switches', 15.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Max. memory: 10.9 MiB'),
-                Metric('max_res_bytes', 11456000.0),
+                Metric('max_res_bytes', 11456000.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Filesystem reads: 96'),
-                Metric('reads', 96.0),
+                Metric('reads', 96.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='System time: 970 milliseconds'),
-                Metric('system_time', 0.97),
+                Metric('system_time', 0.97, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='User time: 9 seconds'),
-                Metric('user_time', 8.85),
+                Metric('user_time', 8.85, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Vol. context switches: 274'),
-                Metric('vol_context_switches', 274.0),
+                Metric('vol_context_switches', 274.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Filesystem writes: 42016'),
-                Metric('writes', 42016.0),
+                Metric('writes', 42016.0, boundaries=(0.0, None)),
             ],
         ),
         (
             'backup.sh',
-            type_defs.Parameters({'age': (1, 2)},),
+            {
+                'age': (1, 2)
+            },
             SECTION_2,
             [
                 Result(state=state.OK, summary='Latest exit code: 0'),
                 Result(state=state.OK, summary='Real time: 4 minutes 42 seconds'),
-                Metric('real_time', 281.65),
+                Metric('real_time', 281.65, boundaries=(0.0, None)),
                 Result(state=state.OK,
                        notice='1 job is currently running, started at Nov 05 2014 17:41:53'),
                 Result(
@@ -381,26 +440,28 @@ def test_process_job_stats(
                     'Job age (currently running): 5 years 247 days (warn/crit at 1 second/2 seconds)'
                 ),
                 Result(state=state.OK, notice='Avg. memory: 0 B'),
-                Metric('avg_mem_bytes', 0.0),
+                Metric('avg_mem_bytes', 0.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Invol. context switches: 16806'),
-                Metric('invol_context_switches', 16806.0),
+                Metric('invol_context_switches', 16806.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Max. memory: 124 MiB'),
-                Metric('max_res_bytes', 130304000.0),
+                Metric('max_res_bytes', 130304000.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Filesystem reads: 0'),
-                Metric('reads', 0.0),
+                Metric('reads', 0.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='System time: 32 seconds'),
-                Metric('system_time', 32.12),
+                Metric('system_time', 32.12, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='User time: 4 minutes 38 seconds'),
-                Metric('user_time', 277.7),
+                Metric('user_time', 277.7, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Vol. context switches: 32779'),
-                Metric('vol_context_switches', 32779.0),
+                Metric('vol_context_switches', 32779.0, boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Filesystem writes: 251792'),
-                Metric('writes', 251792.0),
+                Metric('writes', 251792.0, boundaries=(0.0, None)),
             ],
         ),
         (
             'missing',
-            type_defs.Parameters({'age': (1, 2)},),
+            {
+                'age': (1, 2)
+            },
             SECTION_2,
             [],
         ),
@@ -416,12 +477,13 @@ def test_check_job(item, params, section, expected_results):
     [
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1
             },
-            [
-                _aggr_shrek_result('node1'),
+            list(clusterize.make_node_notice_results('node1', RESULTS_SHREK)) + [
                 Result(
                     state=state.OK,
                     summary=
@@ -431,14 +493,15 @@ def test_check_job(item, params, section, expected_results):
         ),
         (
             'SHREK',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1,
                 'node2': SECTION_1,
             },
-            [
-                _aggr_shrek_result('node1'),
-                _aggr_shrek_result('node2'),
+            list(clusterize.make_node_notice_results('node1', RESULTS_SHREK)) +
+            list(clusterize.make_node_notice_results('node2', RESULTS_SHREK)) + [
                 Result(
                     state=state.OK,
                     summary=
@@ -448,10 +511,10 @@ def test_check_job(item, params, section, expected_results):
         ),
         (
             'SHREK',
-            type_defs.Parameters({
+            {
                 'age': (3600, 7200),
                 'outcome_on_cluster': 'best',
-            },),
+            },
             {
                 'node1': SECTION_1,
                 'node2': {
@@ -462,52 +525,89 @@ def test_check_job(item, params, section, expected_results):
                 },
             },
             [
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Latest exit code: 0',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Real time: 2 minutes 0 seconds',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Latest job started at Jan 12 2019 14:53:21',
+                ),
+                Result(
+                    state=state.OK,
+                    notice=('[node1]: Job age: 1 year 178 days (warn/crit at 1 hour '
+                            '0 minutes/2 hours 0 minutes)(!!)'),
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Avg. memory: 1000 B',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Invol. context switches: 12',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Max. memory: 1.18 MiB',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Filesystem reads: 0',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: System time: 0 seconds',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: User time: 1 second',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Vol. context switches: 23',
+                ),
+                Result(
+                    state=state.OK,
+                    notice='[node1]: Filesystem writes: 0',
+                ),
+                Result(state=state.OK, notice='[node2]: Latest exit code: 0'),
+                Result(state=state.OK, notice='[node2]: Real time: 2 minutes 0 seconds'),
+                Result(
+                    state=state.OK,
+                    notice='[node2]: Latest job started at Jul 09 2020 13:17:10',
+                ),
                 Result(state=state.OK,
-                       notice=('[node1]: Latest exit code: 0\n'
-                               '[node1]: Real time: 2 minutes 0 seconds\n'
-                               '[node1]: Latest job started at Jan 12 2019 14:53:21\n'
-                               '[node1]: Job age: 1 year 178 days (warn/crit at 1 hour'
-                               ' 0 minutes/2 hours 0 minutes)(!!)\n'
-                               '[node1]: Avg. memory: 1000 B\n'
-                               '[node1]: Invol. context switches: 12\n'
-                               '[node1]: Max. memory: 1.18 MiB\n'
-                               '[node1]: Filesystem reads: 0\n'
-                               '[node1]: System time: 0 seconds\n'
-                               '[node1]: User time: 1 second\n'
-                               '[node1]: Vol. context switches: 23\n'
-                               '[node1]: Filesystem writes: 0')),
-                Result(state=state.OK,
-                       notice=('[node2]: Latest exit code: 0\n'
-                               '[node2]: Real time: 2 minutes 0 seconds\n'
-                               '[node2]: Latest job started at Jul 09 2020 13:17:10\n'
-                               '[node2]: Job age: 1 hour 59 minutes (warn/crit at 1 hour'
-                               ' 0 minutes/2 hours 0 minutes)(!)\n'
-                               '[node2]: Avg. memory: 1000 B\n'
-                               '[node2]: Invol. context switches: 12\n'
-                               '[node2]: Max. memory: 1.18 MiB\n'
-                               '[node2]: Filesystem reads: 0\n'
-                               '[node2]: System time: 0 seconds\n'
-                               '[node2]: User time: 1 second\n'
-                               '[node2]: Vol. context switches: 23\n'
-                               '[node2]: Filesystem writes: 0')),
-                Result(state=state.WARN,
-                       summary=('0 nodes in state OK, 1 node in state WARN,'
-                                ' 1 node in state CRIT, 0 nodes in state UNKNOWN')),
+                       notice=('[node2]: Job age: 1 hour 59 minutes (warn/crit at 1 hour'
+                               ' 0 minutes/2 hours 0 minutes)(!)')),
+                Result(state=state.OK, notice='[node2]: Avg. memory: 1000 B'),
+                Result(state=state.OK, notice='[node2]: Invol. context switches: 12'),
+                Result(state=state.OK, notice='[node2]: Max. memory: 1.18 MiB'),
+                Result(state=state.OK, notice='[node2]: Filesystem reads: 0'),
+                Result(state=state.OK, notice='[node2]: System time: 0 seconds'),
+                Result(state=state.OK, notice='[node2]: User time: 1 second'),
+                Result(state=state.OK, notice='[node2]: Vol. context switches: 23'),
+                Result(state=state.OK, notice='[node2]: Filesystem writes: 0'),
+                Result(
+                    state=state.WARN,
+                    summary=('0 nodes in state OK, 1 node in state WARN,'
+                             ' 1 node in state CRIT, 0 nodes in state UNKNOWN'),
+                ),
             ],
         ),
         (
             'missing',
-            type_defs.Parameters({'age': (0, 0)},),
+            {
+                'age': (0, 0)
+            },
             {
                 'node1': SECTION_1,
                 'node2': SECTION_2,
             },
-            [
-                Result(
-                    state=state.UNKNOWN,
-                    summary='Received no data for this job from any of the nodes',
-                ),
-            ],
+            [],
         ),
     ],
 )

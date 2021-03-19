@@ -227,8 +227,6 @@ TEST(UpgradeTest, PatchStateHash) {
 }
 
 std::string nullfile = "";
-std::string commentfile =
-    "# This file is managed via WATO, do not edit manually or you \n";
 std::string not_bakeryfile_strange =
     "[local]\n"
     "# define maximum cache age for scripts matching specified patterns - first match wins\n"
@@ -466,8 +464,16 @@ std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
 TEST(UpgradeTest, LoggingSupport) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+    cma::OnStartTest();
+    auto temp_fs{tst::TempCfgFs::Create()};
+
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+
+    // without
+    ASSERT_TRUE(temp_fs->createRootFile(
+        install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
+
     auto [lwa_dir, pd_dir] = CreateInOut();
     ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
@@ -503,8 +509,16 @@ TEST(UpgradeTest, LoggingSupport) {
 TEST(UpgradeTest, UserIniPackagedAgent) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
+
+    cma::OnStartTest();
+    auto temp_fs{tst::TempCfgFs::Create()};
+
+    // #TODO (sk): make an API in TempCfgFs
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+    ASSERT_TRUE(temp_fs->createRootFile(
+        install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
+
     auto [lwa_dir, pd_dir] = CreateInOut();
     ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
@@ -614,28 +628,31 @@ TEST(UpgradeTest, UserIniPackagedAgent) {
     }
 }
 
-void SimulateWatoInstall(std::filesystem::path pd_dir) {
+void SimulateWatoInstall(const std::filesystem::path& lwa,
+                         const std::filesystem::path& pd_dir) {
     namespace fs = std::filesystem;
     auto bakery_yaml = ConstructBakeryYmlPath(pd_dir);
     auto user_yaml = ConstructUserYmlPath(pd_dir);
     std::error_code ec;
     fs::create_directory(pd_dir / dirs::kBakery, ec);
     ASSERT_EQ(ec.value(), 0);
-    tst::ConstructFile(bakery_yaml, "11");
-    tst::ConstructFile(user_yaml, "0");
+    tst::CreateTextFile(bakery_yaml, "11");
+    tst::CreateTextFile(user_yaml, "0");
 }
 
 TEST(UpgradeTest, UserIniWatoAgent) {
     using namespace cma::cfg;
     namespace fs = std::filesystem;
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    auto [lwa_dir, pd_dir] = CreateInOut();
-    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
+    // make temporary filesystem
+    auto temp_fs{tst::TempCfgFs::Create()};
+    // simulate WATO installation
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+    ASSERT_TRUE(temp_fs->createRootFile(install_yml, "# Doesn't matter"));
 
-    cma::cfg::SetTestInstallationType(InstallationType::wato);
-    ON_OUT_OF_SCOPE(
-        cma::cfg::SetTestInstallationType(InstallationType::packaged));
+    auto [lwa_dir, pd_dir] = CreateInOut();
+
+    ASSERT_TRUE(!lwa_dir.empty() && !pd_dir.empty());
 
     std::error_code ec;
 
@@ -645,7 +662,8 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // bakery file and no local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
+        ASSERT_EQ(DetermineInstallationType(), InstallationType::wato);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto name = "check_mk";
@@ -661,7 +679,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // bakery file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";
@@ -680,7 +698,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // private file and no local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto name = "check_mk";
@@ -697,7 +715,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // private file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";
@@ -715,7 +733,7 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 
     // no private file and local
     {
-        SimulateWatoInstall(pd_dir);
+        SimulateWatoInstall(lwa_dir, pd_dir);
         ON_OUT_OF_SCOPE(tst::SafeCleanTempDir("in");
                         tst::SafeCleanTempDir("out"););
         auto u_name = "check_mk";
@@ -733,11 +751,18 @@ TEST(UpgradeTest, UserIniWatoAgent) {
 }
 
 TEST(UpgradeTest, LoadIni) {
-    tst::SafeCleanTempDir();
     namespace fs = std::filesystem;
+    cma::OnStartTest();
+
+    auto temp_fs{tst::TempCfgFs::Create()};
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
+
+    // #TODO (sk): make an API in TempCfgFs
+    ASSERT_TRUE(temp_fs->createRootFile(
+        install_yml, "# Packaged\nglobal:\n  enabled: yes\n  install: no"));
+
     fs::path temp_dir = cma::cfg::GetTempDir();
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
     auto normal_dir =
         temp_dir.wstring().find(L"\\tmp", 0) != std::wstring::npos;
@@ -886,30 +911,20 @@ static auto a2 =
     "8753143349248||8757138597559||8753154542256|1668537305287|952521535002|951235405633|25314498833504|950257251850|3054676197176|950165926199|949187772416|10000000|2435538|10000000||949554799728|951335256063|949187772535|949187772416|952503978051|132104050924847952|949187774233|132134863734478619|7504388659458|132134935734470000|OK";
 
 TEST(UpgradeTest, CopyFolders) {
-#if (0)
-    // test of bad data
-    // #TODO remove ASAP or rework to test API
-    auto t1 = cma::tools::SplitString(a1, "|");
-    auto t2 = cma::tools::SplitString(a2, "|");
-    for (int i = 0; i < t1.size(); i++) {
-        XLOG::l.i("{}\t{}\n", t1[i].c_str(), t2[i].c_str());
-    }
-#endif
-
     namespace fs = std::filesystem;
-    if (!cma::tools::win::IsElevated()) {
-        XLOG::l(XLOG::kStdio)
-            .w("The Program is not elevated, testing is not possible");
-        return;
-    }
-    tst::SafeCleanTempDir();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
 
-    fs::path path = FindLegacyAgent();
-    ASSERT_TRUE(!path.empty())
-        << "Legacy Agent is absent. Either install it or simulate it";
+    auto temp_fs{tst::TempCfgFs::Create()};
+    auto [lwa_path, tgt] = tst::CreateInOut();
+    fs::create_directory(lwa_path / "config");
+    fs::create_directory(lwa_path / "plugins");
+    fs::create_directory(lwa_path / "bin");
+    tst::CreateWorkFile(lwa_path / "config" / "1.txt", "1");
+    tst::CreateWorkFile(lwa_path / "plugins" / "2.txt", "2");
+    auto good_path = fs::path{cma::cfg::GetTempDir()} /
+                     cma::cfg::kAppDataCompanyName / kAppDataAppName;
+    fs::create_directories(good_path);
 
-    auto source_file = path / "marker.tmpx";
+    auto source_file = lwa_path / "marker.tmpx";
     {
         std::ofstream ofs(source_file);
 
@@ -917,10 +932,10 @@ TEST(UpgradeTest, CopyFolders) {
                          << "error " << GetLastError() << "\n";
         ofs << "@marker\n";
     }
-    auto count_root = CopyRootFolder(path, cma::cfg::GetTempDir());
+    auto count_root = CopyRootFolder(lwa_path, cma::cfg::GetTempDir());
     EXPECT_GE(count_root, 1);
 
-    count_root = CopyRootFolder(path, cma::cfg::GetTempDir());
+    count_root = CopyRootFolder(lwa_path, cma::cfg::GetTempDir());
     EXPECT_GE(count_root, 0);
 
     fs::path target_file = cma::cfg::GetTempDir();
@@ -928,43 +943,51 @@ TEST(UpgradeTest, CopyFolders) {
     std::error_code ec;
     EXPECT_TRUE(fs::exists(target_file, ec));
 
-    auto count =
-        CopyAllFolders(path, L"c:\\Users\\Public", CopyFolderMode::keep_old);
+    auto count = CopyAllFolders(lwa_path, L"c:\\Users\\Public",
+                                CopyFolderMode::keep_old);
     ASSERT_TRUE(count == 0)
         << "CopyAllFolders works only for ProgramData due to safety reasons";
 
-    count = CopyAllFolders(path, cma::cfg::GetTempDir(),
+    count = CopyAllFolders(lwa_path, cma::cfg::GetTempDir(),
                            CopyFolderMode::remove_old);
-    EXPECT_GE(count, 2);
 
-    count =
-        CopyAllFolders(path, cma::cfg::GetTempDir(), CopyFolderMode::keep_old);
     EXPECT_EQ(count, 0);
+    count = CopyAllFolders(lwa_path, good_path, CopyFolderMode::remove_old);
+    EXPECT_EQ(count, 2);
 
-    ON_OUT_OF_SCOPE(fs::remove(target_file, ec));
-    ON_OUT_OF_SCOPE(fs::remove(source_file, ec));
+    count = CopyAllFolders(lwa_path, good_path, CopyFolderMode::keep_old);
+    EXPECT_EQ(count, 0);
 }
 
 TEST(UpgradeTest, CopyFiles) {
     namespace fs = std::filesystem;
-    fs::path path = FindLegacyAgent();
-    ASSERT_TRUE(!path.empty())
-        << "Legacy Agent is absent. Either install it or simulate it";
+    auto temp_fs{tst::TempCfgFs::Create()};
+    auto [lwa_path, tgt] = tst::CreateInOut();
+    fs::create_directory(lwa_path / "config");
+    fs::create_directory(lwa_path / "plugins");
+    fs::create_directory(lwa_path / "bin");
+    tst::CreateWorkFile(lwa_path / "config" / "1.txt", "1");
+    tst::CreateWorkFile(lwa_path / "plugins" / "2.txt", "2");
+    tst::CreateWorkFile(lwa_path / "bin" / "3.txt", "3");
+    tst::CreateWorkFile(lwa_path / "bin" / "4.txt", "4");
+    auto good_path = fs::path{cma::cfg::GetTempDir()} /
+                     cma::cfg::kAppDataCompanyName / kAppDataAppName;
+    fs::create_directories(good_path);
 
     auto count = CopyFolderRecursive(
-        path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
-        [path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
-                      wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
+        lwa_path, cma::cfg::GetTempDir(), fs::copy_options::overwrite_existing,
+        [lwa_path](fs::path P) {
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, lwa_path),
+                      wtools::ToUtf8(cma::cfg::GetTempDir()));
             return true;
         });
-    EXPECT_TRUE(count > 4);
+    EXPECT_EQ(count, 4);
 
     count = CopyFolderRecursive(
-        path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
-        [path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, path).u8string(),
-                      wtools::ConvertToUTF8(cma::cfg::GetTempDir()));
+        lwa_path, cma::cfg::GetTempDir(), fs::copy_options::skip_existing,
+        [lwa_path](fs::path path) {
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
+                      wtools::ToUtf8(cma::cfg::GetTempDir()));
             return true;
         });
     EXPECT_TRUE(count == 0);
@@ -1013,8 +1036,8 @@ TEST(UpgradeTest, TopLevelApi_Long) {
 
 TEST(UpgradeTest, StopStartStopOhm) {
     namespace fs = std::filesystem;
-    auto path = FindLegacyAgent();
-    ASSERT_TRUE(!path.empty())
+    auto lwa_path = FindLegacyAgent();
+    ASSERT_TRUE(!lwa_path.empty())
         << "Legacy Agent is absent. Either install it or simulate it";
 
     if (!cma::tools::win::IsElevated()) {
@@ -1024,7 +1047,7 @@ TEST(UpgradeTest, StopStartStopOhm) {
     }
 
     // start
-    fs::path ohm = path;
+    fs::path ohm = lwa_path;
     ohm /= "bin";
     ohm /= "OpenHardwareMonitorCLI.exe";
     std::error_code ec;
@@ -1065,15 +1088,15 @@ TEST(UpgradeTest, FindLwa_Long) {
         return;
     }
 
-    auto path = FindLegacyAgent();
-    ASSERT_TRUE(!path.empty())
+    auto lwa_path = FindLegacyAgent();
+    ASSERT_TRUE(!lwa_path.empty())
         << "Legacy Agent is absent. Either install it or simulate it";
 
     EXPECT_TRUE(ActivateLegacyAgent());
     EXPECT_TRUE(IsLegacyAgentActive())
         << "Probably you have no legacy agent installed";
 
-    fs::path ohm = path;
+    fs::path ohm = lwa_path;
     ohm /= "bin";
     ohm /= "OpenHardwareMonitorCLI.exe";
     std::error_code ec;

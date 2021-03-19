@@ -20,6 +20,7 @@ from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.gui.watolib as watolib
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.table import table_element
 from cmk.gui.htmllib import HTML
 from cmk.gui.exceptions import MKUserError
@@ -61,8 +62,8 @@ class ModeCheckPlugins(WatoMode):
         return "check_plugins"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     def _from_vars(self):
         self._manpages = _get_check_catalog(only_path=())
@@ -73,8 +74,7 @@ class ModeCheckPlugins(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = super().page_menu(breadcrumb)
-        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search",
-                                            placeholder=_("Search"))
+        menu.inpage_search = PageMenuSearch(target_mode="check_plugin_search")
         return menu
 
     def page(self):
@@ -106,8 +106,8 @@ class ModeCheckPluginSearch(WatoMode):
         return "check_plugin_search"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -178,8 +178,8 @@ class ModeCheckPluginTopic(WatoMode):
         return "check_plugin_topic"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -237,6 +237,8 @@ class ModeCheckPluginTopic(WatoMode):
             self._topic_title = self._titles.get(self._path[1], self._path[1])
 
     def title(self):
+        if self._topic == "unsorted":
+            return "unsorted"
         return self._topic_title
 
     def page(self):
@@ -307,7 +309,7 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
     def translate(t):
         return titles.get(t, t)
 
-    html.h2(heading)
+    html.h3(heading)
     with table_element(searchable=False, sortable=False, css="check_catalog") as table:
         for entry in sorted(manpage_list, key=lambda x: x["title"]):
             if not isinstance(entry, dict):
@@ -392,8 +394,8 @@ class ModeCheckManPage(WatoMode):
         return "check_manpage"
 
     @classmethod
-    def permissions(cls):
-        return []
+    def permissions(cls) -> Optional[List[PermissionName]]:
+        return ["check_plugins"]
 
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
@@ -438,6 +440,11 @@ class ModeCheckManPage(WatoMode):
                                        ("" if self._check_type == "check-mk" else " Discovery"),
                 **self._manpage,
             }
+        else:
+            raise MKUserError(
+                None,
+                _("Could not detect type of manpage: %s. Maybe the check is missing ") %
+                self._check_type)
 
     def title(self):
         return self._manpage["header"]["title"]

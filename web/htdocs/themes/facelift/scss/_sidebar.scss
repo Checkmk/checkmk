@@ -21,7 +21,6 @@ body.side {
   margin: 0;
   overflow: hidden;
   font-family: $font-family-default;
-  font-size: 14px;
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
@@ -36,10 +35,6 @@ body.side {
   b.treeangle.title {
     color: $font-color-sidebar;
   }
-
-  img.treeangle {
-    filter: $treeangle-img-filter-sidebar;
-  }
 }
 
 #check_mk_navigation {
@@ -48,6 +43,10 @@ body.side {
   float: left;
   width: 64px;
   height: 100%;
+
+  &.min {
+    width: 48px;
+  }
 }
 
 #check_mk_sidebar {
@@ -56,6 +55,7 @@ body.side {
   float: right;
   width: 280px;
   height: 100%;
+  padding-top: $spacing;
 
   &.folded {
     display: none;
@@ -86,6 +86,15 @@ body.side {
       &:visited {
         color: $font-color-sidebar;
       }
+
+      &.min {
+        font-size: 0;
+
+        img {
+          width: 24px;
+          height: 24px;
+        }
+      }
     }
 
     img {
@@ -115,7 +124,7 @@ body.side {
   width: auto;
   height: 100%;
   overflow: hidden;
-  background: #fff;
+  background: $bg-color;
 }
 
 #content_area iframe {
@@ -128,16 +137,23 @@ body.side {
 #side_header {
   height: 58px;
 
-  > a {
-    display: block;
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     width: 100%;
     height: 100%;
     text-decoration: none;
-    background-image: url("images/tribe29_icon.svg");
-    background-position: center 5px;
-    background-repeat: no-repeat;
-    background-size: auto 44px;
     outline: none;
+  }
+
+  img {
+    width: 48px;
+    height: auto;
+  }
+
+  .min & img {
+    width: 45px;
   }
 }
 
@@ -149,10 +165,6 @@ body.main .popup_menu #side_header > span {
   background-position: 16px center;
   background-repeat: no-repeat;
   background-size: auto 30px;
-}
-
-#side_bg {
-  display: none;
 }
 
 #side_fold {
@@ -185,7 +197,7 @@ body.main .popup_menu #side_header > span {
 
 #side_version {
   margin: $spacing;
-  font-size: 8px;
+  font-size: $font-size-small;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color-sidebar;
@@ -212,18 +224,6 @@ body.main .popup_menu #side_header > span {
     background-color: rgb(255, 0, 0);
     border-radius: 6px;
   }
-}
-
-span#msg_label {
-  position: relative;
-  top: -6px;
-  left: -10px;
-  z-index: 15;
-  padding: 1px;
-  font-size: $font-size-global;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
 }
 
 /* General layout of snapins */
@@ -259,15 +259,23 @@ div.snapin {
 
     b.heading {
       padding-bottom: 3px;
-      font-size: $font-size-global;
       font-weight: $font-weight-bold;
       line-height: 16px;
       letter-spacing: $letter-spacing-table;
-      border-bottom: 1px solid $snapin-heading-border-color;
     }
 
     &.closed span.minisnapin {
-      background-image: url("images/icon_maxisnapin.png");
+      background-image: url("images/icon_maxisnapin.svg");
+    }
+
+    span.minisnapin {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-left: 6px;
+      line-height: 0;
+      cursor: pointer;
+      background: no-repeat center / 100% url("images/icon_minisnapin.svg");
     }
   }
 
@@ -286,41 +294,36 @@ div.snapin {
   span.moresnapin {
     display: inline-block;
     width: 16px; /* FIXME: get rid of the animation that uses 4 images */
+    height: 16px;
     margin-right: 4px;
-
-    img {
-      width: 16px;
-      height: 16px;
-    }
-  }
-
-  span.closesnapin {
-    display: inline-block;
-    width: 16px;
+    vertical-align: middle;
 
     img {
       width: 16px;
       height: 16px;
       padding: 0;
-      margin-top: -8px; /* HACK to align the button */
     }
   }
 
-  span.minisnapin {
+  span.closesnapin {
     display: inline-block;
-    width: 16px;
-    height: 16px;
-    margin-right: 4px;
-    line-height: 0;
-    cursor: pointer;
-    background: no-repeat center / 100% url("images/icon_minisnapin.png");
+    width: 12px;
+    height: 12px;
+    vertical-align: middle;
+
+    img {
+      width: 12px;
+      height: 12px;
+      padding: 0;
+    }
   }
 
   div.content {
     top: 64px;
     width: 100%;
-    padding: $spacing 0 0;
+    padding: $spacing 0;
     color: $font-color-sidebar;
+    border-bottom: 1px solid $snapin-heading-border-color;
     box-sizing: border-box;
   }
 
@@ -342,7 +345,6 @@ div.snapin {
 
   h3 {
     margin: 2px 0;
-    font-size: 100%;
     color: $font-color;
   }
 
@@ -358,6 +360,11 @@ div.snapin {
 
     &.iconlink img:not(.emblem) {
       margin-right: 5px;
+    }
+
+    &.iconlink img {
+      width: 10px;
+      height: 12px;
     }
   }
 
@@ -398,7 +405,6 @@ div.snapin {
 
     h2 {
       margin-top: 0;
-      font-size: 12px;
       color: rgb(255, 0, 0);
     }
 
@@ -410,14 +416,16 @@ div.snapin {
   /* The right-aligned link at the bottom of some snapins like the "views" snapin. */
   div.footnotelink {
     margin-top: 0;
-    text-align: right;
+    text-align: left;
 
     a {
-      border-radius: 5px;
+      border-radius: $spacing;
     }
 
     a:hover {
+      /* TODO: create a better hover effect */
       text-decoration: none;
+      opacity: 0.5;
     }
   }
 
@@ -443,17 +451,14 @@ div.snapin {
   /* state bullets at problem host or all hosts snapin */
   div.statebullet {
     float: left;
-    width: 10px;
-    height: 10px;
-    margin-right: 6px;
-    margin-left: 0;
-    border: 1px solid rgb(18, 58, 74);
-    box-shadow: 0 0 1px rgb(18, 58, 74);
+    width: 5px;
+    height: 5px;
+    border-radius: 5px;
   }
 }
 
 #add_snapin {
-  margin-top: auto;
+  margin: auto 0 $spacing;
   text-align: center;
 
   a {
@@ -489,26 +494,27 @@ div.snapin div.footnotelink a.link,
 /* TODO: Reproduce these two html elements */
 div.snapin div.footnotelink body.main .popup_menu span.link,
 body.main .popup_menu div.snapin div.footnotelink span.link {
-  padding: 0;
-  margin-right: 16px;
-  margin-left: 0;
+  height: 11px;
+  padding: 2px 7px;
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
-  letter-spacing: $letter-spacing-table;
   color: $footnote-link-color;
-  text-transform: uppercase;
-  background: transparent;
+  background: $inpage-highlight-color;
   border: none;
   box-shadow: none;
+
+  &:not(:last-child) {
+    margin: $spacing-half $spacing-half 0 0;
+  }
 }
 
-div.snapin div.footnotelink a.link::before,
+//div.snapin div.footnotelink a.link::before,
 /* TODO: Reproduce these two html elements */
-div.snapin div.footnotelink body.main .popup_menu span.link::before,
+/*div.snapin div.footnotelink body.main .popup_menu span.link::before,
 body.main .popup_menu div.snapin div.footnotelink span.link::before {
   margin-right: 8px;
   content: "···";
-}
+}*/
 
 /* TODO: Reproduce this html element */
 div#snapinDragIndicator {
@@ -547,8 +553,6 @@ div.add_snapin {
       background-color: $snapin-bg-color;
       border: 1px solid $snapin-bg-color;
       border-radius: 5px;
-      box-shadow: 0 0 0 rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.15s 0s ease-in-out;
     }
 
     *,
@@ -561,12 +565,8 @@ div.add_snapin {
     }
 
     div.description {
-      padding: 16px;
-      font-size: $font-size-small;
-      font-weight: $font-weight-default;
-      line-height: 1.333;
-      letter-spacing: $letter-spacing-table;
-      text-rendering: optimizeLegibility;
+      padding: $spacing;
+      border-top: 1px solid $snapin-heading-border-color;
     }
 
     div.snapin {
@@ -577,37 +577,11 @@ div.add_snapin {
     }
 
     .head {
-      height: auto;
       padding: 8px;
-      color: $font-color-sidebar;
-      text-align: left;
-      background: transparent;
-
-      b.heading {
-        font-size: $font-size-default;
-        font-weight: 500;
-        letter-spacing: $letter-spacing-table;
-        text-transform: uppercase;
-      }
-    }
-
-    .snapin b,
-    .head b {
-      font-weight: $font-weight-bold;
     }
 
     .content {
-      color: $font-color-sidebar;
-    }
-
-    div.foldable {
-      b.treeangle {
-        color: $font-color-sidebar;
-      }
-
-      img.treeangle {
-        filter: $treeangle-img-filter-sidebar;
-      }
+      border-bottom: none;
     }
   }
 
@@ -653,15 +627,6 @@ div.popup_msg {
     display: block;
     float: right;
   }
-}
-
-span#msg_label {
-  position: relative;
-  z-index: 15;
-  padding: 1px;
-  color: rgb(255, 0, 0);
-  background-color: rgb(255, 255, 255);
-  border-radius: 5px;
 }
 
 div.head {

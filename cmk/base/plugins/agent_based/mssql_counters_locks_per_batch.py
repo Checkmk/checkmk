@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping, MutableMapping
 import time
 
 from .agent_based_api.v1 import (
@@ -17,10 +17,8 @@ from .agent_based_api.v1 import (
 )
 
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
-    ValueStore,
 )
 
 from .utils.mssql_counters import Section, get_rate_or_none, get_int
@@ -49,10 +47,10 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResul
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     data_locks = section.get(("%s:Locks" % item, "_Total"), {})
@@ -86,13 +84,14 @@ def _check_common(
         levels_upper=params.get('locks_per_batch'),
         metric_name="locks_per_batch",
         render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
+        boundaries=(0, None),
     )
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -107,23 +106,23 @@ def _check_base(
     ...       print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='1.0')
-    Metric('locks_per_batch', 1.0)
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, "", item, params, section)
 
 
 def check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from _check_base(get_value_store(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """
@@ -138,7 +137,7 @@ def _cluster_check_base(
     ...       print(result)
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] 1.0')
-    Metric('locks_per_batch', 1.0)
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, node_name, item, params, node_section)
@@ -146,7 +145,7 @@ def _cluster_check_base(
 
 def cluster_check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), item, params, section)

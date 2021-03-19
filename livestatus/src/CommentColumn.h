@@ -21,12 +21,12 @@ class MonitoringCore;
 class RowRenderer;
 class Row;
 
-class CommentColumn : public ListColumn {
+class CommentColumn : public deprecated::ListColumn {
 public:
     CommentColumn(const std::string &name, const std::string &description,
                   ColumnOffsets offsets, MonitoringCore *mc, bool is_service,
                   bool with_info, bool with_extra_info)
-        : ListColumn(name, description, std::move(offsets))
+        : deprecated::ListColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info)

@@ -5,10 +5,10 @@
 
 #include "LogEntry.h"
 
-#include <algorithm>  // IWYU pragma: keep
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
-#include <functional>  // IWYU pragma: keep
+#include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>

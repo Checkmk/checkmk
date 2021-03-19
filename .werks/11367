@@ -11,7 +11,7 @@ Version: 2.0.0i1
 This werk is only relevant for users who are currently using the ruleset "Hosts
 forced to use 'if' instead of 'if64'".
 
-The rule "Include or exclude SNMP sections", which allows users to disable individual
+The rule "Disabled and enabled sections (SNMP)", which allows users to disable individual
 SNMP sections, will now replace the more specific rule for enforcing the usage of
 the 32- instead of the 64-bit interface check ("Hosts forced to use 'if' instead
 of 'if64'"). As of this werk, the latter rule is deprecated. To make Checkmk fall

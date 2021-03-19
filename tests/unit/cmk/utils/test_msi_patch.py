@@ -149,6 +149,28 @@ def test_patch_package_code_with_state(conf_dir):
     assert _id == ""
 
 
+def test_patch_version(tmpdir):
+    """Tests version patching using the test file from test directory"""
+
+    # base data
+    fname = u"test_msi_patch_version.tst"
+    result = b"( VersionNT >= 602 )"
+
+    # copy
+    src = _get_test_file(fname=fname)
+    dst = Path(tmpdir) / fname
+    shutil.copy(src, dst)
+
+    # testing
+    assert not msi_patch.patch_windows_version(dst / "xx", new_version="602")  # no file
+    assert not msi_patch.patch_windows_version(dst, new_version="6")  # bad version
+    assert not msi_patch.patch_windows_version(dst, new_version="6020")  # bad version
+    assert msi_patch.patch_windows_version(dst, new_version="602")  # valid call -> success
+    assert not msi_patch.patch_windows_version(dst, new_version="602")  # no matrix -> fail
+    assert dst.stat().st_size == src.stat().st_size
+    assert dst.read_bytes().find(result) != -1
+
+
 def check_content(new_content: bytes, base_content: bytes, pos: int, uuid: str,
                   marker: bytes) -> None:
     assert new_content.find(marker) == -1

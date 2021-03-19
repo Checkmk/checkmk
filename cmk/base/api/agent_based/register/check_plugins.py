@@ -6,7 +6,7 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, get_args, List, Optional
+from typing import Any, Callable, Dict, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
@@ -14,7 +14,6 @@ from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
     DiscoveryFunction,
-    DiscoveryRuleSetType,
     IgnoreResults,
     Metric,
     Result,
@@ -24,8 +23,10 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
+    RuleSetType,
     validate_function_arguments,
     validate_default_parameters,
+    validate_ruleset_type,
 )
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
@@ -93,36 +94,6 @@ def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> Chec
     return filtered_generator
 
 
-def _validate_discovery_ruleset(ruleset_name: Optional[str],
-                                default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
-def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
-    if ruleset_type not in get_args(DiscoveryRuleSetType):
-        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in get_args(DiscoveryRuleSetType))))
-
-
-def _validate_check_ruleset(ruleset_name: Optional[str],
-                            default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
 def _validate_kwargs(
     *,
     plugin_name: CheckPluginName,
@@ -132,7 +103,7 @@ def _validate_kwargs(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict],
     discovery_ruleset_name: Optional[str],
-    discovery_ruleset_type: DiscoveryRuleSetType,
+    discovery_ruleset_type: RuleSetType,
     check_function: Callable,
     check_default_parameters: Optional[Dict],
     check_ruleset_name: Optional[str],
@@ -146,11 +117,7 @@ def _validate_kwargs(
         discovery_ruleset_name,
         discovery_default_parameters,
     )
-    # _validate_discovery_ruleset(
-    #     discovery_ruleset_name,
-    #     discovery_default_parameters,
-    # )
-    _validate_discovery_ruleset_type(discovery_ruleset_type,)
+    validate_ruleset_type(discovery_ruleset_type)
     validate_function_arguments(
         type_label="discovery",
         function=discovery_function,
@@ -164,10 +131,6 @@ def _validate_kwargs(
         check_ruleset_name,
         check_default_parameters,
     )
-    # _validate_check_ruleset(
-    #     check_ruleset_name,
-    #     check_default_parameters,
-    # )
     validate_function_arguments(
         type_label="check",
         function=check_function,
@@ -210,7 +173,7 @@ def create_check_plugin(
     discovery_function: Callable,
     discovery_default_parameters: Optional[Dict] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
     check_default_parameters: Optional[Dict] = None,
     check_ruleset_name: Optional[str] = None,
@@ -260,7 +223,8 @@ def create_check_plugin(
         discovery_function=disco_func,
         discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=disco_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
+        discovery_ruleset_type=("merged"
+                                if discovery_ruleset_type is RuleSetType.MERGED else "all"),
         check_function=_filter_check(check_function),
         check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,

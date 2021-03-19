@@ -39,9 +39,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -130,6 +130,7 @@ class ModeRoles(RoleManagement, WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         return menu
 
@@ -276,12 +277,11 @@ class ModeEditRole(RoleManagement, WatoMode):
         return _("Edit role %s") % self._role_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(
-            breadcrumb,
-            form_name="role",
-            button_name="save",
-        )
-        menu.inpage_search = PageMenuSearch(placeholder=_("Filter permissions"))
+        menu = make_simple_form_page_menu(_("Role"),
+                                          breadcrumb,
+                                          form_name="role",
+                                          button_name="save")
+        menu.inpage_search = PageMenuSearch()
         return menu
 
     def action(self) -> ActionResult:
@@ -295,6 +295,8 @@ class ModeEditRole(RoleManagement, WatoMode):
             raise MKUserError("alias", info)
 
         new_id = html.request.get_ascii_input_mandatory("id")
+        if not new_id:
+            raise MKUserError("id", "You have to provide a ID.")
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
             raise MKUserError(
                 "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
@@ -347,8 +349,8 @@ class ModeEditRole(RoleManagement, WatoMode):
         html.begin_form("role", method="POST")
 
         # ID
-        forms.header(_("Basic Properties"))
-        forms.section(_("Internal ID"), simple="builtin" in self._role)
+        forms.header(_("Basic properties"), css="wide")
+        forms.section(_("Internal ID"), simple="builtin" in self._role, is_required=True)
         if self._role.get("builtin"):
             html.write_text("%s (%s)" % (self._role_id, _("builtin role")))
             html.hidden_field("id", self._role_id)
@@ -405,7 +407,7 @@ class ModeEditRole(RoleManagement, WatoMode):
             if not filtered_perms:
                 continue
 
-            forms.header(section.title, isopen=search is not None)
+            forms.header(section.title, isopen=search is not None, css="wide")
             for perm in filtered_perms:
                 forms.section(perm.title)
 

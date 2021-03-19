@@ -9,11 +9,12 @@ import json
 import os
 import time
 import sys
-import re
 from hashlib import sha256
-from typing import Tuple, List, NamedTuple
+from typing import Tuple, List, NamedTuple, Set, Dict, Any
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.gui.sites import states, SiteStatus
+from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.utils.type_defs import SetAutochecksTable
 
 import cmk.gui.config as config
@@ -23,11 +24,12 @@ import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.i18n import _
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-from cmk.gui.watolib.rulesets import RuleConditions
+from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
 
 from cmk.gui.watolib.automations import (
     sync_changes_before_remote_automation,
     check_mk_automation,
+    execute_automation_discovery,
 )
 
 
@@ -84,6 +86,7 @@ class DiscoveryAction:
     SINGLE_UPDATE = "single_update"
     BULK_UPDATE = "bulk_update"
     UPDATE_HOST_LABELS = "update_host_labels"
+    UPDATE_SERVICES = "update_services"
 
 
 CheckTableEntry = Tuple  # TODO: Improve this type
@@ -94,6 +97,9 @@ DiscoveryResult = NamedTuple("DiscoveryResult", [
     ("check_table_created", int),
     ("check_table", CheckTable),
     ("host_labels", dict),
+    ("new_labels", dict),
+    ("vanished_labels", dict),
+    ("changed_labels", dict),
 ])
 
 DiscoveryOptions = NamedTuple("DiscoveryOptions", [
@@ -130,15 +136,23 @@ class Discovery:
         self.do_discovery(discovery_result)
 
     def do_discovery(self, discovery_result):
+        old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule, add_disabled_rule, saved_services = set(), set(), set()
         apply_changes = False
+
         for (table_source, check_type, _checkgroup, item, discovered_params, _check_params, descr,
-             _state, _output, _perfdata, service_labels) in discovery_result.check_table:
+             _state, _output, _perfdata, service_labels,
+             found_on_nodes) in discovery_result.check_table:
+            # Versions >2.0b2 always provide a found on nodes information
+            # If this information is missing (fallback value is None), the remote system runs on an older version
 
             table_target = self._get_table_target(table_source, check_type, item)
             key = check_type, item
-            value = descr, discovered_params, service_labels
+            value = descr, discovered_params, service_labels, found_on_nodes
+
+            if table_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+                old_autochecks[key] = value
 
             if table_source != table_target:
                 if table_target == DiscoveryState.UNDECIDED:
@@ -224,13 +238,32 @@ class Discovery:
                 self._save_host_service_enable_disable_rules(remove_disabled_rule,
                                                              add_disabled_rule)
                 need_sync = True
-            self._save_services(autochecks_to_save, need_sync)
+            self._save_services(
+                old_autochecks,
+                autochecks_to_save,
+                need_sync,
+            )
 
-    def _save_services(self, checks: SetAutochecksTable, need_sync: bool) -> None:
+    def _save_services(self, old_autochecks: SetAutochecksTable, checks: SetAutochecksTable,
+                       need_sync: bool) -> None:
         message = _("Saved check configuration of host '%s' with %d services") % (self._host.name(),
                                                                                   len(checks))
-        watolib.add_service_change(self._host, "set-autochecks", message, need_sync=need_sync)
-        check_mk_automation(self._host.site_id(), "set-autochecks", [self._host.name()], checks)
+        watolib.add_service_change(
+            host=self._host,
+            action_name="set-autochecks",
+            text=message,
+            need_sync=need_sync,
+            diff_text=watolib.make_diff_text(_make_host_audit_log_object(old_autochecks),
+                                             _make_host_audit_log_object(checks)),
+        )
+
+        site_id = self._host.site_id()
+        site_status = states().get(site_id, SiteStatus({}))
+        if is_pre_17_remote_site(site_status):
+            check_mk_automation(site_id, "set-autochecks", [self._host.name()],
+                                {x: y[1:3] for x, y in checks.items()})
+        else:
+            check_mk_automation(site_id, "set-autochecks", [self._host.name()], checks)
 
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
@@ -248,14 +281,6 @@ class Discovery:
         if not services:
             return
 
-        def _compile_patterns(_services, unescaped="exclude"):
-            ret = []
-            for svc in _services:
-                ret.append({"$regex": "%s$" % re.escape(svc)})
-                if unescaped == "include":
-                    ret.append({"$regex": "%s$" % svc})
-            return ret
-
         rulesets = watolib.AllRulesets()
         rulesets.load()
 
@@ -267,7 +292,7 @@ class Discovery:
 
         modified_folders = []
 
-        service_patterns = _compile_patterns(services, unescaped="include")
+        service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._remove_from_rule_of_host(ruleset,
                                                            service_patterns,
                                                            value=not value)
@@ -282,7 +307,7 @@ class Discovery:
                or value == value_without_host_rule:
                 services.remove(service)
 
-        service_patterns = _compile_patterns(services)
+        service_patterns = [service_description_to_condition(s) for s in services]
         modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
 
         for folder in modified_folders:
@@ -302,7 +327,8 @@ class Discovery:
 
         return []
 
-    def _update_rule_of_host(self, ruleset, service_patterns, value):
+    def _update_rule_of_host(self, ruleset: watolib.Ruleset, service_patterns: List[Dict[str, str]],
+                             value: Any) -> List[watolib.CREFolder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 
@@ -316,7 +342,10 @@ class Discovery:
 
             conditions = RuleConditions(folder.path())
             conditions.host_name = [self._host.name()]
-            conditions.service_description = sorted(service_patterns)
+            # mypy is wrong here vor some reason:
+            # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
+            conditions.service_description = sorted(
+                service_patterns, key=lambda x: x["$regex"])  # type: ignore[index]
             rule.update_conditions(conditions)
 
             rule.value = value
@@ -328,12 +357,17 @@ class Discovery:
 
     def _get_rule_of_host(self, ruleset, value):
         for _folder, _index, rule in ruleset.get_rules():
+            if rule.is_disabled():
+                continue
+
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
 
     def _get_table_target(self, table_source, check_type, item):
-        if self._options.action == DiscoveryAction.FIX_ALL:
+        if self._options.action == DiscoveryAction.FIX_ALL or (
+                self._options.action == DiscoveryAction.UPDATE_SERVICES and
+                self._service_is_checked(check_type, item)):
             if table_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
             if table_source == DiscoveryState.IGNORED:
@@ -343,7 +377,7 @@ class Discovery:
 
         update_target = self._discovery_info["update_target"]
         if not update_target:
-            return table_source  # should never happen
+            return table_source
 
         if self._options.action == DiscoveryAction.BULK_UPDATE:
             if table_source != self._discovery_info["update_source"]:
@@ -361,6 +395,15 @@ class Discovery:
                 return update_target
 
         return table_source
+
+    def _service_is_checked(self, check_type, item):
+        return not self._options.show_checkboxes or checkbox_id(
+            check_type, item) in self._discovery_info["update_services"]
+
+
+def _make_host_audit_log_object(checks: SetAutochecksTable) -> Set[str]:
+    """The resulting object is used for building object diffs"""
+    return {v[0] for v in checks.values()}
 
 
 def checkbox_id(check_type, item):
@@ -418,7 +461,7 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
         return execute_discovery_job(discovery_request)
 
     discovery_result = _get_check_table_from_remote(discovery_request)
-    discovery_result = _add_missing_service_labels(discovery_result)
+    discovery_result = _add_missing_discovery_result_fields(discovery_result)
     return discovery_result
 
 
@@ -440,12 +483,37 @@ def execute_discovery_job(request: StartDiscoveryRequest) -> DiscoveryResult:
     return r
 
 
-# 1.6.0b4 introduced the service labels column which might be missing when
-# fetching information from remote sites.
-def _add_missing_service_labels(discovery_result: DiscoveryResult) -> DiscoveryResult:
+def _add_missing_discovery_result_fields(discovery_result: DiscoveryResult) -> DiscoveryResult:
+    # 1.6.0b4 introduced the service labels column which might be missing when
+    # fetching information from remote sites.
     d = discovery_result._asdict()
     d["check_table"] = [(e + ({},) if len(e) < 11 else e) for e in d["check_table"]]
+
+    # 2.0.0b2 introduced the found_on_nodes info
+    d["check_table"] = [(e + (None,) if len(e) < 12 else e) for e in d["check_table"]]
+
     return DiscoveryResult(**d)
+
+
+def _deserialize_remote_result(raw_result: str) -> DiscoveryResult:
+    remote_result = ast.literal_eval(raw_result)
+
+    if isinstance(remote_result, tuple):
+        # Previous to 2.0.0p1 the remote call returned
+        # a) a tuple
+        # b) did not know about the new_labels, vanished_labels and changed_labels
+        return DiscoveryResult(
+            job_status=remote_result[0],
+            check_table_created=remote_result[1],
+            check_table=remote_result[2],
+            host_labels=remote_result[3],
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+        )
+
+    assert isinstance(remote_result, dict)
+    return DiscoveryResult(**remote_result)
 
 
 def _get_check_table_from_remote(request):
@@ -457,12 +525,12 @@ def _get_check_table_from_remote(request):
     try:
         sync_changes_before_remote_automation(request.host.site_id())
 
-        return DiscoveryResult(*ast.literal_eval(
+        return _deserialize_remote_result(
             watolib.do_remote_automation(config.site(request.host.site_id()),
                                          "service-discovery-job", [
                                              ("host_name", request.host.name()),
                                              ("options", json.dumps(request.options._asdict())),
-                                         ])))
+                                         ]))
     except watolib.MKAutomationException as e:
         if "Invalid automation command: service-discovery-job" not in "%s" % e:
             raise
@@ -494,6 +562,9 @@ def _get_check_table_from_remote(request):
             check_table=check_table,
             check_table_created=int(time.time()),
             host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
         )
 
 
@@ -519,11 +590,14 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
             host_name=host_name,
             estimated_duration=last_job_status.get("duration"),
         )
+        self._pre_try_discovery: Tuple[int, Dict] = (0, {})
 
     def discover(self, request: StartDiscoveryRequest,
                  job_interface: BackgroundProcessInterface) -> None:
         """Target function of the background job"""
         print("Starting job...")
+        self._pre_try_discovery = self._get_try_discovery(request)
+
         if request.options.action == DiscoveryAction.SCAN:
             self._jobstatus.update_status({"title": _("Full scan")})
             self._perform_service_scan(request)
@@ -544,11 +618,11 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         sys.stdout.write(result["output"])
 
     def _perform_automatic_refresh(self, request):
-        _counts, _failed_hosts = check_mk_automation(
-            request.host.site_id(), "inventory",
-            ["@scan", "refresh", request.host.name()])
-        # In distributed sites this must not add a change on the remote site. We need to build
+        # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
+        execute_automation_discovery(site_id=request.host.site_id(),
+                                     args=["@scan", "refresh",
+                                           request.host.name()])
         #count_added, _count_removed, _count_kept, _count_new = counts[request.host.name()]
         #message = _("Refreshed check configuration of host '%s' with %d services") % \
         #            (request.host.name(), count_added)
@@ -567,27 +641,52 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
         return options
 
-    def get_result(self, request):
-        # tupe: (StartDiscoveryRequest) -> DiscoveryResult
+    def get_result(self, request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status["is_active"] = self.is_active()
 
+        if job_status['is_active']:
+            check_table_created, result = self._pre_try_discovery
+        else:
+            check_table_created, result = self._get_try_discovery(request)
+            if job_status['state'] == JobStatusStates.EXCEPTION:
+                job_status.update(self._cleaned_up_status(job_status))
+
+        return DiscoveryResult(
+            job_status=job_status,
+            check_table_created=check_table_created,
+            check_table=result.get("check_table", []),
+            host_labels=result.get("host_labels", {}),
+            new_labels=result.get("new_labels", {}),
+            vanished_labels=result.get("vanished_labels", {}),
+            changed_labels=result.get("changed_labels", {}),
+        )
+
+    @staticmethod
+    def _get_try_discovery(request: StartDiscoveryRequest) -> Tuple[int, Dict]:
         # TODO: Use the correct time. This is difficult because cmk.base does not have a single
         # time for all data of a host. The data sources should be able to provide this information
         # somehow.
-        check_table_created = int(time.time())
-        result = check_mk_automation(request.host.site_id(), "try-inventory",
-                                     ["@noscan", request.host.name()])
+        return (
+            int(time.time()),
+            check_mk_automation(
+                request.host.site_id(),
+                "try-inventory",
+                ["@noscan", request.host.name()],
+            ),
+        )
 
-        if not job_status['is_active'] and job_status['state'] == JobStatusStates.EXCEPTION:
-            # There might be an exception when calling above 'check_mk_automation'. For example
-            # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
-            # configuring an IP address of this host, and the discovery is started again, we put
-            # the cached/last job exception into the current job progress update instead of displaying
-            # the error in a CRIT message box again.
-            job_status['state'] = JobStatusStates.FINISHED
-            job_status['loginfo'] = {
+    @staticmethod
+    def _cleaned_up_status(job_status):
+        # There might be an exception when calling above 'check_mk_automation'. For example
+        # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
+        # configuring an IP address of this host, and the discovery is started again, we put
+        # the cached/last job exception into the current job progress update instead of displaying
+        # the error in a CRIT message box again.
+        return {
+            'state': JobStatusStates.FINISHED,
+            'loginfo': {
                 'JobProgressUpdate': ['%s:' % _('Last progress update')] +
                                      job_status['loginfo']['JobProgressUpdate'] +
                                      ["%s:" % _('Last exception')] +
@@ -595,13 +694,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
                 'JobException': [],
                 'JobResult': job_status['loginfo']['JobResult'],
             }
-
-        return DiscoveryResult(
-            job_status=job_status,
-            check_table_created=check_table_created,
-            check_table=result["check_table"],
-            host_labels=result.get("host_labels", {}),
-        )
+        }
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")

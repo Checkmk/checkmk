@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Optional, Sequence
-
+from typing import Mapping, Optional, Sequence, Tuple
+import urllib.parse
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
 
@@ -14,15 +14,20 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 from cmk.gui.utils.url_encoder import URLEncoder
 from cmk.gui.escaping import escape_text
 
+QueryVars = Mapping[str, Sequence[str]]
 
-def requested_file_name(request: Request) -> str:
-    parts = request.requested_file.rstrip("/").split("/")
+
+def _file_name_from_path(path: str) -> str:
+    parts = path.rstrip("/").split("/")
     file_name = "index"
     if parts[-1].endswith(".py") and len(parts[-1]) > 3:
         # Regular pages end with .py - Strip it away to get the page name
         file_name = parts[-1][:-3]
-
     return file_name
+
+
+def requested_file_name(request: Request) -> str:
+    return _file_name_from_path(request.requested_file)
 
 
 def requested_file_with_query(request: Request) -> str:
@@ -94,7 +99,7 @@ def makeactionuri_contextless(
     )
 
 
-def makeuri_contextless_ruleset_group(
+def makeuri_contextless_rulespec_group(
     request: Request,
     group_name: str,
 ):
@@ -106,7 +111,12 @@ def makeuri_contextless_ruleset_group(
 
 
 def make_confirm_link(*, url: str, message: str) -> str:
-    return "javascript:cmk.forms.confirm_link(%s, %s)" % (
-        json.dumps(url),
+    return "javascript:cmk.forms.confirm_link(%s, %s),cmk.popup_menu.close_popup()" % (
+        json.dumps(urllib.parse.quote_plus(url)),
         json.dumps(escape_text(message)),
     )
+
+
+def file_name_and_query_vars_from_url(url: str) -> Tuple[str, QueryVars]:
+    split_result = urllib.parse.urlsplit(url)
+    return _file_name_from_path(split_result.path), urllib.parse.parse_qs(split_result.query)

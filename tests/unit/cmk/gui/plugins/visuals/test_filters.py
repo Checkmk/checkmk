@@ -673,12 +673,10 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {'host_name': 'h', 'service_description': 'srv2', 'site': 's'},
             {'host_name': 'h2', 'service_description': 'srv2', 'site': 's'},
-            {'host_name': 'h', 'service_description': 'srv1', 'site': 'b'},
         ],
     ),
     FilterTableTest(
@@ -688,7 +686,6 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {"site": "s", "host_name": "h", "service_description": "srv1"},
@@ -1045,10 +1042,10 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(what, site, host, service):
+    def is_part_of_aggregation_patch(host, service):
         return {
-            ("s", "h", "srv1"): True
-        }.get((site, host, service), False)
+            ("h", "srv1"): True
+        }.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
@@ -1060,7 +1057,7 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-            assert filt.filter_table(test.rows) == test.expected_rows
+            assert filt.filter_table({}, test.rows) == test.expected_rows
 
 
 # Filter form is not really checked. Only checking that no exception occurs
@@ -1108,5 +1105,5 @@ def _set_expected_queries(filt_ident, live):
 
     if filt_ident in ["host_check_command", "check_command"]:
         live.expect_query(
-            'GET commands\nCache: reload\nColumns: name\n'
+            'GET commands\nCache: reload\nColumns: name\nColumnHeaders: off'
         )

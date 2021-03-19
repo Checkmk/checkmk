@@ -17,7 +17,6 @@ pytestmark = pytest.mark.checks
     ([[0, 0, "", ""]], (0.0, 0.0, [("total", {})])),
     ([[1, 0, "", ""]], (1.0, 0.0, [("total", {})])),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_f5_bigip_mem_discovery(info, result):
     mem_total, mem_used, items = result
     check = Check("f5_bigip_mem")
@@ -36,7 +35,6 @@ def test_f5_bigip_mem_discovery(info, result):
     ([["", "", 0, 0]], []),
     ([["", "", 1, 0]], [("TMM", {})]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_f5_bigip_mem_tmm_discovery(info, result):
     parsed = Check("f5_bigip_mem").run_parse(info)
     check = Check("f5_bigip_mem.tmm")

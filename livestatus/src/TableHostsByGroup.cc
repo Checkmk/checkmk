@@ -7,15 +7,13 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
 #include "auth.h"
 #include "nagios.h"
-
-extern host *host_list;
-extern hostgroup *hostgroup_list;
 
 namespace {
 struct hostbygroup {
@@ -45,7 +43,9 @@ void TableHostsByGroup::answerQuery(Query *query) {
 
     for (const hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         if (requires_authcheck &&
-            !is_authorized_for_host_group(core(), hg, query->authUser())) {
+            !is_authorized_for_host_group(core()->groupAuthorization(),
+                                          core()->serviceAuthorization(), hg,
+                                          query->authUser())) {
             continue;
         }
 
@@ -59,6 +59,6 @@ void TableHostsByGroup::answerQuery(Query *query) {
 }
 
 bool TableHostsByGroup::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for(core(), ctc, rowData<hostbygroup>(row)->hst,
-                             nullptr);
+    return is_authorized_for(core()->serviceAuthorization(), ctc,
+                             rowData<hostbygroup>(row)->hst, nullptr);
 }

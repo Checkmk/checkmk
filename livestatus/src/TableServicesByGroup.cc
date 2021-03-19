@@ -7,14 +7,13 @@
 
 #include "Column.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
 #include "auth.h"
 #include "nagios.h"
-
-extern servicegroup *servicegroup_list;
 
 namespace {
 struct servicebygroup {
@@ -47,7 +46,9 @@ void TableServicesByGroup::answerQuery(Query *query) {
     for (const servicegroup *sg = servicegroup_list; sg != nullptr;
          sg = sg->next) {
         if (requires_authcheck &&
-            !is_authorized_for_service_group(core(), sg, query->authUser())) {
+            !is_authorized_for_service_group(core()->groupAuthorization(),
+                                             core()->serviceAuthorization(), sg,
+                                             query->authUser())) {
             continue;
         }
 
@@ -62,5 +63,6 @@ void TableServicesByGroup::answerQuery(Query *query) {
 
 bool TableServicesByGroup::isAuthorized(Row row, const contact *ctc) const {
     const auto *svc = rowData<servicebygroup>(row)->svc;
-    return is_authorized_for(core(), ctc, svc->host_ptr, svc);
+    return is_authorized_for(core()->serviceAuthorization(), ctc, svc->host_ptr,
+                             svc);
 }

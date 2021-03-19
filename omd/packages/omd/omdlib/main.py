@@ -1239,7 +1239,8 @@ def _config_set(site: SiteContext, hook_name: str) -> None:
 
     if output and output != value:
         site.conf[hook_name] = output
-        putenv("CONFIG_" + hook_name, output)
+
+    putenv("CONFIG_" + hook_name, site.conf[hook_name])
 
 
 def config_set_value(site: SiteContext,
@@ -1587,14 +1588,21 @@ def call_scripts(site: SiteContext, phase: str) -> None:
                 encoding="utf-8")
             if p.stdout is None:
                 raise Exception("stdout needs to be set")
-            stdout = p.stdout.read()
+
+            wrote_output = False
+            for line in p.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
             exitcode = p.wait()
             if exitcode == 0:
                 sys.stdout.write(tty.ok + '\n')
             else:
                 sys.stdout.write(tty.error + ' (exit code: %d)\n' % exitcode)
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -1631,6 +1639,8 @@ def main_help(version_info: VersionInfo,
         args = []
     if options is None:
         options = {}
+    sys.stdout.write("Manage multiple monitoring sites comfortably with OMD. "
+                     "The Open Monitoring Distribution.\n")
 
     if is_root():
         sys.stdout.write("Usage (called as root):\n\n")
@@ -2352,7 +2362,7 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     # is different from the current version of the site.
     if not global_opts.force and not dialog_yesno(
             "You are going to update the site %s from version %s to version %s. "
-            "This will include updating all of you configuration files and merging "
+            "This will include updating all of your configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." %
         (site.name, from_version, to_version), "Update!", "Abort"):
@@ -3607,7 +3617,11 @@ commands.append(
         args_text="...",
         handler=main_config,
         options=[],
-        description="Show and set site configuration parameters",
+        description="Show and set site configuration parameters.\n\n\
+Usage:\n\
+ omd config [site]\t\t\tinteractive mode\n\
+ omd config [site] show\t\t\tshow configuration settings\n\
+ omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
         confirm_text="",
     ))
 
@@ -3776,7 +3790,10 @@ def _parse_command_options(args: Arguments,
     # Give a short overview over the command specific options
     # when the user specifies --help:
     if len(args) and args[0] in ['-h', '--help']:
-        sys.stdout.write("Possible options for this command:\n")
+        if options:
+            sys.stdout.write("Possible options for this command:\n")
+        else:
+            sys.stdout.write("No options for this command\n")
         for option in options:
             args_text = "%s--%s" % ("-%s," % option.short_opt if option.short_opt else "",
                                     option.long_opt)
@@ -3909,6 +3926,10 @@ def main() -> None:
 
     # Parse command options. We need to do this now in order to know,
     # if a site name has been specified or not
+
+    # Give a short description for the command when the user specifies --help:
+    if len(args) and args[0] in ['-h', '--help']:
+        sys.stdout.write("%s\n\n" % command.description)
     args, command_options = _parse_command_options(args, command.options)
 
     # Some commands need a site to be specified. If we are
@@ -3965,11 +3986,11 @@ def main() -> None:
         set_environment(site)
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
-        sys.stdout.write("%s (yes/NO): " % command.confirm_text)
-        sys.stdout.flush()
-        a = sys.stdin.readline().strip()
-        if a.lower() != "yes":
-            sys.exit(0)
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
+        if answer in ["", "no"]:
+            bail_out(tty.normal + "Aborted.")
 
     try:
         command.handler(version_info, site, global_opts, args, command_options)

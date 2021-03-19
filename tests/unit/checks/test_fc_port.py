@@ -36,7 +36,6 @@ pytestmark = pytest.mark.checks
             48
         ], 14320896),  # "00 00 00 00 00 DA 85 00"
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_services_split(oid_value, expected):
     check = Check('fc_port')
     fc_parse_counter = check.context['fc_parse_counter']

@@ -114,6 +114,8 @@ def check_cmk_agent_update(_no_item, params, info):
         yield 0, "Last agent update: %s" % get_timestamp_human_readable(parsed["last_update"])
 
     if parsed.get("update_url"):
+        # Note: Transformation of URLs from this check (check_mk-check_mk_agent_update) to icons
+        # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
         yield 0, "Update URL: %s" % parsed["update_url"]
 
     if parsed["aghash"]:

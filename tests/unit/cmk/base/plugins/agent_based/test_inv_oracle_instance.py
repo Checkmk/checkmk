@@ -11,7 +11,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
-@pytest.mark.usefixtures("config_load_all_checks", "config_load_all_inventory_plugins")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize('line, expected_data', [
     ([], []),
     ([
@@ -319,7 +319,7 @@ def test_inv_oracle_instance(line, expected_data):
     assert list(inv_plugin.inventory_function(parsed)) == expected_data
 
 
-@pytest.mark.usefixtures("config_load_all_checks", "config_load_all_inventory_plugins")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_inv_oracle_instance_multiline():
     lines = [
         [

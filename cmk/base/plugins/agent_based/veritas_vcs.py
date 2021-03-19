@@ -7,6 +7,7 @@
 from collections import namedtuple
 import functools
 from typing import (
+    Any,
     Iterable,
     Generator,
     List,
@@ -21,7 +22,7 @@ from .agent_based_api.v1 import (
     State as state,
     type_defs,
 )
-from .agent_based_api.v1.clusterize import aggregate_node_details
+from .agent_based_api.v1.clusterize import make_node_notice_results
 
 # <<<veritas_vcs>>>
 # ClusState        RUNNING
@@ -183,7 +184,7 @@ def veritas_vcs_boil_down_states_in_cluster(states: Iterable[str]) -> str:
 
 def check_veritas_vcs_subsection(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     subsection: SubSection,
 ) -> Generator[Result, None, None]:
     list_vcs_tuples = subsection.get(item)
@@ -224,12 +225,12 @@ def check_veritas_vcs_subsection(
 
 def cluster_check_veritas_vcs_subsection(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     subsections: Mapping[str, SubSection],
 ) -> type_defs.CheckResult:
     last_cluster_result = None
 
-    all_nodes_ok = True
+    worst_state = state.OK
 
     for node_name, node_subsec in subsections.items():
         node_results = list(check_veritas_vcs_subsection(item, params, node_subsec))
@@ -240,24 +241,11 @@ def cluster_check_veritas_vcs_subsection(
             last_cluster_result = node_results[-1]
             node_results = node_results[:-1]
 
-        agg_node_state, agg_node_text = aggregate_node_details(
-            node_name,
-            node_results,
-        )
-        if agg_node_text:
-            details_prefix = "[%s]: " % node_name
-            details_split = agg_node_text.split('\n')
-            details_split = [details_split[0]] + [
-                detail_split[len(details_prefix):] for detail_split in details_split[1:]
-            ]
-            yield Result(
-                state=agg_node_state,
-                notice=', '.join(details_split),
-                details=agg_node_text,
-            )
-            all_nodes_ok &= agg_node_state is state.OK
+        for result in make_node_notice_results(node_name, node_results):
+            yield result
+            worst_state = state.worst(worst_state, result.state)
 
-    if all_nodes_ok:
+    if worst_state is state.OK:
         yield Result(
             state=state.OK,
             summary='All nodes OK',
@@ -283,7 +271,7 @@ def discover_veritas_vcs(section: Section) -> type_defs.DiscoveryResult:
 
 def check_veritas_vcs(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
@@ -295,7 +283,7 @@ def check_veritas_vcs(
 
 def cluster_check_veritas_vcs(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
@@ -333,7 +321,7 @@ def discover_veritas_vcs_system(section: Section) -> type_defs.DiscoveryResult:
 
 def check_veritas_vcs_system(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
@@ -345,7 +333,7 @@ def check_veritas_vcs_system(
 
 def cluster_check_veritas_vcs_system(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
@@ -383,7 +371,7 @@ def discover_veritas_vcs_group(section: Section) -> type_defs.DiscoveryResult:
 
 def check_veritas_vcs_group(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
@@ -395,7 +383,7 @@ def check_veritas_vcs_group(
 
 def cluster_check_veritas_vcs_group(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(
@@ -433,7 +421,7 @@ def discover_veritas_vcs_resource(section: Section) -> type_defs.DiscoveryResult
 
 def check_veritas_vcs_resource(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     yield from check_veritas_vcs_subsection(
@@ -445,7 +433,7 @@ def check_veritas_vcs_resource(
 
 def cluster_check_veritas_vcs_resource(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
 ) -> type_defs.CheckResult:
     yield from cluster_check_veritas_vcs_subsection(

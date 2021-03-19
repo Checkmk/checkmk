@@ -3,7 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, Generator, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import collections
 import contextlib
@@ -14,8 +25,6 @@ from ..agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
-    Parameters,
-    ValueStore,
 )
 from ..agent_based_api.v1 import (
     check_levels,
@@ -32,16 +41,18 @@ from ..agent_based_api.v1 import (
     State as state,
 )
 
+from . import cpu, memory
+
 ps_info = collections.namedtuple(
-    "Process_Info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile',
-                     'usermode_time', 'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
+    "ps_info", ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile', 'usermode_time',
+                'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup'))
 
 ps_info.__new__.__defaults__ = (None,) * len(ps_info._fields)  # type: ignore[attr-defined]
 
 Section = Tuple[int, List[Tuple[ps_info, List[str]]]]
 
 
-def get_discovery_specs(params: Sequence[Parameters]):
+def get_discovery_specs(params: Sequence[Mapping[str, Any]]):
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
         inventory_specs.append((
@@ -56,7 +67,7 @@ def get_discovery_specs(params: Sequence[Parameters]):
 
 
 def host_labels_ps(
-    params: Sequence[Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> HostLabelGenerator:
     specs = get_discovery_specs(params)
@@ -175,28 +186,19 @@ def format_process_list(processes, html_output):
             return "%.1f%s" % (value, unit)
         return "%s%s" % (value, unit)
 
+    # keys to output and default values:
+    headers = dict.fromkeys((key for process in processes for key, _value in process), '')
+
     if html_output:
         table_bracket = "<table>%s</table>"
         line_bracket = "<tr>%s</tr>"
         cell_bracket = "<td>%.0s%s</td>"
         cell_seperator = ""
-
-        headers = []
-        headers_found = set()
-
-        for process in processes:
-            for key, _value in process:
-                if key not in headers_found:
-                    headers.append(key)
-                    headers_found.add(key)
+        header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
 
         # make sure each process has all fields from the table
-        processes_filled = []
-        for process in processes:
-            dictified = dict(process)
-            processes_filled.append([(key, dictified.get(key, "")) for key in headers])
-        processes = processes_filled
-        header_line = "<tr><th>" + "</th><th>".join(headers) + "</th></tr>"
+        processes = [{**headers, **dict(process)}.items() for process in processes]
+
     else:
         table_bracket = "%s"
         line_bracket = "%s\r\n"
@@ -205,10 +207,9 @@ def format_process_list(processes, html_output):
         header_line = ""
 
     return table_bracket % (header_line + "".join([
-        line_bracket %
-        cell_seperator.join([cell_bracket % (key, format_value(value))
-                             for key, value in process])
-        for process in processes
+        line_bracket % cell_seperator.join([
+            cell_bracket % (key, format_value(value)) for key, value in process if key in headers
+        ]) for process in processes
     ]))
 
 
@@ -367,9 +368,9 @@ class ProcessAggregator:
 def process_capture(
     # process_lines: (Node, ps_info, cmd_line)
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
-    params: Parameters,
+    params: Mapping[str, Any],
     cpu_cores: int,
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
 ) -> ProcessAggregator:
 
     ps_aggregator = ProcessAggregator(cpu_cores, params)
@@ -415,15 +416,11 @@ def process_capture(
     return ps_aggregator
 
 
-SectionMem = Dict[str, float]
-SectionCpu = Dict[str, Union[float, List[float]]]
-
-
 def discover_ps(
-    params: Sequence[Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_ps: Optional[Section],
-    section_mem: Optional[SectionMem],
-    section_cpu: Optional[SectionCpu],
+    section_mem: Optional[memory.SectionMem],
+    section_cpu: Optional[cpu.Section],
 ) -> DiscoveryResult:
     if not section_ps:
         return
@@ -469,7 +466,7 @@ def discover_ps(
 
 @contextlib.contextmanager
 def unused_value_remover(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
 ) -> Generator[Dict[str, Tuple[float, float]], None, None]:
     """Remove all values that remain unchanged
@@ -490,7 +487,7 @@ def check_ps_common(
     *,
     label: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     process_lines: List[Tuple[Optional[str], ps_info, List[str]]],
     cpu_cores: int,
     total_ram: Optional[float],
@@ -528,7 +525,7 @@ def check_ps_common(
 
 def count_check(
     processes: ProcessAggregator,
-    params: Parameters,
+    params: Mapping[str, Any],
     info_name: str,
 ) -> CheckResult:
     warnmin, okmin, okmax, warnmax = params["levels"]
@@ -550,7 +547,7 @@ def count_check(
 
 def memory_check(
     processes: ProcessAggregator,
-    params: Parameters,
+    params: Mapping[str, Any],
 ) -> CheckResult:
     """Check levels for virtual and physical used memory"""
     for size, label, levels, metric in [
@@ -572,7 +569,7 @@ def memory_check(
 
 def memory_perc_check(
     processes: ProcessAggregator,
-    params: Parameters,
+    params: Mapping[str, Any],
     total_ram: Optional[float],
 ) -> CheckResult:
     """Check levels that are in percent of the total RAM of the host"""
@@ -593,7 +590,7 @@ def memory_perc_check(
     )
 
 
-def cpu_check(percent_cpu: float, params: Parameters) -> CheckResult:
+def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
     """Check levels for cpu utilization from given process"""
 
     warn_cpu, crit_cpu = params.get("cpulevels", (None, None, None))[:2]
@@ -627,7 +624,7 @@ def cpu_check(percent_cpu: float, params: Parameters) -> CheckResult:
 
 def individual_process_check(
     processes: ProcessAggregator,
-    params: Parameters,
+    params: Mapping[str, Any],
 ) -> CheckResult:
     levels = params["single_cpulevels"]
     for p in processes.processes:
@@ -658,7 +655,7 @@ def individual_process_check(
 def uptime_check(
     min_elapsed: float,
     max_elapsed: float,
-    params: Parameters,
+    params: Mapping[str, Any],
 ) -> CheckResult:
     """Check how long the process is running"""
     if min_elapsed == max_elapsed:
@@ -689,7 +686,7 @@ def uptime_check(
 
 def handle_count_check(
     processes: ProcessAggregator,
-    params: Parameters,
+    params: Mapping[str, Any],
 ) -> CheckResult:
     yield from check_levels(
         processes.handle_count,

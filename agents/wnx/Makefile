@@ -19,7 +19,8 @@ MSI_PATCH_FILE = ..\..\cmk\utils\msi_patch.py
 $(MSI_STATE_FILE): $(MSI_AGENT_FILE) $(MSI_PATCH_FILE)
 	@powershell Write-Host "Patching '$(MSI_AGENT_FILE)'" -Foreground Green
 	@del $(MSI_STATE_FILE)  2> nul
-	py -3 $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
+	@python.exe --version
+	python.exe $(MSI_PATCH_FILE) 1033 $(MSI_AGENT_FILE) $(MSI_STATE_FILE)
 
 msi_patch: $(MSI_STATE_FILE)
 	@if NOT exist "$(MSI_STATE_FILE)" powershell Write-Host "Patch of '$(MSI_AGENT_FILE)' failed" -Foreground Red && exit /b 1

@@ -9,7 +9,7 @@ A service discovery is the automatic and reliable detection of all services to b
 a host.
 
 You can find an introduction to services including service discovery in the
-[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 import json
 
@@ -152,7 +152,7 @@ def move_service(params):
               **HOST_NAME,
           }])
 def execute(params):
-    """Execute a service discovery of a host"""
+    """Execute a service discovery on a host"""
     host = watolib.Host.host(params["host_name"])
     discovery_request = StartDiscoveryRequest(host=host,
                                               folder=host.folder(),
@@ -181,7 +181,8 @@ SERVICE_STATE = {0: "OK", 1: "WARN", 2: "CRIT"}
 def serialize_service_discovery(host, discovered_services, discovery_state):
     members = {}
     for (table_source, check_type, _checkgroup, item, _discovered_params, _check_params, descr,
-         _service_state, _output, _perfdata, _service_labels) in discovered_services:
+         _service_state, _output, _perfdata, _service_labels,
+         _found_on_nodes) in discovered_services:
 
         if table_source == SERVICE_DISCOVERY_STATES[discovery_state]:
             service_hash = checkbox_id(check_type, item)

@@ -264,7 +264,7 @@ class ModeObjectParameters(WatoMode):
                     None,
                     _("Failed to determine origin rule of %s / %s") %
                     (self._hostname, self._service))
-            rule_folder, rule_index, _rule = origin_rule_result
+            rule_folder, rule_index, rule = origin_rule_result
 
             url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
                                                   ('varname', "custom_checks"),
@@ -273,7 +273,7 @@ class ModeObjectParameters(WatoMode):
             url = watolib.folder_preserving_link([('mode', 'edit_rule'),
                                                   ('varname', "custom_checks"),
                                                   ('rule_folder', rule_folder.path()),
-                                                  ('rulenr', rule_index), ('host', self._hostname)])
+                                                  ('rule_id', rule.id), ('host', self._hostname)])
 
             html.open_table(class_="setting")
             html.open_tr()
@@ -360,12 +360,12 @@ class ModeObjectParameters(WatoMode):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
-        def rule_url(rule):
+        def rule_url(rule: Rule) -> str:
             return watolib.folder_preserving_link([
                 ('mode', 'edit_rule'),
                 ('varname', varname),
                 ('rule_folder', rule.folder.path()),
-                ('rulenr', rule.index()),
+                ('rule_id', rule.id),
                 ('host', self._hostname),
                 ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
                 ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),

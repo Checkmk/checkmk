@@ -99,28 +99,26 @@ bool MailboxCallback(const cma::MailSlot* Slot, const void* Data, int Len,
 static std::vector<std::wstring> ConvertArgstoPathArray(int argc,
                                                         wchar_t const* argv[]) {
     using namespace std;
-    using namespace std::filesystem;
+    namespace fs = std::filesystem;
     vector<wstring> v;
     if (argc == 0) {
-        path p = G_TestPath;
-        if (exists(p))
-            v.push_back(p.wstring());
-        else
-            xlog::l("Cannot find default path %ls", p.wstring());
+        xlog::l("Not enough args");
+        return {};
+    }
 
-    } else {
-        if (argc > 24) argc = 24;  // limit a bit
-        for (int i = 0; i < argc; i++) {
-            path p = argv[i];
-            if (p.wstring() == L"#") {
-                if (exists(G_TestPath)) v.push_back(G_TestPath.wstring());
-                break;
-            }
-            if (exists(p))
-                v.push_back(p.wstring());
-            else
-                xlog::l("Cannot find path %ls", p.wstring());
+    if (argc > 24) argc = 24;  // limit a bit
+
+    for (int i = 0; i < argc; i++) {
+        fs::path p{argv[i]};
+        if (p.wstring() == L"#") {
+            break;
         }
+
+        std::error_code ec;
+        if (fs::exists(p, ec))
+            v.emplace_back(p.wstring());
+        else
+            xlog::l("Cannot find path %ls", p.wstring());
     }
 
     return v;
@@ -257,11 +255,11 @@ int RunMe(const std::wstring& PeerName,  // assigned by caller
                            uint32_t Code, const std::vector<char>& Data) {
         auto data = wtools::ConditionallyConvertFromUTF16(Data);
         XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
+                wtools::ToUtf8(CmdLine), Pid, Code, data.data());
 
         CoreCarrier::FireLogX(PeerName, Port,
                               "Process [{}]\t Pid [{}]\t Code [{}]",
-                              wtools::ConvertToUTF8(CmdLine), Pid, Code);
+                              wtools::ToUtf8(CmdLine), Pid, Code);
 
         cma::tools::AddVector(accu, data);
         count++;

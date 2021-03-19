@@ -12,11 +12,12 @@ import abc
 import json
 import re
 import subprocess
-from typing import Callable, List, Type, Optional as _Optional, Tuple as _Tuple
+from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple
 
 from six import ensure_str
 
 import cmk.utils.plugin_registry
+from cmk.utils.type_defs import CheckPluginName
 
 import cmk.gui.mkeventd
 import cmk.gui.config as config
@@ -28,7 +29,8 @@ import cmk.gui.weblib as weblib
 from cmk.gui.pages import page_registry
 from cmk.gui.i18n import _u, _
 from cmk.gui.globals import html, g
-from cmk.gui.htmllib import Choices, HTML
+from cmk.gui.utils.html import HTML
+from cmk.gui.type_defs import Choices
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
@@ -86,7 +88,7 @@ from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
     ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
     config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
     make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
-    user_script_title, wato_fileheader, wato_root_dir,
+    user_script_title, wato_fileheader, wato_root_dir, make_diff_text,
 )
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,)
@@ -893,7 +895,6 @@ def PredictiveLevels(**args):
         ],
         default_keys=["levels_upper"],
         columns=1,
-        headers="sup",
         elements=[
             ("period",
              DropdownChoice(title=_("Base prediction on"),
@@ -1046,35 +1047,54 @@ def Levels(**kwargs):
     )
 
 
-def may_edit_ruleset(varname):
-    if varname == "ignored_services":
-        return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    if varname in [
-            "custom_checks",
-            "datasource_programs",
-            "agent_config:mrpe",
-            "agent_config:agent_paths",
-            "agent_config:runas",
-            "agent_config:only_from",
-    ]:
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.add_or_modify_executables")
-    if varname == "agent_config:custom_files":
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.agent_deploy_custom_files")
-    return config.user.may("wato.rulesets")
+def valuespec_check_plugin_selection(
+    *,
+    title: str,
+    help_: str,
+) -> Transform:
+    return Transform(
+        Dictionary(
+            title=title,
+            help=help_,
+            elements=[
+                ("host", _CheckTypeHostSelection(title=_("Checks on regular hosts"))),
+                ("mgmt", _CheckTypeMgmtSelection(title=_("Checks on management boards"))),
+            ],
+            optional_keys=["mgmt"],
+        ),
+        # omit empty mgmt key
+        forth=lambda list_: {
+            k: v for k, v in (
+                ("host", [name for name in list_ if not name.startswith("mgmt_")]),
+                ("mgmt", [name[5:] for name in list_ if name.startswith("mgmt_")]),
+            ) if v or k == "host"
+        },
+        back=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
+    )
 
 
-class CheckTypeSelection(DualListChoice):
+class _CheckTypeHostSelection(DualListChoice):
     def __init__(self, **kwargs):
-        super(CheckTypeSelection, self).__init__(rows=25, **kwargs)
+        super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
         checks = get_check_information()
-        elements = sorted([
-            (cn, (cn + " - " + ensure_str(c["title"]))[:60]) for (cn, c) in checks.items()
-        ])
-        return elements
+        return [
+            (str(cn), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            for (cn, c) in checks.items()
+            # filter out plugins implemented *explicitly* for management boards
+            if not cn.is_management_name()
+        ]
+
+
+class _CheckTypeMgmtSelection(DualListChoice):
+    def __init__(self, **kwargs):
+        super().__init__(rows=25, **kwargs)
+
+    def get_elements(self):
+        checks = get_check_information()
+        return [(str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+                for (cn, c) in checks.items()]
 
 
 class ConfigHostname(TextAsciiAutocomplete):
@@ -1196,13 +1216,13 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             ("match_servicelabels",
              Labels(
                  Labels.World.CORE,
-                 title=_("Match Service Labels"),
+                 title=_("Match service labels"),
                  help=_(
                      "Use this condition to select hosts based on the configured service labels."),
              )),
             ("match_servicegroups",
              ServiceGroupChoice(
-                 title=_("Match Service Groups"),
+                 title=_("Match service groups"),
                  help=_(
                      "The service must be in one of the selected service groups. For host events this condition "
                      "never matches as soon as at least one group is selected."),
@@ -1210,7 +1230,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_servicegroups",
              ServiceGroupChoice(
-                 title=_("Exclude Service Groups"),
+                 title=_("Exclude service groups"),
                  help=_(
                      "The service must not be in one of the selected service groups. For host events this condition "
                      "is simply ignored."),
@@ -1218,7 +1238,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_servicegroups_regex",
              Tuple(
-                 title=_("Match Service Groups (regex)"),
+                 title=_("Match service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1237,7 +1257,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  ])),
             ("match_exclude_servicegroups_regex",
              Tuple(
-                 title=_("Exclude Service Groups (regex)"),
+                 title=_("Exclude service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1255,7 +1275,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  ])),
             ("match_services",
              ListOfStrings(
-                 title=_("Match only the following services"),
+                 title=_("Match services"),
                  help=
                  _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                    "service name in order for the rule to match. Note: Host notifications never match this "
@@ -1272,7 +1292,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_services",
              ListOfStrings(
-                 title=_("Exclude the following services"),
+                 title=_("Exclude services"),
                  valuespec=RegExpUnicode(
                      size=32,
                      mode=RegExpUnicode.prefix,
@@ -1280,16 +1300,16 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                  orientation="horizontal",
              )),
             ("match_checktype",
-             CheckTypeSelection(
-                 title=_("Match the following check types"),
-                 help=
+             valuespec_check_plugin_selection(
+                 title=_("Match check types"),
+                 help_=
                  _("Only apply the rule if the notification originates from certain types of check plugins. "
                    "Note: Host notifications never match this rule if this option is being used."),
              )),
             (
                 "match_plugin_output",
                 RegExp(
-                    title=_("Match the output of the check plugin"),
+                    title=_("Match check plugin output"),
                     help=_(
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
@@ -1300,7 +1320,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
             ("match_contacts",
              ListOf(
                  userdb.UserSelection(only_contacts=True),
-                 title=_("Match Contacts"),
+                 title=_("Match contacts"),
                  help=_("The host/service must have one of the selected contacts."),
                  movable=False,
                  allow_empty=False,
@@ -1308,7 +1328,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_contactgroups",
              ContactGroupChoice(
-                 title=_("Match Contact Groups"),
+                 title=_("Match contact groups"),
                  help=_(
                      "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
                      "If you don't use the CMC that filter will not apply"),
@@ -1416,26 +1436,26 @@ def configure_attributes(new,
     hide_attributes = []
     show_more_mode: bool = False
 
-    show_more_mode = bool(config.user.get_attribute("show_mode") and \
-            "show_more" in config.user.get_attribute("show_mode"))
+    show_more_mode = config.user.show_mode != "default_show_less"
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
+        topic_attributes = watolib.get_sorted_host_attributes_by_topic(topic_id)
 
         forms.header(
             topic_title,
             isopen=topic_id in ["basic", "address", "data_sources"],
             table_id=topic_id,
-            show_more_toggle=True,
+            show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
             show_more_mode=show_more_mode,
         )
 
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:
-                forms.section(_u(vs.title()))
+                forms.section(_u(vs.title()), is_required=not vs.allow_empty())
                 vs.render_input(attr_varprefix, default_value)
 
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
+        for attr in topic_attributes:
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
@@ -1595,7 +1615,8 @@ def configure_attributes(new,
             forms.section(_u(attr.title()),
                           checkbox=checkbox_code,
                           section_id="attr_" + attrname,
-                          is_show_more=attr.is_show_more())
+                          is_show_more=attr.is_show_more(),
+                          is_changed=active)
             html.help(attr.help())
 
             if len(values) == 1:
@@ -1658,7 +1679,7 @@ def configure_attributes(new,
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write(content)
+                    html.write_text(content)
                     html.close_b()
                 elif isinstance(attr, str):
                     html.b(_u(content))
@@ -2191,10 +2212,10 @@ def _site_rule_match_condition():
     return (
         "match_site",
         DualListChoice(
-            title=_("Match site"),
+            title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
-            choices=config.site_attribute_choices,
+            choices=config.get_activation_site_choices,
         ),
     )
 
@@ -2216,23 +2237,23 @@ def _multi_folder_rule_match_condition():
 
 def _common_host_rule_match_conditions():
     return [
-        ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
+        ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
         ("match_hostlabels",
          Labels(
              Labels.World.CORE,
-             title=_("Match Host Labels"),
+             title=_("Match host labels"),
              help=_("Use this condition to select hosts based on the configured host labels."),
          )),
         ("match_hostgroups",
          HostGroupChoice(
-             title=_("Match Host Groups"),
+             title=_("Match host groups"),
              help=_("The host must be in one of the selected host groups"),
              allow_empty=False,
          )),
         ("match_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Match only the following hosts"),
+             title=_("Match hosts"),
              size=24,
              orientation="horizontal",
              allow_empty=False,
@@ -2243,7 +2264,7 @@ def _common_host_rule_match_conditions():
         ("match_exclude_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Exclude the following hosts"),
+             title=_("Exclude hosts"),
              size=24,
              orientation="horizontal",
          ))
@@ -2307,10 +2328,12 @@ class FolderChoice(DropdownChoice):
         DropdownChoice.__init__(self, **kwargs)
 
 
-def get_check_information():
+def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
     if 'automation_get_check_information' not in g:
-        g.automation_get_check_information = watolib.check_mk_local_automation(
-            "get-check-information")
+        raw_check_dict = watolib.check_mk_local_automation("get-check-information")
+        g.automation_get_check_information = {
+            CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
+        }
 
     return g.automation_get_check_information
 

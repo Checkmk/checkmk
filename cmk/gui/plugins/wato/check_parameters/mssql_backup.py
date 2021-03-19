@@ -12,7 +12,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     MonitoringState,
-    TextAscii,
     Transform,
     Tuple,
 )
@@ -24,6 +23,8 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     HostRulespec,
 )
+
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
 
 
 def _vs_mssql_backup_age(title):
@@ -96,7 +97,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         parameter_valuespec=_parameter_valuespec_mssql_backup,
         title=lambda: _("MSSQL Backup summary"),
     ))

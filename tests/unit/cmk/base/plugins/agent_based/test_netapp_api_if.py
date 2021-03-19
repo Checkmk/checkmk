@@ -68,13 +68,15 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[GTB1020-2-CL_mgmt]'),
-                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='[GTB1020-2-CL_mgmt]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Current Port: e0f-112 (is home port)'),
                 ],
@@ -82,13 +84,15 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[GTB1020-2_ic1]'),
-                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='[GTB1020-2_ic1]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Current Port: e0f-2231 (is home port)'),
                 ],
@@ -145,14 +149,16 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '5',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[ifgrp_sto]'),
-                    Result(state=state.OK, notice='Operational state: up'),
-                    Result(state=state.OK, notice='MAC: 01:B0:89:22:DF:02'),
+                    Result(state=state.OK, summary='[ifgrp_sto]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='MAC: 01:B0:89:22:DF:02'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                     Result(state=state.OK, summary='Physical interfaces: e0c(up)'),
                     Result(state=state.OK, summary='e0d(up)'),
@@ -190,13 +196,15 @@ from cmk.base.plugins.agent_based.utils import interfaces
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 0,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[cluster_mgmt]'),
-                    Result(state=state.OK, notice='Operational state: up'),
+                    Result(state=state.OK, summary='[cluster_mgmt]'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='Speed: auto'),
                     Result(state=state.OK, summary='Current Port: e0a (is home port)'),
                 ],
@@ -214,7 +222,7 @@ def test_netapp_api_if_regression(
 
     assert list(
         netapp_api_if.discover_netapp_api_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
             section,
         )) == discovery_results
 
@@ -222,6 +230,6 @@ def test_netapp_api_if_regression(
     for item, par, res in items_params_results:
         assert list(netapp_api_if.check_netapp_api_if(
             item,
-            type_defs.Parameters(par),
+            (par),
             section,
         )) == res

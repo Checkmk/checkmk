@@ -15,9 +15,12 @@ from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
 from testlib import MissingCheckInfoError, Check  # type: ignore[import]
 from generictests.checkhandler import checkhandler
 
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
+from cmk.base.check_utils import Service
+from cmk.base.plugin_contexts import current_host, current_service
 
 # TODO CMK-4180
 #from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -206,15 +209,24 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, 'checks', {}).get(subcheck, [])
     check_func = check.info.get("check_function")
+    check_plugin_name = CheckPluginName(maincheckify(check.name))
 
     for item, params, results_expected_raw in test_cases:
 
         print("Dataset item %r in check %r" % (item, check.name))
         immu.register(params, 'params')
-        result_raw = check.run_check(item, params, info_arg)
+
+        with current_service(
+                Service(
+                    item=item,
+                    check_plugin_name=check_plugin_name,
+                    description="unit test description",
+                    parameters={},
+                )):
+            result = CheckResult(check.run_check(item, params, info_arg))
+
         immu.test(' after check (%s): ' % check_func.__name__)
 
-        result = CheckResult(result_raw)
         result_expected = CheckResult(results_expected_raw)
 
         if write:
@@ -261,10 +273,12 @@ def run(check_info, dataset, write=False):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with value_store.context(CheckPluginName("test"), "unit-test"), \
-                 MockItemState(mock_is), \
-                 MockHostExtraConf(check, mock_hec), \
-                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
+            with \
+                current_host("non-existent-testhost", write_state=False), \
+                value_store.context(CheckPluginName("test"), "unit-test"), \
+                MockItemState(mock_is), \
+                MockHostExtraConf(check, mock_hec), \
+                MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write)
 

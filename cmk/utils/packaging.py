@@ -15,7 +15,7 @@ import subprocess
 import tarfile
 import time
 from contextlib import suppress
-from typing import cast, Any, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
+from typing import cast, Any, Callable, BinaryIO, Dict, Iterable, List, NamedTuple, Optional, Final
 
 from six import ensure_binary, ensure_str
 
@@ -112,6 +112,14 @@ def get_config_parts() -> List[PackagePart]:
     ]
 
 
+def get_repo_ntop_parts() -> List[PackagePart]:
+    # This function is meant to return the location of mkp-able ntop files within the git repository.
+    # It is used for building a mkp which enables the ntop integration
+    return [
+        PackagePart("web", _("ntop GUI extensions"), "enterprise/cmk/gui/cee/"),
+    ]
+
+
 def get_package_parts() -> List[PackagePart]:
     return [
         PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
@@ -125,7 +133,7 @@ def get_package_parts() -> List[PackagePart]:
         PackagePart("notifications", _("Notification scripts"),
                     str(cmk.utils.paths.local_notifications_dir)),
         PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
-        PackagePart("pnp-templates", _("PNP4Nagios templates"),
+        PackagePart("pnp-templates", _("PNP4Nagios templates (deprecated)"),
                     str(cmk.utils.paths.local_pnp_templates_dir)),
         PackagePart("doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)),
         PackagePart("locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)),
@@ -170,7 +178,12 @@ def release(pacname: PackageName) -> None:
     _remove_package_info(pacname)
 
 
-def write_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> None:
+def write_file(
+    package: PackageInfo,
+    file_object: Optional[BinaryIO] = None,
+    package_parts: Callable = get_package_parts,
+    config_parts: Callable = get_config_parts,
+) -> None:
     package["version.packaged"] = cmk_version.__version__
     tar = tarfile.open(fileobj=file_object, mode="w:gz")
 
@@ -197,7 +210,7 @@ def write_file(package: PackageInfo, file_object: Optional[BinaryIO] = None) -> 
     add_file("info.json", ensure_binary(json.dumps(package)))
 
     # Now pack the actual files into sub tars
-    for part in get_package_parts() + get_config_parts():
+    for part in package_parts() + config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
@@ -561,7 +574,7 @@ def get_all_package_infos() -> Packages:
 
     return {
         "installed": packages,
-        "unpackaged": unpackaged_files(),
+        "unpackaged": {part.ident: files for part, files in unpackaged_files().items()},
         "parts": package_part_info(),
         "optional_packages": get_optional_package_infos(),
         "disabled_packages": get_disabled_package_infos(),
@@ -569,13 +582,7 @@ def get_all_package_infos() -> Packages:
 
 
 def get_optional_package_infos() -> Dict[str, PackageInfo]:
-    optional = {}
-    for pkg_path in _get_optional_package_paths():
-        with pkg_path.open("rb") as pkg:
-            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
-            optional[ensure_str(pkg_path.name)] = package_info
-
-    return optional
+    return _get_package_infos(_get_optional_package_paths())
 
 
 def _get_optional_package_paths() -> List[Path]:
@@ -585,10 +592,19 @@ def _get_optional_package_paths() -> List[Path]:
 
 
 def get_disabled_package_infos() -> Dict[str, PackageInfo]:
+    return _get_package_infos(_get_disabled_package_paths())
+
+
+def _get_package_infos(paths: List[Path]) -> Dict[str, PackageInfo]:
     optional = {}
-    for pkg_path in _get_disabled_package_paths():
+    for pkg_path in paths:
         with pkg_path.open("rb") as pkg:
-            package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            try:
+                package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
+            except Exception:
+                # Do not make broken files / packages fail the whole mechanism
+                logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
+                continue
             optional[ensure_str(pkg_path.name)] = package_info
 
     return optional
@@ -600,10 +616,10 @@ def _get_disabled_package_paths() -> List[Path]:
     return list(cmk.utils.paths.disabled_packages_dir.iterdir())
 
 
-def unpackaged_files() -> Dict[PackageName, List[str]]:
+def unpackaged_files() -> Dict[PackagePart, List[str]]:
     unpackaged = {}
     for part in get_package_parts() + get_config_parts():
-        unpackaged[part.ident] = unpackaged_files_in_dir(part.ident, part.path)
+        unpackaged[part] = unpackaged_files_in_dir(part.ident, part.path)
     return unpackaged
 
 
@@ -648,7 +664,9 @@ def _files_in_dir(part: str, directory: str, prefix: str = "") -> List[str]:
         return []
 
     # Handle case where one part-directory lies below another
-    taboo_dirs = [p.path for p in get_package_parts() + get_config_parts() if p.ident != part]
+    taboo_dirs = {p.path for p in get_package_parts() + get_config_parts() if p.ident != part}
+    # os.path.realpath would resolve /omd to /opt/omd ...
+    taboo_dirs |= {p.replace('lib/check_mk', 'lib/python3/cmk') for p in taboo_dirs}
     if directory in taboo_dirs:
         return []
 

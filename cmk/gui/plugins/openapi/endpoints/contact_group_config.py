@@ -9,7 +9,7 @@ Contact groups are the link between hosts and services on one side and users on 
 Every contact group represents a responsibility for a specific area in the IT landscape.
 
 You can find an introduction to user management including contact groups in the
-[Checkmk guide](https://checkmk.com/cms_wato_user.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_user.html).
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response
@@ -74,9 +74,11 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_group(params):
     """Show all contact groups"""
-    return constructors.serve_json(
-        serialize_group_list('contact_group_config',
-                             list(load_contact_group_information().values())),)
+    collection = [{
+        "id": k,
+        "alias": v["alias"]
+    } for k, v in load_contact_group_information().items()]
+    return constructors.serve_json(serialize_group_list('contact_group_config', collection),)
 
 
 @Endpoint(
@@ -98,8 +100,7 @@ def show(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          output_empty=True,
-          etag='input')
+          output_empty=True)
 def delete(params):
     """Delete a contact group"""
     name = params['name']
@@ -116,7 +117,8 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete contact groups"""
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         _group = fetch_group(
             group_name,

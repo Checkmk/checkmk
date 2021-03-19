@@ -6,7 +6,7 @@ Date: 1604920812
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Parameters for {check_sql} have been specified in an overly complicated and buggy way which allowed
 specification of single line and multi line SQL query statements as well as uploading content from

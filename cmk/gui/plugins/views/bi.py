@@ -254,14 +254,14 @@ class PainterAggrAcknowledged(Painter):
         return ("", (row["aggr_effective_state"]["acknowledged"] and "1" or "0"))
 
 
-def paint_aggr_state_short(state, assumed=False):
+def _paint_aggr_state_short(state, assumed=False):
     if state is None:
         return "", ""
     name = short_service_state_name(state["state"], "")
     classes = "state svcstate state%s" % state["state"]
     if assumed:
         classes += " assumed"
-    return classes, name
+    return classes, html.render_span(name)
 
 
 @painter_registry.register
@@ -281,8 +281,8 @@ class PainterAggrState(Painter):
         return ['aggr_effective_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_effective_state"],
-                                      row["aggr_effective_state"] != row["aggr_state"])
+        return _paint_aggr_state_short(row["aggr_effective_state"],
+                                       row["aggr_effective_state"] != row["aggr_state"])
 
 
 @painter_registry.register
@@ -322,7 +322,7 @@ class PainterAggrRealState(Painter):
         return ['aggr_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_state"])
+        return _paint_aggr_state_short(row["aggr_state"])
 
 
 @painter_registry.register
@@ -342,7 +342,7 @@ class PainterAggrAssumedState(Painter):
         return ['aggr_assumed_state']
 
     def render(self, row, cell):
-        return paint_aggr_state_short(row["aggr_assumed_state"])
+        return _paint_aggr_state_short(row["aggr_assumed_state"])
 
 
 @painter_registry.register

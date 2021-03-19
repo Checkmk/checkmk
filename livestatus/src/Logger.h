@@ -38,8 +38,6 @@ enum class LogLevel {
 };
 
 std::ostream &operator<<(std::ostream &os, const LogLevel &c);
-std::ostream &operator<<(std::ostream &os,
-                         const std::chrono::system_clock::time_point &tp);
 
 // -----------------------------------------------------------------------------
 
@@ -156,6 +154,7 @@ public:
     virtual void emitContext(std::ostream &os) const = 0;
 
     virtual void log(const LogRecord &record) = 0;
+    virtual void callHandler(const LogRecord &record) = 0;
 };
 
 class ConcreteLogger : public Logger {
@@ -181,6 +180,7 @@ public:
     void log(const LogRecord &record) override;
 
 private:
+    void callHandler(const LogRecord &record) override;
     const std::string _name;
     Logger *const _parent;
     std::atomic<LogLevel> _level;
@@ -212,6 +212,9 @@ public:
 
 protected:
     Logger *const _logger;
+
+private:
+    void callHandler(const LogRecord &record) override;
 };
 
 class ContextLogger : public LoggerDecorator {
@@ -235,6 +238,7 @@ public:
     Logger *getLogger(const std::string &name);
 
 private:
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static LogManager global_log_manager;
 
     // The mutex protects _known_loggers.
@@ -261,9 +265,30 @@ public:
         }
     }
 
+    // NOTE: Tricky stuff ahead... It is crucial that we return a LogStream&
+    // here and not a std::ostream&, as one might naively expect. Think about:
+    //
+    //     Bar bar;
+    //     Debug(logger) << "foo" << bar;
+    //
+    // Bar can have an expensive operator<<, so we must avoid calling it when we
+    // don't have to. We don't want to guard any logging statement like:
+    //
+    //     Bar bar;
+    //     if (logger.isLoggable(LogLevel::debug)) {
+    //         Debug(logger) << "foo" << bar;
+    //     }
+    //
+    // We could even go a step further and return a no-op stream after we have
+    // detected that we don't have to log (under the assumption that the log
+    // level stays unchagend during logging, which it better should). But this
+    // doesn't really seem necessary, Logger::isLoggable is very cheap.
     template <typename T>
-    std::ostream &operator<<(const T &t) {
-        return _logger->isLoggable(_level) ? (_os << t) : _os;
+    LogStream &operator<<(const T &t) {
+        if (_logger->isLoggable(_level)) {
+            _os << t;
+        }
+        return *this;
     }
 
 protected:

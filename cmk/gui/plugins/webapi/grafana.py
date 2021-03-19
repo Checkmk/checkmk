@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Tuple
+
 import livestatus
 
 from cmk.gui.plugins.webapi import (
@@ -21,6 +23,7 @@ from cmk.gui.plugins.metrics.utils import (
     metric_info,
     get_graph_template_choices,
 )
+from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
 from cmk.gui.plugins.views.utils import (
     data_source_registry,)
 
@@ -69,11 +72,8 @@ class APICallGrafanaConnector(APICallCollection):
         return self._query_for_host_names(request.get("site_id"))
 
     def _query_for_host_names(self, site_id):
-        try:
-            sites.live().set_only_sites([site_id] if site_id else None)
+        with sites.only_sites(site_id):
             return sites.live().query_column("GET hosts\nColumns: name\n")
-        finally:
-            sites.live().set_only_sites(None)
 
     def _get_metrics_of_host(self, request):
         return self._query_for_metrics_of_host(request["hostname"], request.get("site_id"))
@@ -88,11 +88,8 @@ class APICallGrafanaConnector(APICallCollection):
 
         response = {}
 
-        try:
-            sites.live().set_only_sites([site_id] if site_id else None)
+        with sites.only_sites(site_id):
             rows = sites.live().query(query)
-        finally:
-            sites.live().set_only_sites(None)
 
         for service_description, check_command, metrics in rows:
             response[service_description] = {
@@ -116,10 +113,6 @@ class APICallGrafanaConnector(APICallCollection):
         return metric_infos
 
     def _get_graph_recipes(self, request):
-        try:
-            from cmk.gui.cee.plugins.metrics.graphs import graph_recipes_for_api_request
-        except ImportError:
-            raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
         _graph_data_range, graph_recipes = graph_recipes_for_api_request(request)
         return graph_recipes
 
@@ -172,14 +165,23 @@ class APICallGrafanaConnector(APICallCollection):
             ),
         }
 
-    def _get_filter_headers_of_context(self, datasource_name, context, single_infos):
+    def _get_filter_headers_of_context(
+        self,
+        datasource_name,
+        context,
+        single_infos,
+    ) -> Tuple[str, livestatus.OnlySites]:
         try:
-            from cmk.gui.cee.plugins.metrics.graphs import get_filter_headers_of_context
+            from cmk.gui.cee.plugins.metrics.graphs import get_filter_and_filterheaders_of_context
         except ImportError:
             raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
 
-        datasource = data_source_registry[datasource_name]()
-        return get_filter_headers_of_context(datasource, context, single_infos)
+        _filters, filterheaders, selected_sites = get_filter_and_filterheaders_of_context(
+            data_source_registry[datasource_name]().infos,
+            context,
+            single_infos,
+        )
+        return filterheaders, selected_sites
 
     def _get_availability_timelines(self, start_time, end_time, only_sites, filter_headers):
         avoptions = availability.get_default_avoptions()

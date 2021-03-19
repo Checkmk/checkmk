@@ -60,7 +60,7 @@ def parse_hpux_if(string_table: type_defs.StringTable) -> interfaces.Section:
     ... ['Interface', 'Alias', '='],
     ... ['Link', 'Up/Down', 'Trap', 'Enable', '=', 'Enabled'],
     ... ]))
-    [Interface(index='2', descr='lan2', alias='lan2', type='6', speed=1000000000.0, oper_status='1', in_octets=46729081959, in_ucast=0, in_mcast=0, in_bcast=452745382, in_discards=117536051, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x00\x1aK¬1²', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='2', descr='lan2', alias='lan2', type='6', speed=1000000000.0, oper_status='1', in_octets=46729081959, in_ucast=0, in_mcast=0, in_bcast=452745382, in_discards=117536051, in_errors=0, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='\x00\x1aK¬1²', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=46729081959)]
     """
     nics = []
     for line in string_table:
@@ -127,7 +127,7 @@ register.check_plugin(
     name="hpux_if",
     service_name="NIC %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",

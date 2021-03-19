@@ -76,9 +76,9 @@ def _graph_colors(theme_id):
             "canvas_color": "#ffffff",
         },
     }.get(theme_id, {
-        "background_color": "#f0f2f4",
+        "background_color": None,
         "foreground_color": "#000000",
-        "canvas_color": "#ffffff",
+        "canvas_color": None,
     })
 
 
@@ -631,7 +631,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
                 line_width = 2
             else:
                 label_value = None
-                line_width = 1
+                line_width = 0
 
             label_specs.append((pos, label_value, line_width))
             if len(label_specs) > 1000:
@@ -777,7 +777,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
     # might even not be equal in size (like months!)
-    num_t_labels = int((width - 7) / label_size)
+    num_t_labels = max(int((width - 7) / label_size), 2)
     label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
 
     # Get a distribution function. The function is called with start_time end
@@ -920,13 +920,7 @@ def dist_month(start_time, end_time, months):
                     broken_tm_yday,
                     broken_tm_isdst,
                 ))
-                yield pos, 1, False
-
-    # Add weeks if months are low
-    if months <= 2:
-        for pos, line_width, _has_label in dist_week(start_time, end_time):
-            if line_width == 2:
-                yield pos, 1, False
+                yield pos, 0, False
 
 
 # These distance functions yield a sequence of useful
@@ -960,7 +954,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
         if f <= 0.0000001 or f >= 0.9999999:
             yield (pos, 2, True)
         else:
-            yield (pos, 1, False)
+            yield (pos, 0, False)
         pos += subdivision
 
 

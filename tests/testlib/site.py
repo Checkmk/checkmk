@@ -119,7 +119,7 @@ class Site:
                 return False
             return new_t > after
 
-        reload_time, timeout = time.time(), 10
+        reload_time, timeout = time.time(), 40
         while not config_reloaded():
             if time.time() > reload_time + timeout:
                 raise Exception("Config did not update within %d seconds" % timeout)
@@ -392,8 +392,11 @@ class Site:
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._set_number_of_helpers()
-            #self._enabled_liveproxyd_debug_logging()
+            self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
+            self._enable_cmc_core_dumps()
+            self._enable_cmc_debug_logging()
+            self._enable_gui_debug_logging()
 
         if self.install_test_python_modules:
             self._install_test_python_modules()
@@ -402,7 +405,7 @@ class Site:
             self._update_with_f12_files()
 
         if not os.path.exists(self.result_dir()):
-            os.makedirs(self.result_dir())
+            self.makedirs(self.result_dir())
 
     def _update_with_f12_files(self):
         paths = [
@@ -463,8 +466,10 @@ class Site:
 
     def _enabled_liveproxyd_debug_logging(self):
         self.makedirs("etc/check_mk/liveproxyd.d")
+        # 15 = verbose
+        # 10 = debug
         self.write_file("etc/check_mk/liveproxyd.d/logging.mk",
-                        "liveproxyd_log_levels = {'cmk.liveproxyd': 10}")
+                        "liveproxyd_log_levels = {'cmk.liveproxyd': 15}")
 
     def _enable_mkeventd_debug_logging(self):
         self.makedirs("etc/check_mk/mkeventd.d")
@@ -476,6 +481,37 @@ class Site:
                 'cmk.mkeventd.EventStatus': 10,
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
+            })
+
+    def _enable_cmc_core_dumps(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
+
+    def _enable_cmc_debug_logging(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file(
+            "etc/check_mk/conf.d/cmc-logging.mk", "cmc_log_levels = %r\n" % {
+                'cmk.alert': 7,
+                'cmk.carbon': 7,
+                'cmk.core': 7,
+                'cmk.downtime': 7,
+                'cmk.helper': 7,
+                'cmk.livestatus': 7,
+                'cmk.notification': 7,
+                'cmk.rrd': 7,
+                'cmk.smartping': 7,
+            })
+
+    def _enable_gui_debug_logging(self):
+        self.makedirs("etc/check_mk/multisite.d")
+        self.write_file(
+            "etc/check_mk/multisite.d/logging.mk", "log_levels = %r\n" % {
+                "cmk.web": 10,
+                "cmk.web.ldap": 10,
+                "cmk.web.auth": 10,
+                "cmk.web.bi.compilation": 10,
+                "cmk.web.automations": 10,
+                "cmk.web.background-job": 10,
             })
 
     def _install_test_python_modules(self):
@@ -518,11 +554,17 @@ class Site:
     def start(self):
         if not self.is_running():
             assert self.omd("start") == 0
+            #print("= BEGIN PROCESSES AFTER START ==============================")
+            #self.execute(["ps", "aux"]).wait()
+            #print("= END PROCESSES AFTER START ==============================")
             i = 0
             while not self.is_running():
                 i += 1
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
+                    #print("= BEGIN PROCESSES FAIL ==============================")
+                    #self.execute(["ps", "aux"]).wait()
+                    #print("= END PROCESSES FAIL ==============================")
                     raise Exception("Could not start site %s" % self.id)
                 logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
@@ -532,7 +574,7 @@ class Site:
             "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self):
-        if not self.is_running():
+        if self.is_stopped():
             return  # Nothing to do
 
         #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
@@ -548,7 +590,7 @@ class Site:
         #logger.debug("= END PROCESSES AFTER STOP =======================================")
 
         i = 0
-        while self.is_running():
+        while not self.is_stopped():
             i += 1
             if i > 10:
                 raise Exception("Could not stop site %s" % self.id)
@@ -562,6 +604,13 @@ class Site:
     def is_running(self):
         return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
                                                                               "w")).wait() == 0
+
+    def is_stopped(self):
+        # 0 -> fully running
+        # 1 -> fully stopped
+        # 2 -> partially running
+        return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
+                                                                              "w")).wait() == 1
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
@@ -622,15 +671,12 @@ class Site:
 
         web = CMKWebSession(self)
         web.login()
-        web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
         logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
         #logger.debug("Debug: %r" % response)
-        assert "<title>Distributed Monitoring</title>" in response
-        assert "replication_status_%s" % web.site.id in response, \
-                "WATO does not seem to be initialized: %r" % response
+        assert "site=%s" % web.site.id in response
 
         logger.debug("Waiting for WATO files to be created...")
         wait_time = 20.0
@@ -642,6 +688,8 @@ class Site:
         assert not missing_files, \
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
+
+        web.enforce_non_localized_gui()
 
         self._add_wato_test_config(web)
 
@@ -691,7 +739,7 @@ class Site:
         Not free of races, but should be sufficient."""
         start_again = False
 
-        if self.is_running():
+        if not self.is_stopped():
             start_again = True
             self.stop()
 
@@ -736,9 +784,16 @@ class Site:
 
         shutil.copytree(self.path("var/log"), "%s/logs" % self.result_dir())
 
-        crash_dir = self.path("var/check_mk/crashes")
-        if os.path.exists(crash_dir):
-            shutil.copytree(crash_dir, "%s/crashes" % self.result_dir())
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
+            shutil.copytree(nagios_log_path, "%s/logs" % self.result_dir())
+
+        cmc_core_dump = self.path("var/check_mk/core/core")
+        if os.path.exists(cmc_core_dump):
+            shutil.copytree(cmc_core_dump, "%s/cmc_core_dump" % self.result_dir())
+
+        cmc_core_dump = self.path("var/check_mk/crashes")
+        if os.path.exists(cmc_core_dump):
+            shutil.copytree(cmc_core_dump, "%s/crashes" % self.result_dir())
 
     def result_dir(self):
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
@@ -816,13 +871,14 @@ class SiteFactory:
         site = self._site_obj(name)
 
         site.create()
+        self._sites[site.id] = site
+
         site.open_livestatus_tcp(encrypted=False)
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
         logger.debug("Created site %s", site.id)
-        self._sites[site.id] = site
         return site
 
     def save_results(self):

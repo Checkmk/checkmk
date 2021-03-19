@@ -127,7 +127,6 @@ UnitEntry = collections.namedtuple(
         },
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_services_split(services, blacklist, expected):
     check = Check('systemd_units')
     services_split = check.context['_services_split']

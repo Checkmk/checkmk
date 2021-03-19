@@ -18,6 +18,7 @@ from typing import (
     Callable,
     Generator,
     MutableMapping,
+    Optional,
     Set,
 )
 
@@ -170,7 +171,7 @@ def import_module(pathname):
 
     import importlib  # pylint: disable=import-outside-toplevel
     # TODO: load_module() is deprecated, we should avoid using it.
-    # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
+    # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.
     return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
 
@@ -183,6 +184,23 @@ def wait_until(condition, timeout=1, interval=0.1):
         time.sleep(interval)
 
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+
+
+def wait_until_liveproxyd_ready(site, site_ids):
+    # First wait for the site sockets to appear
+    def _all_sockets_opened():
+        return all([site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids])
+
+    wait_until(_all_sockets_opened, timeout=60, interval=0.5)
+
+    # Then wait for the sites to be ready
+    def _all_sites_ready():
+        content = site.read_file("var/log/liveproxyd.state")
+        num_ready = content.count("State:                   ready")
+        print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
+        return len(site_ids) == num_ready
+
+    wait_until(_all_sites_ready, timeout=60, interval=0.5)
 
 
 class WatchLog:
@@ -290,24 +308,34 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(metaclass=abc.ABCMeta):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
-        self.set_hostname = cmk.base.check_api_utils.set_hostname
-        self.set_service = cmk.base.check_api_utils.set_service
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
+        self.current_host = cmk.base.plugin_contexts.current_host
+        self.current_service = cmk.base.plugin_contexts.current_service
         self.name = name
         self.info = {}
+        # we cant use the current_host context, b/c some tests rely on a persistent
+        # item state across several calls to run_check
+        cmk.base.plugin_contexts._hostname = 'non-existent-testhost'
 
-    def set_check_api_utils_globals(self, item=None, set_service=False):
-        description = None
-        if set_service:
-            description = self.info["service_description"]
-            assert description, '%r is missing a service_description' % self.name
-            if item is not None:
-                assert "%s" in description, \
-                    "Missing '%%s' formatter in service description of %r" \
-                    % self.name
-                description = description % item
-        self.set_service(self.name, description)
-        self.set_hostname('non-existent-testhost')
+    def _get_service(self, item: Optional[str]):
+        from cmk.utils.type_defs import CheckPluginName
+        from cmk.utils.check_utils import maincheckify
+        from cmk.base.check_utils import Service
+
+        description = self.info["service_description"]
+
+        assert description, '%r is missing a service_description' % self.name
+        if item is not None:
+            assert "%s" in description, ("Missing '%%s' formatter in service description of %r" %
+                                         self.name)
+            description = description % item
+
+        return Service(
+            item=item,
+            check_plugin_name=CheckPluginName(maincheckify(self.name)),
+            description=description,
+            parameters={},
+        )
 
 
 class Check(BaseCheck):
@@ -331,7 +359,6 @@ class Check(BaseCheck):
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        self.set_check_api_utils_globals()
         return parse_func(info)
 
     def run_discovery(self, info):
@@ -339,17 +366,15 @@ class Check(BaseCheck):
         if not disco_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no discovery function defined")
-        self.set_check_api_utils_globals()
-        # TODO: use standard sanitizing code
-        return disco_func(info)
+        with self.current_host('non-existent-testhost', write_state=False):
+            return disco_func(info)
 
     def run_check(self, item, params, info):
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        self.set_check_api_utils_globals(item, set_service=True)
-        # TODO: use standard sanitizing code
-        return check_func(item, params, info)
+        with self.current_service(self._get_service(item)):
+            return check_func(item, params, info)
 
     #def run_parse_with_walk(self, walk_name):
     #    if "parse_function" not in self.info:
@@ -381,8 +406,8 @@ class ActiveCheck(BaseCheck):
         self.info = config.active_check_info[self.name[len('check_'):]]
 
     def run_argument_function(self, params):
-        self.set_check_api_utils_globals()
-        return self.info['argument_function'](params)
+        with self.current_host('non-existent-testhost', write_state=False):
+            return self.info['argument_function'](params)
 
     def run_service_description(self, params):
         return self.info['service_description'](params)

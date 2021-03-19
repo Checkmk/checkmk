@@ -8,7 +8,6 @@
 #include <bitset>
 #include <cctype>
 #include <map>
-#include <ostream>
 #include <utility>
 
 #include "IntFilter.h"
@@ -57,8 +56,12 @@ std::string refValueFor(const std::string &value, Logger *logger) {
 std::unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<IntFilter>(kind, *this, relOp,
-                                       refValueFor(value, logger()));
+    return std::make_unique<IntFilter>(
+        kind, name(),
+        [this](Row row, const contact *auth_user) {
+            return this->getValue(row, auth_user);
+        },
+        relOp, refValueFor(value, logger()));
 }
 
 int32_t AttributeListAsIntColumn::getValue(

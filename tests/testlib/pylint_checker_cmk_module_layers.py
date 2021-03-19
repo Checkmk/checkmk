@@ -34,6 +34,25 @@ def removesuffix(text: str, suffix: str) -> str:
     return text[:-len(suffix)] if suffix and text.endswith(suffix) else text
 
 
+def _get_absolute_importee(
+    *,
+    root_name: str,
+    modname: str,
+    level: int,
+    is_package: bool,
+) -> ModuleName:
+    parent = root_name.rsplit('.', level - is_package)[0]
+    return ModuleName(f'{parent}.{modname}')
+
+
+def _is_package(node: ImportFrom) -> bool:
+    parent = node.parent
+    try:
+        return parent.package
+    except AttributeError:  # could be a try/except block, for instance.
+        return _is_package(parent)
+
+
 def _in_component(
     imported: ModuleName,
     component: Component,
@@ -60,7 +79,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     component: Component,
 ) -> bool:
     """
-    Allow import of `cmk.fetchers` and `cmk.snmplib`.
+    Allow import of `cmk.core_helpers` and `cmk.snmplib`.
 
     The layering is such that `fetchers` and `snmplib` is between
     `utils` and `base` so that importing `fetchers` in `utils` is
@@ -68,7 +87,7 @@ def _allow_default_plus_fetchers_and_snmplib(
     """
     return any((
         _is_default_allowed_import(imported=imported, component=component),
-        _in_component(imported, Component("cmk.fetchers")),
+        _in_component(imported, Component("cmk.core_helpers")),
         _in_component(imported, Component("cmk.snmplib")),
     ))
 
@@ -78,7 +97,10 @@ def _is_allowed_for_agent_based_api(
         imported: ModuleName,
         component: Component,  # pylint: disable=unused-argument
 ) -> bool:
-    return _in_component(imported, Component("cmk.base.api.agent_based"))
+    return any((
+        _in_component(imported, Component("cmk.base.api.agent_based")),
+        _in_component(imported, Component("cmk.base.plugins.agent_based.agent_based_api")),
+    ))
 
 
 def _is_allowed_for_agent_based_plugin(
@@ -98,8 +120,10 @@ _COMPONENTS = (
     (Component("cmk.base.api.agent_based"), _is_default_allowed_import),
     (Component("cmk.base.plugins.agent_based.agent_based_api"), _is_allowed_for_agent_based_api),
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
+    # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
+    (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
     (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
-    (Component("cmk.fetchers"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
     (Component("cmk.gui"), _is_default_allowed_import),
     (Component("cmk.ec"), _is_default_allowed_import),
@@ -123,7 +147,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     ModulePath("enterprise/bin/liveproxyd"): Component("cmk.cee.liveproxy"),
     ModulePath("enterprise/bin/mknotifyd"): Component("cmk.cee.mknotifyd"),
     ModulePath("enterprise/bin/dcd"): Component("cmk.cee.dcd"),
-    ModulePath("enterprise/bin/fetcher"): Component("cmk.fetchers"),
+    ModulePath("enterprise/bin/fetcher"): Component("cmk.core_helpers"),
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
@@ -148,7 +172,18 @@ class CMKModuleLayerChecker(BaseChecker):
 
     @utils.check_messages('cmk-module-layer-violation')
     def visit_importfrom(self, node: ImportFrom) -> None:
-        self._check_import(node, ModuleName(node.modname))
+        # handle 'from . import foo, bar'
+        imported = [node.modname] if node.modname else [n for n, _ in node.names]
+        for modname in imported:
+            self._check_import(
+                node,
+                ModuleName(modname) if node.level is None else _get_absolute_importee(
+                    root_name=node.root().name,
+                    modname=modname,
+                    level=node.level,
+                    is_package=_is_package(node),
+                ),
+            )
 
     def _check_import(self, node: Statement, imported: ModuleName) -> None:
         # We only care about imports of our own modules.

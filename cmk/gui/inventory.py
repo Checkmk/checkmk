@@ -10,7 +10,7 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from pathlib import Path
 
 import dicttoxml  # type: ignore[import]
@@ -105,14 +105,19 @@ def sort_children(children):
 
 def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
     """Loads the host inventory tree from the current file and returns the filtered tree"""
-    return _filter_tree(_load_inventory_tree(hostname))
+    return _filter_tree(_load_structured_data_tree("inventory", hostname))
 
 
 def load_filtered_and_merged_tree(row):
     """Load inventory tree from file, status data tree from row,
     merge these trees and returns the filtered tree"""
-    inventory_tree = _load_inventory_tree(row.get("host_name"))
+    hostname = row.get("host_name")
+    inventory_tree = _load_structured_data_tree("inventory", hostname)
     status_data_tree = _create_tree_from_raw_tree(row.get("host_structured_status"))
+    # If no data from livestatus could be fetched (CRE) try to load from cache
+    # or status dir
+    if status_data_tree is None:
+        status_data_tree = _load_structured_data_tree("status_data", hostname)
 
     merged_tree = _merge_inventory_and_status_data_tree(inventory_tree, status_data_tree)
     return _filter_tree(merged_tree)
@@ -270,19 +275,21 @@ class LoadStructuredDataError(MKException):
     pass
 
 
-def _load_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
+def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
+                               hostname: Optional[HostName]) -> Optional[StructuredDataTree]:
     """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
         return None
 
-    inventory_tree_cache = g.setdefault("inventory", {})
+    inventory_tree_cache = g.setdefault(tree_type, {})
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
         if '/' in hostname:
             # just for security reasons
             return None
-        cache_path = "%s/inventory/%s" % (cmk.utils.paths.var_dir, hostname)
+        cache_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir if tree_type == "inventory" \
+                else cmk.utils.paths.status_data_dir, hostname)
         try:
             inventory_tree = StructuredDataTree().load_from(cache_path)
         except Exception as e:

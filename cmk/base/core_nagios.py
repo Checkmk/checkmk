@@ -8,10 +8,11 @@
 import base64
 import os
 import py_compile
+import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, IO, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
 from six import ensure_binary, ensure_str
 
@@ -21,6 +22,7 @@ import cmk.utils.store as store
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     CheckPluginName,
     CheckPluginNameStr,
@@ -35,13 +37,15 @@ from cmk.utils.type_defs import (
     ConfigSerial,
 )
 
+from cmk.core_helpers.type_defs import Mode
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.utils
 import cmk.base.obsolete_output as out
-import cmk.base.check_api_utils as check_api_utils
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-import cmk.base.checkers as checkers
+import cmk.base.plugin_contexts as plugin_contexts
+import cmk.base.sources as sources
 import cmk.base.ip_lookup as ip_lookup
 
 from cmk.base.check_utils import ServiceID
@@ -202,7 +206,7 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
     host_spec = {
         "host_name": hostname,
         "use": config.cluster_template if host_config.is_cluster else config.host_template,
-        "address": ip if ip else core_config.fallback_ip_for(host_config),
+        "address": ip if ip else ip_lookup.fallback_ip_for(host_config.default_address_family),
         "alias": attrs["alias"],
     }
 
@@ -213,10 +217,19 @@ def _create_nagios_host_spec(cfg: NagiosConfig, config_cache: ConfigCache, hostn
 
     def host_check_via_service_status(service: ServiceName) -> CoreCommand:
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
-        cfg.hostcheck_commands_to_define.append(
-            (command, 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-             (host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname),
-              host_config.hostname, service.replace('$HOSTNAME$', host_config.hostname))))
+        service_with_hostname = replace_macros_in_str(
+            service,
+            {'$HOSTNAME$': host_config.hostname},
+        )
+        cfg.hostcheck_commands_to_define.append((
+            command,
+            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (
+                host_config.hostname,
+                service_with_hostname,
+                host_config.hostname,
+                service_with_hostname,
+            ),
+        ),)
         return command
 
     def host_check_via_custom_check(command_name: CoreCommandName,
@@ -382,25 +395,28 @@ def _create_nagios_servicedefs(cfg: NagiosConfig, config_cache: ConfigCache, hos
     if actchecks:
         cfg.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
-            # Make hostname available as global variable in argument functions
-            check_api_utils.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = config.active_check_service_description(hostname, acttype, params)
 
-            if not description:
-                core_config.warning(
-                    "Skipping invalid service with empty description (active check: %s) on host %s"
-                    % (acttype, hostname))
-                continue
+            # Make hostname available as global variable in argument functions
+            with plugin_contexts.current_host(hostname, write_state=False):
 
-            if do_omit_service(hostname, description):
-                continue
+                description = config.active_check_service_description(hostname, acttype, params)
 
-            # compute argument, and quote ! and \ for Nagios
-            args = core_config.active_check_arguments(
-                hostname, description,
-                act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
+                if not description:
+                    core_config.warning(
+                        f"Skipping invalid service with empty description (active check: {acttype}) on host {hostname}"
+                    )
+                    continue
+
+                if do_omit_service(hostname, description):
+                    continue
+
+                # compute argument, and quote ! and \ for Nagios
+                args = core_config.active_check_arguments(
+                    hostname, description,
+                    act_info["argument_function"](params)).replace("\\",
+                                                                   "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
@@ -927,7 +943,7 @@ class HostCheckStore:
     """Caring about persistence of the precompiled host check files"""
     @staticmethod
     def host_check_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
-        return Path(config.make_helper_config_path(serial), "host_checks", hostname)
+        return cmk.utils.paths.make_helper_config_path(serial) / "host_checks" / hostname
 
     @staticmethod
     def host_check_source_file_path(serial: ConfigSerial, hostname: HostName) -> Path:
@@ -992,8 +1008,6 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache,
                                 *,
                                 verify_site_python=True) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
-
-    check_api_utils.set_hostname(hostname)
 
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
@@ -1098,28 +1112,34 @@ if '-d' in sys.argv:
         for node in host_config.nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
-                needed_ipaddresses[node] = ip_lookup.lookup_ipv4_address(node_config)
+                needed_ipaddresses[node] = config.lookup_ip_address(node_config,
+                                                                    family=socket.AF_INET)
 
             if node_config.is_ipv6_host:
-                needed_ipv6addresses[node] = ip_lookup.lookup_ipv6_address(node_config)
+                needed_ipv6addresses[node] = config.lookup_ip_address(node_config,
+                                                                      family=socket.AF_INET6)
 
         try:
             if host_config.is_ipv4_host:
-                needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+                needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                        family=socket.AF_INET)
         except Exception:
             pass
 
         try:
             if host_config.is_ipv6_host:
-                needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+                needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                          family=socket.AF_INET6)
         except Exception:
             pass
     else:
         if host_config.is_ipv4_host:
-            needed_ipaddresses[hostname] = ip_lookup.lookup_ipv4_address(host_config)
+            needed_ipaddresses[hostname] = config.lookup_ip_address(host_config,
+                                                                    family=socket.AF_INET)
 
         if host_config.is_ipv6_host:
-            needed_ipv6addresses[hostname] = ip_lookup.lookup_ipv6_address(host_config)
+            needed_ipv6addresses[hostname] = config.lookup_ip_address(host_config,
+                                                                      family=socket.AF_INET6)
 
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("config.ipv6addresses = %r\n\n" % needed_ipv6addresses)
@@ -1152,22 +1172,9 @@ if '-d' in sys.argv:
 def _get_needed_plugin_names(
     host_config: config.HostConfig,
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
-    from cmk.base.check_table import get_needed_check_names  # pylint: disable=import-outside-toplevel
-    needed_legacy_check_plugin_names: Set[CheckPluginNameStr] = set([])
+    from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 
-    # In case the host is monitored as special agent, the check plugin for the special agent needs
-    # to be loaded
-    try:
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
-    except Exception:
-        ipaddress = None
-    for source in checkers.make_sources(
-            host_config,
-            ipaddress,
-            mode=checkers.Mode.NONE,
-    ):
-        if isinstance(source, checkers.programs.SpecialAgentSource):
-            needed_legacy_check_plugin_names.add(source.special_agent_plugin_file_name)
+    needed_legacy_check_plugin_names = {*_plugins_for_special_agents(host_config)}
 
     # Collect the needed check plugin names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
@@ -1176,49 +1183,25 @@ def _get_needed_plugin_names(
     # when determining the needed *section* plugins.
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
-    needed_agent_based_check_plugin_names = get_needed_check_names(
+    needed_agent_based_check_plugin_names = check_table.get_check_table(
         host_config.hostname,
-        filter_mode="include_clustered",
+        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
-    )
+    ).needed_check_names()
 
-    for check_plugin_name in needed_agent_based_check_plugin_names:
-        legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
-        if legacy_name is None:
-            continue
+    legacy_names = (_resolve_legacy_plugin_name(pn) for pn in needed_agent_based_check_plugin_names)
+    needed_legacy_check_plugin_names.update(ln for ln in legacy_names if ln is not None)
 
-        if config.check_info[legacy_name].get("extra_sections"):
-            for section_name in config.check_info[legacy_name]["extra_sections"]:
-                if section_name in config.check_info:
-                    needed_legacy_check_plugin_names.add(section_name)
-
-        needed_legacy_check_plugin_names.add(legacy_name)
-
-    # Also include the check plugins of the cluster nodes to be able to load
-    # the autochecks of the nodes
-    # TODO (mo): is this only due to the referenced variables? If so, we can remove this block
-    # once the variables are resolved during cmk-update-config
-    if host_config.is_cluster:
-        nodes = host_config.nodes
-        if nodes is None:
-            raise MKGeneralException("Invalid cluster configuration")
-        for node in nodes:
-            for check_plugin_name in get_needed_check_names(node, skip_ignored=False):
-                opt_legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
-                if opt_legacy_name is not None:
-                    needed_legacy_check_plugin_names.add(opt_legacy_name)
-                else:
-                    needed_agent_based_check_plugin_names.add(check_plugin_name)
-
-    # inventory plugins get passed parsed data these days. Make sure we load the required sections,
-    # otherwise inventory plugins will crash upon unparsed data.
+    # Inventory plugins get passed parsed data these days.
+    # Load the required sections, or inventory plugins will crash upon unparsed data.
     needed_agent_based_inventory_plugin_names: Set[InventoryPluginName] = set()
     if host_config.do_status_data_inventory:
         for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
             needed_agent_based_inventory_plugin_names.add(inventory_plugin.name)
-            for section_name in inventory_plugin.sections:
+            for parsed_section_name in inventory_plugin.sections:
                 # check if we must add the legacy check plugin:
-                legacy_check_name = config.legacy_check_plugin_names.get(section_name)
+                legacy_check_name = config.legacy_check_plugin_names.get(
+                    CheckPluginName(str(parsed_section_name)))
                 if legacy_check_name is not None:
                     needed_legacy_check_plugin_names.add(legacy_check_name)
 
@@ -1227,6 +1210,44 @@ def _get_needed_plugin_names(
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
     )
+
+
+def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPluginNameStr]:
+    """determine required special agent plugins
+
+    In case the host is monitored as special agent, the check plugin for the special agent
+    needs to be loaded
+    """
+    try:
+        ipaddress = config.lookup_ip_address(host_config)
+    except Exception:
+        ipaddress = None
+
+    yield from (s.special_agent_plugin_file_name for s in sources.make_sources(
+        host_config,
+        ipaddress,
+        mode=Mode.NONE,
+    ) if isinstance(s, sources.programs.SpecialAgentSource))
+
+
+def _resolve_legacy_plugin_name(check_plugin_name: CheckPluginName) -> Optional[CheckPluginNameStr]:
+    legacy_name = config.legacy_check_plugin_names.get(check_plugin_name)
+    if legacy_name:
+        return legacy_name
+
+    if not check_plugin_name.is_management_name():
+        return None
+
+    # See if me must include a legacy plugin from which we derived the given one:
+    # A management plugin *could have been* created on the fly, from a 'regular' legacy
+    # check plugin. In this case, we must load that.
+    plugin = agent_based_register.get_check_plugin(check_plugin_name)
+    if not plugin or plugin.module is not None:
+        # it does *not* result from a legacy plugin, if module is not None
+        return None
+
+    # just try to get the legacy name of the 'regular' plugin:
+    return config.legacy_check_plugin_names.get(check_plugin_name.create_basic_name())
 
 
 def _get_legacy_check_file_names_to_load(
@@ -1275,10 +1296,9 @@ def _get_needed_agent_based_modules(
                     for plugin in
                     [agent_based_register.get_inventory_plugin(p) for p in inventory_plugin_names]
                     if plugin is not None and plugin.module is not None))
-    modules.update((
-        section.module for section in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=check_plugin_names,
-            consider_inventory_plugins=bool(inventory_plugin_names),  # TODO (mo): clean this up
-        ).values() if section.module is not None))
+    modules.update((section.module for section in agent_based_register.get_relevant_raw_sections(
+        check_plugin_names=check_plugin_names,
+        inventory_plugin_names=inventory_plugin_names,
+    ).values() if section.module is not None))
 
     return sorted(modules)

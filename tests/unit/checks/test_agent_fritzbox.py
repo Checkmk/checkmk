@@ -16,7 +16,6 @@ pytestmark = pytest.mark.checks
         "timeout": 10,
     }, ["--timeout", "10", "address"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_fritzbox_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_fritzbox')

@@ -7,7 +7,19 @@
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, TypedDict
+from typing import (
+    Container,
+    Dict,
+    List,
+    Optional,
+    overload,
+    Set,
+    Tuple,
+    Type,
+    TypedDict,
+    TypeVar,
+    Union,
+)
 
 from six import ensure_str
 
@@ -21,25 +33,32 @@ import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
-    OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
     CheckPluginName,
+    EVERYTHING,
     HostAddress,
     HostgroupName,
     HostName,
+    InventoryPluginName,
+    SectionName,
     TagValue,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
-import cmk.fetchers.factory as snmp_factory
+import cmk.core_helpers.factory as snmp_factory
+import cmk.core_helpers.cache
+from cmk.core_helpers.type_defs import Mode as FetchMode
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
@@ -47,18 +66,18 @@ import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
-import cmk.base.checkers as checkers
+import cmk.base.sources as sources
 import cmk.base.diagnostics
-import cmk.base.discovery as discovery
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.dump_host
-import cmk.base.inventory as inventory
+import cmk.base.agent_based.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 
@@ -101,7 +120,7 @@ _verbosity = 0
 
 
 def option_cache() -> None:
-    checkers.set_cache_opts(use_caches=True)
+    cmk.core_helpers.cache.set_cache_opts(use_caches=True)
 
 
 modes.register_general_option(
@@ -115,7 +134,7 @@ modes.register_general_option(
 
 
 def option_no_cache() -> None:
-    cmk.base.checkers.FileCacheFactory.disabled = True
+    cmk.core_helpers.cache.FileCacheFactory.disabled = True
 
 
 modes.register_general_option(
@@ -127,7 +146,7 @@ modes.register_general_option(
 
 
 def option_no_tcp() -> None:
-    checkers.tcp.TCPSource.use_only_cache = True
+    sources.tcp.TCPSource.use_only_cache = True
 
 
 # TODO: Check whether or not this is used only for -I as written in the help.
@@ -321,27 +340,36 @@ def mode_list_checks() -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    registered_checks = [(p.name, p) for p in agent_based_register.iter_all_check_plugins()]
-    active_checks = [("check_%s" % name, entry) for name, entry in config.active_check_info.items()]
-    # TODO clean mixed typed list up:
-    all_checks = registered_checks + active_checks  # type: ignore[operator]
+    all_checks: List[Union[CheckPluginName, str]] = [  #
+        p.name for p in agent_based_register.iter_all_check_plugins()
+    ]
+    all_checks += ["check_%s" % name for name in config.active_check_info]
 
-    for plugin_name, check in sorted(all_checks, key=lambda x: str(x[0])):
-        if not isinstance(check, CheckPlugin):  # active check
-            what = 'active'
-            ty_color = tty.blue
-        else:
-            if plugin_name in config.legacy_check_plugin_names:
-                what = 'auto migrated'
-                ty_color = tty.magenta
-            else:
-                what = ''
-                ty_color = tty.yellow
-
+    for plugin_name in sorted(all_checks, key=str):
+        ds_protocol = _get_ds_protocol(plugin_name)
         title = _get_check_plugin_title(str(plugin_name), all_check_manuals)
 
-        out.output((tty.bold + "%-44s" + tty.normal + ty_color + " %-13s " + tty.normal + "%s\n") %
-                   (plugin_name, what, title))
+        out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
+
+
+def _get_ds_protocol(check_name: Union[CheckPluginName, str]) -> str:
+    if isinstance(check_name, str):  # active check
+        return f"{tty.blue}{'active':10}"
+
+    raw_section_is_snmp = {
+        isinstance(s, SNMPSectionPlugin) for s in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(check_name,),
+            inventory_plugin_names=(),
+        ).values()
+    }
+
+    if not any(raw_section_is_snmp):
+        return f"{tty.yellow}{'agent':10}"
+
+    if all(raw_section_is_snmp):
+        return f"{tty.magenta}{'snmp':10}"
+
+    return f"{tty.yellow}agent{tty.white}/{tty.magenta}snmp"
 
 
 def _get_check_plugin_title(
@@ -387,24 +415,24 @@ def mode_dump_agent(hostname: HostName) -> None:
         if host_config.is_cluster:
             raise MKBailOut("Can not be used with cluster hosts")
 
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_config)
 
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        mode = checkers.Mode.CHECKING
-        for source in checkers.make_sources(
+        mode = FetchMode.CHECKING
+        for source in sources.make_sources(
                 host_config,
                 ipaddress,
                 mode=mode,
         ):
             source.file_cache_max_age = config.check_max_cachefile_age
-            if not isinstance(source, checkers.agent.AgentSource):
+            if not isinstance(source, sources.agent.AgentSource):
                 continue
 
             raw_data = source.fetch()
-            host_sections = source.parse(raw_data)
-            source_state, source_output, _source_perfdata = source.summarize(host_sections)
+            host_sections = source.parse(raw_data, selection=NO_SELECTION)
+            source_state, source_output = source.summarize(host_sections)
             if source_state != 0:
                 console.error(
                     "ERROR [%s]: %s\n",
@@ -723,7 +751,14 @@ modes.register(
 
 
 def mode_update_dns_cache() -> None:
-    ip_lookup.update_dns_cache()
+    config_cache = config.get_config_cache()
+    ip_lookup.update_dns_cache(
+        host_configs=(config_cache.get_host_config(hn) for hn in config_cache.all_active_hosts()),
+        configured_ipv6_addresses=config.ipaddresses,
+        configured_ipv4_addresses=config.ipv6addresses,
+        simulation_mode=config.simulation_mode,
+        override_dns=config.fake_dns,
+    )
 
 
 modes.register(
@@ -859,8 +894,7 @@ def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
     config_cache = config.get_config_cache()
 
     for hostname in hostnames:
-        host_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(config_cache.get_host_config(hostname))
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -929,7 +963,7 @@ def mode_snmpget(args: List[str]) -> None:
     assert hostnames
     for hostname in hostnames:
         host_config = config_cache.get_host_config(hostname)
-        ipaddress = ip_lookup.lookup_ip_address(host_config)
+        ipaddress = config.lookup_ip_address(host_config)
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
@@ -1235,110 +1269,6 @@ modes.register(
     ))
 
 #.
-#   .--inventory-----------------------------------------------------------.
-#   |             _                      _                                 |
-#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
-#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
-#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
-#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
-#   |                                                  |___/               |
-#   '----------------------------------------------------------------------'
-
-
-def mode_inventory(options: Dict, args: List[str]) -> None:
-    config_cache = config.get_config_cache()
-
-    if args:
-        hostnames = modes.parse_hostname_list(args, with_clusters=True)
-        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
-    else:
-        # No hosts specified: do all hosts and force caching
-        hostnames = sorted(config_cache.all_active_hosts())
-        checkers.FileCacheFactory.reset_maybe()
-        console.verbose("Doing HW/SW inventory on all hosts\n")
-
-    if "force" in options:
-        checkers.agent.AgentSource.use_outdated_persisted_sections = True
-
-    inventory.do_inv(hostnames)
-
-
-modes.register(
-    Mode(long_option="inventory",
-         short_option="i",
-         handler_function=mode_inventory,
-         argument=True,
-         argument_descr="HOST1 HOST2...",
-         argument_optional=True,
-         short_help="Do a HW/SW-Inventory on some ar all hosts",
-         long_help=[
-             "Does a HW/SW-Inventory for all, one or several "
-             "hosts. If you add the option -f, --force then persisted sections "
-             "will be used even if they are outdated."
-         ],
-         sub_options=[
-             Option(
-                 long_option="force",
-                 short_option="f",
-                 short_help="Use cached agent data even if it's outdated.",
-             ),
-         ]))
-
-#.
-#   .--inventory-as-check--------------------------------------------------.
-#   | _                      _                              _     _        |
-#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
-#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
-#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
-#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
-#   |                                      |___/                           |
-#   '----------------------------------------------------------------------'
-
-
-def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
-    return inventory.do_inv_check(hostname, options)
-
-
-modes.register(
-    Mode(
-        long_option="inventory-as-check",
-        handler_function=mode_inventory_as_check,
-        argument=True,
-        argument_descr="HOST",
-        short_help="Do HW/SW-Inventory, behave like check plugin",
-        sub_options=[
-            Option(
-                long_option="hw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for HW changes",
-            ),
-            Option(
-                long_option="sw-changes",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for SW changes",
-            ),
-            Option(
-                long_option="sw-missing",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S for missing SW packages info",
-            ),
-            Option(
-                long_option="inv-fail-status",
-                argument=True,
-                argument_descr="S",
-                argument_conv=int,
-                short_help="Use monitoring state S in case of error",
-            ),
-        ],
-    ))
-
-#.
 #   .--automation----------------------------------------------------------.
 #   |                   _                        _   _                     |
 #   |        __ _ _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __          |
@@ -1482,48 +1412,150 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-_ChecksOption = Optional[Set[CheckPluginName]]
+_TName = TypeVar('_TName', str, CheckPluginName, InventoryPluginName, SectionName)
 
 
-def _convert_checks_argument(arg: str) -> _ChecksOption:
-    if arg == "@all":
-        # this is the same as ommitting the option entirely.
-        return None
+def _convert_sections_argument(arg: str) -> Set[SectionName]:
     try:
         # kindly forgive empty strings
-        return {CheckPluginName(maincheckify(n)) for n in arg.split(",") if n}
+        return {SectionName(n) for n in arg.split(",") if n}
     except ValueError as exc:
-        raise MKBailOut("Error in --checks argument: %s" % exc)
+        raise MKBailOut("Error in --detect-sections argument: %s" % exc)
 
 
-_option_checks = Option(
-    long_option="checks",
-    short_help="Restrict discovery/checking to these check plugins",
+_option_sections = Option(
+    long_option="detect-sections",
+    short_help=("Comma separated list of sections. The provided sections (but no more) will be"
+                " available (skipping SNMP detection)"),
     argument=True,
-    argument_descr="C",
-    argument_conv=_convert_checks_argument,
+    argument_descr="S",
+    argument_conv=_convert_sections_argument,
 )
 
-DiscoverOptions = TypedDict(
-    'DiscoverOptions',
+
+def _get_plugins_option(type_: Type[_TName]) -> Option:
+    def _convert_plugins_argument(arg: str) -> Set[_TName]:
+        try:
+            # kindly forgive empty strings
+            return {type_(n) for n in arg.split(",") if n}
+        except ValueError as exc:
+            raise MKBailOut("Error in --plugins argument: %s" % exc) from exc
+
+    return Option(
+        long_option="plugins",
+        short_help="Restrict discovery, checking or inventory to these plugins",
+        argument=True,
+        argument_descr="P",
+        argument_conv=_convert_plugins_argument,
+    )
+
+
+def _convert_detect_plugins_argument(arg: str) -> Set[str]:
+    try:
+        # kindly forgive empty strings
+        # also maincheckify, as we may be dealing with old "--checks" input including dots.
+        return {maincheckify(n) for n in arg.split(",") if n}
+    except ValueError as exc:
+        raise MKBailOut("Error in --detect-plugins argument: %s" % exc) from exc
+
+
+_option_detect_plugins = Option(
+    long_option="detect-plugins",
+    deprecated_long_options={"checks"},
+    short_help="Same as '--plugins', but implies a best efford guess for --detect-sections",
+    argument=True,
+    argument_descr="P",
+    argument_conv=_convert_detect_plugins_argument,
+)
+
+
+@overload
+def _extract_plugin_selection(
+    options: Union["_CheckingOptions", "_DiscoveryOptions"],
+    type_: Type[CheckPluginName],
+) -> Tuple[SectionNameCollection, Container[CheckPluginName]]:
+    pass
+
+
+@overload
+def _extract_plugin_selection(
+    options: "_InventoryOptions",
+    type_: Type[InventoryPluginName],
+) -> Tuple[SectionNameCollection, Container[InventoryPluginName]]:
+    pass
+
+
+def _extract_plugin_selection(
+    options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
+    type_: Type,
+) -> Tuple[SectionNameCollection, Container]:
+    detect_plugins = options.get("detect-plugins")
+    if detect_plugins is None:
+        return (
+            options.get("detect-sections", NO_SELECTION),
+            options.get("plugins", EVERYTHING),
+        )
+
+    conflicting_options = {'detect-sections', 'plugins'}
+    if conflicting_options.intersection(options):
+        raise MKBailOut("Option '--detect-plugins' must not be combined with %s" %
+                        "/".join(f"--{o}" for o in conflicting_options))
+
+    if detect_plugins == {"@all"}:
+        # this is the same as ommitting the option entirely.
+        # (mo) ... which is weird, because specifiying *all* plugins would do
+        # something different. Keeping this for compatibility with old --checks
+        return NO_SELECTION, EVERYTHING
+
+    if type_ is CheckPluginName:
+        check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
+        return set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_plugin_names,
+                inventory_plugin_names=(),
+            )), check_plugin_names
+
+    if type_ is InventoryPluginName:
+        inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
+        return set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=(),
+                inventory_plugin_names=inventory_plugin_names,
+            )), inventory_plugin_names
+
+    raise NotImplementedError(f"unknown plugin name {type_}")
+
+
+_DiscoveryOptions = TypedDict(
+    '_DiscoveryOptions',
     {
-        'checks': _ChecksOption,
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'discover': int,
+        'only-host-labels': bool,
     },
     total=False,
 )
 
 
-def mode_discover(options: DiscoverOptions, args: List[str]) -> None:
+def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
     hostnames = modes.parse_hostname_list(args)
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         # This will make Checkmk only contact hosts in case the cache is not
         # new enough.
-        checkers.FileCacheFactory.reset_maybe()
+        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
 
-    discovery.do_discovery(set(hostnames), options.get("checks"), options["discover"] == 1)
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    discovery.do_discovery(
+        set(hostnames),
+        selected_sections=selected_sections,
+        run_plugin_names=run_plugin_names,
+        arg_only_new=options["discover"] == 1,
+        only_host_labels="only-host-labels" in options,
+    )
 
 
 modes.register(
@@ -1542,6 +1574,8 @@ modes.register(
              "Can be restricted to certain check types. Write '--checks df -I' if "
              "you just want to look for new filesystems. Use 'cmk -L' for a "
              "list of all check types.",
+             "Can also be restricted to only discovering new host labels. "
+             "Use: '--only-host-labels' or '-L' ",
              "-II does the same as -I but deletes all existing checks of the "
              "specified types and hosts."
          ],
@@ -1552,7 +1586,14 @@ modes.register(
                  short_help="Delete existing services before starting discovery",
                  count=True,
              ),
-             _option_checks,
+             _option_sections,
+             _get_plugins_option(CheckPluginName),
+             _option_detect_plugins,
+             Option(
+                 long_option="only-host-labels",
+                 short_option="L",
+                 short_help="Restrict discovery to host labels only",
+             ),
          ]))
 
 #.
@@ -1565,12 +1606,14 @@ modes.register(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-CheckingOptions = TypedDict(
-    'CheckingOptions',
+_CheckingOptions = TypedDict(
+    '_CheckingOptions',
     {
         'no-submit': bool,
         'perfdata': bool,
-        'checks': _ChecksOption,
+        'detect-sections': Set[SectionName],
+        'plugins': Set[CheckPluginName],
+        'detect-plugins': Set[str],
         'keepalive': bool,
         'keepalive-fd': int,
     },
@@ -1578,8 +1621,8 @@ CheckingOptions = TypedDict(
 )
 
 
-def mode_check(options: CheckingOptions, args: List[str]) -> None:
-    import cmk.base.checking as checking  # pylint: disable=import-outside-toplevel
+def mode_check(options: _CheckingOptions, args: List[str]) -> None:
+    import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
     try:
         import cmk.base.cee.keepalive as keepalive  # pylint: disable=import-outside-toplevel
@@ -1595,11 +1638,9 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
         keepalive.check.do_keepalive()
         return
 
-    if "perfdata" in options:
-        checking.show_perfdata()
-
     if "no-submit" in options:
-        checking.disable_submit()
+        # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
+        # it makes get_rate return 0 instead of raising MKCounterError
         item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
@@ -1608,7 +1649,15 @@ def mode_check(options: CheckingOptions, args: List[str]) -> None:
     if len(args) == 2:
         ipaddress = args[1]
 
-    return checking.do_check(hostname, ipaddress, only_check_plugin_names=options.get("checks"))
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
+    return checking.do_check(
+        hostname,
+        ipaddress,
+        selected_sections=selected_sections,
+        run_plugin_names=run_plugin_names,
+        dry_run=options.get("no-submit", False),
+        show_perfdata=options.get("perfdata", False),
+    )
 
 
 modes.register(
@@ -1643,7 +1692,9 @@ modes.register(
                  short_option="p",
                  short_help="Also show performance data (use with -v)",
              ),
-             _option_checks,
+             _option_sections,
+             _get_plugins_option(CheckPluginName),
+             _option_detect_plugins,
              keepalive_option,
              Option(
                  long_option="keepalive-fd",
@@ -1653,6 +1704,129 @@ modes.register(
                  short_help="File descriptor to send output to",
              ),
          ]))
+
+#.
+#   .--inventory-----------------------------------------------------------.
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+_InventoryOptions = TypedDict(
+    '_InventoryOptions',
+    {
+        'force': bool,
+        'detect-sections': Set[SectionName],
+        'plugins': Set[InventoryPluginName],
+        'detect-plugins': Set[str],
+    },
+    total=False,
+)
+
+
+def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
+    config_cache = config.get_config_cache()
+
+    if args:
+        hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
+    else:
+        # No hosts specified: do all hosts and force caching
+        hostnames = sorted(config_cache.all_active_hosts())
+        cmk.core_helpers.cache.FileCacheFactory.reset_maybe()
+        console.verbose("Doing HW/SW inventory on all hosts\n")
+
+    if "force" in options:
+        sources.agent.AgentSource.use_outdated_persisted_sections = True
+
+    selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
+    inventory.do_inv(
+        hostnames,
+        selected_sections=selected_sections,
+        run_plugin_names=run_plugin_names,
+    )
+
+
+modes.register(
+    Mode(long_option="inventory",
+         short_option="i",
+         handler_function=mode_inventory,
+         argument=True,
+         argument_descr="HOST1 HOST2...",
+         argument_optional=True,
+         short_help="Do a HW/SW-Inventory on some ar all hosts",
+         long_help=[
+             "Does a HW/SW-Inventory for all, one or several "
+             "hosts. If you add the option -f, --force then persisted sections "
+             "will be used even if they are outdated."
+         ],
+         sub_options=[
+             Option(
+                 long_option="force",
+                 short_option="f",
+                 short_help="Use cached agent data even if it's outdated.",
+             ),
+             _option_sections,
+             _get_plugins_option(InventoryPluginName),
+             _option_detect_plugins,
+         ]))
+
+#.
+#   .--inventory-as-check--------------------------------------------------.
+#   | _                      _                              _     _        |
+#   |(_)_ ____   _____ _ __ | |_ ___  _ __ _   _        ___| |__ | | __    |
+#   || | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |_____ / __| '_ \| |/ /    |
+#   || | | | \ V /  __/ | | | || (_) | |  | |_| |_____| (__| | | |   < _   |
+#   ||_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |      \___|_| |_|_|\_(_)  |
+#   |                                      |___/                           |
+#   '----------------------------------------------------------------------'
+
+
+def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
+    return inventory.do_inv_check(hostname, options)
+
+
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW-Inventory, behave like check plugin",
+        sub_options=[
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
+            ),
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+        ],
+    ))
 
 #.
 #   .--version-------------------------------------------------------------.
@@ -1770,7 +1944,13 @@ def _get_diagnostics_dump_sub_options() -> List[Option]:
         ),
         Option(
             long_option=OPT_CHECKMK_CONFIG_FILES,
-            short_help="Pack configuration files '*.mk' and '*.conf' from etc/check_mk",
+            short_help="Pack configuration files ('*.mk' or '*.conf') from etc/checkmk",
+            argument=True,
+            argument_descr="FILE,FILE...",
+        ),
+        Option(
+            long_option=OPT_CHECKMK_LOG_FILES,
+            short_help="Pack log files ('*.log' or '*.state') from var/log",
             argument=True,
             argument_descr="FILE,FILE...",
         ),

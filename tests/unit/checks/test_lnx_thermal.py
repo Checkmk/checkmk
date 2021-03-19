@@ -37,7 +37,6 @@ result_discovery = [  # type: ignore
 
 
 @pytest.mark.parametrize("info, result", list(zip(agent_info, result_discovery)))
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse_and_discovery_function(info, result):
     check = Check("lnx_thermal")
     parsed = check.run_parse(info)
@@ -64,7 +63,6 @@ result_check = [
 
 @pytest.mark.parametrize("info, discovered, checked",
                          list(zip(agent_info, result_discovery, result_check)))
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_functions_perfdata(info, discovered, checked):
     check = Check("lnx_thermal")
     parsed = check.run_parse(info)

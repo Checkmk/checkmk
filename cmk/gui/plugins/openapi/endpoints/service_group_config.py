@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Service groups
 
-Service groups are a way to organize services in Checkmk and to bring order to monitoring.
-By using a service group you can generate, among others, suitable views.
-For example, if you want to view all file system services or update services together, you can
-simply assemble service groups in a similar way as you can with host groups.
+Service groups are a way to organize services in Checkmk for monitoring.
+By using a service group you can generate suitable views for overview and/or analysis,
+for example, file system services of multiple hosts.
 
 You can find an introduction to services including service groups in the
-[Checkmk guide](https://checkmk.com/cms_wato_services.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_services.html).
 """
 
 from cmk.gui import watolib
@@ -78,9 +77,11 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
     """Show all service groups"""
-    return constructors.serve_json(
-        serialize_group_list('service_group_config',
-                             list(load_service_group_information().values())))
+    collection = [{
+        "id": k,
+        "alias": v["alias"]
+    } for k, v in load_service_group_information().items()]
+    return constructors.serve_json(serialize_group_list('service_group_config', collection))
 
 
 @Endpoint(
@@ -102,8 +103,7 @@ def show_group(params):
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          output_empty=True,
-          etag='input')
+          output_empty=True)
 def delete(params):
     """Delete a service group"""
     name = params['name']
@@ -120,7 +120,8 @@ def delete(params):
           output_empty=True)
 def bulk_delete(params):
     """Bulk delete service groups"""
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         _group = fetch_group(group_name,
                              "service",

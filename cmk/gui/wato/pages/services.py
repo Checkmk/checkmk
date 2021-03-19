@@ -26,7 +26,7 @@ from cmk.gui.view_utils import render_labels, format_plugin_output
 
 from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.page_menu import (
@@ -35,7 +35,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     PageMenuEntry,
     PageMenuRenderer,
-    PageMenuCheckbox,
     enable_page_menu_entry,
     disable_page_menu_entry,
     make_display_options_dropdown,
@@ -56,14 +55,16 @@ from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, ex
                                       DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
 from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.changes import make_object_audit_log_url
 
 from cmk.gui.plugins.wato import (
-    may_edit_ruleset,
     mode_registry,
     WatoMode,
 )
 
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
+
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 AjaxDiscoveryRequest = Dict[str, Any]
 
@@ -184,7 +185,12 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                                      options=DiscoveryOptions(**options))
 
     def execute(self, request: StartDiscoveryRequest) -> str:
-        return repr(tuple(execute_discovery_job(request)))
+        # Be compatible with pre-2.0.0p1 central sites. The version was not sent before this
+        # version. We need to skip the new_labels, vanished_labels and replaced_labels.
+        version = html.request.headers.get("x-checkmk-version")
+        if not version:
+            return repr(tuple(execute_discovery_job(request))[:4])
+        return repr(execute_discovery_job(request)._asdict())
 
 
 @page_registry.register_page("ajax_service_discovery")
@@ -232,9 +238,16 @@ class ModeAjaxServiceDiscovery(AjaxPage):
            and html.check_transaction():
             discovery_result = self._handle_action(discovery_result, request)
 
-        # Clean the requested action after performing it
-        performed_action = self._options.action
-        self._options = self._options._replace(action=DiscoveryAction.NONE)
+        if not discovery_result.check_table_created and previous_discovery_result:
+            discovery_result = DiscoveryResult(
+                job_status=discovery_result.job_status,
+                check_table_created=previous_discovery_result.check_table_created,
+                check_table=previous_discovery_result.check_table,
+                host_labels=previous_discovery_result.host_labels,
+                new_labels=previous_discovery_result.new_labels,
+                vanished_labels=previous_discovery_result.vanished_labels,
+                changed_labels=previous_discovery_result.changed_labels,
+            )
 
         self._update_persisted_discovery_options()
 
@@ -243,6 +256,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             self._options,
         )
         page_code = renderer.render(discovery_result, request)
+
+        # Clean the requested action after performing it
+        performed_action = self._options.action
+        self._options = self._options._replace(action=DiscoveryAction.NONE)
 
         return {
             "is_finished": not self._is_active(discovery_result),
@@ -267,7 +284,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         with html.plugged():
             PageMenuRenderer().show(
                 page_menu,
-                hide_suggestions=not html.foldable_container_is_open("suggestions", "all", True))
+                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True))
             return html.drain()
 
     def _get_discovery_breadcrumb(self) -> Breadcrumb:
@@ -348,10 +365,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             options = options._replace(action=DiscoveryAction.NONE)
 
         if options.action != DiscoveryAction.REFRESH and not \
-            (config.user.may("wato.service_discovery_to_undecided")
-            and config.user.may("wato.service_discovery_to_monitored")
-            and config.user.may("wato.service_discovery_to_ignored")
-             and config.user.may("wato.service_discovery_to_removed")):
+            (config.user.may("wato.service_discovery_to_undecided") and
+             config.user.may("wato.service_discovery_to_monitored") and
+             config.user.may("wato.service_discovery_to_ignored") and
+             config.user.may("wato.service_discovery_to_removed")):
             options = options._replace(action=DiscoveryAction.NONE)
 
         return options
@@ -398,17 +415,29 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         config.user.need_permission("wato.services")
 
         if self._options.action in [
+                DiscoveryAction.UPDATE_HOST_LABELS,
+                DiscoveryAction.FIX_ALL,
+        ]:
+            self._do_update_host_labels(discovery_result)
+
+        if self._options.action in [
                 DiscoveryAction.SINGLE_UPDATE,
                 DiscoveryAction.BULK_UPDATE,
                 DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
         ]:
             discovery = Discovery(self._host, self._options, request)
             discovery.do_discovery(discovery_result)
+
+        if self._options.action in [
+                DiscoveryAction.SINGLE_UPDATE,
+                DiscoveryAction.BULK_UPDATE,
+                DiscoveryAction.FIX_ALL,
+                DiscoveryAction.UPDATE_SERVICES,
+                DiscoveryAction.UPDATE_HOST_LABELS,
+        ]:
             # did discovery! update the check table
             discovery_result = self._get_check_table()
-
-        if self._options.action == DiscoveryAction.UPDATE_HOST_LABELS:
-            self._do_update_host_labels(discovery_result)
 
         if not self._host.locked():
             self._host.clear_discovery_failed()
@@ -431,17 +460,18 @@ class DiscoveryPageRenderer:
 
     def render(self, discovery_result: DiscoveryResult, request: dict) -> str:
         with html.plugged():
+            html.div("", id_="row_info")
+            self._show_fix_all(discovery_result)
             self._toggle_action_page_menu_entries(discovery_result)
             enable_page_menu_entry("inline_help")
             host_labels_row_count = self._show_discovered_host_labels(discovery_result)
             details_row_count = self._show_discovery_details(discovery_result, request)
-            self._update_header_info(host_labels_row_count + details_row_count)
+            self._update_row_info(host_labels_row_count + details_row_count)
             return html.drain()
 
-    def _update_header_info(self, abs_row_count: int):
-        headinfo = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
-
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+    def _update_row_info(self, abs_row_count: int):
+        row_info = _("1 row") if abs_row_count == 1 else _("%d rows") % abs_row_count
+        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> int:
         host_label_row_count = 0
@@ -547,6 +577,73 @@ class DiscoveryPageRenderer:
             by_group.setdefault(entry[0], []).append(entry)
         return by_group
 
+    def _show_fix_all(self, discovery_result: DiscoveryResult) -> None:
+        if not discovery_result:
+            return
+
+        if not config.user.may("wato.services"):
+            return
+
+        undecided_services = 0
+        vanished_services = 0
+        new_host_labels = len(discovery_result.new_labels)
+        vanished_host_labels = len(discovery_result.vanished_labels)
+        changed_host_labels = len(discovery_result.changed_labels)
+
+        for service in discovery_result.check_table:
+            if service[0] == DiscoveryState.UNDECIDED:
+                undecided_services += 1
+            if service[0] == DiscoveryState.VANISHED:
+                vanished_services += 1
+
+        if all(v == 0 for v in [
+                undecided_services,
+                vanished_services,
+                new_host_labels,
+                vanished_host_labels,
+                changed_host_labels,
+        ]):
+            return
+
+        html.open_div(id_="fixall")
+        html.icon("fixall", _("Services/Host labels to fix"))
+
+        html.open_ul()
+        html.open_li()
+        html.span(ungettext("Undecided service: ", "Undecided services: ", undecided_services))
+        html.span(str(undecided_services), class_="changed" if undecided_services else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Vanished service: ", "Vanished services: ", vanished_services))
+        html.span(str(vanished_services), class_="changed" if vanished_services else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("New host label: ", "New host labels: ", new_host_labels))
+        html.span(str(new_host_labels), class_="changed" if new_host_labels else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Vanished host label: ", "Vanished host labels: ",
+                            vanished_host_labels))
+        html.span(str(vanished_host_labels), class_="changed" if vanished_host_labels else "")
+        html.close_li()
+        html.open_li()
+        html.span(ungettext("Changed host label: ", "Changed host labels: ", changed_host_labels))
+        html.span(str(changed_host_labels), class_="changed" if changed_host_labels else "")
+        html.close_li()
+        html.close_ul()
+
+        html.jsbutton(
+            "_fixall",
+            _("Fix all"),
+            cssclass="action",
+            onclick=_start_js_call(
+                self._host,
+                self._options._replace(action=DiscoveryAction.FIX_ALL),
+            ),
+        )
+
+        html.close_div()
+
     def _toggle_action_page_menu_entries(self, discovery_result: DiscoveryResult) -> None:
         if not config.user.may("wato.services"):
             return
@@ -618,7 +715,7 @@ class DiscoveryPageRenderer:
 
     def _show_check_row(self, table, discovery_result, request, check, show_bulk_actions):
         (table_source, check_type, checkgroup, item, _discovered_params, check_params, descr, state,
-         output, _perfdata, service_labels) = check
+         output, _perfdata, service_labels, _found_on_nodes) = check
 
         statename = short_service_state_name(state, "")
         if statename == "":
@@ -634,7 +731,7 @@ class DiscoveryPageRenderer:
                                  show_bulk_actions)
         self._show_actions(table, discovery_result, check)
 
-        table.cell(_("State"), statename, css=stateclass)
+        table.cell(_("State"), html.render_span(statename), css=stateclass)
         table.cell(_("Service"), escaping.escape_attribute(descr), css="service")
         table.cell(_("Status detail"))
         self._show_status_detail(table_source, check_type, item, descr, output)
@@ -757,7 +854,7 @@ class DiscoveryPageRenderer:
             button_classes.append("disabled")
 
         (table_source, check_type, checkgroup, item, _discovered_params, _check_params, descr,
-         _state, _output, _perfdata, _service_labels) = check
+         _state, _output, _perfdata, _service_labels, _found_on_nodes) = check
         checkbox_name = checkbox_id(check_type, item)
 
         num_buttons = 0
@@ -863,6 +960,9 @@ class DiscoveryPageRenderer:
             ]), _("View and edit the parameters for this service"), "rulesets")
 
     def _check_parameters_button(self, table_source, check_type, checkgroup, item, descr):
+        if not checkgroup:
+            return
+
         if table_source == DiscoveryState.MANUAL:
             url = watolib.folder_preserving_link([
                 ('mode', 'edit_ruleset'),
@@ -1093,11 +1193,11 @@ def service_page_menu(breadcrumb, host: watolib.CREHost, options: DiscoveryOptio
                 title=_("Actions"),
                 topics=[
                     PageMenuTopic(
-                        title=_("Service configuration"),
+                        title=_("Discovery"),
                         entries=list(_page_menu_service_configuration_entries(host, options)),
                     ),
                     PageMenuTopic(
-                        title=_("On selected services"),
+                        title=_("Services"),
                         entries=list(_page_menu_selected_services_entries(host, options)),
                     ),
                     PageMenuTopic(
@@ -1162,6 +1262,13 @@ def _page_menu_host_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
 
     yield make_host_status_link(host_name=host.name(), view_name="hoststatus")
 
+    if config.user.may("wato.auditlog"):
+        yield PageMenuEntry(
+            title=_("Audit log"),
+            icon_name="auditlog",
+            item=make_simple_link(make_object_audit_log_url(host.object_ref())),
+        )
+
 
 def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry]:
     if not config.user.may('wato.rulesets'):
@@ -1178,7 +1285,10 @@ def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Disabled services"),
-        icon_name="disabled_service",
+        icon_name={
+            "icon": "services",
+            "emblem": "disable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                             ("varname", "ignored_services")])),
@@ -1186,7 +1296,10 @@ def _page_menu_settings_entries(host: watolib.CREHost) -> Iterator[PageMenuEntry
 
     yield PageMenuEntry(
         title=_("Disabled checks"),
-        icon_name="check_parameters",
+        icon_name={
+            "icon": "check_plugins",
+            "emblem": "disable",
+        },
         item=make_simple_link(
             watolib.folder_preserving_link([("mode", "edit_ruleset"),
                                             ("varname", "ignored_checks")])),
@@ -1217,13 +1330,13 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 def _page_menu_entry_show_parameters(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show check parameters"),
-        icon_name="trans",
-        item=PageMenuCheckbox(
-            is_checked=options.show_parameters,
-            check_url=_checkbox_js_url(host, options._replace(show_parameters=True)),
-            uncheck_url=_checkbox_js_url(host, options._replace(show_parameters=False)),
-        ),
+        title=_("Hide check parameters") if options.show_parameters else _("Show check parameters"),
+        icon_name="checkbox",
+        item=make_simple_link(
+            _checkbox_js_url(
+                host,
+                options._replace(show_parameters=not options.show_parameters),
+            )),
         name="show_parameters",
         css_classes=["toggle"],
     )
@@ -1232,13 +1345,13 @@ def _page_menu_entry_show_parameters(host: watolib.CREHost,
 def _page_menu_entry_show_checkboxes(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show checkboxes"),
-        icon_name="trans",
-        item=PageMenuCheckbox(
-            is_checked=options.show_checkboxes,
-            check_url=_checkbox_js_url(host, options._replace(show_checkboxes=True)),
-            uncheck_url=_checkbox_js_url(host, options._replace(show_checkboxes=False)),
-        ),
+        title=_("Hide checkboxes") if options.show_checkboxes else _("Show checkboxes"),
+        icon_name="checkbox",
+        item=make_simple_link(
+            _checkbox_js_url(
+                host,
+                options._replace(show_checkboxes=not options.show_checkboxes),
+            )),
         name="show_checkboxes",
         css_classes=["toggle"],
     )
@@ -1251,13 +1364,14 @@ def _checkbox_js_url(host: watolib.CREHost, options: DiscoveryOptions) -> str:
 def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
                                             options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show discovered service labels"),
-        icon_name="trans",
-        item=PageMenuCheckbox(
-            is_checked=options.show_discovered_labels,
-            check_url=_checkbox_js_url(host, options._replace(show_discovered_labels=True)),
-            uncheck_url=_checkbox_js_url(host, options._replace(show_discovered_labels=False)),
-        ),
+        title=_("Hide discovered service labels")
+        if options.show_discovered_labels else _("Show discovered service labels"),
+        icon_name="checkbox",
+        item=make_simple_link(
+            _checkbox_js_url(
+                host,
+                options._replace(show_discovered_labels=not options.show_discovered_labels),
+            )),
         name="show_discovered_labels",
         css_classes=["toggle"],
     )
@@ -1266,13 +1380,13 @@ def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
 def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
                                        options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Show plugin names"),
-        icon_name="trans",
-        item=PageMenuCheckbox(
-            is_checked=options.show_plugin_names,
-            check_url=_checkbox_js_url(host, options._replace(show_plugin_names=True)),
-            uncheck_url=_checkbox_js_url(host, options._replace(show_plugin_names=False)),
-        ),
+        title=_("Hide plugin names") if options.show_plugin_names else _("Show plugin names"),
+        icon_name="checkbox",
+        item=make_simple_link(
+            _checkbox_js_url(
+                host,
+                options._replace(show_plugin_names=not options.show_plugin_names),
+            )),
         name="show_plugin_names",
         css_classes=["toggle"],
     )
@@ -1280,17 +1394,6 @@ def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
 
 def _page_menu_service_configuration_entries(host: watolib.CREHost,
                                              options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
-    yield PageMenuEntry(
-        title=_("Add missing, remove vanished"),
-        icon_name="services_fix_all",
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.FIX_ALL))),
-        name="fix_all",
-        is_enabled=False,
-        is_shortcut=True,
-        css_classes=["action"],
-    )
-
     yield PageMenuEntry(
         title=_("Full service scan"),
         icon_name="services_full_scan",
@@ -1335,6 +1438,16 @@ BulkEntry = NamedTuple("BulkEntry", [
 
 def _page_menu_selected_services_entries(host: watolib.CREHost,
                                          options: DiscoveryOptions) -> Iterator[PageMenuEntry]:
+    yield PageMenuEntry(
+        title=_("Add missing, remove vanished"),
+        icon_name="services_fix_all",
+        item=make_javascript_link(
+            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))),
+        name="fix_all",
+        is_enabled=False,
+        is_shortcut=False,
+        css_classes=["action"],
+    )
 
     for entry in [
             BulkEntry(True, False, DiscoveryState.UNDECIDED, DiscoveryState.MONITORED,
@@ -1382,7 +1495,7 @@ def _page_menu_host_labels_entries(host: watolib.CREHost,
             _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))),
         name="update_host_labels",
         is_enabled=False,
-        is_shortcut=True,
+        is_shortcut=False,
         is_suggested=True,
         css_classes=["action"],
     )

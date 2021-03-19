@@ -16,11 +16,10 @@
 #include <vector>
 
 #include "Metric.h"
-#include "RRDColumn.h"
 #include "StringUtils.h"
 #include "Triggers.h"
 #include "auth.h"
-#include "data_encoding.h"
+enum class Encoding;
 class Logger;
 
 struct Command {

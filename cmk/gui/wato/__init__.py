@@ -129,7 +129,6 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.log import logger
-from cmk.gui.display_options import display_options
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 
 from cmk.gui.wato.pages.activate_changes import (
@@ -262,7 +261,6 @@ ALL_HOSTS = watolib.ALL_HOSTS
 ALL_SERVICES = watolib.ALL_SERVICES
 NEGATE = watolib.NEGATE
 from cmk.gui.plugins.wato import (
-    may_edit_ruleset,
     monitoring_macro_help,
     UserIconOrAction,
     SNMPCredentials,
@@ -956,7 +954,7 @@ permission_registry.register(
         title=_l("Monitoring Agents"),
         description=_l("Download the default Check_MK monitoring agents for Linux, "
                        "Windows and other operating systems."),
-        defaults=config.builtin_role_ids,
+        defaults=["admin", "user"],
     ))
 
 permission_registry.register(
@@ -982,7 +980,7 @@ permission_registry.register(
     Permission(
         section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
         name="analyze_config",
-        title=_l("Access the best analyze configuration functionality provided by WATO"),
+        title=_l("Access analyze configuration"),
         description=_l(
             "WATO has a module that gives you hints on how to tune your Check_MK installation."),
         defaults=["admin"],
@@ -1001,7 +999,7 @@ permission_registry.register(
     Permission(
         section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
         name="add_or_modify_executables",
-        title=_l("Can add or modify executables"),
+        title=_l("Add or modify executables"),
         description=_l(
             "There are different places in Check_MK where an admin can use the GUI to add "
             "executable code to Check_MK. For example when configuring "
@@ -1051,5 +1049,14 @@ permission_registry.register(
         name="service_discovery_to_removed",
         title=_l("Service discovery: Remove services"),
         description=_l("Service discovery: Remove services"),
+        defaults=["admin", "user"],
+    ))
+
+permission_registry.register(
+    Permission(
+        section=cmk.gui.plugins.wato.utils.PermissionSectionWATO,
+        name="check_plugins",
+        title=_l("Catalog of check plugins"),
+        description=_l("Use the catalog of check plugins."),
         defaults=["admin", "user"],
     ))

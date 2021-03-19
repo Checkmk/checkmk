@@ -45,7 +45,7 @@ class HostGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Host Groups")
+        return _("Host groups")
 
     @classmethod
     def description(cls):
@@ -63,7 +63,7 @@ class ServiceGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Service Groups")
+        return _("Service groups")
 
     @classmethod
     def description(cls):

@@ -15,40 +15,38 @@
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
 
 import abc
+import json
 import math
 import string
-import json
-from typing import Any, List, Tuple, Union, Dict, Set, Optional, Type
+from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 
 import cmk.utils
-import cmk.utils.version as cmk_version
-import cmk.utils.render
 import cmk.utils.plugin_registry
+import cmk.utils.render
+import cmk.utils.version as cmk_version
 
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
-import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
-from cmk.gui.i18n import _
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.plugins.metrics.html_render import (
-    host_service_graph_popup_cmk,
     host_service_graph_dashlet_cmk,
+    host_service_graph_popup_cmk,
+)
+# Needed for legacy (pre 1.6) plugins and for cross-module imports (e.g. in dashboards plugin)
+from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
+    check_metrics, darken_color, evaluate, G, GB, generic_graph_template, get_graph_range,
+    get_graph_templates, get_palette_color_by_index, graph_info, hsv_to_hexrgb, indexed_color, K,
+    KB, LegacyPerfometer, m, M, MAX_CORES, MB, metric_info, P, parse_color, parse_color_into_hexrgb,
+    parse_perf_data, PB, Perfometer, perfometer_info, perfvar_translation, render_color,
+    render_color_icon, replace_expressions, scalar_colors, scale_symbols, T, TB, translate_metrics,
+    translated_metrics_from_row, TranslatedMetrics, unit_info,
 )
 from cmk.gui.utils.popups import MethodAjax
-
-from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKInternalError
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
-    unit_info, metric_info, check_metrics, perfometer_info, graph_info, scalar_colors, KB, MB, GB,
-    TB, PB, m, K, M, G, T, P, evaluate, get_graph_range, replace_expressions,
-    generic_graph_template, scale_symbols, hsv_to_hexrgb, render_color, parse_color,
-    parse_color_into_hexrgb, render_color_icon, darken_color, get_palette_color_by_index,
-    parse_perf_data, perfvar_translation, translate_metrics, get_graph_templates, MAX_CORES,
-    indexed_color, TranslatedMetrics, LegacyPerfometer, Perfometer,
-)
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = Union[str, int, float]
 RequiredMetricNames = Set[str]

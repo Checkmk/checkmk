@@ -39,7 +39,7 @@ class ModeAutomationLogin(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         if not config.user.may("wato.automation"):
@@ -57,6 +57,7 @@ class ModeAutomationLogin(AjaxPage):
                 "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
+
         html.write(repr(response))
 
 
@@ -92,7 +93,7 @@ class ModeAutomation(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         # To prevent mixups in written files we use the same lock here as for

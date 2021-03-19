@@ -12,15 +12,16 @@ from typing import Optional, Any, Dict, List, Tuple, Type
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.sites import SiteId
+from cmk.gui.sites import SiteId, filter_available_site_choices
 import cmk.gui.pages
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices
 from cmk.gui.type_defs import RoleName, PermissionName, Visual
+from cmk.gui.visuals import visual_title
 from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
@@ -36,7 +37,7 @@ from cmk.gui.type_defs import (
 CustomSnapins = Any
 
 # Constants to be used in snapins
-snapin_width = 230
+snapin_width = 240
 
 search_plugins: List = []
 
@@ -51,7 +52,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
     @property
     def title(self) -> str:
-        return _("Sidebar snapins")
+        return _("Sidebar elements")
 
     @property
     def do_sort(self) -> bool:
@@ -302,19 +303,20 @@ def nagioscgilink(text, target):
 
 def snapin_site_choice(ident: SiteId, choices: List[Tuple[SiteId, str]]) -> Optional[List[SiteId]]:
     sites = config.user.load_file("sidebar_sites", {})
+    available_site_choices = filter_available_site_choices(choices)
     site = sites.get(ident, "")
     if site == "":
         only_sites = None
     else:
         only_sites = [site]
 
-    if len(choices) <= 1:
+    if len(available_site_choices) <= 1:
         return None
 
     dropdown_choices: Choices = [
         ("", _("All sites")),
     ]
-    dropdown_choices += choices
+    dropdown_choices += available_site_choices
 
     onchange = "cmk.sidebar.set_snapin_site(event, %s, this)" % json.dumps(ident)
     html.dropdown("site", dropdown_choices, deflt=site, onchange=onchange)
@@ -345,6 +347,7 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
             TopicMenuTopic(
                 name=topic.name(),
                 title=topic.title(),
+                max_entries=topic.max_entries(),
                 items=[],
                 icon=topic.icon_name(),
                 hide=topic.hide(),
@@ -352,7 +355,10 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
         topic.items.append(
             TopicMenuItem(
                 name=name,
-                title=visual["title"],
+                title=visual_title(visual_type_name,
+                                   visual,
+                                   visual["context"],
+                                   skip_title_context=True),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
@@ -407,12 +413,13 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
                                   id_=topic.name,
                                   isopen=False,
                                   title=topic.title,
-                                  indent=True)
+                                  indent=True,
+                                  icon="foldable_sidebar")
 
     for item in topic.items:
         if show_item_icons:
             html.open_li(class_=["sidebar", "show_more_mode" if item.is_show_more else None])
-            iconlink(item.title, item.url, item.icon)
+            iconlink(item.title, item.url, item.icon or "icon_missing")
             html.close_li()
         else:
             bulletlink(item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)")

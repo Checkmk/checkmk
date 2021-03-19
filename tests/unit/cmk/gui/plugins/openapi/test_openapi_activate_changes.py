@@ -9,6 +9,22 @@ from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusCon
 CMK_WAIT_FOR_COMPLETION = 'cmk/wait-for-completion'
 
 
+def test_openapi_show_activations(
+    wsgi_app,
+    with_automation_user,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = "/NO_SITE/check_mk/api/v0"
+
+    wsgi_app.call_method(
+        'get',
+        base + '/objects/activation_run/asdf/actions/wait-for-completion/invoke',
+        status=404,
+    )
+
+
 def test_openapi_activate_changes(
     wsgi_app,
     suppress_automation_calls,
@@ -39,19 +55,20 @@ def test_openapi_activate_changes(
             params='{"sites": ["asdf"]}',
             content_type='application/json',
         )
-        assert resp.json['detail'].startswith("Unknown site")
+        assert "Unknown site" in repr(resp.json), resp.json
 
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
             status=200,
+            content_type='application/json',
         )
 
     with live(expect_status_query=True):
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            status=301,
+            status=302,
             params='{"redirect": true}',
             content_type='application/json',
         )
@@ -82,6 +99,7 @@ def test_openapi_activate_changes(
         resp = wsgi_app.call_method(
             'post',
             base + "/domain-types/activation_run/actions/activate-changes/invoke",
+            content_type="application/json",
         )
 
     for _ in range(10):

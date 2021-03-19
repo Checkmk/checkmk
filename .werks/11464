@@ -6,7 +6,7 @@ Date: 1603870219
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Since this release Windows Agent update plugin is delivered as a python file
 with name <tt>cmk_update_agent.checkmk.py</tt>

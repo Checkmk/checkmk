@@ -30,7 +30,6 @@ pytestmark = pytest.mark.checks
         "--agent_port", "6556"
     ]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ruckus_spot_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_ruckus_spot')

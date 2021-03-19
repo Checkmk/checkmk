@@ -40,10 +40,13 @@ ReqString = partial(String, required=True)
 ReqNested = partial(Nested, required=True)
 ReqBoolean = partial(Boolean, required=True)
 
-MacroMappings = Dict[str, str]
 SearchResult = Dict[str, str]
 
 import cmk.utils.plugin_registry as plugin_registry
+from cmk.utils.macros import (
+    MacroMapping,
+    replace_macros_in_str,
+)
 from cmk.utils.bi.type_defs import (
     ActionConfig,
     ComputationConfigDict,
@@ -77,6 +80,7 @@ NodeComputeResult = NamedTuple("NodeComputeResult", [
     ("output", str),
     ("in_service_period", bool),
     ("state_messages", dict),
+    ("custom_infos", dict),
 ])
 
 NodeResultBundle = NamedTuple("NodeResultBundle", [
@@ -116,7 +120,7 @@ BIHostSpec = NamedTuple("BIHostSpec", [
 ])
 BINeededHosts = Set[BIHostSpec]
 
-BIServiceWithFullState = NamedTuple("BIServiceFullState", [
+BIServiceWithFullState = NamedTuple("BIServiceWithFullState", [
     ("state", Optional[ServiceState]),
     ("has_been_checked", bool),
     ("plugin_output", ServiceDetails),
@@ -127,7 +131,7 @@ BIServiceWithFullState = NamedTuple("BIServiceFullState", [
     ("acknowledged", bool),
     ("in_service_period", bool),
 ])
-BIHostStatusInfoRow = NamedTuple("BIStatusInfoRow", [
+BIHostStatusInfoRow = NamedTuple("BIHostStatusInfoRow", [
     ("state", Optional[HostState]),
     ("has_been_checked", bool),
     ("hard_state", Optional[HostState]),
@@ -237,6 +241,13 @@ class BIAggregationComputationOptions(ABCWithSchema):
     def schema(cls) -> Type["BIAggregationComputationOptionsSchema"]:
         return BIAggregationComputationOptionsSchema
 
+    def serialize(self):
+        return {
+            "disabled": self.disabled,
+            "use_hard_states": self.use_hard_states,
+            "escalate_downtimes_as_warn": self.escalate_downtimes_as_warn,
+        }
+
 
 class BIAggregationComputationOptionsSchema(Schema):
     disabled = ReqBoolean(default=False, example=False)
@@ -257,6 +268,12 @@ class BIAggregationGroups(ABCWithSchema):
     def schema(cls) -> Type["BIAggregationGroupsSchema"]:
         return BIAggregationGroupsSchema
 
+    def serialize(self):
+        return {
+            "names": self.names,
+            "paths": self.paths,
+        }
+
 
 class BIAggregationGroupsSchema(Schema):
     names = MList(ReqString(), default=[], example=["group1", "group2"])
@@ -274,6 +291,11 @@ class BIParams(ABCWithSchema):
     def schema(cls) -> Type["BIParamsSchema"]:
         return BIParamsSchema
 
+    def serialize(self):
+        return {
+            "arguments": self.arguments,
+        }
+
 
 class BIParamsSchema(Schema):
     arguments = ReqList(String, default=[], example=["testhostParams"])
@@ -282,30 +304,30 @@ class BIParamsSchema(Schema):
 T = TypeVar("T", str, dict, list)
 
 
-def replace_macros(pattern: T, macros: MacroMappings) -> T:
+def replace_macros(pattern: T, macros: MacroMapping) -> T:
     if isinstance(pattern, str):
-        return replace_macros_in_string(pattern, macros)
+        return replace_macros_in_str(pattern, macros)
     if isinstance(pattern, list):
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
 
 
-def replace_macros_in_list(elements: List[str], macros: MacroMappings) -> List[str]:
+def replace_macros_in_list(elements: List[str], macros: MacroMapping) -> List[str]:
     new_list: List[str] = []
     for element in elements:
         new_list.append(replace_macros(element, macros))
     return new_list
 
 
-def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMappings) -> Dict[str, str]:
+def replace_macros_in_dict(old_dict: Dict[str, str], macros: MacroMapping) -> Dict[str, str]:
     new_dict: Dict[str, str] = {}
     for key, value in old_dict.items():
         new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
     return new_dict
 
 
-def replace_macros_in_string(pattern: str, macros: MacroMappings) -> str:
+def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
     for macro, replacement in macros.items():
         pattern = pattern.replace(macro, replacement)
     return pattern
@@ -380,6 +402,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
     def compile_postprocess(
         self,
         bi_branch_root: "ABCBICompiledNode",
+        services_of_host: Dict[HostName, Set[ServiceName]],
         bi_searcher: ABCBISearcher,
     ) -> List["ABCBICompiledNode"]:
         raise NotImplementedError()
@@ -393,6 +416,10 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def required_elements(self) -> Set[RequiredBIElement]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
 
@@ -418,6 +445,10 @@ class ABCBIAction(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def schema(cls) -> Type[Schema]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -461,7 +492,11 @@ class ABCBISearch(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def execute(self, macros: MacroMappings, bi_searcher: ABCBISearcher) -> List[Dict]:
+    def serialize(self) -> Dict[str, Any]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[Dict]:
         raise NotImplementedError()
 
 
@@ -501,6 +536,10 @@ class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def schema(cls) -> Type[Schema]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
 

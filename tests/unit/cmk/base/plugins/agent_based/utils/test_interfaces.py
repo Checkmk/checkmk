@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
     Result,
     Service,
+    ServiceLabel,
     State as state,
     type_defs,
 )
@@ -71,20 +72,21 @@ def _add_group_info_to_results(results, members):
     return [
         Result(
             state=state.OK,
-            notice='Interface group',
+            summary='Interface group',
         ),
         Result(
             state=state.OK,
-            notice='Operational state: up',
-        ),
+            summary='(up)',
+            details='Operational state: up',
+        ), results[2],
         Result(
             state=state.OK,
-            notice=members,
+            summary=members,
         )
-    ] + results[2:]
+    ] + results[3:]
 
 
-DEFAULT_DISCOVERY_PARAMS = type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)
+DEFAULT_DISCOVERY_PARAMS = interfaces.DISCOVERY_DEFAULT_PARAMETERS
 
 SINGLE_SERVICES = [
     Service(item='5', parameters={
@@ -109,7 +111,7 @@ def test_discovery_ungrouped_empty_section():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         True,
                         {
@@ -118,7 +120,7 @@ def test_discovery_ungrouped_empty_section():
                         },
                     ),
                     'matching_conditions': (True, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             [],
@@ -126,10 +128,26 @@ def test_discovery_ungrouped_empty_section():
 
 
 def test_discovery_ungrouped_admin_status():
+    ifaces = _create_interfaces(0, admin_status='1')
+    ifaces[-1].admin_status = '2'
     assert list(
         interfaces.discover_interfaces(
-            [DEFAULT_DISCOVERY_PARAMS],
-            _create_interfaces(0, admin_status='1'),
+            [
+                {
+                    'discovery_single': (
+                        False,
+                        {},
+                    ),
+                    'matching_conditions': (
+                        False,
+                        {
+                            'admin_states': ['2']
+                        },
+                    ),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            ifaces,
         )) == [
             Service(
                 item='5',
@@ -140,15 +158,6 @@ def test_discovery_ungrouped_admin_status():
                 },
                 labels=[],
             ),
-            Service(
-                item='6',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['1']
-                },
-                labels=[],
-            ),
         ]
 
 
@@ -156,7 +165,7 @@ def test_discovery_ungrouped_one():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -164,7 +173,7 @@ def test_discovery_ungrouped_one():
                         },
                     ),
                     'discovery_single': (False, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -175,119 +184,14 @@ def test_discovery_ungrouped_off():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (True, {}),
                     'discovery_single': (False, {}),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
         )) == []
-
-
-def test_discovery_legacy_parameters_1():
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'pad_portnumbers': False,
-                    'item_appearance': 'alias',
-                    'match_desc': ['enxe4b97ab99f99', 'vboxnet0', 'lo'],
-                    'portstates': ['1', '2', '3'],
-                    'porttypes': ['6'],
-                    'match_alias': ['enxe4b97ab99f99', 'vboxnet0', 'lo'],
-                }),
-                type_defs.Parameters({
-                    'matching_conditions': (True, {}),
-                    'discovery_single': (False, {}),
-                }),
-                DEFAULT_DISCOVERY_PARAMS,
-            ],
-            _create_interfaces(0),
-        )) == [
-            Service(
-                item='enxe4b97ab99f99',
-                parameters={
-                    'discovered_oper_status': ['2'],
-                    'discovered_speed': 10000000,
-                },
-                labels=[],
-            ),
-            Service(
-                item='vboxnet0',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 10000000,
-                },
-                labels=[],
-            ),
-        ]
-
-
-def test_discovery_legacy_parameters_2():
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'item_appearance': 'index',
-                    'portstates': ['1', '9'],
-                }),
-            ],
-            _create_interfaces(0, admin_status='3'),
-        )) == [
-            Service(
-                item='1',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-            Service(
-                item='5',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 10000000,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-            Service(
-                item='6',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['3'],
-                },
-                labels=[],
-            ),
-        ]
-
-
-def test_discovery_legacy_parameters_3():
-    ifaces = _create_interfaces(0, admin_status='1')
-    ifaces[0].admin_status = '2'
-    assert list(
-        interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'item_appearance': 'alias',
-                    'portstates': ['9'],
-                }),
-            ],
-            ifaces,
-        )) == [
-            Service(
-                item='lo',
-                parameters={
-                    'discovered_oper_status': ['1'],
-                    'discovered_speed': 0,
-                    'discovered_admin_status': ['2'],
-                },
-                labels=[],
-            )
-        ]
 
 
 def test_discovery_duplicate_index():
@@ -310,18 +214,16 @@ def test_discovery_duplicate_index():
 def test_discovery_duplicate_descr():
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    **DEFAULT_DISCOVERY_PARAMS,
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                })
-            ],
+            [{
+                **DEFAULT_DISCOVERY_PARAMS,
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+            }],
             _create_interfaces(0, descr='description'),
         )) == [
             Service(
@@ -346,23 +248,21 @@ def test_discovery_duplicate_descr():
 def test_discovery_duplicate_alias():
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'alias',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_index': ['5'],
-                        },
-                    ),
-                })
-            ],
+            [{
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'alias',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_index': ['5'],
+                    },
+                ),
+            }],
             _create_interfaces(0, alias='alias'),
         )) == [
             Service(
@@ -384,23 +284,21 @@ def test_discovery_partial_duplicate_desc_duplicate_alias():
         iface.alias = 'alias'
     assert list(
         interfaces.discover_interfaces(
-            [
-                type_defs.Parameters({
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_index': ['4', '5', '6'],
-                        },
-                    ),
-                })
-            ],
+            [{
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_index': ['4', '5', '6'],
+                    },
+                ),
+            }],
             ifaces,
         )) == [
             Service(
@@ -434,16 +332,18 @@ def test_discovery_grouped_simple():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (True, {}),
-                    "grouping": (
+                    'grouping': (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -468,7 +368,7 @@ def test_discovery_grouped_hierarchy():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -477,22 +377,26 @@ def test_discovery_grouped_hierarchy():
                     ),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'alias',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'alias',
+                            }],
+                        },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -519,7 +423,7 @@ def test_discovery_grouped_exclusion_condition():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -528,19 +432,23 @@ def test_discovery_grouped_exclusion_condition():
                     ),
                     "grouping": (
                         False,
-                        [],
+                        {
+                            'group_items': [],
+                        },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -567,7 +475,7 @@ def test_discovery_grouped_empty():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                {
                     'matching_conditions': (
                         False,
                         {
@@ -576,12 +484,14 @@ def test_discovery_grouped_empty():
                     ),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
-                }),
+                },
                 DEFAULT_DISCOVERY_PARAMS,
             ],
             _create_interfaces(0),
@@ -617,14 +527,16 @@ def test_discovery_grouped_by_agent_and_in_rules():
     assert list(
         interfaces.discover_interfaces(
             [
-                type_defs.Parameters({
+                ({
                     'matching_conditions': (True, {}),
                     "grouping": (
                         True,
-                        [{
-                            'group_name': 'group',
-                            'member_appearance': 'index',
-                        }],
+                        {
+                            'group_items': [{
+                                'group_name': 'group',
+                                'member_appearance': 'index',
+                            }],
+                        },
                     ),
                 }),
                 DEFAULT_DISCOVERY_PARAMS,
@@ -647,71 +559,275 @@ def test_discovery_grouped_by_agent_and_in_rules():
         ]
 
 
+def test_discovery_labels():
+    assert list(
+        interfaces.discover_interfaces(
+            [
+                {
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                            'labels': {
+                                'single': 'wlp'
+                            },
+                        },
+                    ),
+                    "grouping": (
+                        True,
+                        {
+                            'group_items': [{
+                                'group_name': 'wlp_group',
+                                'member_appearance': 'index',
+                            }],
+                            'labels': {
+                                'group': 'wlp'
+                            },
+                        },
+                    ),
+                    'matching_conditions': (False, {
+                        'match_desc': ['wlp']
+                    }),
+                },
+                {
+                    'discovery_single': (
+                        True,
+                        {
+                            'item_appearance': 'alias',
+                            'pad_portnumbers': True,
+                            'labels': {
+                                'single': 'default'
+                            },
+                        },
+                    ),
+                    "grouping": (
+                        True,
+                        {
+                            'group_items': [{
+                                'group_name': 'default_group',
+                                'member_appearance': 'index',
+                            }],
+                            'labels': {
+                                'group': 'default'
+                            },
+                        },
+                    ),
+                    'matching_conditions': (True, {}),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            _create_interfaces(0),
+        )) == [
+            Service(item='lo',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='docker0',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='enp0s31f6',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='enxe4b97ab99f99',
+                    parameters={
+                        'discovered_oper_status': ['2'],
+                        'discovered_speed': 10000000
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='vboxnet0',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 10000000
+                    },
+                    labels=[ServiceLabel('single', 'default')]),
+            Service(item='wlp2s0',
+                    parameters={
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0
+                    },
+                    labels=[ServiceLabel('single', 'wlp')]),
+            Service(item='default_group',
+                    parameters={
+                        'aggregate': {
+                            'member_appearance': 'index',
+                            'inclusion_condition': {},
+                            'exclusion_conditions': []
+                        },
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 20000000.0
+                    },
+                    labels=[ServiceLabel('group', 'default')]),
+            Service(item='wlp_group',
+                    parameters={
+                        'aggregate': {
+                            'member_appearance': 'index',
+                            'inclusion_condition': {
+                                'match_desc': ['wlp']
+                            },
+                            'exclusion_conditions': []
+                        },
+                        'discovered_oper_status': ['1'],
+                        'discovered_speed': 0.0
+                    },
+                    labels=[ServiceLabel('group', 'wlp')]),
+        ]
+
+
 ITEM_PARAMS_RESULTS = (
     (
         '5',
-        type_defs.Parameters({
-            'errors': (0.01, 0.1),
-            'speed': 10000000,
-            'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+        {
+            'errors': {
+                'both': ('abs', (10, 20))
+            },
+            'speed': 10_000_000,
+            'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
             'state': ['1'],
-        }),
+        },
         [
-            Result(state=state.OK, notice='[vboxnet0]'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='MAC: 0A:00:27:00:00:00'),
-            Metric('in', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0, levels=(0.01, 0.1)),
-            Metric('out', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0, levels=(0.01, 0.1)),
+            Result(state=state.OK, summary='[vboxnet0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 0A:00:27:00:00:00'),
+            Result(state=state.OK, summary='Speed: 10 MBit/s'),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
+            Metric('in', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
             Result(state=state.OK, summary='Out: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Speed: 10 MBit/s'),
+            Metric('out', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ],
     ),
     (
         '6',
-        type_defs.Parameters({
-            'errors': (0.01, 0.1),
+        {
+            'errors': {
+                'both': ('abs', (10, 20))
+            },
+            'speed': 100_000_000,
+            'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+            'total_traffic': {},
+            'state': ['1'],
+        },
+        [
+            Result(state=state.OK, summary='[wlp2s0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
+            Metric('outqlen', 0.0),
+            Result(state=state.WARN,
+                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
+            Metric('in', 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Result(state=state.CRIT,
+                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
+            Metric('out', 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Result(state=state.OK, summary='Total: 4.00 MB/s (16.00%)'),
+            Metric('total', 4000000.0, boundaries=(0.0, 25000000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
+        ],
+    ),
+    (
+        '6',
+        {
+            'errors': {
+                'both': ('abs', (10, 20))
+            },
             'speed': 100000000,
             'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
             'state': ['1'],
-        }),
+            'nucasts': (1, 2),
+            'discards': (1, 2),
+        },
         [
-            Result(state=state.OK, notice='[wlp2s0]'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='MAC: 64:5D:86:E4:50:2F'),
-            Metric('in', 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0, levels=(0.01, 0.1)),
-            Metric('out', 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0, levels=(0.01, 0.1)),
+            Result(state=state.OK, summary='[wlp2s0]'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='MAC: 64:5D:86:E4:50:2F'),
+            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
             Metric('outqlen', 0.0),
             Result(state=state.WARN,
-                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
+                   summary='In: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
+            Metric('in', 800000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
-            Result(state=state.OK, summary='Speed: 100 MBit/s (assumed)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
+            Metric('out', 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0, levels=(1.0, 2.0)),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0, levels=(1.0, 2.0)),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0, levels=(1.0, 2.0)),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0, levels=(1.0, 2.0)),
         ],
     ),
 )
@@ -741,21 +857,22 @@ def test_check_single_interface_same_index_descr_alias(value_store):
     result = next(  # type: ignore[call-overload]
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({}),
+            {},
             _create_interfaces(0, index=item, descr=item, alias=item)[0],
         ))
     assert result == Result(
         state=state.OK,
-        notice='Operational state: up',
+        summary='(up)',
+        details='Operational state: up',
     )
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
 def test_check_single_interface_admin_status(value_store, item, params, result):
-    params = type_defs.Parameters({
+    params = {
         **params,
         'discovered_admin_status': '1',
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
@@ -771,61 +888,67 @@ def test_check_single_interface_admin_status(value_store, item, params, result):
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
         )) == result[:2] + [
-            Result(state=state.OK, notice='Admin state: up'),
+            Result(state=state.OK, summary='Admin state: up'),
         ] + result[2:]
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
-def test_check_single_interface_legacy_parameters_1(value_store, item, params, result):
+def test_check_single_interface_states(value_store, item, params, result):
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
-                    'state': ['9'],
-                }),
+                    'state': ['4'],
+                    'admin_state': ['2'],
+                },
                 _create_interfaces(0, admin_status='1')[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
-                'state': ['9'],
-            }),
+                'state': ['4'],
+                'admin_state': ['2'],
+            },
             _create_interfaces(4000000, admin_status='1')[int(item) - 1],
             timestamp=5,
-        )) == result[:2] + [
-            Result(state=state.CRIT, notice='Admin state: up'),
+        )) == result[:1] + [
+            Result(state=state.CRIT, summary='(up)', details='Operational state: up'),
+            Result(state=state.CRIT, summary='Admin state: up'),
         ] + result[2:]
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)
-def test_check_single_interface_legacy_parameters_2(value_store, item, params, result):
+def test_check_single_interface_map_states(value_store, item, params, result):
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
-                    'map_operstates': [(['5', '9'], 3)],
-                }),
+                    'map_operstates': [(['1'], 3)],
+                    'map_admin_states': [(['2'], 3)],
+                },
                 _create_interfaces(0, admin_status='2')[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
-                'map_operstates': [(['5', '9'], 3)],
-            }),
+                'map_operstates': [(['1'], 3)],
+                'map_admin_states': [(['2'], 3)],
+            },
             _create_interfaces(4000000, admin_status='2')[int(item) - 1],
             timestamp=5,
-        )) == result[:2] + [
-            Result(state=state.UNKNOWN, notice='Admin state: down'),
+        )) == result[:1] + [
+            Result(state=state.UNKNOWN, summary='(up)', details='Operational state: up'),
+            Result(state=state.UNKNOWN, summary='Admin state: down'),
         ] + result[2:]
 
 
@@ -835,20 +958,20 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
         list(
             interfaces.check_single_interface(
                 item,
-                type_defs.Parameters({
+                {
                     **params,
                     'state': None,
-                }),
+                },
                 _create_interfaces(0, oper_status=4)[int(item) - 1],
                 timestamp=0,
             ))
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'state': None,
-            }),
+            },
             _create_interfaces(4000000, oper_status=4)[int(item) - 1],
             timestamp=5,
         )) == result
@@ -858,26 +981,28 @@ def test_check_single_interface_ignore_state(value_store, item, params, result):
     (
         ITEM_PARAMS_RESULTS[0][0],
         ITEM_PARAMS_RESULTS[0][1],
-        ITEM_PARAMS_RESULTS[0][2][:-3] + [
-            Metric('in_avg_5', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
+        ITEM_PARAMS_RESULTS[0][2][:5] + [
             Result(state=state.OK, summary='In average 5min: 0.00 B/s (0%)'),
-            Metric('out_avg_5', 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
+        ] + [ITEM_PARAMS_RESULTS[0][2][6]] + [
             Result(state=state.OK, summary='Out average 5min: 0.00 B/s (0%)'),
-        ] + [ITEM_PARAMS_RESULTS[0][2][-1]],
+        ] + ITEM_PARAMS_RESULTS[0][2][8:],
     ),
     (
         ITEM_PARAMS_RESULTS[1][0],
         ITEM_PARAMS_RESULTS[1][1],
-        ITEM_PARAMS_RESULTS[1][2][:-3] + [
-            Metric('in_avg_5', 800000.0, levels=(625000.0, 2500000.0),
-                   boundaries=(0.0, 12500000.0)),
+        ITEM_PARAMS_RESULTS[1][2][:5] + [
             Result(state=state.WARN,
-                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.4%)'),
-            Metric(
-                'out_avg_5', 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
-            Result(state=state.CRIT,
-                   summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.6%)'),
-        ] + [ITEM_PARAMS_RESULTS[1][2][-1]],
+                   summary='In average 5min: 800 kB/s (warn/crit at 625 kB/s/2.50 MB/s) (6.40%)'),
+        ] + [ITEM_PARAMS_RESULTS[1][2][6]] + [
+            Result(
+                state=state.CRIT,
+                summary='Out average 5min: 3.20 MB/s (warn/crit at 625 kB/s/2.50 MB/s) (25.60%)'),
+        ] + [ITEM_PARAMS_RESULTS[1][2][8]] + [
+            Result(
+                state=state.OK,
+                summary='Total average 5min: 4.00 MB/s (16.00%)',
+            ),
+        ] + ITEM_PARAMS_RESULTS[1][2][10:],
     ),
 ])
 def test_check_single_interface_averaging(value_store, item, params, result):
@@ -892,10 +1017,10 @@ def test_check_single_interface_averaging(value_store, item, params, result):
     assert list(
         interfaces.check_single_interface(
             item,
-            type_defs.Parameters({
+            {
                 **params,
                 'average': 5,
-            }),
+            },
             _create_interfaces(4000000)[int(item) - 1],
             timestamp=5,
         )) == result
@@ -1113,15 +1238,20 @@ def test_check_multiple_interfaces_duplicate_alias(value_store, item, params, re
     )) == [
         Result(
             state=state.OK,
-            notice='[%s/%s]' % (alias, ifaces[int(index) - 1].descr),
+            summary='[%s/%s]' % (alias, ifaces[int(index) - 1].descr),
         ),
     ] + result[1:]
 
 
 def test_check_multiple_interfaces_group_simple(value_store):
-    params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
-        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+    params = {
+        'errors': {
+            'both': ('abs', (10, 20))
+        },
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {},
@@ -1131,7 +1261,7 @@ def test_check_multiple_interfaces_group_simple(value_store):
         'discovered_speed': 20000000,
         'state': ['8'],
         'speed': 123456,
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_multiple_interfaces(
@@ -1147,37 +1277,57 @@ def test_check_multiple_interfaces_group_simple(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
-            Result(state=state.OK, notice='Interface group'),
-            Result(state=state.OK, notice='Operational state: degraded'),
+            Result(state=state.OK, summary='Interface group'),
+            Result(state=state.OK, summary='(degraded)', details='Operational state: degraded'),
             Result(state=state.OK,
-                   notice='Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]'),
-            Metric('in', 800000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0, levels=(0.01, 0.1)),
-            Metric('out', 3200000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0, levels=(0.01, 0.1)),
+                   summary='Members: [1 (up), 2 (down), 3 (down), 4 (down), 5 (up), 6 (up)]'),
+            Result(state=state.WARN, summary='Speed: 10 MBit/s (expected: 123 kBit/s)'),
             Metric('outqlen', 0.0),
             Result(state=state.CRIT,
-                   summary='In: 800 kB/s (warn/crit at 62.5 kB/s/250 kB/s) (64.0%)'),
+                   summary='In: 800 kB/s (warn/crit at 62.5 kB/s/250 kB/s) (64.00%)'),
+            Metric('in', 800000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256%)'),
-            Result(state=state.WARN, summary='Speed: 10 MBit/s (expected: 123 kBit/s)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 62.5 kB/s/250 kB/s) (256.00%)'),
+            Metric('out', 3200000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
+            Result(state=state.CRIT,
+                   summary='Total: 4.00 MB/s (warn/crit at 250 kB/s/750 kB/s) (160.00%)'),
+            Metric('total', 4000000.0, levels=(250000.0, 750000.0), boundaries=(0.0, 2500000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ]
 
 
 def test_check_multiple_interfaces_group_exclude(value_store):
-    params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
-        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+    params = {
+        'errors': {
+            'both': ('abs', (10, 20))
+        },
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {},
@@ -1187,7 +1337,7 @@ def test_check_multiple_interfaces_group_exclude(value_store):
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         list(
             interfaces.check_multiple_interfaces(
@@ -1203,42 +1353,62 @@ def test_check_multiple_interfaces_group_exclude(value_store):
             _create_interfaces(4000000),
             timestamp=5,
         )) == [
-            Result(state=state.OK, notice='Interface group'),
-            Result(state=state.CRIT, notice='Operational state: degraded'),
-            Result(state=state.OK, notice='Members: [1 (up), 2 (down), 3 (down), 6 (up)]'),
-            Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0, levels=(0.01, 0.1)),
-            Metric('out', 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0, levels=(0.01, 0.1)),
+            Result(state=state.OK, summary='Interface group'),
+            Result(state=state.CRIT, summary='(degraded)', details='Operational state: degraded'),
+            Result(state=state.OK, summary='Members: [1 (up), 2 (down), 3 (down), 6 (up)]'),
+            Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
             Metric('outqlen', 0.0),
             Result(state=state.CRIT,
-                   summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.0%)'),
+                   summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)'),
+            Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
             Result(state=state.CRIT,
-                   summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
-            Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
+                   summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)'),
+            Metric('out', 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+            Result(state=state.CRIT,
+                   summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)'),
+            Metric('total', 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0, levels=(10.0, 20.0)),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ]
 
 
 def test_check_multiple_interfaces_group_by_agent(value_store):
-    params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
-        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+    params = {
+        'errors': {
+            'both': ('abs', (10, 20))
+        },
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000
-    })
+    }
     with pytest.raises(IgnoreResultsError):
         ifaces = _create_interfaces(0)
         ifaces[3].group = 'group'
@@ -1259,27 +1429,43 @@ def test_check_multiple_interfaces_group_by_agent(value_store):
         ifaces,
         timestamp=5,
     )) == [
-        Result(state=state.OK, notice='Interface group'),
-        Result(state=state.CRIT, notice='Operational state: degraded'),
-        Result(state=state.OK, notice='Members: [4 (down), 6 (up)]'),
-        Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-        Metric('inmcast', 0.0),
-        Metric('inbcast', 0.0),
-        Metric('inucast', 0.0),
-        Metric('innucast', 0.0),
-        Metric('indisc', 0.0),
-        Metric('inerr', 0.0, levels=(0.01, 0.1)),
-        Metric('out', 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-        Metric('outmcast', 0.0),
-        Metric('outbcast', 0.0),
-        Metric('outucast', 0.0),
-        Metric('outnucast', 0.0),
-        Metric('outdisc', 0.0),
-        Metric('outerr', 0.0, levels=(0.01, 0.1)),
-        Metric('outqlen', 0.0),
-        Result(state=state.CRIT, summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.0%)'),
-        Result(state=state.CRIT, summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128%)'),
+        Result(state=state.OK, summary='Interface group'),
+        Result(state=state.CRIT, summary='(degraded)', details='Operational state: degraded'),
+        Result(state=state.OK, summary='Members: [4 (down), 6 (up)]'),
         Result(state=state.OK, summary='Speed: 20 MBit/s (assumed)'),
+        Metric('outqlen', 0.0),
+        Result(state=state.CRIT, summary='In: 800 kB/s (warn/crit at 125 kB/s/500 kB/s) (32.00%)'),
+        Metric('in', 800000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+        Result(state=state.CRIT,
+               summary='Out: 3.20 MB/s (warn/crit at 125 kB/s/500 kB/s) (128.00%)'),
+        Metric('out', 3200000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+        Result(state=state.CRIT,
+               summary='Total: 4.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (80.00%)'),
+        Metric('total', 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
+        Result(state=state.OK, notice='Errors in: 0 packets/s'),
+        Metric('inerr', 0.0, levels=(10.0, 20.0)),
+        Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+        Metric('inmcast', 0.0),
+        Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+        Metric('inbcast', 0.0),
+        Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+        Metric('inucast', 0.0),
+        Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+        Metric('innucast', 0.0),
+        Result(state=state.OK, notice='Discards in: 0 packets/s'),
+        Metric('indisc', 0.0),
+        Result(state=state.OK, notice='Errors out: 0 packets/s'),
+        Metric('outerr', 0.0, levels=(10.0, 20.0)),
+        Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+        Metric('outmcast', 0.0),
+        Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+        Metric('outbcast', 0.0),
+        Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+        Metric('outucast', 0.0),
+        Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+        Metric('outnucast', 0.0),
+        Result(state=state.OK, notice='Discards out: 0 packets/s'),
+        Metric('outdisc', 0.0),
     ]
 
 
@@ -1326,9 +1512,14 @@ def test_check_multiple_interfaces_same_item_twice_cluster(value_store, item, pa
 
 
 def test_check_multiple_interfaces_group_multiple_nodes(value_store):
-    params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
-        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+    params = {
+        'errors': {
+            'both': ('abs', (10, 20))
+        },
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'aggregate': {
             'member_appearance': 'index',
             'inclusion_condition': {
@@ -1340,7 +1531,7 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
         },
         'discovered_oper_status': ['1'],
         'discovered_speed': 20000000,
-    })
+    }
     node_names = ['node1', 'node2', 'node3']
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1366,41 +1557,62 @@ def test_check_multiple_interfaces_group_multiple_nodes(value_store):
             timestamp=5,
         )
     ) == [
-        Result(state=state.OK, notice='Interface group'),
-        Result(state=state.OK, notice='Operational state: up'),
+        Result(state=state.OK, summary='Interface group'),
+        Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
             state=state.OK,
-            notice='Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: '
-            'up) on node node1] [5 (op. state: up, admin state: down), 6 (op. state: up, '
-            'admin state: down) on node node2]'),
-        Metric('in', 1600000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-        Metric('inmcast', 0.0),
-        Metric('inbcast', 0.0),
-        Metric('inucast', 0.0),
-        Metric('innucast', 0.0),
-        Metric('indisc', 0.0),
-        Metric('inerr', 0.0, levels=(0.01, 0.1)),
-        Metric('out', 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
-        Metric('outmcast', 0.0),
-        Metric('outbcast', 0.0),
-        Metric('outucast', 0.0),
-        Metric('outnucast', 0.0),
-        Metric('outdisc', 0.0),
-        Metric('outerr', 0.0, levels=(0.01, 0.1)),
-        Metric('outqlen', 0.0),
-        Result(state=state.CRIT, summary='In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.0%)'),
-        Result(state=state.CRIT, summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256%)'),
+            summary=
+            'Members: [5 (op. state: up, admin state: up), 6 (op. state: up, admin state: up) on node node1] [5 (op. state: up, admin state: down), 6 (op. state: up, admin state: down) on node node2]'
+        ),
         Result(state=state.OK, summary='Speed: 20 MBit/s'),
+        Metric('outqlen', 0.0),
+        Result(state=state.CRIT, summary='In: 1.60 MB/s (warn/crit at 125 kB/s/500 kB/s) (64.00%)'),
+        Metric('in', 1600000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+        Result(state=state.CRIT,
+               summary='Out: 6.40 MB/s (warn/crit at 125 kB/s/500 kB/s) (256.00%)'),
+        Metric('out', 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
+        Result(state=state.CRIT,
+               summary='Total: 8.00 MB/s (warn/crit at 500 kB/s/1.50 MB/s) (160.00%)'),
+        Metric('total', 8000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
+        Result(state=state.OK, notice='Errors in: 0 packets/s'),
+        Metric('inerr', 0.0, levels=(10.0, 20.0)),
+        Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+        Metric('inmcast', 0.0),
+        Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+        Metric('inbcast', 0.0),
+        Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+        Metric('inucast', 0.0),
+        Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+        Metric('innucast', 0.0),
+        Result(state=state.OK, notice='Discards in: 0 packets/s'),
+        Metric('indisc', 0.0),
+        Result(state=state.OK, notice='Errors out: 0 packets/s'),
+        Metric('outerr', 0.0, levels=(10.0, 20.0)),
+        Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+        Metric('outmcast', 0.0),
+        Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+        Metric('outbcast', 0.0),
+        Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+        Metric('outucast', 0.0),
+        Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+        Metric('outnucast', 0.0),
+        Result(state=state.OK, notice='Discards out: 0 packets/s'),
+        Metric('outdisc', 0.0),
     ]
 
 
 def test_cluster_check(monkeypatch, value_store):
-    params = type_defs.Parameters({
-        'errors': (0.01, 0.1),
+    params = {
+        'errors': {
+            'both': ('abs', (10, 20))
+        },
         'speed': 10000000,
-        'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
+        'traffic': [('both', ('upper', ('perc', (5.0, 20.0)))),],
+        'total_traffic': {
+            'levels': [('upper', ('perc', (10.0, 30.0))),]
+        },
         'state': ['1'],
-    })
+    }
     section = {}
     ifaces = []
     for i in range(3):

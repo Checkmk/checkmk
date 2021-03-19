@@ -11,7 +11,7 @@
 #juniper-trpz-wlc-800-2 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
 #juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
-from typing import Mapping, Dict, Tuple, List, TypedDict
+from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
 import time
 from contextlib import suppress
 
@@ -34,7 +34,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     DiscoveryResult,
     CheckResult,
-    ValueStore,
 )
 
 RadioCounters = List[float]
@@ -116,7 +115,7 @@ def discovery_juniper_trpz_aps_sessions(section: Section) -> DiscoveryResult:
 
 
 def _check_common_juniper_trpz_aps_sessions(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     now: float,
     item: str,
     section: Mapping[str, Section],

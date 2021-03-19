@@ -11,7 +11,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 from cmk.base.plugins.agent_based import adva_fsp_if
 
 SECTION = {
@@ -78,10 +77,10 @@ def test_discover_adva_fsp_if():
                    summary='Admin/Operational State: up/up',
                    details='Admin/Operational State: up/up'),
             Result(state=State.OK, summary='Output power: -3.1 dBm'),
-            Metric('output_power', -3.1),
+            Metric('output_power', -3.1, boundaries=(0.0, None)),
             Result(state=State.OK, summary='Input power: -2.7 dBm',
                    details='Input power: -2.7 dBm'),
-            Metric('input_power', -2.7),
+            Metric('input_power', -2.7, boundaries=(0.0, None)),
         ],
     ),
     (
@@ -95,11 +94,11 @@ def test_discover_adva_fsp_if():
                    summary='Admin/Operational State: up/up',
                    details='Admin/Operational State: up/up'),
             Result(state=State.CRIT, summary='Output power: 2.2 dBm'),
-            Metric('output_power', 2.2, levels=(None, 1.0)),
+            Metric('output_power', 2.2, levels=(None, 1.0), boundaries=(0.0, None)),
             Result(state=State.CRIT,
                    summary='Input power: -12.0 dBm',
                    details='Input power: -12.0 dBm'),
-            Metric('input_power', -12.0, levels=(None, 12.3)),
+            Metric('input_power', -12.0, levels=(None, 12.3), boundaries=(0.0, None)),
         ],
     ),
     (
@@ -128,6 +127,6 @@ def test_discover_adva_fsp_if():
 def test_check_huawei_osn_if(item, params, expected_result):
     assert list(adva_fsp_if.check_adva_fsp_if(
         item,
-        Parameters(params),
+        params,
         SECTION,
     )) == expected_result

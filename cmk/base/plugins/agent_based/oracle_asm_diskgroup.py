@@ -24,7 +24,6 @@ from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
     CheckResult,
-    Parameters,
 )
 from .utils.df import df_check_filesystem_single
 
@@ -186,8 +185,8 @@ def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryResult:
             yield Service(item=asm_diskgroup_name)
 
 
-def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
-                                                                            Any]) -> CheckResult:
+def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
+                               section: Dict[str, Any]) -> CheckResult:
     if item not in section:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
@@ -386,7 +385,7 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
     yield Result(state=aggregated_state, summary=infotext)
 
 
-def cluster_check_oracle_asm_diskgroup(item: str, params: Parameters,
+def cluster_check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
                                        section: Mapping[str, Dict[str, Any]]) -> CheckResult:
 
     # only use data from 1. node in agent output

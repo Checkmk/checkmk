@@ -29,12 +29,12 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.valuespec import ValueSpec
 from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
 from cmk.gui.log import logger
 from cmk.gui.valuespec import (
     TextAscii,
     DropdownChoice,
+    ValueSpec,
 )
 import cmk.gui.i18n
 from cmk.gui.i18n import _
@@ -181,7 +181,7 @@ def user_exists(username: UserId) -> bool:
 def _user_exists_according_to_profile(username: UserId) -> bool:
     base_path = config.config_dir + "/" + ensure_str(username) + "/"
     return os.path.exists(base_path + "transids.mk") \
-            or os.path.exists(base_path + "serial.mk")
+        or os.path.exists(base_path + "serial.mk")
 
 
 def _login_timed_out(username: UserId, last_activity: int) -> bool:
@@ -235,7 +235,7 @@ def need_to_change_pw(username: UserId) -> Union[bool, str]:
     return False
 
 
-def _load_user(user_id: UserId) -> UserSpec:
+def load_user(user_id: UserId) -> UserSpec:
     """Loads of a single user profile
 
     This is called during regular page processing. We must not load the whole user database, because
@@ -251,11 +251,11 @@ def _load_user(user_id: UserId) -> UserSpec:
 
 
 def _is_local_user(user_id: UserId) -> bool:
-    return _load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
+    return load_user(user_id).get('connector', 'htpasswd') == 'htpasswd'
 
 
-def _user_locked(user_id: UserId) -> bool:
-    return _load_user(user_id).get('locked', False)
+def user_locked(user_id: UserId) -> bool:
+    return load_user(user_id).get('locked', False)
 
 
 def _root_dir() -> str:
@@ -273,7 +273,7 @@ class UserSelection(DropdownChoice):
         only_contacts = kwargs.pop("only_contacts", False)
         only_automation = kwargs.pop("only_automation", False)
         kwargs["choices"] = self._generate_wato_users_elements_function(
-            kwargs.get("none"), only_contacts=only_contacts, only_automation=only_automation)
+            kwargs.pop("none", None), only_contacts=only_contacts, only_automation=only_automation)
         kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
         DropdownChoice.__init__(self, **kwargs)
 
@@ -610,13 +610,19 @@ def declare_user_attribute(name: str,
             )
 
 
-def load_users(lock: bool = False) -> Users:
-    filename = _root_dir() + "contacts.mk"
+def load_contacts() -> Dict[str, Any]:
+    return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
 
+
+def _contacts_filepath() -> str:
+    return _root_dir() + "contacts.mk"
+
+
+def load_users(lock: bool = False) -> Users:
     if lock:
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        store.aquire_lock(filename)
+        store.aquire_lock(_contacts_filepath())
 
     if 'users' in g:
         return g.users
@@ -624,10 +630,9 @@ def load_users(lock: bool = False) -> Users:
     # First load monitoring contacts from Checkmk's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
-    contacts = store.load_from_mk_file(filename, "contacts", {})
+    contacts = load_contacts()
 
     # Now load information about users from the GUI config world
-    filename = _multisite_dir() + "users.mk"
     users = store.load_from_mk_file(_multisite_dir() + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
@@ -672,8 +677,7 @@ def load_users(lock: bool = False) -> Users:
             return []
 
     # FIXME TODO: Consolidate with htpasswd user connector
-    filename = cmk.utils.paths.htpasswd_file
-    for line in readlines(filename):
+    for line in readlines(cmk.utils.paths.htpasswd_file):
         line = line.strip()
         if ':' in line:
             uid, password = line.strip().split(":")[:2]
@@ -725,6 +729,7 @@ def load_users(lock: bool = False) -> Users:
                     ('enforce_pw_change', lambda x: bool(utils.saveint(x))),
                     ('idle_timeout', _convert_idle_timeout),
                     ('session_info', _convert_session_info),
+                    ('start_url', lambda x: None if x == "None" else x),
                     ('ui_theme', lambda x: x),
                     ('ui_sidebar_position', lambda x: None if x == "None" else x),
                 ]:
@@ -874,6 +879,11 @@ def _save_user_profiles(updated_profiles: Users) -> None:
         else:
             remove_custom_attr(user_id, "idle_timeout")
 
+        if user.get("start_url") is not None:
+            save_custom_attr(user_id, "start_url", user["start_url"])
+        else:
+            remove_custom_attr(user_id, "start_url")
+
         # Is None on first load
         if user.get("ui_theme") is not None:
             save_custom_attr(user_id, "ui_theme", user["ui_theme"])
@@ -988,7 +998,7 @@ def _multisite_keys() -> List[str]:
     """User attributes to put into multisite configuration"""
     multisite_variables = [
         var for var in _get_multisite_custom_variable_names()
-        if var not in ["ui_theme", "ui_sidebar_position"]
+        if var not in ("start_url", "ui_theme", "ui_sidebar_position")
     ]
     return [
         "roles",
@@ -1055,7 +1065,7 @@ def _save_cached_profile(user_id: UserId, user: UserSpec, multisite_keys: List[s
 
 
 def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
-    return _load_user(user_id).get("contactgroups", [])
+    return load_user(user_id).get("contactgroups", [])
 
 
 def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
@@ -1163,7 +1173,7 @@ def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[
 
         # Now, after successfull login (and optional user account creation), check whether or
         # not the user is locked.
-        if _user_locked(user_id):
+        if user_locked(user_id):
             auth_logger.debug("User '%s' is not allowed to login: Account locked" % user_id)
             return False  # The account is locked
 

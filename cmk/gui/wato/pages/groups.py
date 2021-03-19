@@ -31,8 +31,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -125,6 +126,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -248,12 +250,15 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         pass
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="group", button_name="save")
+        return make_simple_form_page_menu(_("Group"),
+                                          breadcrumb,
+                                          form_name="group",
+                                          button_name="save")
 
     def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the group is used as an internal key. It cannot be "
               "changed later. It is also visible in the status GUI."))
@@ -264,7 +269,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("alias")
 
-        forms.section(_("Alias"))
+        forms.section(_("Alias"), is_required=True)
         html.help(_("An alias or description of this group."))
         html.text_input("alias", self.group["alias"])
 

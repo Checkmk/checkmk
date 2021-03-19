@@ -10,7 +10,7 @@ def test_swagger_ui(wsgi_app):
     assert resp.headers['content-type'] == 'text/html'
     assert b'petstore' not in resp.body
     assert b'check_mk/api' in resp.body
-    assert b'openapi.yaml' in resp.body
+    assert b'openapi-swagger-ui.yaml' in resp.body
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=200)
     assert resp.headers['content-type'] == 'application/javascript'
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css", status=200)

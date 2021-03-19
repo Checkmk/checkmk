@@ -4,24 +4,82 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
+# REMOVE THIS:
 # type: ignore
-# pylint: disable=undefined-variable,disable=blacklisted-name
+# pylint: disable
+
+from typing import Any, Mapping
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
+
+from .agent_based_api.v1 import HostLabel, register, Result, RuleSetType, Service, State
 
 
-def inventory_foobar(info):
-    return []
+# define an appropriate section type
+class Section:
+    pass
 
 
-def check_foobar(item, _no_params, info):
-    return 3, "UNKNOWN - Check not implemented"
+def parse_norris(string_table: StringTable) -> Section:
+    """
+        >>> parse_norris([
+        ... # Example output from agent:
+        ... # Put here the example output of the data source
+        ... ])
+        Section(...)
+    """
+    return section
 
 
-check_info["foobar"] = {
-    "check_function": check_foobar,
-    "inventory_function": inventory_foobar,
-    "service_description": "FOOBAR",
-    "has_perfdata": False,
-}
+def host_labels_norris(section: Section) -> HostLabelGenerator:
+    yield HostLabel(...)
+
+
+register.snmp_section(
+    name="norris",
+    # Don't use this unless you known what you're doing!
+    # parsed_section_name="mr_pickle",  # you can' rename norris, norris renames you!
+    parse_function=parse_norris,
+    host_label_function=host_label_norris,
+)
+
+
+def discover_norris(params: Mapping[str, Any], section: Section):
+    yield Service(...)
+
+
+def check_norris(item: str, params: Mapping[str, Any], section: Section):
+    yield Result(
+        state=State.UNKNOWN,
+        summary="Check not implemented",
+        details=("Check not implemented.\n"
+                 f"item: {item!r}\n"
+                 f"params: {params!r}\n"
+                 f"section: {section!r}\n"),
+    )
+
+
+def cluster_check_norris(item: str, params: Mapping[str, Any], section: Mapping[str, Section]):
+    """This is just an example.
+    """
+    aggregated_data = Section()
+    for _node_name, _node_section in section.items():
+        # do something  clever here!
+        pass
+
+    yield from check_norris(item, params, aggregated_data)
+
+
+register.check_plugin(
+    name="norris",
+    service_description="Check Norris %s",
+    discovery_function=discover_norris,
+    discovery_default_parameters={},
+    discovery_ruleset_name="norris_discovery_rule",
+    # The ruleset type here is `MERGED`. Choose `ALL` to get a list of
+    # all parameter sets matching the host.
+    discovery_ruleset_type=RuleSetType.MERGED,
+    check_function=check_norris,
+    check_ruleset_name="norris_rules",
+    check_default_parameters={},
+    cluster_check_function=cluster_check_norris,
+)

@@ -5,18 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Optional, Literal, List, Tuple
+from typing import Any, Optional, Literal, List, Tuple, Sequence
 
 import livestatus
+from livestatus import SiteId
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
 import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _u, _, _l
+from cmk.gui.i18n import _u, _, _l, ungettext
 from cmk.gui.globals import html
-from cmk.gui.htmllib import Choices
+from cmk.gui.type_defs import Choices, Row
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
 from cmk.gui.watolib.downtime import DowntimeSchedule, determine_downtime_mode
@@ -33,6 +34,8 @@ from cmk.gui.plugins.views import (
     CommandGroup,
     command_registry,
     Command,
+    CommandActionResult,
+    CommandSpec,
 )
 
 
@@ -75,13 +78,14 @@ class PermissionSectionAction(PermissionSection):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionReschedule := Permission(
-    section=PermissionSectionAction,
-    name="reschedule",
-    title=_l("Reschedule checks"),
-    description=_l("Reschedule host and service checks"),
-    defaults=["user", "admin"],
-))
+PermissionActionReschedule = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="reschedule",
+        title=_l("Reschedule checks"),
+        description=_l("Reschedule host and service checks"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -95,6 +99,10 @@ class CommandReschedule(Command):
         return _("Reschedule active checks")
 
     @property
+    def icon_name(self):
+        return "service_duration"
+
+    @property
     def permission(self):
         return PermissionActionReschedule
 
@@ -104,7 +112,7 @@ class CommandReschedule(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_("Spread over:") + " ")
+        html.write_text(_("Spread over") + " ")
         html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
         html.write_text(" " + _("minutes"))
         html.close_div()
@@ -112,21 +120,23 @@ class CommandReschedule(Command):
         html.div(html.render_button("_resched_checks", _("Reschedule"), cssclass="hot"),
                  class_="group")
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_resched_checks"):
             spread = utils.saveint(html.request.var("_resched_spread"))
-            text = "<b>" + _("reschedule an immediate check")
+            title = "<b>" + _("reschedule an immediate check")
             if spread:
-                text += _(" spread over %d minutes ") % spread
+                title += _(" spread over %d minutes ") % spread
 
-            text += "</b>" + _("of")
+            title += "</b>" + _(" of")
 
             t = time.time()
             if spread:
                 t += spread * 60.0 * row_index / num_rows
 
             command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
-            return command, text
+            return command, title
+        return None
 
 
 #.
@@ -145,13 +155,14 @@ class CommandReschedule(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionNotifications := Permission(
-    section=PermissionSectionAction,
-    name="notifications",
-    title=_l("Enable/disable notifications"),
-    description=_l("Enable and disable notifications on hosts and services"),
-    defaults=[],
-))
+PermissionActionNotifications = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="notifications",
+        title=_l("Enable/disable notifications"),
+        description=_l("Enable and disable notifications on hosts and services"),
+        defaults=[],
+    ))
 
 
 @command_registry.register
@@ -176,13 +187,15 @@ class CommandNotifications(Command):
         html.button("_enable_notifications", _("Enable"))
         html.button("_disable_notifications", _("Disable"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_enable_notifications"):
             return ("ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>enable notifications</b> for"))
         if html.request.var("_disable_notifications"):
             return ("DISABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>disable notifications</b> for"))
+        return None
 
 
 #.
@@ -201,13 +214,14 @@ class CommandNotifications(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionEnableChecks := Permission(
-    section=PermissionSectionAction,
-    name="enablechecks",
-    title=_l("Enable/disable checks"),
-    description=_l("Enable and disable active or passive checks on hosts and services"),
-    defaults=[],
-))
+PermissionActionEnableChecks = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="enablechecks",
+        title=_l("Enable/disable checks"),
+        description=_l("Enable and disable active or passive checks on hosts and services"),
+        defaults=[],
+    ))
 
 
 @command_registry.register
@@ -232,11 +246,13 @@ class CommandToggleActiveChecks(Command):
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_enable_checks"):
             return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
         if html.request.var("_disable_checks"):
             return ("DISABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>disable active checks</b> for"))
+        return None
 
 
 #.
@@ -278,13 +294,15 @@ class CommandTogglePassiveChecks(Command):
         html.button("_enable_passive_checks", _("Enable"))
         html.button("_disable_passive_checks", _("Disable"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_enable_passive_checks"):
             return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>enable passive checks</b> for"))
         if html.request.var("_disable_passive_checks"):
             return ("DISABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>disable passive checks</b> for"))
+        return None
 
 
 #.
@@ -303,14 +321,15 @@ class CommandTogglePassiveChecks(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionClearModifiedAttributes := Permission(
-    section=PermissionSectionAction,
-    name="clearmodattr",
-    title=_l("Reset modified attributes"),
-    description=_l("Reset all manually modified attributes of a host "
-                   "or service (like disabled notifications)"),
-    defaults=[],
-))
+PermissionActionClearModifiedAttributes = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="clearmodattr",
+        title=_l("Reset modified attributes"),
+        description=_l("Reset all manually modified attributes of a host "
+                       "or service (like disabled notifications)"),
+        defaults=[],
+    ))
 
 
 @command_registry.register
@@ -334,10 +353,12 @@ class CommandClearModifiedAttributes(Command):
     def render(self, what):
         html.button("_clear_modattr", _('Clear modified attributes'))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_clear_modattr"):
             return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _(
                 "<b>clear the modified attributes</b> of")
+        return None
 
 
 #.
@@ -350,13 +371,14 @@ class CommandClearModifiedAttributes(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionFakeChecks := Permission(
-    section=PermissionSectionAction,
-    name="fakechecks",
-    title=_l("Fake check results"),
-    description=_l("Manually submit check results for host and service checks"),
-    defaults=["admin"],
-))
+PermissionActionFakeChecks = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="fakechecks",
+        title=_l("Fake check results"),
+        description=_l("Manually submit check results for host and service checks"),
+        defaults=["admin"],
+    ))
 
 
 @command_group_registry.register
@@ -385,6 +407,10 @@ class CommandFakeCheckResult(Command):
         return _("Fake check results")
 
     @property
+    def icon_name(self):
+        return "fake_check_result"
+
+    @property
     def permission(self):
         return PermissionActionFakeChecks
 
@@ -396,30 +422,34 @@ class CommandFakeCheckResult(Command):
     def group(self):
         return CommandGroupFakeCheck
 
+    @property
+    def is_show_more(self):
+        return True
+
     def render(self, what):
         html.open_table()
 
         html.open_tr()
         html.open_td()
-        html.write_text("%s: " % _("Plugin output"))
+        html.write_text(_("Plugin output"))
         html.close_td()
         html.open_td()
-        html.text_input("_fake_output", "", size=50)
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr()
-        html.open_td()
-        html.write_text("%s: " % _("Performance data"))
-        html.close_td()
-        html.open_td()
-        html.text_input("_fake_perfdata", "", size=50)
+        html.text_input("_fake_output", "", size=60)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.open_td()
-        html.write_text(_("Result:"))
+        html.write_text(_("Performance data"))
+        html.close_td()
+        html.open_td()
+        html.text_input("_fake_perfdata", "", size=60)
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.write_text(_("Result"))
         html.close_td()
         html.open_td()
         if what == "host":
@@ -435,7 +465,8 @@ class CommandFakeCheckResult(Command):
 
         html.close_table()
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         for s in [0, 1, 2, 3]:
             statename = html.request.var("_fake_%d" % s)
             if statename:
@@ -453,6 +484,7 @@ class CommandFakeCheckResult(Command):
                 title = _("<b>manually set check results to %s</b> for"
                          ) % escaping.escape_attribute(statename)
                 return command, title
+        return None
 
 
 #.
@@ -471,14 +503,15 @@ class CommandFakeCheckResult(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionCustomNotification := Permission(
-    section=PermissionSectionAction,
-    name="customnotification",
-    title=_l("Send custom notification"),
-    description=_l("Manually let the core send a notification to a host or service in order "
-                   "to test if notifications are setup correctly"),
-    defaults=["user", "admin"],
-))
+PermissionActionCustomNotification = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="customnotification",
+        title=_l("Send custom notification"),
+        description=_l("Manually let the core send a notification to a host or service in order "
+                       "to test if notifications are setup correctly"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -492,6 +525,10 @@ class CommandCustomNotification(Command):
         return _("Custom notification")
 
     @property
+    def icon_name(self):
+        return "notifications"
+
+    @property
     def permission(self):
         return PermissionActionCustomNotification
 
@@ -499,10 +536,18 @@ class CommandCustomNotification(Command):
     def tables(self):
         return ["host", "service"]
 
+    @property
+    def is_show_more(self):
+        return True
+
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification")
+        html.text_input("_cusnot_comment",
+                        "TEST",
+                        id_="cusnot_comment",
+                        size=60,
+                        submit="_customnotification",
+                        label=_("Comment"))
         html.close_div()
 
         html.open_div(class_="group")
@@ -513,7 +558,8 @@ class CommandCustomNotification(Command):
         html.div(html.render_button("_customnotification", _('Send'), cssclass="hot"),
                  class_="group")
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_customnotification"):
             comment = html.request.get_unicode_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
@@ -527,6 +573,7 @@ class CommandCustomNotification(Command):
             )
             title = _("<b>send a custom notification</b> regarding")
             return command, title
+        return None
 
 
 #.
@@ -539,13 +586,14 @@ class CommandCustomNotification(Command):
 #   |                                                      |___/           |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionAcknowledge := Permission(
-    section=PermissionSectionAction,
-    name="acknowledge",
-    title=_l("Acknowledge"),
-    description=_l("Acknowledge host and service problems and remove acknowledgements"),
-    defaults=["user", "admin"],
-))
+PermissionActionAcknowledge = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="acknowledge",
+        title=_l("Acknowledge"),
+        description=_l("Acknowledge host and service problems and remove acknowledgements"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_group_registry.register
@@ -574,6 +622,10 @@ class CommandAcknowledge(Command):
         return _("Acknowledge problems")
 
     @property
+    def icon_name(self):
+        return "host_svc_problems"
+
+    @property
     def is_shortcut(self):
         return True
 
@@ -595,8 +647,12 @@ class CommandAcknowledge(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_("Comment") + ": ")
-        html.text_input("_ack_comment", size=48, submit="_acknowledge")
+        html.text_input("_ack_comment",
+                        id_="ack_comment",
+                        size=60,
+                        submit="_acknowledge",
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.open_div(class_="group")
@@ -618,10 +674,11 @@ class CommandAcknowledge(Command):
 
         html.open_div(class_="group")
         html.button("_acknowledge", _("Acknowledge"), cssclass="hot")
-        html.button("_remove_ack", _("Remove Acknowledgement"))
+        html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode
             specs = []
             for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
@@ -681,6 +738,8 @@ class CommandAcknowledge(Command):
             title = _("<b>remove acknowledgements</b> from")
             return commands, title
 
+        return None
+
     def _vs_expire(self):
         return Age(
             display=["days", "hours", "minutes"],
@@ -698,13 +757,14 @@ class CommandAcknowledge(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionAddComment := Permission(
-    section=PermissionSectionAction,
-    name="addcomment",
-    title=_l("Add comments"),
-    description=_l("Add comments to hosts or services, and remove comments"),
-    defaults=["user", "admin"],
-))
+PermissionActionAddComment = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="addcomment",
+        title=_l("Add comments"),
+        description=_l("Add comments to hosts or services, and remove comments"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -718,6 +778,10 @@ class CommandAddComment(Command):
         return _("Add comment")
 
     @property
+    def icon_name(self):
+        return "comment"
+
+    @property
     def permission(self):
         return PermissionActionAddComment
 
@@ -727,14 +791,19 @@ class CommandAddComment(Command):
 
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_comment", size=33, submit="_add_comment")
+        html.text_input("_comment",
+                        id_="comment",
+                        size=60,
+                        submit="_add_comment",
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.div(html.render_button("_add_comment", _("Add comment"), cssclass="hot"),
                  class_="group")
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_add_comment"):
             comment = html.request.get_unicode_input("_comment")
             if not comment:
@@ -743,6 +812,7 @@ class CommandAddComment(Command):
                       (spec, config.user.id) + (";%s" % livestatus.lqencode(comment))
             title = _("<b>add a comment to</b>")
             return command, title
+        return None
 
 
 #.
@@ -755,13 +825,14 @@ class CommandAddComment(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionDowntimes := Permission(
-    section=PermissionSectionAction,
-    name="downtimes",
-    title=_l("Set/Remove downtimes"),
-    description=_l("Schedule and remove downtimes on hosts and services"),
-    defaults=["user", "admin"],
-))
+PermissionActionDowntimes = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="downtimes",
+        title=_l("Set/Remove downtimes"),
+        description=_l("Schedule and remove downtimes on hosts and services"),
+        defaults=["user", "admin"],
+    ))
 
 permission_registry.register(
     Permission(
@@ -799,6 +870,10 @@ class CommandScheduleDowntimes(Command):
         return _("Schedule downtimes")
 
     @property
+    def icon_name(self):
+        return "downtime"
+
+    @property
     def is_shortcut(self):
         return True
 
@@ -818,14 +893,34 @@ class CommandScheduleDowntimes(Command):
     def tables(self):
         return ["host", "service", "aggr"]
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        if cmdtag == "SVC" and not html.request.var("_down_remove"):
+            return title + "?"
+        return super().user_dialog_suffix(
+            title if html.request.var("_down_remove") else title + " on",
+            len_action_rows,
+            cmdtag,
+        )
+
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
+        if cmdtag == "SVC" and not html.request.var("_down_remove"):
+            return [(_("Schedule downtime on host"), "_do_confirm_host_downtime"),
+                    (_("Schedule downtime for %d %s") %
+                     (len_rows, ungettext("service", "services", len_rows)),
+                     "_do_confirm_service_downtime")]
+        return super().user_confirm_options(len_rows, cmdtag)
+
     def render(self, what):
         html.open_div(class_="group")
-        html.write_text(_('Comment') + ": ")
-        html.text_input("_down_comment", "", size=60, submit="")
+        html.text_input("_down_comment",
+                        id_="down_comment",
+                        size=60,
+                        label=_("Comment"),
+                        required=True)
         html.close_div()
 
         html.open_div(class_="group")
-        html.button("_down_from_now", _("From now for"))
+        html.button("_down_from_now", _("From now for"), cssclass="hot")
         html.nbsp()
         html.text_input("_down_minutes",
                         default_value="60",
@@ -871,21 +966,12 @@ class CommandScheduleDowntimes(Command):
             html.write_text("  ")
             html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
             html.close_div()
-        elif what == "service":
-            html.open_div(class_="group")
-            html.checkbox("_on_hosts",
-                          False,
-                          label=_('Schedule downtimes on the affected '
-                                  '<b>hosts</b> instead of on the individual '
-                                  'services'))
-            html.close_div()
 
         if self._has_recurring_downtimes():
             html.open_div(class_="group")
             html.checkbox("_down_do_recur",
                           False,
                           label=_("Repeat this downtime on a regular basis every"))
-            html.write_text(" ")
 
             from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
 
@@ -893,10 +979,11 @@ class CommandScheduleDowntimes(Command):
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
             ]
             html.dropdown("_down_recurring", recurring_selections, deflt="3")
-            html.write_text(_("(This only works when using CMC)"))
+            html.write_text(" " + _("(only works with the microcore)"))
             html.close_div()
 
-    def action(self, cmdtag: Any, spec: Any, row: Any, row_index: Any, num_rows: Any) -> Any:
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
         if html.request.var("_down_remove"):
             return self._remove_downtime_details(cmdtag, row)
@@ -923,7 +1010,7 @@ class CommandScheduleDowntimes(Command):
             if button_value is None:
                 # the remove button in the Show Downtimes WATO view returns None here
                 # TODO: separate the remove mechanism from the create downtime procedure in the views call
-                return
+                return None
             next_time_interval = button_value
             start_time = self._current_local_time()
             end_time = time_interval_end(next_time_interval, start_time)
@@ -958,7 +1045,7 @@ class CommandScheduleDowntimes(Command):
                 downtime_ids.append(int(id_))
         commands = []
         for dtid in downtime_ids:
-            commands.append("DEL_%s_DOWNTIME;%d\n" % (cmdtag, dtid))
+            commands.append("DEL_%s_DOWNTIME;%s\n" % (cmdtag, dtid))
         title = _("<b>remove all scheduled downtimes</b> of ")
         return commands, title
 
@@ -1049,10 +1136,10 @@ class CommandScheduleDowntimes(Command):
         return description
 
     def _title_for_next_minutes(self, minutes, prefix):
-        return _("<b>%s for the next %d minutes</b> on") % (prefix, minutes)
+        return _("<b>%s for the next %d minutes</b>") % (prefix, minutes)
 
     def _title_range(self, start_time, end_time):
-        return _("<b>schedule a downtime from %s to %s</b> on ") % (time.asctime(
+        return _("<b>schedule a downtime from %s to %s</b>") % (time.asctime(
             time.localtime(start_time)), time.asctime(time.localtime(end_time)))
 
     def button_interval_value(self):
@@ -1066,7 +1153,8 @@ class CommandScheduleDowntimes(Command):
         _btnname, period = rangebtn.split("__", 1)
         return period
 
-    def _downtime_specs(self, cmdtag, row, spec, title):
+    def _downtime_specs(self, cmdtag: str, row: Row, spec: str,
+                        title: str) -> Tuple[str, List[str], str]:
         if html.request.var("_include_childs"):  # only for hosts
             specs = [spec] + self._get_child_hosts(
                 row["site"], [spec], recurse=bool(html.request.var("_include_childs_recurse")))
@@ -1126,7 +1214,7 @@ class CommandScheduleDowntimes(Command):
             return False
 
 
-def bi_commands(downtime: DowntimeSchedule, node: Any) -> List[Tuple[Any, Any]]:
+def bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]:
     """Generate the list of downtime command strings for the BI module"""
     commands_aggr = []
     for site, host, service in bi.find_all_leaves(node):
@@ -1177,21 +1265,24 @@ def time_interval_to_human_readable(next_time_interval, prefix):
 
     Examples:
         >>> time_interval_to_human_readable("next_day", "schedule an immediate downtime")
-        '<b>schedule an immediate downtime until 24:00:00</b> on'
+        '<b>schedule an immediate downtime until 24:00:00</b>'
+        >>> time_interval_to_human_readable("next_year", "schedule an immediate downtime")
+        '<b>schedule an immediate downtime until end of year</b>'
 
     Returns:
         string representing the schedule downtime title
     """
     downtime_titles = {
-        "next_day": _("<b>%s until 24:00:00</b> on"),
-        "next_week": _("<b>%s until sunday night</b> on"),
-        "next_month": _("<b>%s until end of month</b> on"),
+        "next_day": _("<b>%s until 24:00:00</b>"),
+        "next_week": _("<b>%s until sunday night</b>"),
+        "next_month": _("<b>%s until end of month</b>"),
+        "next_year": _("<b>%s until end of year</b>"),
     }
     try:
         title = downtime_titles[next_time_interval]
     except KeyError:
         duration = int(next_time_interval)
-        title = _("<b>%%s of %s length</b> on") % duration_human_readable(duration)
+        title = _("<b>%%s of %s length</b>") % duration_human_readable(duration)
     return title % prefix
 
 
@@ -1241,12 +1332,22 @@ class CommandRemoveDowntime(Command):
     def tables(self):
         return ["downtime"]
 
+    @property
+    def is_shortcut(self):
+        return True
+
+    @property
+    def is_suggested(self):
+        return True
+
     def render(self, what):
         html.button("_remove_downtimes", _("Remove"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.has_var("_remove_downtimes"):
-            return ("DEL_%s_DOWNTIME;%d" % (cmdtag, spec), _("remove"))
+            return ("DEL_%s_DOWNTIME;%s" % (cmdtag, spec), _("remove"))
+        return None
 
 
 @command_registry.register
@@ -1260,6 +1361,14 @@ class CommandRemoveComments(Command):
         return _("Remove comments")
 
     @property
+    def is_shortcut(self) -> bool:
+        return True
+
+    @property
+    def is_suggested(self) -> bool:
+        return True
+
+    @property
     def permission(self):
         return PermissionActionAddComment
 
@@ -1270,9 +1379,10 @@ class CommandRemoveComments(Command):
     def render(self, what):
         html.button("_remove_comments", _("Remove"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.has_var("_remove_comments"):
-            commands = [("DEL_%s_COMMENT;%d" % (cmdtag, spec))]
+            commands = [("DEL_%s_COMMENT;%s" % (cmdtag, spec))]
             if row.get("comment_entry_type") == 4:
                 if row.get("service_description"):
                     commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s;%s" %
@@ -1281,6 +1391,7 @@ class CommandRemoveComments(Command):
                     commands.append(("REMOVE_%s_ACKNOWLEDGEMENT;%s" % (cmdtag, row["host_name"])))
 
             return commands, _("remove")
+        return None
 
 
 #.
@@ -1293,15 +1404,16 @@ class CommandRemoveComments(Command):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionActionStar := Permission(
-    section=PermissionSectionAction,
-    name="star",
-    title=_l("Use favorites"),
-    description=_l("This permission allows a user to make certain host and services "
-                   "his personal favorites. Favorites can be used for a having a fast "
-                   "access to items that are needed on a regular base."),
-    defaults=["user", "admin"],
-))
+PermissionActionStar = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="star",
+        title=_l("Use favorites"),
+        description=_l("This permission allows a user to make certain host and services "
+                       "his personal favorites. Favorites can be used for a having a fast "
+                       "access to items that are needed on a regular base."),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1315,6 +1427,10 @@ class CommandFavorites(Command):
         return _("Favorites")
 
     @property
+    def icon_name(self):
+        return "favorite"
+
+    @property
     def permission(self):
         return PermissionActionStar
 
@@ -1326,16 +1442,21 @@ class CommandFavorites(Command):
         html.button("_star", _("Add to Favorites"), cssclass="hot")
         html.button("_unstar", _("Remove from Favorites"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_star") or html.request.var("_unstar"):
             star = 1 if html.request.var("_star") else 0
             if star:
                 title = _("<b>add to you favorites</b>")
             else:
                 title = _("<b>remove from your favorites</b>")
-            return "STAR;%d;%s" % (star, spec), title
+            return "STAR;%s;%s" % (star, spec), title
+        return None
 
-    def executor(self, command, site):
+    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
+        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
+        # object type for the command
+        assert isinstance(command, str)
         _unused, star, spec = command.split(";", 2)
         stars = config.user.stars
         if star == "0" and spec in stars:

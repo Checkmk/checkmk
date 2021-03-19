@@ -5,6 +5,7 @@
 
 #include <memory>
 
+// NOLINTNEXTLINE(bugprone-suspicious-include)
 #include "DynamicFileColumn.cc"
 #include "DynamicFileColumn.h"
 #include "nagios.h"

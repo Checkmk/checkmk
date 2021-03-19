@@ -11,7 +11,6 @@ from checktestlib import (
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_fileinfo_min_max_age_levels():
     check = Check("prism_containers")
 

@@ -1,6 +1,8 @@
-// test-section_ps.cpp
-//
-//
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include "pch.h"
 
 #include "cfg.h"
@@ -11,28 +13,71 @@
 #include "tools/_process.h"
 
 namespace cma::provider {
-std::string OutputProcessLine(ULONGLONG virtual_size,
-                              ULONGLONG working_set_size,
-                              long long pagefile_usage, ULONGLONG uptime,
-                              long long usermode_time,
-                              long long kernelmode_time, long long process_id,
-                              long long process_handle_count,
-                              long long thread_count, const std::string &user,
-                              const std::string &exe_file);
-
-static long long convert(std::string Val) {
+namespace {
+long long convert(const std::string &value) {
     try {
-        return std::stoll(Val);
+        return std::stoull(value);
     } catch (...) {
         return -1;
     }
 }
 
-std::vector<std::string> SpecialProcesses = {
-    {"System Idle Process"}, {"Memory"}, {"Registry"},
-    {"Memory Compression"},  {"vmmem"},  {"Secure System"}};
+using namespace std::string_view_literals;
 
-TEST(PsTest, Time) {
+const std::vector<std::string_view> special_processes{
+    {"System Idle Process"sv}, {"Memory"sv}, {"Registry"sv},
+    {"Memory Compression"sv},  {"vmmem"sv},  {"Secure System"sv}};
+
+}  // namespace
+
+TEST(PsTest, Integration) {
+    cma::OnStart(cma::AppType::test);
+    for (auto use_full_path : {false, true}) {
+        SCOPED_TRACE(
+            fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));
+        auto out = ProducePsWmi(use_full_path);
+        EXPECT_EQ(use_full_path,
+                  out.find("svchost.exe -k") != std::string::npos);
+        auto all = cma::tools::SplitString(out, "\n");
+        EXPECT_TRUE(all.size() > 10);
+        for (auto &in : all) {
+            auto by_tab = cma::tools::SplitString(in, "\t");
+            SCOPED_TRACE(fmt::format("'{}'", in));
+
+            ASSERT_EQ(by_tab.size(), 2);
+            ASSERT_EQ(by_tab[0].back(), ')');
+            ASSERT_EQ(by_tab[0][0], '(');
+            EXPECT_TRUE(by_tab[1].size() > 0);
+            auto process_name = by_tab[1];
+            auto special =
+                std::find(special_processes.begin(), special_processes.end(),
+                          process_name) != special_processes.end();
+
+            by_tab[0].erase(0, 1);
+            by_tab[0].pop_back();
+            auto by_comma = cma::tools::SplitString(by_tab[0], ",");
+            ASSERT_EQ(by_comma.size(), 11);
+
+            EXPECT_TRUE(!by_comma[0].empty());
+
+            auto result = convert(by_comma[1]);
+            EXPECT_TRUE(convert(by_comma[1]) >= 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
+            EXPECT_TRUE(convert(by_comma[3]) == 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
+            EXPECT_TRUE(convert(by_comma[5]) >= 0);
+            EXPECT_TRUE(convert(by_comma[6]) >= 0);
+            EXPECT_TRUE(convert(by_comma[7]) >= 0);
+            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
+            if (!special)
+                EXPECT_TRUE(convert(by_comma[9]) > 0)
+                    << "'" << process_name << "'";
+            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
+        }
+    }
+}
+
+TEST(PsTest, ConvertWmiTime) {
     {
         std::string in = "2019052313140";
 
@@ -81,24 +126,38 @@ TEST(PsTest, Time) {
     }
 }
 
-TEST(PsTest, All) {  //
-    using namespace std::chrono;
+namespace {
+constexpr ULONGLONG virtual_size = 1ull * 1024 * 1024 * 1024 * 1024;
+constexpr ULONGLONG working_set_size = 2ull * 1024 * 1024 * 1024 * 1024;
+constexpr long long pagefile_usage = 3ll * 1024 * 1024 * 1024 * 1024;
+constexpr ULONGLONG uptime = 4ull * 1024ull * 1024 * 1024 * 1024;
+constexpr long long usermode_time = 5ll * 1024 * 1024 * 1024 * 1024;
+constexpr long long kernelmode_time = 6ll * 1024 * 1024 * 1024 * 1024;
+constexpr long long process_id = 7ll * 1024 * 1024 * 1024 * 1024;
+constexpr long long process_handle_count = 8ll * 1024 * 1024 * 1024 * 1024;
+constexpr long long thread_count = 9ll * 1024 * 1024 * 1024 * 1024;
 
-    cma::OnStart(cma::AppType::test);
+const std::string user = "user";
+const std::string exe_file = "exe_file";
 
-    ULONGLONG virtual_size = 1ull * 1024 * 1024 * 1024 * 1024;
-    ULONGLONG working_set_size = 2ull * 1024 * 1024 * 1024 * 1024;
-    long long pagefile_usage = 3ll * 1024 * 1024 * 1024 * 1024;
-    ULONGLONG uptime = 4ull * 1024ull * 1024 * 1024 * 1024;
-    long long usermode_time = 5ll * 1024 * 1024 * 1024 * 1024;
-    long long kernelmode_time = 6ll * 1024 * 1024 * 1024 * 1024;
-    long long process_id = 7ll * 1024 * 1024 * 1024 * 1024;
-    long long process_handle_count = 8ll * 1024 * 1024 * 1024 * 1024;
-    long long thread_count = 9ll * 1024 * 1024 * 1024 * 1024;
+}  // namespace
 
-    const std::string user = "user";
-    const std::string exe_file = "exe_file";
+// This internal function will be tested intentionally.
+// Motivation. We have the problem:
+// - cant put this function into public API as implementation
+// - have to test the function because it is complicated part the of business
+// logic.
+// Decision: "Test internal API explicit"
+std::string OutputProcessLine(ULONGLONG virtual_size,
+                              ULONGLONG working_set_size,
+                              long long pagefile_usage, ULONGLONG uptime,
+                              long long usermode_time,
+                              long long kernelmode_time, long long process_id,
+                              long long process_handle_count,
+                              long long thread_count, const std::string &user,
+                              const std::string &exe_file);
 
+TEST(PsTest, OutputProcessLine) {
     auto process_string =
         OutputProcessLine(virtual_size, working_set_size, pagefile_usage,
                           uptime, usermode_time, kernelmode_time, process_id,
@@ -126,85 +185,13 @@ TEST(PsTest, All) {  //
     EXPECT_EQ(convert(by_comma[8]), process_handle_count);
     EXPECT_EQ(convert(by_comma[9]), thread_count);
     EXPECT_EQ(convert(by_comma[10]), uptime);
+}
 
+TEST(PsTest, GetProcessListFromWmi) {
     auto processes = GetProcessListFromWmi(ps::kSepString);
     auto table = cma::tools::SplitString(processes, L"\n");
     EXPECT_TRUE(!processes.empty());
-
-    auto out = ProducePsWmi(false);
-    {
-        auto all = cma::tools::SplitString(out, "\n");
-        EXPECT_TRUE(all.size() > 10);
-
-        for (auto &in : all) {
-            auto by_tab = cma::tools::SplitString(in, "\t");
-            ASSERT_EQ(by_tab.size(), 2);
-            ASSERT_EQ(by_tab[0].back(), ')');
-            ASSERT_EQ(by_tab[0][0], '(');
-            EXPECT_TRUE(by_tab[1].size() > 0);
-            auto process_name = by_tab[1];
-            auto special =
-                std::find(SpecialProcesses.begin(), SpecialProcesses.end(),
-                          process_name) != SpecialProcesses.end();
-
-            by_tab[0].erase(0, 1);
-            by_tab[0].pop_back();
-            auto by_comma = cma::tools::SplitString(by_tab[0], ",");
-            ASSERT_EQ(by_comma.size(), 11);
-
-            EXPECT_TRUE(!by_comma[0].empty());
-
-            auto result = convert(by_comma[1]);
-            EXPECT_TRUE(convert(by_comma[1]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
-            EXPECT_TRUE(convert(by_comma[3]) == 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[5]) >= 0);
-            EXPECT_TRUE(convert(by_comma[6]) >= 0);
-            EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            if (!special)
-                EXPECT_TRUE(convert(by_comma[9]) > 0)
-                    << "'" << process_name << "'";
-            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
-        }
-    }
-    {
-        auto out_full_path = ProducePsWmi(true);
-        EXPECT_TRUE(!out_full_path.empty());
-
-        auto all = cma::tools::SplitString(out, "\n");
-        EXPECT_TRUE(all.size() > 10);
-        for (auto &in : all) {
-            auto by_tab = cma::tools::SplitString(in, "\t");
-            ASSERT_EQ(by_tab.size(), 2);
-            ASSERT_EQ(by_tab[0].back(), ')');
-            ASSERT_EQ(by_tab[0][0], '(');
-            EXPECT_TRUE(by_tab[1].size() > 0);
-            auto process_name = by_tab[1];
-            auto special =
-                std::find(SpecialProcesses.begin(), SpecialProcesses.end(),
-                          process_name) != SpecialProcesses.end();
-
-            by_tab[0].erase(0, 1);
-            by_tab[0].pop_back();
-            auto by_comma = cma::tools::SplitString(by_tab[0], ",");
-            ASSERT_EQ(by_comma.size(), 11);
-
-            EXPECT_TRUE(!by_comma[0].empty());
-
-            EXPECT_TRUE(convert(by_comma[1]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[2]) > 0);
-            EXPECT_TRUE(convert(by_comma[3]) == 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[4]) > 0) << by_tab[1];
-            EXPECT_TRUE(convert(by_comma[5]) >= 0);
-            EXPECT_TRUE(convert(by_comma[6]) >= 0);
-            EXPECT_TRUE(convert(by_comma[7]) >= 0);
-            if (!special) EXPECT_TRUE(convert(by_comma[8]) > 0) << by_tab[1];
-            if (!special) EXPECT_TRUE(convert(by_comma[9]) > 0);
-            EXPECT_TRUE(convert(by_comma[10]) >= 0) << by_comma[10];
-        }
-    }
+    EXPECT_GT(table.size(), 10UL);
 }
 
 }  // namespace cma::provider

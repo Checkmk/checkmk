@@ -50,9 +50,11 @@ def inventory_windows_tasks(parsed):
     return [(n, None) for n, v in parsed.items() if v.get('Scheduled Task State') != "Disabled"]
 
 
+# Code duplication with cmk/gui/plugins/wato/check_parameters/windows_tasks.py
+# because of base/gui import restrictions
+# This is protected via unit test
 _MAP_EXIT_CODES = {
     '0x00000000': (0, 'The task exited successfully'),
-    '0x00000001': (0, 'The task contained a popup action'),
     '0x00041300': (0, 'The task is ready to run at its next scheduled time.'),
     '0x00041301': (0, 'The task is currently running.'),
     '0x00041302': (0, 'The task will not run at the scheduled times because it has been disabled.'),

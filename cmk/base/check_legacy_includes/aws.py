@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_number_with_precision
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.check_api import MKCounterWrapped
@@ -16,56 +16,9 @@ from typing import Dict, List, Union, Optional, Tuple, Callable, Iterable
 import functools
 import cmk.utils.aws_constants as agent_aws_types
 
+from cmk.base.plugins.agent_based.utils.aws import parse_aws
+
 AWSRegions = dict(agent_aws_types.AWSRegions)
-
-
-def parse_aws(info):
-    import json
-    loaded = []
-    for row in info:
-        try:
-            loaded.extend(json.loads(" ".join(row)))
-        except (TypeError, IndexError):
-            pass
-    return loaded
-
-
-def extract_aws_metrics_by_labels(expected_metric_names, parsed, extra_keys=None):
-    if extra_keys is None:
-        extra_keys = []
-    values_by_labels: Dict[str, Dict] = {}
-    for row in parsed:
-        row_id = row['Id'].lower()
-        row_label = row['Label']
-        row_values = row['Values']
-        for expected_metric_name in expected_metric_names:
-            expected_metric_name_lower = expected_metric_name.lower()
-            if not row_id.startswith(expected_metric_name_lower)\
-               and not row_id.endswith(expected_metric_name_lower):
-                continue
-
-            try:
-                # AWSSectionCloudwatch in agent_aws.py yields both the actual values of the metrics
-                # as returned by Cloudwatch and the time period over which they were collected (for
-                # example 600 s). However, only for metrics based on the "Sum" statistics, the
-                # period is not None, because these metrics need to be divided by the period to
-                # convert the metric value to a rate. For all other metrics, the time period is
-                # None.
-                value, time_period = row_values[0]
-                if time_period is not None:
-                    value /= time_period
-            except IndexError:
-                continue
-            else:
-                values_by_labels.setdefault(row_label, {})\
-                                .setdefault(expected_metric_name, value)
-        for extra_key in extra_keys:
-            extra_value = row.get(extra_key)
-            if extra_value is None:
-                continue
-            values_by_labels.setdefault(row_label, {})\
-                            .setdefault(extra_key, extra_value)
-    return values_by_labels
 
 
 def inventory_aws_generic(parsed, required_metrics):
@@ -269,10 +222,6 @@ def check_aws_metrics(
 
     if go_stale:
         raise MKCounterWrapped("Currently no data from AWS")
-
-
-def aws_rds_service_item(instance_id, region):
-    return '%s [%s]' % (instance_id, region)
 
 
 def aws_get_parsed_item_data(check_function: Callable) -> Callable:

@@ -112,6 +112,7 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/opt/omd$",
             "/opt/omd/apache$",
             "/opt/omd/sites$",
+            "/var/lock/mkbackup$",
         ] + version_allowed_patterns
 
         paths = subprocess.check_output(["rpm", "-qlp", package_path],

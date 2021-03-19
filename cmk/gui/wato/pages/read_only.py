@@ -58,11 +58,10 @@ class ModeManageReadOnly(WatoMode):
         return _("Manage configuration read only mode")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="read_only",
-            button_name="_save",
-        )
+        return make_simple_form_page_menu(_("Mode"),
+                                          breadcrumb,
+                                          form_name="read_only",
+                                          button_name="_save")
 
     def action(self) -> ActionResult:
         settings = self._vs().from_html_vars("_read_only")

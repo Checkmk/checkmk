@@ -56,7 +56,6 @@ def test_builtin_icons_and_actions():
             'deployment_status',
             'status_shadow',
             'ntop_host',
-            'ntop_service_interface',
         ]
 
     cmk.gui.views.transform_old_dict_based_icons()

@@ -160,7 +160,7 @@ class ABCPackageManager(abc.ABC):
         return temp_package_path
 
     def _package_url(self, version: str, package_name: str) -> str:
-        return "https://checkmk.com/support/%s/%s" % (version, package_name)
+        return "https://download.checkmk.com/checkmk/%s/%s" % (version, package_name)
 
     @abc.abstractmethod
     def _install_package(self, package_path: Path) -> None:
@@ -203,8 +203,7 @@ class ABCPackageManagerRPM(ABCPackageManager):
 
 class PackageManagerSuSE(ABCPackageManagerRPM):
     def _install_package(self, package_path):
-        # TODO: Cleanup --no-gpg-checks
-        self._execute(["zypper", "--no-gpg-checks", "in", "-y", package_path])
+        self._execute(["zypper", "in", "-y", package_path])
 
 
 class PackageManagerRHEL(ABCPackageManagerRPM):

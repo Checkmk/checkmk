@@ -1,28 +1,19 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #include "providers/system_time.h"
 
-#include <chrono>
 #include <string>
 
-#include "tools/_misc.h"
-#include "tools/_raii.h"
-#include "tools/_xlog.h"
-
-namespace cma {
-
-namespace provider {
+namespace cma::provider {
 
 std::string SystemTime::makeBody() {
-    using namespace std::chrono;
-
-    XLOG::t(XLOG_FUNC + " entering");
-
-    const auto now = cma::tools::SecondsSinceEpoch();
+    const auto now = tools::SecondsSinceEpoch();
     return std::to_string(now) + "\n";
 }
 
-}  // namespace provider
-};  // namespace cma
+};  // namespace cma::provider

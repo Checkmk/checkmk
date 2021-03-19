@@ -61,22 +61,27 @@ CrashInfo = Dict
 
 def handle_exception_as_gui_crash_report(details: Optional[Dict] = None,
                                          plain_error: bool = False,
-                                         fail_silently: bool = False) -> None:
+                                         fail_silently: bool = False,
+                                         show_crash_link: Optional[bool] = None) -> None:
     crash = GUICrashReport.from_exception(details=details)
     CrashReportStore().save(crash)
 
     logger.exception("Unhandled exception (Crash-ID: %s)", crash.ident_to_text())
-    show_crash_dump_message(crash, plain_error, fail_silently)
+    _show_crash_dump_message(crash, plain_error, fail_silently, show_crash_link)
 
 
-def show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool) -> None:
+def _show_crash_dump_message(crash: 'GUICrashReport', plain_text: bool, fail_silently: bool,
+                             show_crash_link: Optional[bool]) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
+
+    if show_crash_link is None:
+        show_crash_link = config.user.may("general.see_crash_reports")
 
     title = _("Internal error")
     message = u"%s: %s<br>\n<br>\n" % (title, crash.crash_info["exc_value"])
     # Do not reveal crash context information to unauthenticated users or not permitted
     # users to prevent disclosure of internal information
-    if not config.user.may("general.see_crash_reports"):
+    if not show_crash_link:
         message += _("An internal error occurred while processing your request. "
                      "You can report this issue to your Checkmk administrator. "
                      "Detailed information can be found on the crash report page "
@@ -314,7 +319,7 @@ class PageCrash(ABCCrashReportPage):
                 _("Failed to send the crash report. Please download it manually and send it "
                   "to <a href=\"%s\">%s</a>") % (report_url, self._get_crash_report_target()))
             html.close_div()
-            html.javascript("cmk.crash_reporting.submit(%s, %s);" %
+            html.javascript("cmk.transfer.submit_crash_report(%s, %s);" %
                             (json.dumps(config.crash_report_url), json.dumps(url_encoded_params)))
         except MKUserError as e:
             action_message = "%s" % e
@@ -386,7 +391,7 @@ class PageCrash(ABCCrashReportPage):
         details.setdefault("mail", user.get("mail"))
 
     def _show_crash_report(self, info):
-        html.h2(_("Crash Report"))
+        html.h3(_("Crash Report"), class_="table")
         html.open_table(class_=["data", "crash_report"])
 
         _crash_row(_("Exception"),
@@ -471,7 +476,7 @@ class ReportRendererGeneric(ABCReportRenderer):
         if not crash_info["details"]:
             return
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.p(
             _("No detail renderer for crash of type '%s' available. Details structure is:") %
             crash_info["crash_type"])
@@ -532,7 +537,7 @@ class ReportRendererCheck(ABCReportRenderer):
 
         details = info["details"]
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
         _crash_row(_("Host"), details["host"], odd=False, legend=True)
@@ -570,7 +575,7 @@ class ReportRendererGUI(ABCReportRenderer):
     def show_details(self, crash_info, row):
         details = crash_info["details"]
 
-        html.h2(_("Details"))
+        html.h3(_("Details"), class_="table")
         html.open_table(class_="data")
 
         _crash_row(_("Page"), details["page"], odd=False, legend=True)
@@ -614,7 +619,7 @@ def format_params(params):
 
 
 def _show_output_box(title, content):
-    html.h3(title)
+    html.h3(title, class_="table")
     html.open_div(class_="log_output")
     html.write(escaping.escape_attribute(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
     html.close_div()

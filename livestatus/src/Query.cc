@@ -15,6 +15,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "Aggregator.h"
 #include "AndingFilter.h"
 #include "ChronoUtils.h"
 #include "Column.h"
@@ -161,7 +162,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
                 throw std::runtime_error("undefined request header");
             }
         } catch (const std::runtime_error &e) {
-            _output.setError(OutputBuffer::ResponseCode::invalid_header,
+            _output.setError(OutputBuffer::ResponseCode::bad_request,
                              header + ": " + e.what());
         }
     }
@@ -182,6 +183,10 @@ Query::Query(const std::list<std::string> &lines, Table &table,
 
 void Query::invalidRequest(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
+}
+
+void Query::badGateway(const std::string &message) const {
+    _output.setError(OutputBuffer::ResponseCode::bad_gateaway, message);
 }
 
 void Query::parseAndOrLine(char *line, Filter::Kind kind,
@@ -540,10 +545,10 @@ void Query::parseWaitTriggerLine(char *line) {
 }
 
 void Query::parseWaitObjectLine(char *line) {
-    auto objectspec = mk::lstrip(line);
-    _wait_object = _table.findObject(objectspec);
+    auto primary_key = mk::lstrip(line);
+    _wait_object = _table.get(primary_key);
     if (_wait_object.isNull()) {
-        throw std::runtime_error("object '" + objectspec +
+        throw std::runtime_error("primary key '" + primary_key +
                                  "' not found or not supported by this table");
     }
 }
@@ -620,7 +625,7 @@ void Query::start(QueryRenderer &q) {
 
 bool Query::timelimitReached() const {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "Maximum query time of " +
                              std::to_string(_time_limit) +
                              " seconds exceeded!");
@@ -632,13 +637,13 @@ bool Query::timelimitReached() const {
 bool Query::processDataset(Row row) {
     if (_output.shouldTerminate()) {
         // Not the perfect response code, but good enough...
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "core is shutting down");
         return false;
     }
 
     if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
-        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
                          "Maximum response size of " +
                              std::to_string(_max_response_size) +
                              " bytes exceeded!");
@@ -706,8 +711,7 @@ void Query::finish(QueryRenderer &q) {
 }
 
 std::unique_ptr<Filter> Query::partialFilter(
-    const std::string &message,
-    std::function<bool(const Column &)> predicate) const {
+    const std::string &message, columnNamePredicate predicate) const {
     auto result = _filter->partialFilter(std::move(predicate));
     Debug(_logger) << "partial filter for " << message << ": " << *result;
     return result;
@@ -787,6 +791,17 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
+    if (_wait_condition->is_contradiction() && _wait_timeout == 0ms) {
+        invalidRequest("waiting for WaitCondition would hang forever");
+        return;
+    }
+    if (!_wait_condition->is_tautology() && _wait_object.isNull()) {
+        _wait_object = _table.getDefault();
+        if (_wait_object.isNull()) {
+            invalidRequest("missing WaitObject");
+            return;
+        }
+    }
     _table.core()->triggers().wait_for(_wait_trigger, _wait_timeout, [this] {
         return _wait_condition->accepts(_wait_object, _auth_user,
                                         timezoneOffset());

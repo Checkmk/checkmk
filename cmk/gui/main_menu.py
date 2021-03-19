@@ -12,6 +12,7 @@ in this module as small as possible.
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
+from cmk.utils.version import __version__, edition_title
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 
@@ -69,13 +70,34 @@ mega_menu_registry = MegaMenuRegistry()
 def _help_menu_topics() -> List[TopicMenuTopic]:
     return [
         TopicMenuTopic(
-            name="local_help",
-            title=_("Internal links"),
+            name="version",
+            title=_("Version"),
+            icon=None,
+            items=[
+                TopicMenuItem(
+                    name="release_notes",
+                    title=_("Release notes"),
+                    url="version.py?major=1",
+                    sort_index=10,
+                    icon="tribe29",
+                ),
+                TopicMenuItem(
+                    name="release_notes",
+                    title=_("Change log"),
+                    url="version.py",
+                    sort_index=20,
+                    icon="tribe29",
+                ),
+            ],
+        ),
+        TopicMenuTopic(
+            name="apis",
+            title=_("APIs"),
             icon=None,
             items=[
                 TopicMenuItem(
                     name="rest_api_redoc",
-                    title=_("REST-API Documentation"),
+                    title=_("REST API documentation"),
                     url="openapi/",
                     target="_blank",
                     sort_index=30,
@@ -83,16 +105,24 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 ),
                 TopicMenuItem(
                     name="rest_api_swagger_ui",
-                    title=_("REST-API Interactive GUI"),
+                    title=_("REST API interactive GUI"),
                     url="api/v0/ui/",
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
+                TopicMenuItem(
+                    name="plugin_api",
+                    title=_("Plugin API reference"),
+                    url="plugin-api/",
+                    target="_blank",
+                    sort_index=40,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
             ]),
         TopicMenuTopic(
             name="external_help",
-            title=_("External links"),
+            title=_("External"),
             icon=None,  # TODO(CMK-5773): add an icon
             items=[
                 TopicMenuItem(
@@ -104,11 +134,19 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
                 TopicMenuItem(
+                    name="forum",
+                    title=_("Forum"),
+                    url="https://forum.checkmk.com/",
+                    target="_blank",
+                    sort_index=40,
+                    icon=None,  # TODO(CMK-5773): add an icon
+                ),
+                TopicMenuItem(
                     name="youtube_channel",
-                    title=_("Youtube"),
+                    title=_("YouTube"),
                     url="https://www.youtube.com/checkmk-channel",
                     target="_blank",
-                    sort_index=30,
+                    sort_index=50,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
             ],
@@ -117,10 +155,9 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
 
 
 mega_menu_registry.register(
-    MegaMenu(
-        name="help_links",
-        title=_l("Help"),
-        icon="main_help",
-        sort_index=18,
-        topics=_help_menu_topics,
-    ))
+    MegaMenu(name="help_links",
+             title=_l("Help"),
+             icon="main_help",
+             sort_index=18,
+             topics=_help_menu_topics,
+             info_line=lambda: f"{__version__} ({edition_title()})"))

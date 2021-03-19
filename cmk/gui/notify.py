@@ -90,11 +90,11 @@ def save_gui_messages(messages, user_id=None):
 def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
-            'title': _('Popup Message in the GUI (shows up alert window)'),
+            'title': _('Open window in the user interface'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Send hint to message inbox (bottom of sidebar)'),
+            'title': _('Show hint in the \'User\' menu'),
             'handler': notify_gui_msg,
         },
         'mail': {
@@ -102,7 +102,7 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_mail,
         },
         'dashlet': {
-            'title': _('Send hint to dashlet'),
+            'title': _('Show notification in dashboard element \'User notifications\''),
             'handler': notify_gui_msg,
         },
     }
@@ -148,12 +148,11 @@ def page_notify():
 
 
 def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    menu = make_simple_form_page_menu(
-        breadcrumb,
-        form_name="notify",
-        button_name="save",
-        save_title=_("Send notification"),
-    )
+    menu = make_simple_form_page_menu(_("Users"),
+                                      breadcrumb,
+                                      form_name="notify",
+                                      button_name="save",
+                                      save_title=_("Send notification"))
 
     menu.dropdowns.insert(
         1,
@@ -196,6 +195,8 @@ def _vs_notify():
             ('text',
              TextAreaUnicode(title=_('Text'),
                              help=_('Insert the text to be sent to all reciepents.'),
+                             allow_empty=False,
+                             empty_text=_('You need to provide a text.'),
                              cols=50,
                              rows=10)),
             ('dest',
@@ -208,6 +209,7 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
+                 allow_empty=False,
                  choices=[(k, v['title']) for k, v in _notify_methods().items()],
                  default_value=['popup'],
              )),
@@ -228,9 +230,6 @@ def _vs_notify():
 
 
 def _validate_msg(msg, varprefix):
-    if not msg.get('text'):
-        raise MKUserError('text', _('You need to provide a text.'))
-
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
@@ -286,7 +285,7 @@ def _process_notify_message(msg):
     message += "<table>"
     for method in msg['methods']:
         message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                        (_notify_methods()[method]["title"], num_success[method], num_recipients)
+            (_notify_methods()[method]["title"], num_success[method], num_recipients)
     message += "</table>"
 
     message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)

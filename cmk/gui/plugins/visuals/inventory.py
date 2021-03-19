@@ -28,7 +28,9 @@ from cmk.gui.plugins.visuals import (
     visual_info_registry,
 )
 from cmk.gui.type_defs import (
-    Rows,)
+    Rows,
+    VisualContext,
+)
 
 
 class FilterInvtableText(Filter):
@@ -43,10 +45,10 @@ class FilterInvtableText(Filter):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.get_unicode_input(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else '')
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         htmlvar = self.htmlvars[0]
         request_var = html.request.var(htmlvar)
         if request_var is None:
@@ -124,7 +126,8 @@ class FilterInvtableTimestampAsAge(Filter):
                 newrows.append(row)
         return newrows
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         now = time.time()
         return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
 
@@ -145,7 +148,8 @@ class FilterInvtableIDRange(Filter):
         html.write_text("&nbsp; %s: " % _("to"))
         html.text_input(self.ident + "_to", size=8, cssclass="number")
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         from_value = utils.saveint(html.request.var(self.ident + "_from"))
         to_value = utils.saveint(html.request.var(self.ident + "_to"))
 
@@ -187,7 +191,8 @@ class FilterInvtableOperStatus(Filter):
                 html.br()
         html.end_checkbox_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # We consider the filter active if not all checkboxes
         # are either on (default) or off (unset)
         settings = set([])
@@ -220,7 +225,8 @@ class FilterInvtableAdminStatus(Filter):
             html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
         html.end_radio_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = html.request.var(self.ident)
         if current not in ("1", "2"):
             return rows
@@ -248,7 +254,8 @@ class FilterInvtableAvailable(Filter):
             html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
         html.end_radio_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = html.request.var(self.ident)
         if current not in ("no", "yes"):
             return rows
@@ -298,7 +305,8 @@ class FilterInvtableInterfaceType(Filter):
         self.valuespec().render_input(self.ident, self.selection())
         html.close_div()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         current = self.selection()
         if len(current) == 0:
             return rows  # No types selected, filter is unused
@@ -325,7 +333,8 @@ class FilterInvtableVersion(Filter):
         html.write_text(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], size=7)
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         from_version = html.request.var(self.htmlvars[0])
         to_version = html.request.var(self.htmlvars[1])
         if not from_version and not to_version:
@@ -365,10 +374,10 @@ class FilterInvText(Filter):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         value = html.request.var(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value if value is not None else "")
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         filtertext = self.filtertext
         if not filtertext:
             return rows
@@ -441,7 +450,8 @@ class FilterInvFloat(Filter):
     def need_inventory(self) -> bool:
         return any(self.filter_configs())
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         lower, upper = self.filter_configs()
         if not any((lower, upper)):
             return rows
@@ -473,7 +483,8 @@ class FilterInvBool(FilterTristate):
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         tri = self.tristate_value()
         if tri == -1:
             return rows
@@ -503,7 +514,8 @@ class FilterHasInv(FilterTristate):
     def filter(self, infoname):
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         tri = self.tristate_value()
         if tri == -1:
             return rows
@@ -560,7 +572,8 @@ class FilterInvHasSoftwarePackage(Filter):
                       False,
                       label=_("Negate: find hosts <b>not</b> having this package"))
 
-    def filter_table(self, rows: Rows) -> Rows:
+    # TODO: get value to filter against from context instead of from html vars
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         name = self.filtername
         if not name:
             return rows

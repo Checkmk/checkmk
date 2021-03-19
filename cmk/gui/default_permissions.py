@@ -267,7 +267,7 @@ permission_registry.register(
     Permission(
         section=PermissionSectionGeneral,
         name="see_stales_in_tactical_overview",
-        title=_l("See stale objects in tactical overview snapin"),
+        title=_l("See stale objects in tactical overview"),
         description=_l(
             "Show the column for stale host and service checks in the tactical overview snapin."),
         defaults=config.builtin_role_ids,

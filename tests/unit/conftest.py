@@ -3,17 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import copy
 import socket
 import shutil
 import logging
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+from fakeredis import FakeRedis  # type: ignore[import]
+import pytest
 import livestatus
 
 import cmk.utils.paths
+import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -21,9 +22,9 @@ import cmk.utils.version as cmk_version
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
-from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection
 
 # No stub file
+from cmk.gui.plugins.openapi.livestatus_helpers.testing import mock_livestatus
 from testlib import is_managed_repo, is_enterprise_repo  # type: ignore[import]
 # No stub file
 from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
@@ -119,65 +120,106 @@ def fixup_ip_lookup(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
 
 
-@pytest.fixture(name='config_load_all_checks', scope="session")
-def _config_load_all_checks():
-    # Local import to have faster pytest initialization
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+class FixRegister:
+    """Access agent based plugins
+    """
+    def __init__(self):
+        # Local import to have faster pytest initialization
+        import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
 
-    config._initialize_data_structures()
-    assert config.check_info == {}
+        config._initialize_data_structures()
+        assert config.check_info == {}
 
-    with cmk_debug_enabled():  # fail if a plugin can't be loaded
-        config.load_all_agent_based_plugins(check_api.get_check_api_context)
+        with cmk_debug_enabled():  # fail if a plugin can't be loaded
+            config.load_all_agent_based_plugins(check_api.get_check_api_context)
+            inventory_plugins.load_legacy_inventory_plugins(
+                check_api.get_check_api_context,
+                register.inventory_plugins_legacy.get_inventory_context,
+            )
 
-    assert len(config.check_info) > 1000  # sanitiy check
+        # some sanitiy checks, may decrease as we migrate
+        assert len(config.check_info) > 1000
+        assert len(config.snmp_info) > 400
+        assert len(inventory_plugins._inv_info) > 60
+
+        self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
+        self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)
+        self._check_plugins = copy.deepcopy(register._config.registered_check_plugins)
+        self._inventory_plugins = copy.deepcopy(register._config.registered_inventory_plugins)
+
+    @property
+    def snmp_sections(self):
+        return self._snmp_sections
+
+    @property
+    def agent_sections(self):
+        return self._agent_sections
+
+    @property
+    def check_plugins(self):
+        return self._check_plugins
+
+    @property
+    def inventory_plugins(self):
+        return self._inventory_plugins
 
 
-@pytest.fixture(name='config_load_all_inventory_plugins', scope="session")
-@pytest.mark.usesfixture('config_load_all_checks')
-def _config_load_all_inventory_plugins():
-    # Local import to have faster pytest initialization
-    import cmk.base.api.agent_based.register.inventory_plugins_legacy as inventory_legacy  # pylint: disable=bad-option-value,import-outside-toplevel
-    import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=bad-option-value,import-outside-toplevel
-    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
+class FixPluginLegacy:
+    """Access legacy dicts like `check_info`
+    """
+    def __init__(self, fixed_register: FixRegister):
+        import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
+        import cmk.base.inventory_plugins as inventory_plugins
+        assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
-    with cmk_debug_enabled():  # fail if a plugin can't be loaded
-        inventory_plugins.load_legacy_inventory_plugins(
-            check_api.get_check_api_context,
-            inventory_legacy.get_inventory_context,
-        )
+        self._check_info = copy.deepcopy(config.check_info)
+        self._snmp_info = copy.deepcopy(config.snmp_info)
+        self._inv_info = copy.deepcopy(inventory_plugins._inv_info)
+        self._active_check_info = copy.deepcopy(config.active_check_info)
+        self._snmp_scan_functions = copy.deepcopy(config.snmp_scan_functions)
+        self._check_variables = copy.deepcopy(config.get_check_variables())
 
-    assert len(inventory_plugins.inv_info) > 90  # sanitiy check, may decrease as we migrate
+    @property
+    def check_info(self):
+        return self._check_info
+
+    @property
+    def snmp_info(self):
+        return self._snmp_info
+
+    @property
+    def inv_info(self):
+        return self._inv_info
+
+    @property
+    def active_check_info(self):
+        return self._active_check_info
+
+    @property
+    def snmp_scan_functions(self):
+        return self._snmp_scan_functions
+
+    @property
+    def check_variables(self):
+        return self._check_variables
 
 
 @pytest.fixture(scope="session")
-def config_check_info(config_load_all_checks):
-    # Local import to have faster pytest initialization
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    return copy.deepcopy(config.check_info)
+def fix_register():
+    yield FixRegister()
 
 
 @pytest.fixture(scope="session")
-def config_active_check_info(config_load_all_checks):
-    # Local import to have faster pytest initialization
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    return copy.deepcopy(config.active_check_info)
+def load_all_agent_based_plugins(fix_register):
+    pass
 
 
 @pytest.fixture(scope="session")
-def config_snmp_scan_functions(config_load_all_checks):
-    # Local import to have faster pytest initialization
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    assert len(config.snmp_scan_functions) > 400  # sanity check
-    return copy.deepcopy(config.snmp_scan_functions)
-
-
-@pytest.fixture(scope="session")
-def config_check_variables(config_load_all_checks):
-    # Local import to have faster pytest initialization
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    return copy.deepcopy(config.get_check_variables())
+def fix_plugin_legacy(fix_register):
+    yield FixPluginLegacy(fix_register)
 
 
 @pytest.fixture(autouse=True)
@@ -185,7 +227,7 @@ def prevent_livestatus_connect(monkeypatch):
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     monkeypatch.setattr(
-        livestatus.SingleSiteConnection, "_create_socket", lambda s, f: pytest.fail(
+        livestatus.SingleSiteConnection, "_create_socket", lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
             "Use mock_livestatus for mocking away the livestatus API"))
 
@@ -200,7 +242,7 @@ def prevent_livestatus_connect(monkeypatch):
 
 
 @pytest.fixture(name="mock_livestatus")
-def _mock_livestatus(mocker, monkeypatch):
+def _mock_livestatus():
     """Mock LiveStatus by patching MultiSiteConnection
 
     Use it like this:
@@ -218,22 +260,15 @@ def _mock_livestatus(mocker, monkeypatch):
 
 
     """
-    # Local import to have faster pytest initialization
-    from cmk.gui.plugins.openapi.livestatus_helpers.testing import MockLiveStatusConnection  # pylint: disable=bad-option-value,import-outside-toplevel
-    live = MockLiveStatusConnection()
+    with mock_livestatus(with_context=False) as live:
+        yield live
 
-    def enabled_and_disabled_sites(user):
-        config = {'socket': 'unix:'}
-        return {'local': config, 'NO_SITE': config}, {}
 
-    mocker.patch("cmk.gui.sites._get_enabled_and_disabled_sites", new=enabled_and_disabled_sites)
-    mocker.patch("livestatus.MultiSiteConnection.set_prepend_site", new=live.set_prepend_site)
-    mocker.patch("livestatus.MultiSiteConnection.query_non_parallel", new=live.query_non_parallel)
-    mocker.patch("livestatus.MultiSiteConnection.query_parallel", new=live.query_parallel)
-    mocker.patch("livestatus.SingleSiteConnection._create_socket")
-    mocker.patch("livestatus.SingleSiteConnection.do_query", new=live.do_query)
-    mocker.patch("livestatus.SingleSiteConnection.do_command", new=live.do_command)
-
-    monkeypatch.setenv('OMD_ROOT', '/')
-
-    return live
+@pytest.fixture(scope="function", autouse=True)
+def use_fakeredis_client(monkeypatch):
+    """Use fakeredis client instead of redis.Redis"""
+    monkeypatch.setattr(
+        redis,
+        "Redis",
+        FakeRedis,
+    )

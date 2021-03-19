@@ -69,9 +69,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    PageMenuCheckbox,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
     make_display_options_dropdown,
@@ -99,11 +99,10 @@ class ABCNotificationsMode(ABCEventsMode):
         return [
             ("match_escalation",
              Tuple(
-                 title=_("Restrict to n<sup>th</sup> to m<sup>th</sup> notification"),
+                 title=_("Restrict to notification number"),
                  orientation="float",
                  elements=[
                      Integer(
-                         label=_("from"),
                          help=_("Let through notifications counting from this number. "
                                 "The first notification always has the number 1."),
                          default_value=1,
@@ -474,6 +473,7 @@ class ModeNotifications(ABCNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         self._extend_display_dropdown(menu)
         return menu
@@ -486,31 +486,42 @@ class ModeNotifications(ABCNotificationsMode):
                 title=_("Toggle elements"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Show user rules"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_user_rules,
-                            check_url=html.makeactionuri([("_show_user", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_user", "")]),
-                        ),
+                        title=_("Hide user rules")
+                        if self._show_user_rules else _("Show user rules"),
+                        icon_name={
+                            'icon': 'checkbox',
+                            'emblem': 'disable' if self._show_user_rules else 'enable'
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_user", "" if self._show_user_rules else "1"),
+                            ])),
                     ),
                     PageMenuEntry(
-                        title=_("Show analysis"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_backlog,
-                            check_url=html.makeactionuri([("_show_backlog", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_backlog", "")]),
-                        ),
+                        title=_("Hide analysis") if self._show_backlog else _("Show analysis"),
+                        icon_name={
+                            'icon': 'analyze',
+                            'emblem': 'disable' if self._show_backlog else "enable",
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_backlog", "" if self._show_backlog else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
                     ),
                     PageMenuEntry(
-                        title=_("Show bulks"),
-                        icon_name="trans",
-                        item=PageMenuCheckbox(
-                            is_checked=self._show_bulks,
-                            check_url=html.makeactionuri([("_show_bulks", "1")]),
-                            uncheck_url=html.makeactionuri([("_show_bulks", "")]),
-                        ),
+                        title=_("Hide bulks") if self._show_bulks else _("Show bulks"),
+                        icon_name={
+                            'icon': 'bulk',
+                            'emblem': 'disable' if self._show_bulks else "enable",
+                        },
+                        item=make_simple_link(
+                            html.makeactionuri([
+                                ("_show_bulks", "" if self._show_bulks else "1"),
+                            ])),
+                        is_shortcut=True,
+                        is_suggested=True,
                     ),
                 ],
             ))
@@ -666,7 +677,7 @@ class ModeNotifications(ABCNotificationsMode):
 
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"),
-                                 "replay")
+                                 "reload_cmk")
 
                 if (html.request.var("analyse") and
                         nr == html.request.get_integer_input_mandatory("analyse")):
@@ -693,7 +704,7 @@ class ModeNotifications(ABCNotificationsMode):
                         statename = context.get("HOSTSTATE")[:4]
                         state = context["HOSTSTATEID"]
                         css = "state hstate hstate%s" % state
-                    table.cell(_("State"), statename, css=css)
+                    table.cell(_("State"), html.render_span(statename), css=css)
                 elif nottype.startswith("DOWNTIME"):
                     table.cell(_("State"))
                     html.icon("downtime", _("Downtime"))
@@ -833,7 +844,8 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             html.h3(_('Notification Rules'))
 
         self._render_notification_rules(
@@ -921,6 +933,7 @@ class ModeUserNotifications(ABCUserNotificationsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
         return menu
 
@@ -975,6 +988,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                 cmk.gui.wato.user_profile.page_menu_dropdown_user_related("user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _user_id(self):
@@ -983,7 +997,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(None, log_what, log_text)
+            watolib.log_audit(log_what, log_text)
         else:
             super()._add_change(log_what, log_text)
 
@@ -1100,13 +1114,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ("contact_groups",
                  ListOf(
                      cmk.gui.plugins.wato.ContactGroupSelection(),
-                     title=_("The members of certain contact groups"),
+                     title=_("Members of contact groups"),
                      movable=False,
                  )),
                 ("contact_emails",
                  ListOfStrings(
                      valuespec=EmailAddress(size=44),
-                     title=_("The following explicit email addresses"),
+                     title=_("Explicit email addresses"),
                      orientation="vertical",
                  )),
                 ("contact_match_macros",
@@ -1182,10 +1196,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                  _("Create separate notification bulks for different values of the following custom macros"
                   ),
                  help=
-                 _("If you enter the names of host/service-custom macros here then for each different "
-                   "combination of values of those macros a separate bulk will be created. This can be used "
-                   "in combination with the grouping by folder, host etc. Omit any leading underscore. "
-                   "<b>Note</b>: If you are using "
+                 _("If you enter the names of host/service-custom macros here "
+                   "then for each different combination of values of those "
+                   "macros a separate bulk will be created. Service macros "
+                   "match first, if no service macro is found, the host macros "
+                   "are searched. This can be used in combination with the grouping by folder, host etc. "
+                   "Omit any leading underscore. <b>Note</b>: If you are using "
                    "Nagios as a core you need to make sure that the values of the required macros are "
                    "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
                    "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
@@ -1362,7 +1378,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                       "bulking or choose another notification plugin which allows bulking."))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        return make_simple_form_page_menu(_("Notification rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
 
     def action(self) -> ActionResult:
         if not html.check_transaction():
@@ -1389,7 +1408,8 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
     def page(self):
         if self._start_async_repl:
             cmk.gui.wato.user_profile.user_profile_async_replication_dialog(
-                sites=_get_notification_sync_sites())
+                sites=_get_notification_sync_sites(),
+                back_url=ModePersonalUserNotifications.mode_url())
             return
 
         html.begin_form("rule", method="POST")
@@ -1517,7 +1537,7 @@ class ModeEditPersonalNotificationRule(ABCEditUserNotificationRuleMode):
     def _add_change(self, log_what, log_text):
         if config.has_wato_slave_sites():
             self._start_async_repl = True
-            watolib.log_audit(None, log_what, log_text)
+            watolib.log_audit(log_what, log_text)
         else:
             super()._add_change(log_what, log_text)
 

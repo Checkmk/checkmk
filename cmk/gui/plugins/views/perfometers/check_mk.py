@@ -417,7 +417,7 @@ perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
     perfdata_found = False
-    perfdata1 = ''
+    perfdata1 = 0
 
     for data in perf_data:
         if data[0] == "apply_lag":

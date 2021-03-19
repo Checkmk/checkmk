@@ -27,12 +27,12 @@ enum class ServiceState;
 #include "nagios.h"
 #endif
 
-class ServiceListColumn : public ListColumn {
+class ServiceListColumn : public deprecated::ListColumn {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
                       const ColumnOffsets &offsets, MonitoringCore *mc,
                       int info_depth)
-        : ListColumn(name, description, offsets)
+        : deprecated::ListColumn(name, description, offsets)
         , _mc(mc)
         , _info_depth(info_depth) {}
 

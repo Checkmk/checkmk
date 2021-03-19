@@ -8,16 +8,15 @@ import datetime
 from typing import (
     Any,
     Dict,
+    Mapping,
     Optional,
 )
 from .utils import docker, uptime
-from .utils.legacy_docker import DeprecatedDict
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
     CheckResult,
     HostLabelGenerator,
-    Parameters,
 )
 from .agent_based_api.v1 import (
     register,
@@ -39,7 +38,7 @@ HEALTH_STATUS_MAP = {
 
 def _is_active_container(section: Dict[str, Any]) -> bool:
     '''return wether container is or should be running'''
-    if section.get("Status") == "running":
+    if section.get("Status") in ("running", "exited"):
         return True
     restart_policy_name = section.get("RestartPolicy", {}).get("Name")
     return restart_policy_name in RESTART_POLICIES_TO_DISCOVER
@@ -53,16 +52,7 @@ def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
     '''
-    version = docker.get_version(string_table)  # pylint: disable=undefined-variable
-
-    index = 0 if version is None else 1
-    section: Dict[str, Any] = {}
-    if string_table[index:]:
-        section = docker.json_get_obj(string_table[index]) or {}
-
-    if version is None:
-        return DeprecatedDict(section)  # pylint: disable=undefined-variable
-    return section
+    return docker.parse(string_table, strict=False).data
 
 
 def host_labels_docker_container_status(section) -> HostLabelGenerator:
@@ -189,12 +179,6 @@ def discover_docker_container_status(section: Dict[str, Any]):
 
 
 def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
-    if isinstance(section, DeprecatedDict):
-        yield Result(
-            state=state.WARN,
-            summary=
-            "Deprecated plugin/agent! You are using legacy code, which may lead to crashes and/or incomplete information. Please upgrade the monitored host to use the plugin 'mk_docker.py'."
-        )
     status = section.get("Status", "unknown")
     cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
 
@@ -246,7 +230,7 @@ def discover_docker_container_status_uptime(
 
 
 def check_docker_container_status_uptime(
-    params: Parameters,
+    params: Mapping[str, Any],
     section_docker_container_status: Optional[Dict[str, Any]],
     section_uptime: Optional[uptime.Section],
 ) -> CheckResult:

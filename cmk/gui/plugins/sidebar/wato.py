@@ -4,7 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List, Dict
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+)
 
 import cmk.gui.config as config
 import cmk.gui.views as views
@@ -16,6 +22,12 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
 from cmk.gui.globals import html
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 
 from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
@@ -101,6 +113,41 @@ mega_menu_registry.register(
         sort_index=15,
         topics=get_wato_menu_items,
         search=search.SetupSearch("setup_search"),
+    ))
+
+
+class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        topic_generator: Callable[[], Iterable[TopicMenuTopic]],
+    ) -> None:
+        super().__init__(name)
+        self._topic_generator = topic_generator
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=topic_menu_item.title,
+            topic=_("Setup"),
+            url=topic_menu_item.url,
+            match_texts=[topic_menu_item.title],
+        )
+                    for topic_menu_topic in self._topic_generator()
+                    for topic_menu_item in topic_menu_topic.items)
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorSetupMenu(
+        "setup",
+        mega_menu_registry["setup"].topics,
     ))
 
 
@@ -257,7 +304,14 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
+        html.begin_foldable_container(
+            tree_id,
+            "/" + folder[".path"],
+            False,
+            HTML(title),
+            icon="foldable_sidebar",
+            padding=6,
+        )
         for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
             render_tree_folder(tree_id, subfolder, js_func)
         html.end_foldable_container()
@@ -311,7 +365,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
         html.open_table()
         html.open_tr()
-        html.td(_('Topic:'), class_="label")
         html.open_td()
         html.dropdown("topic",
                       topic_choices,
@@ -321,7 +374,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.close_tr()
 
         html.open_tr()
-        html.td(_("View:"), class_="label")
         html.open_td()
 
         for topic in topics:

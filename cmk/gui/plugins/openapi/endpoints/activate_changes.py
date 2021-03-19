@@ -8,15 +8,12 @@
 When changes are activated, Checkmk transfers the current configuration status to the ongoing
 monitoring.
 
-Checkmk differentiates between the configuration environment in which you manage the hosts,
-services and settings, and the actual monitoring environment.
-
 Changes in the configuration - adding a new host, for example - will initially have no effect
 on the monitoring. Changes must first be activated, which will bring all changes that you have
 accumulated since the last activation as a "bundle" into the operational monitoring.
 
 You can find an introduction to the configuration of Checkmk including activation of changes in the
-[Checkmk guide](https://checkmk.com/cms_wato.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato.html).
 """
 
 from cmk.gui import watolib
@@ -32,6 +29,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 ACTIVATION_ID = {
     'activation_id': fields.String(
@@ -46,11 +44,12 @@ ACTIVATION_ID = {
           'cmk/activate',
           method='post',
           status_descriptions={
-              200: "The activation has already been completed.",
+              200: "The activation has been completed.",
               302: ("The activation is still running. Redirecting to the "
                     "'Wait for completion' endpoint."),
+              422: "There are no changes to be activated.",
           },
-          will_do_redirects=True,
+          additional_status_codes=[302, 422],
           request_schema=request_schemas.ActivateChanges,
           response_schema=response_schemas.DomainObject)
 def activate_changes(params):
@@ -58,10 +57,11 @@ def activate_changes(params):
     body = params['body']
     sites = body['sites']
     with may_fail(MKUserError, status=400):
-        activation_id = watolib.activate_changes_start(sites)
+        activation_id = watolib.activate_changes_start(
+            sites, force_foreign_changes=body['force_foreign_changes'])
     if body['redirect']:
         wait_for = _completion_link(activation_id)
-        response = Response(status=301)
+        response = Response(status=302)
         response.location = wait_for['href']
         return response
 
@@ -96,21 +96,30 @@ def _serve_activation_run(activation_id, is_running=False):
                                           'wait-for-completion'),
           'cmk/wait-for-completion',
           method='get',
+          status_descriptions={
+              204: "The activation has been completed.",
+              302: ("The activation is still running. Redirecting to the "
+                    "'Wait for completion' endpoint."),
+              404: "There is no running activation with this activation_id.",
+          },
           path_params=[ACTIVATION_ID],
-          will_do_redirects=True,
+          additional_status_codes=[302],
           output_empty=True)
-def activate_changes_state(params):
-    """Wait for an activation-run to complete.
+def activate_changes_wait_for_completion(params):
+    """Wait for activation completion
 
     This endpoint will periodically redirect on itself to prevent timeouts.
     """
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()
-    manager.load_activation(activation_id)
+    try:
+        manager.load_activation(activation_id)
+    except MKUserError:
+        raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
-        response = Response(status=301)
+        response = Response(status=302)
         response.location = request.url
         return response
 
@@ -121,14 +130,23 @@ def activate_changes_state(params):
           'cmk/show',
           method='get',
           path_params=[ACTIVATION_ID],
+          status_descriptions={
+              404: "There is no running activation with this activation_id.",
+          },
           response_schema=response_schemas.DomainObject)
 def show_activation(params):
-    """Show the status of a particular activation-run.
+    """Show the activation status
     """
     activation_id = params['activation_id']
     manager = watolib.ActivateChangesManager()
     manager.load()
-    manager.load_activation(activation_id)
+    try:
+        manager.load_activation(activation_id)
+    except MKUserError:
+        raise ProblemException(
+            status=404,
+            title=f"Activation {activation_id!r} not found.",
+        )
     return _serve_activation_run(activation_id, is_running=manager.is_running())
 
 

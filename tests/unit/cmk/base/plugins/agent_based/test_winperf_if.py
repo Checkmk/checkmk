@@ -87,10 +87,10 @@ value_store_fixture = get_value_store_fixture(interfaces)
 def test_winperf_if_netconnection_id(string_table, settings, items):
     assert [
         service.item for service in winperf_if.discover_winperf_if(
-            [type_defs.Parameters({
+            [{
                 **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
                 **settings,
-            })],
+            }],
             winperf_if.parse_winperf_if(string_table),
         ) if isinstance(service, Service)
     ] == items
@@ -99,18 +99,16 @@ def test_winperf_if_netconnection_id(string_table, settings, items):
 def test_winperf_if_inventory_teaming():
     assert list(
         winperf_if.discover_winperf_if(
-            [
-                type_defs.Parameters({
-                    **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'descr',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                })
-            ],
+            [{
+                **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'descr',
+                        'pad_portnumbers': True,
+                    },
+                ),
+            }],
             winperf_if.parse_winperf_if([
                 [u'1542018413.59', u'510', u'2341040'],
                 [
@@ -382,19 +380,19 @@ def test_winperf_if_group_patterns(value_store):
     assert list(
         winperf_if.discover_winperf_if(
             [
-                type_defs.Parameters({
+                {
                     'discovery_single': (
                         False,
                         {},
                     ),
                     'grouping': (
                         True,
-                        [
-                            {
+                        {
+                            'group_items': [{
                                 'group_name': 'isatap',
                                 'member_appearance': 'descr',
-                            },
-                        ],
+                            },],
+                        },
                     ),
                     'matching_conditions': (
                         False,
@@ -409,16 +407,16 @@ def test_winperf_if_group_patterns(value_store):
                             ],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     'grouping': (
                         True,
-                        [
-                            {
+                        {
+                            'group_items': [{
                                 'group_name': 'Broadcom',
                                 'member_appearance': 'descr',
-                            },
-                        ],
+                            },],
+                        },
                     ),
                     'matching_conditions': (
                         False,
@@ -429,8 +427,8 @@ def test_winperf_if_group_patterns(value_store):
                             ],
                         },
                     ),
-                }),
-                type_defs.Parameters({
+                },
+                {
                     **interfaces.DISCOVERY_DEFAULT_PARAMETERS,
                     'discovery_single': (
                         True,
@@ -439,7 +437,7 @@ def test_winperf_if_group_patterns(value_store):
                             'pad_portnumbers': True,
                         },
                     ),
-                }),
+                },
             ],
             section,
         )) == expected_services
@@ -447,30 +445,34 @@ def test_winperf_if_group_patterns(value_store):
     assert [
         result for service in expected_services for result in winperf_if.check_winperf_if(
             service.item or "",  # or "" to make mypy happy
-            type_defs.Parameters(service.parameters),
+            service.parameters,
             section,
         ) if not isinstance(result, IgnoreResults)
     ] == [
-        Result(state=state.OK, notice='[1]'),
-        Result(state=state.OK, notice='Operational state: Connected'),
+        Result(state=state.OK, summary='[1]'),
+        Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
         Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
-        Result(state=state.OK, notice='[2]'),
-        Result(state=state.OK, notice='Operational state: Connected'),
+        Result(state=state.OK, summary='[2]'),
+        Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
         Result(state=state.OK, summary='Speed: 1.41 GBit/s'),
-        Result(state=state.OK, notice='Teaming'),
-        Result(state=state.OK, notice='Operational state: up'),
+        Result(state=state.OK, summary='Teaming'),
+        Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
             state=state.OK,
-            notice=
-            'Members: [Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected), Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected)]',
+            summary=('Members: [Broadcom ABC123 NetXtreme 123 GigE [Client1] 138 (Connected),'
+                     ' Broadcom ABC456 NetXtreme 456 GigE [Client2] 137 (Connected)]'),
         ),
         Result(state=state.OK, summary='Speed: 2.82 GBit/s'),
-        Result(state=state.OK, notice='Teaming'),
-        Result(state=state.OK, notice='Operational state: up'),
+        Result(state=state.OK, summary='Teaming'),
+        Result(state=state.OK, summary='(up)', details='Operational state: up'),
         Result(
             state=state.OK,
-            notice=
-            'Members: [isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected), isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected), isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected), isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected), isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected), isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected)]',
+            summary=('Members: [isatap.{A1A1A1A1-A1A1-A1A1-A1A1-A1A1A1A1A1A1} (Connected),'
+                     ' isatap.{B1B1B1B1-B1B1-B1B1-B1B1-B1B1B1B1B1B1} (Connected),'
+                     ' isatap.{C1C1C1C1-C1C1-C1C1-C1C1-C1C1C1C1C1C1} (Connected),'
+                     ' isatap.{D1D1D1D1-D1D1-D1D1-D1D1-D1D1D1D1D1D1} (Connected),'
+                     ' isatap.{E1E1E1E1-E1E1-E1E1-E1E1-E1E1E1E1E1E1} (Connected),'
+                     ' isatap.{F1F1F1F1-F1F1-F1F1-F1F1-F1F1F1F1F1F1} (Connected)]'),
         ),
         Result(state=state.OK, summary='Speed: 600 kBit/s'),
     ]
@@ -531,27 +533,39 @@ def winperf_if_teaming_parsed(time, out_octets):
             'discovered_speed': 10000000000
         },
         [
-            Result(state=state.OK, notice='[SLOT 6 Port 1 DAG]'),
-            Result(state=state.OK, notice='Operational state: Connected'),
-            Result(state=state.OK, notice='MAC: A0:36:9F:B0:A3:60'),
-            Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0),
-            Metric('out', 1073741824.0, boundaries=(0.0, 1250000000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0),
+            Result(state=state.OK, summary='[SLOT 6 Port 1 DAG]'),
+            Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
+            Result(state=state.OK, summary='MAC: A0:36:9F:B0:A3:60'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
-            Result(state=state.OK, summary='Speed: 10 GBit/s'),
+            Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.90%)'),
+            Metric('out', 1073741824.0, boundaries=(0.0, 1250000000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ],
     ),
     (
@@ -561,27 +575,39 @@ def winperf_if_teaming_parsed(time, out_octets):
             'discovered_speed': 10000000000
         },
         [
-            Result(state=state.OK, notice='[SLOT 4 Port 2 DAG]'),
-            Result(state=state.OK, notice='Operational state: Connected'),
-            Result(state=state.OK, notice='MAC: A0:36:9F:B0:B3:66'),
-            Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0),
-            Metric('out', 1073741824.0, boundaries=(0.0, 1250000000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0),
+            Result(state=state.OK, summary='[SLOT 4 Port 2 DAG]'),
+            Result(state=state.OK, summary='(Connected)', details='Operational state: Connected'),
+            Result(state=state.OK, summary='MAC: A0:36:9F:B0:B3:66'),
+            Result(state=state.OK, summary='Speed: 10 GBit/s'),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 1.07 GB/s (85.9%)'),
-            Result(state=state.OK, summary='Speed: 10 GBit/s'),
+            Metric('in', 0.0, boundaries=(0.0, 1250000000.0)),
+            Result(state=state.OK, summary='Out: 1.07 GB/s (85.90%)'),
+            Metric('out', 1073741824.0, boundaries=(0.0, 1250000000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ],
     ),
     (
@@ -594,27 +620,39 @@ def winperf_if_teaming_parsed(time, out_octets):
             },
         },
         [
-            Result(state=state.OK, notice='Teaming'),
-            Result(state=state.OK, notice='Operational state: up'),
-            Result(state=state.OK, notice='Members: [3 (Connected), 8 (Connected)]'),
-            Metric('in', 0.0, boundaries=(0.0, 2500000000.0)),
-            Metric('inmcast', 0.0),
-            Metric('inbcast', 0.0),
-            Metric('inucast', 0.0),
-            Metric('innucast', 0.0),
-            Metric('indisc', 0.0),
-            Metric('inerr', 0.0),
-            Metric('out', 2147483648.0, boundaries=(0.0, 2500000000.0)),
-            Metric('outmcast', 0.0),
-            Metric('outbcast', 0.0),
-            Metric('outucast', 0.0),
-            Metric('outnucast', 0.0),
-            Metric('outdisc', 0.0),
-            Metric('outerr', 0.0),
+            Result(state=state.OK, summary='Teaming'),
+            Result(state=state.OK, summary='(up)', details='Operational state: up'),
+            Result(state=state.OK, summary='Members: [3 (Connected), 8 (Connected)]'),
+            Result(state=state.OK, summary='Speed: 20 GBit/s'),
             Metric('outqlen', 0.0),
             Result(state=state.OK, summary='In: 0.00 B/s (0%)'),
-            Result(state=state.OK, summary='Out: 2.15 GB/s (85.9%)'),
-            Result(state=state.OK, summary='Speed: 20 GBit/s'),
+            Metric('in', 0.0, boundaries=(0.0, 2500000000.0)),
+            Result(state=state.OK, summary='Out: 2.15 GB/s (85.90%)'),
+            Metric('out', 2147483648.0, boundaries=(0.0, 2500000000.0)),
+            Result(state=state.OK, notice='Errors in: 0 packets/s'),
+            Metric('inerr', 0.0),
+            Result(state=state.OK, notice='Multicast in: 0 packets/s'),
+            Metric('inmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast in: 0 packets/s'),
+            Metric('inbcast', 0.0),
+            Result(state=state.OK, notice='Unicast in: 0 packets/s'),
+            Metric('inucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast in: 0 packets/s'),
+            Metric('innucast', 0.0),
+            Result(state=state.OK, notice='Discards in: 0 packets/s'),
+            Metric('indisc', 0.0),
+            Result(state=state.OK, notice='Errors out: 0 packets/s'),
+            Metric('outerr', 0.0),
+            Result(state=state.OK, notice='Multicast out: 0 packets/s'),
+            Metric('outmcast', 0.0),
+            Result(state=state.OK, notice='Broadcast out: 0 packets/s'),
+            Metric('outbcast', 0.0),
+            Result(state=state.OK, notice='Unicast out: 0 packets/s'),
+            Metric('outucast', 0.0),
+            Result(state=state.OK, notice='Non-unicast out: 0 packets/s'),
+            Metric('outnucast', 0.0),
+            Result(state=state.OK, notice='Discards out: 0 packets/s'),
+            Metric('outdisc', 0.0),
         ],
     ),
 ])
@@ -622,12 +660,11 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
     # Initialize counters
     monkeypatch.setattr('time.time', lambda: 0)
     with suppress(IgnoreResultsError):
-        list(
-            winperf_if.check_winperf_if(
-                item,
-                type_defs.Parameters(params),
-                winperf_if_teaming_parsed(0, 0),
-            ))
+        list(winperf_if.check_winperf_if(
+            item,
+            params,
+            winperf_if_teaming_parsed(0, 0),
+        ))
 
     # winperf_if should use the timestamp of the parsed data. To check that it does not use
     # time.time by accident, we set it to 20 s instead of 10 s. If winperf_if would now used
@@ -636,7 +673,7 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
     assert list(
         winperf_if.check_winperf_if(
             item,
-            type_defs.Parameters(params),
+            params,
             winperf_if_teaming_parsed(10, 1024 * 1024 * 1024 * 10),
         )) == results
 
@@ -689,26 +726,34 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 10000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[TEAM:F[o]O 123-BAR]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[TEAM:F[o]O 123-BAR]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 10000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[TEAM:F[o]O 123-BAR 2]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[TEAM:F[o]O 123-BAR 2]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
@@ -823,52 +868,68 @@ def test_winperf_if_teaming_performance_data(monkeypatch, value_store, item, par
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 10000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[A B-C]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[A B-C]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[FOO B-A-R 53]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[FOO B-A-R 53]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
             (
                 '3',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 10000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[A B-C 3]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[A B-C 3]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 10 GBit/s'),
                 ],
             ),
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'discovered_speed': 1000000000,
                     'discovered_oper_status': ['1']
                 },
                 [
-                    Result(state=state.OK, notice='[FOO B-A-R 52]'),
-                    Result(state=state.OK, notice='Operational state: Connected'),
+                    Result(state=state.OK, summary='[FOO B-A-R 52]'),
+                    Result(state=state.OK,
+                           summary='(Connected)',
+                           details='Operational state: Connected'),
                     Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
@@ -882,16 +943,15 @@ def test_winperf_if_regression(
     items_params_results,
 ):
     section = winperf_if.parse_winperf_if(string_table)
-    assert list(
-        winperf_if.discover_winperf_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-            section,
-        )) == discovery_results
+    assert list(winperf_if.discover_winperf_if(
+        [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
+        section,
+    )) == discovery_results
 
     monkeypatch.setattr(interfaces, 'get_value_store', lambda: {})
     for item, par, res in items_params_results:
         assert list(winperf_if.check_winperf_if(
             item,
-            type_defs.Parameters(par),
+            par,
             section,
         )) == res

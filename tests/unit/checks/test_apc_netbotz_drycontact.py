@@ -22,7 +22,6 @@ from testlib import Check  # type: ignore[import]
         'state': ('Closed high mem', 2),
     }
 }, [('Pumpe 0', {}), ('Pumpe 1', {}), ('Pumpe 2', {})])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_apc_netbotz_drycontact_inventory(parsed, expected):
 
     check = Check("apc_netbotz_drycontact")
@@ -58,7 +57,6 @@ def test_apc_netbotz_drycontact_inventory(parsed, expected):
              'state': ('Disabled', 1)
          }
      }), ([], {})])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_apc_netbotz_drycontact_parse(info, expected):
 
     check = Check("apc_netbotz_drycontact")
@@ -102,7 +100,6 @@ def test_apc_netbotz_drycontact_parse(info, expected):
                                   'state': ('unknown[5]', 3)
                               }
                           }, (3, 'State: unknown[5]'))])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_apc_netbotz_drycontact_check(item, params, data, expected):
 
     check = Check("apc_netbotz_drycontact")

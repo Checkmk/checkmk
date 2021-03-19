@@ -7,9 +7,20 @@
 import abc
 from contextlib import contextmanager
 from typing import Any, List, Optional, Set, Tuple, Type, Union
-
-from cmk.gui.valuespec import DropdownChoiceEntry
 from pathlib import Path
+
+from livestatus import SiteId, LivestatusResponse
+
+from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.bi.bi_packs import BIAggregationPacks
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.utils.bi.bi_compiler import BICompiler
+from cmk.utils.bi.bi_lib import SitesCallback, BIStates, NodeResultBundle
+from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
+from cmk.utils.bi.bi_trees import BICompiledRule
+
+from cmk.gui.exceptions import MKConfigError
+from cmk.gui.valuespec import DropdownChoiceEntry
 import cmk.gui.watolib as watolib
 import cmk.gui.config as config
 import cmk.gui.pages
@@ -27,14 +38,6 @@ from cmk.gui.permissions import (
     Permission,
 )
 from cmk.gui.utils.urls import makeuri_contextless
-
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
-from cmk.utils.bi.bi_compiler import BICompiler
-from cmk.utils.bi.bi_lib import SitesCallback
-from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
-from cmk.gui.exceptions import MKConfigError
-from livestatus import SiteId, LivestatusResponse
 
 
 @permission_section_registry.register
@@ -61,8 +64,10 @@ permission_registry.register(
     ))
 
 
-def is_part_of_aggregation(what, site, host, service):
-    return get_cached_bi_manager().compiler.used_in_aggregation(host, service)
+def is_part_of_aggregation(host, service):
+    if BIAggregationPacks.get_num_enabled_aggregations() == 0:
+        return False
+    return get_cached_bi_compiler().is_part_of_aggregation(host, service)
 
 
 def get_aggregation_group_trees():
@@ -79,27 +84,68 @@ def aggregation_group_choices() -> List[DropdownChoiceEntry]:
     return get_cached_bi_packs().get_aggregation_group_choices()
 
 
-def api_get_aggregation_state(filter_names=None, filter_groups=None):
-    """ returns the computed aggregation states """
-
+def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
+                              filter_groups: Optional[List[str]] = None):
     bi_manager = BIManager()
-    bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names or [], filter_groups or [],
-                                                [])
-    legacy_results = bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
+    bi_aggregation_filter = BIAggregationFilter(
+        [],
+        [],
+        [],
+        filter_names or [],
+        filter_groups or [],
+        [],
+    )
 
-    used_aggr_names = set()
-    filter_groups_set = set(filter_groups or [])
-    modified_rows = []
-    for result in legacy_results:
-        aggr_name = result["aggr_compiled_branch"].properties.title
-        group_names = set(result["aggr_compiled_aggregation"].groups.names)
-        if aggr_name in used_aggr_names:
+    def collect_infos(node_result_bundle: NodeResultBundle, is_single_host_aggregation: bool):
+        actual_result = node_result_bundle.actual_result
+
+        own_infos = {}
+        if actual_result.custom_infos:
+            own_infos["custom"] = actual_result.custom_infos
+
+        if actual_result.state not in [BIStates.OK, BIStates.PENDING]:
+            node_instance = node_result_bundle.instance
+            line_tokens = []
+            if isinstance(node_instance, BICompiledRule):
+                line_tokens.append(node_instance.properties.title)
+            else:
+                node_info = []
+                if not is_single_host_aggregation:
+                    node_info.append(node_instance.host_name)
+                if node_instance.service_description:
+                    node_info.append(node_instance.service_description)
+                if node_info:
+                    line_tokens.append("/".join(node_info))
+            if actual_result.output:
+                line_tokens.append(actual_result.output)
+            own_infos["error"] = {"state": actual_result.state, "output": ", ".join(line_tokens)}
+
+        nested_infos = [
+            x for y in node_result_bundle.nested_results
+            for x in [collect_infos(y, is_single_host_aggregation)] if x is not None
+        ]
+
+        if own_infos or nested_infos:
+            return [own_infos, nested_infos]
+        return None
+
+    aggregations = {}
+    results = bi_manager.computer.compute_result_for_filter(bi_aggregation_filter)
+    for compiled_aggregation, node_result_bundles in results:
+        if filter_groups and not any(x in filter_groups for x in compiled_aggregation.groups.names):
             continue
-        used_aggr_names.add(aggr_name)
-        groups = list(group_names if filter_groups is None else group_names - filter_groups_set)
-        del result["aggr_compiled_branch"]
-        del result["aggr_compiled_aggregation"]
-        modified_rows.append({"groups": groups, "tree": result})
+        for node_result_bundle in node_result_bundles:
+            aggr_title = node_result_bundle.instance.properties.title
+            required_hosts = [x[1] for x in node_result_bundle.instance.get_required_hosts()]
+            is_single_host_aggregation = len(required_hosts) == 1
+            aggregations[aggr_title] = {
+                "state": node_result_bundle.actual_result.state,
+                "hosts": required_hosts,
+                "acknowledged": node_result_bundle.actual_result.acknowledged,
+                "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
+                "in_service_period": node_result_bundle.actual_result.in_service_period,
+                "infos": collect_infos(node_result_bundle, is_single_host_aggregation)
+            }
 
     have_sites = {x[0] for x in bi_manager.status_fetcher.states.keys()}
     missing_aggregations = []
@@ -109,13 +155,13 @@ def api_get_aggregation_state(filter_names=None, filter_groups=None):
         for branch in branches:
             branch_sites = {x[0] for x in branch.required_elements()}
             required_sites.update(branch_sites)
-            if branch.properties.title not in used_aggr_names:
+            if branch.properties.title not in aggregations:
                 missing_aggregations.append(branch.properties.title)
 
     response = {
+        "aggregations": aggregations,
         "missing_sites": list(required_sites - have_sites),
         "missing_aggr": missing_aggregations,
-        "rows": modified_rows
     }
     return response
 
@@ -549,7 +595,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=html.theme_url("images/tree_closed.png"),
+                html.img(src=html.theme_url("images/tree_closed.svg"),
                          class_=["treeangle", img_class],
                          onclick=mousecode)
 
@@ -722,7 +768,7 @@ class ABCFoldableTreeRendererTable(FoldableTreeRendererTree):
         return leaves
 
 
-def find_all_leaves(node):
+def find_all_leaves(node) -> List[Tuple[Optional[str], HostName, Optional[ServiceName]]]:
     # leaf node
     if node["type"] == 1:
         site, host = node["host"]
@@ -891,7 +937,7 @@ class BIManager:
 
     @classmethod
     def bi_configuration_file(cls) -> str:
-        return str(Path(watolib.multisite_dir()) / "bi_config.mk")
+        return str(Path(watolib.multisite_dir()) / "bi_config.bi")
 
 
 def get_cached_bi_packs() -> BIAggregationPacks:
@@ -905,6 +951,13 @@ def get_cached_bi_manager() -> BIManager:
     if "bi_manager" not in g:
         g.bi_manager = BIManager()
     return g.bi_manager
+
+
+def get_cached_bi_compiler() -> BICompiler:
+    if "bi_compiler" not in g:
+        sites_callback = SitesCallback(cmk.gui.sites.states, bi_livestatus_query)
+        g.bi_compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+    return g.bi_compiler
 
 
 def bi_livestatus_query(query: str,

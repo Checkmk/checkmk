@@ -132,4 +132,4 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
 
     @property
     def file_path(self) -> Path:
-        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
+        return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")

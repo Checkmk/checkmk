@@ -5,17 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextAscii,
-    Transform,
-)
-
+from cmk.gui.valuespec import (Dictionary, Integer, TextAscii, Transform, Tuple)
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_params
+
+from cmk.gui.plugins.wato.check_parameters.mailqueue_length import mailqueue_elements
+
+mailqueue_params = Dictionary(
+    elements=[
+        *mailqueue_elements,
+        (
+            "failed",
+            Tuple(
+                title=_("Mails in failed mail queue"),
+                help=_("This rule is applied to the number of E-Mails currently "
+                       "in the failed mail queue"),
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("mails"), default_value=1),
+                    Integer(title=_("Critical at"), unit=_("mails"), default_value=1),
+                ],
+            ),
+        ),
+    ],
+    optional_keys=["active", "deferred", "failed"],
+)
 
 
 def _parameter_valuespec_mail_queue_length():

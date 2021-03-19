@@ -77,7 +77,7 @@ class APICallBulkDiscovery(APICallCollection):
 
         params["performance"] = (
             request.get("do_scan", params["performance"][0]),
-            request.get("bulk_size", params["performance"][1]),
+            int(request.get("bulk_size", params["performance"][1])),
         )
 
         params["error_handling"] = request.get("ignore_single_check_errors",

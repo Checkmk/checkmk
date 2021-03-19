@@ -7,23 +7,28 @@
 from typing import Callable, Optional, TypeVar, Union
 import urllib.parse
 
+from livestatus import SiteId
+
 from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, Row
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.valuespec import MonitoringState
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 
 from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
 
 from cmk.gui.plugins.views import (
     get_permitted_views,
     command_registry,
     Command,
+    CommandActionResult,
+    CommandSpec,
     data_source_registry,
     ABCDataSource,
     RowTableLivestatus,
@@ -154,10 +159,10 @@ permission_registry.register(
     Permission(
         section=mkeventd.PermissionSectionEventConsole,
         name="see_in_tactical_overview",
-        title=_("See events in tactical overview snapin"),
+        title=_("See events in the sidebar element 'Overview'"),
         description=_(
             "Whether or not the user is permitted to see the number of open events in the "
-            "tactical overview snapin."),
+            "sidebar element 'Overview'."),
         defaults=config.builtin_role_ids,
     ))
 
@@ -322,11 +327,11 @@ class PainterEventMatchGroups(Painter):
     def render(self, row, cell):
         groups = row["event_match_groups"]
         if groups:
-            code = ""
+            code = HTML("")
             for text in groups:
-                code += '<span>%s</span>' % text
+                code += html.render_span(text)
             return "matchgroups", code
-        return "", ""
+        return "", HTML("")
 
 
 @painter_registry.register
@@ -394,7 +399,7 @@ class PainterEventComment(Painter):
         return ['event_comment']
 
     def render(self, row, cell):
-        return ("", row["event_comment"])
+        return ("", escaping.escape_attribute(row["event_comment"]))
 
 
 @painter_registry.register
@@ -415,7 +420,7 @@ class PainterEventSl(Painter):
 
     def render(self, row, cell):
         sl_txt = dict(config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
-        return "", sl_txt
+        return "", escaping.escape_attribute(sl_txt)
 
 
 @painter_registry.register
@@ -436,8 +441,8 @@ class PainterEventHost(Painter):
 
     def render(self, row, cell):
         if row["host_name"]:
-            return "", row["host_name"]
-        return "", row["event_host"]
+            return "", escaping.escape_attribute(row["host_name"])
+        return "", escaping.escape_attribute(row["event_host"])
 
 
 @painter_registry.register
@@ -457,7 +462,7 @@ class PainterEventIpaddress(Painter):
         return ['event_ipaddress']
 
     def render(self, row, cell):
-        return ("", row["event_ipaddress"])
+        return ("", escaping.escape_attribute(row["event_ipaddress"]))
 
 
 @painter_registry.register
@@ -497,7 +502,7 @@ class PainterEventOwner(Painter):
         return ['event_owner']
 
     def render(self, row, cell):
-        return ("", row["event_owner"])
+        return ("", escaping.escape_attribute(row["event_owner"]))
 
 
 @painter_registry.register
@@ -517,7 +522,7 @@ class PainterEventContact(Painter):
         return ['event_contact']
 
     def render(self, row, cell):
-        return ("", row["event_contact"])
+        return ("", escaping.escape_attribute(row["event_contact"]))
 
 
 @painter_registry.register
@@ -537,7 +542,7 @@ class PainterEventApplication(Painter):
         return ['event_application']
 
     def render(self, row, cell):
-        return ("", row["event_application"])
+        return ("", escaping.escape_attribute(row["event_application"]))
 
 
 @painter_registry.register
@@ -629,7 +634,7 @@ class PainterEventRuleId(Painter):
         if config.user.may("mkeventd.edit"):
             urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
-        return "", rule_id
+        return "", escaping.escape_attribute(rule_id)
 
 
 @painter_registry.register
@@ -651,7 +656,7 @@ class PainterEventState(Painter):
     def render(self, row, cell):
         state = row["event_state"]
         name = short_service_state_name(state, "")
-        return "state svcstate state%s" % state, name
+        return "state svcstate state%s" % state, html.render_span(name)
 
 
 @painter_registry.register
@@ -809,7 +814,7 @@ class PainterEventContactGroups(Painter):
         if cgs is None:
             return "", ""
         if cgs:
-            return "", ", ".join(cgs)
+            return "", escaping.escape_attribute(", ".join(cgs))
         return "", "<i>" + _("none") + "</i>"
 
 
@@ -842,7 +847,7 @@ class PainterEventEffectiveContactGroups(Painter):
         if cgs is None:
             return "", ""
         if cgs:
-            return "", ", ".join(sorted(cgs))
+            return "", escaping.escape_attribute(", ".join(sorted(cgs)))
         return "", "<i>" + _("none") + "</i>"
 
 
@@ -911,7 +916,7 @@ class PainterHistoryWhat(Painter):
 
     def render(self, row, cell):
         what = row["history_what"]
-        return "", '<span title="%s">%s</span>' % (mkeventd.action_whats[what], what)
+        return "", html.render_span(what, title=mkeventd.action_whats[what])
 
 
 @painter_registry.register
@@ -948,7 +953,7 @@ class PainterHistoryWho(Painter):
         return ['history_who']
 
     def render(self, row, cell):
-        return ("", row["history_who"])
+        return ("", escaping.escape_attribute(row["history_who"]))
 
 
 @painter_registry.register
@@ -968,7 +973,7 @@ class PainterHistoryAddinfo(Painter):
         return ['history_addinfo']
 
     def render(self, row, cell):
-        return ("", row["history_addinfo"])
+        return ("", escaping.escape_attribute(row["history_addinfo"]))
 
 
 #.
@@ -981,13 +986,14 @@ class PainterHistoryAddinfo(Painter):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-permission_registry.register(PermissionECUpdateEvent := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="update",
-    title=_l("Update an event"),
-    description=_l("Needed for acknowledging and changing the comment and contact of an event"),
-    defaults=["user", "admin"],
-))
+PermissionECUpdateEvent = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="update",
+        title=_l("Update an event"),
+        description=_l("Needed for acknowledging and changing the comment and contact of an event"),
+        defaults=["user", "admin"],
+    ))
 
 # Sub-Permissions for Changing Comment, Contact and Acknowledgement
 permission_registry.register(
@@ -1015,7 +1021,10 @@ class ECCommand(Command):
     def tables(self):
         return ["event"]
 
-    def executor(self, command, site):
+    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
+        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
+        # object type for the command
+        assert isinstance(command, str)
         mkeventd.execute_command(command, site=site)
 
 
@@ -1032,6 +1041,12 @@ class CommandECUpdateEvent(ECCommand):
     @property
     def permission(self):
         return PermissionECUpdateEvent
+
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
 
     def render(self, what):
         html.open_table(border="0", cellpadding="0", cellspacing="3")
@@ -1062,7 +1077,8 @@ class CommandECUpdateEvent(ECCommand):
         html.close_table()
         html.button('_mkeventd_update', _("Update"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
                 comment = html.request.get_unicode_input_mandatory(
@@ -1077,16 +1093,18 @@ class CommandECUpdateEvent(ECCommand):
             ack = html.get_checkbox("_mkeventd_acknowledge")
             return "UPDATE;%s;%s;%s;%s;%s" % (row["event_id"], config.user.id, ack and 1 or
                                               0, comment, contact), _("update")
+        return None
 
 
-permission_registry.register(PermissionECChangeEventState := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="changestate",
-    title=_l("Change event state"),
-    description=_l("This permission allows to change the state classification of an event "
-                   "(e.g. from CRIT to WARN)."),
-    defaults=["user", "admin"],
-))
+PermissionECChangeEventState = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="changestate",
+        title=_l("Change event state"),
+        description=_l("This permission allows to change the state classification of an event "
+                       "(e.g. from CRIT to WARN)."),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1103,26 +1121,35 @@ class CommandECChangeState(ECCommand):
     def permission(self):
         return PermissionECChangeEventState
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" of the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         html.button('_mkeventd_changestate', _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
                                              state), _("change the state")
+        return None
 
 
-permission_registry.register(PermissionECCustomActions := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="actions",
-    title=_l("Perform custom action"),
-    description=_l("This permission is needed for performing the configured actions "
-                   "(execution of scripts and sending emails)."),
-    defaults=["user", "admin"],
-))
+PermissionECCustomActions = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="actions",
+        title=_l("Perform custom action"),
+        description=_l("This permission is needed for performing the configured actions "
+                       "(execution of scripts and sending emails)."),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1139,25 +1166,34 @@ class CommandECCustomAction(ECCommand):
     def permission(self):
         return PermissionECCustomActions
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" for the following %d Event Console  %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if html.request.var("_action_" + action_id):
-                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), (
-                    _("execute the action \"%s\"") % title)
+                title = _("execute the action \"%s\"") % title
+                return "ACTION;%s;%s;%s" % (row["event_id"], config.user.id, action_id), title
+        return None
 
 
-permission_registry.register(PermissionECArchiveEvent := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="delete",
-    title=_l("Archive an event"),
-    description=_l("Finally archive an event without any further action"),
-    defaults=["user", "admin"],
-))
+PermissionECArchiveEvent = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="delete",
+        title=_l("Archive an event"),
+        description=_l("Finally archive an event without any further action"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1174,23 +1210,32 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self):
         return PermissionECArchiveEvent
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d Event Console %s") % (
+            len_action_rows,
+            ungettext("event", "events", len_action_rows),
+        )
+
     def render(self, what):
         html.button("_delete_event", _("Archive Event"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_delete_event"):
             command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
             title = _("<b>archive</b>")
             return command, title
+        return None
 
 
-permission_registry.register(PermissionECArchiveEventsOfHost := Permission(
-    section=mkeventd.PermissionSectionEventConsole,
-    name="archive_events_of_hosts",
-    title=_l("Archive events of hosts"),
-    description=_l("Archive all open events of all hosts shown in host views"),
-    defaults=["user", "admin"],
-))
+PermissionECArchiveEventsOfHost = permission_registry.register(
+    Permission(
+        section=mkeventd.PermissionSectionEventConsole,
+        name="archive_events_of_hosts",
+        title=_l("Archive events of hosts"),
+        description=_l("Archive all open events of all hosts shown in host views"),
+        defaults=["user", "admin"],
+    ))
 
 
 @command_registry.register
@@ -1212,9 +1257,14 @@ class CommandECArchiveEventsOfHost(ECCommand):
         return ["host", "service"]
 
     def render(self, what):
+        html.help(
+            _('Note: With this command you can archive all events of one host. '
+              'Needs a rule "Check event state in Event Console" to be '
+              'configured.'))
         html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
                 tag: Optional[str] = "host"
@@ -1228,7 +1278,9 @@ class CommandECArchiveEventsOfHost(ECCommand):
                 data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
                                           "Filter: host_name = %s" % row['host_name'])
                 commands = ["DELETE;%s;%s" % (entry[0], config.user.id) for entry in data]
-            return commands, "<b>archive all events of all hosts</b> of"
+
+            return commands, "<b>archive all events</b> of"
+        return None
 
 
 #.
@@ -1293,7 +1345,7 @@ def mkeventd_view(d):
         'topic': "events",
         'browser_reload': 60,
         'column_headers': 'pergroup',
-        'icon': 'event',
+        'icon': 'event_console',
         'mobile': False,
         'hidden': False,
         'mustsearch': False,
@@ -1489,7 +1541,7 @@ multisite_builtin_views['ec_history_recent'] = mkeventd_view({
     'title': _('Recent Event History'),
     'description': _('Information about events and actions on events during the recent 24 hours.'),
     'icon': {
-        'icon': 'event',
+        'icon': 'event_console',
         'emblem': 'time'
     },
     'datasource': 'mkeventd_history',
@@ -1717,7 +1769,7 @@ multisite_builtin_views['ec_event_mobile'] = {
     'single_infos': ['event'],
     'sorters': [],
     'title': u'Event Details',
-    'topic': u'Event Console',
+    'topic': 'events',
     'user_sortable': True
 }
 
@@ -1821,6 +1873,6 @@ multisite_builtin_views['ec_events_mobile'] = {
     'single_infos': [],
     'sorters': [('event_last', False)],
     'title': u'Events',
-    'topic': u'Event Console',
+    'topic': 'events',
     'user_sortable': True,
 }

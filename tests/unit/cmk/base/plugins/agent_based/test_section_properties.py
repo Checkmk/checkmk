@@ -4,13 +4,108 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections import defaultdict
+
 import pytest  # type: ignore[import]
 
-import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.register import get_relevant_raw_sections
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_section_parse_function_does_something():
+def test_all_sections_are_subscribed_by_some_plugin(fix_register):
+    """Test that all registered sections are subscribed to by some plugin
+
+    We have very few sections (one at the time of this writing),
+    that are not subscribed to by any plugin.
+    We can afford to keep track of those.
+    """
+    all_section_names = set(fix_register.snmp_sections) | set(fix_register.agent_sections)
+
+    subscribed_sections_names = set(
+        get_relevant_raw_sections(
+            check_plugin_names=fix_register.check_plugins,
+            inventory_plugin_names=fix_register.inventory_plugins,
+        ))
+
+    unsubscribed_sections_names = {str(n) for n in all_section_names - subscribed_sections_names}
+
+    assert unsubscribed_sections_names == {'labels'}
+
+
+def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
+    """Make sure the first OID is the system description or the system object ID
+
+    Checking the system description or the system object ID first increases performance
+    massively, because we can reduce the number of devices for which the subsequent OIDs
+    are fetched, based on an OID information we fetch anyway.
+
+    You should really have an exceptionally good reason to add something here.
+
+    The known exeptions cannot easily be fixed, because introducing a too strict
+    criterion is an incompatible change.
+    In most of the cases I was unable to spot the identifying feature of the system
+    description.
+    """
+
+    allowed_oids = {
+        ".1.3.6.1.2.1.1.1.0",  # system description
+        ".1.3.6.1.2.1.1.2.0",  # system object ID
+    }
+
+    known_exceptions = {
+        '.1.3.6.1.2.1.2.2.1.*': {'if', 'inv_if'},
+        '.1.3.6.1.2.1.25.1.1.0': {'hr_cpu', 'hr_fs', 'hr_ps'},
+        '.1.3.6.1.2.1.31.1.1.1.6.*': {'if64', 'if64adm'},
+        '.1.3.6.1.2.1.43.*': {
+            'printer_alerts',
+            'printer_input',
+            'printer_output',
+            'printer_pages',
+            'printer_supply',
+        },
+        '.1.3.6.1.2.1.47.1.1.1.1.*': {'snmp_extended_info'},
+        '.1.3.6.1.2.1.105.1.3.1.1.*': {'pse_poe'},
+        '.1.3.6.1.4.1.14848.2.1.1.1.0': {'etherbox'},
+        '.1.3.6.1.4.1.2036.2.1.1.4.0': {'snmp_quantum_storage_info'},
+        '.1.3.6.1.4.1.232.2.2.4.2.0': {
+            'hp_proliant_cpu',
+            'hp_proliant_da_cntlr',
+            'hp_proliant_da_phydrv',
+            'hp_proliant_fans',
+            'hp_proliant_mem',
+            'hp_proliant_power',
+            'hp_proliant_psu',
+            'hp_proliant_raid',
+            'hp_proliant_systeminfo',
+            'hp_proliant_temp',
+            'hp_sts_drvbox',
+        },
+        '.1.3.6.1.4.1.30155.2.1.1.0': {'openbsd_sensors'},
+        '.1.3.6.1.4.1.6302.2.1.1.1.0': {'emerson_stat', 'emerson_temp'},
+        '.1.3.6.1.4.1.674.*': {
+            'dell_compellent_controller',
+            'dell_compellent_disks',
+            'dell_compellent_enclosure',
+            'dell_compellent_folder',
+            'dell_hw_info',
+        },
+    }
+
+    for section in fix_register.snmp_sections.values():
+        for (first_checked_oid, *_rest1), *_rest2 in (  #
+                criterion for criterion in section.detect_spec if criterion  #
+        ):
+            if first_checked_oid in allowed_oids:
+                continue
+            assert str(section.name) in known_exceptions.get(first_checked_oid, ()), f"""
+            If you've made it here, you have added a case to the known exeptions above.
+            Even worse: You may have added an OID to the list of OIDs that are fetched
+            from *all SNMP devices* known to the Checkmk site. Please reconsider!
+
+            First OID fetched by {section.name}: {first_checked_oid}
+            """
+
+
+def test_section_parse_function_does_something(fix_register):
     """We make sure that the parse function is not trivial
 
     To ease the learning curve when developing check plugins
@@ -32,7 +127,6 @@ def test_section_parse_function_does_something():
         'inv_cisco_vlans',
         'juniper_info',
         'snmp_os',
-        'snmp_quantum_storage_info',
         # agent sections
         '3ware_disks',
         '3ware_info',
@@ -82,7 +176,6 @@ def test_section_parse_function_does_something():
         'logins',
         'lvm_vgs',
         'mailman_lists',
-        'mcafee_av_client',
         'megaraid_bbu',
         'megaraid_pdisks',
         'mongodb_asserts',
@@ -101,7 +194,6 @@ def test_section_parse_function_does_something():
         'netapp_api_status',
         'netapp_api_vf_status',
         'nfsexports',
-        'nullmailer_mailq',
         'openvpn_clients',
         'oracle_crs_version',
         'oracle_crs_voting',
@@ -113,7 +205,6 @@ def test_section_parse_function_does_something():
         'oracle_recovery_area',
         'oracle_recovery_status',
         'oracle_rman_backups',
-        'oracle_undostat',
         'oracle_version',
         'plesk_backups',
         'plesk_domains',
@@ -162,8 +253,6 @@ def test_section_parse_function_does_something():
         'winperf_ts_sessions',
         'wmic_process',
         'zerto_vpg_rpo',
-        'zpool_status',
-        'zypper',
         'dmraid',
         'emcvnx_raidgroups',
         'hpux_tunables',
@@ -186,10 +275,10 @@ def test_section_parse_function_does_something():
         'winperf',
     }
 
-    for snmp_section in agent_based_register.iter_all_snmp_sections():
-        assert (str(snmp_section.name) not in legacy_exceptions_for_easier_migration) is (
+    for name, snmp_section in fix_register.snmp_sections.items():
+        assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             snmp_section.parse_function.__code__.co_code != noop_code)
 
-    for agent_section in agent_based_register.iter_all_agent_sections():
-        assert (str(agent_section.name) not in legacy_exceptions_for_easier_migration) is (
+    for name, agent_section in fix_register.agent_sections.items():
+        assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             agent_section.parse_function.__code__.co_code != noop_code)

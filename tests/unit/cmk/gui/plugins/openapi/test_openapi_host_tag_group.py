@@ -54,6 +54,14 @@ def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automat
         'topic': 'nothing'
     }
 
+    col_resp = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/host_tag_group/collections/all',
+        status=200,
+    )
+
+    assert len(col_resp.json_body["value"]) == 1
+
     _resp = wsgi_app.call_method(
         'delete',
         base + "/objects/host_tag_group/foo",
@@ -66,5 +74,37 @@ def test_openapi_host_tag_group(wsgi_app, with_automation_user, suppress_automat
     _resp = wsgi_app.call_method(
         'get',
         base + "/objects/host_tag_group/foo",
+        status=404,
+    )
+
+    col_resp = wsgi_app.call_method(
+        'get',
+        base + '/domain-types/host_tag_group/collections/all',
+        status=200,
+    )
+
+    assert len(col_resp.json_body["value"]) == 0
+
+
+def test_openapi_host_tag_group_invalid_id(wsgi_app, with_automation_user,
+                                           suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/v0'
+    _resp = wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_tag_group/collections/all",
+        params=json.dumps({
+            "ident": "1",
+            "title": "Kubernetes",
+            "topic": "Data Sources",
+            "help": "Kubernetes Pods",
+            "tags": [{
+                "ident": "pod",
+                "title": "Pod"
+            }]
+        }),
         status=400,
+        content_type='application/json',
     )

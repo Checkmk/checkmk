@@ -10,7 +10,6 @@ from typing import Any, Dict
 import pytest  # type: ignore[import]
 
 import cmk.utils.version as cmk_version
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html
 import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.plugins.visuals
@@ -3816,15 +3815,12 @@ def test_get_merged_context(register_builtin_html, uri_vars, visual, expected_co
     assert context == expected_context
 
 
-def test_verify_single_infos_has_context():
-    visual: Visual = {"single_infos": ["host"], "context": {"host": "abc"},}
-    visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_has_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={"host": "abc"}) == set()
 
 
-def test_verify_single_infos_missing_context():
-    visual: Visual = {"single_infos": ["host"], "context": {},}
-    with pytest.raises(MKUserError, match="Missing context information"):
-        visuals.verify_single_infos(visual, visual["context"])
+def test_get_missing_single_infos_missing_context():
+    assert visuals.get_missing_single_infos(single_infos=["host"], context={}) == {"host"}
 
 
 def test_context_uri_vars(register_builtin_html):
@@ -3856,22 +3852,3 @@ def test_context_uri_vars(register_builtin_html):
         assert html.request.var("hu") == "hu"
 
     assert list(dict(html.request.itervars()).keys()) == ["bla"]
-
-
-@pytest.mark.parametrize(
-    "context,result",
-    [
-        pytest.param({"site": "sitename"}, [visuals.SiteId("sitename")],
-                     id="Single context site enforced"),
-        pytest.param({"siteopt": {"site": ""}}, None,
-                     id="Multiple contexts no site selected"),
-        pytest.param({"sites": "first|second"},
-                     [visuals.SiteId("first"), visuals.SiteId("second")],
-                     id="Single context Multiple sites selected"),
-        pytest.param({"sites": {"sites": "first|second"}},
-                     [visuals.SiteId("first"), visuals.SiteId("second")],
-                     id="Multiple contexts Multiple sites selected"),
-    ]
-)
-def test_get_only_sites_from_context(context, result):
-    assert visuals.get_only_sites_from_context(context) == result

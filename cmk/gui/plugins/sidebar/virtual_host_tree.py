@@ -125,8 +125,13 @@ class VirtualHostTree(SidebarSnapin):
                     target="main")
 
             if path:
-                html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False,
-                                              HTML(bullet + title))
+                html.begin_foldable_container(
+                    "tag-tree",
+                    ".".join(map(str, path)),
+                    False,
+                    HTML(bullet + title),
+                    icon="foldable_sidebar",
+                )
 
         for (node_title, node_value), subtree in sorted(tree.get("_children", {}).items()):
             subpath = path + [node_value or ""]

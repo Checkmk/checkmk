@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <iterator>
-#include <ostream>
 
 #include "ListFilter.h"
 #include "Logger.h"
@@ -22,6 +21,7 @@
 #include "Service.h"
 #include "State.h"
 #else
+#include "MonitoringCore.h"
 #include "auth.h"
 #endif
 
@@ -60,8 +60,14 @@ std::string checkValue(Logger *logger, RelationalOperator relOp,
 std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<ListFilter>(kind, *this, relOp,
-                                        checkValue(logger(), relOp, value));
+    return std::make_unique<ListFilter>(
+        kind, name(),
+        // `timezone_offset` is unused
+        [this](Row row, const contact *auth_user,
+               std::chrono::seconds timezone_offset) {
+            return getValue(row, auth_user, timezone_offset);
+        },
+        relOp, checkValue(logger(), relOp, value), logger());
 }
 
 std::vector<std::string> ServiceGroupMembersColumn::getValue(
@@ -97,7 +103,8 @@ ServiceGroupMembersColumn::getMembers(Row row, const contact *auth_user) const {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
             if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
+                is_authorized_for(_mc->serviceAuthorization(), auth_user,
+                                  svc->host_ptr, svc)) {
                 members.emplace_back(
                     svc->host_name, svc->description,
                     static_cast<ServiceState>(svc->current_state),

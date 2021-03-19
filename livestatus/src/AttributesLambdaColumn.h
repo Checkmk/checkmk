@@ -35,11 +35,12 @@ class RowRenderer;
 template <class T>
 class AttributesLambdaColumn : public CustomVarsDictColumn {
 public:
-    AttributesLambdaColumn(std::string name, std::string description,
+    AttributesLambdaColumn(const std::string& name,
+                           const std::string& description,
                            const ColumnOffsets& offsets,
                            std::function<Attributes(const T&)> f)
         : CustomVarsDictColumn(
-              std::move(name), std::move(description), offsets,
+              name, description, offsets,
               // TODO(ml): The hierarchy of every *LambdaColumn is wrong anyway
               // but this is the easiest way to get rid of the pointer
               // arithmetic by replacing inheritance with delegation without

@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=consider-using-in
 
-from cmk.base.check_api import saveint
+import enum
+from typing import NamedTuple, Literal, Mapping
+from cmk.base.check_api import check_levels, get_percent_human_readable
 printer_io_units = {
     '-1': 'unknown',
     '0': 'unknown',
@@ -21,121 +23,141 @@ printer_io_units = {
     '19': 'percent',
 }
 
-printer_io_states = {
-    # PrtSubUnitStatusTC   monitoring-state   label
 
+class AvailabilityStatus(enum.Enum):
     # Availability
-    0: (0, 'Available and Idle'),
-    2: (0, 'Available and Standby'),
-    4: (0, 'Available and Active'),
-    6: (0, 'Available and Busy'),
-    1: (1, 'Unavailable and OnRequest'),
-    3: (2, 'Unavailable because Broken'),
-    5: (3, 'Unknown'),
+    AVAILABLE_AND_IDLE = 0
+    AVAILABLE_AND_STANDBY = 2
+    AVAILABLE_AND_ACTIVE = 4
+    AVAILABLE_AND_BUSY = 6
+    UNAVAILABLE_AND_ON_REQUEST = 1
+    UNAVAILABLE_BECAUSE_BROKEN = 3
+    UNKNOWN = 5
 
-    # Non-critical alerts
-    8: (1, 'Non-Critical Alerts'),
 
-    # Critical alerts
-    16: (2, 'Critical Alerts'),
+class PrinterStates(NamedTuple):
+    availability: AvailabilityStatus
+    alerts: Literal[0, 1, 2]
+    offline: bool
+    transitioning: bool
 
-    # On-Line state
-    32: (2, 'Off-Line'),
-    64: (0, 'Transitioning to intended state'),
+
+class Tray(NamedTuple):
+    index: str
+    name: str
+    description: str
+    states: PrinterStates
+    capacity_unit: str
+    capacity_max: int
+    level: int
+
+
+Section = Mapping[str, Tray]
+
+_STATES_MAP = {
+    AvailabilityStatus.AVAILABLE_AND_IDLE: 0,
+    AvailabilityStatus.AVAILABLE_AND_STANDBY: 0,
+    AvailabilityStatus.AVAILABLE_AND_ACTIVE: 0,
+    AvailabilityStatus.AVAILABLE_AND_BUSY: 0,
+    AvailabilityStatus.UNAVAILABLE_AND_ON_REQUEST: 1,
+    AvailabilityStatus.UNAVAILABLE_BECAUSE_BROKEN: 2,
+    AvailabilityStatus.UNKNOWN: 3,
 }
 
 
-def inventory_printer_io(info):
+def parse_printer_io(info) -> Section:
+    parsed: Section = {}
     for line in info:
-        index, name, descr, status = line[:4]
-        if descr == '':
-            continue
-        snmp_status, _capacity_unit, capacity_max, _level = line[3:]
-        if capacity_max == '0':  # useless
-            continue
+        index, name, descr, snmp_status_raw, capacity_unit, capacity_max, level = line[:7]
+        snmp_status_raw = int(snmp_status_raw) if snmp_status_raw else 0
 
-        ignore = False
-        snmp_status = saveint(status)
-        for state_val in sorted(printer_io_states, reverse=True):
-            if state_val > 0 and snmp_status - state_val >= 0:
-                snmp_status -= state_val
-                # Skip sub units where it does not seem to make sense to monitor them
-                if state_val in (1, 3, 5):
-                    ignore = True
-        if ignore is True:
-            continue
+        transitioning = bool(snmp_status_raw & 64)
+        offline = bool(snmp_status_raw & 32)
+        alert = 2 if (snmp_status_raw & 16) else bool(snmp_status_raw & 8)
+        availability = AvailabilityStatus(snmp_status_raw % 8)
 
-        # When no name is set
-        # a) try to use the description
-        # b) try to use the type otherwise use the index
         if name == "unknown" or not name:
             name = descr if descr else index.split('.')[-1]
 
-        yield (name, {})
+        if capacity_unit != '':
+            capacity_unit = ' ' + printer_io_units[capacity_unit]
+
+        parsed[name] = Tray(
+            index,
+            name,
+            descr,
+            PrinterStates(
+                availability,
+                alert,
+                offline,
+                transitioning,
+            ),
+            capacity_unit,
+            int(capacity_max) if capacity_max else 0,
+            int(level) if level else 0,
+        )
+
+    return parsed
 
 
-def check_printer_io(item, params, info, what):
-    for line in info:
-        index, name, descr = line[:3]
+def inventory_printer_io(parsed: Section):
+    for tray in parsed.values():
+        if tray.description == '':
+            continue
+        if tray.capacity_max == 0:  # useless
+            continue
+        if tray.states.availability in [
+                AvailabilityStatus.UNAVAILABLE_BECAUSE_BROKEN,
+                AvailabilityStatus.UNKNOWN,
+        ]:
+            continue
+        yield (tray.name, {})
 
-        if name == item or descr == item or index.split('.')[-1] == item:
-            snmp_status, capacity_unit, capacity_max, level = line[3:]
-            snmp_status, level, capacity_max = saveint(snmp_status), saveint(level), saveint(
-                capacity_max)
-            if capacity_unit != '':
-                capacity_unit = ' ' + printer_io_units[capacity_unit]
 
-            state_txt = []
-            state_state = 0
+def check_printer_io(item, params, parsed: Section, what):
+    tray = parsed.get(item)
+    if tray is None:
+        return
 
-            yield 0, descr
-            if snmp_status == 0:
-                state_txt.append(printer_io_states[0][1])
-            else:
-                for state_val in sorted(printer_io_states, reverse=True):
-                    if state_val > 0 and snmp_status - state_val >= 0:
-                        mon_state, text = printer_io_states[state_val]
-                        state_state = max(mon_state, state_state)
-                        state_txt.append(text)
-                        snmp_status -= state_val
+    yield 0, tray.description
 
-            yield state_state, 'Status: %s' % ', '.join(state_txt)
+    if tray.states.offline:
+        yield 2, "Offline"
 
-            if level in [-1, -2] or level < -3:
-                pass  # totally skip this info when level is unknown or not limited
+    if tray.states.transitioning:
+        yield 0, "Transitioning"
 
-            elif capacity_max in (-2, -1, 0):
-                # -2: unknown, -1: no restriction, 0: due to saveint
-                yield 0, 'Capacity: %s%s' % (level, capacity_unit)
+    yield (
+        _STATES_MAP[tray.states.availability],
+        "Status: %s" % tray.states.availability.name.replace("_", " ").capitalize(),
+    )
+    yield (
+        tray.states.alerts,
+        "Alerts: %s" % ["None", "Non-Critical", "Critical"][tray.states.alerts],
+    )
 
-            else:
-                state = 0
-                levels_txt = ''
-                how = 'remaining' if what == 'input' else 'filled'
-                if level == -3:
-                    level_txt = "at least one"
+    if tray.level in [-1, -2] or tray.level < -3:
+        return  # totally skip this info when level is unknown or not limited
 
-                else:
-                    level_perc = 100.0 * level / capacity_max  # to percent
-                    level_txt = '%0.2f%%' % level_perc
+    if tray.capacity_max in (-2, -1, 0):
+        # -2: unknown, -1: no restriction, 0: due to saveint
+        yield 0, 'Capacity: %s%s' % (tray.level, tray.capacity_unit)
+        return
 
-                    if what == 'input':
-                        warn, crit = params['capacity_levels']  # percentage levels
-                        if crit is not None and level_perc <= crit:
-                            state = 2
-                            levels_txt = ' (<= %0.2f)' % crit
-                        elif warn is not None and level_perc <= warn:
-                            state = 1
-                            levels_txt = ' (<= %0.2f%%)' % warn
+    yield 0, f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}"
 
-                    else:  # output
-                        warn, crit = params['capacity_levels']  # percentage levels
-                        if crit is not None and level_perc >= crit:
-                            state = 2
-                            levels_txt = ' (>= %0.2f)' % crit
-                        elif warn is not None and level_perc >= warn:
-                            state = 1
-                            levels_txt = ' (>= %0.2f%%)' % warn
+    how = 'remaining' if what == 'input' else 'filled'
 
-                yield state, 'Capacity: %s of %s%s %s%s' % \
-                    (level_txt, capacity_max, capacity_unit, how, levels_txt)
+    if tray.level == -3:
+        yield 0, f"At least one {how}"
+        return
+
+    yield check_levels(
+        100.0 * tray.level / tray.capacity_max,  # to percent
+        None,  # no metric
+        # levels[0], levels[1]: warn/crit output (upper)
+        # levels[3], levels[4]: warn/crit input (lower)
+        ((None, None) if what == 'input' else ()) + params["capacity_levels"],
+        infoname=how.capitalize(),
+        human_readable_func=get_percent_human_readable,
+    )

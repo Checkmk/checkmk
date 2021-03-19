@@ -22,7 +22,7 @@ import signal
 import socket
 import subprocess
 import time
-from typing import Any, List, Optional, Tuple, Iterator
+from typing import Any, List, Optional, Tuple, Iterator, Dict
 
 import cmk.utils.version as cmk_version
 import cmk.utils.render as render
@@ -272,8 +272,8 @@ class MKBackupJob:
             return False
 
         state = self.state()
-        return state["state"] in [ "started", "running" ] \
-               and os.path.exists("/proc/%d" % state["pid"])
+        return state["state"] in ["started", "running"] \
+            and os.path.exists("/proc/%d" % state["pid"])
 
     def start(self, env=None):
         p = subprocess.Popen(self._start_command(),
@@ -357,15 +357,15 @@ class Job(MKBackupJob, BackupEntity):
 
         return path / ("%s.state" % self.ident())
 
-    def _start_command(self):
+    def _start_command(self) -> List[str]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
-    def schedule(self):
+    def schedule(self) -> Optional[Dict[str, Any]]:
         return self._config["schedule"]
 
-    def cron_config(self):
+    def cron_config(self) -> List[str]:
         if not self._config["schedule"] or self._config["schedule"]["disabled"]:
-            return
+            return []
         userspec = self._cron_userspec()
         cmdline = self._cron_cmdline()
         return ["%s %s%s" % (timespec, userspec, cmdline) for timespec in self._cron_timespecs()]
@@ -403,6 +403,14 @@ class Job(MKBackupJob, BackupEntity):
     def _cron_cmdline(self):
         return "mkbackup backup %s >/dev/null" % self.ident()
 
+    def from_config(self, config):
+        # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
+        # compatibility.
+        schedule = config.get("schedule", {})
+        if schedule and "timeofday" in schedule:
+            config["schedule"]["timeofday"] = [e for e in schedule["timeofday"] if e is not None]
+        self._config = config
+
 
 class Jobs(BackupEntityCollection):
     def __init__(self, config_file_path):
@@ -412,7 +420,7 @@ class Jobs(BackupEntityCollection):
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
     def show_list(self, editable=True):
-        html.h2(_("Jobs"))
+        html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
             for job_ident, job in sorted(self.objects.items()):
@@ -473,7 +481,7 @@ class Jobs(BackupEntityCollection):
                     css = ""
 
                 table.cell(_("State"), css=css)
-                html.write(html.render_text(state_txt))
+                html.write(html.render_span(state_txt))
 
                 table.cell(_("Runtime"))
                 if state["started"]:
@@ -503,7 +511,7 @@ class Jobs(BackupEntityCollection):
                 elif schedule["disabled"]:
                     html.write(_("Disabled"))
 
-                else:
+                elif schedule["timeofday"]:
                     # find the next time of all configured times
                     times = []
                     for timespec in schedule["timeofday"]:
@@ -571,7 +579,10 @@ class PageBackup:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Restore"),
-                                    icon_name="backup_restore",
+                                    icon_name={
+                                        'icon': 'backup',
+                                        'emblem': 'refresh',
+                                    },
                                     item=make_simple_link(
                                         makeuri_contextless(request, [("mode", "backup_restore")])),
                                     is_shortcut=True,
@@ -595,7 +606,7 @@ class PageBackup:
         )
         yield PageMenuEntry(
             title=_("Backup encryption keys"),
-            icon_name="backup_key",
+            icon_name="signature_key",
             item=make_simple_link(makeuri_contextless(request, [("mode", "backup_keys")])),
             is_shortcut=True,
             is_suggested=True,
@@ -604,7 +615,7 @@ class PageBackup:
         if self._may_edit_config():
             yield PageMenuEntry(
                 title=_("Add job"),
-                icon_name="backup_job_new",
+                icon_name="new",
                 item=make_simple_link(makeuri_contextless(request, [("mode", "edit_backup_job")])),
                 is_shortcut=True,
                 is_suggested=True,
@@ -697,7 +708,10 @@ class PageEditBackupJob:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_job", button_name="save")
+        return make_simple_form_page_menu(_("Job"),
+                                          breadcrumb,
+                                          form_name="edit_job",
+                                          button_name="save")
 
     def vs_backup_schedule(self):
         return Alternative(
@@ -719,7 +733,10 @@ class PageEditBackupJob:
                         ("period", SchedulePeriod(from_end=False)),
                         ("timeofday",
                          ListOf(
-                             Timeofday(default_value=(0, 0),),
+                             Timeofday(
+                                 default_value=(0, 0),
+                                 allow_empty=False,
+                             ),
                              title=_("Time of day to start the backup at"),
                              movable=False,
                              default_value=[(0, 0)],
@@ -1002,8 +1019,10 @@ class Target(BackupEntity):
                     message=_("Do you really want to start the restore of this backup?"),
                 )
 
-                html.icon_button(start_url, _("Start restore of this backup"),
-                                 "backup_restore_start")
+                html.icon_button(start_url, _("Start restore of this backup"), {
+                    'icon': 'backup',
+                    'emblem': 'refresh',
+                })
 
                 from_info = info["hostname"]
                 if "site_id" in info:
@@ -1065,8 +1084,10 @@ class Targets(BackupEntityCollection):
                     request,
                     [("mode", "backup_restore"), ("target", target_ident)],
                 )
-                html.icon_button(restore_url, _("Restore from this backup target"),
-                                 "backup_restore")
+                html.icon_button(restore_url, _("Restore from this backup target"), {
+                    'icon': 'backup',
+                    'emblem': 'refresh',
+                })
 
                 if editable:
                     delete_url = make_confirm_link(
@@ -1197,7 +1218,10 @@ class PageEditBackupTarget:
         return self._title
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit_target", button_name="save")
+        return make_simple_form_page_menu(_("Target"),
+                                          breadcrumb,
+                                          form_name="edit_target",
+                                          button_name="save")
 
     def vs_backup_target(self):
         if self._new:
@@ -1660,7 +1684,7 @@ class PageBackupRestore:
                             entries=[
                                 PageMenuEntry(
                                     title=_("Stop"),
-                                    icon_name="backup_restore_stop",
+                                    icon_name="backup_stop",
                                     item=make_simple_link(
                                         make_confirm_link(
                                             url=html.makeactionuri([("_action", "stop")]),
@@ -1675,7 +1699,7 @@ class PageBackupRestore:
                                 ),
                                 PageMenuEntry(
                                     title=_("Complete the restore"),
-                                    icon_name="backup_restore_complete",
+                                    icon_name="save",
                                     item=make_simple_link(
                                         html.makeactionuri([("_action", "complete")])),
                                     is_shortcut=True,

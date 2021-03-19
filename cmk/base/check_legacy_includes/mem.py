@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.config import factory_settings
 import time
 import collections
@@ -24,20 +24,6 @@ memused_default_levels = (150.0, 200.0)
 factory_settings["memory_default_levels"] = {
     "levels": memused_default_levels,
 }
-
-
-##############################################################################
-# This function is mid-migration and only called in the ps check. It won't be
-# after ps is migrated!
-##############################################################################
-def parse_proc_meminfo_bytes(info):
-    meminfo = {}
-    for line in info:
-        value = int(line[1])
-        if len(line) > 2 and line[2] == 'kB':
-            value *= 1024
-        meminfo[line[0][:-1]] = value
-    return meminfo
 
 
 class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float)])):

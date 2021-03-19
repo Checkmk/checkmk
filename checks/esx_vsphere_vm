@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import datetime
-
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
@@ -325,101 +323,6 @@ check_info['esx_vsphere_vm.cpu'] = {
     "inventory_function": inventory_esx_vsphere_vm_cpu,
     "check_function": check_esx_vsphere_vm_cpu,
     "service_description": "ESX CPU",
-    "has_perfdata": True,
-}
-
-#.-
-#   .--Snapshots-----------------------------------------------------------.
-#   |           ____                        _           _                  |
-#   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
-#   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
-#   |           ___) | | | | (_| | |_) \__ \ | | | (_) | |_\__ \           |
-#   |          |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|___/           |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-
-# <<<esx_vsphere_vm>>>
-# snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
-
-
-def inventory_esx_vsphere_vm_snapshots(section):
-    if section:
-        return [(None, {})]
-
-
-def check_esx_vsphere_vm_snapshots(_no_item, params, section, key: str):
-    Snapshot = collections.namedtuple("Snapshot", ["time", "state", "name"])
-
-    raw_snapshots = " ".join(section.get(key, [])).split("|")
-    snapshots = (x.split(" ", 3) for x in raw_snapshots if x)
-    snapshots = [Snapshot(int(x[1]), x[2], x[3]) for x in snapshots]
-    yield 0, "Count: %d" % len(snapshots)
-
-    if not snapshots:
-        return
-
-    powered_on = (s.name for s in snapshots if s.state == "poweredOn")
-    yield 0, "Powered on: %s" % (', '.join(powered_on) or "None")
-
-    # if provided take the `time_reference` timestamp from server - otherwise
-    # use a UTC-timestamp - don't use time.time() here since it's local
-    now = int(section.get("time_reference", [0])[0] or  #
-              datetime.datetime.utcnow().timestamp())
-    latest_snapshot = max(snapshots, key=lambda s: s.time)
-    latest_timestamp = get_timestamp_human_readable(latest_snapshot.time)
-    oldest_snapshot = min(snapshots, key=lambda s: s.time)
-    oldest_timestamp = get_timestamp_human_readable(oldest_snapshot.time)
-
-    yield 0, "Latest: %s %s" % (latest_snapshot.name, latest_timestamp)
-    state, info, perf = check_levels(
-        now - latest_snapshot.time,
-        "age",
-        params.get("age"),
-        infoname="Age of latest",
-        human_readable_func=get_age_human_readable,
-    )
-
-    if state:
-        yield state, info, perf
-    elif params.get("age"):
-        yield 0, "", perf
-
-    # Display oldest snapshot only, if it is not identical with the latest snapshot
-    if oldest_snapshot != latest_snapshot:
-        yield 0, "Oldest: %s %s" % (oldest_snapshot.name, oldest_timestamp)
-    # check oldest age unconditionally
-    state, info, perf = check_levels(
-        now - oldest_snapshot.time,
-        "age_oldest",
-        params.get("age_oldest"),
-        infoname="Age of oldest",
-        human_readable_func=get_age_human_readable,
-    )
-    if state:
-        yield state, info, perf
-    elif params.get("age_oldest"):
-        yield 0, "", perf
-
-
-check_info['esx_vsphere_vm.snapshots'] = {
-    "inventory_function": inventory_esx_vsphere_vm_snapshots,
-    "check_function": lambda *args: check_esx_vsphere_vm_snapshots(
-        *args,
-        key="snapshot.rootSnapshotList",
-    ),
-    "service_description": "ESX Snapshots",
-    "group": "vm_snapshots",
-    "has_perfdata": True,
-}
-
-check_info['esx_vsphere_vm.snapshots_summary'] = {
-    "inventory_function": inventory_esx_vsphere_vm_snapshots,
-    "check_function": lambda *args: check_esx_vsphere_vm_snapshots(
-        *args,
-        key="snapshot.rootSnapshotList.summary",
-    ),
-    "service_description": "ESX Snapshots Summary",
-    "group": "vm_snapshots",
     "has_perfdata": True,
 }
 

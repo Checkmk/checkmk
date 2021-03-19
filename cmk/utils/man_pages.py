@@ -201,6 +201,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
+        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
@@ -558,7 +559,7 @@ def load_man_page(name: str) -> Optional[ManPage]:
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = ['unsorted']
+        header['catalog'] = 'unsorted'
     man_page['header'] = header
 
     return man_page

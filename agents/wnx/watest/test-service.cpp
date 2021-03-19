@@ -123,7 +123,7 @@ TEST(ServiceControllerTest, StartStop) {
 }  // namespace wtools
 
 namespace cma::srv {
-extern bool global_stop_signaled;
+extern bool g_global_stop_signaled;
 TEST(SelfConfigure, Checker) {
     auto handle = SelfOpen();
     if (handle == nullptr) {
@@ -144,7 +144,7 @@ TEST(CmaSrv, GlobalApi) {
     ServiceProcessor sp;
     sp.stopService();
     EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
-    global_stop_signaled = false;
+    g_global_stop_signaled = false;
 }
 
 static void SetStartMode(std::string_view mode) {

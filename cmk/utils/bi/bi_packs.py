@@ -72,14 +72,24 @@ class BIAggregationPack:
         self.contact_groups = pack_config["contact_groups"]
         self.public = pack_config["public"]
 
-        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config["rules"]}
+        self.rules = {x["id"]: BIRule(x, self.id) for x in pack_config.get("rules", [])}
         self.aggregations = {
-            x["id"]: BIAggregation(x, self.id) for x in pack_config["aggregations"]
+            x["id"]: BIAggregation(x, self.id) for x in pack_config.get("aggregations", [])
         }
 
     @classmethod
     def schema(cls) -> Type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "contact_groups": self.contact_groups,
+            "public": self.public,
+            "rules": [rule.serialize() for rule in self.rules.values()],
+            "aggregations": [aggr.serialize() for aggr in self.aggregations.values()]
+        }
 
     def num_aggregations(self) -> int:
         return len(self.aggregations)
@@ -276,15 +286,13 @@ class BIAggregationPacks:
 
     def load_config(self) -> None:
         if not Path(self._bi_configuration_file).exists():
-            self.load_config_from_schema(bi_sample_config)
+            self._load_config(bi_sample_config)
             return
+        self._load_config(store.load_object_from_file(self._bi_configuration_file))
 
-        self.load_config_from_schema(store.load_object_from_file(self._bi_configuration_file))
-
-    def load_config_from_schema(self, config_packs_schema: Dict) -> None:
+    def _load_config(self, config: Dict) -> None:
         self.cleanup()
-        data = BIAggregationPacksSchema().load(config_packs_schema)
-        self._instantiate_packs(data["packs"])
+        self._instantiate_packs(config["packs"])
 
     def _instantiate_packs(self, packs_data: List[Dict[str, Any]]):
         self.packs = {x["id"]: BIAggregationPack(x) for x in packs_data}
@@ -297,14 +305,30 @@ class BIAggregationPacks:
                 if not bi_aggr.computation_options.disabled
             ]))
 
-        enabled_info_path = os.path.join(cmk.utils.paths.var_dir, "wato")
-        store.makedirs(enabled_info_path)
-        store.save_file(os.path.join(enabled_info_path, "num_enabled_aggregations"),
-                        enabled_aggregations)
+        store.makedirs(self._num_enabled_aggregations_dir())
+        store.save_file(self._num_enabled_aggregations_path(), enabled_aggregations)
+
+    @classmethod
+    def _num_enabled_aggregations_dir(cls):
+        return os.path.join(cmk.utils.paths.var_dir, "wato")
+
+    @classmethod
+    def _num_enabled_aggregations_path(cls):
+        return os.path.join(cls._num_enabled_aggregations_dir(), "num_enabled_aggregations")
+
+    @classmethod
+    def get_num_enabled_aggregations(cls):
+        try:
+            return int(store.load_text_from_file(cls._num_enabled_aggregations_path()))
+        except (TypeError, ValueError):
+            return 0
 
     def generate_config(self) -> Dict[str, Any]:
         self._check_rule_cycles()
-        return BIAggregationPacksSchema().dump(self)
+        return self.serialize()
+
+    def serialize(self):
+        return {"packs": [pack.serialize() for pack in self.packs.values()]}
 
     def _check_rule_cycles(self) -> None:
         toplevel_rules = {

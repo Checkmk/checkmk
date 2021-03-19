@@ -5,9 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.config as config
-from cmk.gui.globals import html, request
+from cmk.gui.globals import html, request, display_options
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import display_options
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
@@ -18,13 +17,17 @@ class WatoIcon(Icon):
     def ident(cls):
         return "wato"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Wato")
+
     def host_columns(self):
         return ['filename']
 
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
             return config.user.may("wato.use") and \
-              (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+                (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
         if not may_see_hosts() or html.mobile:
             return None
@@ -45,7 +48,7 @@ class WatoIcon(Icon):
 
         if display_options.enabled(display_options.X):
             url = "wato.py?folder=%s&host=%s" % \
-              (html.urlencode(folder), html.urlencode(hostname))
+                (html.urlencode(folder), html.urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")
@@ -66,6 +69,10 @@ class DownloadAgentOutputIcon(Icon):
     def ident(cls):
         return "download_agent_output"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Download agent output")
+
     def default_sort_index(self):
         return 50
 
@@ -82,6 +89,10 @@ class DownloadSnmpWalkIcon(Icon):
     @classmethod
     def ident(cls):
         return "download_snmp_walk"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Download snmp walk")
 
     def host_columns(self):
         return ["filename", "check_type"]
@@ -128,7 +139,7 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
             title = _("Download SNMP walk")
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
-        return "agent_output", title, url
+        return "agents", title, url
 
 
 def _wato_folder_from_filename(filename):

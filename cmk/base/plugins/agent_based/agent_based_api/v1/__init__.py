@@ -3,22 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Version 1
----------
 
-.. warning::
-    This Version of the **Check API** is still under development
-    and may change until Checkmk version 2.0.0 is released.
-
-    Do not use it (yet) for production code.
-    It may change at any time without notice.
-
-"""
 # For an explanation of what is what see comments in __all__definition at the end
 
 from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
-from cmk.snmplib.type_defs import OIDBytes, OIDCached  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
@@ -30,7 +18,8 @@ from cmk.base.api.agent_based.checking_classes import (
     State,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.type_defs import HostLabel, OIDEnd, SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
+from cmk.base.api.agent_based.type_defs import HostLabel
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,

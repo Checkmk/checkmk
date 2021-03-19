@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -47,9 +51,10 @@ def check_mem_linux(_no_item, params, section):
     # See which ones we actually need.
 
     # SReclaimable is not available for older kernels
+    # SwapCached may be missing if swap is disabled, see crash 9d22dcb4-5260-11eb-8458-0b95bfca1bb1
     # Compute memory used by caches, that can be considered "free"
     section["Caches"] = section["Cached"] + section["Buffers"] \
-                      + section["SwapCached"] + section.get("SReclaimable", 0)
+                      + section.get("SwapCached", 0) + section.get("SReclaimable", 0)
 
     section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
     section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
@@ -67,26 +72,22 @@ def check_mem_linux(_no_item, params, section):
     results = check_memory_dict(section, params)
 
     # show this always:
-    yield results.pop("virtual", (0, ""))[:2]
+    yield results.pop("virtual", (0, ""))
 
-    # show these if not OK:
-    ok_results = []
-    for key, (state, text, _perf) in results.items():
+    details_results = []
+    for state, text, metrics in results.values():
         if state:
-            yield state, text
-        elif key in ("ram", "swap"):
-            ok_results.append((state, text))
-    for state, text in ok_results:
-        yield state, f"\n{text}"
-
-    # add value of "mem_used_percent" metric to section
-    section["MemUsedPercent"] = results["ram"][2][-1][1]
+            yield state, text, metrics
+        else:
+            details_results.append((state, text, metrics))
+    MARK_AS_DETAILS = "\n"
+    for state, text, perf in details_results:
+        yield state, f"{MARK_AS_DETAILS}{text}", perf
 
     # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
     perfdata = []
-    items = sorted(section.items())
-    for name, value in items:
+    for name, value in sorted(section.items()):
         if name.startswith("DirectMap"):
             continue
         if name.startswith(
@@ -98,7 +99,11 @@ def check_mem_linux(_no_item, params, section):
             if name == "Hugepagesize":
                 continue  # not needed
             value = value * section["Hugepagesize"]  # convert number to actual memory size
-        perfdata.append((camelcase_to_underscored(name.replace("(", "_").replace(")", "")), value))
+        metric_name = camelcase_to_underscored(name.replace("(", "_").replace(")", ""))
+        if metric_name not in {
+                'mem_used', 'mem_used_percent', 'swap_used', 'committed_as', 'shmem', 'page_tables'
+        }:
+            perfdata.append((metric_name, value))
     yield 0, "", perfdata
 
 
@@ -132,7 +137,6 @@ check_info["mem.linux"] = {
     'default_levels_variable': 'mem_linux_default_levels',
     'has_perfdata': True,
     'group': 'memory_linux',
-    "handle_real_time_checks": True,
 }
 
 #.
@@ -283,7 +287,6 @@ check_info["mem.win"] = {
     'has_perfdata': True,
     'group': 'memory_pagefile_win',
     'default_levels_variable': 'memory_win_default_levels',
-    "handle_real_time_checks": True,
 }
 
 #.
@@ -363,5 +366,4 @@ check_info["mem.vmalloc"] = {
     'check_function': check_mem_vmalloc,
     'service_description': 'Vmalloc address space',
     'has_perfdata': True,
-    "handle_real_time_checks": True,
 }

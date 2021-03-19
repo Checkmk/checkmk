@@ -3,7 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Host Tag Groups"""
+"""Host tag groups
+
+Host tag groups are, besides the static folder structure, another more flexible way to
+organize hosts in Checkmk for configuration.
+A host tag group is a collection of different host tags, with each host receiving exactly one
+tag from the group.
+
+You can find an introduction to hosts including host tags and host tag groups in the
+[Checkmk guide](hhttps://docs.checkmk.com/latest/en/wato_hosts.html).
+"""
 
 import json
 
@@ -56,6 +65,7 @@ HOST_TAG_GROUP_NAME = {
     'name': HostTagGroupName(
         description="The name of the host tag group",
         example='datasource',
+        pattern='[a-zA-Z_]+[-0-9a-zA-Z_]*',
         required=True,
     )
 }
@@ -85,7 +95,7 @@ def create_host_tag_group(params):
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
 def show_host_tag_group(params):
-    """Show host tag group"""
+    """Show a host tag group"""
     ident = params['name']
     if not tag_group_exists(ident):
         return problem(
@@ -94,6 +104,30 @@ def show_host_tag_group(params):
         )
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
+
+
+@Endpoint(constructors.collection_href('host_tag_group'),
+          '.../collection',
+          method='get',
+          response_schema=response_schemas.DomainObjectCollection)
+def list_host_tag_groups(params):
+    """Show all host tags"""
+    tag_config = load_tag_config()
+    tag_groups_collection = {
+        'id': 'host_tag',
+        'domainType': 'host_tag_group',
+        'value': [
+            constructors.collection_item(
+                domain_type='host_tag_group',
+                obj={
+                    'title': tag_group_obj.title,
+                    'id': tag_group_obj.id
+                },
+            ) for tag_group_obj in tag_config.get_tag_groups()
+        ],
+        'links': [constructors.link_rel('self', constructors.collection_href('host_tag_group'))]
+    }
+    return constructors.serve_json(tag_groups_collection)
 
 
 @Endpoint(
@@ -129,7 +163,6 @@ def update_host_tag_group(params):
     constructors.object_href('host_tag_group', '{name}'),
     '.../delete',
     method='delete',
-    etag='input',
     path_params=[HOST_TAG_GROUP_NAME],
     request_schema=request_schemas.DeleteHostTagGroup,
     output_empty=True,

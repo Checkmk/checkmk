@@ -6,16 +6,18 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 checkname = 'df'
 
-info = [
+parsed = parse_df([
     ['/dev/sda4', 'ext4', '143786696', '101645524', '34814148', '75%', '/'],
     ['/dev/sda2', 'ext4', '721392', '151120', '517808', '23%', '/boot'],
     ['[df_inodes_start]'],
     ['/dev/sda4', 'ext4', '9142272', '1654272', '7488000', '19%', '/'],
     ['/dev/sda2', 'ext4', '46848', '304', '46544', '1%', '/boot'],
     ['[df_inodes_end]'],
-]
+])
 
 discovery = {
     '': [
@@ -240,7 +242,8 @@ checks = {
                 ),
                 (
                     1,
-                    'Inodes used: 18.1% (warn/crit at 10.0%/95.0%), Inodes available: 7,488,000 (81.9%)',
+                    ('Inodes used: 18.09% (warn/crit at 10.00%/95.00%), '
+                     'Inodes available: 7,488,000 (81.91%)'),
                     [
                         ('inodes_used', 1654272, 914227.2000000001, 8685158.4, 0.0, 9142272.0),
                     ],
@@ -266,7 +269,7 @@ checks = {
                 ),
                 (
                     2,
-                    'Inodes used: 1,654,272 (warn/crit at 600,000/1,000,000), Inodes available: 7,488,000 (81.9%)',
+                    'Inodes used: 1,654,272 (warn/crit at 600,000/1,000,000), Inodes available: 7,488,000 (81.91%)',
                     [
                         ('inodes_used', 1654272, 600000.0, 1000000.0, 0.0, 9142272.0),
                     ],

@@ -87,25 +87,31 @@ def _create_discovery_function(
 
         for element in original_discovery_result:
             if isinstance(element, tuple) and len(element) in (2, 3):
-                parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)
+                item, raw_params = element[0], element[-1]
+                if item is not None and not isinstance(item, str):
+                    raise ValueError("item must be None or of type `str`")
+
+                parameters = _resolve_string_parameters(raw_params, check_name, get_check_context)
                 service = Service(
-                    item=element[0] or None,
+                    item=None,  # will be replaced
                     parameters=wrap_parameters(parameters or {}),
                 )
-                # nasty hack for nasty plugins:
+                # nasty hack for nasty plugins: item = ''
                 # Bypass validation. Item should be None or non-empty string!
-                service = service._replace(item=element[0])
+                service = service._replace(item=item)
                 yield service
-            else:
-                try:
-                    yield Service(
-                        item=element.item,
-                        parameters=wrap_parameters(element.parameters or {}),
-                        labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
-                    )
-                except AttributeError:
-                    # just let it through. Base must deal with bogus return types anyway.
-                    yield element
+                continue
+
+            with suppress(AttributeError):
+                yield Service(
+                    item=element.item,
+                    parameters=wrap_parameters(element.parameters or {}),
+                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
+                )
+                continue
+
+            # just let it through. Base must deal with bogus return types anyway.
+            yield element
 
     return discovery_migration_wrapper
 
@@ -134,8 +140,9 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
         raise ValueError("[%s]: invalid service description: %r" % (name, service_descr))
 
     # 1) ensure we have the correct signature
+    requires_item = "%s" in service_descr
     sig_function = _create_signature_check_function(
-        requires_item="%s" in service_descr,
+        requires_item=requires_item,
         original_function=check_info_dict["check_function"],
     )
 
@@ -154,15 +161,14 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
-        try:
-            subresults = sig_function(**kwargs)
-        except TypeError:
+        if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
             # We cannot just append "%s" to the service description, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(
-            # Just retry without item:
-            subresults = sig_function(**{k: v for k, v in kwargs.items() if k != "item"})
+            kwargs = {k: v for k, v in kwargs.items() if k != "item"}
+
+        subresults = sig_function(**kwargs)
 
         if subresults is None:
             return
@@ -208,24 +214,17 @@ def _create_new_result(
         legacy_text: str,
         legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, bool]:
-    result_state = State(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
-        if is_details:
-            summary = ""
-            details = legacy_text
-        else:
-            is_details = "\n" in legacy_text
-            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, "")
         # Bypass the validation of the Result class:
         # Legacy plugins may relie on the fact that once a newline
         # as been in the output, *all* following ouput is sent to
         # the details. That means we have to create Results with
         # details only, which is prohibited by the original Result
         # class.
-        yield Result(state=result_state, summary="Fake")._replace(
-            summary=summary,
-            details=details,
+        yield Result(state=State(legacy_state), summary="Fake")._replace(
+            summary="" if is_details else legacy_text.split("\n", 1)[0],
+            details=legacy_text.strip(),
         )
 
     for metric in legacy_metrics:
@@ -240,7 +239,7 @@ def _create_new_result(
             _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4)))
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
-    return is_details
+    return ("\n" in legacy_text) or is_details
 
 
 def _create_signature_check_function(
@@ -284,8 +283,20 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     # copy signature of check function:
     @functools.wraps(check_function, ('__attributes__',))
     def cluster_legacy_mode_from_hell(*args, **kwargs):
-        raise NotImplementedError("This just a dummy to pass validation is.")
-        yield  # pylint: disable=unreachable
+        # This function will *almost* never be called:
+        #
+        # If legacy plugins are executed on clusters, the original check function is called,
+        # as it is impossible to recreate the "complex" behavior of the legacy API using the new API.
+        # We maintain an extra code path in cmk/base/checking.py for those cases.
+        #
+        # Unfortunately, when discovering cluster hosts, this function will still be called, as
+        # part of the code designed for the new API is used.
+        # Since fixing this issue would dramatically worsen the code in cmk/base/checking.py,
+        # We simply issue an Message here, similar to the preview for counter based checks:
+        yield Result(
+            state=State.OK,
+            summary="Service preview for legacy plugins on clusters not available.",
+        )
 
     return cluster_legacy_mode_from_hell
 

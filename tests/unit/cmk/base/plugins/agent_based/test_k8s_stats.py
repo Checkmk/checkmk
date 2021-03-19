@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Dict
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -10,10 +11,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
     State as state,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    Parameters,
-    ValueStore,
 )
 from cmk.base.plugins.agent_based.k8s_stats_section import parse_k8s
 from cmk.base.plugins.agent_based.k8s_stats_fs import (
@@ -258,17 +255,17 @@ def test_discover_k8s_stats_network(section, expected_items):
            4158.4921875,
            levels=(13193.91875, 14843.15859375),
            boundaries=(0.0, 16492.3984375)),
-    Metric('fs_size', 16492.3984375),
-    Metric('fs_used_percent', 25.21459933956316),
-    Result(state=state.OK, summary='25.2% used (4.06 of 16.1 GiB)'),
+    Metric('fs_size', 16492.3984375, boundaries=(0.0, None)),
+    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+    Result(state=state.OK, summary='25.21% used (4.06 of 16.1 GiB)'),
 ])])
 def test__check_k8s_stats_fs(section, expected_results):
-    vs: ValueStore = {}
+    vs: Dict[str, Any] = {}
     for _ in range(2):
         results = list(_check__k8s_stats_fs__core(
             vs,
             "/dev/sda1",
-            Parameters({}),
+            {},
             section,
         ))
 
@@ -281,29 +278,28 @@ def test__check_k8s_stats_fs(section, expected_results):
     Metric('in', 0.0),
     Result(state=state.OK, summary='Out: 0.00 Bit/s'),
     Metric('out', 0.0),
-    Metric('if_in_pkts', 0.0),
-    Metric('if_in_errors', 0.0),
+    Metric('if_in_pkts', 0.0, boundaries=(0.0, None)),
+    Metric('if_in_errors', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Input error rate: 0.00/s'),
-    Metric('if_out_pkts', 0.0),
-    Metric('if_out_errors', 0.0),
+    Metric('if_out_pkts', 0.0, boundaries=(0.0, None)),
+    Metric('if_out_errors', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Output error rate: 0.00/s'),
     Result(state=state.OK, summary='Input Discards: 0.00/s'),
-    Metric('if_in_discards', 0.0),
+    Metric('if_in_discards', 0.0, boundaries=(0.0, None)),
     Result(state=state.OK, summary='Output Discards: 0.00/s'),
-    Metric('if_out_discards', 0.0),
+    Metric('if_out_discards', 0.0, boundaries=(0.0, None)),
 ])])
 def test__check_k8s_stats_network(section, expected_results):
-    vs: ValueStore = {}
+    vs: Dict[str, Any] = {}
     for _ in range(2):
         section["timestamp"] = section["timestamp"] + 1
-        results = list(
-            _check__k8s_stats_network__proxy_results(
-                vs,
-                "eth1",
-                Parameters({}),
-                section,
-                None,
-            ))
+        results = list(_check__k8s_stats_network__proxy_results(
+            vs,
+            "eth1",
+            {},
+            section,
+            None,
+        ))
 
     print("\n", "\n".join(str(r) for r in results))
     assert results == expected_results

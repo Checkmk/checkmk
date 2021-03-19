@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Optional, NamedTuple, Type
+from typing import Iterable, NamedTuple, Optional, Type
 
+from cmk.gui.breadcrumb import BreadcrumbItem
+from cmk.gui.globals import request
 from cmk.gui.type_defs import Icon
+from cmk.gui.utils.urls import makeuri_contextless
 import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.utils.plugin_registry
 
 
@@ -69,7 +71,7 @@ class MenuItem:
         mode_or_url = self.mode_or_url
         if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
-        return watolib.folder_preserving_link([("mode", mode_or_url)])
+        return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
     def __repr__(self):
         return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
@@ -143,6 +145,12 @@ class ABCMainModule(MenuItem, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def is_show_more(self) -> bool:
         raise NotImplementedError()
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        """This class method allows for adding additional items to the breadcrumb navigation"""
+        return
+        yield  # pylint: disable=unreachable
 
 
 class ModuleRegistry(cmk.utils.plugin_registry.Registry[Type[ABCMainModule]]):

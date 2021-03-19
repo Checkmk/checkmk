@@ -16,7 +16,7 @@ import logging
 from pathlib import Path
 import sys
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable, Optional
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -1495,7 +1495,7 @@ class EBSSummary(AWSSectionGeneric):
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            return [v for v in col_volumes for tag in v['Tags'] if tag in tags]
+            return [v for v in col_volumes for tag in v.get('Tags', []) if tag in tags]
 
         volumes = []
         for chunk in _chunks(self._tags, length=200):
@@ -3797,11 +3797,12 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False):
+    def __init__(self, hostname, session, debug=False, config=None):
         self._hostname = hostname
         self._session = session
         self._debug = debug
         self._sections = []
+        self.config = config
 
     @abc.abstractmethod
     def init_sections(self, services, region, config, s3_limits_distributor=None):
@@ -3809,7 +3810,7 @@ class AWSSections(abc.ABC):
 
     def _init_client(self, client_key):
         try:
-            return self._session.client(client_key)
+            return self._session.client(client_key, config=self.config)
         except (ValueError, botocore.exceptions.ClientError,
                 botocore.exceptions.UnknownServiceError) as e:
             # If region name is not valid we get a ValueError
@@ -3871,9 +3872,12 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (
+                    int(cache_timestamp),
+                    int(section_interval + 60),
+                )
 
-            if any([r.content for r in result]):
+            if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):
@@ -4300,12 +4304,13 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
-    parser.add_argument("--access-key-id",
-                        required=True,
-                        help="The access key ID for your AWS account.")
-    parser.add_argument("--secret-access-key",
-                        required=True,
-                        help="The secret access key for your AWS account.")
+    parser.add_argument("--access-key-id", help="The access key ID for your AWS account")
+    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
+    parser.add_argument("--proxy-host", help="The address of the proxy server")
+    parser.add_argument("--proxy-port", help="The port of the proxy server")
+    parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
+    parser.add_argument("--proxy-password",
+                        help="The password for authentication of the proxy server")
     parser.add_argument("--assume-role",
                         action="store_true",
                         help="Use STS AssumeRole to assume a different IAM role")
@@ -4529,14 +4534,61 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
     return global_services, regional_services
 
 
+def _proxy_address(
+    server_address: str,
+    port: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+) -> str:
+    address = server_address
+    authentication = ""
+    if port:
+        address += f":{port}"
+    if username and password:
+        authentication = f"{username}:{password}@"
+    return f"{authentication}{address}"
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    access_key_id = stdin_args.get('access_key_id') or args.access_key_id
+    secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
+
+    has_exceptions = False
+
+    if not access_key_id:
+        has_exceptions = True
+        sys.stderr.write('access key id is not set\n')
+
+    if not secret_access_key:
+        has_exceptions = True
+        sys.stderr.write('secret access key is not set\n')
+
+    if has_exceptions:
+        return 1
+
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
+    proxy_config = None
+    if args.proxy_host:
+        proxy_user = stdin_args.get('proxy_user') or args.proxy_user
+        proxy_password = stdin_args.get('proxy_password') or args.proxy_password
+        proxy_config = botocore.config.Config(proxies={
+            'https': _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        })
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
@@ -4578,12 +4630,12 @@ def main(sys_argv=None):
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
-                                              args.role_arn, args.external_id, region)
+                    session = sts_assume_role(access_key_id, secret_access_key, args.role_arn,
+                                              args.external_id, region)
                 else:
-                    session = create_session(args.access_key_id, args.secret_access_key, region)
+                    session = create_session(access_key_id, secret_access_key, region)
 
-                sections = aws_sections(hostname, session, debug=args.debug)
+                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
                 sections.init_sections(aws_services,
                                        region,
                                        aws_config,
@@ -4596,12 +4648,12 @@ def main(sys_argv=None):
                 return 0
             except AssertionError:
                 if args.debug:
-                    return 1
+                    raise
             except Exception as e:
                 logging.info(e)
                 has_exceptions = True
                 if args.debug:
-                    return 1
+                    raise
     if has_exceptions:
         return 1
     return 0

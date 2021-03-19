@@ -70,23 +70,34 @@ class ModeBulkDiscovery(WatoMode):
          self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
                                      self._bulk_discovery_params["selection"])
 
-        # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._do_scan, self._bulk_size) = cast(Tuple[bool, int],
-                                                self._bulk_discovery_params["performance"])
-
+        self._do_scan, self._bulk_size = self._get_performance_params()
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
+
+    def _get_performance_params(self) -> Tuple[bool, int]:
+        performance_params = self._bulk_discovery_params["performance"]
+        assert isinstance(performance_params, tuple)
+
+        if len(performance_params) == 3:
+            # In previous Checkmk versions (< 2.0) there was a third performance parameter:
+            # 'use_cache' in the first place.
+            do_scan, bulk_size = performance_params[1:]
+        else:
+            do_scan, bulk_size = performance_params
+
+        assert isinstance(do_scan, bool)
+        assert isinstance(bulk_size, int)
+        return do_scan, bulk_size
 
     def title(self):
         return _("Bulk discovery")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="bulkinventory",
-            button_name="_start",
-            save_title=_("Start"),
-        )
+        return make_simple_form_page_menu(_("Discovery"),
+                                          breadcrumb,
+                                          form_name="bulkinventory",
+                                          button_name="_start",
+                                          save_title=_("Start"))
 
     def action(self) -> ActionResult:
         config.user.need_permission("wato.services")

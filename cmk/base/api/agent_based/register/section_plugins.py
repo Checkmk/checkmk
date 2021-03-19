@@ -12,9 +12,16 @@ from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ParsedSectionName, SectionName, SNMPDetectBaseType
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
-from cmk.snmplib.type_defs import OIDBytes, OIDSpec  # pylint: disable=cmk-module-layer-violation
+from cmk.base.api.agent_based.register.utils import (
+    RuleSetType,
+    validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
+)
+from cmk.base.api.agent_based.section_classes import (
+    SNMPTree,)
 
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
@@ -24,11 +31,9 @@ from cmk.base.api.agent_based.type_defs import (
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,
-    SNMPTree,
     StringByteTable,
     StringTable,
 )
-from cmk.base.api.agent_based.register.utils import validate_function_arguments
 
 
 def _create_parse_annotation(
@@ -70,6 +75,29 @@ def _validate_parse_function(
         if arg.annotation != expected_annotation[0]:
             raise TypeError('expected parse function argument annotation %r, got %r' %
                             (expected_annotation[1], arg.annotation))
+
+
+def _validate_host_label_kwargs(
+    *,
+    host_label_function: HostLabelFunction,
+    host_label_default_parameters: Optional[Dict[str, Any]],
+    host_label_ruleset_name: Optional[str],
+    host_label_ruleset_type: RuleSetType,
+) -> None:
+    validate_ruleset_type(host_label_ruleset_type)
+    validate_default_parameters(
+        "host_label",
+        host_label_ruleset_name,
+        host_label_default_parameters,
+    )
+
+    validate_function_arguments(
+        type_label="host_label",
+        function=host_label_function,
+        has_item=False,
+        default_params=host_label_default_parameters,
+        sections=[ParsedSectionName("__always_just_one_section__")],
+    )
 
 
 def _create_agent_parse_function(
@@ -119,7 +147,7 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
         if not str(oid_string).startswith('.'):
             raise ValueError("OID in value of 'detect' keyword must start with '.': %r" %
                              (oid_string,))
-        OIDSpec.validate(oid_string.rstrip('.*'))
+        SNMPTree.validate_oid_string(oid_string.rstrip('.*'))
 
         if expression is not None:
             try:
@@ -190,6 +218,9 @@ def create_agent_section_plugin(
     parsed_section_name: Optional[str] = None,
     parse_function: Optional[AgentParseFunction] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
     validate_creation_kwargs: bool = True,
@@ -209,25 +240,26 @@ def create_agent_section_plugin(
             )
 
         if host_label_function is not None:
-            validate_function_arguments(
-                type_label="host_label",
-                function=host_label_function,
-                has_item=False,
-                # TODO:
-                # The following is a special case for the ps plugin. This should be done
-                # in a more general sense when CMK-5158 is addressed. Make sure to grep for
-                # "CMK-5158" in the code base.
-                default_params={} if name in ("ps", "ps_lnx") else None,
-                sections=[ParsedSectionName("__always_just_one_section__")],
+            _validate_host_label_kwargs(
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,
+                host_label_ruleset_name=host_label_ruleset_name,
+                host_label_ruleset_type=host_label_ruleset_type,
             )
 
     return AgentSectionPlugin(
-        section_name,
-        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        _create_agent_parse_function(parse_function),
-        _create_host_label_function(host_label_function),
-        _create_supersedes(section_name, supersedes),
-        module,
+        name=section_name,
+        parsed_section_name=ParsedSectionName(
+            parsed_section_name if parsed_section_name else str(section_name)),
+        parse_function=_create_agent_parse_function(parse_function),
+        host_label_function=_create_host_label_function(host_label_function),
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=(None if host_label_ruleset_name is None else
+                                 RuleSetName(host_label_ruleset_name)),
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
+        supersedes=_create_supersedes(section_name, supersedes),
+        module=module,
     )
 
 
@@ -239,6 +271,9 @@ def create_snmp_section_plugin(
     parsed_section_name: Optional[str] = None,
     parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
     host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
     supersedes: Optional[List[str]] = None,
     module: Optional[str] = None,
     validate_creation_kwargs: bool = True,
@@ -258,7 +293,7 @@ def create_snmp_section_plugin(
         _validate_fetch_spec(tree_list)
 
         if parse_function is not None:
-            needs_bytes = any(isinstance(oid, OIDBytes) for tree in tree_list for oid in tree.oids)
+            needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
             _validate_parse_function(
                 parse_function,
                 expected_annotation=_create_parse_annotation(
@@ -268,23 +303,28 @@ def create_snmp_section_plugin(
             )
 
         if host_label_function is not None:
-            validate_function_arguments(
-                type_label="host_label",
-                function=host_label_function,
-                has_item=False,
-                default_params=None,  # CMK-5181
-                sections=[ParsedSectionName("__always_just_one_section__")],
+            _validate_host_label_kwargs(
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,
+                host_label_ruleset_name=host_label_ruleset_name,
+                host_label_ruleset_type=host_label_ruleset_type,
             )
 
     return SNMPSectionPlugin(
-        section_name,
-        ParsedSectionName(parsed_section_name if parsed_section_name else str(section_name)),
-        _create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
-        _create_host_label_function(host_label_function),
-        _create_supersedes(section_name, supersedes),
-        detect_spec,
-        tree_list,
-        module,
+        name=section_name,
+        parsed_section_name=ParsedSectionName(
+            parsed_section_name if parsed_section_name else str(section_name)),
+        parse_function=_create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
+        host_label_function=_create_host_label_function(host_label_function),
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=(None if host_label_ruleset_name is None else
+                                 RuleSetName(host_label_ruleset_name)),
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
+        supersedes=_create_supersedes(section_name, supersedes),
+        detect_spec=detect_spec,
+        trees=tree_list,
+        module=module,
     )
 
 
@@ -316,6 +356,9 @@ def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
         parsed_section_name=ParsedSectionName(str(section_name)),
         parse_function=lambda string_table: string_table,
         host_label_function=_noop_host_label_function,
+        host_label_default_parameters=None,
+        host_label_ruleset_name=None,
+        host_label_ruleset_type="merged",  # doesn't matter, use default.
         supersedes=set(),
         module=None,
     )

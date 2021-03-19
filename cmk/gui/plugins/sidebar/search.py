@@ -8,7 +8,7 @@ import abc
 import re
 import traceback
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 from enum import Enum, unique
 
 import livestatus
@@ -23,10 +23,12 @@ from cmk.gui.type_defs import ABCMegaMenuSearch
 import cmk.gui.utils
 import cmk.gui.config as config
 import cmk.gui.sites as sites
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.log import logger
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.exceptions import HTTPRedirect
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
 from cmk.gui.type_defs import (
     HTTPVariables,
@@ -36,10 +38,17 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     ViewName,
+    Icon,
 )
 from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher, get_index_store
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.labels import (
+    Labels,
+    encode_labels_for_http,
+    encode_labels_for_livestatus,
+    label_help_text,
+)
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
@@ -484,6 +493,13 @@ class QuicksearchManager:
     def generate_search_url(self, query: SearchQuery) -> str:
         search_objects = self._determine_search_objects(query)
 
+        # Hitting enter on the search field to open the search in the
+        # page content area is currently only supported for livestatus
+        # search plugins
+        search_objects = [
+            s for s in search_objects if isinstance(s, LivestatusQuicksearchConductor)
+        ]
+
         try:
             self._conduct_search(search_objects)
         except TooManyRowsError:
@@ -621,12 +637,13 @@ class QuicksearchManager:
         search_objects: List[ABCQuicksearchConductor],
     ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
-        results_by_topic: Dict[str, List[SearchResult]] = {}
-        for search_object in search_objects:
-            results = search_object.create_results()
-            if results:
-                results_by_topic[search_object.get_match_topic()] = results
-        return results_by_topic
+        yield from ((
+            search_object.get_match_topic(),
+            results,
+        )
+                    for search_object in search_objects
+                    for results in [search_object.create_results()]
+                    if results)
 
 
 def _maybe_strip(param: Optional[str]) -> Optional[str]:
@@ -659,9 +676,7 @@ class QuicksearchSnapin(SidebarSnapin):
 
     def show(self):
         id_ = "mk_side_search_field"
-        html.open_div(id_="mk_side_search",
-                      class_="content_center",
-                      onclick="cmk.quicksearch.close_popup();")
+        html.open_div(id_="mk_side_search", onclick="cmk.quicksearch.close_popup();")
         html.input(id_=id_, type_="text", name="search", autocomplete="off")
         html.icon_button("#",
                          _("Search"),
@@ -719,9 +734,10 @@ class QuicksearchResultRenderer:
 
         Show search topic if at least two search objects provide elements
         """
-        show_match_topics = len(results_by_topic) > 1
+        sorted_results = sorted(results_by_topic, key=lambda x: x[0])
+        show_match_topics = len(sorted_results) > 1
 
-        for match_topic, results in sorted(results_by_topic.items(), key=lambda x: x[0]):
+        for match_topic, results in sorted_results:
             if show_match_topics:
                 html.div(match_topic, class_="topic")
 
@@ -1018,7 +1034,7 @@ class HostMatchPlugin(ABCLivestatusMatchPlugin):
 
         if row:
             field_value: str = row[self._get_real_fieldname(livestatus_table)]
-            hostname = row.get("host_name", row["name"])
+            hostname = row.get("host_name", row.get("name"))
             url_info = [(filter_name, hostname)]
         else:
             field_value = self._create_textfilter_regex(used_filters)
@@ -1136,6 +1152,113 @@ class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
 
 match_plugin_registry.register(HosttagMatchPlugin())
 
+
+class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
+    @staticmethod
+    def _input_to_key_value(inpt: str) -> Tuple[str, str]:
+        if ":" not in inpt:
+            raise MKUserError(None, label_help_text())
+        key, value = inpt.split(":", maxsplit=1)
+        if not key or not value:
+            raise MKUserError(None, label_help_text())
+        return key, value
+
+    def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
+        yield from (self._input_to_key_value(inpt) for inpt in user_inputs)
+
+    def _user_inputs_to_http(self, user_inputs: Iterable[str]) -> str:
+        return encode_labels_for_http(self._user_inputs_to_labels(user_inputs))
+
+    def get_livestatus_filters(
+        self,
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+    ) -> LivestatusFilterHeaders:
+        user_inputs = used_filters.get(self.name, [])
+        return encode_labels_for_livestatus(
+            self.get_livestatus_columns(livestatus_table)[0],
+            self._user_inputs_to_labels(user_inputs),
+        )
+
+
+class HostLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["hosts", "services"], "hosts", "hl")
+        self._supported_views = {"host", "searchhost", "allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ['labels'] if livestatus_table == 'hosts' else ['host_labels']
+
+    def get_match_topic(self) -> str:
+        return _("Host labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if for_view == "host" and row:
+            return row["name"], [("host", row["name"])]
+        return "", [("host_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+class ServiceLabelMatchPlugin(ABCLabelMatchPlugin):
+    def __init__(self) -> None:
+        super().__init__(["services"], "services", "sl")
+        self._supported_views = {"allservices", "searchsvc"}
+
+    def get_livestatus_columns(self, livestatus_table: LivestatusTable) -> List[LivestatusColumn]:
+        return ["labels"]
+
+    def get_match_topic(self) -> str:
+        return _("Service labels")
+
+    def get_matches(
+        self,
+        for_view: ViewName,
+        row: Optional[Row],
+        livestatus_table: LivestatusTable,
+        used_filters: UsedFilters,
+        _rows: Rows,
+    ) -> Matches:
+        if for_view not in self._supported_views:
+            return None
+        if row:
+            return "", [("service", row["description"])]
+        return "", [("service_label", self._user_inputs_to_http(used_filters[self.name]))]
+
+
+match_plugin_registry.register(HostLabelMatchPlugin())
+match_plugin_registry.register(ServiceLabelMatchPlugin())
+
+
+class MonitorMenuMatchPlugin(ABCBasicMatchPlugin):
+    """Create matches for the entries of the monitor menu"""
+    def __init__(self) -> None:
+        super().__init__("menu")
+
+    def get_match_topic(self) -> str:
+        return _("Monitor")
+
+    def get_results(self, query: str) -> List[SearchResult]:
+        return [
+            SearchResult(
+                title=topic_menu_item.title,
+                url=topic_menu_item.url,
+            )
+            for topic_menu_topic in mega_menu_registry["monitoring"].topics()
+            for topic_menu_item in topic_menu_topic.items
+            if query.lower() in topic_menu_item.title.lower()
+        ]
+
+
+match_plugin_registry.register(MonitorMenuMatchPlugin())
+
 #   .--Menu Search---------------------------------------------------------.
 #   |      __  __                    ____                      _           |
 #   |     |  \/  | ___ _ __  _   _  / ___|  ___  __ _ _ __ ___| |__        |
@@ -1158,45 +1281,108 @@ class MenuSearchResultsRenderer:
             self._generate_results = QuicksearchManager(
                 raise_too_many_rows_error=False).generate_results
         elif search_type == "setup":
-            self._generate_results = IndexSearcher(get_index_store()).search
+            self._generate_results = IndexSearcher().search
         else:
             raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
+        self.search_type = search_type
 
     def render(self, query: str) -> str:
-        results = self._generate_results(query)
+        try:
+            results = self._generate_results(query)
+        except MKException as error:
+            return self._render_error(error)
+        return self._render_results(results)
+
+    def _render_error(self, error: MKException) -> str:
         with html.plugged():
-            for topic, search_results in results.items():
+            html.open_div(class_="error")
+            html.write_text(f"{error}")
+            html.close_div()
+            error_as_html = html.drain()
+        return error_as_html
+
+    def _get_icon_mapping(
+        self,
+        default_icon: Icon = "topic_overview",
+    ) -> Dict[str, Tuple[Icon, Icon]]:
+        # {topic: (Icon(Topic): green, Icon(Item): colorful)}
+        mapping: Dict[str, Tuple[Icon, Icon]] = {}
+        for menu in [
+                mega_menu_registry.menu_setup(),
+                mega_menu_registry.menu_monitoring(),
+        ]:
+            mapping[menu.title] = (
+                menu.icon + "_active" if isinstance(menu.icon, str) else default_icon,
+                menu.icon if menu.icon else default_icon,
+            )
+
+            for topic in menu.topics():
+                mapping[topic.title] = (
+                    topic.icon if topic.icon else default_icon,
+                    topic.icon if topic.icon else default_icon,
+                )
+                for item in topic.items:
+                    mapping[item.title] = (
+                        topic.icon if topic.icon else default_icon,
+                        item.icon if item.icon else default_icon,
+                    )
+        for module_class in main_module_registry.values():
+            module = module_class()
+            if module.title not in mapping:
+                mapping[module.title] = (
+                    module.topic.icon_name
+                    if module.topic and module.topic.icon_name else default_icon,
+                    module.icon if module.icon else default_icon,
+                )
+        return mapping
+
+    def _render_results(
+        self,
+        results: SearchResultsByTopic,
+        default_icon: Icon = "topic_overview",
+    ) -> str:
+        with html.plugged():
+            icon_mapping = self._get_icon_mapping(default_icon)
+            for topic, search_results in results:
                 html.open_div(id_=topic, class_="topic")
-                self._render_topic(topic)
+                icons = icon_mapping.get(topic, (default_icon, default_icon))
+                self._render_topic(topic, icons)
                 html.open_ul()
                 for count, result in enumerate(list(search_results)):
-                    self._render_result(result, hidden=count >= self._max_num_displayed_results)
+                    self._render_result(
+                        result,
+                        hidden=count >= self._max_num_displayed_results,
+                    )
                 # TODO: Remove this as soon as the index search does limit its search results
                 if len(list(search_results)) >= self._max_num_displayed_results:
                     html.input(name="show_all_results",
                                value=_("Show all results"),
                                type_="button",
-                               onclick=f"cmk.search.on_click_show_all_results('{topic}');")
+                               onclick=f"cmk.search.on_click_show_all_results('{topic}');",
+                               class_="button")
                 html.close_ul()
                 html.close_div()
             html.div(None, class_=["topic", "sentinel"])
             html_text = html.drain()
         return html_text
 
-    def _render_topic(self, topic):
+    def _render_topic(self, topic: str, icons: Tuple[Icon, Icon]):
         html.open_h2()
         html.div(class_="spacer", content="")
-        # TODO: Add the corresponding icon
-        html.icon("topic_overview")
+        if not config.user.get_attribute("icons_per_item"):
+            html.icon(icons[0])
+        else:
+            html.icon(icons[1])
         html.span(topic)
         html.close_h2()
 
     def _render_result(self, result, hidden=False):
-        html.open_li()
-        html.open_a(href=result.url,
-                    target="main",
-                    onclick="cmk.popup_menu.close_popup()",
-                    class_="hidden" if hidden else "")
+        html.open_li(class_="hidden" if hidden else "")
+        html.open_a(
+            href=result.url,
+            target="main",
+            onclick=f"cmk.popup_menu.close_popup(); cmk.search.on_click_reset('{self.search_type}');"
+        )
         html.write_text(result.title)
         html.close_a()
         html.close_li()
@@ -1205,15 +1391,22 @@ class MenuSearchResultsRenderer:
 class MonitoringSearch(ABCMegaMenuSearch):
     """Search field in the monitoring menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_monitoring",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_monitoring")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, hosts, services or host- and servicegroups.\n"
+                    "You can use the following filters:\n"
+                    "h: Host\n"
+                    "s: Service\n"
+                    "hg: Hostgroup\n"
+                    "sg: Servicegroup\n"
+                    "ad: Address\n"
+                    "al: Alias\n"
+                    "tg: Hosttag")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Monitoring"),
                    onkeydown="cmk.search.on_key_down('monitoring')",
@@ -1237,15 +1430,14 @@ class PageSearchMonitoring(AjaxPage):
 class SetupSearch(ABCMegaMenuSearch):
     """Search field in the setup menu"""
     def show_search_field(self) -> None:
-        html.open_div(
-            id_="mk_side_search_setup",
-            class_="content_center",
-        )
+        html.open_div(id_="mk_side_search_setup")
         # TODO: Implement submit action (e.g. show all results of current query)
         html.begin_form(f"mk_side_{self.name}", add_transid=False, onsubmit="return false;")
+        tooltip = _("Search for menu entries, settings, hosts and rulesets.")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",
+                   title=tooltip,
                    autocomplete="off",
                    placeholder=_("Search in Setup"),
                    onkeydown="cmk.search.on_key_down('setup')",

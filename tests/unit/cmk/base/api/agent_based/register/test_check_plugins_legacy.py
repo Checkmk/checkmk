@@ -14,7 +14,7 @@ from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.check_api_utils import Service as OldService
+from cmk.base.check_api import Service as OldService
 import cmk.base.config as config
 
 
@@ -97,9 +97,10 @@ def test_create_check_function():
     # we cannot compare the actual Result objects because of
     # the nasty bypassing of validation in the legacy conversion
     assert [tuple(r) for r in results] == [
-        (checking_classes.State.OK, "Main info", ""),  # Result
+        (checking_classes.State.OK, "Main info", "Main info"),  # Result
         ("metric1", 23.0, (2.0, 3.0), (None, None)),  # Metric
-        (checking_classes.State.WARN, "still main, but very long", "additional1"),
+        (checking_classes.State.WARN, "still main, but very long",
+         "still main, but very long\nadditional1"),
         ("metric2", 23.0, (None, None), (0.0, None)),
         (checking_classes.State.CRIT, "", "additional2\nadditional3"),
         ("metric3", 23.0, (None, None), (None, None)),

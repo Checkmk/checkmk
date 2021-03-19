@@ -1,0 +1,17 @@
+Title: Dynamic configuration: Fix example connector configuration
+Class: fix
+Compatible: incomp
+Component: dcd
+Date: 1614850646
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you used the example configuration mentioned in werk #11078, the DCD
+connection could not be established. The error message "Failed to get the
+status from DCD (The connection '[example_connection]' does not exist)" was
+shown.
+
+We now added the missing imports to the example script, please check your
+existing custom connectors.

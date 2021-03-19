@@ -25,11 +25,9 @@
 # 6. Kb_wrtn    -> Kilobytes written since system boot
 
 import time
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional
 from .agent_based_api.v1 import (
     get_value_store,
-    get_rate,
-    IgnoreResultsError,
     register,
     type_defs,
 )
@@ -58,35 +56,14 @@ register.agent_section(
 )
 
 
-def _compute_rates(
-    disk: diskstat.Disk,
-    value_store,
-) -> diskstat.Disk:
-    now = time.time()
-    disk_with_rates = {}
-    ignore_res = False
-    for key, value in disk.items():
-        try:
-            disk_with_rates[key] = get_rate(
-                value_store,
-                key,
-                now,
-                value,
-                raise_overflow=True,
-            )
-        except IgnoreResultsError:
-            ignore_res = True
-    if ignore_res:
-        raise IgnoreResultsError('Initializing counters')
-    return disk_with_rates
-
-
 def _check_disk(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     disk: diskstat.Disk,
 ) -> type_defs.CheckResult:
     value_store = get_value_store()
-    disk_with_rates = _compute_rates(disk, value_store)
+    disk_with_rates = diskstat.compute_rates(disk=disk,
+                                             value_store=value_store,
+                                             this_time=time.time())
     yield from diskstat.check_diskstat_dict(
         params=params,
         disk=disk_with_rates,
@@ -97,7 +74,7 @@ def _check_disk(
 
 def check_aix_diskiod(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: diskstat.Section,
 ) -> type_defs.CheckResult:
     if item == 'SUMMARY':
@@ -112,7 +89,7 @@ def check_aix_diskiod(
 
 def cluster_check_aix_diskiod(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, diskstat.Section],
 ) -> type_defs.CheckResult:
     if item == 'SUMMARY':
@@ -127,7 +104,7 @@ def cluster_check_aix_diskiod(
 register.check_plugin(
     name="aix_diskiod",
     service_name="Disk IO %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=diskstat.discovery_diskstat_generic,

@@ -1,4 +1,4 @@
--std=c++20
+-std=c++17
 -DHAVE_CONFIG_H
 -I.
 -I..

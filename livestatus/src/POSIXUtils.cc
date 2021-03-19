@@ -12,9 +12,11 @@
 #include <unistd.h>
 
 #include <array>
+#include <ratio>
 #include <thread>
 
 #include "Logger.h"
+#include "Poller.h"
 
 using namespace std::chrono_literals;
 
@@ -95,6 +97,7 @@ void SocketPair::close() {
 }
 
 namespace {
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 thread_local std::string thread_name;
 }  // namespace
 
@@ -146,4 +149,29 @@ bool file_lock::try_lock_until_impl(const steady_clock::time_point &time,
         }
         std::this_thread::sleep_for(10ms);
     } while (true);
+}
+
+ssize_t writeWithTimeoutWhile(int fd, std::string_view buffer,
+                              std::chrono::nanoseconds timeout,
+                              const std::function<bool()> &pred) {
+    auto size = buffer.size();
+    while (!buffer.empty() && pred()) {
+        auto ret = ::write(fd, buffer.data(), buffer.size());
+        if (ret == -1 && errno == EWOULDBLOCK) {
+            ret = Poller{}.wait(timeout, fd, PollEvents::out)
+                      ? ::write(fd, buffer.data(), buffer.size())
+                      : -1;
+        }
+        if (ret != -1) {
+            buffer = std::string_view{buffer.data() + ret, buffer.size() - ret};
+        } else if (errno != EINTR) {
+            return -1;
+        }
+    }
+    return size;
+}
+
+ssize_t writeWithTimeout(int fd, std::string_view buffer,
+                         std::chrono::nanoseconds timeout) {
+    return writeWithTimeoutWhile(fd, buffer, timeout, []() { return true; });
 }

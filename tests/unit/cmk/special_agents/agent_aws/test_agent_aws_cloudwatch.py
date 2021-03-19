@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore[import]
+from typing import List, Optional, Tuple
 from agent_aws_fake_clients import (
     FakeCloudwatchClient,)
 
@@ -39,7 +40,7 @@ def get_cloudwatch_alarms_sections():
     return _create_cloudwatch_alarms_sections
 
 
-cloudwatch_params = [  # type: ignore[var-annotated]
+cloudwatch_params: List[Tuple[Optional[List[str]], int]] = [
     (None, 2),
     ([], 2),
     (['AlarmName-0'], 1),
@@ -75,7 +76,7 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
 def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names, amount_alarms):
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
-    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
+    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300

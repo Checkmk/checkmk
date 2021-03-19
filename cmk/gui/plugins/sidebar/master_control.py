@@ -30,7 +30,7 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Master Control")
+        return _("Master control")
 
     @classmethod
     def description(cls) -> str:
@@ -53,7 +53,11 @@ class MasterControlSnapin(SidebarSnapin):
 
         for site_id, site_alias in config.sorted_sites():
             if not config.is_single_local_site():
-                html.begin_foldable_container("master_control", site_id, True, site_alias)
+                html.begin_foldable_container("master_control",
+                                              site_id,
+                                              True,
+                                              site_alias,
+                                              icon="foldable_sidebar")
 
             try:
                 self._show_master_control_site(site_id, site_status_info, items)

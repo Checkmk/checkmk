@@ -124,9 +124,7 @@ def test_check(item, params, section, results):
 
 def test_check_raises():
     with pytest.raises(IgnoreResultsError) as exc:
-        list(
-            oracle_rman.check_oracle_rman("NON-EXISTANT-ITEM", type_defs.Parameters({}),
-                                          PARSED_SECTION))
+        list(oracle_rman.check_oracle_rman("NON-EXISTANT-ITEM", {}, PARSED_SECTION))
     assert "Login into database failed. Working on NON-EXISTANT-ITEM" in str(exc.value)
 
 
@@ -137,8 +135,7 @@ def test_cluster_check():
     PARSED_SECTION3 = copy.deepcopy(PARSED_SECTION)
     PARSED_SECTION3[item]['backupage'] = None
     node_sections = {"node1": PARSED_SECTION, "node2": PARSED_SECTION2, "node3": PARSED_SECTION3}
-    yielded_results = list(
-        oracle_rman.cluster_check_oracle_rman(item, type_defs.Parameters({}), node_sections))
+    yielded_results = list(oracle_rman.cluster_check_oracle_rman(item, {}, node_sections))
     assert [
         Result(state=state.OK,
                summary='Time since last backup: 1 minute 0 seconds',

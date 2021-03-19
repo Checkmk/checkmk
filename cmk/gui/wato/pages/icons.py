@@ -53,7 +53,8 @@ class ModeIcons(WatoMode):
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Icon"),
+                                          breadcrumb,
                                           form_name="upload_form",
                                           button_name="_do_upload",
                                           save_title=_("Upload"))
@@ -64,14 +65,13 @@ class ModeIcons(WatoMode):
 
     def _vs_upload(self):
         return Dictionary(
-            title=_('Icon'),
+            title=_('Upload icon'),
             optional_keys=False,
             render="form",
             elements=[
                 ('icon',
                  ImageUpload(
                      title=_('Icon'),
-                     allow_empty=False,
                      max_size=(80, 80),
                      validate=self._validate_icon,
                  )),
@@ -132,7 +132,6 @@ class ModeIcons(WatoMode):
             raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
     def page(self) -> None:
-        html.h3(_("Upload Icon"))
         html.p(
             _("Here you can add icons, for example to use them in bookmarks or "
               "in custom actions of views. Allowed are single PNG image files "

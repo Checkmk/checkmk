@@ -7,28 +7,63 @@
 import errno
 import os
 import socket
-from typing import AnyStr, cast, Dict, List, Optional, Tuple, Union
-
-from six import ensure_str
+from typing import Any, cast, Dict, Iterable, List, Mapping, Optional, Protocol, Tuple, Union
 
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.exceptions import MKTerminate, MKTimeout, MKIPAddressLookupError
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.base.config as config
-from cmk.base.caching import config_cache as _config_cache
-from cmk.base.exceptions import MKGeneralException
-
-IPLookupCacheId = Tuple[HostName, int]
+IPLookupCacheId = Tuple[HostName, socket.AddressFamily]
 NewIPLookupCache = Dict[IPLookupCacheId, str]
 LegacyIPLookupCache = Dict[str, str]
 UpdateDNSCacheResult = Tuple[int, List[HostName]]
 
 _fake_dns: Optional[HostAddress] = None
 _enforce_localhost = False
+
+
+class _HostConfigLike(Protocol):
+    """This is what we expect from a HostConfig in *this* module"""
+    # Importing of the HostConfig class repeatedly lead to import cycles at various places.
+    hostname: HostName
+    is_ipv4_host: bool
+    is_ipv6_host: bool
+    is_no_ip_host: bool
+    is_snmp_host: bool
+    is_usewalk_host: bool
+
+    @property
+    def default_address_family(self) -> socket.AddressFamily:
+        ...
+
+    @property
+    def management_address(self) -> Optional[HostAddress]:
+        ...
+
+    @property
+    def is_dyndns_host(self) -> bool:
+        ...
+
+
+def fallback_ip_for(family: socket.AddressFamily) -> str:
+    return {
+        socket.AF_INET: "0.0.0.0",
+        socket.AF_INET6: "::",
+    }.get(family, "::")
+
+
+def deserialize_cache_id(serialized: Tuple[HostName, int]) -> Tuple[HostName, socket.AddressFamily]:
+    # 4 and 6 are legacy values.
+    return serialized[0], {4: socket.AF_INET, 6: socket.AF_INET6}[serialized[1]]
+
+
+def serialize_cache_id(cache_id: Tuple[HostName, socket.AddressFamily]) -> Tuple[HostName, int]:
+    # 4, 6 for legacy.
+    return cache_id[0], {socket.AF_INET: 4, socket.AF_INET6: 6}[cache_id[1]]
 
 
 def enforce_fake_dns(address: HostAddress) -> None:
@@ -41,78 +76,61 @@ def enforce_localhost() -> None:
     _enforce_localhost = True
 
 
-def lookup_ipv4_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, 4)
-
-
-def lookup_ipv6_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    return lookup_ip_address(host_config, 6)
-
-
-def lookup_mgmt_board_ip_address(host_config: config.HostConfig) -> Optional[HostAddress]:
-    try:
-        return lookup_ip_address(host_config, for_mgmt_board=True)
-    except MKIPAddressLookupError:
-        return None
-
-
 # Determine the IP address of a host. It returns either an IP address or, when
 # a hostname is configured as IP address, the hostname.
 # Or raise an exception when a hostname can not be resolved on the first
 # try to resolve a hostname. On later tries to resolve a hostname  it
 # returns None instead of raising an exception.
 # FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(host_config: config.HostConfig,
-                      family: Optional[int] = None,
-                      for_mgmt_board: bool = False) -> Optional[HostAddress]:
+def lookup_ip_address(
+    *,
+    host_config: _HostConfigLike,
+    family: socket.AddressFamily,
+    configured_ip_address: Optional[HostAddress],
+    simulation_mode: bool,
+    override_dns: Optional[HostAddress],
+    use_dns_cache: bool,
+) -> Optional[HostAddress]:
     # Quick hack, where all IP addresses are faked (--fake-dns)
     if _fake_dns:
         return _fake_dns
 
-    if config.fake_dns:
-        return config.fake_dns
-
-    if family is None:  # choose primary family
-        family = 6 if host_config.is_ipv6_primary else 4
+    if override_dns:
+        return override_dns
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
-    if config.simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
-                                                        host_config.is_snmp_host):
-        if family == 4:
-            return "127.0.0.1"
-
-        return "::1"
+    if simulation_mode or _enforce_localhost or (host_config.is_usewalk_host and
+                                                 host_config.is_snmp_host):
+        return "127.0.0.1" if family is socket.AF_INET else "::1"
 
     hostname = host_config.hostname
 
-    # Now check, if IP address is hard coded by the user
-    if for_mgmt_board:
-        # TODO Cleanup:
-        # host_config.management_address also looks up "hostname" in ipaddresses/ipv6addresses
-        # dependent on host_config.is_ipv6_primary as above. Thus we get the "right" IP address
-        # here.
-        ipa = host_config.management_address
-
-    elif family == 4:
-        ipa = config.ipaddresses.get(hostname)
-
-    else:
-        ipa = config.ipv6addresses.get(hostname)
-
-    if ipa:
-        return ipa
+    # check if IP address is hard coded by the user
+    if configured_ip_address:
+        return configured_ip_address
 
     # Hosts listed in dyndns hosts always use dynamic DNS lookup.
     # The use their hostname as IP address at all places
     if host_config.is_dyndns_host:
         return hostname
 
-    return cached_dns_lookup(hostname, family, host_config.is_no_ip_host)
+    return cached_dns_lookup(
+        hostname,
+        family=family,
+        is_no_ip_host=host_config.is_no_ip_host,
+        use_dns_cache=use_dns_cache,
+    )
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> Optional[str]:
-    cache = _config_cache.get_dict("cached_dns_lookup")
+def cached_dns_lookup(
+    hostname: HostName,
+    *,
+    family: socket.AddressFamily,
+    is_no_ip_host: bool,
+    use_dns_cache: bool,
+) -> Optional[str]:
+    cache = _config_cache.get("cached_dns_lookup")
 
     cache_id = hostname, family
 
@@ -125,7 +143,7 @@ def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> O
     ip_lookup_cache = _get_ip_lookup_cache()
 
     cached_ip = ip_lookup_cache.get(cache_id)
-    if cached_ip and config.use_dns_cache:
+    if cached_ip and use_dns_cache:
         cache[cache_id] = cached_ip
         return cached_ip
 
@@ -135,12 +153,11 @@ def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> O
 
     # Now do the actual DNS lookup
     try:
-        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or
-                                 socket.AF_INET6)[0][4][0]
+        ipa = socket.getaddrinfo(hostname, None, family)[0][4][0]
 
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
-            console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
+            console.verbose("Updating %s DNS cache for %s: %s\n" % (family, hostname, ipa))
             ip_lookup_cache.update_cache(cache_id, ipa)
 
         cache[cache_id] = ipa  # Update in-memory-cache
@@ -158,18 +175,40 @@ def cached_dns_lookup(hostname: HostName, family: int, is_no_ip_host: bool) -> O
             cache[cache_id] = cached_ip
             return cached_ip
         cache[cache_id] = None
-        raise MKIPAddressLookupError("Failed to lookup IPv%d address of %s via DNS: %s" %
-                                     (family, hostname, e))
+        raise MKIPAddressLookupError("Failed to lookup %s address of %s via DNS: %s" % (
+            {
+                socket.AF_INET: "IPv4",
+                socket.AF_INET6: "IPv6"
+            }[family],
+            hostname,
+            e,
+        ))
 
 
-class IPLookupCache(cmk.base.caching.DictCache):
-    def __init__(self) -> None:
-        super(IPLookupCache, self).__init__()
+class IPLookupCache:
+    def __init__(self, cache: cmk.utils.caching.DictCache) -> None:
+        super().__init__()
+        self._cache = cache
         self.persist_on_update = True
+
+    def __repr__(self) -> str:
+        return "%s(%r)" % (type(self).__name__, self._cache)
+
+    def __eq__(self, other: Any) -> bool:
+        return other == self._cache
+
+    def __getitem__(self, key: Any) -> Any:
+        return self._cache[key]
+
+    def __len__(self) -> int:
+        return len(self._cache)
+
+    def get(self, key: Any) -> Optional[Any]:
+        return self._cache.get(key)
 
     def load_persisted(self) -> None:
         try:
-            self.update(_load_ip_lookup_cache(lock=False))
+            self._cache.update(_load_ip_lookup_cache(lock=False))
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
@@ -200,27 +239,41 @@ class IPLookupCache(cmk.base.caching.DictCache):
         or the "cmk --update-dns-cache" call that both call update_dns_cache().
         """
         if not self.persist_on_update:
-            self[cache_id] = ipa
+            self._cache[cache_id] = ipa
             return
 
         try:
-            self.update(_load_ip_lookup_cache(lock=True))
-            self[cache_id] = ipa
+            self._cache.update(_load_ip_lookup_cache(lock=True))
+            self._cache[cache_id] = ipa
             self.save_persisted()
         finally:
             store.release_lock(_cache_path())
 
     def save_persisted(self) -> None:
-        store.save_object_to_file(_cache_path(), self, pretty=False)
+        store.save_object_to_file(
+            _cache_path(),
+            {serialize_cache_id(k): v for k, v in self._cache.items()},
+            pretty=False,
+        )
+
+    def clear(self) -> None:
+        """Clear the persisted AND in memory cache"""
+        try:
+            os.unlink(_cache_path())
+        except OSError as e:
+            if e.errno != errno.ENOENT:
+                raise
+
+        self._cache.clear()
 
 
 def _get_ip_lookup_cache() -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
-    if _config_cache.exists("ip_lookup"):
+    if "ip_lookup" in _config_cache:
         # Return already created and initialized cache
-        return cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
+        return IPLookupCache(_config_cache.get("ip_lookup"))
 
-    cache = cast(IPLookupCache, _config_cache.get("ip_lookup", IPLookupCache))
+    cache = IPLookupCache(_config_cache.get("ip_lookup"))
     cache.load_persisted()
     return cache
 
@@ -238,13 +291,13 @@ def _convert_legacy_ip_lookup_cache(
 
     # New version has (hostname, ip family) as key
     if isinstance(list(cache)[0], tuple):
-        return cast(NewIPLookupCache, cache)
+        return {deserialize_cache_id(cast(IPLookupCacheId, k)): v for k, v in cache.items()}
 
     cache = cast(LegacyIPLookupCache, cache)
 
     new_cache: NewIPLookupCache = {}
     for key, val in cache.items():
-        new_cache[(key, 4)] = val
+        new_cache[(key, socket.AF_INET)] = val
     return new_cache
 
 
@@ -252,8 +305,16 @@ def _cache_path() -> str:
     return cmk.utils.paths.var_dir + "/ipaddresses.cache"
 
 
-def update_dns_cache() -> UpdateDNSCacheResult:
-    config_cache = config.get_config_cache()
+def update_dns_cache(
+    *,
+    host_configs: Iterable[_HostConfigLike],
+    configured_ipv4_addresses: Mapping[HostName, HostAddress],
+    configured_ipv6_addresses: Mapping[HostName, HostAddress],
+    # Do these two even make sense? If either is set, this function
+    # will just clear the cache.
+    simulation_mode: bool,
+    override_dns: Optional[HostAddress],
+) -> UpdateDNSCacheResult:
 
     failed = []
 
@@ -261,15 +322,22 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     ip_lookup_cache.persist_on_update = False
 
     console.verbose("Cleaning up existing DNS cache...\n")
-    _clear_ip_lookup_cache(ip_lookup_cache)
+    ip_lookup_cache.clear()
 
     console.verbose("Updating DNS cache...\n")
-    for hostname, family in _get_dns_cache_lookup_hosts(config_cache):
-        host_config = config_cache.get_host_config(hostname)
-        console.verbose("%s (IPv%d)..." % (hostname, family))
+    for host_config, family in _annotate_family(host_configs):
+        console.verbose(f"{host_config.hostname} ({family})...")
         try:
-            ip = lookup_ip_address(host_config, family)
-            console.verbose("%s\n" % ip)
+            ip = lookup_ip_address(
+                host_config=host_config,
+                family=family,
+                configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET else
+                                       configured_ipv4_addresses).get(host_config.hostname),
+                simulation_mode=simulation_mode,
+                override_dns=override_dns,
+                use_dns_cache=False,  # it's cleared anyway
+            )
+            console.verbose(f"{ip}\n")
 
         except (MKTerminate, MKTimeout):
             # We should be more specific with the exception handler below, then we
@@ -277,7 +345,7 @@ def update_dns_cache() -> UpdateDNSCacheResult:
             raise
 
         except Exception as e:
-            failed.append(hostname)
+            failed.append(host_config.hostname)
             console.verbose("lookup failed: %s\n" % e)
             if cmk.utils.debug.enabled():
                 raise
@@ -289,45 +357,13 @@ def update_dns_cache() -> UpdateDNSCacheResult:
     return len(ip_lookup_cache), failed
 
 
-def _clear_ip_lookup_cache(ip_lookup_cache: IPLookupCache) -> None:
-    """Clear the persisted AND in memory cache"""
-    try:
-        os.unlink(_cache_path())
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
-
-    ip_lookup_cache.clear()
-
-
-def _get_dns_cache_lookup_hosts(config_cache: config.ConfigCache) -> List[IPLookupCacheId]:
-    hosts = []
-    for hostname in config_cache.all_active_hosts():
-        host_config = config_cache.get_host_config(hostname)
+def _annotate_family(
+    host_configs: Iterable[_HostConfigLike],
+) -> Iterable[Tuple[_HostConfigLike, socket.AddressFamily]]:
+    for host_config in host_configs:
 
         if host_config.is_ipv4_host:
-            hosts.append((hostname, 4))
+            yield host_config, socket.AF_INET
 
         if host_config.is_ipv6_host:
-            hosts.append((hostname, 6))
-
-    return hosts
-
-
-def normalize_ip_addresses(ip_addresses: Union[AnyStr, List[AnyStr]]) -> List[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
-    if not isinstance(ip_addresses, list):
-        ip_addresses = ip_addresses.split()
-
-    decoded_ip_addresses = [ensure_str(word) for word in ip_addresses]
-    expanded = [word for word in decoded_ip_addresses if '{' not in word]
-    for word in decoded_ip_addresses:
-        if word in expanded:
-            continue
-        try:
-            prefix, tmp = word.split('{')
-            curly, suffix = tmp.split('}')
-            expanded.extend(prefix + i + suffix for i in curly.split(','))
-        except Exception:
-            raise MKGeneralException("could not expand %r" % word)
-    return expanded
+            yield host_config, socket.AF_INET6

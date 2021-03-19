@@ -36,7 +36,6 @@ pytestmark = pytest.mark.checks
          -1.0),
         ([], 3, 'missing data: average_ms and flushed and last_ms', [], -1, '', '', -1.0),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(info, state_expected, info_expected, perf_expected, state_expected_flush,
                         info_expected_flush, perf_expected_flush_key, perf_expected_flush_value):
     """

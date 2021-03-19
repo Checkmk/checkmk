@@ -294,7 +294,7 @@ div.node_vis {
 
   .state0 {
     color: $black;
-    fill: rgb(19, 211, 137);
+    fill: $success;
   }
 
   .state1 {
@@ -407,7 +407,7 @@ div.node_vis {
   }
 
   image.growth_possible {
-    filter: $node-vis-growth-img-filter;
+    filter: $dark-image-invert;
   }
 
   div#togglebuttons {

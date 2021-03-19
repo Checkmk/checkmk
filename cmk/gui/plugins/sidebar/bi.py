@@ -27,7 +27,7 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups")
+        return _("BI aggregation groups")
 
     @classmethod
     def description(cls) -> str:
@@ -48,7 +48,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("BI Aggregation Groups Tree")
+        return _("BI aggregation groups tree")
 
     @classmethod
     def description(cls) -> str:
@@ -82,12 +82,16 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
             if attrs.get('__children__'):
                 html.begin_foldable_container(
-                    "bi_aggregation_group_trees", group, False,
+                    "bi_aggregation_group_trees",
+                    group,
+                    False,
                     HTML(html.render_a(
                         group,
                         href=fetch_url,
                         target="main",
-                    )))
+                    )),
+                    icon="foldable_sidebar",
+                )
                 self._render_tree(attrs['__children__'])
                 html.end_foldable_container()
             else:

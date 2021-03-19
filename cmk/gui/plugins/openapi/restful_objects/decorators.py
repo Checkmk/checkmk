@@ -11,8 +11,9 @@ which then has to be dumped into the checkmk.yaml file.
 """
 import functools
 import hashlib
+import http.client
 from types import FunctionType
-from typing import Any, Dict, List, Optional, Sequence, Set, Type, Union, Tuple, Literal
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union, TypeVar
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -22,33 +23,36 @@ from werkzeug.utils import import_string
 
 from cmk.gui.globals import request
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
+from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
+    CONTENT_TYPE,
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
 )
-from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_schema, to_openapi
+from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
-from cmk.gui.plugins.openapi.restful_objects.specification import (
-    find_all_parameters,
-    SPEC,
-)
-from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
+from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    EndpointName,
+    EndpointTarget,
     ETagBehaviour,
     HTTPMethod,
+    LinkRelation,
+    LocationType,
     OpenAPIParameter,
     OpenAPITag,
     OperationSpecType,
-    LocationType,
     RawParameter,
     ResponseType,
     SchemaParameter,
+    StatusCodeInt,
+    PathItem,
 )
+from cmk.gui.plugins.openapi.utils import problem
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
+
+T = TypeVar("T")
 
 
 def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
@@ -97,6 +101,50 @@ def coalesce_schemas(
             rv.append({'in': location, 'schema': to_named_schema(to_convert)})
 
     return rv
+
+
+def _path_item(
+    status_code: int,
+    description: str,
+    content: Optional[Dict[str, Any]] = None,
+    headers: Optional[Dict[str, OpenAPIParameter]] = None,
+) -> PathItem:
+    """Build a OpenAPI PathItem segment
+
+    Examples:
+
+        >>> _path_item(404, "Godot is still not here.")  # doctest: +ELLIPSIS
+        {'description': 'Not Found: Godot is still not here.', 'content': ...}
+
+        >>> _path_item(422, "What's this?")  # doctest: +ELLIPSIS
+        {'description': "Unprocessable Entity: What's this?", 'content': ...}
+
+    Args:
+        status_code:
+            A HTTP status code
+
+        description:
+            Description for the segment.
+
+        content:
+            A dictionary which has content-types as keys and dicts as values in
+            the form of {'schema': <marshmallowschema>}
+
+        headers:
+
+
+    Returns:
+
+    """
+    response: PathItem = {'description': f"{http.client.responses[status_code]}: {description}"}
+    if status_code >= 400 and content is None:
+        content = {'application/problem+json': {'schema': ApiError}}
+    if content is None:
+        content = {}
+    response['content'] = content
+    if headers:
+        response['headers'] = headers
+    return response
 
 
 class Endpoint:
@@ -155,10 +203,6 @@ class Endpoint:
             with the 'ETag' response header. When set to 'both', it will act as if set to
             'input' and 'output' at the same time.
 
-        will_do_redirects:
-            This endpoint can also emit a 302 response (moved temporarily) code. Setting this to
-            true will add this to the specification and documentation. Defaults to False.
-
         **options:
             Various keys which will be directly applied to the OpenAPI operation object.
 
@@ -166,7 +210,7 @@ class Endpoint:
     def __init__(
         self,
         path: str,
-        name: EndpointName,
+        link_relation: LinkRelation,
         method: HTTPMethod = 'get',
         content_type: str = 'application/json',
         output_empty: bool = False,
@@ -176,16 +220,17 @@ class Endpoint:
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
         etag: Optional[ETagBehaviour] = None,
-        will_do_redirects: bool = False,
         status_descriptions: Optional[Dict[int, str]] = None,
         options: Optional[Dict[str, str]] = None,
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
+        blacklist_in: Optional[Sequence[EndpointTarget]] = None,
+        additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
         func: Optional[FunctionType] = None,
         operation_id: Optional[str] = None,
         wrapped: Optional[Any] = None,
     ):
         self.path = path
-        self.name = name
+        self.link_relation = link_relation
         self.method = method
         self.content_type = content_type
         self.output_empty = output_empty
@@ -195,20 +240,58 @@ class Endpoint:
         self.query_params = query_params
         self.header_params = header_params
         self.etag = etag
-        self.will_do_redirects = will_do_redirects
         self.status_descriptions = status_descriptions if status_descriptions is not None else {}
         self.options: Dict[str, str] = options if options is not None else {}
         self.tag_group = tag_group
+        self.blacklist_in: List[EndpointTarget] = self._list(blacklist_in)
+        self.additional_status_codes = self._list(additional_status_codes)
         self.func = func
         self.operation_id = operation_id
         self.wrapped = wrapped
+
+        self._expected_status_codes = self.additional_status_codes.copy()
+
+        if self.response_schema is not None:
+            self._expected_status_codes.append(200)  # ok
+
+        if self.output_empty:
+            self._expected_status_codes.append(204)  # no content
+
+        if self.method in ("put", "post"):
+            self._expected_status_codes.append(400)  # bad request
+            self._expected_status_codes.append(415)  # unsupported media type
+
+        if self.path_params:
+            self._expected_status_codes.append(404)  # not found
+
+        if self.query_params or self.request_schema:
+            self._expected_status_codes.append(400)  # bad request
+
+        if self.etag in ('input', 'both'):
+            self._expected_status_codes.append(412)  # precondition failed
+            self._expected_status_codes.append(428)  # precondition required
+
+        for status_code, _ in self.status_descriptions.items():
+            if status_code not in self._expected_status_codes:
+                raise RuntimeError(
+                    f"Unexpected custom status description. "
+                    f"Status code {status_code} not expected for endpoint: {method.upper()} {path}")
+
+    def _list(self, sequence: Optional[Sequence[T]]) -> List[T]:
+        return list(sequence) if sequence is not None else []
 
     def __call__(self, func):
         """This is the real decorator.
         Returns:
         A wrapped function. The wrapper does input and output validation.
         """
-        header_schema = to_schema(self.header_params)
+        header_schema = None
+        if self.header_params is not None:
+            header_params = list(self.header_params)
+            if self.request_schema:
+                header_params.append(CONTENT_TYPE)
+            header_schema = to_schema(header_params)
+
         path_schema = to_schema(self.path_params, required='all')
         query_schema = to_schema(self.query_params)
 
@@ -222,14 +305,14 @@ class Endpoint:
             query_schema,
         )
 
-        _verify_parameters2(self.path, path_schema)
+        _verify_parameters(self.path, path_schema)
 
         self.operation_id = func.__module__ + "." + func.__name__
 
-        def _mandatory_parameter_names(*params):
+        def _mandatory_parameter_names(*_params):
             schema: Type[Schema]
             req = []
-            for schema in params:
+            for schema in _params:
                 if not schema:
                     continue
                 for name, field in schema().declared_fields.items():
@@ -290,10 +373,40 @@ class Endpoint:
         @functools.wraps(self.func)
         def _validating_wrapper(param):
             # TODO: Better error messages, pointing to the location where variables are missing
+
+            def _format_fields(_messages: Union[List, Dict]) -> str:
+                if isinstance(_messages, list):
+                    return ', '.join(_messages)
+                if isinstance(_messages, dict):
+                    return ', '.join(_messages.keys())
+                return ''
+
+            def _problem(exc_, status_code=400):
+                if isinstance(exc_.messages, dict):
+                    messages = exc_.messages
+                else:
+                    messages = {'exc': exc_.messages}
+                return problem(
+                    status=status_code,
+                    title=http.client.responses[status_code],
+                    detail=f"These fields have problems: {_format_fields(exc_.messages)}",
+                    ext={'fields': messages},
+                )
+
+            if (self.method in ("post", "put") and request.get_data(cache=True) and
+                    request.content_type != self.content_type):
+                return problem(
+                    status=415,
+                    title=f"Content type {request.content_type!r} not supported on this endpoint.",
+                )
+
             try:
                 if path_schema:
                     param.update(path_schema().load(param))
+            except ValidationError as exc:
+                return _problem(exc, status_code=404)
 
+            try:
                 if query_schema:
                     param.update(query_schema().load(request.args))
 
@@ -301,27 +414,14 @@ class Endpoint:
                     param.update(header_schema().load(request.headers))
 
                 if request_schema:
-                    body = request_schema().load(request.json or {})
-                    param['body'] = body
+                    # Try to decode only when there is data. Decoding an empty string will fail.
+                    if request.get_data(cache=True):
+                        json = request.json or {}
+                    else:
+                        json = {}
+                    param['body'] = request_schema().load(json)
             except ValidationError as exc:
-
-                def _format_fields(_messages: Union[List, Dict]) -> str:
-                    if isinstance(_messages, list):
-                        return ', '.join(_messages)
-                    if isinstance(_messages, dict):
-                        return ', '.join(_messages.keys())
-                    return ''
-
-                if isinstance(exc.messages, dict):
-                    messages = exc.messages
-                else:
-                    messages = {'exc': exc.messages}
-                return problem(
-                    status=400,
-                    title="Bad request.",
-                    detail=f"These fields have problems: {_format_fields(exc.messages)}",
-                    ext=messages,
-                )
+                return _problem(exc, status_code=400)
 
             # make pylint happy
             assert callable(self.func)
@@ -330,6 +430,13 @@ class Endpoint:
             # it on the response instance. This is somewhat problematic because it's not
             # expected behaviour and not a valid interface of Response. Needs refactoring.
             response = self.func(param)
+
+            if response.status_code not in self._expected_status_codes:
+                return problem(status=500,
+                               title=f"Unexpected status code returned: {response.status_code}",
+                               detail=f"Endpoint {self.operation_id}",
+                               ext={'codes': self._expected_status_codes})
+
             if hasattr(response, 'original_data') and response_schema:
                 try:
                     response_schema().load(response.original_data)
@@ -368,6 +475,18 @@ class Endpoint:
     def make_url(self, parameter_values: Dict[str, Any]):
         return self.path.format(**parameter_values)
 
+    def _path_item(
+        self,
+        status_code: int,
+        description: str,
+        content: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, OpenAPIParameter]] = None,
+    ) -> PathItem:
+        message = self.status_descriptions.get(status_code)
+        if message is None:
+            message = description
+        return _path_item(status_code, message, content, headers)
+
     def to_operation_dict(self) -> OperationSpecType:
         """Generate the openapi spec part of this endpoint.
 
@@ -377,57 +496,79 @@ class Endpoint:
         assert self.operation_id is not None, "This object must be used in a decorator environment."
 
         module_obj = import_string(self.func.__module__)
-        module_name = module_obj.__name__
 
-        headers: Dict[str, OpenAPIParameter] = {}
+        response_headers: Dict[str, OpenAPIParameter] = {}
+        content_type_header = to_openapi([CONTENT_TYPE], 'header')[0]
+        del content_type_header['in']
+        response_headers[content_type_header.pop('name')] = content_type_header
+
         if self.etag in ('output', 'both'):
             etag_header = to_openapi([ETAG_HEADER_PARAM], 'header')[0]
             del etag_header['in']
-            headers[etag_header.pop('name')] = etag_header
+            response_headers[etag_header.pop('name')] = etag_header
 
         responses: ResponseType = {}
 
+        if 404 in self._expected_status_codes:
+            responses['404'] = self._path_item(404, 'The requested object has not been found.')
+
+        if 422 in self._expected_status_codes:
+            responses['422'] = self._path_item(422, 'The request could not be processed.')
+
+        if 405 in self._expected_status_codes:
+            responses['405'] = _path_item(
+                405, 'Method not allowed: This request is only allowed '
+                'with other HTTP methods')
+
+        if 409 in self._expected_status_codes:
+            responses['409'] = self._path_item(
+                409,
+                'The request is in conflict with the stored resource',
+            )
+
+        if 415 in self._expected_status_codes:
+            responses['415'] = self._path_item(415, 'The submitted content-type is not supported.')
+
+        if 302 in self._expected_status_codes:
+            responses['302'] = self._path_item(
+                302,
+                'Either the resource has moved or has not yet completed. Please see this '
+                'resource for further information.',
+            )
+
+        if 400 in self._expected_status_codes:
+            responses['400'] = self._path_item(400, 'Parameter or validation failure')
+
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
-        if self.response_schema is not None:
-            responses['200'] = {
-                'content': {
-                    self.content_type: {
-                        'schema': self.response_schema
-                    },
-                },
-                'description': self.status_descriptions.get(
-                    200,
-                    'The operation was done successfully.' if self.method != 'get' else '',
-                ),
-                'headers': headers,
-            }
+        if 200 in self._expected_status_codes:
+            responses['200'] = self._path_item(
+                200,
+                'The operation was done successfully.',
+                content={self.content_type: {
+                    'schema': self.response_schema
+                }},
+                headers=response_headers,
+            )
 
-        if self.will_do_redirects:
-            responses['302'] = {
-                'description': self.status_descriptions.get(
-                    302,
-                    'Either the resource has moved or has not yet completed. Please see this '
-                    'resource for further information.',
-                )
-            }
+        if 204 in self._expected_status_codes:
+            responses['204'] = self._path_item(204,
+                                               'Operation done successfully. No further output.')
 
-        # Actually, iff you don't want to give out anything, then we don't need a schema.
-        if self.output_empty:
-            responses['204'] = {
-                'description': self.status_descriptions.get(
-                    204,
-                    'Operation done successfully. No further output.',
-                ),
-                'headers': headers,
-            }
+        if 412 in self._expected_status_codes:
+            responses['412'] = self._path_item(
+                412,
+                "The value of the If-Match header doesn't match the object's ETag.",
+            )
 
-        tag_obj: OpenAPITag = {
-            'name': module_name,
-        }
+        if 428 in self._expected_status_codes:
+            responses['428'] = self._path_item(428, 'The required If-Match header is missing.')
+
         docstring_name = _docstring_name(module_obj.__doc__)
-        if docstring_name:
-            tag_obj['x-displayName'] = docstring_name
+        tag_obj: OpenAPITag = {
+            'name': docstring_name,
+            'x-displayName': docstring_name,
+        }
         docstring_desc = _docstring_description(module_obj.__doc__)
         if docstring_desc:
             tag_obj['description'] = docstring_desc
@@ -435,18 +576,8 @@ class Endpoint:
 
         operation_spec: OperationSpecType = {
             'operationId': self.operation_id,
-            'tags': [module_name],
+            'tags': [docstring_name],
             'description': '',
-            'responses': {
-                'default': {
-                    'description': 'Any unsuccessful or unexpected result.',
-                    'content': {
-                        'application/problem+json': {
-                            'schema': ApiError,
-                        }
-                    }
-                }
-            },
         }
 
         header_params: List[RawParameter] = []
@@ -458,13 +589,18 @@ class Endpoint:
         if self.etag in ('input', 'both'):
             header_params.append(ETAG_IF_MATCH_HEADER)
 
+        if self.request_schema:
+            header_params.append(CONTENT_TYPE)
+
+        # While we define the parameters separately to be able to use them for validation, the
+        # OpenAPI spec expects them to be listed in on place, so here we bunch them together.
         operation_spec['parameters'] = coalesce_schemas([
             ('header', header_params),
             ('query', query_params),
             ('path', path_params),
         ])
 
-        operation_spec['responses'].update(responses)
+        operation_spec['responses'] = responses
 
         if self.request_schema is not None:
             operation_spec['requestBody'] = {
@@ -501,7 +637,7 @@ class Endpoint:
         return {self.method: operation_spec}  # type: ignore[misc]
 
 
-def _verify_parameters2(
+def _verify_parameters(
     path: str,
     path_schema: Optional[Type[Schema]],
 ):
@@ -525,17 +661,17 @@ def _verify_parameters2(
           >>> class Params(Schema):
           ...      bar = fields.String()
 
-          >>> _verify_parameters2('/foo/{bar}', Params)
-          >>> _verify_parameters2('/foo', None)
+          >>> _verify_parameters('/foo/{bar}', Params)
+          >>> _verify_parameters('/foo', None)
 
         Yet, when problems are found, ValueErrors are raised.
 
-          >>> _verify_parameters2('/foo', Params)
+          >>> _verify_parameters('/foo', Params)
           Traceback (most recent call last):
           ...
           ValueError: Params {'bar'} not used in path /foo. Found params: set()
 
-          >>> _verify_parameters2('/foo/{bar}', None)
+          >>> _verify_parameters('/foo/{bar}', None)
           Traceback (most recent call last):
           ...
           ValueError: Params {'bar'} of path /foo/{bar} were not given in schema parameters set()
@@ -565,66 +701,6 @@ def _verify_parameters2(
     if missing_in_path:
         raise ValueError(f"Params {missing_in_path!r} not used in path {path}. "
                          f"Found params: {path_params!r}")
-
-
-def _verify_parameters(
-    path: str,
-    parameters: Sequence[OpenAPIParameter],
-):
-    """Verifies matching of parameters to the placeholders used in an URL-Template
-
-    This works both ways, ensuring that no parameter is supplied which is then not used and that
-    each template-variable in the URL-template has a corresponding parameter supplied,
-    either globally or locally.
-
-    Args:
-        path:
-            The URL-Template, for eample: '/user/{username}'
-
-        parameters:
-            A list of parameters. A parameter can either be a string referencing a
-            globally defined parameter by name, or a dict containing a full parameter.
-
-    Examples:
-
-        In case of success, this function will return nothing.
-
-          >>> _verify_parameters('/foo/{bar}', [{'name': 'bar', 'in': 'path'}])
-
-        Yet, when problems are found, ValueErrors are raised.
-
-          >>> _verify_parameters('/foo', [{'name': 'foo', 'in': 'path'}])
-          Traceback (most recent call last):
-          ...
-          ValueError: Param 'foo', which is specified as 'path', not used in path. Found params: []
-
-          >>> _verify_parameters('/foo/{bar}', [])
-          Traceback (most recent call last):
-          ...
-          ValueError: Param 'bar', which is used in the HTTP path, was not specified in []
-
-    Returns:
-        Nothing.
-
-    Raises:
-        ValueError in case of a mismatch.
-
-    """
-    param_names = _names_of(parameters)
-    path_params = path_parameters(path)
-    for path_param in path_params:
-        if path_param not in param_names:
-            raise ValueError(
-                f"Param {path_param!r}, which is used in the HTTP path, was not specified in "
-                f"{parameters!r}")
-
-    for param in parameters:
-        if isinstance(param, dict) and param['in'] == 'path' and param['name'] not in path_params:
-            raise ValueError(
-                f"Param {repr(param['name'])}, which is specified as 'path', not used in path. "
-                f"Found params: {path_params}")
-
-    find_all_parameters(parameters, errors='raise')
 
 
 def _assign_to_tag_group(tag_group: str, name: str) -> None:
@@ -719,13 +795,18 @@ def _tag_from_schema(schema: Type[Schema]) -> OpenAPITag:
     return tag
 
 
-def _docstring_name(docstring: Union[Any, str, None]) -> Optional[str]:
+def _docstring_name(docstring: Union[Any, str, None]) -> str:
     """Split the docstring by title and rest.
 
     This is part of the rest.
 
     >>> _docstring_name(_docstring_name.__doc__)
     'Split the docstring by title and rest.'
+
+    >>> _docstring_name("")
+    Traceback (most recent call last):
+    ...
+    ValueError: No name for the module defined. Please add a docstring!
 
     Args:
         docstring:
@@ -735,11 +816,9 @@ def _docstring_name(docstring: Union[Any, str, None]) -> Optional[str]:
 
     """ ""
     if not docstring:
-        return None
-    parts = apispec.utils.dedent(docstring).split("\n\n", 1)
-    if len(parts) > 0:
-        return parts[0].strip()
-    return None
+        raise ValueError("No name for the module defined. Please add a docstring!")
+
+    return [part.strip() for part in apispec.utils.dedent(docstring).split("\n\n", 1)][0]
 
 
 def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
@@ -763,47 +842,3 @@ def _docstring_description(docstring: Union[Any, str, None]) -> Optional[str]:
     if len(parts) > 1:
         return parts[1].strip()
     return None
-
-
-def _names_of(params: Sequence[OpenAPIParameter]) -> Sequence[str]:
-    """Give a list of parameter names
-
-    Both dictionary and string form are supported. See examples.
-
-    Args:
-        params: A list of params (dict or string).
-
-    Returns:
-        A list of parameter names.
-
-    Examples:
-        >>> _names_of(['a', 'b', 'c'])
-        ['a', 'b', 'c']
-
-        >>> _names_of(['a', {'name': 'b'}, 'c'])
-        ['a', 'b', 'c']
-
-    Examples:
-
-        >>> _names_of(['a', 'b', 'c'])
-        ['a', 'b', 'c']
-
-        >>> _names_of(['a', {'name': 'b'}])
-        ['a', 'b']
-
-    """
-    res = []
-    for p in params:
-        if isinstance(p, dict):
-            if 'name' in p and isinstance(p['name'], str):
-                res.append(p['name'])
-            else:
-                for key, value in p.items():
-                    if isinstance(value, fields.Field):
-                        res.append(key)
-        elif isinstance(p, str):
-            res.append(p)
-        else:
-            raise ValueError(f"Unknown type: {type(p)}")
-
-    return res

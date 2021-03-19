@@ -12,7 +12,6 @@ from typing import (
     Dict,
     Iterable,
     List,
-    Literal,
     NamedTuple,
     Optional,
     overload,
@@ -23,7 +22,7 @@ from typing import (
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel
+from cmk.base.api.agent_based.type_defs import PluginSuppliedLabel, RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[Tuple[Optional[float], Optional[float]]]
@@ -49,16 +48,16 @@ class Service(
     """Class representing services that the discover function yields
 
     Args:
-        item (str): The item of the service
-        parameters (dict): The determined discovery parameters for this service
-        labels (List[ServiceLabel]): A list of labels attached to this service
+        item:       The item of the service
+        parameters: The determined discovery parameters for this service
+        labels:     A list of labels attached to this service
 
     Example:
-        my_drive_service = Service(
-            item="disc_name",
-            parameters={...},
-            labels=[ServiceLabel(...)],
-        )
+
+        >>> my_drive_service = Service(
+        ...    item="disc_name",
+        ...    parameters={},
+        ... )
 
     """
     def __new__(
@@ -190,6 +189,22 @@ class Metric(
             ("levels", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
             ("boundaries", Tuple[Optional[EvalableFloat], Optional[EvalableFloat]]),
         ])):
+    """Create a metric for a service
+
+    Args:
+        name:       The name of the metric.
+        value:      The measured value.
+        levels:     A tuple of upper levels. This information is only used for visualization
+                    by the graphing system. It does not affect the service state.
+        boundaries: Additional information on the value domain for the graphing system.
+
+    If you create a Metric in this way, you may want to consider using :func:`check_levels`.
+
+    Example:
+
+        >>> my_metric = Metric("used_slots_percent", 23.0, levels=(80, 90), boundaries=(0, 100))
+
+    """
     def __new__(
         cls,
         name: str,
@@ -198,7 +213,7 @@ class Metric(
         levels: _OptionalPair = None,
         boundaries: _OptionalPair = None,
     ) -> 'Metric':
-        cls.validate_name(name)
+        cls._validate_name(name)
 
         if not isinstance(value, (int, float)):
             raise TypeError("value for metric must be float or int, got %r" % (value,))
@@ -212,7 +227,7 @@ class Metric(
         )
 
     @staticmethod
-    def validate_name(metric_name: str) -> None:
+    def _validate_name(metric_name: str) -> None:
         if not metric_name:
             raise TypeError("metric name must not be empty")
 
@@ -261,6 +276,52 @@ class Result(
             ("summary", str),
             ("details", str),
         ]),):
+    """A result to be yielded by check functions
+
+    This is the class responsible for creating service output and setting the state of a service.
+
+    Args:
+        state:   The resulting state of the service.
+        summary: The text to be displayed in the services *summary* view.
+        notice:  A text that will only be shown in the *summary* if `state` is not OK.
+        details: The alternative text that will be displayed in the details view. Defaults to the
+                 value of `summary` or `notice`.
+
+    Note:
+        You must specify *exactly* one of the arguments ``summary`` and ``notice``!
+
+    When yielding more than one result, Checkmk will not only aggregate the texts, but also
+    compute the worst state for the service and highlight the individual non-OK states in
+    the output.
+    You should always match the state to the output, and yield subresults:
+
+        >>> def my_check_function():
+        ...     # the back end will comput the worst overall state:
+        ...     yield Result(state=State.CRIT, summary="All the foos are broken")
+        ...     yield Result(state=State.OK, summary="All the bars are fine")
+        >>>
+        >>> # run function to make sure we have a working example
+        >>> _ = list(my_check_function())
+
+    The ``notice`` keyword has the special property that it will only be displayed if the
+    corresponding state is not OK. Otherwise we assume it is sufficient if the information
+    is available in the details view:
+
+        >>> def my_check_function():
+        ...     count = 23
+        ...     yield Result(
+        ...         state=State.WARN if count <= 42 else State.OK,
+        ...         notice=f"Things: {count}",  # only appear in summary if count drops below 43
+        ...         details=f"We currently have this many things: {count}",
+        ...     )
+        >>>
+        >>> # run function to make sure we have a working example
+        >>> _ = list(my_check_function())
+
+    If you find yourself computing the state by comparing a metric to some thresholds, you
+    probably should be using :func:`check_levels`!
+
+    """
     @overload
     def __new__(
         cls,
@@ -294,8 +355,13 @@ class Result(
         )
 
     def __repr__(self) -> str:
-        details = f", details={self.details!r}" if self.summary != self.details else ""
-        return f"{self.__class__.__name__}(state={self.state!r}, summary={self.summary!r}{details})"
+        if not self.summary:
+            text_args = f"notice={self.details!r}"
+        elif self.summary != self.details:
+            text_args = f"summary={self.summary!r}, details={self.details!r}"
+        else:
+            text_args = f"summary={self.summary!r}"
+        return f"{self.__class__.__name__}(state={self.state!r}, {text_args})"
 
 
 def _create_result_fields(
@@ -335,10 +401,41 @@ def _create_result_fields(
 
 
 class IgnoreResultsError(RuntimeError):
-    pass
+    """Raising an `IgnoreResultsError` from within a check function makes the service go stale.
+
+    Example:
+
+        >>> def check_db_table(item, section):
+        ...     if item not in section:
+        ...         # avoid a lot of UNKNOWN services:
+        ...         raise IgnoreResultsError("Login to database failed")
+        ...     # do your work here
+        >>>
+
+    """
 
 
 class IgnoreResults:
+    """A result to make the service go stale, but carry on with the check function
+
+    Yielding a result of type `IgnoreResults` will have a similar effect as raising
+    an :class:`.IgnoreResultsError`, with the difference that the execution of the
+    check funtion will not be interrupted.
+
+    .. code-block:: python
+
+        yield IgnoreResults("Good luck next time!")
+        return
+
+    is equivalent to
+
+    .. code-block:: python
+
+        raise IgnoreResultsError("Good luck next time!")
+
+    This is useful for instance if you want to initialize all counters, before
+    returning.
+    """
     def __init__(self, value: str = "currently no results") -> None:
         self._value = value
 
@@ -356,22 +453,18 @@ CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]
 CheckFunction = Callable[..., CheckResult]
 DiscoveryResult = Iterable[Service]
 DiscoveryFunction = Callable[..., DiscoveryResult]
-DiscoveryRuleSetType = Literal["merged", "all"]
 
-CheckPlugin = NamedTuple(
-    "CheckPlugin",
-    [
-        ("name", CheckPluginName),
-        ("sections", List[ParsedSectionName]),
-        ("service_name", str),
-        ("discovery_function", DiscoveryFunction),
-        ("discovery_default_parameters", Optional[Dict[str, Any]]),
-        ("discovery_ruleset_name", Optional[RuleSetName]),
-        ("discovery_ruleset_type", DiscoveryRuleSetType),
-        ("check_function", CheckFunction),
-        ("check_default_parameters", Optional[Dict[str, Any]]),
-        ("check_ruleset_name", Optional[RuleSetName]),
-        ("cluster_check_function", CheckFunction),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+
+class CheckPlugin(NamedTuple):
+    name: CheckPluginName
+    sections: List[ParsedSectionName]
+    service_name: str
+    discovery_function: DiscoveryFunction
+    discovery_default_parameters: Optional[Dict[str, Any]]
+    discovery_ruleset_name: Optional[RuleSetName]
+    discovery_ruleset_type: RuleSetTypeName
+    check_function: CheckFunction
+    check_default_parameters: Optional[Dict[str, Any]]
+    check_ruleset_name: Optional[RuleSetName]
+    cluster_check_function: CheckFunction
+    module: Optional[str]  # not available for auto migrated plugins.

@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based import netscaler_sslcertificates
 
-PARAMS = type_defs.Parameters({
+PARAMS = ({
     "age_levels": (30, 10),
 })
 

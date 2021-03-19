@@ -6,7 +6,7 @@ Date: 1603897571
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In Checkmk 2.0.0i1 several active checks failed with different error messages,
 because the command lines that were built to execute the active checks were

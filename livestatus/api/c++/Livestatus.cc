@@ -12,14 +12,14 @@
 #include <unistd.h>
 
 void Livestatus::connectUNIX(const char *socket_path) {
-    _connection = socket(PF_LOCAL, SOCK_STREAM, 0);
+    _connection = ::socket(PF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, socket_path, sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (0 > connect(_connection, (const struct sockaddr *)&sockaddr,
                     sizeof(sockaddr))) {
-        close(_connection);
+        ::close(_connection);
         _connection = -1;
     } else
         _file = fdopen(_connection, "r");
@@ -32,16 +32,16 @@ void Livestatus::disconnect() {
         if (_file)
             fclose(_file);
         else
-            close(_connection);
+            ::close(_connection);
     }
     _connection = -1;
     _file = 0;
 }
 
 void Livestatus::sendQuery(const char *query) {
-    write(_connection, query, strlen(query));
+    ::write(_connection, query, strlen(query));
     std::string separators = "Separators: 10 1 2 3\n";
-    write(_connection, separators.c_str(), separators.size());
+    ::write(_connection, separators.c_str(), separators.size());
     shutdown(_connection, SHUT_WR);
 }
 

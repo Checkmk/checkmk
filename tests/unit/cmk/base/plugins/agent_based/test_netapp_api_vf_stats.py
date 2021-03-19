@@ -37,7 +37,7 @@ SECTION_NETAPP_API_VF_STATS = {
     }
 }
 
-SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
+SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
     '7mode': {
         'num_processors': '2',
         'cpu_busy': '153993540928'
@@ -66,8 +66,8 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
             [
                 Metric('util', 0.0, levels=(0.0, 95.0), boundaries=(0.0, 100.0)),
                 Result(state=state.WARN,
-                       summary='Total CPU (5 min average): 0% (warn/crit at 0%/95.0%)',
-                       details='Total CPU (5 min average): 0% (warn/crit at 0%/95.0%)'),
+                       summary='Total CPU (5 min average): 0% (warn/crit at 0%/95.00%)',
+                       details='Total CPU (5 min average): 0% (warn/crit at 0%/95.00%)'),
                 Metric('util_average', 0.0, levels=(0.0, 95.0), boundaries=(0.0, None)),
                 Result(state=state.OK, notice='Number of processors: 2'),
             ],
@@ -75,20 +75,19 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.Section = {
     ],
 )
 def test_check_netapp_api_vf_stats(value_store, params, exp_res):
-    par = type_defs.Parameters(params)
     # initialize counters
     with pytest.raises(IgnoreResultsError):
         list(
             netapp_api_vf_stats.check_netapp_api_vf_stats(
                 'vfiler0',
-                par,
+                params,
                 SECTION_NETAPP_API_VF_STATS,
                 SECTION_NETAPP_API_CPU,
             ))
     assert list(
         netapp_api_vf_stats.check_netapp_api_vf_stats(
             'vfiler0',
-            par,
+            params,
             SECTION_NETAPP_API_VF_STATS,
             SECTION_NETAPP_API_CPU,
         )) == exp_res

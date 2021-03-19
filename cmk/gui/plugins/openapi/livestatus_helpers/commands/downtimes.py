@@ -13,8 +13,12 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.type_defs import Livest
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.utils import to_timestamp
 
 # TODO: Test duration option
-from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.hosts import Hosts
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.services import Services
+from cmk.gui.plugins.openapi.livestatus_helpers.tables.downtimes import Downtimes
+
 
 RecurMode = Literal[
     "fixed",  # TODO: Rename to "non_recurring"
@@ -42,7 +46,7 @@ def del_host_downtime(connection, downtime_id: int):
     Examples:
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1") as live:
+        >>> with simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis") as live:
         ...     del_host_downtime(live, 1)
 
     """
@@ -62,11 +66,71 @@ def del_service_downtime(connection, downtime_id: int):
     Examples:
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
-        >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1") as live:
+        >>> with simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis") as live:
         ...     del_service_downtime(live, 1)
 
     """
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id])
+
+
+def delete_downtime_with_query(connection, query):
+    """Delete scheduled downtimes based upon a query"""
+    q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
+    for downtime_id, is_service in [(row['id'], row['is_service']) for row in q.iterate(connection)
+                                   ]:
+        if is_service:
+            del_service_downtime(connection, downtime_id)
+        else:
+            del_host_downtime(connection, downtime_id)
+
+
+def delete_downtime(connection, downtime_id):
+    """Delete a scheduled downtime based upon the downtime id"""
+    is_service = Query(
+        [Downtimes.is_service],
+        Downtimes.id.contains(downtime_id),
+    ).value(connection)
+    if is_service:
+        del_service_downtime(connection, downtime_id)
+    else:
+        del_host_downtime(connection, downtime_id)
+
+
+def schedule_services_downtimes_with_query(
+    connection,
+    query: QueryExpression,
+    start_time: dt.datetime,
+    end_time: dt.datetime,
+    recur: RecurMode = 'fixed',
+    duration: int = 0,
+    user_id: str = '',
+    comment: str = '',
+):
+    """Schedule downtimes for services based upon a query"""
+
+    q = Query(
+        [Services.description, Services.host_name],
+        query,
+    )
+    for host_name, service_description in [
+        (row['host_name'], row['description']) for row in q.iterate(connection)
+    ]:
+        if not comment:
+            downtime_comment = f"Downtime for service {service_description}@{host_name}"
+        else:
+            downtime_comment = comment
+
+        schedule_service_downtime(
+            connection,
+            host_name=host_name,
+            service_description=service_description,
+            start_time=start_time,
+            end_time=end_time,
+            recur=recur,
+            duration=duration,
+            user_id=user_id,
+            comment=downtime_comment,
+        )
 
 
 def schedule_service_downtime(
@@ -137,8 +201,8 @@ def schedule_service_downtime(
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
-        >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;17;0;120;;Boom"
-        >>> with simple_expect(cmd) as live:
+        >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     schedule_service_downtime(live,
         ...             'example.com',
         ...             'Memory',
@@ -347,6 +411,37 @@ def schedule_hostgroup_host_downtime(
     )
 
 
+def schedule_hosts_downtimes_with_query(
+    connection,
+    query: QueryExpression,
+    start_time: dt.datetime,
+    end_time: dt.datetime,
+    include_all_services=False,
+    recur: RecurMode = 'fixed',
+    duration: int = 0,
+    user_id: str = '',
+    comment: str = '',
+):
+    """Schedule a downtimes for hosts based upon a query"""
+
+    q = Query([Hosts.name]).filter(query)
+    hosts = [row['name'] for row in q.iterate(connection)]
+    if not comment:
+        comment = f"Downtime for hosts {', '.join(hosts)}"
+
+    schedule_host_downtime(
+        connection,
+        host_name=hosts,
+        start_time=start_time,
+        end_time=end_time,
+        include_all_services=include_all_services,
+        recur=recur,
+        duration=duration,
+        user_id=user_id,
+        comment=comment,
+    )
+
+
 def schedule_host_downtime(
     connection,
     host_name: Union[List[str], str],
@@ -421,8 +516,8 @@ def schedule_host_downtime(
         >>> _end_time = dt.datetime(1970, 1, 2, tzinfo=pytz.timezone("UTC"))
 
         >>> from cmk.gui.plugins.openapi.livestatus_helpers.testing import simple_expect
-        >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;17;0;120;;Boom"
-        >>> with simple_expect(cmd) as live:
+        >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
+        >>> with simple_expect(cmd, match_type="ellipsis") as live:
         ...     schedule_host_downtime(live,
         ...             'example.com',
         ...             _start_time,
@@ -494,12 +589,7 @@ def _schedule_downtime(
     """
     # TODO: provide reference documents for recurring magic numbers
 
-    recur_mode = _recur_to_even_mode(recur)
-
-    if duration:
-        # When a duration is set then the mode shifts to the next one. Even numbers (incl 0) signal
-        # fixed recurring modes, odd numbers ones with a duration.
-        recur_mode += 1
+    recur_mode = _recur_mode(recur, duration)
 
     if command == 'SCHEDULE_HOST_DOWNTIME':
         params = [host_or_group]
@@ -526,39 +616,42 @@ def _schedule_downtime(
     )
 
 
-def _recur_to_even_mode(recur: RecurMode) -> int:
+def _recur_mode(recur: RecurMode, duration: int) -> int:
     """Translate the recur-mode to livestatus' internally used magic-numbers.
 
     The numbers are defined like this:
-        0: fixed between `start_time` and `end_time`
-        1: starts between `start_time` and  `end_time` and lasts for `duration`
-        2: repeats every hour
-        3: repeats every hour (takes duration)
-        4: repeats every day
-        5: repeats every day (takes duration)
-        6: repeats every week
-        7: repeats every week (takes duration)
-        8: repeats every second week
-        9: repeats every second week (takes duration)
-       10: repeats every fourth week
-       11: repeats every fourth week (takes duration)
-       12: repeats on same weekday as `start_date`
-       13: (undefined?)
-       14: repeats on same weekday as `end_date`
-       15: (undefined?)
-       16: repeats on the same day of the month as ??? (start_date or end_date?)
-       17: (undefined?)
+        0: starts between `start_time` and  `end_time` and lasts for `duration`
+        1: fixed between `start_time` and `end_time`
+        2: repeats every hour (takes duration)
+        3: repeats every hour
+        4: repeats every day (takes duration)
+        5: repeats every day
+        6: repeats every week (takes duration)
+        7: repeats every week
+        8: repeats every second week (takes duration)
+        9: repeats every second week
+       10: repeats every fourth week (takes duration)
+       11: repeats every fourth week
+       12: (undefined?)
+       13: repeats on same weekday as `start_date`
+       14: (undefined?)
+       15: repeats on same weekday as `end_date`
+       16: (undefined?)
+       17: repeats on the same day of the month as ??? (start_date or end_date?)
 
     Examples:
 
         We don't test the KeyError case as it's supposed to be one execution path and mypy will
         check for the input.
 
-        >>> _recur_to_even_mode('fixed')
+        >>> _recur_mode('fixed', 0)
+        1
+
+        >>> _recur_mode('fixed', 30)
         0
 
-        >>> _recur_to_even_mode('second_week')
-        8
+        >>> _recur_mode('second_week', 0)
+        9
 
     """
     mapping: Dict[str, int] = {
@@ -574,6 +667,12 @@ def _recur_to_even_mode(recur: RecurMode) -> int:
     }
     rv = mapping[recur]
     assert rv % 2 == 0, "Number is not even."  # This is intentional.
+
+    if not duration:
+        # When a duration is not set then the mode shifts to the next one. Even numbers (incl 0)
+        # signal recurring modes with a duration, odd numbers signal fixed ones.
+        rv += 1
+
     return rv
 
 

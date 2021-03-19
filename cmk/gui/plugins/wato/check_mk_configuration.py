@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import re
 import logging
 from typing import Dict, List, Tuple as _Tuple, Any
@@ -19,44 +18,44 @@ from cmk.gui.exceptions import MKUserError, MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.globals import request
 
-from cmk.snmplib.type_defs import SNMPBackend  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Checkbox,
     Dictionary,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    Float,
+    IconSelector,
+    ID,
+    Integer,
+    IPNetwork,
+    Labels,
+    ListChoice,
+    ListOf,
+    ListOfCAs,
+    ListOfStrings,
+    ListOfTimeRanges,
+    LogLevelChoice,
+    MonitoringState,
+    Optional,
+    PasswordSpec,
+    RegExpUnicode,
     TextAscii,
     TextUnicode,
-    DropdownChoice,
-    Tuple,
-    ListOf,
-    Integer,
-    Float,
     Transform,
-    ListOfStrings,
-    IPNetwork,
-    CascadingDropdown,
-    MonitoringState,
-    RegExpUnicode,
-    IconSelector,
-    PasswordSpec,
-    ListOfTimeRanges,
-    Age,
-    FixedValue,
-    Optional,
-    Alternative,
-    ListChoice,
-    Checkbox,
-    ID,
-    ListOfCAs,
-    LogLevelChoice,
-    Labels,
-    CascadingDropdownChoice,
+    Tuple,
     ValueSpec,
 )
 
 from cmk.gui.plugins.wato import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    CheckTypeSelection,
     ConfigDomainCACertificates,
     ConfigDomainCore,
     ConfigDomainGUI,
@@ -83,6 +82,7 @@ from cmk.gui.plugins.wato import (
     SNMPCredentials,
     TimeperiodSelection,
     UserIconOrAction,
+    valuespec_check_plugin_selection,
 )
 
 from cmk.gui.plugins.views.icons import icon_and_action_registry
@@ -138,6 +138,30 @@ class ConfigVariableUITheme(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableShowMoreMode(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "show_mode"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Show more / Show less"),
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            choices=config.show_mode_choices(),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
     def group(self):
         return ConfigVariableGroupUserInterface
@@ -150,6 +174,21 @@ class ConfigVariableBulkDiscoveryDefaultSettings(ConfigVariable):
 
     def valuespec(self):
         return vs_bulk_discovery()
+
+
+def _slow_view_logging_help():
+    return _(
+        "Some builtin or own views may take longer time than expected. In order to"
+        " detect slow views you have to set"
+        "<ul>"
+        "<li>the log level to <b>DEBUG</b> at"
+        " <b>Setup > General > Global settings > User Interface > Log levels > Slow views</b>,</li>"
+        "<li>a threshold (in seconds) at"
+        " <b>Setup > General > Global settings > User Interface > Threshold for slow views</b>.</li>"
+        "</ul>"
+        "The logging is disable by default. The default threshold is set to 60 seconds."
+        " If enabled one log entry per view rendering that exceeeds the configured threshold"
+        " is logged to <b>var/log/web.log</b>.")
 
 
 @config_variable_registry.register
@@ -193,6 +232,7 @@ class ConfigVariableLogLevels(ConfigVariable):
              _("Some long running tasks are executed as executed in so called background jobs. You "
                "can use this log level to individually enable more detailed logging for the "
                "background jobs.")),
+            ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
         ]:
             elements.append((level_id,
                              LogLevelChoice(
@@ -202,6 +242,28 @@ class ConfigVariableLogLevels(ConfigVariable):
                              )))
 
         return elements
+
+
+@config_variable_registry.register
+class ConfigVariableSlowViewsDurationThreshold(ConfigVariable):
+    def group(self):
+        return ConfigVariableGroupUserInterface
+
+    def domain(self):
+        return ConfigDomainGUI
+
+    def ident(self):
+        return "slow_views_duration_threshold"
+
+    def valuespec(self):
+        return Integer(
+            title=_("Threshold for slow views"),
+            #title=_("Create a log entry for all view calls taking longer than"),
+            default_value=60,
+            unit=_("Seconds"),
+            size=3,
+            help=_slow_view_logging_help(),
+        )
 
 
 @config_variable_registry.register
@@ -424,6 +486,7 @@ class ConfigVariableQuicksearchSearchOrder(ConfigVariable):
                 DropdownChoice(
                     title=_("Search filter"),
                     choices=[
+                        ("menu", _("Monitor menu entries")),
                         ("h", _("Hostname")),
                         ("al", _("Hostalias")),
                         ("ad", _("Hostaddress")),
@@ -590,18 +653,19 @@ class ConfigVariableEscapePluginOutput(ConfigVariable):
 
     def valuespec(self):
         return Checkbox(
-            title=_("Escape HTML codes in plugin output"),
+            title=_("Escape HTML in service output "
+                    "(Dangerous to deactivate - read help)"),
             help=_("By default, for security reasons, the GUI does not interpret any HTML "
-                   "code received from external sources, like plugin output or log messages. "
+                   "code received from external sources, like service output or log messages. "
                    "If you are really sure what you are doing and need to have HTML codes, like "
                    "links rendered, disable this option. Be aware, you might open the way "
                    "for several injection attacks. ") +
             _("Instead of disabling this option globally it is highly recommended to "
               "disable the escaping selectively for individual hosts and services with "
-              "the rulesets \"Escape HTML codes in host output\" and \"Escape HTML codes in "
+              "the rulesets \"Escape HTML in host output\" and \"Escape HTML in "
               "service output\". The rulesets have the additional advantage that the "
               "configured value is accessible in the notification context."),
-            label=_("Prevent loading HTML from plugin output or log messages"),
+            label=_("Prevent loading HTML from service output or log messages"),
         )
 
 
@@ -767,26 +831,6 @@ class ConfigVariableRescheduleTimeout(ConfigVariable):
             minvalue=1.0,
             unit="sec",
             display_format="%.1f",
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableSidebarShowVersionInSidebar(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupUserInterface
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "sidebar_show_version_in_sidebar"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Show Checkmk edition & version in sidebar"),
-            label=_("Show the edition ad version"),
-            help=_("Use this option to hide the Check_MK edition and version information from "
-                   "the header of the sidebar."),
         )
 
 
@@ -1049,7 +1093,10 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
         return Transform(
             ListOf(
                 Tuple(elements=[
-                    ID(title=_("ID")),
+                    ID(
+                        title=_("ID"),
+                        allow_empty=False,
+                    ),
                     Dictionary(
                         elements=[
                             ('icon',
@@ -1393,7 +1440,7 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
         )
 
     def _get_builtin_icons(self):
-        return [(id_, id_) for id_ in icon_and_action_registry.keys()]
+        return [(id_, class_.title()) for id_, class_ in icon_and_action_registry.items()]
 
 
 @config_variable_registry.register
@@ -1593,7 +1640,7 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
             help=
             _("Specifies the maximum number of parallel running site activate changes processes. "
               "Each site activation is handled in a separate apache process. If your configuration setup includes "
-              "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates."
+              "lots of sites, but your RAM is limited, you should reduce the maximum number of concurrent site updates. "
               "Note: The hardcoded minimum is set to 5."))
 
 
@@ -1640,30 +1687,6 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
                 ('restart', _("Restart")),
                 ('reload', _("Reload")),
             ],
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableWATOLegacyEval(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupWATO
-
-    def domain(self):
-        return ConfigDomainGUI
-
-    def ident(self):
-        return "wato_legacy_eval"
-
-    def valuespec(self):
-        return Checkbox(
-            title=_("Use unsafe legacy encoding for distributed WATO"),
-            help=
-            _("The current implementation of WATO uses a Python module called <tt>ast</tt> for the "
-              "communication between sites. Previous versions of Check_MK used an insecure encoding "
-              "named <tt>pickle</tt>. Even in the current version WATO falls back to <tt>pickle</tt> "
-              "if your Python version is not recent enough. This is at least the case for RedHat/CentOS 5.X "
-              "and Debian 5.0. In a mixed environment you can force using the legacy <tt>pickle</tt> format "
-              "in order to create compatibility."),
         )
 
 
@@ -1985,8 +2008,8 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
             Age(
                 title=None,
                 display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
+                minvalue=5400,
+                default_value=5400,
             ),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),
@@ -2144,7 +2167,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
                 ("cmciii_lcp_airout", _("Rittal CMC-III LCP: Air Out Temperature")),
                 ("cmciii_lcp_water", _("Rittal CMC-III LCP: Water In/Out Temperature")),
                 ("cmk_inventory", _("Monitor hosts for unchecked services (Checkmk Discovery)")),
-                ("dbd2_mem", _("DB2 memory usage")),
+                ("db2_mem", _("DB2 memory usage")),
                 ("df", _("Used space in filesystems")),
                 ("df_netapp", _("NetApp Filers: Used Space in Filesystems")),
                 ("df_netapp32", _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
@@ -2434,23 +2457,25 @@ class ConfigVariableUseDNSCache(ConfigVariable):
 
 
 def transform_snmp_backend_default_forth(backend):
-    if backend in [True, "inline"]:
-        return SNMPBackend.inline
-    if backend in [False, "classic"]:
-        return SNMPBackend.classic
+    # During 2.0.0 Beta you could configure inline_legacy as backend thats why
+    # we need to accept this as value aswell.
+    if backend in [True, "inline", "inline_legacy"]:
+        return SNMPBackendEnum.INLINE
     if backend == "pysnmp":
-        return SNMPBackend.pysnmp
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+        return SNMPBackendEnum.PYSNMP
+    if backend in [False, "classic"]:
+        return SNMPBackendEnum.CLASSIC
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 def transform_snmp_backend_back(backend):
-    if backend == SNMPBackend.inline:
-        return "inline"
-    if backend == SNMPBackend.classic:
-        return "classic"
-    if backend == SNMPBackend.pysnmp:
+    if backend == SNMPBackendEnum.PYSNMP:
         return "pysnmp"
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+    if backend == SNMPBackendEnum.CLASSIC:
+        return "classic"
+    if backend == SNMPBackendEnum.INLINE:
+        return "inline"
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 @config_variable_registry.register
@@ -2467,19 +2492,19 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self):
         return Transform(
             DropdownChoice(
-                title=_("Choose SNMP Backend"),
+                title=_("Choose SNMP Backend (Enterprise Edition only)"),
                 choices=[
-                    (SNMPBackend.classic, _("Use Classic SNMP Backend")),
-                    (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                    (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
+                    (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
+                    (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+                    (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
                 ],
                 help=
                 _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
                   "snmpwalk to gather SNMP information. For each request a new command line "
-                  "program is being executed. It is now possible to use the Inline SNMP or PySNMP implementation "
+                  "program is being executed. It is now possible to use the Inline SNMP implementation "
                   "which calls the respective libraries directly via its python bindings. This "
                   "should increase the performance of SNMP checks in a significant way. Both "
-                  "SNMP modes are featurse which improve the performance for large installations and are "
+                  "SNMP modes are features which improve the performance for large installations and are "
                   "only available via our subscription."),
             ),
             forth=transform_snmp_backend_default_forth,
@@ -2502,17 +2527,17 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
         return Checkbox(
             title=_("Use Inline SNMP (deprecated)"),
             label=_("Enable inline SNMP (directly use net-snmp libraries) (deprecated)"),
-            help=_(
-                "By default Check_MK uses command line calls of Net-SNMP tools like snmpget or "
-                "snmpwalk to gather SNMP information. For each request a new command line "
-                "program is being executed. It is now possible to use the inline SNMP implementation "
-                "which calls the net-snmp libraries directly via its python bindings. This "
-                "should increase the performance of SNMP checks in a significant way. The inline "
-                "SNMP mode is a feature which improves the performance for large installations and "
-                "only available via our subscription."
-                "<b>Note:</b> This option is deprecated and has been replaced by "
-                "Choose SNMP Backend. Changes to this option will have no effect "
-                "to the behaviour of Checkmk"),
+            help=
+            _("By default Checkmk uses command line calls of Net-SNMP tools like snmpget or "
+              "snmpwalk to gather SNMP information. For each request a new command line "
+              "program is being executed. It is now possible to use the inline SNMP implementation "
+              "which calls the net-snmp libraries directly via its python bindings. This "
+              "should increase the performance of SNMP checks in a significant way. The inline "
+              "SNMP mode is a feature which improves the performance for large installations and "
+              "only available via our subscription."
+              "<b>Note:</b> This option is deprecated and has been replaced by '%s'. "
+              "Changes to this option will have no effect to the behaviour of "
+              "Checkmk") % _("Choose SNMP Backend (Enterprise Edition only)"),
         )
 
 
@@ -2644,27 +2669,6 @@ class ConfigVariableInventoryCheckSeverity(ConfigVariable):
 
 
 @config_variable_registry.register
-class ConfigVariableInventoryCheckDoScan(ConfigVariable):
-    def group(self):
-        return ConfigVariableGroupServiceDiscovery
-
-    def domain(self):
-        return ConfigDomainCore
-
-    def ident(self):
-        return "inventory_check_do_scan"
-
-    def valuespec(self):
-        return DropdownChoice(
-            title=_("Service discovery check for SNMP devices"),
-            choices=[
-                (True, _("Perform full SNMP scan always, detect new check types")),
-                (False, _("Just rely on existing check files, detect new items only")),
-            ],
-        )
-
-
-@config_variable_registry.register
 class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
     def group(self):
         return ConfigVariableGroupServiceDiscovery
@@ -2702,18 +2706,33 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
 
 
 @rulespec_group_registry.register
-class RulespecGroupGrouping(RulespecGroup):
+class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
     @property
-    def name(self):
-        return "grouping"
+    def main_group(self):
+        return RulespecGroupHostsMonitoringRules
+
+    @property
+    def sub_group_name(self):
+        return "host_various"
 
     @property
     def title(self):
-        return _("Grouping")
+        return _("Various")
+
+
+@rulespec_group_registry.register
+class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
+    @property
+    def main_group(self):
+        return RulespecGroupMonitoringConfiguration
 
     @property
-    def help(self):
-        return _("Assignment of host & services to host, service and contacts groups.")
+    def sub_group_name(self):
+        return "various"
+
+    @property
+    def title(self):
+        return _("Various")
 
 
 def _valuespec_host_groups():
@@ -2727,7 +2746,7 @@ def _valuespec_host_groups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="all",
         name="host_groups",
         valuespec=_valuespec_host_groups,
@@ -2740,7 +2759,7 @@ def _valuespec_service_groups():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         match_type="all",
         name="service_groups",
@@ -2754,7 +2773,7 @@ def _valuespec_host_contactgroups():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupHostsMonitoringRulesVarious,
         match_type="all",
         name="host_contactgroups",
         valuespec=_valuespec_host_contactgroups,
@@ -2767,7 +2786,7 @@ def _valuespec_service_contactgroups():
 
 rulespec_registry.register(
     ServiceRulespec(
-        group=RulespecGroupGrouping,
+        group=RulespecGroupMonitoringConfigurationVarious,
         item_type="service",
         match_type="all",
         name="service_contactgroups",
@@ -3451,12 +3470,13 @@ rulespec_registry.register(
 
 
 def _valuespec_ignored_checks():
-    return CheckTypeSelection(
+    return valuespec_check_plugin_selection(
         title=_("Disabled checks"),
-        help=_("This ruleset is similar to 'Disabled services', but selects checks to be disabled "
-               "by their <b>type</b>. This allows you to disable certain technical implementations "
-               "such as filesystem checks via SNMP on hosts that also have the Check_MK agent "
-               "installed."),
+        help_=_(
+            "This ruleset is similar to 'Disabled services', but selects checks to be disabled "
+            "by their <b>type</b>. This allows you to disable certain technical implementations "
+            "such as filesystem checks via SNMP on hosts that also have the Checkmk agent "
+            "installed."),
     )
 
 
@@ -3481,7 +3501,6 @@ def _valuespec_periodic_discovery():
             "severity_unmonitored": 1,
             "severity_vanished": 0,
             "severity_new_host_label": 1,
-            "inventory_check_do_scan": True,
         },
         elements=[
             FixedValue(
@@ -3548,17 +3567,10 @@ def _vs_periodic_discovery() -> Transform:
                          (3, _("Unknown")),
                      ],
                  )),
-                ("inventory_check_do_scan",
-                 DropdownChoice(
-                     title=_("Service discovery check for SNMP devices"),
-                     choices=[
-                         (True, _("Perform full SNMP scan always, detect new check types")),
-                         (False, _("Just rely on existing check files, detect new items only")),
-                     ],
-                 )),
                 ("inventory_rediscovery", _valuespec_automatic_rediscover_parameters()),
             ],
             optional_keys=["inventory_rediscovery"],
+            ignored_keys=["inventory_check_do_scan"],
         ),
         forth=_periodic_discovery_add_severity_new_host_label,
     )
@@ -3726,36 +3738,6 @@ rulespec_registry.register(
         name="periodic_discovery",
         valuespec=_valuespec_periodic_discovery,
     ))
-
-
-@rulespec_group_registry.register
-class RulespecGroupMonitoringConfigurationVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupMonitoringConfiguration
-
-    @property
-    def sub_group_name(self):
-        return "various"
-
-    @property
-    def title(self):
-        return _("Various")
-
-
-@rulespec_group_registry.register
-class RulespecGroupHostsMonitoringRulesVarious(RulespecSubGroup):
-    @property
-    def main_group(self):
-        return RulespecGroupHostsMonitoringRules
-
-    @property
-    def sub_group_name(self):
-        return "host_various"
-
-    @property
-    def title(self):
-        return _("Various")
 
 
 def _valuespec_custom_service_attributes():
@@ -4018,7 +4000,7 @@ def _valuespec_extra_host_conf_icon_image():
             (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
-        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
+        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v if v is not None else "",
     )
 
 
@@ -4039,7 +4021,7 @@ def _valuespec_extra_service_conf_icon_image():
             (cmk.utils.paths.omd_root + "/local/share/check_mk/web/htdocs/images/icons"),
             with_emblem=False,
         ),
-        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v,
+        forth=lambda v: v and (v.endswith('.png') and v[:-4]) or v if v is not None else "",
     )
 
 
@@ -4087,7 +4069,8 @@ rulespec_registry.register(
 
 def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML codes in host output"),
+        title=_("Escape HTML in host output"
+                "(Dangerous to deactivate - read help)"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
                "code received from external sources, like plugin output or log messages. "
                "If you are really sure what you are doing and need to have HTML code, like "
@@ -4096,8 +4079,8 @@ def _valuespec_extra_host_conf__ESCAPE_PLUGIN_OUTPUT():
         _("The configured value for a host is accessible in notifications as well via the "
           "variable <tt>HOST_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
-            ("1", _("Escape HTML codes")),
-            ("0", _("Don't escape HTML codes (insecure)")),
+            ("1", _("Escape HTML")),
+            ("0", _("Don't escape HTML (Dangerous - please read context help)")),
         ],
         default_value="1",
     )
@@ -4113,17 +4096,18 @@ rulespec_registry.register(
 
 def _valuespec_extra_service_conf__ESCAPE_PLUGIN_OUTPUT():
     return DropdownChoice(
-        title=_("Escape HTML codes in service output"),
+        title=_("Escape HTML in service output "
+                "(Dangerous to deactivate - read help)"),
         help=_("By default, for security reasons, the GUI does not interpret any HTML "
-               "code received from external sources, like plugin output or log messages. "
+               "code received from external sources, like service output or log messages. "
                "If you are really sure what you are doing and need to have HTML code, like "
                "links rendered, disable this option. Be aware, you might open the way "
                "for several injection attacks. ") +
         _("The configured value for a service is accessible in notifications as well via the "
           "variable <tt>SERVICE_ESCAPE_PLUGIN_OUTPUT</tt> of the notification context."),
         choices=[
-            ("1", _("Escape HTML codes")),
-            ("0", _("Don't escape HTML codes (insecure)")),
+            ("1", _("Escape HTML")),
+            ("0", _("Don't escape HTML (Dangerous - please read context help)")),
         ],
         default_value="1",
     )
@@ -4214,7 +4198,7 @@ class RulespecGroupAgentSNMP(RulespecGroup):
 
     @property
     def title(self):
-        return _("SNMP settings")
+        return _("SNMP rules")
 
     @property
     def help(self):
@@ -4297,6 +4281,22 @@ rulespec_registry.register(
         help_func=_help_bulkwalk_hosts,
         name="bulkwalk_hosts",
         title=lambda: _("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
+    ))
+
+
+def _help_management_bulkwalk_hosts():
+    return _("SNMP monitoring of management boards defaults to SNMPv2 for all hosts by default. "
+             "In case some of your management boards don't support SNMPv2 or bulk walks, you "
+             "can use this ruleset to enforce Checkmk to contact these management boards "
+             "using SNMPv1.")
+
+
+rulespec_registry.register(
+    BinaryHostRulespec(
+        group=RulespecGroupAgentSNMP,
+        help_func=_help_management_bulkwalk_hosts,
+        name="management_bulkwalk_hosts",
+        title=lambda: _("Management board SNMP using bulk walk (enforces SNMP v2c)"),
     ))
 
 
@@ -4429,21 +4429,24 @@ rulespec_registry.register(
 
 def _help_snmp_backend():
     return _(
-        "Checkmk has an efficient SNMP implementations called Inline SNMP and PySNMP which reduce "
+        "Checkmk has an efficient SNMP implementation called Inline SNMP which reduces "
         "the load produced by SNMP monitoring on the monitoring host significantly. Inline SNMP "
         "is enabled by default for all SNMP hosts and it is a good idea to keep this default setting. "
         "However, there are SNMP devices which have problems with some SNMP implementations. "
-        "You can use this rule to select the SNMP Backend for these hosts.")
+        "You can use this rule to select the SNMP Backend for these hosts."
+        "Inline SNMP uses PySNMP bindings to make SNMP calls.")
 
 
 def transform_snmp_backend_hosts_forth(backend):
-    if backend in [False, "inline"]:
-        return SNMPBackend.inline
-    if backend in [True, "classic"]:
-        return SNMPBackend.classic
+    # During 2.0.0 Beta you could configure inline_legacy backend thats why
+    # we need to accept this as value aswell.
+    if backend in [False, "inline", "inline_legacy"]:
+        return SNMPBackendEnum.INLINE
     if backend == "pysnmp":
-        return SNMPBackend.pysnmp
-    raise MKConfigError("SNMPBackend %r not implemented" % backend)
+        return SNMPBackendEnum.PYSNMP
+    if backend in [True, "classic"]:
+        return SNMPBackendEnum.CLASSIC
+    raise MKConfigError("SNMPBackendEnum %r not implemented" % backend)
 
 
 def _valuespec_snmp_backend():
@@ -4451,9 +4454,9 @@ def _valuespec_snmp_backend():
         DropdownChoice(
             title=_("Choose SNMP Backend"),
             choices=[
-                (SNMPBackend.inline, _("Use Inline SNMP Backend")),
-                (SNMPBackend.pysnmp, _("Use PySNMP Backend")),
-                (SNMPBackend.classic, _("Use Classic Backend")),
+                (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
+                (SNMPBackendEnum.PYSNMP, _("Use Inline SNMP (PySNMP) Backend (experimental)")),
+                (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
             ],
         ),
         forth=transform_snmp_backend_hosts_forth,
@@ -4467,7 +4470,7 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         help_func=_help_snmp_backend,
         name="snmp_backend_hosts",
-        title=lambda: _("Hosts using a specific SNMP Backend"),
+        title=lambda: _("Hosts using a specific SNMP Backend (Enterprise Edition only)"),
     ))
 
 
@@ -4518,7 +4521,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
     @property
     def title(self):
-        return _("Checkmk Agent")
+        return _("Checkmk agent")
 
 
 def _valuespec_agent_ports():
@@ -4560,89 +4563,6 @@ rulespec_registry.register(
         group=RulespecGroupAgentCMKAgent,
         name="tcp_connect_timeouts",
         valuespec=_valuespec_tcp_connect_timeouts,
-    ))
-
-
-def agent_config_mk_agent_sections():
-    # The key must match the section exclude parameter in the checkmk_agent i.e. MK_SKIP_<key>
-    return [
-        ("bonding_if", _("Bonding interfaces")),
-        ("chrony", _("Chrony timesynchronisation")),
-        ("cpu", _("CPU")),
-        ("diskstat", _("Diskstat")),
-        ("drbd", _("DRBD")),
-        ("fileinfo", _("Fileinfo")),
-        ("df", _("Filesystems usage")),
-        ("haproxy", _("Haproxy")),
-        ("heartbeat", _("Heartbeat clusters")),
-        ("labels", _("Host label")),
-        ("http_accelerator", _("HTTP accelerator statistics")),
-        ("ipmitool", _("Ipmitool")),
-        ("ipmisensors", _("Ipmisensors")),
-        ("kernel", _("Kernel")),
-        ("libelle", _("Libelle Business Shadow")),
-        ("lnx_if", _("Linux interfaces")),
-        ("mailqueue", _("Mailqueue")),
-        ("mem", _("Memory")),
-        ("job", _("Monitored jobs")),
-        ("multipathing", _("Multipathing")),
-        ("mounts", _("Mount options")),
-        ("nfs_mounts", ("NFS mounts")),
-        ("timesynchronisation", _("NTP or timesyncd time synchronisation")),
-        ("nvidia", _("Nvidia")),
-        ("omd_cores", _("OMD monitoring cores")),
-        ("openvpn", _("OpenVPN clients")),
-        ("proxmox", _("Proxmox cluster")),
-        ("md", _("Raid status of Linux software")),
-        ("dm_raid", _("Raid status of Linux Raid")),
-        ("cfggen", _("Raid status of LSI controllers")),
-        ("megaraid", _("Raid status of LSI MegaRAID controller")),
-        ("three_ware_raid", _("Raid status of 3WARE disk controller")),
-        ("areca", _("Raid controllers from Areca")),
-        ("ps", _("Running processes")),
-        ("omd", _("Status of OMD sites and Checkmk Notification spooler")),
-        ("systemd", _("Systemd services")),
-        ("tcp", _("TCP")),
-        ("thermal", _("Thermal information")),
-        ("uptime", _("UPTIME")),
-        ("veritas", _("Veritas cluster server")),
-        ("vbox_guest", _("VirtualBox Guests")),
-        ("vswitch_bonding", _("Vswitch bonding")),
-        ("zfs", _("ZFS filesystem usage")),
-        ("zpool", _("Zpool status")),
-    ]
-
-
-def _agent_config_mk_sections_invert_choices(selected):
-    return [key for key, _label in agent_config_mk_agent_sections() if key not in selected]
-
-
-def _valuespec_agent_config_agent_sections():
-    return Dictionary(
-        title=_("Exclude specific agent sections"),
-        elements=[
-            (
-                "sections",
-                ListChoice(
-                    title=_("Excluded agent sections (Linux)"),
-                    help=_(
-                        "This option allows to omit specific sections from the Checkmk agent. "
-                        "Checked options will be excluded in the agent. Omission of a section "
-                        "will result in the absence of the associated Checkmk service or services."
-                    ),
-                    choices=sorted(agent_config_mk_agent_sections(), key=lambda x: x[1]),
-                    toggle_all=True,
-                ),
-            ),
-        ],
-        optional_keys=[])
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupAgentCMKAgent,
-        name="agent_exclude_sections",
-        valuespec=_valuespec_agent_config_agent_sections,
     ))
 
 
@@ -4879,7 +4799,7 @@ class RulespecGroupMonitoringAgents(RulespecGroup):
 
     @property
     def title(self):
-        return _("Monitoring Agents")
+        return _("Agent rules")
 
     @property
     def help(self):
@@ -4996,25 +4916,30 @@ def _valuespec_snmp_fetch_interval():
     return Tuple(
         title=_('Fetch intervals for SNMP sections'),
         help=_(
-            'This rule can be used to customize the data acquisition interval of each SNMP based '
-            'section. With this option it is possible to configure a longer interval for specific '
-            'sections, than then normal check interval.'),
+            'This rule can be used to customize the data acquisition interval of SNMP based '
+            'sections. This can be useful for cases where fetching the data takes close to or '
+            'longer than the usual check interval or where it puts a lot of load on the target '
+            'device. Note that it is strongly recommended to also adjust the actual '
+            '<a href="wato.py?mode=edit_ruleset&varname=extra_service_conf%3Acheck_interval">check interval</a> '
+            'in such cases to a number at least as high as the number you choose in this rule. '
+            'This is especially important for counter-based checks such as the interface checks. A '
+            'check interval which is shorter then the interval for fetching the data might result '
+            'in misleading output (e.g. far too large interface throughputs) in such cases.'),
         elements=[
             Transform(
                 DropdownChoice(
-                    title=_("Check"),
-                    help=_("You can only configure \"section names\" here and not choose "
-                           "individual checks here. It is only possible to define "
-                           "SNMP fetch intervals for SNMP based sections. "
-                           "The reason for this is that the check plugins themselves are not "
-                           "aware wether or not they are processing SNMP based data."),
+                    title=_("Section"),
+                    help=_("You can only configure section names here, but not choose individual "
+                           "check plugins. The reason for this is that the check plugins "
+                           "themselves are not aware whether or not they are processing SNMP based "
+                           "data."),
                     choices=lambda: [(None, _('All SNMP sections'))] + get_snmp_section_names(),
                 ),
                 # Transform check types to section names
                 forth=lambda e: e.split(".")[0] if e is not None else None,
             ),
             Integer(
-                title=_("Do check every"),
+                title=_("Fetch every"),
                 unit=_("minutes"),
                 minvalue=1,
                 default_value=1,
@@ -5030,50 +4955,75 @@ rulespec_registry.register(
     ))
 
 
+def _transform_2_0_beta_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    """this transforms a parameter format that was only created by Checkmk 2.0.0b1 - 2.0.0b4"""
+    if 'sections' not in params:
+        return params
+
+    new_params: Dict[str, Any] = {}
+    for section, is_disabled in params['sections']:
+        new_params.setdefault(
+            'sections_disabled' if is_disabled else 'sections_enabled',
+            [],
+        ).append(section)
+
+    return new_params
+
+
 def _valuespec_snmp_config_agent_sections():
-    return Dictionary(
-        title=_("Include or exclude SNMP sections"),
-        elements=[
-            (
-                "sections",
-                ListOf(
-                    Tuple(elements=[
-                        DropdownChoice(
-                            title=_("SNMP section name"),
-                            choices=get_snmp_section_names,
-                        ),
-                        DropdownChoice(choices=[(True, _("Disable")), (False, _("Enable"))]),
-                    ],),),
-            ),
-        ],
-        help=_("This option allows to omit individual sections from being fetched at all. "
-               "Disabled sections will not be fetched. As a result, associated Checkmk "
-               "services may be entirely missing.") + " " +
-        _("However, some check plugins process multiple sections and their behavior may change if "
-          "one of them is excluded. In such cases, you may want to disable individual sections, "
-          "instead of the check plugin itself. Furthermore, SNMP sections can supersede other SNMP "
-          "sections in order to prevent duplicate services. By excluding a section which "
-          "supersedes another one, the superseded section might become available. One such use "
-          "case is the enforcing of 32-bit network interface counters (section <tt>if</tt>, "
-          "superseded by <tt>if64</tt>) in case the 64-bit counters reported by the device are "
-          "useless due to broken firmware."),
-        validate=_validate_snmp_config_agent_sections,
-        optional_keys=[],
+    return Transform(
+        Dictionary(
+            title=_("Disabled or enabled sections (SNMP)"),
+            help=_(
+                "This option allows to omit individual sections from being fetched at all. "
+                "As a result, associated Checkmk services may be entirely missing. "
+                "However, some check plugins process multiple sections and their behavior may "
+                "change if one of them is excluded. In such cases, you may want to disable "
+                "individual sections, instead of the check plugin itself. "
+                "Furthermore, SNMP sections can supersede other SNMP sections in order to "
+                "prevent duplicate services. By excluding a section which supersedes another one, "
+                "the superseded section might become available. One such use case is the enforcing "
+                "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
+                "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
+                "due to broken firmware."),
+            elements=[
+                (
+                    "sections_disabled",
+                    DualListChoice(
+                        title=_("Disabled sections"),
+                        choices=get_snmp_section_names,
+                        rows=25,
+                    ),
+                ),
+                (
+                    "sections_enabled",
+                    DualListChoice(
+                        title=_("Enabled sections"),
+                        choices=get_snmp_section_names,
+                        rows=25,
+                    ),
+                ),
+            ],
+            validate=_validate_snmp_config_agent_sections,
+            optional_keys=[],
+        ),
+        forth=_transform_2_0_beta_params,
     )
 
 
 def _validate_snmp_config_agent_sections(value, varprefix):
-    section_settings = value.get('sections', [])
-    if not section_settings:
+    enabled_set = set(value.get('sections_enabled', ()))
+    conflicts = enabled_set.intersection(value.get('sections_disabled', ()))
+    if not conflicts:
         return
 
-    most_common = collections.Counter(s for s, _v in section_settings).most_common()
-    if most_common[0][1] > 1:  # count of the very most common one
-        offenders = ', '.join(name for name, count in most_common if count > 1)
-        raise MKUserError(
-            varprefix,
-            "%s %s" % (_("Section(s) specified more than once:"), offenders),
-        )
+    raise MKUserError(
+        varprefix,
+        "%s %s" % (
+            _("Section(s) cannot be disabled and enabled at the same time:"),
+            ', '.join(sorted(conflicts)),
+        ),
+    )
 
 
 rulespec_registry.register(

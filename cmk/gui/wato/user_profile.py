@@ -7,6 +7,7 @@
 
 import time
 import abc
+import json
 from typing import Iterator, List, Optional, Union
 from cmk.utils.type_defs import UserId
 
@@ -24,10 +25,11 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.config import SiteId, SiteConfiguration
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
-from cmk.gui.exceptions import HTTPRedirect, MKUserError, MKGeneralException, MKAuthException
+from cmk.gui.plugins.wato.utils.base_modes import redirect
+from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
 from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request as global_request
-from cmk.gui.pages import page_registry, AjaxPage, Page
+from cmk.gui.globals import html, request
+from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
@@ -37,14 +39,14 @@ from cmk.gui.page_menu import (
     make_simple_form_page_menu,
 )
 
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
 from cmk.gui.wato.pages.users import select_language
 
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
-
-from cmk.gui.utils.urls import makeuri
 
 
 def _get_current_theme_titel() -> str:
@@ -56,14 +58,15 @@ def _get_sidebar_position() -> str:
     sidebar_position = userdb.load_custom_attr(config.user.id, 'ui_sidebar_position', lambda x: None
                                                if x == "None" else "left")
 
-    return _get_sidebar_position_title(sidebar_position or "right")
+    return sidebar_position or "right"
 
 
-def _get_sidebar_position_title(value: str) -> str:
-    return {
-        "left": _("left"),
-        "right": _("right"),
-    }[value]
+def _sidebar_position_title(stored_value: str) -> str:
+    return _("Left") if stored_value == "left" else _("Right")
+
+
+def _sidebar_position_id(stored_value: str) -> str:
+    return "left" if stored_value == "left" else "right"
 
 
 def _user_menu_topics() -> List[TopicMenuTopic]:
@@ -84,7 +87,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             target="",
             sort_index=20,
             icon="sidebar_position",
-            button_title=_get_sidebar_position(),
+            button_title=_sidebar_position_title(_get_sidebar_position()),
         ),
     ]
 
@@ -141,19 +144,18 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
 
 
 mega_menu_registry.register(
-    MegaMenu(
-        name="user",
-        title=_l("User"),
-        icon="main_user",
-        sort_index=20,
-        topics=_user_menu_topics,
-    ))
+    MegaMenu(name="user",
+             title=_l("User"),
+             icon="main_user",
+             sort_index=20,
+             topics=_user_menu_topics,
+             info_line=lambda: f"{config.user.id} ({config.user.baserole_id})"))
 
 
 @page_registry.register_page("ajax_ui_theme")
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for quick access option 'Interface theme" in user menu"""
-    def page(self):
+    def page(self) -> AjaxPageResult:
         themes = [theme for theme, _title in cmk.gui.config.theme_choices()]
         current_theme = html.get_theme()
         try:
@@ -167,14 +169,31 @@ class ModeAjaxCycleThemes(AjaxPage):
             new_theme = themes[theme_index + 1]
 
         _set_user_attribute("ui_theme", new_theme)
+        return {}
 
 
 @page_registry.register_page("ajax_sidebar_position")
 class ModeAjaxCycleSidebarPosition(AjaxPage):
     """AJAX handler for quick access option 'Sidebar position" in user menu"""
-    def page(self):
-        _set_user_attribute("ui_sidebar_position",
-                            None if _get_sidebar_position() == "left" else "left")
+    def page(self) -> AjaxPageResult:
+        _set_user_attribute(
+            "ui_sidebar_position",
+            None if _sidebar_position_id(_get_sidebar_position()) == "left" else "left")
+        return {}
+
+
+@page_registry.register_page("ajax_set_dashboard_start_url")
+class ModeAjaxSetStartURL(AjaxPage):
+    """AJAX handler to set the start URL of a user to a dashboard"""
+    def page(self) -> AjaxPageResult:
+        try:
+            name = html.request.get_str_input_mandatory("name")
+            url = makeuri_contextless(request, [("name", name)], "dashboard.py")
+            cmk.gui.utils.validate_start_url(url, "")
+            _set_user_attribute("start_url", repr(url))
+        except Exception:
+            raise MKUserError(None, _("Failed to set start URL"))
+        return {}
 
 
 def _set_user_attribute(key: str, value: Optional[str]):
@@ -187,14 +206,14 @@ def _set_user_attribute(key: str, value: Optional[str]):
         userdb.save_custom_attr(user_id, key, value)
 
 
-def user_profile_async_replication_page() -> None:
+def user_profile_async_replication_page(back_url: str) -> None:
     sites = list(config.user.authorized_login_sites().keys())
-    user_profile_async_replication_dialog(sites=sites)
+    user_profile_async_replication_dialog(sites=sites, back_url=back_url)
 
     html.footer()
 
 
-def user_profile_async_replication_dialog(sites: List[SiteId]) -> None:
+def user_profile_async_replication_dialog(sites: List[SiteId], back_url: str) -> None:
     html.p(
         _('In order to activate your changes available on all remote sites, your user profile needs '
           'to be replicated to the remote sites. This is done on this page now. Each site '
@@ -223,9 +242,9 @@ def user_profile_async_replication_dialog(sites: List[SiteId]) -> None:
             estimated_duration = changes_manager.get_activation_time(site_id,
                                                                      ACTIVATION_TIME_PROFILE_SYNC,
                                                                      2.0)
-            html.javascript(
-                'cmk.profile_replication.start(\'%s\', %d, \'%s\');' %
-                (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
+            html.javascript('cmk.profile_replication.start(%s, %d, %s);' %
+                            (json.dumps(site_id), int(estimated_duration * 1000.0),
+                             json.dumps(_('Replication in progress'))))
             num_replsites += 1
         else:
             _add_profile_replication_change(site_id, status_txt)
@@ -233,7 +252,8 @@ def user_profile_async_replication_dialog(sites: List[SiteId]) -> None:
 
         html.close_div()
 
-    html.javascript('cmk.profile_replication.prepare(%d);\n' % num_replsites)
+    html.javascript('cmk.profile_replication.prepare(%d, %s);\n' %
+                    (num_replsites, json.dumps(back_url)))
 
     html.close_div()
 
@@ -252,11 +272,11 @@ class ABCUserProfilePage(Page):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _action(self) -> bool:
+    def _action(self) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _show_form(self, profile_changed: bool) -> None:
+    def _show_form(self) -> None:
         raise NotImplementedError()
 
     def __init__(self, permission: str) -> None:
@@ -275,35 +295,71 @@ class ABCUserProfilePage(Page):
             raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
 
     def _page_menu(self, breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="profile", button_name="_save")
+        menu = make_simple_form_page_menu(_("Profile"),
+                                          breadcrumb,
+                                          form_name="profile",
+                                          button_name="_save")
         menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
         return menu
 
     def page(self) -> None:
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        profile_changed = False
-        if html.request.has_var('_save') and html.check_transaction():
-            try:
-                profile_changed = self._action()
-            except MKUserError as e:
-                html.add_user_error(e.varname, e)
-
-        if profile_changed and config.user.authorized_login_sites():
-            title = _('Replicate new user profile')
-        else:
-            title = self._page_title()
-
+        title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
         html.header(title, breadcrumb, self._page_menu(breadcrumb))
 
+        if html.request.has_var('_save') and html.check_transaction():
+            try:
+                self._action()
+            except MKUserError as e:
+                html.add_user_error(e.varname, e)
+
+        for message in get_flashed_messages():
+            html.show_message(message)
+
+        if html.has_user_errors():
+            html.show_user_errors()
+
+        self._show_form()
+
+
+@page_registry.register_page("user_profile_replicate")
+class UserProfileReplicate(Page):
+    def __init__(self) -> None:
+        super().__init__()
+
+        if not config.user.id:
+            raise MKUserError(None, _('Not logged in.'))
+
+        if (not config.user.may("general.change_password") and
+                not config.user.may("general.edit_profile")):
+            raise MKAuthException(_("You are not allowed to edit your user profile."))
+
+        if not config.wato_enabled:
+            raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
+
+    def _page_menu(self, breadcrumb) -> PageMenu:
+        menu = make_simple_form_page_menu(_("Profile"),
+                                          breadcrumb,
+                                          form_name="profile",
+                                          button_name="_save")
+        menu.dropdowns.insert(1, page_menu_dropdown_user_related(html.myfile))
+        return menu
+
+    def page(self) -> None:
+        watolib.init_wato_datastructures(with_wato_lock=True)
+
+        title = _('Replicate user profile')
+        breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_user(), title)
+        html.header(title, breadcrumb, self._page_menu(breadcrumb))
+
+        for message in get_flashed_messages():
+            html.show_message(message)
+
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously
-        if profile_changed and config.user.authorized_login_sites():
-            user_profile_async_replication_page()
-            return
-
-        self._show_form(profile_changed)
+        user_profile_async_replication_page(back_url=html.get_url_input("back", "user_profile.py"))
 
 
 @page_registry.register_page("user_change_pw")
@@ -314,7 +370,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
     def __init__(self) -> None:
         super().__init__("general.change_password")
 
-    def _action(self) -> bool:
+    def _action(self) -> None:
         assert config.user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -358,12 +414,22 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         userdb.save_users(users)
 
+        flash(_("Successfully changed password."))
+
         # Set the new cookie to prevent logout for the current user
         login.update_auth_cookie(config.user.id)
 
-        return True
+        # In distributed setups with remote sites where the user can login, start the
+        # user profile replication now which will redirect the user to the destination
+        # page after completion. Otherwise directly open up the destination page.
+        origtarget = html.request.get_str_input_mandatory('_origtarget', 'user_change_pw.py')
+        if config.user.authorized_login_sites():
+            raise redirect(
+                makeuri_contextless(request, [("back", origtarget)],
+                                    filename="user_profile_replicate.py"))
+        raise redirect(origtarget)
 
-    def _show_form(self, profile_changed: bool) -> None:
+    def _show_form(self) -> None:
         assert config.user.id is not None
 
         users = userdb.load_users()
@@ -374,14 +440,6 @@ class UserChangePasswordPage(ABCUserProfilePage):
             html.p(_('Your password is too old, you need to choose a new password.'))
         elif change_reason == 'enforced':
             html.p(_('You are required to change your password before proceeding.'))
-
-        if profile_changed:
-            html.show_message(_("Your password has been changed."))
-            if change_reason:
-                raise HTTPRedirect(html.request.get_str_input_mandatory('_origtarget', 'index.py'))
-
-        if html.has_user_errors():
-            html.show_user_errors()
 
         user = users.get(config.user.id)
         if user is None:
@@ -425,7 +483,7 @@ class UserProfile(ABCUserProfilePage):
     def __init__(self) -> None:
         super().__init__("general.edit_profile")
 
-    def _action(self) -> bool:
+    def _action(self) -> None:
         assert config.user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -466,21 +524,26 @@ class UserProfile(ABCUserProfilePage):
 
         userdb.save_users(users)
 
-        return True
+        flash(_("Successfully updated user profile."))
 
-    def _show_form(self, profile_changed: bool) -> None:
+        # In distributed setups with remote sites where the user can login, start the
+        # user profile replication now which will redirect the user to the destination
+        # page after completion. Otherwise directly open up the destination page.
+        if config.user.authorized_login_sites():
+            back_url = "user_profile_replicate.py?back=user_profile.py"
+        else:
+            back_url = "user_profile.py"
+
+        # Ensure theme changes are applied without additional user interaction
+        html.reload_whole_page(back_url)
+        html.footer()
+
+        raise FinalizeRequest(code=200)
+
+    def _show_form(self) -> None:
         assert config.user.id is not None
 
         users = userdb.load_users()
-
-        if profile_changed:
-            html.reload_sidebar()
-            html.show_message(_("Successfully updated user profile."))
-            # Ensure theme changes are applied without additional user interaction
-            html.immediate_browser_redirect(0.5, makeuri(global_request, []))
-
-        if html.has_user_errors():
-            html.show_user_errors()
 
         user = users.get(config.user.id)
         if user is None:
@@ -512,7 +575,7 @@ class UserProfile(ABCUserProfilePage):
         if config.user.may('general.edit_user_attributes'):
             custom_user_attr_topics = get_user_attributes_by_topic()
             _show_custom_user_attr(user, custom_user_attr_topics.get("personal", []))
-            forms.header(_("Interface settings"), isopen=False)
+            forms.header(_("User interface settings"))
             _show_custom_user_attr(user, custom_user_attr_topics.get("interface", []))
 
         forms.end()
@@ -539,9 +602,9 @@ def _show_custom_user_attr(user, custom_attr):
 class ModeAjaxProfileReplication(AjaxPage):
     """AJAX handler for asynchronous replication of user profiles (changed passwords)"""
     def page(self):
-        request = self.webapi_request()
+        ajax_request = self.webapi_request()
 
-        site_id_val = request.get("site")
+        site_id_val = ajax_request.get("site")
         if not site_id_val:
             raise MKUserError(None, "The site_id is missing")
         site_id = site_id_val

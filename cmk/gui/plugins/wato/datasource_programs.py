@@ -4,23 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
+
+from cmk.utils import aws_constants
 
 import cmk.gui.bi as bi
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato import (
+    HostRulespec,
     IndividualOrStoredPassword,
-    RulespecGroup,
-    RulespecSubGroup,
     monitoring_macro_help,
     rulespec_group_registry,
     rulespec_registry,
-    HostRulespec,
+    RulespecGroup,
+    RulespecSubGroup,
 )
+from cmk.gui.plugins.wato.utils import PasswordFromStore
 from cmk.gui.valuespec import (
-    ID,
     Age,
     Alternative,
     CascadingDropdown,
@@ -29,8 +32,9 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
-    HTTPUrl,
     Hostname,
+    HTTPUrl,
+    ID,
     Integer,
     ListChoice,
     ListOf,
@@ -44,10 +48,144 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.plugins.wato.utils import (
-    PasswordFromStore,)
-from cmk.utils import aws_constants
-from cmk.gui.plugins.metrics.utils import MetricName
+
+
+def connection_set(options: Optional[List[str]] = None,
+                   auth_option: Optional[str] = None) -> List[Any]:
+    """Standard connection elements set
+
+    A set of frequently used connection configuration options.
+    Using the listed elements here allows to use additional helper functions
+    in base/check_legacy_includes/agent_helper & in cmk/special_agents/utils.py which serve
+    to facilitate the API connection setup from the special_agent side
+
+    Args:
+        options:
+            list of strings specifying which connection elements to include. If empty
+            then all connection elements will be included
+        auth_option:
+            string which specify which connection authentication element to include
+
+    Returns:
+        list of WATO connection elements
+
+    """
+    connection_options: List[Any] = []
+    if options is None:
+        all_options = True
+        options = []
+    else:
+        all_options = False
+
+    if "connection_type" in options or all_options:
+        connection_options.append(
+            ("connection",
+             CascadingDropdown(
+                 choices=[
+                     ("host_name", _("Host name")),
+                     ("ip_address", _("IP Address")),
+                     ("url_custom", _("Custom URL"),
+                      Dictionary(
+                          elements=[("url_address",
+                                     TextAscii(
+                                         title=_("Custom URL server address"),
+                                         help=_("Specify a custom URL to connect to "
+                                                "your server. Do not include the "
+                                                "protocol. This option overwrites "
+                                                "all available options such as port and "
+                                                "other URL prefixes."),
+                                         allow_empty=False,
+                                     ))],
+                          optional_keys=[],
+                      )),
+                 ],
+                 title=_("Connection option"),
+             )))
+
+    if "port" in options or all_options:
+        connection_options.append(("port",
+                                   Integer(title=_('TCP port number'),
+                                           help=_('Port number that server is listening on.'),
+                                           default_value=4223,
+                                           minvalue=1,
+                                           maxvalue=65535)))
+
+    if "protocol" in options or all_options:
+        connection_options.append(("protocol",
+                                   DropdownChoice(title=_("Protocol"),
+                                                  choices=[
+                                                      ("http", "HTTP"),
+                                                      ("https", "HTTPS"),
+                                                  ])))
+
+    if "url_prefix" in options or all_options:
+        connection_options.append(
+            ("url-prefix",
+             HTTPUrl(title=_("Custom URL prefix"),
+                     help=_(
+                         "Specifies a URL prefix which is prepended to the path in calls to "
+                         "the API. This is e.g. useful if you use the ip address or the hostname "
+                         "as base address but require some additional prefix to make the correct "
+                         "API call. Use the custom URL option if you need to specify a more "
+                         "complex API url."),
+                     allow_empty=False)))
+
+    if "path_prefix" in options or all_options:
+        connection_options.append(
+            ("path-prefix",
+             TextAscii(
+                 title=_("Custom path prefix"),
+                 help=_("Specifies an URL path suffix which is appended to the path in calls "
+                        "to the API. This is e.g. useful if you use the ip address or the hostname "
+                        "as base address and require to specify a path URL in order to make the "
+                        "correct API calls. Do not prepend or append your custom path with \"/\". "
+                        "Use the custom URL option if you need to specify a "
+                        "more complex API URL"),
+                 allow_empty=False)))
+
+    if "ssl_verify" in options or all_options:
+        connection_options.append(
+            ("no-cert-check",
+             Alternative(title=_("SSL certificate verification"),
+                         elements=[
+                             FixedValue(False, title=_("Verify the certificate"), totext=""),
+                             FixedValue(True,
+                                        title=_("Ignore certificate errors (unsecure)"),
+                                        totext=""),
+                         ],
+                         default_value=False)))
+
+    if auth_option:
+        connection_options.extend(_auth_option(auth_option))
+
+    return connection_options
+
+
+def _auth_option(option: str) -> List[Any]:
+    auth: List[Any] = []
+    if option == "basic":
+        auth.append(
+            ('auth_basic',
+             Dictionary(elements=[
+                 ('username', TextAscii(
+                     title=_('Login username'),
+                     allow_empty=False,
+                 )),
+                 ("password", IndividualOrStoredPassword(
+                     title=_("Password"),
+                     allow_empty=False,
+                 )),
+             ],
+                        optional_keys=[],
+                        title=_("Basic authentication"))))
+
+    elif option == "token":
+        auth.append(("token", TextAscii(
+            title=_("API key/token"),
+            allow_empty=False,
+            size=70,
+        )))
+    return auth
 
 
 @rulespec_group_registry.register
@@ -228,7 +366,7 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_special_agents_proxmox():
+def _valuespec_special_agents_proxmox_ve():
     return Dictionary(
         elements=[
             ("username", TextAscii(title=_("Username"), allow_empty=False)),
@@ -256,15 +394,15 @@ def _valuespec_special_agents_proxmox():
                  unit=_("weeks"),
              )),
         ],
-        title=_("Proxmox"),
+        title=_("Proxmox VE"),
     )
 
 
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupVMCloudContainer,
-        name="special_agents:proxmox",
-        valuespec=_valuespec_special_agents_proxmox,
+        name="special_agents:proxmox_ve",
+        valuespec=_valuespec_special_agents_proxmox_ve,
     ))
 
 
@@ -314,6 +452,25 @@ rulespec_registry.register(
     ))
 
 
+def _transform_kubernetes_connection_params(value):
+    '''Check_mk version 2.0: rework input of connection paramters to improve intuitive use.
+    Note that keys are removed from the parameters dictionary!
+    '''
+    if 'url-prefix' in value:
+        # it is theoretically possible that a customer has split up the custom URL into
+        # base URL, port and path prefix in their rule.
+        url_suffix = ''
+        port = value.pop('port', None)
+        if port:
+            url_suffix += f':{port}'
+        path_prefix = value.pop('path-prefix', None)
+        if path_prefix:
+            url_suffix += f'/{path_prefix}'
+        return 'url_custom', value.pop('url-prefix') + url_suffix
+
+    return 'ipaddress', {k: value.pop(k) for k in ['port', 'path-prefix'] if k in value}
+
+
 def _special_agents_kubernetes_transform(value):
     if 'infos' not in value:
         value['infos'] = ['nodes']
@@ -321,13 +478,67 @@ def _special_agents_kubernetes_transform(value):
         value['no-cert-check'] = False
     if 'namespaces' not in value:
         value['namespaces'] = False
+
+    if 'api-server-endpoint' in value:
+        return value
+
+    value['api-server-endpoint'] = _transform_kubernetes_connection_params(value)
+
     return value
+
+
+def _kubernetes_connection_elements():
+    return [
+        ("port",
+         Integer(title=_("Port"),
+                 help=_("If no port is given, a default value of 443 will be used."),
+                 default_value=443)),
+        ("path-prefix",
+         TextAscii(title=_("Custom path prefix"),
+                   help=_("Specifies a URL path prefix, which is prepended to API calls "
+                          "to the Kubernetes API. This is a useful option for Rancher "
+                          "installations (more information can be found in the manual). "
+                          "If this option is not relevant for your installation, "
+                          "please leave it unchecked."),
+                   allow_empty=False)),
+    ]
 
 
 def _valuespec_special_agents_kubernetes():
     return Transform(
         Dictionary(
             elements=[
+                (
+                    "api-server-endpoint",
+                    CascadingDropdown(
+                        choices=[
+                            (
+                                "hostname",
+                                _("Hostname"),
+                                Dictionary(elements=_kubernetes_connection_elements()),
+                            ),
+                            (
+                                "ipaddress",
+                                _("IP address"),
+                                Dictionary(elements=_kubernetes_connection_elements()),
+                            ),
+                            (
+                                "url_custom",
+                                _("Custom URL"),
+                                TextAscii(
+                                    allow_empty=False,
+                                    size=80,
+                                ),
+                            ),
+                        ],
+                        orientation='horizontal',
+                        title=_("API server endpoint"),
+                        help=
+                        _("The URL that will be contacted for Kubernetes API calls. If the \"Hostname\" "
+                          "or the \"IP Address\" options are selected, the DNS hostname or IP address and "
+                          "a secure protocol (HTTPS) are used."),
+                    ),
+                ),
                 ("token", IndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
@@ -376,25 +587,6 @@ def _valuespec_special_agents_kubernetes():
                             ],
                             allow_empty=False,
                             title=_("Retrieve information about..."))),
-                ("port",
-                 Integer(title=_("Port"),
-                         help=_("If no port is given a default value of 443 will be used."),
-                         default_value=443)),
-                ("url-prefix",
-                 HTTPUrl(title=_("Custom URL prefix"),
-                         help=_("Defines the scheme (either HTTP or HTTPS) and host part "
-                                "of Kubernetes API calls like e.g. \"https://example.com\". "
-                                "If no prefix is specified HTTPS together with the IP of "
-                                "the host will be used."),
-                         allow_empty=False)),
-                ("path-prefix",
-                 TextAscii(
-                     title=_("Custom path prefix"),
-                     help=_(
-                         "Specifies a URL path prefix which is prepended to the path in calls "
-                         "to the Kubernetes API. This is e.g. useful if Rancher is used to "
-                         "manage Kubernetes clusters. If no prefix is given \"/\" will be used."),
-                     allow_empty=False)),
             ],
             optional_keys=["port", "url-prefix", "path-prefix"],
             title=_("Kubernetes"),
@@ -428,6 +620,34 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 
 
 def _valuespec_generic_metrics_prometheus():
+    namespace_element = (
+        "prepend_namespaces",
+        DropdownChoice(
+            title=_("Prepend namespace prefix for hosts"),
+            help=_("If a cluster uses multiple namespaces you need to activate this option. "
+                   "Hosts for namespaced Kubernetes objects will then be prefixed with the "
+                   "name of their namespace. This makes Kubernetes resources in different "
+                   "namespaces that have the same name distinguishable, but results in "
+                   "longer hostnames."),
+            choices=[
+                ("use_namespace", _("Use a namespace prefix")),
+                ("omit_namespace", _("Don't use a namespace prefix")),
+            ],
+        ))
+
+    filter_namespace_element = ("namespace_include_patterns",
+                                ListOf(
+                                    RegExp(mode=RegExp.complete, title=_("Pattern")),
+                                    title=_("Filter namespaces"),
+                                    add_label=_("Add new pattern"),
+                                    allow_empty=False,
+                                    help=_(
+                                        "If your cluster has multiple namespaces, you can specify "
+                                        "a list of regex patterns. Only matching namespaces will "
+                                        "be monitored. Note that this concerns everything which "
+                                        "is part of the matching namespaces such as pods for "
+                                        "example."),
+                                ))
     return Dictionary(
         elements=[
             ("connection",
@@ -435,6 +655,20 @@ def _valuespec_generic_metrics_prometheus():
                  choices=[
                      ("ip_address", _("IP Address")),
                      ("host_name", _("Host name")),
+                     ("url_custom", _("Custom URL"),
+                      Dictionary(
+                          elements=[("url_address",
+                                     TextAscii(
+                                         title=_("Custom URL server address"),
+                                         help=_("Specify a custom URL to connect to "
+                                                "your server. Do not include the "
+                                                "protocol. This option overwrites "
+                                                "all available options such as port and "
+                                                "other URL prefixes."),
+                                         allow_empty=False,
+                                     ))],
+                          optional_keys=[],
+                      )),
                  ],
                  title=_("Prometheus connection option"),
              )),
@@ -442,6 +676,24 @@ def _valuespec_generic_metrics_prometheus():
                 title=_('Prometheus web port'),
                 default_value=9090,
             )),
+            ('auth_basic',
+             Dictionary(elements=[
+                 ('username', TextAscii(
+                     title=_('Login username'),
+                     allow_empty=False,
+                 )),
+                 ("password", IndividualOrStoredPassword(
+                     title=_("Password"),
+                     allow_empty=False,
+                 )),
+             ],
+                        optional_keys=[],
+                        title=_("Basic authentication"))),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"), choices=[
+                 ("http", "HTTP"),
+                 ("https", "HTTPS"),
+             ])),
             ("exporter",
              ListOf(
                  CascadingDropdown(choices=[
@@ -459,7 +711,7 @@ def _valuespec_generic_metrics_prometheus():
                                      "The created services of the mapped Node Exporter will "
                                      "be assigned to the Checkmk host. A piggyback host for each "
                                      "Node Exporter host will be created if none of the options are "
-                                     "valid."
+                                     "valid. "
                                      "This option allows you to explicitly map one of your Node "
                                      "Exporter hosts to the underlying Checkmk host. This can be "
                                      "used if the default options do not apply to your setup."),
@@ -496,6 +748,8 @@ def _valuespec_generic_metrics_prometheus():
                                      " will be used to create a piggyback host for the cluster related services."
                                     ),
                                )),
+                              namespace_element,
+                              filter_namespace_element,
                               ("entities",
                                ListChoice(
                                    choices=[
@@ -516,7 +770,7 @@ def _valuespec_generic_metrics_prometheus():
                                      "for the respective entities will be created."))),
                           ],
                           title=_("Kube state metrics"),
-                          optional_keys=[],
+                          optional_keys=["namespace_include_patterns"],
                       )),
                      ("cadvisor", _("cAdvisor"),
                       Dictionary(
@@ -556,7 +810,7 @@ def _valuespec_generic_metrics_prometheus():
                                             optional_keys=[],
                                         )),
                                        ("pod", _("Pod - Display the information for pod level"),
-                                        Dictionary(elements=[])),
+                                        Dictionary(elements=[namespace_element])),
                                        ("both",
                                         _("Both - Display the information for both, pod and container, levels"
                                          ),
@@ -581,11 +835,12 @@ def _valuespec_generic_metrics_prometheus():
                                                       ("name",
                                                        _("Name - Use the containers' name")),
                                                   ],
-                                              ))],
+                                              )), namespace_element],
                                             optional_keys=[],
                                         )),
                                    ],
                                )),
+                              filter_namespace_element,
                               (
                                   "entities",
                                   ListChoice(
@@ -606,7 +861,9 @@ def _valuespec_generic_metrics_prometheus():
                           ],
                           title=_("CAdvisor"),
                           validate=_check_not_empty_exporter_dict,
-                          optional_keys=["diskio", "cpu", "df", "if", "memory"],
+                          optional_keys=[
+                              "diskio", "cpu", "df", "if", "memory", "namespace_include_patterns"
+                          ],
                       )),
                  ]),
                  add_label=_("Add new Scrape Target"),
@@ -634,7 +891,7 @@ def _valuespec_generic_metrics_prometheus():
                           help=_("Specify the host to which the resulting "
                                  "service will be assigned to. The host "
                                  "should be configured to allow Piggyback "
-                                 "data"),
+                                 "data."),
                       )),
                      ("metric_components",
                       ListOf(
@@ -702,7 +959,7 @@ def _valuespec_generic_metrics_prometheus():
              )),
         ],
         title=_("Prometheus"),
-        optional_keys=[],
+        optional_keys=["auth_basic"],
     )
 
 
@@ -734,8 +991,27 @@ def _factory_default_special_agents_vsphere():
     return watolib.Rulespec.FACTORY_DEFAULT_UNUSED
 
 
+def _transform_agent_vsphere(params):
+    params.setdefault("skip_placeholder_vms", True)
+    params.setdefault("ssl", False)
+    params.pop("use_pysphere", None)
+    params.setdefault("spaces", "underscore")
+
+    if "snapshots_on_host" not in params:
+        params["snapshots_on_host"] = params.pop("snapshot_display", "vCenter") == "esxhost"
+
+    if isinstance(params["direct"], str):
+        params["direct"] = "hostsystem" in params["direct"]
+
+    return params
+
+
 def _valuespec_special_agents_vsphere():
-    return Transform(valuespec=Dictionary(
+    return Transform(Dictionary(
+        title=_("VMWare ESX via vSphere"),
+        help=_(
+            "This rule allows monitoring of VMWare ESX via the vSphere API. "
+            "You can configure your connection settings here.",),
         elements=[
             ("user", TextAscii(
                 title=_("vSphere User name"),
@@ -750,12 +1026,8 @@ def _valuespec_special_agents_vsphere():
                  title=_("Type of query"),
                  choices=[
                      (True, _("Queried host is a host system")),
-                     ("hostsystem_agent",
-                      _("Queried host is a host system with Checkmk Agent installed")),
                      (False, _("Queried host is the vCenter")),
-                     ("agent", _("Queried host is the vCenter with Checkmk Agent installed")),
                  ],
-                 default_value=True,
              )),
             ("tcp_port",
              Integer(
@@ -843,20 +1115,16 @@ def _valuespec_special_agents_vsphere():
                  ],
                  default_value=None,
              )),
-            ("snapshot_display",
-             DropdownChoice(
-                 title=_("<i>Additionally</i> display snapshots on"),
-                 help=_("The created snapshots can be displayed additionally either "
-                        "on the ESX host or the vCenter. This will result in services "
-                        "for <i>both</i> the queried system and the ESX host / vCenter. "
-                        "By disabling the unwanted services it is then possible "
-                        "to configure where the services are displayed."),
-                 choices=[
-                     (None, _("The Virtual Machine")),
-                     ("esxhost", _("The ESX Host")),
-                     ("vCenter", _("The queried ESX system (vCenter / Host)")),
-                 ],
-                 default_value=None,
+            ("snapshots_on_host",
+             Checkbox(
+                 title=_("VM snapshot summary"),
+                 label=_("Display snapshot summary on ESX hosts"),
+                 default_value=False,
+                 help=_(
+                     "By default the snapshot summary service is displayed on the vCenter. "
+                     "Users who run an ESX host on its own or do not include their vCenter in the "
+                     "monitoring can choose to display the snapshot summary on the ESX host itself."
+                 ),
              )),
             ("vm_piggyname",
              DropdownChoice(
@@ -883,19 +1151,11 @@ def _valuespec_special_agents_vsphere():
             "timeout",
             "vm_pwr_display",
             "host_pwr_display",
-            "snapshot_display",
             "vm_piggyname",
         ],
         ignored_keys=["use_pysphere"],
     ),
-                     title=_("VMWare ESX via vSphere"),
-                     help=_(
-                         "This rule selects the vSphere agent instead of the normal Check_MK Agent "
-                         "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
-                         "your connection settings here."),
-                     forth=lambda a: dict([("skip_placeholder_vms", True), ("ssl", False),
-                                           ("use_pysphere", False),
-                                           ("spaces", "underscore")] + list(a.items())))
+                     forth=_transform_agent_vsphere)
 
 
 rulespec_registry.register(
@@ -1061,6 +1321,8 @@ rulespec_registry.register(
 
 def _special_agents_activemq_transform_activemq(value):
     if not isinstance(value, tuple):
+        if "protocol" not in value:
+            value["protocol"] = "http"
         return value
     new_value = {}
     new_value["servername"] = value[0]
@@ -1081,7 +1343,11 @@ def _valuespec_special_agents_activemq():
                 title=_("Server Name"),
                 allow_empty=False,
             )), ("port", Integer(title=_("Port Number"), default_value=8161)),
-            ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+            ("protocol",
+             DropdownChoice(title=_("Protocol"), choices=[
+                 ("http", "HTTP"),
+                 ("https", "HTTPS"),
+             ])), ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
             ("basicauth",
              Tuple(title=_("BasicAuth settings (optional)"),
                    elements=[TextAscii(title=_("Username")),
@@ -1918,8 +2184,9 @@ rulespec_registry.register(
     ))
 
 
-def _special_agents_3par_transform_3par_add_verify_cert(v):
+def _special_agents_3par_transform(v):
     v.setdefault("verify_cert", False)
+    v.setdefault("port", 8080)
     return v
 
 
@@ -1936,6 +2203,14 @@ def _valuespec_special_agents_3par():
                     title=_("Password"),
                     allow_empty=False,
                 )),
+                ("port",
+                 Integer(
+                     title=_('TCP port number'),
+                     help=_('Port number that 3par is listening on. The default is 8080.'),
+                     default_value=8080,
+                     minvalue=1,
+                     maxvalue=65535,
+                 )),
                 ("verify_cert",
                  DropdownChoice(
                      title=_("SSL certificate verification"),
@@ -1956,7 +2231,7 @@ def _valuespec_special_agents_3par():
             ],
             optional_keys=["values"],
         ),
-        forth=_special_agents_3par_transform_3par_add_verify_cert,
+        forth=_special_agents_3par_transform,
     )
 
 
@@ -2168,7 +2443,7 @@ def _valuespec_special_agents_azure():
                  ],
              )),
         ],
-        optional_keys=["piggyback_vms", "sequential"],
+        optional_keys=["subscription", "piggyback_vms", "sequential"],
     )
 
 
@@ -2407,6 +2682,20 @@ def _valuespec_special_agents_aws():
                  title=_("The secret access key for your AWS account"),
                  allow_empty=False,
              )),
+            ("proxy_details",
+             Dictionary(
+                 title=_("Proxy server details"),
+                 elements=[
+                     ("proxy_host", TextAscii(title=_("Proxy host"), allow_empty=False)),
+                     ("proxy_port", Integer(title=_("Port"))),
+                     ("proxy_user", TextAscii(
+                         title=_("Username"),
+                         size=32,
+                     )),
+                     ("proxy_password", TextAscii(title=_("Password"))),
+                 ],
+                 optional_keys=["proxy_port", "proxy_user", "proxy_password"],
+             )),
             ("assume_role",
              Dictionary(
                  title=_("Assume a different IAM role"),
@@ -2577,7 +2866,7 @@ def _valuespec_special_agents_aws():
             ("overall_tags",
              _vs_aws_tags(_("Restrict monitoring services by one of these AWS tags"))),
         ],
-        optional_keys=["overall_tags"],
+        optional_keys=["overall_tags", "proxy_details"],
     ),
                      forth=_transform_aws)
 

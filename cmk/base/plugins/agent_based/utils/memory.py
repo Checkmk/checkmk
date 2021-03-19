@@ -4,14 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Literal, Optional, Tuple, Union
+from typing import Dict, Literal, Mapping, Optional, Tuple, Union
 from ..agent_based_api.v1.type_defs import CheckResult
 
 from ..agent_based_api.v1 import Metric, render, Result, State as state
 
+SectionMem = Mapping[str, int]
+
 
 def is_linux_section(section: Dict[str, int]) -> bool:
-    return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
+    # match these to the keys required by checks/mem
+    return {
+        "Buffers",
+        "Cached",
+        "Dirty",
+        "MemFree",
+        "MemTotal",
+        "SwapFree",
+        "SwapTotal",
+        "Writeback",
+    } <= section.keys()
 
 
 def get_levels_mode_from_value(
@@ -54,7 +66,7 @@ def normalize_levels(
     Normalize levels to absolute posive levels and return formatted levels text
 
         >>> normalize_levels("perc_used", 12, 42, 200)
-        (24.0, 84.0, 'warn/crit at 12.0%/42.0% used')
+        (24.0, 84.0, 'warn/crit at 12.00%/42.00% used')
 
     """
     # TODO: remove this weird case of different reference values.
@@ -123,7 +135,7 @@ def check_element(
         ...     create_percent_metric=True,
         ... )
         >>> print(result.summary)
-        Short term memory: 23.0% - 46 B of 200 B (warn/crit at 12.0%/42.0% used)
+        Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
         >>> print(result.state)
         State.WARN
         >>> print(metric)

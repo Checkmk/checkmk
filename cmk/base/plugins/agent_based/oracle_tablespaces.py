@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     Tuple,
     Optional,
@@ -18,7 +19,6 @@ from .agent_based_api.v1.type_defs import (
     StringTable,
     DiscoveryResult,
     CheckResult,
-    Parameters,
 )
 
 from .agent_based_api.v1 import (
@@ -147,7 +147,7 @@ def parse_oracle_tablespaces(string_table: StringTable) -> oracle.SectionTableSp
 
     for v in tablespaces.values():
         v["amount_missing_filenames"] = len([df for df in v['datafiles'] if df['name'] == ''])
-        v["autoextensible"] = any([df['autoextensible'] for df in v['datafiles']])
+        v["autoextensible"] = any(df['autoextensible'] for df in v['datafiles'])
 
     return {"error_sids": error_sids, "tablespaces": tablespaces}
 
@@ -168,7 +168,7 @@ def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Discover
 
 def check_oracle_tablespaces(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: oracle.SectionTableSpaces,
 ) -> CheckResult:
     try:
@@ -202,7 +202,7 @@ def check_oracle_tablespaces(
 
     # Conversion of old autochecks params
     if isinstance(params, tuple):
-        params = Parameters({"autoextend": params[0], "levels": params[1:]})
+        params = Mapping[str, Any]({"autoextend": params[0], "levels": params[1:]})
 
     autoext = params.get("autoextend", None)
     uses_default_increment = False
@@ -257,9 +257,12 @@ def check_oracle_tablespaces(
         warn, crit, _as_perc, _info_text = \
             db.get_tablespace_levels_in_bytes(max_size, params)
 
-        yield Metric(name="size",
-                     value=current_size,
-                     levels=(max_size - warn, max_size - crit) if warn and crit else None)
+        yield Metric(
+            name="size",
+            value=current_size,
+            levels=(max_size - warn, max_size - crit) if warn and crit else None,
+            boundaries=(0, max_size),
+        )
         yield Metric(
             name="used",
             value=used_size,

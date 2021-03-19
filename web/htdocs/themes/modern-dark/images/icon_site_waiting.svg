@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#F5F0FF;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Dashboard">
+	<g id="Hexagon-Variant-01" transform="translate(-1237.000000, -305.000000)">
+		<g id="waiting" transform="translate(1237.000000, 305.000000)">
+			<path id="Shape" class="st0" d="M8,0C3.6,0,0,3.6,0,8c0,4.4,3.6,8,8,8c4.4,0,8-3.6,8-8S12.4,0,8,0z M8,14.3
+				c-3.4,0-6.3-2.8-6.3-6.3c0-3.4,2.8-6.3,6.3-6.3s6.3,2.8,6.3,6.3C14.3,11.4,11.4,14.3,8,14.3z"/>
+			<path id="Path" class="st0" d="M8.7,8V4.7C8.7,4.3,8.4,4,8,4C7.6,4,7.3,4.3,7.3,4.7v3.6c0,0,0,0,0,0c0,0.2,0.1,0.4,0.2,0.5
+				l2.5,2.5c0.3,0.3,0.7,0.3,1,0c0.3-0.3,0.3-0.7,0-1L8.7,8z"/>
+		</g>
+	</g>
+</g>
+</svg>

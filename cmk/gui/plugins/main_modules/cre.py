@@ -33,6 +33,7 @@ import cmk.gui.notify
 import cmk.gui.webapi
 import cmk.gui.crash_reporting
 import cmk.gui.werks
+import cmk.gui.user_notify
 import cmk.gui.notifications
 import cmk.gui.valuespec
 

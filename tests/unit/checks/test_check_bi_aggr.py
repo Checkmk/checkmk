@@ -19,7 +19,6 @@ pytestmark = pytest.mark.checks
         "optional": {}
     }, ["-b", "some/path", "-a", "foo", "--use-automation-user"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_bi_aggr_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_bi_aggr")

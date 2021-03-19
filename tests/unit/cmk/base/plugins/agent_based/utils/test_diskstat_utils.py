@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+from typing import Any, Dict
 import time
 
 import pytest  # type: ignore[import]
@@ -25,9 +25,9 @@ from cmk.base.plugins.agent_based.utils import diskstat
     [
         (
             [
-                type_defs.Parameters({
+                {
                     'summary': True,
-                },),
+                },
             ],
             [
                 Service(item='SUMMARY'),
@@ -35,10 +35,10 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
         (
             [
-                type_defs.Parameters({
+                {
                     'summary': True,
                     'physical': True,
-                },),
+                },
             ],
             [
                 Service(item='SUMMARY'),
@@ -48,14 +48,13 @@ from cmk.base.plugins.agent_based.utils import diskstat
         ),
         (
             [
-                type_defs.Parameters(
-                    {
-                        'summary': True,
-                        'physical': True,
-                        'lvm': True,
-                        'vxvm': True,
-                        'diskless': True,
-                    },),
+                {
+                    'summary': True,
+                    'physical': True,
+                    'lvm': True,
+                    'vxvm': True,
+                    'diskless': True,
+                },
             ],
             [
                 Service(item='SUMMARY'),
@@ -133,7 +132,7 @@ def test_compute_rates_multiple_disks():
         'C:': DISK,
         'D:': DISK,
     }
-    value_store: type_defs.ValueStore = {}
+    value_store: Dict[str, Any] = {}
 
     # first call should result in IgnoreResultsError, second call should yield rates
     with pytest.raises(IgnoreResultsError):
@@ -252,10 +251,10 @@ def test_scale_levels(levels, factor):
     "params,disk,exp_res",
     [
         (
-            type_defs.Parameters({}),
+            {},
             DISK,
             [
-                Result(state=state.OK, notice='Utilization: 53.2%'),
+                Result(state=state.OK, notice='Utilization: 53.24%'),
                 Metric('disk_utilization', 0.53242),
                 Result(state=state.OK, summary='Read: 12.3 kB/s'),
                 Metric('disk_read_throughput', 12312.4324),
@@ -288,7 +287,7 @@ def test_scale_levels(levels, factor):
             ],
         ),
         (
-            type_defs.Parameters({
+            ({
                 'utilization': (10, 20),
                 'read': (1e-5, 1e-4),
                 'write': (1e-5, 1e-4),
@@ -302,7 +301,7 @@ def test_scale_levels(levels, factor):
             }),
             DISK,
             [
-                Result(state=state.CRIT, notice='Utilization: 53.2% (warn/crit at 10.0%/20.0%)'),
+                Result(state=state.CRIT, notice='Utilization: 53.24% (warn/crit at 10.00%/20.00%)'),
                 Metric('disk_utilization', 0.53242, levels=(0.1, 0.2)),
                 Result(state=state.CRIT, summary='Read: 12.3 kB/s (warn/crit at 10.0 B/s/100 B/s)'),
                 Metric('disk_read_throughput', 12312.4324, levels=(10.0, 100.0)),
@@ -352,14 +351,14 @@ def test_scale_levels(levels, factor):
             ],
         ),
         (
-            type_defs.Parameters({}),
+            {},
             {},
             [],
         ),
     ],
 )
 def test_check_diskstat_dict(params, disk, exp_res):
-    value_store: type_defs.ValueStore = {}
+    value_store: Dict[str, Any] = {}
 
     assert list(
         diskstat.check_diskstat_dict(params=params,
@@ -373,7 +372,7 @@ def test_check_diskstat_dict(params, disk, exp_res):
 
     assert list(
         diskstat.check_diskstat_dict(
-            params=type_defs.Parameters({
+            params=({
                 **params, 'average': 300
             }),
             disk=disk,

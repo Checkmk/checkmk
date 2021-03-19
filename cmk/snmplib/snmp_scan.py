@@ -14,7 +14,7 @@ from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend
+from cmk.snmplib.type_defs import SNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
@@ -26,7 +26,7 @@ def gather_available_raw_section_names(
     on_error: str,
     *,
     missing_sys_description: bool,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
     if not sections:
         return set()
@@ -56,7 +56,7 @@ def _snmp_scan(
     on_error: str = "ignore",
     *,
     missing_sys_description: bool,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
@@ -78,7 +78,7 @@ def _snmp_scan(
 
 def _prefetch_description_object(
     *,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> None:
     for oid, name in [
         (OID_SYS_DESCR, "system description"),
@@ -103,15 +103,15 @@ def _fake_description_object() -> None:
         OID_SYS_DESCR,
         OID_SYS_OBJ,
     )
-    snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
-    snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
+    snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
+    snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""
 
 
 def _find_sections(
     sections: Iterable[SNMPScanSection],
     *,
     on_error: str,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
     found_sections: Set[SectionName] = set()
     for name, specs in sections:

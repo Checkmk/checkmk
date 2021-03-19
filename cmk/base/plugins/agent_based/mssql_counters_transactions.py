@@ -3,21 +3,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping
+from typing import Any, Mapping, MutableMapping
 import time
 
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (
     IgnoreResults,
     register,
     check_levels,
     get_value_store,
-)
-
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    CheckResult,
-    DiscoveryResult,
-    ValueStore,
 )
 
 from .utils.mssql_counters import (
@@ -41,11 +35,11 @@ def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     counters, _counter = get_item(item, section)
@@ -74,14 +68,15 @@ def _check_common(
             levels_upper=params.get(counter_key),
             render_func=lambda v, n=node_name, t=title: "%s%s: %.1f/s" % (n and "[%s] " % n, t, v),
             metric_name=counter_key.replace("/sec", "_per_second"),
+            boundaries=(0, None),
         )
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -95,28 +90,28 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0)
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0)
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0)
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
 
 def check_mssql_counters_transactions(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     """
@@ -130,11 +125,11 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Result(state=<State.OK: 0>, summary='[node1] Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0)
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0)
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
     Result(state=<State.OK: 0>, summary='[node1] Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0)
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, time_point, node_name, item, params, node_section)
@@ -142,7 +137,7 @@ def _cluster_check_base(
 
 def cluster_check_mssql_counters_transactions(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
 ) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)

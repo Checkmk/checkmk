@@ -13,7 +13,6 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize("params,expected_args", [
     (None, ["host"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_acme_sbc_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent("agent_acme_sbc")

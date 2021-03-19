@@ -858,7 +858,7 @@ def test_regression_check(item, check_results):
     assert list(
         ipmi.check_ipmi(
             item,
-            type_defs.Parameters({"ignored_sensorstates": ["ns", "nr", "na"]}),
+            {"ignored_sensorstates": ["ns", "nr", "na"]},
             SECTION_IPMI,
             SECTION_IPMI_DISCRETE,
         )) == check_results

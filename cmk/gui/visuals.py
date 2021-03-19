@@ -10,10 +10,25 @@ import sys
 import traceback
 import json
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
-from livestatus import SiteId
+from livestatus import LivestatusTestingError
 
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
 from cmk.utils.type_defs import UserId
@@ -21,7 +36,12 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKAuthException, MKUserError
+from cmk.gui.exceptions import (
+    HTTPRedirect,
+    MKGeneralException,
+    MKAuthException,
+    MKUserError,
+)
 from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
 from cmk.gui.type_defs import (
@@ -35,6 +55,7 @@ from cmk.gui.type_defs import (
     VisualTypeName,
 )
 from cmk.gui.valuespec import (
+    CascadingDropdown,
     Dictionary,
     DualListChoice,
     ValueSpec,
@@ -50,6 +71,7 @@ from cmk.gui.valuespec import (
     Integer,
     ListOfMultipleChoiceGroup,
     GroupedListOfMultipleChoices,
+    Transform,
 )
 
 import cmk.gui.config as config
@@ -76,8 +98,11 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
     filter_registry,
+    get_only_sites_from_context,
 )
 
+from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 # Needed for legacy (pre 1.6) plugins
@@ -454,12 +479,13 @@ def page_list(what,
     breadcrumb = visual_page_breadcrumb(what, title, "list")
 
     visual_type = visual_type_registry[what]()
+    visual_plural_title = visual_type.plural_title.title()
     current_type_dropdown = PageMenuDropdown(
         name=what,
-        title=visual_type.plural_title.title(),
+        title=visual_plural_title,
         topics=[
             PageMenuTopic(
-                title=visual_type.plural_title.title(),
+                title=visual_plural_title,
                 entries=[
                     PageMenuEntry(
                         title=_('Add %s') % visual_type.title,
@@ -473,8 +499,15 @@ def page_list(what,
         ],
     )
 
-    page_menu = pagetypes.customize_page_menu(breadcrumb, current_type_dropdown, what)
+    page_menu = pagetypes.customize_page_menu(
+        breadcrumb,
+        current_type_dropdown,
+        what,
+    )
     html.header(title, breadcrumb, page_menu)
+
+    for message in get_flashed_messages():
+        html.show_message(message)
 
     # Deletion of visuals
     delname = html.request.var("_delete")
@@ -491,7 +524,8 @@ def page_list(what,
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
-            html.reload_sidebar()
+            flash(_('Your %s has been deleted.') % visual_type.title)
+            html.reload_whole_page()
         except MKUserError as e:
             html.user_error(e)
 
@@ -516,9 +550,7 @@ def page_list(what,
     for title1, items in [(_('Customized'), my_visuals),
                           (_("Owned by other users"), foreign_visuals),
                           (_('Builtin'), builtin_visuals)]:
-        html.open_h3()
-        html.write(title1)
-        html.close_h3()
+        html.h3(title1, class_="table")
 
         with table_element(css='data', limit=None) as table:
 
@@ -598,9 +630,6 @@ def page_list(what,
 
 
 def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
-    if what != "dashboards" and visual["hidden"]:
-        return False  # don't link to hidden visuals
-
     if owner == config.user.id:
         return True
 
@@ -627,7 +656,8 @@ def _visual_can_be_linked(what, visual_name, all_visuals, visual, owner):
 
 
 def page_create_visual(what, info_keys, next_url=None):
-    title = _('Create %s') % visual_type_registry[what]().title
+    visual_name = visual_type_registry[what]().title
+    title = _('Create %s') % visual_name
     what_s = what[:-1]
 
     vs_infos = SingleInfoSelection(info_keys)
@@ -635,32 +665,29 @@ def page_create_visual(what, info_keys, next_url=None):
     breadcrumb = visual_page_breadcrumb(what, title, "create")
     html.header(
         title, breadcrumb,
-        make_simple_form_page_menu(breadcrumb,
+        make_simple_form_page_menu(visual_name.capitalize(),
+                                   breadcrumb,
                                    form_name="create_visual",
                                    button_name="save",
                                    save_title=_("Continue")))
 
     html.open_p()
     html.write(
-        _('Depending on the choosen datasource a %s can list <i>multiple</i> or <i>single</i> objects. '
-          'For example the <i>services</i> datasource can be used to simply create a list '
+        _('Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. '
+          'For example, the <i>services</i> datasource can be used to simply create a list '
           'of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even '
           'a list of services with the same name on <i>multiple</i> hosts. When you just want to '
-          'create a list of objects, you do not need to make any selection in this dialog. '
-          'If you like to create a view for one specific object of a specific type, select the '
-          'object type below and continue.') % what_s)
+          'create a list of objects, simply continue with the default choice (no restrictions). '
+          'Alternatively, you have the option to restrict to a single host or to choose the type '
+          'of objects you want to restrict to manually.') % what_s)
     html.close_p()
 
     if html.request.var('save') and html.check_transaction():
         try:
             single_infos = vs_infos.from_html_vars('single_infos')
             vs_infos.validate_value(single_infos, 'single_infos')
-
-            if not next_url:
-                next_url = 'edit_' + what_s + '.py?mode=create&single_infos=%s' % ','.join(
-                    single_infos)
-            else:
-                next_url += '&single_infos=%s' % ','.join(single_infos)
+            next_url = (next_url or 'edit_' + what_s +
+                        '.py?mode=create') + '&single_infos=%s' % ','.join(single_infos)
             raise HTTPRedirect(next_url)
         except MKUserError as e:
             html.user_error(e)
@@ -752,28 +779,44 @@ def process_context_specs(context_specs):
     return context
 
 
-def render_context_specs(visual, context_specs):
+def render_context_specs(
+    visual,
+    context_specs,
+    isopen: bool = True,
+    help_text: Union[str, HTML, None] = None,
+):
     if not context_specs:
         return
 
-    forms.header(_("Context / Search Filters"))
+    forms.header(
+        _("Context / Search Filters"),
+        isopen=isopen,
+        show_more_toggle=any(vs.has_show_more() for _title, vs in context_specs if vs is not None),
+        help_text=help_text,
+    )
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
     value = visual.get('context', {})
     for info_key, spec in context_specs:
-        forms.section(spec.title())
+        forms.section(
+            spec.title(),
+            is_show_more=spec.has_show_more() if isinstance(spec, Dictionary) else all(
+                flt.is_show_more for _title, flt in spec.filter_items() if flt is not None))
         ident = 'context_' + info_key
         spec.render_input(ident, value)
 
 
-def page_edit_visual(what,
-                     all_visuals,
-                     custom_field_handler=None,
-                     create_handler=None,
-                     load_handler=None,
-                     info_handler=None,
-                     sub_pages: pagetypes.SubPagesSpec = None):
+def page_edit_visual(
+    what: Literal["dashboards", "views", "reports"],
+    all_visuals: Dict[Any, Dict[str, Any]],
+    custom_field_handler=None,
+    create_handler=None,
+    load_handler=None,
+    info_handler=None,
+    sub_pages: pagetypes.SubPagesSpec = None,
+    help_text_context: Union[str, HTML, None] = None,
+):
     if sub_pages is None:
         sub_pages = []
 
@@ -793,7 +836,7 @@ def page_edit_visual(what,
         cloneuser = html.request.var("load_user")
         if cloneuser is not None:
             mode = 'clone'
-            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
+            visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), {}))
             if not visual:
                 raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type.title)
 
@@ -816,9 +859,9 @@ def page_edit_visual(what,
         else:
             user_id_str = html.request.get_unicode_input("owner", config.user.id)
             owner_user_id = None if user_id_str is None else UserId(user_id_str)
-            visual = all_visuals.get((owner_user_id, visualname))
+            visual = all_visuals.get((owner_user_id, visualname), {})
             if not visual:
-                visual = all_visuals.get(('', visualname))  # load builtin visual
+                visual = all_visuals.get(('', visualname), {})  # load builtin visual
                 mode = 'clone'
                 if not visual:
                     raise MKUserError(None,
@@ -856,6 +899,7 @@ def page_edit_visual(what,
         dropdown_name=what[:-1],
         mode=mode,
         type_title=visual_type.title,
+        type_title_plural=visual_type.plural_title,
         ident_attr_name=visual_type.ident_attr,
         sub_pages=sub_pages,
         form_name="visual",
@@ -908,7 +952,11 @@ def page_edit_visual(what,
                  regex_error=_(
                      'The name of the view may only contain letters, digits and underscores.'),
                  size=50,
-                 allow_empty=False)),
+                 allow_empty=False,
+                 default_value=unique_default_name_suggestion(
+                     what[:-1],
+                     (visual["name"] for visual in all_visuals.values()),
+                 ))),
             ('title', TextUnicode(title=_('Title') + '<sup>*</sup>', size=50, allow_empty=False)),
             ('description',
              TextAreaUnicode(
@@ -923,10 +971,17 @@ def page_edit_visual(what,
                  help=_("Whether or not additional information from the page context "
                         "(filters) should be added to the title given above."),
              )),
-            ('topic', DropdownChoice(
-                title=_('Topic'),
-                choices=pagetypes.PagetypeTopics.choices(),
-            )),
+            ('topic',
+             DropdownChoice(
+                 title=_("Topic in ’Monitor' menu"),
+                 default_value="my_workplace",
+                 help=_("Dashboards will be visible in the ‘Monitor’ main menu. "
+                        "With this option, you can select in which section of the menu this "
+                        "dashboard should be accessible. If you want to define a new "
+                        "topic name you can do this here <a href='%s'>here</a>.") %
+                 "pagetype_topics.py",
+                 choices=pagetypes.PagetypeTopics.choices(),
+             )),
             ("sort_index",
              Integer(
                  title=_("Sort index"),
@@ -940,13 +995,22 @@ def page_edit_visual(what,
              Checkbox(
                  title=_("Show more"),
                  label=_("Only show the %s if show more is active" % visual_type.title),
-                 default_value=99,
                  help=_("The navigation allows to hide items based on a show "
                         "less / show more toggle. You can specify here whether or "
                         "not this %s should only be shown with show more %s.") %
                  (visual_type.title, visual_type.title),
              )),
-            ('icon', IconSelector(title=_('Icon'))),
+            ('icon',
+             IconSelector(
+                 title=_('Icon'),
+                 help=_("This selection is only relevant if under 'User' "
+                        "-> 'Edit Profile' -> 'Mega menue icons' you have selected "
+                        "the options 'Per Entry'. If this is the case, you "
+                        "select here the icon that will be placed next to your "
+                        "Dashboard’s name in the Monitoring menu. You can only "
+                        "select one icon (the colored icon) or one icon that is "
+                        "complemented with an additional symbol."),
+             )),
             ('visibility', Dictionary(
                 title=_('Visibility'),
                 elements=visibility_elements,
@@ -962,7 +1026,8 @@ def page_edit_visual(what,
         if html.request.var("save%d" % nr):
             save_and_go = pagename
 
-    if save_and_go or html.request.var("save") or html.request.var("search"):
+    if save_and_go or html.request.var("save") or html.request.var(
+            "save_and_view") or html.request.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
 
@@ -1002,12 +1067,19 @@ def page_edit_visual(what,
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.request.var("save") or save_and_go:
+            if html.request.var("save") or html.request.var("save_and_view") or save_and_go:
                 if save_and_go:
                     back_url = makeuri_contextless(
                         global_request,
                         [(visual_type.ident_attr, visual['name'])],
                         filename=save_and_go + '.py',
+                    )
+
+                if html.request.var("save_and_view"):
+                    back_url = makeuri_contextless(
+                        global_request,
+                        [(visual_type.ident_attr, visual['name'])],
+                        filename=visual_type.show_url,
                     )
 
                 if html.check_transaction():
@@ -1024,9 +1096,9 @@ def page_edit_visual(what,
                                                         varstring + visual["name"])
                     save(what, all_visuals, owner_user_id)
 
-                html.immediate_browser_redirect(1, back_url)
-                html.show_message(_('Your %s has been saved.') % visual_type.title)
-                html.reload_sidebar()
+                if not html.request.var("save_and_view"):
+                    flash(_('Your %s has been saved.') % visual_type.title)
+                html.reload_whole_page(back_url)
                 html.footer()
                 return
 
@@ -1051,10 +1123,18 @@ def page_edit_visual(what,
 
     vs_general.render_input("general", visual)
 
-    if custom_field_handler:
+    if custom_field_handler and custom_field_handler.__name__ != 'dashboard_fields_handler':
         custom_field_handler(visual)
 
-    render_context_specs(visual, context_specs)
+    render_context_specs(
+        visual,
+        context_specs,
+        isopen=what != "dashboards",
+        help_text=help_text_context,
+    )
+
+    if custom_field_handler and custom_field_handler.__name__ == 'dashboard_fields_handler':
+        custom_field_handler(visual)
 
     forms.end()
     html.show_localization_hint()
@@ -1087,6 +1167,8 @@ def show_filter(f: Filter) -> None:
         with html.plugged():
             f.display()
             html.write(html.drain())
+    except LivestatusTestingError:
+        raise
     except Exception as e:
         logger.exception("error showing filter")
         tb = sys.exc_info()[2]
@@ -1130,10 +1212,12 @@ def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
 # is some kind of filter translation between a filter of the "hostgroup" info
 # and the "hosts" info.
 def get_link_filter_names(
-        visual: Visual, info_keys: List[InfoName],
-        link_filters: Dict[FilterName, FilterName]) -> List[Tuple[FilterName, FilterName]]:
+    single_infos: SingleInfos,
+    info_keys: List[InfoName],
+    link_filters: Dict[FilterName, FilterName],
+) -> List[Tuple[FilterName, FilterName]]:
     names: List[Tuple[FilterName, FilterName]] = []
-    for info_key in visual['single_infos']:
+    for info_key in single_infos:
         if info_key not in info_keys:
             for key in info_params(info_key):
                 if key in link_filters:
@@ -1164,7 +1248,7 @@ def filters_of_visual(visual: Visual,
                     pass  # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
-    for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
+    for key, dst_key in get_link_filter_names(visual["single_infos"], info_keys, link_filters):
         filters[dst_key] = get_filter(dst_key)
 
     # add ubiquitary_filters that are possible for these infos
@@ -1322,60 +1406,18 @@ def get_filter_headers(table, infos, context):
             else:
                 html.request.set_var(filter_name, filter_vars)
 
-        filter_headers = "".join(collect_filter_headers(infos, table))
+        filter_headers = "".join(collect_filter_headers(collect_filters(infos)))
     return filter_headers, get_only_sites_from_context(context)
 
 
-def get_only_sites_from_context(context: dict) -> Optional[List[SiteId]]:
-    """Gather possible existing "only sites" information from context
-
-      We need to deal with
-
-      a) all possible site filters (sites, site and siteopt).
-      b) with single and multiple contexts
-
-      Single contexts are structured like this:
-
-      {"site": "sitename"}
-      {"sites": "sitename|second"}
-
-      Multiple contexts are structured like this:
-
-      {"site": {"site": "sitename"}}
-      {"sites": {"sites": "sitename|second"}}
-
-      The difference is no fault or "old" data structure. We can have both kind of structures.
-      These are the data structure the visuals work with.
-
-      "site" and "sites" are conflicting filters. The new optional filter
-      "sites" for many sites filter is only used if the view is configured
-      to only this filter.
-      """
-
-    if "sites" in context and "site" not in context:
-        only_sites = context["sites"]
-        if isinstance(only_sites, dict):
-            only_sites = only_sites["sites"]
-        only_sites = [SiteId(site) for site in only_sites.strip().split("|") if site]
-        return only_sites if only_sites else None
-
-    for var in ["site", "siteopt"]:
-        if var in context:
-            if isinstance(context[var], dict):
-                site_name = context[var].get("site")
-                if site_name:
-                    return [SiteId(site_name)]
-                return None
-            return [SiteId(context[var])]
-
-    return None
-
-
-def collect_filter_headers(info_keys, table):
-    # Collect all available filters for these infos
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
     for filter_obj in filter_registry.values():
         if filter_obj.info in info_keys and filter_obj.available():
-            yield filter_obj.filter(table)
+            yield filter_obj
+
+
+def collect_filter_headers(filters: Iterable[Filter],) -> Iterable[str]:
+    yield from (filter.filter(None) for filter in filters)
 
 
 #.
@@ -1393,8 +1435,14 @@ def collect_filter_headers(info_keys, table):
 
 def FilterChoices(infos: List[InfoName], title: str, help: str):  # pylint: disable=redefined-builtin
     """Select names of filters for the given infos"""
+    def _info_filter_choices(infos):
+        for info in infos:
+            info_title = visual_info_registry[info]().title
+            for key, filter_ in VisualFilterList.get_choices(info, ignore=set()):
+                yield (key, f"{info_title}: {filter_.title()}")
+
     return DualListChoice(
-        choices=[(x[0], x[1].title()) for x in VisualFilterList.get_choices(infos, ignore=set())],
+        choices=list(_info_filter_choices(infos)),
         title=title,
         help=help,
     )
@@ -1448,6 +1496,12 @@ class VisualFilterList(ListOfMultiple):
 
     def filter_names(self):
         return self._filters.keys()
+
+    def filter_items(self):
+        return self._filters.items()
+
+    def has_show_more(self) -> bool:
+        return all(vs.is_show_more for _key, vs in self.filter_items())
 
 
 class VisualFilterListWithAddPopup(VisualFilterList):
@@ -1583,13 +1637,13 @@ def _show_filter_form_buttons(varprefix: str, filter_list_id: str,
     html.close_a()
 
     html.open_div(class_="update_buttons")
+    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
     html.jsbutton("%s_reset" % varprefix,
                   _("Reset"),
                   cssclass="reset",
                   onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)" %
                   (json.dumps(varprefix), json.dumps(page_request_vars), json.dumps(view_name),
                    json.dumps(reset_ajax_page)))
-    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
     html.close_div()
     html.close_div()
 
@@ -1644,18 +1698,83 @@ class VisualFilter(ValueSpec):
         for varname in self._filter.htmlvars:
             var_value = value.get(varname)
             if var_value is not None:
+                # Workaround a bug we had in Checkmk <2.0.0 in the "discovery_state" filter.
+                # It persisted the checkbox states as booleans instead of using the HTTP
+                # request variable values. See CMK-6606.
+                if varname in [
+                        "discovery_state_ignored", "discovery_state_vanished",
+                        "discovery_state_unmonitored"
+                ]:
+                    if var_value is True:
+                        var_value = "on"
+                    elif var_value is False:
+                        var_value = ""
+
                 html.request.set_var(varname, var_value)
 
 
-def SingleInfoSelection(info_keys: List[InfoName]) -> DualListChoice:
-    infos = [visual_info_registry[key]() for key in info_keys]
-    choices = [(i.ident, _('Show information of a single %s') % i.title)
-               for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
+def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
+    if not restrictions:
+        choice_name = "no_restriction"
+    elif restrictions == ["host"]:
+        choice_name = "single_host"
+    else:
+        choice_name = "manual_selection"
+    return choice_name, restrictions
 
-    return DualListChoice(
-        title=_('Specific objects'),
-        choices=choices,
-        rows=10,
+
+def _single_info_selection_back(name_and_restrictions: Tuple[str, Sequence[str]]) -> Sequence[str]:
+    return name_and_restrictions[1]
+
+
+def SingleInfoSelection(info_keys: List[InfoName]) -> Transform:
+    infos = [visual_info_registry[key]() for key in info_keys]
+    manual_choices = [(i.ident, _('Show information of a single %s') % i.title)
+                      for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))]
+
+    cascading_dropdown_choices: List[Tuple[str, str, ValueSpec]] = [
+        (
+            "no_restriction",
+            _("No restrictions to specific objects"),
+            FixedValue(
+                [],
+                totext="",
+            ),
+        ),
+    ]
+
+    if any(manual_choice[0] == "host" for manual_choice in manual_choices):
+        cascading_dropdown_choices.append((
+            "single_host",
+            _("Restrict to a single host"),
+            FixedValue(
+                ["host"],
+                totext="",
+            ),
+        ),)
+
+    cascading_dropdown_choices.append((
+        "manual_selection",
+        _("Configure restrictions manually"),
+        DualListChoice(
+            title=_('Specific objects'),
+            choices=manual_choices,
+            rows=10,
+            allow_empty=False,
+        ),
+    ),)
+
+    # We need these transformations because the code which further processes the user input to this
+    # valuespec expects a list of strings (since this was once the DualListChoice now located under
+    # "manual_selection").
+    return Transform(
+        CascadingDropdown(
+            cascading_dropdown_choices,
+            title=_('Specific objects'),
+            sorted=False,
+        ),
+        back=_single_info_selection_back,
+        forth=_single_info_selection_forth,
     )
 
 
@@ -1721,45 +1840,23 @@ def single_infos_spec(single_infos: SingleInfos) -> Tuple[str, FixedValue]:
             ))
 
 
-def verify_single_infos(visual: Visual, context: VisualContext) -> None:
-    """Check if all single infos from the element are known"""
-
-    missing_single_infos = get_missing_single_infos(visual["single_infos"], context)
-
-    # Special hack for the situation where hostgroup views link to host views: The host view uses
-    # the datasource "hosts" which does not have the "hostgroup" info, but is configured to have a
-    # single_info "hostgroup". To make this possible there exists a feature in
-    # (ABCDataSource.link_filters, views._patch_view_context) which is a very specific hack. Have a
-    # look at the description there.  We workaround the issue here by allowing this specific
-    # situation but validating all others.
-    #
-    # The more correct approach would be to find a way which allows filters of different datasources
-    # to have equal names. But this would need a bigger refactoring of the filter mechanic. One
-    # day...
-    if (visual.get("datasource") in ["hosts", "services"] and
-            missing_single_infos == {'hostgroup'} and "opthostgroup" in context):
-        return
-    if (visual.get("datasource") == "services" and missing_single_infos == {"servicegroup"} and
-            "optservicegroup" in context):
-        return
-
-    if missing_single_infos:
-        raise MKUserError(
-            None,
-            _("Missing context information: %s. You can either add this as a fixed "
-              "setting, or call the with the missing HTTP variables.") %
-            (", ".join(missing_single_infos)))
-
-
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> Set[FilterName]:
     single_info_keys = get_single_info_keys(single_infos)
     return set(single_info_keys).difference(context)
 
 
-def visual_title(what: VisualTypeName, visual: Visual) -> str:
+def visual_title(what: VisualTypeName,
+                 visual: Visual,
+                 context: VisualContext,
+                 skip_title_context: bool = False) -> str:
     title = _u(visual["title"])
 
-    if visual["add_context_to_title"]:
+    # In case we have a site context given replace the $SITE$ macro in the titles.
+    site_filter_vars = context.get("site", {})
+    assert isinstance(site_filter_vars, dict)
+    title = title.replace("$SITE$", site_filter_vars.get("site", ""))
+
+    if visual["add_context_to_title"] and not skip_title_context:
         title = _add_context_title(visual, title)
 
     # Execute title plugin functions which might be added by the user to

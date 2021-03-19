@@ -19,7 +19,6 @@ _broken_info = [[
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_oracle_jobs_discovery_error(info):
     check = Check('oracle_jobs')
     assert list(check.run_discovery(info)) == []
@@ -28,7 +27,6 @@ def test_oracle_jobs_discovery_error(info):
 @pytest.mark.parametrize('info', [
     _broken_info,
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_oracle_jobs_check_error(info):
     check = Check('oracle_jobs')
     with pytest.raises(MKCounterWrapped):

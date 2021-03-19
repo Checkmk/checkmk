@@ -14,7 +14,7 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import Optional, List, Type, Dict
+from typing import Optional, List, Type
 
 from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
@@ -25,24 +25,27 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
-    ID,
-    FixedValue,
-    SiteChoice,
-    Dictionary,
-    TextUnicode,
     Checkbox,
+    Dictionary,
     DocumentationURL,
+    FixedValue,
+    ID,
     RuleComment,
+    SetupSiteChoice,
+    TextUnicode,
 )
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import SiteId
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuTopic,
+    PageMenuSearch,
     make_simple_link,
     make_simple_form_page_menu,
 )
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
 from cmk.gui.utils.flashed_messages import flash
 
@@ -65,8 +68,8 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def site_valuespec(self) -> SiteChoice:
-        return SiteChoice()
+    def site_valuespec(self) -> SetupSiteChoice:
+        return SetupSiteChoice()
 
     @abc.abstractmethod
     def can_be_disabled(self) -> bool:
@@ -106,7 +109,7 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         return None
 
 
-class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
+class _SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
     """Base for specific WATO modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
@@ -120,17 +123,25 @@ class SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
         # to be set before it is executed. Therefore we execute the super constructor
         # here.
         # TODO: Make the _from_vars() mechanism more explicit
-        super(SimpleWatoModeBase, self).__init__()
+        super(_SimpleWatoModeBase, self).__init__()
 
-    def _add_change(self, action: str, entry: Dict, text: str) -> None:
+    def _add_change(
+        self,
+        *,
+        action: str,
+        text: str,
+        affected_sites: Optional[List[SiteId]],
+    ) -> None:
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
-                           text,
-                           domains=self._mode_type.affected_config_domains(),
-                           sites=self._mode_type.affected_sites(entry))
+        watolib.add_change(
+            "%s-%s" % (action, self._mode_type.type_name()),
+            text,
+            domains=self._mode_type.affected_config_domains(),
+            sites=affected_sites,
+        )
 
 
-class SimpleListMode(SimpleWatoModeBase):
+class SimpleListMode(_SimpleWatoModeBase):
     """Base class for list modes"""
     @abc.abstractmethod
     def _table_title(self) -> str:
@@ -181,6 +192,7 @@ class SimpleListMode(SimpleWatoModeBase):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _new_button_label(self) -> str:
@@ -215,8 +227,11 @@ class SimpleListMode(SimpleWatoModeBase):
         self._validate_deletion(ident, entries[ident])
 
         entry = entries.pop(ident)
-        self._add_change("delete", entry,
-                         _("Removed the %s '%s'") % (self._mode_type.name_singular(), ident))
+        self._add_change(
+            action="delete",
+            text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
+            affected_sites=self._mode_type.affected_sites(entry),
+        )
         self._store.save(entries)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
@@ -274,7 +289,7 @@ class SimpleListMode(SimpleWatoModeBase):
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
 
-class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
+class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
     """Base class for edit modes"""
     @abc.abstractmethod
     def _vs_individual_elements(self):
@@ -318,7 +333,10 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="edit", button_name="save")
+        return make_simple_form_page_menu(_("Actions"),
+                                          breadcrumb,
+                                          form_name="edit",
+                                          button_name="save")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()
@@ -331,6 +349,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
             title=self._mode_type.name_singular().title(),
             elements=general_elements + individual_elements,
             optional_keys=self._vs_optional_keys(),
+            show_more_keys=["docu_url"],
             headers=[
                 (_("General Properties"), general_keys),
                 (_("%s Properties") % self._mode_type.name_singular().title(), individual_keys),
@@ -339,6 +358,7 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
         )
 
     def _vs_mandatory_elements(self):
+        ident_attr: List = []
         if self._new:
             ident_attr = [
                 ("ident",
@@ -346,8 +366,9 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
                      title=_("Unique ID"),
                      help=_("The ID must be a unique text. It will be used as an internal key "
                             "when objects refer to this object."),
+                     default_value=self._default_id,
                      allow_empty=False,
-                     size=12,
+                     size=80,
                  )),
             ]
         else:
@@ -393,6 +414,12 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
 
         return elements
 
+    def _default_id(self) -> str:
+        return unique_default_name_suggestion(
+            self._mode_type.name_singular(),
+            self._store.load_for_reading().keys(),
+        )
+
     def _vs_optional_keys(self):
         return []
 
@@ -419,16 +446,27 @@ class SimpleEditMode(SimpleWatoModeBase, metaclass=abc.ABCMeta):
                 "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
-        entries[self._ident] = self._entry
-
         if self._new:
+            entries[self._ident] = self._entry
             self._add_change(
-                "add", self._entry,
-                _("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident))
+                action="add",
+                text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                affected_sites=self._mode_type.affected_sites(self._entry),
+            )
         else:
+            current_sites = self._mode_type.affected_sites(self._entry)
+            previous_sites = self._mode_type.affected_sites(entries[self._ident])
+
+            affected_sites = (None if current_sites is None or previous_sites is None else sorted(
+                {*previous_sites, *current_sites}))
+
+            entries[self._ident] = self._entry
+
             self._add_change(
-                "edit", self._entry,
-                _("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident))
+                action="edit",
+                text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                affected_sites=affected_sites,
+            )
 
         self._save(entries)
 

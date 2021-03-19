@@ -180,14 +180,14 @@ def check_heartbeat_crm(_no_item, params, info):
         yield 2, u'DC: %s (Expected %s)' % (dc, params['dc'])
 
     # Check for number of nodes when enabled
-    if params['num_nodes'] is not None:
+    if params['num_nodes'] is not None and num_nodes is not None:
         if num_nodes == params['num_nodes']:
             yield 0, u'Nodes: %d' % (num_nodes,)
         else:
             yield 2, u'Nodes: %d (Expected %d)' % (num_nodes, params['num_nodes'])
 
     # Check for number of resources when enabled
-    if params['num_resources'] is not None:
+    if params['num_resources'] is not None and num_resources is not None:
         if num_resources == params['num_resources']:
             yield 0, u'Resources: %d' % (num_resources,)
         else:

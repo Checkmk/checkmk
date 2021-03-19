@@ -10,6 +10,7 @@
 
 #include <string>
 
+#include "Row.h"
 #include "Table.h"
 #include "global_counters.h"
 class ColumnOffsets;
@@ -30,6 +31,7 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
+    [[nodiscard]] Row getDefault() const override;
 
 private:
     void addCounterColumns(const std::string &name,

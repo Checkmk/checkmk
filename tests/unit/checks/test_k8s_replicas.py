@@ -42,7 +42,7 @@ info_recreate = [[
         info_unavailable_ok,
         [
             (0, 'Ready: 1/2', [
-                ('ready_replicas', 1, None, 4.0, None, None),
+                ('ready_replicas', 1, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -52,7 +52,7 @@ info_recreate = [[
         info_surge_ok,
         [
             (0, 'Ready: 3/2', [
-                ('ready_replicas', 3, None, 4.0, None, None),
+                ('ready_replicas', 3, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 1)', []),
@@ -62,7 +62,7 @@ info_recreate = [[
         info_unavailable_crit,
         [
             (2, 'Ready: 0/2 (crit below 1)', [
-                ('ready_replicas', 0, None, 4.0, None, None),
+                ('ready_replicas', 0, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -72,7 +72,7 @@ info_recreate = [[
         info_surge_crit,
         [
             (2, 'Ready: 4/2 (crit at 4)', [
-                ('ready_replicas', 4, None, 4.0, None, None),
+                ('ready_replicas', 4, None, 4.0, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -82,7 +82,7 @@ info_recreate = [[
         info_paused,
         [
             (0, 'Ready: 4/2 (paused)', [
-                ('ready_replicas', 4, None, None, None, None),
+                ('ready_replicas', 4, None, None, 0.0, 2.0),
                 ('total_replicas', 2, None, None, None, None),
             ]),
             (0, u'Strategy: RollingUpdate (max unavailable: 1, max surge: 25%)', []),
@@ -92,14 +92,13 @@ info_recreate = [[
         info_recreate,
         [
             (0, 'Ready: 0/10', [
-                ('ready_replicas', 0, None, None, None, None),
+                ('ready_replicas', 0, None, None, 0.0, 10.0),
                 ('total_replicas', 10, None, None, None, None),
             ]),
             (0, u'Strategy: Recreate', []),
         ],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_k8s_replicas(info, expected):
     check = Check("k8s_replicas")
     parsed = parse_json(info)
@@ -115,7 +114,6 @@ def test_k8s_replicas(info, expected):
     (1, 4, 6),
     ('25%', 10, 14),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_surge_levels(max_surge, total, expected):
     check = Check('k8s_replicas')
     crit = check.context['parse_k8s_surge'](max_surge, total)
@@ -126,7 +124,6 @@ def test_surge_levels(max_surge, total, expected):
     (2, 5, 3),
     ('25%', 10, 7),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_unavailability_levels(max_unavailable, total, expected):
     check = Check('k8s_replicas')
     crit_lower = check.context['parse_k8s_unavailability'](max_unavailable, total)

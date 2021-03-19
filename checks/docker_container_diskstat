@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.utils.docker as docker
 
@@ -33,7 +37,7 @@ def parse_docker_container_diskstat(info):
 
 
 def _parse_docker_container_diskstat_plugin(info):
-    raw = docker.json_get_obj(info[1])
+    raw = docker.parse(info).data
 
     devices = {}
     for major_minor, name in raw["names"].items():
@@ -44,12 +48,12 @@ def _parse_docker_container_diskstat_plugin(info):
             "ios": {},
         }
 
-    for entry in raw["io_service_bytes_recursive"]:
+    for entry in raw["io_service_bytes_recursive"] or ():
         device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["bytes"][entry["op"]] = entry["value"]
 
-    for entry in raw["io_serviced_recursive"]:
+    for entry in raw["io_serviced_recursive"] or ():
         device = devices.get((entry["major"], entry["minor"]))
         if device:
             device["ios"][entry["op"]] = entry["value"]

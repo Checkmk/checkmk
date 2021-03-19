@@ -14,7 +14,6 @@ pytestmark = pytest.mark.checks
 FileinfoItem = namedtuple("FileinfoItem", "name missing failed size time")
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_fileinfo_min_max_age_levels():
     # This test has the following purpose:
     # For each file attr (size or age) the levels 'min*', 'max*' are evaluated.
@@ -140,7 +139,6 @@ def test_fileinfo_min_max_age_levels():
             ],
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_no_files(info, parsed, expected_result):
     '''Test that the check returns an OK status when there are no files.'''
 
@@ -206,7 +204,6 @@ def test_check_fileinfo_group_no_files(info, parsed, expected_result):
             ],
         ),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
     '''Test that the check returns an OK status if there are no matching files.'''
 
@@ -244,7 +241,6 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
                 (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
                 (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
                 (0, '\nInclude patterns: /var/log/sys*' \
-                    '\n(Remaining) files in file group:' \
                     '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B' \
                     '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'),
             ],
@@ -266,7 +262,6 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
              (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
              (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
              (0, '\nInclude patterns: /var/log/sys*' \
-                 '\n(Remaining) files in file group:' \
                  '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B' \
                  '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'),
              ],
@@ -279,8 +274,7 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             ],
             {},
             [
-              (3, 'No group pattern found in autocheck. Please rediscover the services ' \
-                  'of this host to get this fixed automatically'),
+             (3, "No group pattern found."),
             ],
         ),
         (
@@ -289,8 +283,7 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
             ],
             {},
             [
-                (0, 'Count: 0', [('count', 0, None, None)]),
-                (0, 'Size: 0 B', [('size', 0, None, None)]),
+             (3, "No group pattern found."),
             ],
         ),
         (
@@ -312,7 +305,6 @@ def test_check_fileinfo_group_no_matching_files(info, parsed, expected_result):
                 (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
                 (0, '\nInclude patterns: /var/log/sys*' \
                     '\nExclude patterns: /var/log/syslog1' \
-                    '\n(Remaining) files in file group:' \
                     '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'),
             ],
         ),
@@ -324,104 +316,5 @@ def test_check_fileinfo_group_patterns(info, group_pattern, expected_result):
         fileinfo_groups_check.run_check(
             'banana',
             group_pattern,
-            fileinfo_single_check.run_parse(info),
-        ))
-
-
-@pytest.mark.parametrize('info, expected_result', [
-    (
-        [
-            [u"1563288717"],
-            [u'/var/log/syslog', '384', '1465079135'],
-            [u'/var/log/syslog1', '384', '1465079135'],
-            [u'/var/log/banana', '1', '1465079135'],
-        ],
-        [
-            (0, 'Count: 3', [('count', 3, None, None)]),
-            (0, 'Size: 769 B', [('size', 769, None, None)]),
-            (0, 'Largest size: 1 B', [('size_largest', 1, None, None)]),
-            (0, 'Smallest size: 1 B', [('size_smallest', 1, None, None)]),
-            (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
-            (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
-            (0, 'Files matching /var/log/sys*'),
-            (0, 'Count: 2', []),
-            (0, 'Size: 768 B', []),
-            (0, 'Largest size: 384 B', []),
-            (0, 'Smallest size: 384 B', []),
-            (0, 'Oldest age: 3.1 y', []),
-            (0, 'Newest age: 3.1 y', []),
-            (0, '\nInclude patterns: /var/log/*'
-             '\nFiles matching /var/log/sys*:'
-             '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'
-             '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'
-             '\n(Remaining) files in file group:'
-             '\n[/var/log/banana] Age: 3.1 y, Size: 1 B'),
-        ],
-    ),
-    (
-        [
-            [u"1563288717"],
-            [u'/var/log/syslog', '384', '1465079135'],
-            [u'/var/log/syslog1', '384', '1465079135'],
-        ],
-        [
-            (0, 'Count: 2', [('count', 2, None, None)]),
-            (0, 'Size: 768 B', [('size', 768, None, None)]),
-            (0, 'Files matching /var/log/sys*'),
-            (0, 'Count: 2', []),
-            (0, 'Size: 768 B', []),
-            (0, 'Largest size: 384 B', []),
-            (0, 'Smallest size: 384 B', []),
-            (0, 'Oldest age: 3.1 y', []),
-            (0, 'Newest age: 3.1 y', []),
-            (0, '\nInclude patterns: /var/log/*'
-             '\nFiles matching /var/log/sys*:'
-             '\n[/var/log/syslog] Age: 3.1 y, Size: 384 B'
-             '\n[/var/log/syslog1] Age: 3.1 y, Size: 384 B'),
-        ],
-    ),
-    (
-        [
-            [u"1563288717"],
-            [u'/var/log/banana', '1', '1465079135'],
-        ],
-        [
-            (0, 'Count: 1', [('count', 1, None, None)]),
-            (0, 'Size: 1 B', [('size', 1, None, None)]),
-            (0, 'Largest size: 1 B', [('size_largest', 1, None, None)]),
-            (0, 'Smallest size: 1 B', [('size_smallest', 1, None, None)]),
-            (0, 'Oldest age: 3.1 y', [('age_oldest', 98209582, None, None)]),
-            (0, 'Newest age: 3.1 y', [('age_newest', 98209582, None, None)]),
-            (0, '\nInclude patterns: /var/log/*'
-             '\n(Remaining) files in file group:'
-             '\n[/var/log/banana] Age: 3.1 y, Size: 1 B'),
-        ],
-    ),
-    (
-        [
-            [u"1563288717"],
-        ],
-        [
-            (0, 'Count: 0', [('count', 0, None, None)]),
-            (0, 'Size: 0 B', [('size', 0, None, None)]),
-            (0, '\nInclude patterns: /var/log/*'),
-        ],
-    ),
-])
-def test_check_fileinfo_group_count_size(info, expected_result):
-    '''Test that the fileinfo.groups check counts and adds up the size of all files
-    within the file group, regardless of any additional rules. Test that it counts
-    the files and adds the file size of files within file groups correctly.'''
-    fileinfo_groups_check = Check('fileinfo.groups')
-    fileinfo_single_check = Check('fileinfo')
-    assert expected_result == list(
-        fileinfo_groups_check.run_check(
-            'banana',
-            {
-                'group_patterns': [('/var/log/*', '')],
-                'additional_rules': [('/var/log/sys*', {
-                    'minage_oldest': (1.0, 2.0)
-                }),],
-            },
             fileinfo_single_check.run_parse(info),
         ))

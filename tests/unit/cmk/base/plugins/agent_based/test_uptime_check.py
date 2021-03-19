@@ -8,7 +8,6 @@ import pytest  # type: ignore[import]
 from testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
 
 from cmk.base.plugins.agent_based import uptime
 from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
@@ -40,7 +39,7 @@ def test_uptime_discovery(section, do_discover):
 def test_uptime_check_basic():
 
     with on_time('2018-04-15 16:50', 'CET'):
-        assert list(uptime_utils.check(Parameters({}), uptime_utils.Section(123, None))) == [
+        assert list(uptime_utils.check({}, uptime_utils.Section(123, None))) == [
             Result(state=State.OK, summary='Up since Apr 15 2018 18:47:57'),
             Result(state=State.OK, summary='Uptime: 2 minutes 3 seconds'),
             Metric("uptime", 123.0),
@@ -49,7 +48,7 @@ def test_uptime_check_basic():
 
 def test_uptime_check_zero():
     with on_time('2018-04-15 16:50', 'CET'):
-        assert list(uptime_utils.check(Parameters({}), uptime_utils.Section(0, None))) == [
+        assert list(uptime_utils.check({}, uptime_utils.Section(0, None))) == [
             Result(state=State.OK, summary='Up since Apr 15 2018 18:50:00'),
             Result(state=State.OK, summary='Uptime: 0 seconds'),
             Metric("uptime", 0.0),
@@ -152,6 +151,6 @@ def test_uptime_solaris_inputs(info, reference):
     # is needed for the check output to always return the same infotext.
     # The true test happens on state and perfdata
     with on_time('2018-04-15 16:50', 'CET'):
-        result = list(uptime_utils.check(Parameters({}), section))
+        result = list(uptime_utils.check({}, section))
 
     assert result == reference

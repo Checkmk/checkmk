@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import hashlib
+from pathlib import Path
+
 import pytest  # type: ignore[import]
 
 import cmk.gui.config
 from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
+from cmk.gui.globals import html
+
 from testlib import on_time
 
 
@@ -196,36 +201,6 @@ def test_timerange_value_to_json_conversion():
             assert vs.Timerange().value_from_json(json_value) == choice_value
 
 
-@pytest.mark.parametrize("value, result", [
-    ({
-        "time_range": ("date", (1577833200, 1580425200)),
-        "time_resolution": "h"
-    }, "Time range: Date range, 2019-12-31, 2020-01-30, Time resolution: Show alerts per hour"),
-    ({
-        "time_range": ("age", 158000),
-        "time_resolution": "d"
-    },
-     "Time range: The last..., 1 days 19 hours 53 minutes 20 seconds, Time resolution: Show alerts per day"
-    ),
-])
-def test_dictionary_value_to_json_conversion(value, result):
-    with on_time("2020-03-02", "UTC"):
-        # TODO: Obtain this valuespec directly by importing AlertBarChartDashlet
-        #       once it's available and simplify to:
-        #       abcd_vs = AlertBarChartDashlet.vs_parameters()
-        abcd_vs = vs.Dictionary([
-            ("time_range", vs.Timerange(title="Time range")),
-            ("time_resolution",
-             vs.DropdownChoice(title="Time resolution",
-                               choices=[("h", "Show alerts per hour"),
-                                        ("d", "Show alerts per day")])),
-        ])
-        abcd_vs._render = "oneline"
-        assert abcd_vs.value_to_text(value) == result
-        json_value = abcd_vs.value_to_json(value)
-        assert abcd_vs.value_from_json(json_value) == value
-
-
 @pytest.mark.parametrize(
     "address",
     [
@@ -339,3 +314,69 @@ def test_transform_value_in_cascading_dropdown():
     assert valuespec.transform_value(("a", "abc")) == ("a", "abc")
     assert valuespec.transform_value(("b", "lala")) == ("b", "lalaaaa")
     assert valuespec.transform_value(("b", "AAA")) == ("b", "AAAaaa")
+
+
+@pytest.fixture()
+def fixture_auth_secret():
+    secret_path = Path(cmk.utils.paths.omd_root) / "etc" / "auth.secret"
+    secret_path.parent.mkdir(parents=True, exist_ok=True)
+    with secret_path.open("wb") as f:
+        f.write(b"auth-secret")
+
+
+def test_password_from_html_vars_empty(register_builtin_html):
+    html.request.set_var("pw_orig", "")
+    html.request.set_var("pw", "")
+
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == ""
+
+
+def test_password_from_html_vars_not_set(register_builtin_html):
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == ""
+
+
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_initial_pw(register_builtin_html):
+    html.request.set_var("pw_orig", "")
+    html.request.set_var("pw", "abc")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "abc"
+
+
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_unchanged_pw(register_builtin_html):
+    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw", "")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "abc"
+
+
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_password_from_html_vars_change_pw(register_builtin_html):
+    html.request.set_var("pw_orig", vs.ValueEncrypter.encrypt("abc"))
+    html.request.set_var("pw", "xyz")
+    pw = vs.Password()
+    assert pw.from_html_vars("pw") == "xyz"
+
+
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_value_encrypter_encrypt():
+    encrypted = vs.ValueEncrypter.encrypt("abc")
+    assert isinstance(encrypted, str)
+    assert encrypted != "abc"
+
+
+@pytest.mark.skipif(not hasattr(hashlib, 'scrypt'),
+                    reason="OpenSSL version too old, must be >= 1.1")
+@pytest.mark.usefixtures("fixture_auth_secret")
+def test_value_encrypter_transparent():
+    enc = vs.ValueEncrypter
+    assert enc.decrypt(enc.encrypt("abc")) == "abc"

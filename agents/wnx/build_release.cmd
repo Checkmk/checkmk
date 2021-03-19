@@ -60,6 +60,8 @@ set LOCAL_IMAGES_PDB=%arte%\pdb
 set LOCAL_IMAGES_EXE=%arte%\exe
 set SKIP_MINOR_BINARIES=YES
 
+set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
+
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 

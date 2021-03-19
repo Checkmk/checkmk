@@ -117,7 +117,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def real_dir(self) -> str:
-        return "/opt/" + self.dir
+        return "/opt/" + self.dir.lstrip("/")
 
     @property
     def real_tmp_dir(self) -> str:
@@ -258,6 +258,7 @@ class RootContext(AbstractSiteContext):
 
     @property
     def dir(self) -> str:
+        """Absolute base path (without trailing slash)"""
         return "/"
 
     @property
@@ -266,7 +267,8 @@ class RootContext(AbstractSiteContext):
 
     @property
     def real_dir(self) -> str:
-        return "/" + self.dir
+        """Absolute base path (without trailing slash)"""
+        return "/" + self.dir.lstrip("/")
 
     @property
     def real_tmp_dir(self) -> str:

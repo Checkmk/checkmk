@@ -40,12 +40,20 @@ pathlib_paths = [
     "local_agent_based_plugins_dir",
     "diagnostics_dir",
     "site_config_dir",
+    "license_usage_dir",
 ]
 
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
-        if not var.startswith("_") and var not in ('Path', 'os', 'sys', 'Union'):
+        if not var.startswith("_") and not var.startswith("make_") and var not in (
+                'ConfigSerial',
+                'Path',
+                'OptionalConfigSerial',
+                'os',
+                'sys',
+                'Union',
+        ):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)

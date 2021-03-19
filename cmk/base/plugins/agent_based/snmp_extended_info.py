@@ -16,8 +16,9 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     StringTable,
     HostLabelGenerator,
-    SNMPDeviceTypes,
 )
+
+from .utils.device_types import is_fibrechannel_switch, SNMPDeviceType
 
 
 class SNMPExtendedInfo(NamedTuple):
@@ -37,9 +38,13 @@ def parse_snmp_extended_info(string_table: List[StringTable]) -> List[SNMPExtend
 
 
 def host_label_snmp_extended_info(section: List[SNMPExtendedInfo]) -> HostLabelGenerator:
-    for device_type in SNMPDeviceTypes:
-        if device_type in section[0].entPhysDescr.lower():
-            yield HostLabel("cmk/device_type", device_type)
+    for device_type in SNMPDeviceType:
+        if device_type.name in section[0].entPhysDescr.upper():
+            if device_type is SNMPDeviceType.SWITCH and is_fibrechannel_switch(
+                    section[0].entPhysDescr):
+                yield HostLabel("cmk/device_type", "fcswitch")
+            else:
+                yield HostLabel("cmk/device_type", device_type.name.lower())
             return
 
 

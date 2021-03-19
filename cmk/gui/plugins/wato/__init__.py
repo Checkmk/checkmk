@@ -30,9 +30,9 @@ from cmk.gui.plugins.wato.utils import (
     ACTestCategories,
     ac_test_registry,
     add_change,
+    make_diff_text,
     add_replication_paths,
     ReplicationPath,
-    CheckTypeSelection,
     config_domain_registry,
     ABCConfigDomain,
     ConfigDomainCore,
@@ -70,7 +70,6 @@ from cmk.gui.plugins.wato.utils import (
     MainMenu,
     make_action_link,
     make_confirm_link,
-    may_edit_ruleset,
     MenuItem,
     mode_registry,
     monitoring_macro_help,
@@ -161,6 +160,7 @@ from cmk.gui.plugins.wato.utils import (
     mode_url,
     flash,
     redirect,
+    valuespec_check_plugin_selection,
 )
 
 #.

@@ -73,7 +73,6 @@ expected_result_2 = CheckResult([
     (info_statgrab_cpu_hpux, mock_state_tuple, expected_result_1),
     (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_statgrab_cpu_check(info, mockstate, expected_result):
 
     check = Check("statgrab_cpu")
@@ -87,7 +86,6 @@ def test_statgrab_cpu_check(info, mockstate, expected_result):
 @pytest.mark.parametrize("info,mockstate", [
     (info_statgrab_cpu_hpux, mock_state_function),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_statgrab_cpu_check_error(info, mockstate):
 
     check = Check("statgrab_cpu")

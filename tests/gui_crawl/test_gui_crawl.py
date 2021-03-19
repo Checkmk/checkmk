@@ -58,7 +58,7 @@ class Worker(threading.Thread):
 
         self.client = CMKWebSession(self.crawler.site)
         self.client.login()
-        self.client.set_language("en")
+        self.client.enforce_non_localized_gui()
 
     def run(self):
         while not self.terminate:
@@ -176,6 +176,10 @@ class Worker(threading.Thread):
             "Missing context information",
             # Same for dashlets that are related to a specific context
             "There are no metrics meeting your context filters",
+            # Some of the errors are only visible to the user when trying to submit and
+            # some are visible for the reason that the GUI crawl sites do not have license
+            # information configured -> ignore the errors
+            "license usage report",
         ]
 
         for element in soup.select("div.error"):
@@ -244,6 +248,7 @@ class Worker(threading.Thread):
         if not parsed.path.startswith("/%s/check_mk" % self.crawler.site.id) \
            or "../pnp4nagios/" in parsed.path \
            or "../nagvis/" in parsed.path \
+           or "check_mk/plugin-api" in parsed.path \
            or "../nagios/" in parsed.path:
             raise InvalidUrl("Skipping non Check_MK URL: %s %s" % (url, parsed))
 

@@ -14,11 +14,10 @@
 #                                                                                       #
 #########################################################################################
 
-from typing import Any, Counter, Dict, Iterable, List, Optional, Sequence, Set, TypedDict
+from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequence, Set, TypedDict
 
 import re
 
-from ..agent_based_api.v1.type_defs import Parameters
 from ..agent_based_api.v1 import regex, Result, State as state
 
 from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
@@ -60,7 +59,7 @@ def discoverable_items(*sections: Section) -> List[str]:
     })
 
 
-def ec_forwarding_enabled(params: Parameters, item: str) -> bool:
+def ec_forwarding_enabled(params: Mapping[str, Any], item: str) -> bool:
     if 'restrict_logfiles' not in params:
         return True  # matches all logs on this host
 
@@ -70,7 +69,7 @@ def ec_forwarding_enabled(params: Parameters, item: str) -> bool:
 
 def select_forwarded(
     items: Sequence[str],
-    forward_settings: List[Parameters],
+    forward_settings: Sequence[Mapping[str, Any]],
     *,
     invert: bool = False,
 ) -> Set[str]:
@@ -83,6 +82,12 @@ def select_forwarded(
     }
 
 
+def escape_win_backslash(text: str) -> str:
+    if "\\" in text:
+        return text.replace("\\", "\\\\")
+    return text
+
+
 def reclassify(
     counts: Counter[int],
     patterns: Dict[str, Any],  # all I know right now :-(
@@ -93,7 +98,7 @@ def reclassify(
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(pattern, re.UNICODE)
+        reg = regex(escape_win_backslash(pattern), re.UNICODE)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and

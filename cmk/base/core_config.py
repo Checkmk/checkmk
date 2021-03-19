@@ -7,6 +7,7 @@
 import abc
 import numbers
 import os
+import socket
 import sys
 import shutil
 from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator, Final, Iterable
@@ -60,9 +61,9 @@ class HelperConfig:
     link is only created in case the context is left without exception.
     """
     def __init__(self, serial: ConfigSerial) -> None:
-        self.serial: Final[ConfigSerial] = serial
-        self.serial_path: Final[Path] = config.make_helper_config_path(serial)
-        self.latest_path: Final[Path] = config.make_helper_config_path(LATEST_SERIAL)
+        self.serial: Final = serial
+        self.serial_path: Final = cmk.utils.paths.make_helper_config_path(serial)
+        self.latest_path: Final = cmk.utils.paths.make_helper_config_path(LATEST_SERIAL)
 
     @contextmanager
     def create(self) -> Iterator["HelperConfig"]:
@@ -628,7 +629,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = ip_address_of(host_config, 4)
+        v4address = ip_address_of(host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -636,7 +637,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = ip_address_of(host_config, 6)
+        v6address = ip_address_of(host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -692,23 +693,25 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     }
     node_ips_4 = []
     if host_config.is_ipv4_host:
+        family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 4)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
-                node_ips_4.append(fallback_ip_for(node_config, 4))
+                node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
     node_ips_6 = []
     if host_config.is_ipv6_host:
+        family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 6)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
-                node_ips_6.append(fallback_ip_for(node_config, 6))
+                node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
     node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
 
@@ -776,9 +779,9 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
+def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) -> Optional[str]:
     try:
-        return ip_lookup.lookup_ip_address(host_config, family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
         if host_config.is_cluster:
             return ""
@@ -787,7 +790,7 @@ def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) 
         if not _ignore_ip_lookup_failures:
             warning("Cannot lookup IP address of '%s' (%s). "
                     "The host will not be monitored correctly." % (host_config.hostname, e))
-        return fallback_ip_for(host_config, family)
+        return ip_lookup.fallback_ip_for(family)
 
 
 def ignore_ip_lookup_failures() -> None:
@@ -797,16 +800,6 @@ def ignore_ip_lookup_failures() -> None:
 
 def failed_ip_lookups() -> List[HostName]:
     return _failed_ip_lookups
-
-
-def fallback_ip_for(host_config: HostConfig, family: Optional[int] = None) -> str:
-    if family is None:
-        family = 6 if host_config.is_ipv6_primary else 4
-
-    if family == 4:
-        return "0.0.0.0"
-
-    return "::"
 
 
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:

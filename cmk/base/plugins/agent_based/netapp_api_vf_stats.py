@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Optional
+from typing import Any, Mapping, Optional
 from .agent_based_api.v1 import (
     check_levels,
     GetRateError,
@@ -19,7 +19,6 @@ from .agent_based_api.v1 import (
     State as state,
     type_defs,
 )
-from . import netapp_api_cpu
 from .utils import cpu_util, netapp_api
 
 # <<<netapp_api_vf_stats:sep(9)>>>
@@ -39,7 +38,7 @@ register.agent_section(
 
 def discover_netapp_api_vf_stats(
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api_cpu.Section],
+    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
 ) -> type_defs.DiscoveryResult:
     """
     >>> list(discover_netapp_api_vf_stats({'vfiler0': {}}, None))
@@ -63,9 +62,9 @@ def discover_netapp_api_vf_stats_common(
 
 def check_netapp_api_vf_stats(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_netapp_api_vf_stats: Optional[netapp_api.SectionSingleInstance],
-    section_netapp_api_cpu: Optional[netapp_api_cpu.Section],
+    section_netapp_api_cpu: Optional[netapp_api.CPUSection],
 ) -> type_defs.CheckResult:
 
     vf = (section_netapp_api_vf_stats or {}).get(item)

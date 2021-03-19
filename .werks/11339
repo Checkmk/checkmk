@@ -6,7 +6,7 @@ Date: 1604041627
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 The refactored check_mk_agent.linux was missing the postfix_mailq_status
 section in its output. This change reintroduces the section. The user is

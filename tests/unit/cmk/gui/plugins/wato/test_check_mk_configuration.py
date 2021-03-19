@@ -8,14 +8,11 @@ import os
 
 import pytest  # type: ignore[import]
 
-from testlib import cmk_path
-
 import cmk.gui.config as config
 from cmk.gui.valuespec import (
     DropdownChoice,)
 
 from cmk.gui.plugins.wato.check_mk_configuration import (ConfigVariableGroupUserInterface,
-                                                         agent_config_mk_agent_sections,
                                                          _transform_automatic_rediscover_parameters)
 
 from cmk.gui.plugins.wato import (
@@ -46,18 +43,6 @@ def test_ui_theme_default_value(register_builtin_html):
     assert default_setting == "modern-dark"
 
     assert var.valuespec().value_to_text(default_setting) == "Dark"
-
-
-def test_exclude_section_options():
-    actual = sorted(
-        skip_section for skip_section, _section_title in agent_config_mk_agent_sections())
-    agent_skip_functions = os.popen(  # nosec
-        "grep \"\\$MK_SKIP_[A-Z]*[_A-Z]*\" %s/agents/check_mk_agent.linux -o" % cmk_path()).read()
-    expected = sorted(
-        skip_section.replace("$MK_SKIP_", "").lower()
-        for skip_section in agent_skip_functions.split("\n")
-        if "$MK_SKIP_" in skip_section)
-    assert expected == actual
 
 
 @pytest.mark.parametrize(

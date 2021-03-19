@@ -7,7 +7,7 @@
 #include "cma_core.h"
 
 namespace cma {
-extern std::unordered_map<std::wstring, wtools::InternalUser> G_Users;
+extern std::unordered_map<std::wstring, wtools::InternalUser> g_users;
 
 TEST(CmaCore, InternalUsers) {
     using namespace std::string_literals;
@@ -16,17 +16,17 @@ TEST(CmaCore, InternalUsers) {
     auto x = ObtainInternalUser(L"Users");
     EXPECT_TRUE(!x.first.empty());
     EXPECT_EQ(x.first, L"cmk_TST_Users"s);
-    EXPECT_EQ(G_Users.size(), 1);
+    EXPECT_EQ(g_users.size(), 1);
 
     auto x2 = ObtainInternalUser(L"Users");
     EXPECT_TRUE(!x2.first.empty());
     EXPECT_EQ(x2.first, L"cmk_TST_Users"s);
     EXPECT_TRUE(x == x2);
 
-    EXPECT_EQ(G_Users.size(), 1);
+    EXPECT_EQ(g_users.size(), 1);
 
     KillAllInternalUsers();
-    EXPECT_TRUE(G_Users.empty());
+    EXPECT_TRUE(g_users.empty());
 };
 
 TEST(CmaCore, Misc) {

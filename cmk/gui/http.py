@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import List, Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
+from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar
 
 from six import ensure_binary, ensure_str
 import werkzeug.wrappers
@@ -183,12 +183,6 @@ class LegacyDeprecatedMixin:
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.headers.get(key, default)  # type: ignore[attr-defined]
-
-    def get_cookie_names(self) -> List[str]:
-        # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
-        # up with 1.7, once we have moved to python 3.
-        # TODO: Deprecated
-        return list(self.cookies.keys())  # type: ignore[attr-defined]
 
     @property
     def referer(self) -> Optional[str]:

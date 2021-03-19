@@ -23,6 +23,7 @@ from six import ensure_str
 from livestatus import SiteId, SiteConfiguration
 
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
@@ -157,7 +158,7 @@ def check_mk_local_automation(command: str,
 
 def _local_automation_failure(command, cmdline, code=None, out=None, err=None, exc=None):
     call = subprocess.list2cmdline(cmdline) if config.debug else command
-    msg = "Error running automation call <tt>%s<tt>" % call
+    msg = "Error running automation call <tt>%s</tt>" % call
     if code:
         msg += " (exit code %d)" % code
     if out:
@@ -312,6 +313,10 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         auth=auth,
         files=files,
         timeout=timeout,
+        headers={
+            "x-checkmk-version": cmk_version.__version__,
+            "x-checkmk-edition": cmk_version.edition_short(),
+        },
     )
 
     response.encoding = "utf-8"  # Always decode with utf-8
@@ -388,7 +393,7 @@ CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
     ("timeout", Optional[int]),
 ])
 
-CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponsee", [
+CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponse", [
     ("job_status", Dict[str, Any]),
     ("result", Any),
 ])
@@ -513,3 +518,36 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         store.save_object_to_file(result_file_path, result)
 
         job_interface.send_result_message(_("Finished."))
+
+
+def execute_automation_discovery(*,
+                                 site_id: SiteId,
+                                 args: Sequence[str],
+                                 timeout=None,
+                                 non_blocking_http=False) -> AutomationDiscoveryResponse:
+    raw_response = check_mk_automation(site_id,
+                                       "inventory",
+                                       args,
+                                       timeout=timeout,
+                                       non_blocking_http=True)
+    # This automation may be executed agains 1.6 remote sites. Be compatible to old structure
+    # (counts, failed_hosts).
+    if isinstance(raw_response, tuple) and len(raw_response) == 2:
+        results = {
+            hostname: DiscoveryResult(
+                self_new=v[0],
+                self_removed=v[1],
+                self_kept=v[2],
+                self_total=v[3],
+                self_new_host_labels=v[4],
+                self_total_host_labels=v[5],
+            ) for hostname, v in raw_response[0].items()
+        }
+
+        for hostname, error_text in raw_response[1].items():
+            results[hostname].error_text = error_text
+
+        return AutomationDiscoveryResponse(results=results)
+    if isinstance(raw_response, dict):
+        return AutomationDiscoveryResponse.deserialize(raw_response)
+    raise NotImplementedError()

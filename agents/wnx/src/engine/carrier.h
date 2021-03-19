@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // API "Internal transport"
 
@@ -168,7 +169,11 @@ public:
     bool sendCommand(std::string_view peer_name, std::string_view command);
     void shutdownCommunication();
 
-    // Helper API #TODO gtest
+    // Accessors
+    std::string getName() const noexcept { return carrier_name_; }
+    std::string getAddress() const noexcept { return carrier_address_; }
+
+    // Helper API
     static inline bool FireSend(
         const std::wstring& PeerName,  // assigned by caller
         const std::wstring& Port,      // standard format
@@ -178,16 +183,15 @@ public:
 
         auto id = ConvertToUint64(Id);
         if (id.has_value()) {
-            auto port = wtools::ConvertToUTF8(Port);
+            auto port = wtools::ToUtf8(Port);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(wtools::ConvertToUTF8(PeerName), id.value(),
-                                   Data, Length);
+            auto ret =
+                cc.sendData(wtools::ToUtf8(PeerName), id.value(), Data, Length);
             cc.shutdownCommunication();
             return ret;
         } else {
-            XLOG::l("Failed to convert id value '{}'",
-                    wtools::ConvertToUTF8(Id));
+            XLOG::l("Failed to convert id value '{}'", wtools::ToUtf8(Id));
             return false;
         }
     }
@@ -197,10 +201,10 @@ public:
     static bool FireCommand(const std::wstring& Name, const T& Port,
                             const void* Data, size_t Length) {
         CoreCarrier cc;
-        auto port = wtools::ConvertToUTF8(Port);
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -210,10 +214,10 @@ public:
     static bool FireLog(const std::wstring& Name, const T& Port,
                         const void* Data, size_t Length) {
         CoreCarrier cc;
-        auto port = wtools::ConvertToUTF8(Port);
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(wtools::ConvertToUTF8(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -258,12 +262,6 @@ private:
                        const std::string& PeerName, uint64_t Marker,
                        const void* Data, size_t Length)>
         data_sender_ = nullptr;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class CarrierTest;
-    FRIEND_TEST(CarrierTest, Mail);
-    FRIEND_TEST(CarrierTest, EstablishShutdown);
-#endif
 };
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 

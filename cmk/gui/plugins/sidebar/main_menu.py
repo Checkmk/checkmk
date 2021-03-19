@@ -7,25 +7,27 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
-
 from typing import NamedTuple, List, Optional, Union
 
 import cmk.gui.config as config
-from cmk.gui.i18n import _
+import cmk.gui.notify as notify
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.popups import MethodInline
+from cmk.gui.i18n import _, ungettext
+from cmk.gui.main_menu import (
+    mega_menu_registry,
+    any_show_more_items,
+)
+from cmk.gui.pages import page_registry, AjaxPage, register
 from cmk.gui.type_defs import (
     Icon,
     MegaMenu,
     TopicMenuTopic,
     TopicMenuItem,
 )
-
-from cmk.gui.main_menu import (
-    mega_menu_registry,
-    any_show_more_items,
-)
+from cmk.gui.utils.popups import MethodInline
+from cmk.gui.werks import num_unacknowledged_incompatible_werks, may_acknowledge
 
 MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),
@@ -33,16 +35,6 @@ MainMenuItem = NamedTuple("MainMenuItem", [
     ("icon", Icon),
     ("onopen", Optional[str]),
 ])
-
-
-def get_show_more_setting(more_id: str) -> bool:
-    if config.user.get_attribute("show_mode") == "enforce_show_more":
-        return True
-
-    return html.foldable_container_is_open(
-        treename="more_buttons",
-        id_=more_id,
-        isopen=config.user.get_attribute("show_mode") == "default_show_more")
 
 
 class MainMenuRenderer:
@@ -64,8 +56,7 @@ class MainMenuRenderer:
 
             html.open_li()
             html.popup_trigger(
-                (html.render_icon(menu_item.icon) + html.render_icon(active_icon, class_="active") +
-                 html.render_div(menu_item.title)),
+                (self._get_popup_trigger_content(active_icon, menu_item)),
                 ident="mega_menu_" + menu_item.name,
                 method=MethodInline(self._get_mega_menu_content(menu_item)),
                 cssclass=menu_item.name,
@@ -73,13 +64,27 @@ class MainMenuRenderer:
                 hover_switch_delay=150,  # ms
                 onopen=menu_item.onopen,
             )
-            html.div("", id_="popup_shadow", onclick="cmk.popup_menu.close_popup()")
+            html.div("",
+                     id_="popup_shadow",
+                     onclick="cmk.popup_menu.close_popup()",
+                     class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
             html.close_li()
 
+    def _get_popup_trigger_content(self, active_icon: Icon, menu_item: MainMenuItem) -> HTML:
+        content = html.render_icon(menu_item.icon) + \
+                    html.render_icon(active_icon, class_="active")
+
+        if not config.user.get_attribute("nav_hide_icons_title"):
+            content += html.render_div(menu_item.title)
+
+        return content
+
     def _get_main_menu_items(self) -> List[MainMenuItem]:
-        # TODO: Add permissions? For example WATO is not allowed for all users
         items: List[MainMenuItem] = []
         for menu in sorted(mega_menu_registry.values(), key=lambda g: g.sort_index):
+            if not menu.topics():
+                continue  # Hide e.g. Setup menu when user is not permitted to see a single topic
+
             items.append(
                 MainMenuItem(
                     name=menu.name,
@@ -92,10 +97,66 @@ class MainMenuRenderer:
     def _get_mega_menu_content(self, menu_item: MainMenuItem) -> str:
         with html.plugged():
             menu = mega_menu_registry[menu_item.name]
-            html.open_div(class_=["popup_menu", "main_menu_popup"])
+            html.open_div(id_="popup_menu_%s" % menu_item.name,
+                          class_=[
+                              "popup_menu",
+                              "main_menu_popup",
+                              "min" if config.user.get_attribute("nav_hide_icons_title") else None,
+                          ])
             MegaMenuRenderer().show(menu)
             html.close_div()
             return html.drain()
+
+
+@register("sidebar_message_read")
+def ajax_message_read():
+    html.set_output_format("json")
+    try:
+        notify.delete_gui_message(html.request.var('id'))
+        html.write("OK")
+    except Exception:
+        if config.debug:
+            raise
+        html.write("ERROR")
+
+
+@page_registry.register_page("ajax_sidebar_get_messages")
+class ModeAjaxSidebarGetMessages(AjaxPage):
+    def page(self):
+        popup_msg: List = []
+        hint_msg: int = 0
+
+        for msg in notify.get_gui_messages():
+            if 'gui_hint' in msg['methods']:
+                hint_msg += 1
+            if 'gui_popup' in msg['methods']:
+                popup_msg.append({"id": msg["id"], "text": msg['text']})
+
+        return {
+            "popup_messages": popup_msg,
+            "hint_messages": {
+                "text": ungettext("message", "messages", hint_msg),
+                "count": hint_msg,
+            },
+        }
+
+
+@page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")
+class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
+    def page(self):
+        if not may_acknowledge():
+            raise MKAuthException(_("You are not allowed to acknowlegde werks"))
+
+        num_unack_werks = num_unacknowledged_incompatible_werks()
+        tooltip_text = ungettext("%d unacknowledged incompatible werk" % num_unack_werks,
+                                 "%d unacknowledged incompatible werks" % num_unack_werks,
+                                 num_unack_werks)
+
+        return {
+            "count": num_unack_werks,
+            "text": _("%d open incompatible werks") % num_unack_werks,
+            "tooltip": tooltip_text,
+        }
 
 
 class MegaMenuRenderer:
@@ -103,7 +164,7 @@ class MegaMenuRenderer:
     def show(self, menu: MegaMenu) -> None:
         more_id = "main_menu_" + menu.name
 
-        show_more = get_show_more_setting(more_id)
+        show_more = config.user.get_show_more_setting(more_id)
         html.open_div(id_=more_id, class_=["main_menu", "more" if show_more else "less"])
         hide_entries_js = "cmk.popup_menu.mega_menu_hide_entries('%s')" % more_id
 
@@ -112,6 +173,8 @@ class MegaMenuRenderer:
         if menu.search:
             menu.search.show_search_field()
         html.close_div()
+        if menu.info_line:
+            html.span(menu.info_line(), id_="info_line_%s" % menu.name, class_="info_line")
         topics = menu.topics()
         if any_show_more_items(topics):
             html.open_div()
@@ -123,6 +186,8 @@ class MegaMenuRenderer:
         html.close_div()
         html.open_div(class_="content inner", id="content_inner_%s" % menu.name)
         for topic in topics:
+            if not topic.items:
+                continue
             self._show_topic(topic, menu.name)
         html.div(None, class_=["topic", "sentinel"])
         html.close_div()
@@ -137,7 +202,9 @@ class MegaMenuRenderer:
         topic_id = "_".join(
             [menu_id, "topic", "".join(c.lower() for c in topic.title if not c.isspace())])
 
-        html.open_div(id_=topic_id, class_=["topic"] + (["show_more_mode"] if show_more else []))
+        html.open_div(id_=topic_id,
+                      class_=["topic"] + (["show_more_mode"] if show_more else []),
+                      **{"data-max-entries": "%d" % topic.max_entries})
 
         self._show_topic_title(menu_id, topic_id, topic)
         self._show_items(topic_id, topic)

@@ -5,16 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # yapf: disable
-
+from typing import Any, Dict
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (  # type: ignore[import]
     Result,
     Metric,
     State as state,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (  # type: ignore[import]
-    ValueStore,
 )
 
 from cmk.base.plugins.agent_based.juniper_trpz_aps import (  # type: ignore[import]
@@ -251,7 +248,7 @@ def test_discovery_juniper_trpz_aps_sessions(node_sections, expected_items):  # 
 ])
 def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_results):  # type: ignore
     now = 1600000000
-    vs: ValueStore = {}
+    vs: Dict[str, Any] = {}
     for _ in range(2):
         results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
     assert results == expected_results
@@ -277,7 +274,7 @@ def test__check_common_juniper_trpz_aps_sessions_single(node_sections, expected_
 ])
 def test__check_common_juniper_trpz_aps_sessions_cluster(node_sections, expected_results):  # type: ignore
     now = 1600000000
-    vs: ValueStore = {}
+    vs: Dict[str, Any] = {}
     for _ in range(2):
         results = list(_check_common_juniper_trpz_aps_sessions(vs, now, "ap1", node_sections))
     assert results == expected_results

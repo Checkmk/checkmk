@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping, MutableMapping
 import collections
 from contextlib import suppress
 
@@ -16,8 +17,6 @@ from .agent_based_api.v1 import (
 from .agent_based_api.v1.type_defs import (
     DiscoveryResult,
     CheckResult,
-    Parameters,
-    ValueStore,
 )
 from .utils.k8s import (
     Section,
@@ -49,9 +48,9 @@ def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
 
 
 def _check__k8s_stats_fs__core(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """
@@ -62,9 +61,9 @@ def _check__k8s_stats_fs__core(
     ... }):
     ...     print(result)
     Metric('fs_used', 4158.4921875, levels=(13193.91875, 14843.15859375), boundaries=(0.0, 16492.3984375))
-    Metric('fs_size', 16492.3984375)
-    Metric('fs_used_percent', 25.21459933956316)
-    Result(state=<State.OK: 0>, summary='25.2% used (4.06 of 16.1 GiB)')
+    Metric('fs_size', 16492.3984375, boundaries=(0.0, None))
+    Metric('fs_used_percent', 25.21459933956316, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
+    Result(state=<State.OK: 0>, summary='25.21% used (4.06 of 16.1 GiB)')
     Metric('growth', 0.0)
     Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0 B')
     Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%')
@@ -91,7 +90,7 @@ def _check__k8s_stats_fs__core(
 
 def check_k8s_stats_fs(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
     """This is an API conformant wrapper for the more functional base functions"""

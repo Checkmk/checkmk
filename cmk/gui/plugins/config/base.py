@@ -44,7 +44,10 @@ log_levels = {
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
     "cmk.web.background-job": 30,
+    "cmk.web.slow-views": 30,
 }
+
+slow_views_duration_threshold = 60
 
 multisite_users: _Dict = {}
 multisite_hostgroups: _Dict = {}
@@ -60,7 +63,6 @@ multisite_contactgroups: _Dict = {}
 
 sidebar = [
     ('tactical_overview', 'open'),
-    ('search', 'open'),
     ('bookmarks', 'open'),
     ('master_control', 'closed'),
 ]
@@ -71,16 +73,15 @@ sidebar_update_interval = 30.0
 # It is possible (but ugly) to enable a scrollbar in the sidebar
 sidebar_show_scrollbar = False
 
-# Enable regular checking for popup notifications
-sidebar_notify_interval = None
-
-sidebar_show_version_in_sidebar = True
+# Enable regular checking for notification messages
+sidebar_notify_interval = 30
 
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80
 
 # Quicksearch search order
 quicksearch_search_order = [
+    ("menu", "continue"),
     ("h", "continue"),
     ("al", "continue"),
     ("ad", "continue"),
@@ -200,6 +201,9 @@ custom_style_sheet = None
 # UI theme to use
 ui_theme = "modern-dark"
 
+# Show mode to use
+show_mode = "default_show_less"
+
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
 
@@ -256,11 +260,6 @@ virtual_host_trees: _List = []
 crash_report_url = "https://crash.checkmk.com"
 # Target email address for "Crashed Check" page
 crash_report_target = "feedback@checkmk.com"
-
-support_credentials = {
-    "username": "",
-    "password": ("password", ""),
-}
 
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False
@@ -323,7 +322,7 @@ default_user_profile: _Dict[str, _Any] = {
     'force_authuser': False,
 }
 lock_on_logon_failures = False
-user_idle_timeout = None
+user_idle_timeout = 5400
 single_user_session = None
 password_policy: _Dict = {}
 
@@ -480,7 +479,6 @@ wato_use_git = False
 wato_hidden_users: _List = []
 wato_user_attrs: _List = []
 wato_host_attrs: _List = []
-wato_legacy_eval = False
 wato_read_only: _Dict = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False

@@ -137,31 +137,37 @@ metric_info["supply_toner_other"] = {
 # Printer
 
 graph_info["printer_queue"] = {
+    "title": _("Printer queue length"),
     "metrics": [("printer_queue", "area")],
     "range": (0, 10),
 }
 
 graph_info["supply_toner_cyan"] = {
+    "title": _("Supply toner cyan"),
     "metrics": [("supply_toner_cyan", "area")],
     "range": (0, 100),
 }
 
 graph_info["supply_toner_magenta"] = {
+    "title": _("Supply toner magenta"),
     "metrics": [("supply_toner_magenta", "area")],
     "range": (0, 100),
 }
 
 graph_info["supply_toner_yellow"] = {
+    "title": _("Supply toner yellow"),
     "metrics": [("supply_toner_yellow", "area")],
     "range": (0, 100),
 }
 
 graph_info["supply_toner_black"] = {
+    "title": _("Supply toner black"),
     "metrics": [("supply_toner_black", "area")],
     "range": (0, 100),
 }
 
 graph_info["supply_toner_other"] = {
+    "title": _("Supply toner"),
     "metrics": [("supply_toner_other", "area")],
     "range": (0, 100),
 }

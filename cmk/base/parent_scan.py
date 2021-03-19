@@ -15,13 +15,12 @@ from typing import Union, Tuple, Optional, Set, Dict, List
 import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.debug
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 
-from cmk.base.caching import config_cache as _config_cache
 import cmk.base.obsolete_output as out
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
 from cmk.utils.type_defs import HostName, HostAddress
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
@@ -127,7 +126,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
 
     if config.monitoring_host:
         host_config = config_cache.get_host_config(config.monitoring_host)
-        nagios_ip = ip_lookup.lookup_ipv4_address(host_config)
+        nagios_ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -140,7 +139,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
         console.verbose("%s " % host)
         host_config = config_cache.get_host_config(host)
         try:
-            ip = ip_lookup.lookup_ipv4_address(host_config)
+            ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -310,17 +309,17 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 # from all_hosts
 def _ip_to_hostname(config_cache: config.ConfigCache,
                     ip: Optional[HostAddress]) -> Optional[HostName]:
-    if not _config_cache.exists("ip_to_hostname"):
-        cache = _config_cache.get_dict("ip_to_hostname")
+    if "ip_to_hostname" not in _config_cache:
+        cache = _config_cache.get("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
             host_config = config_cache.get_host_config(host)
             try:
-                cache[ip_lookup.lookup_ipv4_address(host_config)] = host
+                cache[config.lookup_ip_address(host_config, family=socket.AF_INET)] = host
             except Exception:
                 pass
     else:
-        cache = _config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get("ip_to_hostname")
 
     return cache.get(ip)
 

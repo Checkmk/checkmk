@@ -11,8 +11,18 @@ import re
 import io
 import time
 import zipfile
-from typing import (Callable, Dict, List, Optional as _Optional, TypeVar, Union, Type, Iterator,
-                    overload)
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional as _Optional,
+    TypeVar,
+    Union,
+    Type,
+    Iterator,
+    overload,
+)
 from pathlib import Path
 
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -41,6 +51,7 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
+from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.forms as forms
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -99,6 +110,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     ABCEditGlobalSettingMode,
+    MatchItemGeneratorSettings,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -141,7 +153,18 @@ from cmk.gui.plugins.wato.check_mk_configuration import (
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
 
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.urls import (
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+    make_confirm_link,
+)
+
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    MatchItem,
+    MatchItems,
+    match_item_generator_registry,
+)
 
 
 def _compiled_mibs_dir():
@@ -195,9 +218,9 @@ def substitute_help():
     ]
 
     return _("The following macros will be substituted by value from the actual event:")\
-         + html.render_br()\
-         + html.render_br()\
-         + html.render_table(HTML().join(_help_rows), class_="help")
+        + html.render_br()\
+        + html.render_br()\
+        + html.render_table(HTML().join(_help_rows), class_="help")
 
 
 def ActionList(vs, **kwargs):
@@ -458,7 +481,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("cancel_action_phases",
          DropdownChoice(
-             title=_("Do Cancelling-Actions when..."),
+             title=_("Do cancelling actions"),
              choices=[
                  ("always", _("Always when an event is being cancelled")),
                  ("open", _("Only when the cancelled event is in phase OPEN")),
@@ -476,7 +499,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("event_limit",
          Alternative(
-             title=_("Custom rule event limit"),
+             title=_("Custom event limit"),
              help=_("Use this option to override the "
                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&site=&varname=event_limit\">"
                     "global rule event limit</a>"),
@@ -491,7 +514,7 @@ def vs_mkeventd_rule(customer=None):
          )),
         ("count",
          Dictionary(
-             title=_("Count messages in defined interval"),
+             title=_("Count messages in interval"),
              help=_("With this option you can make the rule being executed not before "
                     "the matching message is seen a couple of times in a defined "
                     "time interval. Also counting activates the aggregation of messages "
@@ -577,101 +600,128 @@ def vs_mkeventd_rule(customer=None):
                   )),
              ],
          )),
-        ("expect",
-         Dictionary(title=_("Expect regular messages"),
-                    help=_("With this option activated you can make the Event Console monitor "
-                           "that a certain number of messages are <b>at least</b> seen within "
-                           "each regular time interval. Otherwise an event will be created. "
-                           "The options <i>week</i>, <i>two days</i> and <i>day</i> refer to "
-                           "periodic intervals aligned at 00:00:00 on the 1st of January 1970. "
-                           "You can specify a relative offset in hours in order to re-align this "
-                           "to any other point of time. In a distributed environment, make "
-                           "sure to specify which site should expect the messages in the match "
-                           "criteria above, else all sites with config replication will warn if "
-                           "messages fail to arrive."),
-                    optional_keys=False,
-                    columns=2,
-                    elements=[
-                        ("interval",
-                         CascadingDropdown(
-                             title=_("Interval"),
-                             separator="&nbsp;",
-                             choices=[
-                                 (7 * 86400, _("week"),
-                                  Integer(
-                                      label=_("Timezone offset"),
-                                      unit=_("hours"),
-                                      default_value=0,
-                                      minvalue=-167,
-                                      maxvalue=167,
-                                  )),
-                                 (2 * 86400, _("two days"),
-                                  Integer(
-                                      label=_("Timezone offset"),
-                                      unit=_("hours"),
-                                      default_value=0,
-                                      minvalue=-47,
-                                      maxvalue=47,
-                                  )),
-                                 (86400, _("day"),
-                                  DropdownChoice(
-                                      label=_("in timezone"),
-                                      choices=[
-                                          (-12, _("UTC -12 hours")),
-                                          (-11, _("UTC -11 hours")),
-                                          (-10, _("UTC -10 hours")),
-                                          (-9, _("UTC -9 hours")),
-                                          (-8, _("UTC -8 hours")),
-                                          (-7, _("UTC -7 hours")),
-                                          (-6, _("UTC -6 hours")),
-                                          (-5, _("UTC -5 hours")),
-                                          (-4, _("UTC -4 hours")),
-                                          (-3, _("UTC -3 hours")),
-                                          (-2, _("UTC -2 hours")),
-                                          (-1, _("UTC -1 hour")),
-                                          (0, _("UTC")),
-                                          (1, _("UTC +1 hour")),
-                                          (2, _("UTC +2 hours")),
-                                          (3, _("UTC +3 hours")),
-                                          (4, _("UTC +4 hours")),
-                                          (5, _("UTC +5 hours")),
-                                          (6, _("UTC +8 hours")),
-                                          (7, _("UTC +7 hours")),
-                                          (8, _("UTC +8 hours")),
-                                          (9, _("UTC +9 hours")),
-                                          (10, _("UTC +10 hours")),
-                                          (11, _("UTC +11 hours")),
-                                          (12, _("UTC +12 hours")),
-                                      ],
-                                      default_value=0,
-                                  )),
-                                 (3600, _("hour")),
-                                 (900, _("15 minutes")),
-                                 (300, _("5 minutes")),
-                                 (60, _("minute")),
-                                 (10, _("10 seconds")),
-                             ],
-                             default_value=3600,
-                         )),
-                        ("count", Integer(
-                            title=_("Number of expected messages"),
-                            minvalue=1,
+        (
+            "expect",
+            Dictionary(
+                title=_("Expect regular messages"),
+                help=_("With this option activated you can make the Event Console monitor "
+                       "that a certain number of messages are <b>at least</b> seen within "
+                       "each regular time interval. Otherwise an event will be created. "
+                       "The options <i>week</i>, <i>two days</i> and <i>day</i> refer to "
+                       "periodic intervals aligned at 00:00:00 on the 1st of January 1970. "
+                       "You can specify a relative offset in hours in order to re-align this "
+                       "to any other point of time. In a distributed environment, make "
+                       "sure to specify which site should expect the messages in the match "
+                       "criteria above, else all sites with config replication will warn if "
+                       "messages fail to arrive."),
+                optional_keys=False,
+                columns=2,
+                elements=[
+                    ("interval",
+                     CascadingDropdown(
+                         title=_("Interval"),
+                         separator="&nbsp;",
+                         choices=[
+                             (7 * 86400, _("week"),
+                              Integer(
+                                  label=_("Timezone offset"),
+                                  unit=_("hours"),
+                                  default_value=0,
+                                  minvalue=-167,
+                                  maxvalue=167,
+                              )),
+                             (2 * 86400, _("two days"),
+                              Integer(
+                                  label=_("Timezone offset"),
+                                  unit=_("hours"),
+                                  default_value=0,
+                                  minvalue=-47,
+                                  maxvalue=47,
+                              )),
+                             (86400, _("day"),
+                              DropdownChoice(
+                                  label=_("in timezone"),
+                                  choices=[
+                                      (-12, _("UTC -12 hours")),
+                                      (-11, _("UTC -11 hours")),
+                                      (-10, _("UTC -10 hours")),
+                                      (-9, _("UTC -9 hours")),
+                                      (-8, _("UTC -8 hours")),
+                                      (-7, _("UTC -7 hours")),
+                                      (-6, _("UTC -6 hours")),
+                                      (-5, _("UTC -5 hours")),
+                                      (-4, _("UTC -4 hours")),
+                                      (-3, _("UTC -3 hours")),
+                                      (-2, _("UTC -2 hours")),
+                                      (-1, _("UTC -1 hour")),
+                                      (0, _("UTC")),
+                                      (1, _("UTC +1 hour")),
+                                      (2, _("UTC +2 hours")),
+                                      (3, _("UTC +3 hours")),
+                                      (4, _("UTC +4 hours")),
+                                      (5, _("UTC +5 hours")),
+                                      (6, _("UTC +8 hours")),
+                                      (7, _("UTC +7 hours")),
+                                      (8, _("UTC +8 hours")),
+                                      (9, _("UTC +9 hours")),
+                                      (10, _("UTC +10 hours")),
+                                      (11, _("UTC +11 hours")),
+                                      (12, _("UTC +12 hours")),
+                                  ],
+                                  default_value=0,
+                              )),
+                             (3600, _("hour")),
+                             (900, _("15 minutes")),
+                             (300, _("5 minutes")),
+                             (60, _("minute")),
+                             (10, _("10 seconds")),
+                         ],
+                         default_value=3600,
+                     )),
+                    ("count", Integer(
+                        title=_("Number of expected messages"),
+                        minvalue=1,
+                    )),
+                    (
+                        "merge",
+                        Transform(
+                            CascadingDropdown(
+                                title=_("Merge with open event"),
+                                help=_("If there already exists an open event because of absent "
+                                       "messages according to this rule, you can optionally merge "
+                                       "the new incident with the exising event or create a new "
+                                       "event for each interval with absent messages."),
+                                choices=[
+                                    ("open", _("Merge if there is an open un-acknowledged event")),
+                                    (
+                                        "acked",
+                                        _("Merge even if there is an acknowledged event"),
+                                        Checkbox(
+                                            title=_("Reset acknowledged state"),
+                                            label=_(
+                                                "Reset acknowledged events back to \"open\" on merge"
+                                            ),
+                                            help=
+                                            _("The state of the event is reset back to "
+                                              "\"open\" in this case. This behavior is based on the "
+                                              "assumption that you want to be informed when there is "
+                                              "new information. However, there are also use cases where "
+                                              "new incoming messages should be counted to the already "
+                                              "existing event in the \"ack\" state and the \"ack\" "
+                                              "state should be kept. To achieve this, the configuration "
+                                              "option \"Reset acknowledged state\" can be disabled below."
+                                             ),
+                                        ),
+                                    ),
+                                    ("never",
+                                     _("Create a new event for each incident - never merge")),
+                                ],
+                                default_value="open",
+                            ),
+                            # The "ackend" sub option was introduced with 1.6.0p20
+                            forth=lambda v: ("acked", True) if v == "acked" else v,
                         )),
-                        ("merge",
-                         DropdownChoice(
-                             title=_("Merge with open event"),
-                             help=_("If there already exists an open event because of absent "
-                                    "messages according to this rule, you can optionally merge "
-                                    "the new incident with the exising event or create a new "
-                                    "event for each interval with absent messages."),
-                             choices=[
-                                 ("open", _("Merge if there is an open un-acknowledged event")),
-                                 ("acked", _("Merge even if there is an acknowledged event")),
-                                 ("never", _("Create a new event for each incident - never merge")),
-                             ],
-                             default_value="open",
-                         )),
-                    ])),
+                ])),
         ("delay",
          Age(title=_("Delay event creation"),
              help=_("The creation of an event will be delayed by this time period. This "
@@ -1103,7 +1153,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         rfc = cmk.gui.mkeventd.send_event(event)
         flash(
             _("Test event generated and sent to Event Console.") + html.render_br() +
-            html.render_pre(rfc) + html.render_reload_sidebar())
+            html.render_pre(rfc))
         return True
 
     def _add_change(self, what, message):
@@ -1119,7 +1169,7 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
         """Valuespec for simulating an event"""
         return Dictionary(
             title=_("Event Simulator"),
-            help=_("You can simulate an event here and check out, which rules are matching."),
+            help=_("You can simulate an event here and check out which rules are matching."),
             render="form",
             form_narrow=True,
             optional_keys=False,
@@ -1140,8 +1190,8 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                              attrencode=True)),
                 ("host",
                  TextUnicode(
-                     title=_("Host Name"),
-                     help=_("The host name of the event"),
+                     title=_("Host lookup element"),
+                     help=_("Hostname, IP address or host alias the event is relevant for"),
                      size=40,
                      default_value=_("myhost089"),
                      allow_empty=True,
@@ -1151,25 +1201,25 @@ class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
                  )),
                 ("ipaddress",
                  IPv4Address(
-                     title=_("IP Address"),
+                     title=_("Event source IP address"),
                      help=_("Original IP address the event was received from"),
                      default_value="1.2.3.4",
                  )),
                 ("priority",
                  DropdownChoice(
-                     title=_("Syslog Priority"),
+                     title=_("Syslog priority"),
                      choices=cmk.gui.mkeventd.syslog_priorities,
                      default_value=5,
                  )),
                 ("facility",
                  DropdownChoice(
-                     title=_("Syslog Facility"),
+                     title=_("Syslog facility"),
                      choices=cmk.gui.mkeventd.syslog_facilities,
                      default_value=1,
                  )),
                 ("sl",
                  DropdownChoice(
-                     title=_("Service Level"),
+                     title=_("Service level"),
                      choices=cmk.gui.mkeventd.service_levels,
                      prefix_values=True,
                  )),
@@ -1209,7 +1259,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rule packs")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -1246,7 +1296,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
             entries=[
                 PageMenuEntry(
                     title=_("Reset counters"),
-                    icon_name="resetcounters",
+                    icon_name="reload_cmk",
                     item=make_simple_link(
                         make_confirm_link(
                             url=make_action_link([("mode", "mkeventd_rule_packs"),
@@ -1406,7 +1456,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 _("You have not created any rule packs yet. The Event Console is useless unless "
                   "you have activated <i>Force message archiving</i> in the global settings."))
         elif search_expression and not found_packs:
-            html.show_message(_("Found no rules packs."))
+            html.show_message(_("Found no rule packs."))
             return
 
         id_to_mkp = self._get_rule_pack_to_mkp_map()
@@ -1451,44 +1501,58 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                                      ("_dissolve", nr)])
                     html.icon_button(dissolve_url,
                                      _("Remove this rule pack from the Extension Packages module"),
-                                     "release_mkp_yellow")
+                                     {
+                                         'icon': 'mkps',
+                                         'emblem': 'disable',
+                                     })
                 elif type_ == ec.RulePackType.modified_mkp:
                     reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
-                    html.icon_button(reset_url, _("Reset rule pack to the MKP version"),
-                                     "release_mkp")
+                    html.icon_button(reset_url, _("Reset rule pack to the MKP version"), {
+                        'icon': 'mkps',
+                        'emblem': 'disable',
+                    })
                     sync_url = make_action_link([("mode", "mkeventd_rule_packs"),
                                                  ("_synchronize", nr)])
-                    html.icon_button(sync_url, _("Synchronize MKP with modified version"),
-                                     "sync_mkp")
+                    html.icon_button(sync_url, _("Synchronize MKP with modified version"), {
+                        'icon': 'mkps',
+                        'emblem': 'refresh',
+                    })
 
                 rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
                 if found_packs.get(id_):
                     rules_url_vars.append(("search", search_expression))
                 rules_url = makeuri_contextless(request, rules_url_vars)
-                html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
+                html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
-                if type_ == ec.RulePackType.internal:
-                    export_url = make_action_link([("mode", "mkeventd_rule_packs"),
-                                                   ("_export", nr)])
-                    html.icon_button(
-                        export_url,
-                        _("Make this rule pack available in the Extension Packages module"),
-                        "cached")
+                if not cmk_version.is_raw_edition():
+                    # Icons for mkp export (CEE/CME only)
+                    if type_ == ec.RulePackType.internal:
+                        export_url = make_action_link([("mode", "mkeventd_rule_packs"),
+                                                       ("_export", nr)])
+                        html.icon_button(
+                            export_url,
+                            _("Make this rule pack available in the Extension Packages module"), {
+                                'icon': 'mkps',
+                                'emblem': 'add',
+                            })
 
-                # Icons for mkp export and disabling
-                table.cell("", css="buttons")
-                if type_ == ec.RulePackType.unmodified_mkp:
-                    html.icon("mkps",
-                              _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
-                elif type_ == ec.RulePackType.exported:
-                    html.icon(
-                        "package",
-                        _("This is rule pack can be packaged with the Extension Packages module."))
-                elif type_ == ec.RulePackType.modified_mkp:
-                    html.icon(
-                        "new_mkp",
-                        _("This rule pack is modified. Originally it was provided via the MKP %s.")
-                        % id_to_mkp[id_])
+                    table.cell("", css="buttons")
+                    if type_ == ec.RulePackType.unmodified_mkp:
+                        html.icon("mkps",
+                                  _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_])
+                    elif type_ == ec.RulePackType.exported:
+                        html.icon(
+                            "mkps",
+                            _("This is rule pack can be packaged with the Extension Packages module."
+                             ))
+                    elif type_ == ec.RulePackType.modified_mkp:
+                        html.icon(
+                            {
+                                'icon': 'mkps',
+                                'emblem': 'warning',
+                            },
+                            _("This rule pack is modified. Originally it was provided via the MKP %s."
+                             ) % id_to_mkp[id_])
 
                 if rule_pack["disabled"]:
                     html.icon(
@@ -1562,8 +1626,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                or search_expression in rule_pack["title"].lower():
                 found_packs.setdefault(rule_pack["id"], [])
             for rule in rule_pack.get("rules", []):
-                if search_expression in rule["id"].lower() \
-                   or search_expression in rule.get("description", "").lower():
+                if any(search_expression in searchable_rule_item.lower()
+                       for searchable_rule_item in (
+                           rule["id"],
+                           rule.get("description", ""),
+                           rule.get("match", ""),
+                       )):
                     found_rules = found_packs.setdefault(rule_pack["id"], [])
                     found_rules.append(rule)
         return found_packs
@@ -1636,7 +1704,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter rules")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -1775,7 +1843,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         facilities = dict(_deref(cmk.gui.mkeventd.syslog_facilities))
 
         # Show content of the rule package
-        with table_element(css="ruleset", limit=None, sortable=False) as table:
+        with table_element(title=_("Rules"), css="ruleset", limit=None, sortable=False) as table:
             have_match = False
             for nr, rule in enumerate(self._rules):
                 if rule in found_rules:
@@ -1792,14 +1860,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 )
                 drag_url = make_action_link([("mode", "mkeventd_rules"),
                                              ("rule_pack", self._rule_pack_id), ("_move", nr)])
-                edit_url = makeuri_contextless(
-                    request,
-                    [
-                        ("mode", "mkeventd_edit_rule"),
-                        ("rule_pack", self._rule_pack_id),
-                        ("edit", nr),
-                    ],
-                )
+                edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
                     request,
                     [
@@ -1879,7 +1940,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         -1: _("(syslog)"),
                         'text_pattern': _("(set by message text)")
                     }[stateval]
-                    table.cell(_("State"), txt, css="state state%s" % stateval)
+                    table.cell(_("State"), html.render_span(txt), css="state state%s" % stateval)
 
                 # Syslog priority
                 if "match_priority" in rule:
@@ -1981,7 +2042,10 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return _("Edit rule pack %s") % self._rule_packs[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule_pack", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule pack"),
+                                          breadcrumb,
+                                          form_name="rule_pack",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2112,7 +2176,10 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return _("Edit rule %s") % self._rules[self._edit_nr]["id"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="rule", button_name="save")
+        menu = make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
+                                          form_name="rule",
+                                          button_name="save")
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -2274,7 +2341,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         else:
             new_mode = "takeover"
         cmk.gui.mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
-        watolib.log_audit(None, "mkeventd-switchmode",
+        watolib.log_audit("mkeventd-switchmode",
                           _("Switched replication slave mode to %s") % new_mode)
         flash(_("Switched to %s mode") % new_mode)
         return None
@@ -2355,7 +2422,8 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         self._default_values = ConfigDomainEventConsole().default_globals()
         self._current_settings = watolib.load_configuration_settings()
 
-    def _groups(self, show_all=False):
+    @staticmethod
+    def _get_groups(show_all: bool) -> Iterable[ConfigVariableGroup]:
         return [
             g for g in sorted([g_class() for g_class in config_variable_group_registry.values()],
                               key=lambda grp: grp.sort_index())
@@ -2382,7 +2450,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
                 ),
             ],
             breadcrumb=breadcrumb,
-            inpage_search=PageMenuSearch(placeholder=_("Filter settings")),
+            inpage_search=PageMenuSearch(),
         )
 
         return menu
@@ -2419,12 +2487,13 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
             flash(msg)
         return redirect(mode_url("mkeventd_config"))
 
-    def _edit_mode(self):
+    @property
+    def edit_mode_name(self) -> str:
         return "mkeventd_edit_configvar"
 
     def page(self):
         self._verify_ec_enabled()
-        self._show_configuration_variables(self._groups())
+        self._show_configuration_variables()
 
 
 class ConfigVariableGroupEventConsole(ConfigVariableGroup):
@@ -2482,6 +2551,9 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
     def _affected_sites(self):
         return _get_event_console_sync_sites()
 
+    def _back_url(self) -> str:
+        return ModeEventConsoleSettings.mode_url()
+
 
 def _get_event_console_sync_sites():
     """Returns a list of site ids which gets the Event Console configuration replicated"""
@@ -2517,7 +2589,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Add one or multiple MIBs"),
-                                    icon_name="upload",
+                                    icon_name="new",
                                     item=make_simple_link(
                                         makeuri_contextless(
                                             request,
@@ -2704,7 +2776,8 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return _('Upload SNMP MIBs')
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb,
+        menu = make_simple_form_page_menu(_("MIBs"),
+                                          breadcrumb,
                                           form_name="upload_form",
                                           button_name="upload_button",
                                           save_title=_("Upload"))
@@ -2877,7 +2950,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         html.begin_form("upload_form", method="POST")
         forms.header(_("Upload MIB file"))
 
-        forms.section(_("Select file"))
+        forms.section(_("Select file"), is_required=True)
         html.upload_file("_upload_mib")
         forms.end()
 
@@ -2889,7 +2962,7 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
     if mode_name != "mkeventd_rule_packs":
         yield PageMenuEntry(
             title=_("Rule packs"),
-            icon_name="event",
+            icon_name="event_console",
             item=make_simple_link(makeuri_contextless(
                 request,
                 [("mode", "mkeventd_rule_packs")],
@@ -2921,7 +2994,7 @@ def _page_menu_entry_rulesets():
 def _page_menu_entry_status():
     return PageMenuEntry(
         title=_("Status"),
-        icon_name="status",
+        icon_name="event console_status",
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_status")])),
     )
 
@@ -2941,6 +3014,18 @@ def _page_menu_entry_snmp_mibs():
         title=_("SNMP MIBs"),
         icon_name="snmpmib",
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_mibs")])),
+    )
+
+
+def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
+    return makeuri_contextless(
+        request,
+        [
+            ("mode", "mkeventd_edit_rule"),
+            ("rule_pack", rule_pack_id),
+            ("edit", rule_nr),
+        ],
+        filename="wato.py",
     )
 
 
@@ -3015,7 +3100,7 @@ class MainModuleEventConsole(ABCMainModule):
 
     @property
     def icon(self):
-        return "event"
+        return "event_console"
 
     @property
     def permission(self):
@@ -4007,6 +4092,56 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return True
 
 
+@main_module_registry.register
+class MainModuleEventConsoleRules(ABCMainModule):
+    @property
+    def enabled(self) -> bool:
+        return False
+
+    @property
+    def mode_or_url(self):
+        return makeuri_contextless_rulespec_group(request, "eventconsole")
+
+    @property
+    def topic(self):
+        return MainModuleTopicEvents
+
+    @property
+    def title(self):
+        return _("Event Console rules")
+
+    @property
+    def icon(self):
+        return {"icon": "event_console", "emblem": "settings"}
+
+    @property
+    def permission(self):
+        return "rulesets"
+
+    @property
+    def description(self):
+        return _("Host and service rules related to the Event Console")
+
+    @property
+    def sort_index(self):
+        return 40
+
+    @property
+    def is_show_more(self):
+        return True
+
+    @classmethod
+    def additional_breadcrumb_items(cls) -> Iterable[BreadcrumbItem]:
+        yield BreadcrumbItem(
+            title="Event Console rule packages",
+            url=makeuri_contextless(
+                request,
+                [("mode", "mkeventd_rule_packs")],
+                filename="wato.py",
+            ),
+        )
+
+
 @rulespec_group_registry.register
 class RulespecGroupEventConsole(RulespecGroup):
     @property
@@ -4015,11 +4150,11 @@ class RulespecGroupEventConsole(RulespecGroup):
 
     @property
     def title(self):
-        return _("Event Console")
+        return _("Event Console rules")
 
     @property
     def help(self):
-        return _("Settings and Checks dealing with the Checkmk Event Console")
+        return _("Host and service rules related to the Event Console")
 
 
 def convert_mkevents_hostspec(value):
@@ -4054,10 +4189,10 @@ rulespec_registry.register(
 def _valuespec_active_checks_mkevents():
     return Dictionary(
         title=_("Check event state in Event Console"),
-        help=_("This check is part of the Check_MK Event Console and will check "
-               "if there are any open events for a certain host (and maybe a certain "
-               "application on that host. The state of the check will reflect the status "
-               "of the worst open event for that host."),
+        help=_("This check is part of the Check_MK Event Console and monitors "
+               "whether there are any open events for a particular host. "
+               "The overall state of the service generated by the check reflects "
+               "the most critical status of any open event for that host."),
         elements=[
             ("hostspec",
              Transform(
@@ -4071,14 +4206,14 @@ def _valuespec_active_checks_mkevents():
                                             ]),
                                  TextAscii(allow_empty=False,
                                            attrencode=True,
-                                           title="Specify host explicitely"),
+                                           title="Specify host explicitly"),
                              ],
                              default_value=['$HOSTNAME$', '$HOSTADDRESS$']),
-                 help=_(
-                     "When quering the event status you can either use the monitoring "
-                     "host name, the IP address, the host alias or a custom host name for referring to a "
-                     "host. This is needed in cases where the event source (syslog, snmptrapd) "
-                     "do not send a host name that matches the monitoring host name."),
+                 help=_("When querying the event status, you can match events to a particular host "
+                        "using the hostname, the IP address, or the host alias. This is due to the "
+                        "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
+                        "same host using different specification methods. Alternatively, you can "
+                        "specify an explicit host for which to show events."),
                  forth=convert_mkevents_hostspec)),
             ("item",
              TextAscii(
@@ -4312,3 +4447,95 @@ define command {
 
 
 hooks.register_builtin("pre-activate-changes", mkeventd_update_notifiation_configuration)
+
+#   .--Setup search--------------------------------------------------------.
+#   |     ____       _                                         _           |
+#   |    / ___|  ___| |_ _   _ _ __    ___  ___  __ _ _ __ ___| |__        |
+#   |    \___ \ / _ \ __| | | | '_ \  / __|/ _ \/ _` | '__/ __| '_ \       |
+#   |     ___) |  __/ |_| |_| | |_) | \__ \  __/ (_| | | | (__| | | |      |
+#   |    |____/ \___|\__|\__,_| .__/  |___/\___|\__,_|_|  \___|_| |_|      |
+#   |                         |_|                                          |
+#   +----------------------------------------------------------------------+
+#   | Searching of EC in setup search                                      |
+#   '----------------------------------------------------------------------'
+#.
+
+
+class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        rule_pack_loader: Callable[[], ec.ECRulePacks],
+    ) -> None:
+        super().__init__(name)
+        self._rule_pack_loader = rule_pack_loader
+
+    def generate_match_items(self) -> MatchItems:
+        for rule_pack in self._iter_rulepacks():
+            rule_pack_title = rule_pack["title"]
+            rule_pack_id = rule_pack["id"]
+            yield MatchItem(
+                title=f"{rule_pack_id} ({rule_pack_title})",
+                topic=_("Event Console rule packages"),
+                url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
+                match_texts=[rule_pack_title, rule_pack_id],
+            )
+            yield from (self._rule_to_match_item(rule, _rule_edit_url(rule_pack_id, nr))
+                        for nr, rule in enumerate(rule_pack["rules"]))
+
+    def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
+        yield from (opt_rule_pack
+                    for opt_rule_pack in (self._rule_pack_from_rule_pack_or_mkp(rule_pack_or_mkp)
+                                          for rule_pack_or_mkp in self._rule_pack_loader())
+                    if opt_rule_pack)
+
+    def _rule_pack_from_rule_pack_or_mkp(
+        self,
+        rule_pack_or_mkp: ec.ECRulePack,
+    ) -> _Optional[ec.ECRulePackSpec]:
+        if isinstance(rule_pack_or_mkp, ec.MkpRulePackProxy):
+            return self._unpack_mkp_rule_pack(rule_pack_or_mkp.rule_pack)
+        return rule_pack_or_mkp
+
+    def _unpack_mkp_rule_pack(
+        self,
+        mkp_rule_pack: _Optional[ec.ECRulePack],
+    ) -> _Optional[ec.ECRulePackSpec]:
+        if isinstance(mkp_rule_pack, ec.MkpRulePackProxy):
+            return self._unpack_mkp_rule_pack(mkp_rule_pack.rule_pack)
+        return mkp_rule_pack
+
+    @staticmethod
+    def _rule_to_match_item(rule: ec.ECRuleSpec, url: str) -> MatchItem:
+        id_ = rule["id"]
+        description = rule.get("description")
+        return MatchItem(
+            title=id_ + ((description and f" ({description})") or ""),
+            topic=_("Event Console rules"),
+            url=url,
+            match_texts=[id_] + [value for value in [description, rule.get("comment")] if value],
+        )
+
+    @staticmethod
+    def is_affected_by_change(change_action_name: str) -> bool:
+        # rule packs: new-rule-pack, edit-rule-pack, ...
+        # rules within rule packs: new-rule, edit-rule, ...
+        return "rule" in change_action_name
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return False
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorECRulePacksAndRules(
+        "event_console",
+        ec.load_rule_packs,
+    ))
+
+match_item_generator_registry.register(
+    MatchItemGeneratorSettings(
+        "event_console_settings",
+        _("Event Console settings"),
+        ModeEventConsoleSettings,
+    ))

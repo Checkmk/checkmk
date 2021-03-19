@@ -4,16 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated]
 # pylint: disable=chained-comparison
 
-from typing import Dict, List, Tuple
-from cmk.base.config import factory_settings
+from typing import Any, Dict, List, Tuple
+from cmk.base.config import factory_settings, Ruleset
 from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.check_api import get_percent_human_readable
 from cmk.base.check_api import host_extra_conf
 from cmk.base.check_api import host_name
 
+from cmk.base.api.agent_based.checking_classes import Metric, Result
 from cmk.base.plugins.agent_based.utils.df import (
     _check_inodes,
     get_filesystem_levels as _get_filesystem_levels,
@@ -22,13 +22,13 @@ from cmk.base.plugins.agent_based.utils.df import (
     ungrouped_mountpoints_and_groups,
 )
 
-from .size_trend import size_trend
+from .size_trend import size_trend  # type: ignore[attr-defined]
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 
 # Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels = []  # obsolete. Just here to check config and warn if changed
-filesystem_default_levels = {}  # can also be dropped some day in future
+filesystem_levels: List[Any] = []  # obsolete. Just here to check config and warn if changed
+filesystem_default_levels: Dict[str, Any] = {}  # can also be dropped some day in future
 
 # Filesystems to ignore. They should not be sent by agent anyway and
 # will indeed not be sent on Linux beginning with 1.6.0
@@ -42,7 +42,7 @@ inventory_df_exclude_mountpoints = ['/dev']
 #     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ),
 #         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
 # ]
-filesystem_groups = []
+filesystem_groups: Ruleset = []
 
 factory_settings["filesystem_default_levels"] = _FILESYSTEM_DEFAULT_LEVELS
 
@@ -81,8 +81,13 @@ def df_inventory(mplist):
 
     ungrouped_mountpoints, groups = ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    return [(mp, {}) for mp in ungrouped_mountpoints] \
-            + [(group, {"patterns": group_patterns[group]}) for group in groups]
+    ungrouped: List[Tuple[str, Dict[str,
+                                    Tuple[List[str],
+                                          List[str]]]]] = [(mp, {}) for mp in ungrouped_mountpoints]
+    grouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [(group, {
+        "patterns": group_patterns[group]
+    }) for group in groups]
+    return ungrouped + grouped
 
 
 # Users might have set filesystem_default_levels to old format like (80, 90)
@@ -184,6 +189,7 @@ def df_check_filesystem_list_coroutine(
         if item not in blocks_info:
             return
         data, inodes_data = blocks_info.get(item), inodes_info.get(item, {})
+        assert data is not None
         yield from df_check_filesystem_single_coroutine(
             item,
             data["size_mb"],
@@ -322,6 +328,8 @@ def df_check_filesystem_single_coroutine(
         return
 
     metric, result = _check_inodes(levels, inodes_total, inodes_avail)
+    assert isinstance(metric, Metric)
+    assert isinstance(result, Result)
     yield int(result.state), result.summary, [
         (metric.name, metric.value) + metric.levels + metric.boundaries
     ]

@@ -8,8 +8,18 @@
 import copy
 import traceback
 import json
+import textwrap
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Type, Union, NamedTuple
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
@@ -17,12 +27,9 @@ import cmk.utils.paths
 import cmk.gui.i18n
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
-import cmk.gui.notify as notify
-import cmk.gui.werks as werks
 import cmk.gui.sites as sites
 import cmk.gui.pages
 import cmk.gui.plugins.sidebar
@@ -39,6 +46,10 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.werks import may_acknowledge
+
+if TYPE_CHECKING:
+    from cmk.gui.utils.html import HTML
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.sidebar  # pylint: disable=no-name-in-module
@@ -55,7 +66,7 @@ from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unus
     write_snapin_exception,
 )
 
-from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer, get_show_more_setting
+from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -290,18 +301,8 @@ class UserSidebarSnapin:
         return not self.__eq__(other)
 
 
-ShortcutMenuItem = NamedTuple("ShortcutMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("url", str),
-    ("target_name", str),
-    ("permission_name", Optional[str]),
-])
-
-
 class SidebarRenderer:
-    def show(self, title: Optional[str] = None, content: Optional[HTML] = None) -> None:
+    def show(self, title: Optional[str] = None, content: Optional['HTML'] = None) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideallly we should
         # split this up. Possible solutions might be:
@@ -328,14 +329,17 @@ class SidebarRenderer:
         body_classes = ['side', "screenshotmode" if config.screenshotmode else None]
 
         if not config.user.may("general.see_sidebar"):
-            html.open_body(class_=body_classes)
+            html.open_body(class_=body_classes, data_theme=html.get_theme())
             return
 
         interval = config.sidebar_notify_interval if config.sidebar_notify_interval is not None else "null"
         html.open_body(
             class_=body_classes,
-            onload='cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages(%s);' %
-            interval)
+            onload=
+            'cmk.sidebar.initialize_scroll_position(); cmk.sidebar.init_messages_and_werks(%s, %s); '
+            % (json.dumps(interval), json.dumps(bool(may_acknowledge()))),
+            data_theme=html.get_theme(),
+        )
 
     def _show_sidebar(self) -> None:
         if not config.user.may("general.see_sidebar"):
@@ -344,7 +348,8 @@ class SidebarRenderer:
 
         user_config = UserSidebarConfig(config.user, config.sidebar)
 
-        html.open_div(id_="check_mk_navigation")
+        html.open_div(id_="check_mk_navigation",
+                      class_="min" if config.user.get_attribute("nav_hide_icons_title") else None)
         self._show_sidebar_head()
         html.close_div()
 
@@ -353,7 +358,6 @@ class SidebarRenderer:
             config.user.id, 'ui_sidebar_position', lambda x: None if x == "None" else "left")
         html.open_div(id_="check_mk_sidebar", class_=[sidebar_position])
 
-        self._show_shortcut_bar()
         self._show_snapin_bar(user_config)
 
         html.close_div()
@@ -376,18 +380,6 @@ class SidebarRenderer:
             json.dumps(restart_snapins),
             json.dumps(static_snapins),
         ))
-
-    def _show_shortcut_bar(self) -> None:
-        html.open_div(class_="shortcuts")
-        for item in _shortcut_menu_items():
-            if item.permission_name and not config.user.may(item.permission_name):
-                continue
-
-            html.open_a(href=item.url, target=item.target_name)
-            html.icon(item.icon_name)
-            html.div(item.title)
-            html.close_a()
-        html.close_div()
 
     def _show_snapins(self, user_config: UserSidebarConfig) -> Tuple[List, List, List]:
         refresh_snapins = []
@@ -415,7 +407,7 @@ class SidebarRenderer:
         html.open_div(id_="add_snapin")
         html.open_a(href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
                     target="main")
-        html.icon("add", title=_("Add snapins to your sidebar"))
+        html.icon("add", title=_("Add elements to your sidebar"))
         html.close_a()
         html.close_div()
 
@@ -426,7 +418,7 @@ class SidebarRenderer:
 
         more_id = "sidebar_snapin_%s" % name
 
-        show_more = get_show_more_setting(more_id)
+        show_more = config.user.get_show_more_setting(more_id)
         html.open_div(id_="snapin_container_%s" % name,
                       class_=["snapin", ("more" if show_more else "less")])
 
@@ -454,15 +446,10 @@ class SidebarRenderer:
 
         show_more = snapin_instance.has_show_more_items()
         may_configure = config.user.may("general.configure_sidebar")
-        if show_more or may_configure:
-            html.open_div(class_="snapin_buttons")
 
-            if may_configure:
-                # Icon for mini/maximizing
-                html.span("",
-                          class_="minisnapin",
-                          title=_("Toggle this snapin"),
-                          onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
+        if show_more or may_configure:
+
+            html.open_div(class_="snapin_buttons")
 
             if show_more:
                 html.open_span(class_="moresnapin")
@@ -474,7 +461,7 @@ class SidebarRenderer:
                 html.open_span(class_="closesnapin")
                 close_url = "sidebar_openclose.py?name=%s&state=off" % name
                 html.icon_button(url=None,
-                                 title=_("Remove this snapin"),
+                                 title=_("Remove this element"),
                                  icon="close",
                                  onclick="cmk.sidebar.remove_sidebar_snapin(this, '%s')" %
                                  close_url)
@@ -490,7 +477,16 @@ class SidebarRenderer:
                 "onmouseover": "this.style.cursor='pointer'",
                 "onmouseout": "this.style.cursor='auto'"
             }
-        html.b(snapin_class.title(), class_=["heading"], **toggle_actions)
+        html.b(textwrap.shorten(snapin_class.title(), width=27, placeholder="..."),
+               class_=["heading"],
+               **toggle_actions)
+
+        if may_configure:
+            # Icon for mini/maximizing
+            html.span("",
+                      class_="minisnapin",
+                      title=_("Open/close this element"),
+                      onclick="cmk.sidebar.toggle_sidebar_snapin(this, '%s')" % toggle_url)
 
         # End of header
         html.close_div()
@@ -522,7 +518,7 @@ class SidebarRenderer:
             html.write(styles)
             html.close_style()
 
-    def _show_page_content(self, content: Optional[HTML]):
+    def _show_page_content(self, content: Optional['HTML']):
         html.open_div(id_="content_area")
         if content is not None:
             html.write(content)
@@ -530,10 +526,15 @@ class SidebarRenderer:
 
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
-        html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
-                    target="main",
-                    title=_("Go to main overview"))
-        html.div("", id_="side_bg")
+        html.open_a(
+            href=config.user.start_url or config.start_url,
+            target="main",
+            title=_("Go to main page"),
+        )
+        if config.user.get_attribute("nav_hide_icons_title"):
+            html.img(html.theme_url('images/tribe29_icon_min.svg'))
+        else:
+            html.img(html.theme_url('images/tribe29_icon.svg'))
         html.close_a()
         html.close_div()
 
@@ -544,108 +545,9 @@ class SidebarRenderer:
                       onclick="cmk.sidebar.toggle_sidebar()")
         html.icon("sidebar_folded", class_="folded")
         html.icon("sidebar")
-        html.div(_("Sidebar"))
+        if not config.user.get_attribute("nav_hide_icons_title"):
+            html.div(_("Sidebar"))
         html.close_div()
-
-        if config.sidebar_show_version_in_sidebar:
-            html.open_div(id_="side_version")
-            html.open_a(href="version.py", target="main", title=_("Open release notes"))
-            html.write(self._get_check_mk_edition_title())
-            html.br()
-            html.write(cmk_version.__version__)
-
-            if werks.may_acknowledge():
-                num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
-                if num_unacknowledged_werks:
-                    html.span(num_unacknowledged_werks,
-                              class_="unack_werks",
-                              title=_("%d unacknowledged incompatible werks") %
-                              num_unacknowledged_werks)
-
-            html.close_a()
-            html.close_div()
-
-    def _get_check_mk_edition_title(self):
-        if cmk_version.is_enterprise_edition():
-            if cmk_version.is_demo():
-                return "Enterprise (Demo)"
-            return "Enterprise"
-        if cmk_version.is_managed_edition():
-            return "Managed"
-        return "Raw"
-
-    # TODO: Re-add with new UX?
-    #def _sidebar_foot(self, user_config):
-    #    html.icon_button("return void();",
-    #                     _("You have pending messages."),
-    #                     "sidebar_messages",
-    #                     onclick='cmk.sidebar.read_message()',
-    #                     id_='msg_button',
-    #                     style='display:none')
-    #    html.open_div(style="display:none;", id_="messages")
-    #    self.render_messages()
-    #    html.close_div()
-
-    #def render_messages(self):
-    #    for msg in notify.get_gui_messages():
-    #        if 'gui_hint' in msg['methods']:
-    #            html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
-    #            html.a("x",
-    #                   href="javascript:void(0)",
-    #                   class_=["close"],
-    #                   onclick="cmk.sidebar.message_close(\'%s\')" % msg['id'])
-    #            html.write_text(msg['text'].replace('\n', '<br>\n'))
-    #            html.close_div()
-    #        if 'gui_popup' in msg['methods']:
-    #            html.javascript(
-    #                ensure_str(
-    #                    'alert(\'%s\'); cmk.sidebar.mark_message_read("%s")' %
-    #                    (escaping.escape_attribute(msg['text']).replace('\n', '\\n'), msg['id'])))
-
-
-def _shortcut_menu_items() -> List[ShortcutMenuItem]:
-    return [
-        ShortcutMenuItem(
-            name="main",
-            title=_("Main"),
-            icon_name="main_dashboard",
-            url=makeuri_contextless(request, [("name", "main")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.main",
-        ),
-        ShortcutMenuItem(
-            name="system",
-            title=_("System"),
-            icon_name="main_cmk_dashboard",
-            url=makeuri_contextless(request, [("name", "cmk_overview")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.cmk_overview",
-        ),
-        ShortcutMenuItem(
-            name="problems",
-            title=_("Problems"),
-            icon_name="main_problems",
-            url=makeuri_contextless(request, [("name", "simple_problems")], "dashboard.py"),
-            target_name="main",
-            permission_name="dashboard.simple_problems",
-        ),
-        ShortcutMenuItem(
-            name="hosts",
-            title=_("Hosts"),
-            icon_name="main_folder",
-            url=makeuri_contextless(request, [("mode", "folder")], "wato.py"),
-            target_name="main",
-            permission_name="wato.hosts",
-        ),
-        ShortcutMenuItem(
-            name="manual",
-            title=_("Manual"),
-            icon_name="main_manual",
-            url="https://checkmk.com/cms.html",
-            target_name="blank",
-            permission_name=None,
-        ),
-    ]
 
 
 @cmk.gui.pages.register("side")
@@ -693,7 +595,7 @@ def ajax_snapin():
                 snapin_instance.show()
             except Exception as e:
                 write_snapin_exception(e)
-                e_message = _("Exception during snapin refresh (snapin \'%s\')"
+                e_message = _("Exception during element refresh (element \'%s\')"
                              ) % snapin_instance.type_name()
                 logger.error("%s %s: %s", html.request.requested_url, e_message,
                              traceback.format_exc())
@@ -769,25 +671,6 @@ def move_snapin() -> None:
     user_config.save()
 
 
-@cmk.gui.pages.register("sidebar_get_messages")
-def ajax_get_messages():
-    # TODO: Readd with new UX?
-    pass
-    #SidebarRenderer().render_messages()
-
-
-@cmk.gui.pages.register("sidebar_message_read")
-def ajax_message_read():
-    html.set_output_format("json")
-    try:
-        notify.delete_gui_message(html.request.var('id'))
-        html.write("OK")
-    except Exception:
-        if config.debug:
-            raise
-        html.write("ERROR")
-
-
 #.
 #   .--Custom-Snapins------------------------------------------------------.
 #   |       ____          _     ____                    _                  |
@@ -815,13 +698,13 @@ class CustomSnapins(pagetypes.Overridable):
     @classmethod
     def phrase(cls, phrase):
         return {
-            "title": _("Custom snapin"),
-            "title_plural": _("Custom snapins"),
-            #"add_to"         : _("Add to custom snapin list"),
-            "clone": _("Clone snapin"),
-            "create": _("Create snapin"),
-            "edit": _("Edit snapin"),
-            "new": _("New snapin"),
+            "title": _("Custom sidebar element"),
+            "title_plural": _("Custom sidebar elements"),
+            #"add_to"         : _("Add to custom element list"),
+            "clone": _("Clone element"),
+            "create": _("Create element"),
+            "edit": _("Edit element"),
+            "new": _("New element"),
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod
@@ -833,7 +716,7 @@ class CustomSnapins(pagetypes.Overridable):
             # sort-index, key, valuespec
             [(2.5, "custom_snapin",
               CascadingDropdown(
-                  title=_("Snapin type"),
+                  title=_("Element type"),
                   choices=cls._customizable_snapin_type_choices,
               ))])]
 
@@ -878,7 +761,7 @@ def page_add_snapin() -> None:
     if not config.user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
-    title = _("Available snapins")
+    title = _("Add sidebar element")
     breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_customize(), title)
     html.header(title, breadcrumb, _add_snapins_page_menu(breadcrumb))
 
@@ -938,10 +821,10 @@ class AjaxAddSnapin(cmk.gui.pages.AjaxPage):
         addname = html.request.var("name")
 
         if addname is None or addname not in snapin_registry:
-            raise MKUserError(None, _("Invalid snapin %s") % addname)
+            raise MKUserError(None, _("Invalid sidebar element %s") % addname)
 
         if addname in _used_snapins():
-            raise MKUserError(None, _("Snapin %s is already enabled") % addname)
+            raise MKUserError(None, _("Element %s is already enabled") % addname)
 
         user_config = UserSidebarConfig(config.user, config.sidebar)
         snapin = UserSidebarSnapin.from_snapin_type_id(addname)
@@ -972,7 +855,7 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site = html.request.var("site")
-    site_choices = dict([("", _("All sites"))] + config.site_choices())
+    site_choices = dict([("", _("All sites"))] + config.get_configured_site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

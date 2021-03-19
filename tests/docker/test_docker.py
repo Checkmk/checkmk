@@ -279,7 +279,7 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
     pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:
@@ -294,7 +294,10 @@ def test_build_using_local_deb(request, client, version):
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(request, client, version):
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
+    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
     try:
+        os.rename(pkg_path, pkg_path_sav)
+
         with open(pkg_path, "w") as f:
             f.write("")
 
@@ -302,6 +305,7 @@ def test_build_using_local_gpg_pubkey(request, client, version):
             _build(request, client, version)
     finally:
         os.unlink(pkg_path)
+        os.rename(pkg_path_sav, pkg_path)
 
 
 def test_start_enable_mail(request, client):
@@ -412,7 +416,7 @@ def test_container_agent(request, client):
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert "0.0.0.0:6556" in _exec_run(c, ["netstat", "-tln"])[-1]
+    assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):

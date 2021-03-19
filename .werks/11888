@@ -1,0 +1,15 @@
+Title: Rename SNMP section ruleset
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610723803
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0b5
+
+The ruleset <i>"Include or exclude SNMP sections"</i> has been
+renamed to <i>"Disabled and enabled sections (SNMP)"</i>.
+This makes the naming scheme more consistent with other section
+disabling rulesets (Windows and Linux agent).
+

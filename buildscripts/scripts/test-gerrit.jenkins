@@ -11,8 +11,6 @@ withFolderProperties{
     TEST_CONTAINER = DOCKER_REGISTRY + '/ubuntu-20.04:' + env.DOCKER_TAG_FOLDER
 }
 
-def PYTHON_VERSIONS = [ "2.6", "2.7", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8" ]
-
 node (NODE) {
     def WORKSPACE = pwd()
     def RESULTS = WORKSPACE + "/results"
@@ -54,8 +52,8 @@ node (NODE) {
         def CHANGED_CORE_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // Gather the list of changed JavaScript and CSS files in raw and enterprise edition
-        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
-        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_JS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/js/' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
+        def CHANGED_CSS_FILES = sh(script: "echo '${CHANGED_FILES_REL}' | grep 'web/htdocs/themes/' | sed '/\\.scss\$/!d' || true", returnStdout: true).toString().trim().replaceAll("[\\n]+"," ");
 
         // this variable is needed as long as we have base plugins that are
         // concantenated for pylint (See tests/pylint/test_pylint.py)
@@ -145,19 +143,17 @@ node (NODE) {
             TEXT_ON_SKIP: 'No CSS files changed. Skipping.'
          )
 
-         PYTHON_VERSIONS.each { PYTHON_VERSION ->
-            gerrit_stages.run(
-               NAME: 'Agent Plugin Unit Tests ' + PYTHON_VERSION,
-               CONDITION: CHANGED_AGENT_PLUGINS != "",
-               DIR: 'tests',
-               ENV_VARS: [
-                   "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-" + PYTHON_VERSION + "-junit.xml",
-                   "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
-               ],
-               COMMAND: "make test-agent-plugin-unit-py" + PYTHON_VERSION + "-docker",
-               TEXT_ON_SKIP: 'No agent files changed. Skipping.'
-            )
-         }
+        gerrit_stages.run(
+            NAME: 'Agent Plugin Unit Tests',
+            CONDITION: CHANGED_AGENT_PLUGINS != "",
+            DIR: 'tests',
+            ENV_VARS: [
+            "PYTEST_ADDOPTS=--junitxml=$RESULTS/agent-plugin-unit-junit.xml",
+            "DOCKER_ADDOPTS=-v $RESULTS:$RESULTS"
+            ],
+            COMMAND: "make test-agent-plugin-docker",
+            TEXT_ON_SKIP: 'No agent files changed. Skipping.'
+        )
 
          gerrit_stages.run(
             NAME: 'NEB/CMC Compile',

@@ -5,7 +5,6 @@
 
 #include "StatsColumn.h"
 
-#include <ostream>
 #include <stdexcept>
 #include <utility>
 

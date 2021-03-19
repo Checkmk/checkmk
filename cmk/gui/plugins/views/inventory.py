@@ -11,10 +11,13 @@ from functools import partial
 
 from six import ensure_str
 
+from livestatus import SiteId
+
 from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.structured_data import StructuredDataTree
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config
@@ -65,6 +68,15 @@ PaintResult = Tuple[str, Union[str, HTML]]
 
 
 def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
+    hostname = row.get("host_name")
+    sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
+
+    if len(sites_with_same_named_hosts) > 1:
+        html.show_error(
+            _("Cannot display inventory tree of host '%s': Found this host on multiple sites: %s") %
+            (hostname, ", ".join(sites_with_same_named_hosts)))
+        return "", ""
+
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
@@ -86,6 +98,12 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
         return _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
                                             attribute_keys)
+
+
+def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
+    query_str = "GET hosts\nColumns: host_name\nFilter: host_name = %s\n" % hostname
+    with sites.prepend_site():
+        return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
 def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
@@ -229,6 +247,7 @@ def _declare_inv_column(invpath, datatype, title, short=None, is_show_more: bool
 
 def _cmp_inventory_node(a: Dict[str, StructuredDataTree], b: Dict[str, StructuredDataTree],
                         invpath: str) -> int:
+    # TODO merge with _decorate_sort_func
     # Returns
     # (1)  1 if val_a > val_b
     # (2)  0 if val_a == val_b
@@ -753,11 +772,26 @@ def _inv_find_subtable_columns(invpath):
     return sorted(columns, key=lambda x: (order.get(x, 999), x))
 
 
+def _decorate_sort_func(f):
+    def wrapper(val_a, val_b):
+        if val_a is None:
+            return 0 if val_b is None else -1
+
+        if val_b is None:
+            return 0 if val_a is None else 1
+
+        return f(val_a, val_b)
+
+    return wrapper
+
+
 def _declare_invtable_column(infoname, invpath, topic, name, column):
     sub_invpath = invpath + "*." + name
     hint = inventory_displayhints.get(sub_invpath, {})
 
-    cmp_func = lambda a, b: (a > b) - (a < b)
+    def cmp_func(a, b):
+        return (a > b) - (a < b)
+
     sortfunc = hint.get("sort", cmp_func)
     if "paint" in hint:
         paint_name = hint["paint"]
@@ -796,7 +830,7 @@ def _declare_invtable_column(infoname, invpath, topic, name, column):
         column, {
             "title": _("Inventory") + ": " + title,
             "columns": [column],
-            "cmp": lambda self, a, b: sortfunc(a.get(column), b.get(column)),
+            "cmp": lambda self, a, b: _decorate_sort_func(sortfunc)(a.get(column), b.get(column)),
         })
 
 
@@ -926,16 +960,18 @@ def declare_joined_inventory_table_view(tablename, title_singular, title_plural,
     titles: List[str] = []
     errors = []
     for this_tablename in tables:
-        vi = visual_info_registry.get(this_tablename)
-        ds = data_source_registry.get(this_tablename)
-        if ds is None or vi is None:
+        visual_info_class = visual_info_registry.get(this_tablename)
+        data_source_class = data_source_registry.get(this_tablename)
+        if data_source_class is None or visual_info_class is None:
             errors.append("Missing declare_invtable_view for inventory table view '%s'" %
                           this_tablename)
             continue
-        assert isinstance(ds, ABCDataSourceInventory)
+
+        assert issubclass(data_source_class, ABCDataSourceInventory)
+        ds = data_source_class()
         info_names.append(ds.ident)
         invpaths.append(ds.inventory_path)
-        titles.append(vi.title)
+        titles.append(visual_info_class().title)
 
     # Create the datasource (like a database view)
     ds_class = type(
@@ -1250,7 +1286,7 @@ multisite_builtin_views["inv_host"] = {
     'topic': 'inventory',
     'title': _('Inventory of host'),
     'description': _('The complete hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': 'inventory',
     'hidebutton': False,
     'public': True,
     'hidden': True,
@@ -1280,7 +1316,11 @@ multisite_builtin_views["inv_host"] = {
     # Filters
     'hard_filters': [],
     'hard_filtervars': [],
-    'hide_filters': ['host', 'site'],
+    # Previously (<2.0/1.6??) the hide_filters: ['host, 'site'] were needed to build the URL.
+    # Now for creating the URL these filters are obsolete;
+    # Side effect: with 'site' in hide_filters the only_sites filter for livestatus is NOT set
+    # properly. Thus we removed 'site'.
+    'hide_filters': ['host'],
     'show_filters': [],
     'sorters': [],
 }
@@ -1566,10 +1606,14 @@ multisite_builtin_views["inv_host_history"] = {
     'topic': 'inventory',
     'title': _('Inventory history of host'),
     'description': _('The history for changes in hardware- and software inventory of a host'),
-    'icon': 'inv',
+    'icon': {
+        'icon': 'inventory',
+        'emblem': 'time',
+    },
     'hidebutton': False,
     'public': True,
     'hidden': True,
+    'is_show_more': True,
     'link_from': {
         'single_infos': ['host'],
         'has_inventory_tree_history': '.',
@@ -1788,7 +1832,8 @@ class NodeRenderer:
                              Callable[[Tuple[str, Any]], str]] = partial(_sort_by_index, keyorder)
         else:
             # Simply sort by keys
-            sort_func = lambda item: item[0]
+            def sort_func(item):
+                return item[0]
 
         html.open_table()
         for key, value in sorted(attributes.get_child_data().items(), key=sort_func):

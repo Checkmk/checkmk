@@ -9,10 +9,11 @@ from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECK
 from six import ensure_binary, ensure_str
 
 import cmk.gui.escaping as escaping
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+import cmk.gui.config as config
 
 if TYPE_CHECKING:
     from typing import Sequence
@@ -100,20 +101,25 @@ def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictio
 # New functions for painting forms
 
 
-def header(title: str,
-           isopen: bool = True,
-           table_id: str = "",
-           narrow: bool = False,
-           css: Optional[str] = None,
-           show_more_toggle: bool = False,
-           show_more_mode: bool = False) -> None:
+def header(
+    title: str,
+    isopen: bool = True,
+    table_id: str = "",
+    narrow: bool = False,
+    css: Optional[str] = None,
+    show_table_head: bool = True,
+    show_more_toggle: bool = False,
+    show_more_mode: bool = False,
+    help_text: Union[str, HTML, None] = None,
+) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
 
     id_ = ensure_str(base64.b64encode(ensure_binary(title)))
     treename = html.form_name or "nform"
-    isopen = html.foldable_container_is_open(treename, id_, isopen)
+    isopen = config.user.get_tree_state(treename, id_, isopen)
+    container_id = html.foldable_container_id(treename, id_)
 
     html.open_table(id_=table_id if table_id else None,
                     class_=[
@@ -121,49 +127,51 @@ def header(title: str,
                         "narrow" if narrow else None,
                         css if css else None,
                         "open" if isopen else "closed",
-                        "more" if show_more_mode else None,
+                        "more" if config.user.get_show_more_setting("foldable_%s" % id_) or
+                        show_more_mode else None,
                     ])
 
-    _begin_foldable_nform_container(
-        treename=treename,
-        id_=id_,
-        isopen=isopen,
-        title=title,
-        show_more_toggle=show_more_toggle,
-    )
+    if show_table_head:
+        _table_head(
+            treename=treename,
+            id_=id_,
+            isopen=isopen,
+            title=title,
+            show_more_toggle=show_more_toggle,
+            help_text=help_text,
+        )
+
+    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
 
 
-def _begin_foldable_nform_container(
+def _table_head(
     treename: str,
     id_: str,
     isopen: bool,
     title: str,
     show_more_toggle: bool,
-) -> bool:
-    isopen = html.foldable_container_is_open(treename, id_, isopen)
+    help_text: Union[str, HTML, None] = None,
+) -> None:
     onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
     img_id = html.foldable_container_img_id(treename, id_)
-    container_id = html.foldable_container_id(treename, id_)
 
     html.open_thead()
     html.open_tr(class_="heading")
     html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
     html.img(id_=img_id,
              class_=["treeangle", "nform", "open" if isopen else "closed"],
-             src="themes/%s/images/tree_closed.png" % (html.get_theme()),
+             src="themes/%s/images/tree_closed.svg" % (html.get_theme()),
              align="absbottom")
     html.write_text(title)
+    html.help(help_text)
     if show_more_toggle:
-        html.more_button("foldable_" + id_, dom_levels_up=4)
+        html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
     html.close_td()
     html.close_tr()
     html.close_thead()
-    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
-
-    return isopen
 
 
 # container without legend and content
@@ -186,12 +194,14 @@ def section(title: Union[None, HTML, str] = None,
             hide: bool = False,
             legend: bool = True,
             css: Optional[str] = None,
-            is_show_more: bool = False) -> None:
+            is_show_more: bool = False,
+            is_changed: bool = False,
+            is_required: bool = False) -> None:
     global g_section_open
     section_close()
     html.open_tr(
         id_=section_id,
-        class_=[css, "show_more_mode" if is_show_more else "basic"],
+        class_=[css, "show_more_mode" if is_show_more and not is_changed else "basic"],
         style="display:none;" if hide else None,
     )
 
@@ -201,7 +211,7 @@ def section(title: Union[None, HTML, str] = None,
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
                           title=escaping.strip_tags(title))
             html.write(escaping.escape_text(title))
-            html.span('.' * 200, class_="dots")
+            html.span('.' * 200, class_=["dots", "required" if is_required else None])
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")

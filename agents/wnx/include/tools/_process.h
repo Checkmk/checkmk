@@ -6,9 +6,8 @@
 // Assorted process management routines
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <shlobj.h>  // known path
-#include <windows.h>
+#include <Windows.h>
+#include <shlobj.h>
 
 #include <fstream>
 #include <string>
@@ -80,41 +79,41 @@ inline bool RunDetachedCommand(const std::string& Command) {
     return false;
 }
 
-// LAST and BEST attempt to have standard windows starter
-// returns process id
-// used during auto update
+// NOTE: LAST and BEST attempt to have standard windows starter
+// Returns process id on success
+/// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
 inline uint32_t RunStdCommand(
-    std::wstring_view Command,   // full command with arguments
-    bool Wait,                   // important flag! set false  when you are sure
-    BOOL InheritHandle = FALSE,  // not optimal, but default
-    HANDLE Stdio = 0,            // when we want to catch output
-    HANDLE Stderr = 0,           // same
-    DWORD CreationFlags = 0,     // never checked this
-    DWORD StartFlags = 0) {
+    std::wstring_view command,    // full command with arguments
+    bool wait_for_end,            // important flag! set false when you are sure
+    BOOL inherit_handle = FALSE,  // recommended option
+    HANDLE stdio_handle = 0,      // when we want to catch output
+    HANDLE stderr_handle = 0,     // same
+    DWORD creation_flags = 0,     // never checked this
+    DWORD start_flags = 0) {
     // windows "boiler plate"
     STARTUPINFOW si{0};
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(STARTUPINFO);
-    si.dwFlags = StartFlags;
-    si.hStdOutput = Stdio;
-    si.hStdError = Stderr;
-    if (InheritHandle)
+    si.dwFlags = start_flags;
+    si.hStdOutput = stdio_handle;
+    si.hStdError = stderr_handle;
+    if (inherit_handle)
         si.dwFlags = STARTF_USESTDHANDLES;  // switch to the handles in si
 
     PROCESS_INFORMATION pi{0};
     memset(&pi, 0, sizeof(pi));
 
     if (::CreateProcessW(nullptr,  // stupid windows want null here
-                         const_cast<wchar_t*>(Command.data()),  // win32!
-                         nullptr,        // security attribute
-                         nullptr,        // thread attribute
-                         InheritHandle,  // handle inheritance
-                         CreationFlags,  // Creation Flags
-                         nullptr,        // environment
-                         nullptr,        // current directory
+                         const_cast<wchar_t*>(command.data()),  // win32!
+                         nullptr,         // security attribute
+                         nullptr,         // thread attribute
+                         inherit_handle,  // handle inheritance
+                         creation_flags,  // Creation Flags
+                         nullptr,         // environment
+                         nullptr,         // current directory
                          &si, &pi)) {
         auto process_id = pi.dwProcessId;
-        if (Wait) WaitForSingleObject(pi.hProcess, INFINITE);
+        if (wait_for_end) WaitForSingleObject(pi.hProcess, INFINITE);
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
         return process_id;

@@ -63,7 +63,6 @@ info_3 = [[u'[[[system:test1]]]'], [u'{'], [u'"bytes_per_second":', u'0,'],
     info_2,
     info_3,
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_mkbackup_parse(info):
     check = Check("mkbackup")
     check.run_parse(info)

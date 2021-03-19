@@ -39,6 +39,7 @@ def test_sync_plugins(load_config):
         'icons_per_item',
         'disable_notifications',
         'force_authuser',
+        'nav_hide_icons_title',
         'pager',
         'start_url',
         'ui_theme',

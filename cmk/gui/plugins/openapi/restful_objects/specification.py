@@ -18,36 +18,17 @@ The API is documented in a machine-readable schema and a human-readable format i
 resources, their input and output parameters and the associated value ranges. The API is created
 with the OpenAPI specification 3.x, an API description format especially for REST APIs.
 
-The API documentation created with this specification is displayed to you with ReDoc, a responsive
-Web design for OpenAPI documents.
+The API documentation created with this specification is displayed to you with ReDoc (a
+responsive Web design for an OpenAPI document) or with Swagger UI (an OpenAPI document
+visualization for direct interaction with the API's resources).
 
 
 # Prerequisites
 
+* You know Checkmk and its principles of setup and configuration.
 * You are experienced in using an API, preferably a REST-API.
 * You are familiar with at least one of the applications for which sample code is available.
-* You know Checkmk and its principles of setup and configuration.
-
-
-# Using the API documentation
-
-The API documentation's Web design provides 3 panes.
-
-The left navigation pane is used for orientation, search and quick jump to the exact description of
-the entries in the middle content pane. The table of contents contains one entry for each API endpoint.
-An endpoint uses a URL to refer to the resource that the API provides (e.g., to collect hosts),
-along with the method used to access the resource (e.g., GET to display a host).
-The endpoints are organized in several folders.
-
-The middle content pane contains all information about the definition of a request (with parameters,
-value ranges, default values and descriptions) and the corresponding answers (also with all details).
-The possible answers are displayed in different colors, depending on whether the returned HTTP status
-code signals success or an error.
-
-The right example pane shows the method and URL for the endpoint selected in the content pane,
-followed by several examples of requests: the payload in JSON format (if relevant to the endpoint) and
-code examples, such as cURL, HTTPie, Python Requests, or Python Urllib. Then follow the responses
-according to the HTTP status. All code examples can be copied to the clipboard with the Copy button.
+* It helps if you have already worked with ReDoc and/or Swagger UI.
 
 
 # Responses
@@ -55,28 +36,52 @@ according to the HTTP status. All code examples can be copied to the clipboard w
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
 
-All responses are well-formed according to the
-[Restful-Objects standard](https://en.wikipedia.org/wiki/Restful_Objects).
-There are a limited number of key concepts in the standard (e.g. object, action, collection, etc.)
-which enables the use of this API without having to understand the details of the implementation of
-each endpoint.
+# Link relations
 
 Every response comes with a collection of `links` to inform the API client on possible
 follow-up actions. For example, a folder response can have links to resources for updating,
 deleting and moving the folder. The client does not have to know about the URL structure, it
 just needs to follow the link. In this sense, the API is quasi self-documenting.
 This provision of additional information as a REST-API principle is also called
-[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS).
+[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS). In this context,
+a `rel` specifies the type of relationship of the concerning resource to the resource that generated
+this representation. The rel attribute is only of informational nature for the client.
 
+Objects may have these possible generic link relations:
+
+ * self - The API location of the current object
+ * help - Documentation for the currently requested endpoint
+ * collection - The API location for a list of object of the current objects' type
+ * edit - The API location to update the current object
+ * edit-form - The GUI location to edit the current object
+ * delete - The API location to delete the current object
+
+Members of collections have also:
+
+ * item - The API location of a member of the current collection
+
+Please note that these (except for self) are completely optional and may or may not be available on
+certain endpoints. More specialized link relations are also available:
+
+ * invoke - The API location to invoke an action
+ * start - The API location to start a long running process, which the current object represents
+ * cancel - The API location to abort the long running process, which the current object represents
+ * download - The URL to download the object described by the current endpoint
+ * move - The API location to move the current object to another destination
+
+Endpoint specific link relations are also possible.
 
 # Authentication
 
-To use this API from a client, an *automation* user must be set up in Checkmk. Only this user is
-authorized to perform actions via the API. For a newly created site the automation user is
-already created. You can find it, like other users, in Checkmk at *Setup* > *Users*.
+To use this API from an automated client, a user needs to be set up in Checkmk. Ideally this
+would be an *automation* user, with which actions can be performed via the API. For a newly
+created site an automation user is already created. You can find it, like other users, in
+Checkmk at *Setup* > *Users*.
 
-Username and password of the automation user must be transmitted in the HTTP header in the
-`Bearer` format in every request to the Checkmk server.
+As an alternative, users who already logged into Checkmk can also access the API, although these
+users are not very suitable for automation, because their session will time out eventually.
+
+For scripting, please use the Bearer authentication format.
 
 <SecurityDefinitions />
 
@@ -97,7 +102,7 @@ For backwards compatibility reasons we only keep the fields that have already be
 versions. You can consult the documentation to see what changed in each API revision.
 
 """
-from typing import List, Literal, Sequence, Dict, TypedDict
+from typing import List, Literal, Dict, TypedDict
 
 import apispec.utils  # type: ignore[import]
 import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
@@ -108,7 +113,26 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ACCEPT_HEADER,)
 
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
-from cmk.gui.plugins.openapi.restful_objects.type_defs import OpenAPIParameter
+
+SECURITY_SCHEMES = {
+    'bearerAuth': {
+        'type': 'http',
+        'scheme': 'bearer',
+        'in': 'header',
+        'description': 'Use automation user credentials. The format of the header value is '
+                       '`Bearer $user $password`. This method has the highest precedence. If it '
+                       'succeeds, all other authentication methods are skipped.',
+        'bearerFormat': 'username password',
+    },
+    'webserverAuth': {
+        'type': 'http',
+        'scheme': 'basic',
+        'in': 'header',
+        'description': "Use the authentication method of the webserver ('basic' or 'digest'). To "
+                       "use this, you'll have to re-configure the site's Apache instance "
+                       "yourself. This method takes precedence over the cookieAuth method."
+    }
+}
 
 DEFAULT_HEADERS = [
     ('Accept', 'Media type(s) that is/are acceptable for the response.', 'application/json'),
@@ -176,19 +200,14 @@ OPTIONS: ReDocSpec = {
             'name': 'Setup',
             'tags': []
         },
-        # TODO: remove
-        {
-            'name': 'Endpoints',
-            'tags': []
-        },
     ],
     'x-ignoredHeaderParameters': [
         'User-Agent',
         'X-Test-Header',
     ],
     'security': [{
-        'BearerAuth': []
-    }]
+        sec_scheme_name: []
+    } for sec_scheme_name in SECURITY_SCHEMES]
 }
 
 __version__ = "0.3.2"
@@ -209,18 +228,8 @@ def make_spec(options: ReDocSpec):
 
 
 SPEC = make_spec(options=OPTIONS)
-SPEC.components.security_scheme(
-    'BearerAuth',
-    {
-        'type': 'http',
-        'scheme': 'bearer',
-        'in': 'header',
-        'description': 'The format of the header-value is "Bearer $automation_user '
-                       '$automation_user_password"\n\nExample: `Bearer hansdampf miezekatze123`',
-        'bearerFormat': 'username password',
-        'x-bearerInfoFunc': 'cmk.gui.wsgi.auth.bearer_auth',
-    },
-)
+for sec_scheme_name, sec_scheme_spec in SECURITY_SCHEMES.items():
+    SPEC.components.security_scheme(sec_scheme_name, sec_scheme_spec)
 
 # All the supported response headers by the spec.
 
@@ -241,63 +250,3 @@ for header_name, field in ACCEPT_HEADER.items():
     )
 
 ErrorType = Literal['ignore', 'raise']
-
-
-def find_all_parameters(
-    params: Sequence[OpenAPIParameter],
-    errors: ErrorType = 'ignore',
-) -> List[OpenAPIParameter]:
-    """Find all parameters, while de-referencing string based parameters.
-
-    Parameters can come in dictionary, or string form. If they are a dictionary they are supposed
-    to be completely self-contained and can be specified with the same name multiple times for
-    different endpoints even with different values.
-
-    A string parameter is just a reference to a globally defined parameter, which can only be
-    defined once with that name.
-
-    This function de-references these string based parameters and emits a list of all parameters
-    that it has been given in their dictionary form.
-
-    Examples:
-
-        >>> find_all_parameters([{'name': 'fizz', 'in': 'query'}, 'foobar'])
-        [{'name': 'fizz', 'in': 'query'}]
-
-        >>> find_all_parameters(['foobar'])
-        []
-
-        >>> find_all_parameters(['foobar'], errors='raise')
-        Traceback (most recent call last):
-           ...
-        ValueError: Param 'foobar', assumed globally defined, was not found.
-
-    Args:
-        params:
-            Either as a dict or as a string. If it is a string it will be replaced
-            by it's globally defined parameter (if found).
-
-        errors:
-            What to do when an error is detected. Can be either 'raise' or 'ignore'.
-
-    Returns:
-        A list of parameters, all in their dictionary form.
-
-    Raises:
-        ValueError: Whenever a parameter could not be de-referenced.
-
-    """
-    result = []
-    global_params = SPEC.components.to_dict().get('parameters', {})
-
-    for _param in params:
-        if isinstance(_param, dict):
-            result.append(_param)
-        elif isinstance(_param, str):
-            if _param in global_params:
-                result.append(global_params[_param])
-                continue
-
-            if errors == 'raise':
-                raise ValueError(f"Param {_param!r}, assumed globally defined, was not found.")
-    return result

@@ -13,7 +13,6 @@ pytestmark = pytest.mark.checks
 @pytest.mark.parametrize("params,expected_args", [
     (("foo", {}), ["-4", "-H", "$_HOSTADDRESS_4$"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_smtp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_smtp")

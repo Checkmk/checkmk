@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host groups
 
-Host groups are, besides the folder structure, another way to organize hosts in Checkmk.
-By using a host group you can generate, among others, suitable views.
+Host groups are a way to organize hosts in Checkmk for monitoring.
+By using a host group you can generate suitable views for overview and/or analysis.
 
 You can find an introduction to hosts including host groups in the
-[Checkmk guide](https://checkmk.com/cms_wato_hosts.html).
+[Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
 """
 from cmk.gui import watolib
 from cmk.gui.http import Response
@@ -75,16 +75,15 @@ def bulk_create(params):
           response_schema=response_schemas.DomainObjectCollection)
 def list_groups(params):
     """Show all host groups"""
-    return constructors.serve_json(
-        serialize_group_list('service_group_config', list(load_host_group_information().values())))
+    collection = [{"id": k, "alias": v["alias"]} for k, v in load_host_group_information().items()]
+    return constructors.serve_json(serialize_group_list('host_group_config', collection))
 
 
 @Endpoint(constructors.object_href('host_group_config', '{name}'),
           '.../delete',
           method='delete',
           path_params=[NAME_FIELD],
-          output_empty=True,
-          etag='input')
+          output_empty=True)
 def delete(params):
     """Delete a host group"""
     name = params['name']
@@ -102,7 +101,8 @@ def delete(params):
 def bulk_delete(params):
     """Bulk delete host groups"""
     # TODO: etag implementation
-    entries = params['entries']
+    body = params['body']
+    entries = body['entries']
     for group_name in entries:
         message = "host group %s was not found" % group_name
         _group = fetch_group(

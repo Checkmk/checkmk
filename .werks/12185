@@ -1,0 +1,22 @@
+Title: local checks: automatically show metrics in output
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614923716
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Local checks will now automatically show their metrics in the service output.
+This means you can simplify your local checks from outputting e.g.
+
+<tt>P Warehouse number_of_things=23;17;42 Number of things: 23.00</tt>
+
+to the shorter
+
+<tt>P Warehouse number_of_things=23;17;42</tt>
+
+Note that the levels will only be shown in the service graphs, if 'P'
+is used for the state -- that is, if Checkmk can be sure that they
+actually affect the state of the service.

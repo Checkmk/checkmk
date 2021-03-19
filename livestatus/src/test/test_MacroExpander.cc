@@ -7,19 +7,23 @@
 #include <cstdlib>
 #include <functional>
 #include <iterator>
+#include <map>
 #include <memory>
 #include <string>
 
 #include "Column.h"
 #include "MacroExpander.h"
 #include "NagiosCore.h"
+#include "NagiosGlobals.h"
 #include "Row.h"
 #include "Store.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "data_encoding.h"
 #include "gtest/gtest.h"
 #include "nagios.h"
 #include "test_utilities.h"
+class Comment;
+class Downtime;
 
 // TODO(sp) Move this to a better place.
 TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
@@ -40,8 +44,6 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
         ::testing::ExitedWithCode(0), "");
 }
 
-extern char *macro_user[MAX_USER_MACROS];
-
 namespace {
 // First test fixture: A single host
 struct HostMacroExpanderTest : public ::testing::Test {
@@ -59,15 +61,21 @@ struct HostMacroExpanderTest : public ::testing::Test {
     TestHost test_host{{{"ERNIE", "Bert"},  //
                         {"HARRY", "Hirsch"},
                         {"_TAG_GUT", "Guten Tag!"}}};
-    NagiosCore core{NagiosPaths{}, NagiosLimits{}, NagiosAuthorization{},
+    std::map<unsigned long, std::unique_ptr<Downtime>> downtimes_;
+    std::map<unsigned long, std::unique_ptr<Comment>> comments_;
+    NagiosCore core{downtimes_,
+                    comments_,
+                    NagiosPaths{},
+                    NagiosLimits{},
+                    NagiosAuthorization{},
                     Encoding::utf8};
     ColumnOffsets offsets{};
-    StringLambdaColumn<host> oshmc{"funny_column_name", "Cool description!",
-                                   offsets, [this](const host &r) {
-                                       return HostMacroExpander::make(
-                                                  r, &this->core)
-                                           ->expandMacros(r.notes);
-                                   }};
+    StringColumn::Callback<host> oshmc{"funny_column_name", "Cool description!",
+                                       offsets, [this](const host &r) {
+                                           return HostMacroExpander::make(
+                                                      r, &this->core)
+                                               ->expandMacros(r.notes);
+                                       }};
 };
 
 // Second test fixture: A single host with a single service
@@ -84,7 +92,7 @@ struct ServiceMacroExpanderTest : public HostMacroExpanderTest {
                              {{"STATLER", "Boo!"},
                               {"WALDORF", "Terrible!"},
                               {"_LABEL_LO", "Labello"}}};
-    StringLambdaColumn<service> ossmc{
+    StringColumn::Callback<service> ossmc{
         "navn", "Beskrivelse", offsets, [this](const service &r) {
             return ServiceMacroExpander::make(r, &this->core)
                 ->expandMacros(r.notes);

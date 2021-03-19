@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import (
     Service,
@@ -13,7 +13,6 @@ from .agent_based_api.v1 import (
     check_levels,
 )
 from .agent_based_api.v1.type_defs import (
-    Parameters,
     CheckResult,
     DiscoveryResult,
 )
@@ -22,7 +21,7 @@ from .utils.mssql_counters import Section, get_int, get_item
 
 
 def discovery_mssql_counters_cache_hits(
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> DiscoveryResult:
     """
@@ -107,7 +106,6 @@ register.check_plugin(
     discovery_function=discovery_mssql_counters_cache_hits,
     discovery_ruleset_name='inventory_mssql_counters_rules',
     discovery_default_parameters={},
-    discovery_ruleset_type='merged',
     check_function=check_mssql_counters_cache_hits,
     cluster_check_function=cluster_check_mssql_counters_cache_hits,
 )

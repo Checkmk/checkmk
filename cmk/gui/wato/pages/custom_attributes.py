@@ -25,8 +25,9 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
     make_simple_link,
     make_simple_form_page_menu,
 )
@@ -147,7 +148,10 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="attr", button_name="save")
+        return make_simple_form_page_menu(_("Attribute"),
+                                          breadcrumb,
+                                          form_name="attr",
+                                          button_name="save")
 
     def _add_extra_attrs_from_html_vars(self):
         pass
@@ -223,7 +227,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the attribute is used as an internal key. It cannot be "
               "changed later."))
@@ -234,7 +238,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("title")
 
-        forms.section(_("Title") + "<sup>*</sup>")
+        forms.section(_("Title") + "<sup>*</sup>", is_required=True)
         html.help(_("The title is used to label this attribute."))
         html.text_input("title", self._attr.get('title', ''))
 
@@ -455,6 +459,7 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     @abc.abstractmethod
@@ -561,7 +566,7 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Hosts"),
-            icon_name="host",
+            icon_name="folder",
             item=make_simple_link(
                 makeuri_contextless(
                     request,

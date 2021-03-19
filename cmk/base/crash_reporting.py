@@ -23,7 +23,7 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.snmplib.type_defs import SNMPBackend
+from cmk.snmplib.type_defs import SNMPBackendEnum
 
 import cmk.base.config as config
 
@@ -48,11 +48,12 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
 
 def create_check_crash_dump(
-    hostname: HostName,
-    check_plugin_name: Union[CheckPluginNameStr, CheckPluginName],
-    check_plugin_kwargs: Dict[str, Any],
-    is_manual_check: bool,
-    description: ServiceName,
+    *,
+    host_name: HostName,
+    service_name: ServiceName,
+    plugin_name: Union[CheckPluginNameStr, CheckPluginName],
+    plugin_kwargs: Dict[str, Any],
+    is_manual: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -63,11 +64,11 @@ def create_check_crash_dump(
     text = u"check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
-            hostname=hostname,
-            check_plugin_name=str(check_plugin_name),
-            check_plugin_kwargs=check_plugin_kwargs,
-            is_manual_check=is_manual_check,
-            description=description,
+            hostname=host_name,
+            check_plugin_name=str(plugin_name),
+            check_plugin_kwargs=plugin_kwargs,
+            is_manual_check=is_manual,
+            description=service_name,
             text=text,
         )
         CrashReportStore().save(crash)
@@ -108,7 +109,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).snmp_backend == SNMPBackend.inline,
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend ==
+                               SNMPBackendEnum.INLINE,
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,
             },
@@ -162,7 +164,7 @@ def _read_agent_output(hostname: str) -> Optional[AgentRawData]:
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
-            return f.read()
+            return AgentRawData(f.read())
     except IOError:
         pass
     return None

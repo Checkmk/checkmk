@@ -107,7 +107,7 @@ def test_sap_hana_license_discovery():
                           ("X04 55", [
                               Result(state=state.OK, summary='Size: 5 B'),
                               Metric('license_size', 5.0),
-                              Result(state=state.OK, summary='Usage: 50.0%'),
+                              Result(state=state.OK, summary='Usage: 50.00%'),
                               Metric('license_usage_perc', 50.0),
                               Result(state=state.WARN, summary='License: not FALSE'),
                               Result(state=state.WARN,
@@ -129,6 +129,5 @@ def test_sap_hana_license_discovery():
                               ],
                           )])
 def test_sap_hana_license_check(cur_item, result):
-    yielded_results = list(
-        sap_hana_license.check_sap_hana_license(cur_item, Parameters({}), SECTION))
+    yielded_results = list(sap_hana_license.check_sap_hana_license(cur_item, {}, SECTION))
     assert yielded_results == result

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
 # check_mk plugin to monitor Fujitsu storage systems supporting FJDARY-E60.MIB or FJDARY-E100.MIB
@@ -17,33 +17,25 @@
 # <oid>.3: Status
 # the latter can be one of the following:
 fjdarye_item_status = {
-    1: 'normal',
-    2: 'alarm',
-    3: 'warning',
-    4: 'invalid',
-    5: 'maintenance',
-    6: 'undefined'
+    "1": (0, 'Normal'),
+    "2": (2, 'Alarm'),
+    "3": (1, 'Warning'),
+    "4": (2, 'Invalid'),
+    "5": (2, 'Maintenance'),
+    "6": (2, 'Undefined'),
 }
 
 
 # generic inventory item - status other than 'invalid' is ok for inventory
 def inventory_fjdarye_item(info):
-    return [(int(index), '', None) for index, status in info if int(status) != 4]
+    return [(index, {}) for index, status in info if status != '4']
 
 
 # generic check_function returning the nagios-code and the status text
-def check_fjdarye_item(index, _no_param, info):
+def check_fjdarye_item(item, _no_param, info):
     for line in info:
-        if int(line[0]) == index:
-            status = int(line[1])
-            if status == 1:
-                code = 0
-            elif status == 3:
-                code = 1
-            else:
-                code = 2
-            return (code, "Status is %s" % (fjdarye_item_status[status]))
-    return (3, 'No status for item %d present' % index)
+        if line[0] == str(item):  # watch out! older versions discovered `int`s!
+            return fjdarye_item_status[line[1]]
 
 
 #.
@@ -78,9 +70,11 @@ fjdarye_disks_status = {
 def parse_fjdarye_disks(info):
     parsed = {}
     for idx, disk_state in info:
-        state, state_readable = fjdarye_disks_status.get(disk_state,
-                                                         (3, "unknown[%s]" % disk_state))
-        parsed.setdefault(int(idx), {
+        state, state_readable = fjdarye_disks_status.get(
+            disk_state,
+            (3, "unknown[%s]" % disk_state),
+        )
+        parsed.setdefault(str(idx), {
             "state": state,
             "state_readable": state_readable,
             "state_disk": disk_state,
@@ -112,8 +106,6 @@ def check_fjdarye_disks(item, params, parsed):
             check_state = 2
             infotext += " (expected: %s)" % expected_state
         return check_state, infotext
-
-    return 3, "No status for disk number %s present" % item
 
 
 #.
@@ -240,7 +232,7 @@ fjdarye_sum_status = {1: 'unknown', 2: 'unused', 3: 'ok', 4: 'warning', 5: 'fail
 
 def inventory_fjdarye_sum(info):
     if len(info[0]) == 1:
-        return [(0, None)]
+        yield "0", {}
 
 
 def check_fjdarye_sum(index, _no_param, info):

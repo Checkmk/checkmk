@@ -221,8 +221,9 @@ class BookmarkList(pagetypes.Overridable):
 
     def bookmarks_by_topic(self):
         topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
@@ -250,12 +251,19 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            html.begin_foldable_container(
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
+            )
 
             for bookmark in bookmarks:
                 icon = bookmark["icon"]
                 if not icon:
-                    icon = "kdict"
+                    icon = "bookmark_list"
 
                 iconlink(bookmark["title"], bookmark["url"], icon)
 

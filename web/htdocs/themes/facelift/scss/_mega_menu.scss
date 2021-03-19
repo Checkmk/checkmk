@@ -19,7 +19,6 @@
   }
 
   div.username {
-    font-size: 11px;
     color: #808080;
     text-align: right;
   }
@@ -32,8 +31,15 @@
   padding: 0;
   margin: 0;
 
-  img:hover {
-    opacity: 1;
+  img {
+    &.icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      opacity: 1;
+    }
   }
 
   #mk_side_search_monitoring,
@@ -47,6 +53,10 @@
       border-radius: 2px;
     }
 
+    form:focus-within {
+      border: 1px solid $success;
+    }
+
     input {
       border: none;
     }
@@ -55,7 +65,6 @@
       padding: 6px 0 6px $spacing;
       background: transparent;
       box-shadow: none;
-      box-sizing: border-box;
     }
 
     input[type="button"] {
@@ -64,14 +73,14 @@
       background-image: url("images/icon_quicksearch.png");
       background-position: center;
       background-repeat: no-repeat;
-      background-size: 19px;
+      background-size: 16px;
       filter: none;
       box-shadow: none;
 
       &.clearable {
         cursor: pointer;
-        background-image: url("images/icon_close.png");
-        filter: $inpage-close-button-filter;
+        background-image: url("images/icon_close.svg");
+        background-size: 12px;
       }
     }
   }
@@ -125,7 +134,7 @@
       height: $height;
 
       div.navigation_bar {
-        height: 0;
+        height: 30px;
       }
 
       div.content.inner {
@@ -135,11 +144,32 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(200px);
+      @include small-menu(340px);
     }
 
     &.user > div.popup_menu {
-      @include small-menu(235px);
+      @include small-menu(265px);
+    }
+
+    #messages_link,
+    #werks_link {
+      flex-grow: 1;
+      margin: auto 0 auto 48px;
+
+      #werks_link_to,
+      #messages_link_to {
+        &:not(:empty) {
+          padding: 2px 5px;
+          color: $white;
+          background-color: $danger;
+          border-radius: $theme-border-radius;
+        }
+      }
+    }
+
+    .info_line {
+      margin: auto $spacing auto 0;
+      color: rgba($font-color, 0.7);
     }
 
     div.popup_menu {
@@ -153,6 +183,14 @@
       border-right: $popup-border;
       visibility: hidden;
 
+      &.min {
+        left: 48px;
+      }
+
+      &.single_column {
+        width: $single-column-mega-menu;
+      }
+
       a {
         text-decoration: none;
         cursor: pointer;
@@ -162,6 +200,11 @@
         padding: 10px 10px 9px;
         margin: 0;
         background-color: #383838;
+      }
+
+      &#popup_menu_user div.navigation_bar div.search_bar,
+      &#popup_menu_help_links div.navigation_bar div.search_bar {
+        flex-grow: 0;
       }
 
       div.navigation_bar {
@@ -199,12 +242,20 @@
           display: none;
         }
 
+        div.error {
+          margin: $spacing;
+        }
+
         div.topic {
           flex-grow: 1;
           width: 250px;
           padding: (2 * $spacing) (2 * $spacing) 0;
           border-right: 1px solid $headline-color;
           box-sizing: border-box;
+
+          &.single_column {
+            width: $single-column-mega-menu;
+          }
 
           input[type="button"] {
             cursor: pointer;
@@ -222,7 +273,7 @@
           h2 {
             padding-bottom: 4px;
             margin: 0;
-            font-size: 14px;
+            font-size: $font-size-large;
             font-weight: bold;
             color: $font-color;
 
@@ -230,7 +281,12 @@
               margin-left: 22px;
             }
 
-            img + span {
+            span.emblem {
+              margin: 0 4px 2px 0;
+            }
+
+            img + span,
+            span + span {
               margin-left: 0; /* No spacing if icons per entry are used */
             }
 
@@ -251,7 +307,6 @@
 
           ul {
             padding-left: 0;
-            font-size: 12px;
             line-height: $menu-item-spacing;
           }
 
@@ -261,21 +316,22 @@
           }
 
           li {
+            margin-left: 28px;
+
             a {
               display: block;
-              margin-left: 28px;
 
               & > img,
               & > span.emblem {
                 margin-left: -28px; /* No spacing if icons per entry are used */
               }
+
+              &.active {
+                color: $success;
+              }
             }
 
-            a.active {
-              color: $success;
-            }
-
-            a.hidden {
+            &.hidden {
               display: none;
             }
 
@@ -292,7 +348,7 @@
               padding: 2px;
               margin: 0;
               margin-top: 2px;
-              font-size: 9px;
+              font-size: $font-size-small;
               line-height: 12px;
               letter-spacing: 0;
               color: $hot-font-color;
@@ -359,6 +415,10 @@
         div.sentinel {
           flex-grow: 1000;
         }
+
+        input.button {
+          margin-left: 27px;
+        }
       }
 
       div.main_menu.extended_topic div.topic:not(.extended) {
@@ -377,6 +437,10 @@
     display: none;
     cursor: default;
     background-color: $popup-shadow-color;
+
+    &.min {
+      left: 48px;
+    }
   }
 
   div.popup_trigger.active + #popup_shadow {
@@ -393,6 +457,7 @@
     }
 
     a.popup_trigger {
+      position: relative;
       display: block;
       padding: $spacing 4px $spacing 0;
       font-size: $font-size-small;
@@ -403,6 +468,17 @@
 
       img {
         margin-bottom: 8px;
+      }
+
+      span#messages_label,
+      span#werks_label {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        padding: 2px 4px 0;
+        color: $white;
+        background-color: $danger;
+        border-radius: 8px;
       }
     }
   }

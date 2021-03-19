@@ -13,7 +13,6 @@ pytestmark = pytest.mark.checks
 CHECK_NAME = "ibm_mq_plugin"
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_parse():
     lines = """\
 version: 2.0.4
@@ -40,7 +39,7 @@ runmqsc: Not executable
             'runmqsc': 'OK',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (0, 'dspmq: OK'),
             (0, 'runmqsc: OK'),
         ],
@@ -54,7 +53,7 @@ runmqsc: Not executable
             'runmqsc': 'Not found',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (0, 'dspmq: OK'),
             (2, 'runmqsc: Not found'),
         ],
@@ -67,28 +66,27 @@ runmqsc: Not executable
             'runmqsc': 'Not found',
         },
         [
-            (0, 'Agent version: 2.0.4'),
+            (0, 'Plugin version: 2.0.4'),
             (3, 'dspmq: No agent info'),
             (2, 'runmqsc: Not found'),
         ],
         id="tool_not_in_agent",
     ),
     pytest.param(
-        {'version': ('at_least', '2.1')},
+        {'version': (('at_least', '2.1'), 2)},
         {
             'version': '2.0.4',
             'dspmq': 'OK',
             'runmqsc': 'Not found',
         },
         [
-            (2, 'Agent version: 2.0.4 (should be at least 2.1)'),
+            (2, 'Plugin version: 2.0.4 (should be at least 2.1)'),
             (0, 'dspmq: OK'),
             (2, 'runmqsc: Not found'),
         ],
         id="version_mismatch",
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check(params, parsed, expected):
     check = Check(CHECK_NAME)
     actual = list(check.run_check(None, params, parsed))

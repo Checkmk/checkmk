@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
 
-from marshmallow import ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, config
+from cmk.gui import config, watolib
 from cmk.utils.defines import weekday_ids
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_host_downtime,
@@ -18,93 +16,33 @@ from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME_REGEXP
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
 )
-from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.gui.plugins.openapi.fields import HostField, query_field, AttributesField
+from cmk.gui.plugins.openapi.livestatus_helpers import tables
 from cmk.gui.plugins.openapi.endpoints.utils import verify_group_exist
+from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_tag_config, load_aux_tags
 
-
-class InputAttribute(BaseSchema):
-    key = fields.String(required=True)
-    value = fields.String(required=True)
-
-
-class Hostname(fields.String):
-    """A field representing a hostname.
-
-    """
-    default_error_messages = {
-        'should_exist': 'Host missing: {host_name!r}',
-        'should_not_exist': 'Host {host_name!r} already exists.',
-    }
-
-    def __init__(
-        self,
-        example='example.com',
-        pattern=HOST_NAME_REGEXP,
-        required=True,
-        validate=None,
-        should_exist: bool = True,
-        **kwargs,
-    ):
-        self._should_exist = should_exist
-        super().__init__(
-            example=example,
-            pattern=pattern,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-
-        host = watolib.Host.host(value)
-        if self._should_exist and not host:
-            self.fail("should_exist", host_name=value)
-        elif not self._should_exist and host:
-            self.fail("should_not_exist", host_name=value)
-
-
-EXISTING_HOST_NAME = Hostname(
+EXISTING_HOST_NAME = HostField(
     description="The hostname or IP address itself.",
     required=True,
     should_exist=True,
 )
 
-MONITORED_HOST = fields.String(
+MONITORED_HOST = fields.HostField(
     description="The hostname or IP address itself.",
     example='example.com',
-    pattern=HOST_NAME_REGEXP,
+    should_exist=True,
+    should_be_monitored=True,
     required=True,
 )
-
-
-class AttributesField(fields.Dict):
-    default_error_messages = {
-        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
-    }
-
-    def _validate(self, value):
-        # Special keys:
-        #  - site -> validate against config.allsites().keys()
-        #  - tag_* -> validate_host_tags
-        #  - * -> validate against host_attribute_registry.keys()
-        try:
-            validate_host_attributes(value, new=True)
-            if 'meta_data' in value:
-                self.fail("attribute_forbidden", attribute='meta_data', value=value)
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
-
 
 EXISTING_FOLDER = fields.FolderField(
     description=("The folder-id of the folder under which this folder shall be created. May be "
@@ -128,7 +66,7 @@ SERVICEGROUP_NAME = fields.String(
 
 
 class CreateClusterHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname of the cluster host.",
         required=True,
         should_exist=False,
@@ -157,7 +95,7 @@ class UpdateNodes(BaseSchema):
 
 
 class CreateHost(BaseSchema):
-    host_name = Hostname(
+    host_name = HostField(
         description="The hostname or IP address of the host to be created.",
         required=True,
         should_exist=False,
@@ -215,7 +153,7 @@ class UpdateHost(BaseSchema):
         fields.String(),
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
-        missing=[],
+        missing=list,
         required=False,
     )
 
@@ -231,6 +169,23 @@ class BulkUpdateHost(BaseSchema):
             "host_name": "example.com",
             "attributes": {}
         }],
+    )
+
+
+class RenameHost(BaseSchema):
+    new_name = HostField(
+        description="The new name of the existing host.",
+        required=True,
+        should_exist=False,
+        example="newhost",
+    )
+
+
+class MoveHost(BaseSchema):
+    target_folder = fields.FolderField(
+        required=True,
+        description="The path of the target folder where the host is supposed to be moved to.",
+        example=urllib.parse.quote_plus('/my/fine/folder'),
     )
 
 
@@ -480,6 +435,13 @@ class UpdateFolder(BaseSchema):
         missing=dict,
         required=False,
     )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
+        required=False,
+    )
 
 
 class UpdateFolderEntry(UpdateFolder):
@@ -499,13 +461,20 @@ class UpdateFolderEntry(UpdateFolder):
         missing=dict,
         required=False,
     )
+    remove_attributes = fields.List(
+        fields.String(),
+        description="A list of attributes which should be removed.",
+        example=["tag_foobar"],
+        missing=list,
+        required=False,
+    )
 
 
 class BulkUpdateFolder(BaseSchema):
     entries = fields.Nested(UpdateFolderEntry,
                             many=True,
                             example=[{
-                                'ident': 'root',
+                                'folder': 'root',
                                 'title': 'Virtual Servers',
                                 'attributes': {
                                     'key': 'foo'
@@ -525,7 +494,7 @@ class CreateDowntimeBase(BaseSchema):
     downtime_type = fields.String(
         required=True,
         description="The type of downtime to create.",
-        enum=['host', 'service', 'hostgroup', 'servicegroup'],
+        enum=['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query', 'service_by_query'],
         example="host",
     )
     start_time = fields.DateTime(
@@ -727,10 +696,13 @@ class UpdateTimePeriod(BaseSchema):
     )
     active_time_ranges = fields.List(
         fields.Nested(TimeRangeActive),
-        example={
-            'start': '12:00',
-            'end': '14:00'
-        },
+        example=[{
+            'day': 'monday',
+            'time_ranges': [{
+                'start': '12:00',
+                'end': '14:00'
+            }],
+        }],
         description="The list of active time ranges which replaces the existing list of time ranges",
         required=False,
     )
@@ -754,6 +726,21 @@ HOST_DURATION = fields.Integer(
     description=param_description(schedule_host_downtime.__doc__, 'duration'),
     example=3600,
     missing=0,
+)
+
+SERVICE_DURATION = fields.Integer(
+    required=False,
+    description=param_description(schedule_service_downtime.__doc__, 'duration'),
+    example=3600,
+    missing=0,
+)
+
+INCLUDE_ALL_SERVICES = fields.Bool(
+    description=
+    "If set, downtimes for all services associated with the given host will be scheduled.",
+    required=False,
+    missing=False,
+    example=True,
 )
 
 
@@ -793,14 +780,78 @@ class CreateHostGroupDowntime(CreateDowntimeBase):
     duration = HOST_DURATION
 
 
-class CreateDowntime(OneOfSchema):
+class CreateHostQueryDowntime(CreateDowntimeBase):
+    query = query_field(tables.Hosts, required=True)
+    duration = HOST_DURATION
+
+
+class CreateServiceQueryDowntime(CreateDowntimeBase):
+    query = query_field(tables.Services, required=True)
+    duration = SERVICE_DURATION
+
+
+class CreateHostRelatedDowntime(OneOfSchema):
     type_field = 'downtime_type'
     type_field_remove = False
     type_schemas = {
         'host': CreateHostDowntime,
         'hostgroup': CreateHostGroupDowntime,
+        'host_by_query': CreateHostQueryDowntime,
+    }
+
+
+class CreateServiceRelatedDowntime(OneOfSchema):
+    type_field = 'downtime_type'
+    type_field_remove = False
+    type_schemas = {
         'service': CreateServiceDowntime,
         'servicegroup': CreateServiceGroupDowntime,
+        'service_by_query': CreateServiceQueryDowntime,
+    }
+
+
+class DeleteDowntimeBase(BaseSchema):
+    delete_type = fields.String(
+        required=True,
+        description="The option how to delete a downtime.",
+        enum=['params', 'query'],
+        example="params",
+    )
+
+
+class DeleteDowntimeById(DeleteDowntimeBase):
+    downtime_id = fields.String(
+        description='The id of the downtime',
+        example='54',
+        required=True,
+    )
+
+
+class DeleteDowntimeByName(DeleteDowntimeBase):
+    hostname = fields.String(
+        required=True,
+        description="If set alone, then all downtimes of the host will be removed.",
+        example="example.com")
+    services = fields.List(
+        SERVICE_DESCRIPTION_FIELD,
+        description="If set, the downtimes of the listed services of the specified host will be "
+        "removed. If a service has multiple downtimes then all will be removed",
+        required=False,
+        example=["CPU load", "Memory"],
+    )
+
+
+class DeleteDowntimeByQuery(DeleteDowntimeBase):
+    query = query_field(tables.Downtimes, required=True)
+
+
+class DeleteDowntime(OneOfSchema):
+    type_field = 'delete_type'
+    type_field_remove = False
+    type_schemas = {
+        'by_id': DeleteDowntimeById,
+        'params': DeleteDowntimeByName,
+        'query': DeleteDowntimeByQuery,
     }
 
 
@@ -951,7 +1002,7 @@ class InputPassword(BaseSchema):
         description="The list of members to share the password with",
         required=False,
         attribute="shared_with",
-        missing=[],
+        missing=list,
     )
 
 
@@ -998,6 +1049,361 @@ class UpdatePassword(BaseSchema):
                          description="The list of members to share the password with",
                          required=False,
                          attribute="shared_with")
+
+
+class Username(fields.String):
+    default_error_messages = {
+        "should_exist": "Username missing: {username!r}",
+        "should_not_exist": "Username {username!r} already exists"
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        # TODO: change to names list only
+        usernames = load_users()
+        if self._should_exist and value not in usernames:
+            self.fail("should_exist", username=value)
+        elif not self._should_exist and value in usernames:
+            self.fail("should_not_exist", username=value)
+
+
+class CustomTimeRange(BaseSchema):
+    # TODO: fields.Dict validation also for Timperiods
+    start_time = fields.DateTime(
+        format="iso8601",
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The start datetime of the time period. The format has to conform to the ISO 8601 profile",
+    )
+    end_time = fields.DateTime(
+        required=True,
+        example="2017-07-21T17:32:28Z",
+        description=
+        "The end datetime of the time period. The format has to conform to the ISO 8601 profile",
+        format="iso8601",
+    )
+
+
+class DisabledNotifications(BaseSchema):
+    disable = fields.Bool(
+        required=False,
+        description="Option if all notifications should be temporarily disabled",
+        missing=False,
+        example="False",
+    )
+    timerange = fields.Nested(
+        CustomTimeRange,
+        description="A custom timerange during which notifications are disabled",
+        required=False,
+        example={
+            "start_time": "2017-07-21T17:32:28Z",
+            "end_time": "2017-07-21T18:32:28Z",
+        },
+    )
+
+
+AUTH_PASSWORD = fields.String(
+    required=False,
+    description="The password for login",
+    example="password",
+)
+
+AUTH_SECRET = fields.String(
+    required=False,
+    description="For accounts used by automation processes (such as fetching data from views "
+    "for further procession). This is the automation secret",
+    example="DEYQEQQPYCFFBYH@AVMC",
+)
+
+AUTH_CREATE_TYPE = fields.String(
+    required=False,
+    description="The authentication type",
+    enum=["automation", "password"],
+    example="password",
+)
+
+AUTH_UPDATE_TYPE = fields.String(
+    required=True,
+    description="The authentication type",
+    enum=["automation", "password", "remove"],
+    example="password",
+)
+
+
+class AuthSecret(BaseSchema):
+    auth_type = AUTH_CREATE_TYPE
+    secret = AUTH_SECRET
+
+
+class AuthPassword(BaseSchema):
+    auth_type = AUTH_CREATE_TYPE
+    password = AUTH_PASSWORD
+
+
+class AuthUpdateSecret(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+    secret = AUTH_SECRET
+
+
+class AuthUpdatePassword(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+    password = AUTH_PASSWORD
+
+
+class AuthUpdateRemove(BaseSchema):
+    auth_type = AUTH_UPDATE_TYPE
+
+
+class AuthOption(OneOfSchema):
+    type_field = 'auth_type'
+    type_field_remove = False
+    type_schemas = {
+        'password': AuthPassword,
+        'automation': AuthSecret,
+    }
+
+
+class AuthUpdateOption(OneOfSchema):
+    type_field = 'auth_type'
+    type_field_remove = False
+    type_schemas = {
+        'password': AuthUpdatePassword,
+        'automation': AuthUpdateSecret,
+        'remove': AuthUpdateRemove,
+    }
+
+
+class IdleOption(BaseSchema):
+    option = fields.String(
+        required=True,
+        description="Specify if the idle timeout should use the global configuration, be disabled "
+        "or use an individual duration",
+        enum=["global", "disable", "individual"],
+        example=False,
+    )
+    duration = fields.Integer(
+        required=False,
+        description="The duration in seconds of the individual idle timeout if individual is "
+        "selected as idle timeout option.",
+        example=3600,
+        missing=3600,
+    )
+
+
+class UserContactOption(BaseSchema):
+    email_address = fields.String(
+        required=True,
+        description="The mail address of the user. Required if the user is a monitoring"
+        "contact and receives notifications via mail.",
+        example="user@example.com",
+        attribute="email")
+    # User cannot enable fallback contact if no email is specified
+    fallback_contact = fields.Bool(
+        description="In case none of your notification rules handles a certain event a notification "
+        "will be sent to the specified email",
+        required=False,
+        missing=False,
+        example=False,
+    )
+
+
+class CreateUser(BaseSchema):
+    username = Username(
+        required=True,
+        should_exist=False,
+        description="An unique username for the user",
+        example="cmkuser",
+    )
+    fullname = fields.String(
+        required=True,
+        description="The alias or full name of the user",
+        example="Mathias Kettner",
+        attribute="alias",
+    )
+    auth_option = fields.Nested(
+        AuthOption,
+        required=False,
+        description="Authentication option for the user",
+        example={
+            "auth_type": "password",
+            "password": "password"
+        },
+        missing=dict,
+    )
+    disable_login = fields.Bool(
+        required=False,
+        missing=False,
+        description="The user can be blocked from login but will remain part of the site. "
+        "The disabling does not affect notification and alerts.",
+        example=False,
+        attribute='locked')
+    contact_options = fields.Nested(UserContactOption,
+                                    required=False,
+                                    description="Contact settings for the user",
+                                    missing=lambda: {
+                                        "email": "",
+                                        "fallback_contact": False
+                                    },
+                                    example={"email": "user@example.com"})
+    pager_address = fields.String(
+        required=False,
+        description="",
+        example="",
+        missing="",
+        attribute="pager",
+    )
+    idle_timeout = fields.Nested(
+        IdleOption,
+        required=False,
+        description="Idle timeout for the user. Per default, the global configuration is used.",
+        example={},
+    )
+    roles = fields.List(
+        fields.String(
+            required=True,
+            description="A role of the user",
+            enum=["user", "admin", "guest"],
+            example="user",
+        ),
+        required=False,
+        missing=list,
+        description="The list of assigned roles to the user",
+        example=["user"],
+    )
+    authorized_sites = fields.List(
+        fields.SiteField(),
+        description="The sites the user is authorized to handle",
+        example=['heute'],
+        required=False,
+    )
+    contactgroups = fields.List(
+        fields.String(description="Assign the user to one or multiple contact groups",
+                      required=True,
+                      example="all"),
+        required=False,
+        missing=list,
+        description="Assign the user to one or multiple contact groups. If no contact group is "
+        "specified then no monitoring contact will be created for the user."
+        "",
+        example=['all'])
+    disable_notifications = fields.Nested(
+        DisabledNotifications,
+        required=False,
+        missing=dict,
+        example={"disabled": False},
+    )
+    # default language is not setting a key in dict
+    language = fields.String(
+        required=False,
+        description="Configure the language to be used by the user in the user interface. Omitting "
+        "this will configure the default language.",
+        example="en",
+        enum=["de", "en", "rm"],
+    )
+
+
+class UpdateUser(BaseSchema):
+    fullname = fields.String(
+        required=False,
+        description="The alias or full name of the user",
+        example="Mathias Kettner",
+        attribute="alias",
+    )
+    auth_option = fields.Nested(
+        AuthUpdateOption,
+        required=False,
+        description="Authentication option for the user",
+        example={
+            "auth_type": "password",
+            "password": "password"
+        },
+        missing=dict,
+    )
+    enforce_password_change = fields.Bool(
+        required=False,
+        description="Enforce the password change on next login. This has no effect if you remove "
+        "the authentication option",
+        example=True,
+    )
+    disable_login = fields.Bool(
+        required=False,
+        description="The user can be blocked from login but will remain part of the site. "
+        "The disabling does not affect notification and alerts.",
+        example=False,
+        attribute='locked')
+    contact_options = fields.Nested(UserContactOption,
+                                    required=False,
+                                    description="Contact settings for the user",
+                                    example={"email": "user@example.com"})
+    pager_address = fields.String(
+        required=False,
+        description="",
+        example="",
+        attribute="pager",
+    )
+    idle_timeout = fields.Nested(
+        IdleOption,
+        required=False,
+        description="Idle timeout for the user",
+        example={},
+    )
+    roles = fields.List(
+        fields.String(
+            required=False,
+            description="A role of the user",
+            enum=["user", "admin", "guest"],
+            example="user",
+        ),
+        required=False,
+        description="The list of assigned roles to the user",
+        example=["user"],
+    )
+    authorized_sites = fields.List(
+        fields.SiteField(),
+        description="The sites the user is authorized to handle",
+        example=['heute'],
+        required=False,
+    )
+    contactgroups = fields.List(
+        fields.String(description="Assign the user to one or multiple contact groups",
+                      required=True,
+                      example="all"),
+        required=False,
+        description="Assign the user to one or multiple contact groups. If no contact group is "
+        "specified then no monitoring contact will be created for the user."
+        "",
+        example=['all'])
+    disable_notifications = fields.Nested(
+        DisabledNotifications,
+        required=False,
+        example={"disabled": False},
+    )
+    # default language is not setting a key in dict
+    language = fields.String(
+        required=False,
+        description="Configure the language to be used by the user in the user interface. Omitting "
+        "this will configure the default language",
+        example="en",
+        enum=["de", "en", "rm"],
+    )
 
 
 class HostTagGroupId(fields.String):
@@ -1114,7 +1520,7 @@ class HostTag(BaseSchema):
         "The list of auxiliary tag ids. Built-in tags (ip-v4, ip-v6, snmp, tcp, ping) and custom defined tags are allowed.",
         example=["ip-v4, ip-v6"],
         required=False,
-        missing=[],
+        missing=list,
     )
 
 
@@ -1123,6 +1529,7 @@ class InputHostTagGroup(BaseSchema):
         example="group_id",
         description="An id for the host tag group",
         attribute="id",
+        pattern='[a-zA-Z_]+[-0-9a-zA-Z_]*',
     )
     title = fields.String(
         required=True,
@@ -1197,10 +1604,16 @@ class UpdateHostTagGroup(BaseSchema):
     )
 
 
-class AcknowledgeHostProblem(BaseSchema):
+class AcknowledgeHostProblemBase(BaseSchema):
+    acknowledge_type = fields.String(
+        required=True,
+        description="The acknowledge host selection type.",
+        enum=['host', 'hostgroup', 'host_by_query'],
+        example="host",
+    )
     sticky = fields.Boolean(
         required=False,
-        missing=False,
+        missing=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'sticky'),
     )
@@ -1214,25 +1627,118 @@ class AcknowledgeHostProblem(BaseSchema):
 
     notify = fields.Boolean(
         required=False,
-        missing=False,
+        missing=True,
         example=False,
         description=param_description(acknowledge_host_problem.__doc__, 'notify'),
     )
 
     comment = fields.String(
-        required=False,
-        missing="Acknowledged",
+        required=True,
         example='This was expected.',
         description=param_description(acknowledge_host_problem.__doc__, 'comment'),
     )
 
 
-class BulkAcknowledgeHostProblem(AcknowledgeHostProblem):
-    entries = fields.List(
-        MONITORED_HOST,
+class AcknowledgeHostProblem(AcknowledgeHostProblemBase):
+    host_name = fields.HostField(description="The name of the host.",
+                                 should_exist=True,
+                                 should_be_monitored=True,
+                                 example="example.com",
+                                 required=True)
+
+
+class AcknowledgeHostGroupProblem(AcknowledgeHostProblemBase):
+    hostgroup_name = fields.String(
         required=True,
-        example=["example.com", "sample.com"],
+        description="The name of the hostgroup",
+        example="Servers",
     )
+
+
+class AcknowledgeHostQueryProblem(AcknowledgeHostProblemBase):
+    query = query_field(tables.Hosts, required=True)
+
+
+class AcknowledgeHostRelatedProblem(OneOfSchema):
+    type_field = 'acknowledge_type'
+    type_field_remove = False
+    type_schemas = {
+        'host': AcknowledgeHostProblem,
+        'hostgroup': AcknowledgeHostGroupProblem,
+        'host_by_query': AcknowledgeHostQueryProblem,
+    }
+
+
+class AcknowledgeServiceProblemBase(BaseSchema):
+    acknowledge_type = fields.String(
+        required=True,
+        description="The acknowledge service selection type.",
+        enum=['service', 'servicegroup', 'service_by_query'],
+        example="service",
+    )
+
+    sticky = fields.Boolean(
+        required=False,
+        missing=True,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'sticky'),
+    )
+
+    persistent = fields.Boolean(
+        required=False,
+        missing=False,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'persistent'),
+    )
+
+    notify = fields.Boolean(
+        required=False,
+        missing=True,
+        example=False,
+        description=param_description(acknowledge_service_problem.__doc__, 'notify'),
+    )
+
+    comment = fields.String(
+        required=True,
+        example='This was expected.',
+        description=param_description(acknowledge_service_problem.__doc__, 'comment'),
+    )
+
+
+class AcknowledgeSpecificServiceProblem(AcknowledgeServiceProblemBase):
+    host_name = fields.HostField(
+        should_exist=True,
+        should_be_monitored=True,
+        required=True,
+    )
+    service_description = fields.String(
+        description=
+        "The acknowledgement process will be applied to all matching service descriptions",
+        example="CPU load",
+        required=True,
+    )
+
+
+class AcknowledgeServiceGroupProblem(AcknowledgeServiceProblemBase):
+    servicegroup_name = fields.String(
+        description='The name of the service group',
+        example='windows',
+        required=True,
+    )
+
+
+class AcknowledgeServiceQueryProblem(AcknowledgeServiceProblemBase):
+    query = query_field(tables.Services, required=True)
+
+
+class AcknowledgeServiceRelatedProblem(OneOfSchema):
+    type_field = 'acknowledge_type'
+    type_field_remove = False
+    type_schemas = {
+        'service': AcknowledgeSpecificServiceProblem,
+        'servicegroup': AcknowledgeServiceGroupProblem,
+        'service_by_query': AcknowledgeServiceQueryProblem,
+    }
 
 
 SERVICE_STICKY_FIELD = fields.Boolean(
@@ -1294,7 +1800,6 @@ class BulkDeleteDowntime(BaseSchema):
 
 
 class BulkDeleteHost(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         EXISTING_HOST_NAME,
         required=True,
@@ -1312,7 +1817,6 @@ class BulkDeleteFolder(BaseSchema):
 
 
 class BulkDeleteHostGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1325,7 +1829,6 @@ class BulkDeleteHostGroup(BaseSchema):
 
 
 class BulkDeleteServiceGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1338,7 +1841,6 @@ class BulkDeleteServiceGroup(BaseSchema):
 
 
 class BulkDeleteContactGroup(BaseSchema):
-    # TODO: addition of etag field
     entries = fields.List(
         fields.String(
             required=True,
@@ -1358,10 +1860,17 @@ class ActivateChanges(BaseSchema):
         example=False,
     )
     sites = fields.List(
-        fields.String(),
+        fields.SiteField(),
         description=("On which sites the configuration shall be activated. An empty list "
                      "means all sites which have pending changes."),
         required=False,
-        missing=[],
+        missing=list,
         example=['production'],
+    )
+    force_foreign_changes = fields.Boolean(
+        description=param_description(watolib.activate_changes_start.__doc__,
+                                      'force_foreign_changes'),
+        required=False,
+        missing=False,
+        example=False,
     )

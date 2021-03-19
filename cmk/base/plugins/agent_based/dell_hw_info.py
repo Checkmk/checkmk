@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .agent_based_api.v1 import (
+    all_of,
     exists,
     register,
     SNMPTree,
@@ -26,5 +27,7 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=exists(".1.3.6.1.4.1.674.10892.5.1.1.1.0"),
-)
+    detect=all_of(
+        exists(".1.3.6.1.4.1.674.*"),  # shared with dell_compellent_ checks (performance!)
+        exists(".1.3.6.1.4.1.674.10892.5.1.1.1.0"),
+    ))

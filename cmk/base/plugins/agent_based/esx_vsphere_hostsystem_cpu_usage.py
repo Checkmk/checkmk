@@ -3,14 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 import time
 
 from .agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
-    Parameters,
 )
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State as state
 from .utils import cpu_util
@@ -33,7 +32,7 @@ def discover_esx_vsphere_hostsystem_cpu_usage(
 
 
 def check_esx_vsphere_hostsystem_cpu(
-    params: Parameters,
+    params: Mapping[str, Any],
     section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
     section_winperf_processor: Optional[List],
 ) -> CheckResult:

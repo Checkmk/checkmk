@@ -20,7 +20,6 @@ pytestmark = pytest.mark.checks
         'client_secret': 'clientsecret'
     }, ["http://cloud.com", "102", "token", "clientID", "clientsecret", "http://redirect.com"]),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_hivemanager_ng_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     agent = SpecialAgent('agent_hivemanager_ng')

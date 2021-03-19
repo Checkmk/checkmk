@@ -39,6 +39,7 @@ from cmk.gui.plugins.wato import (
     NotificationParameter,
     passwordstore_choices,
     HTTPProxyReference,
+    IndividualOrStoredPassword,
 )
 
 from cmk.gui.plugins.wato.utils import (
@@ -259,6 +260,33 @@ class NotificationParameterMail(NotificationParameter):
             import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option
 
+        elements += [
+            ("graphs_per_notification",
+             Integer(
+                 title=_("Graphs per notification (default: 5)"),
+                 label=_("Show up to"),
+                 unit=_("graphs"),
+                 help=_(
+                     "Sets a limit for the number of graphs that are displayed in a notification."),
+                 default_value=5,
+                 minvalue=0,
+             )),
+            ("notifications_with_graphs",
+             Integer(
+                 title=_("Bulk notifications with graphs (default: 5)"),
+                 label=_("Show graphs for the first"),
+                 unit=_("Notifications"),
+                 help=_(
+                     "Sets a limit for the number of notifications in a bulk for which graphs "
+                     "are displayed. If you do not use bulk notifications this option is ignored. "
+                     "Note that each graph increases the size of the mail and takes time to render"
+                     "on the monitoring server. Therefore, large bulks may exceed the maximum "
+                     "size for attachements or the plugin may run into a timeout so that a failed "
+                     "notification is produced."),
+                 default_value=5,
+                 minvalue=0,
+             )),
+        ]
         return elements
 
 
@@ -314,7 +342,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                      title=_("Webhook-URL"),
                      help=
                      _("Webhook URL. Setup Cisco Webex Teams Webhook " +
-                       "<a href=\"https://apphub.webex.com/teams/applications/incoming-webhooks-cisco-systems\" target=\"_blank\">here</a>"
+                       "<a href=\"https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054\" target=\"_blank\">here</a>"
                        "<br />This URL can also be collected from the Password Store from Check_MK."
                       ),
                      choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
@@ -399,6 +427,30 @@ class NotificationParameterPagerDuty(NotificationParameter):
 
 
 @notification_parameter_registry.register
+class NotificationParameterSIGNL4(NotificationParameter):
+    @property
+    def ident(self):
+        return "signl4"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=[],
+            elements=[
+                ("password",
+                 IndividualOrStoredPassword(
+                     title=_("Team Secret"),
+                     help=_("The team secret of your SIGNL4 team. That is the last part of "
+                            "your webhook URL: https://connect.signl4.com/webhook/<team_secret>"),
+                     allow_empty=False,
+                 )),
+                ("url_prefix", _get_url_prefix_specs(local_site_url)),
+            ],
+        )
+
+
+@notification_parameter_registry.register
 class NotificationParameterASCIIMail(NotificationParameter):
     @property
     def ident(self):
@@ -446,6 +498,60 @@ $LONGSERVICEOUTPUT$
         ])
         return Dictionary(title=_("Create notification with the following parameters"),
                           elements=elements)
+
+
+@notification_parameter_registry.register
+class NotificationILert(NotificationParameter):
+    @property
+    def ident(self):
+        return "ilert"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            optional_keys=[],
+            elements=[
+                ("ilert_api_key",
+                 CascadingDropdown(title=_("iLert alert source API key"),
+                                   help=_("API key for iLert alert server"),
+                                   choices=[(
+                                       "ilert_api_key",
+                                       _("API key"),
+                                       TextAscii(size=80, allow_empty=False),
+                                   ),
+                                            ("store", _("API key from password store"),
+                                             DropdownChoice(sorted=True,
+                                                            choices=passwordstore_choices))])),
+                ("ilert_priority",
+                 DropdownChoice(
+                     sorted=True,
+                     choices=[
+                         ("HIGH", _("High (with escalation)")),
+                         ('LOW', _("Low (without escalation")),
+                     ],
+                     title=
+                     _("Notification priority (This will override the priority configured in the alert source)"
+                      ),
+                     default_value='HIGH')),
+                ("ilert_summary_host",
+                 TextUnicode(
+                     title=_("Custom incident summary for host alerts"),
+                     default_value=
+                     "$NOTIFICATIONTYPE$ Host Alert: $HOSTNAME$ is $HOSTSTATE$ - $HOSTOUTPUT$",
+                     size=64,
+                 )),
+                ("ilert_summary_service",
+                 TextUnicode(
+                     title=_("Custom incident summary for service alerts"),
+                     default_value=
+                     "$NOTIFICATIONTYPE$ Service Alert: $HOSTALIAS$/$SERVICEDESC$ is $SERVICESTATE$ - $SERVICEOUTPUT$",
+                     size=64,
+                 )),
+                ("url_prefix", _get_url_prefix_specs(local_site_url,
+                                                     default_value="automatic_https")),
+            ],
+        )
 
 
 @notification_parameter_registry.register
@@ -894,6 +1000,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
                      regex_error=_("The URL must begin with <tt>https</tt>."),
                      size=64,
                  )),
+                ("proxy_url", HTTPProxyReference()),
                 ("owner",
                  TextUnicode(
                      title=_("Owner"),
@@ -1183,6 +1290,7 @@ class NotificationParameterPushover(NotificationParameter):
                          ("spacealarm", _("Space Alarm")),
                          ("tugboat", _("Tug Boat")),
                          ("updown", _("Up Down (long)")),
+                         ("vibrate", _("Vibrate only")),
                      ],
                      default_value="none")),
             ],

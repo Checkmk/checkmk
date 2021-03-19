@@ -24,7 +24,7 @@ from cmk.base.item_state import (  # pylint: disable=cmk-module-layer-violation
 )
 
 
-class _ValueStore(ValueStore):
+class _ValueStore(ValueStore):  # pylint: disable=too-many-ancestors
     """_ValueStore objects are used to persist values across check intervals"""
     @staticmethod
     def _raise_for_scope_violation():

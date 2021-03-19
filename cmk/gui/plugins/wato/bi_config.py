@@ -19,9 +19,10 @@ except ImportError:
     managed = None  # type: ignore[assignment]
 
 import cmk.gui.config as config
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
 from cmk.gui.valuespec import (
     ValueSpec,
@@ -43,7 +44,8 @@ from cmk.gui.valuespec import (
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import HTML, Choices
+from cmk.gui.htmllib import HTML
+from cmk.gui.type_defs import Choices
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.plugins.wato import (
@@ -65,16 +67,18 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuPopup,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_checkbox_selection_json_text,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
     make_checkbox_selection_topic,
 )
 
-from cmk.gui.node_visualization import BILayoutManagement
+from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
 from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
@@ -286,7 +290,8 @@ class ModeBIEditPack(ABCBIMode):
         return redirect(mode_url("bi_packs"))
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("BI pack"),
+                                          breadcrumb,
                                           form_name="bi_pack",
                                           button_name="_save",
                                           save_title=_("Save") if self._bi_pack else _("Create"))
@@ -412,7 +417,7 @@ class ModeBIPacks(ABCBIMode):
                             title=_("Of aggregations"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Monitor state"),
+                                    title=_("BI Aggregations"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
                                         makeuri_contextless(
@@ -424,7 +429,7 @@ class ModeBIPacks(ABCBIMode):
                                         )),
                                 ),
                                 PageMenuEntry(
-                                    title=_("Monitor single state (Deprecated)"),
+                                    title=_("Check State of BI Aggregation"),
                                     icon_name="rulesets",
                                     item=make_simple_link(
                                         makeuri_contextless(
@@ -442,6 +447,7 @@ class ModeBIPacks(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -492,7 +498,7 @@ class ModeBIPacks(ABCBIMode):
                 rules_url = makeuri_contextless(request, [("mode", "bi_rules"), ("pack", pack.id)])
                 html.icon_button(rules_url,
                                  _("View and edit the rules and aggregations in this BI pack"),
-                                 "bi_rules")
+                                 "rules")
                 table.text_cell(_("ID"), pack.id)
                 table.text_cell(_("Title"), pack.title)
                 table.text_cell(_("Public"), pack.public and _("Yes") or _("No"))
@@ -573,9 +579,11 @@ class ModeBIRules(ABCBIMode):
 
         if self._view_type == "list":
             unused_rules_title = _("Show only unused rules")
+            unused_rules_emblem: _Optional[str] = "warning"
             unused_rules_url = self.url_to_pack([("mode", "bi_rules")], self.bi_pack)
         else:
             unused_rules_title = _("Show all rules")
+            unused_rules_emblem = None
             unused_rules_url = self.url_to_pack([("mode", "bi_rules"), ("view", "unused")],
                                                 self.bi_pack)
 
@@ -614,7 +622,7 @@ class ModeBIRules(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic(),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -646,7 +654,10 @@ class ModeBIRules(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=unused_rules_title,
-                                    icon_name="unusedbirules",
+                                    icon_name={
+                                        "icon": "rules",
+                                        "emblem": unused_rules_emblem
+                                    },
                                     item=make_simple_link(unused_rules_url),
                                 ),
                             ],
@@ -655,6 +666,7 @@ class ModeBIRules(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
@@ -753,8 +765,10 @@ class ModeBIRules(ABCBIMode):
         else:
             self.render_rules(_("Unused BI Rules"), only_unused=True)
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -803,11 +817,13 @@ class ModeBIRules(ABCBIMode):
                 refs = aggr_refs + rule_refs
                 if not only_unused or refs == 0:
                     table.row()
-                    table.cell(html.render_input("_toggle_group",
-                                                 type_="button",
-                                                 class_="checkgroup",
-                                                 onclick="cmk.selection.toggle_all_rows();",
-                                                 value='X'),
+                    table.cell(html.render_input(
+                        "_toggle_group",
+                        type_="button",
+                        class_="checkgroup",
+                        onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                        make_checkbox_selection_json_text(),
+                        value='X'),
                                sortable=False,
                                css="checkbox")
                     html.checkbox("_c_rule_%s" % rule_id)
@@ -831,7 +847,7 @@ class ModeBIRules(ABCBIMode):
                             ],
                         )
                         html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"),
-                                         "bitree")
+                                         "aggr")
 
                     if refs == 0:
                         delete_url = make_confirm_link(
@@ -963,7 +979,8 @@ class ModeBIEditRule(ABCBIMode):
         return _("Edit Rule") + " " + escaping.escape_attribute(self._rule_id)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Rule"),
+                                          breadcrumb,
                                           form_name="birule",
                                           button_name="_save",
                                           save_title=_("Create") if self._new else _("Save"),
@@ -977,9 +994,9 @@ class ModeBIEditRule(ABCBIMode):
         self.verify_pack_permission(self.bi_pack)
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars('rule')
-
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), 'rule')
-        new_bi_rule = BIRule(vs_rule_config)
+        schema_validated_config = BIRuleSchema().load(vs_rule_config)
+        new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
 
@@ -996,10 +1013,6 @@ class ModeBIEditRule(ABCBIMode):
                 _("There is already a rule with the ID <b>%s</b>. "
                   "It is in the pack <b>%s</b> and as the title <b>%s</b>") %
                 (self._rule_id, existing_bi_pack.title, existing_bi_rule.title))
-
-        if new_bi_rule.num_nodes() == 0:
-            raise MKUserError(None,
-                              _("Please add at least one child node. Empty rules are useless."))
 
         self.bi_pack.add_rule(new_bi_rule)
         try:
@@ -1175,14 +1188,16 @@ class ModeBIEditRule(ABCBIMode):
              )),
             ("node_visualization",
              NodeVisualizationLayoutStyle(
-                 title="BI visualization layout style",
+                 title=_("Layout"),
                  help=_("The following layout style is applied to the matching node"))),
             ("icon", IconSelector(title=_("Icon"), with_emblem=False)),
             ("nodes",
              ListOf(
                  bi_valuespecs.get_bi_rule_node_choices_vs(),
                  add_label=_("Add child node generator"),
-                 title=_("Nodes that are aggregated by this rule"),
+                 title=_("Aggregated nodes"),
+                 allow_empty=False,
+                 empty_text=_("Please add at least one child node."),
              )),
             ("state_messages",
              Optional(
@@ -1200,7 +1215,7 @@ class ModeBIEditRule(ABCBIMode):
                                            ("3",
                                             "UNKNOWN"),
                                        ]]),
-                 title=_("Additional messages describing rule state"),
+                 title=_("Display additional messages"),
                  help=
                  _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
                    "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
@@ -1221,6 +1236,10 @@ class ModeBIEditRule(ABCBIMode):
                 value[what] = value["properties"].pop(what)
             value["disabled"] = value["computation_options"].pop("disabled")
 
+            # Marshmallow cannot handle None, it saves {}
+            if value["state_messages"] == {}:
+                value["state_messages"] = None
+
             del value["properties"]
             del value["computation_options"]
             return value
@@ -1231,7 +1250,7 @@ class ModeBIEditRule(ABCBIMode):
                 value["properties"][what] = value.pop(what) or ""
 
             for what in ["state_messages"]:
-                value["properties"][what] = value.get(what, {})
+                value["properties"][what] = value.pop(what) or {}
 
             value["computation_options"] = {}
             value["computation_options"]["disabled"] = value.pop("disabled")
@@ -1440,7 +1459,8 @@ class BIModeEditAggregation(ABCBIMode):
         return _("Edit Aggregation")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb,
+        return make_simple_form_page_menu(_("Aggregation"),
+                                          breadcrumb,
                                           form_name="biaggr",
                                           button_name="_save",
                                           save_is_enabled=bi_valuespecs.is_contact_for_pack(
@@ -1463,9 +1483,6 @@ class BIModeEditAggregation(ABCBIMode):
         vs_aggregation.validate_value(vs_aggregation_config, 'aggr')
 
         new_bi_aggregation = BIAggregation(vs_aggregation_config)
-
-        if new_bi_aggregation.groups.count() == 0:
-            raise MKUserError('rule_p_groups_0', _("Please define at least one aggregation group"))
 
         aggregation_ids = self._get_aggregations_by_id()
         if new_bi_aggregation.id in aggregation_ids and aggregation_ids[
@@ -1564,7 +1581,9 @@ class BIModeEditAggregation(ABCBIMode):
                     ],
                 ),
                 default_value={},
-                title=_("Aggregation Groups"),
+                title=_("Aggregation groups"),
+                allow_empty=False,
+                empty_text=_("Please define at least one aggregation group"),
             ),
             forth=convert_to_vs,
             back=convert_from_vs,
@@ -1801,7 +1820,7 @@ class BIModeAggregations(ABCBIMode):
                                 ),
                             ],
                         ),
-                        make_checkbox_selection_topic(),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -1813,7 +1832,7 @@ class BIModeAggregations(ABCBIMode):
                             entries=[
                                 PageMenuEntry(
                                     title=_("Rules"),
-                                    icon_name="bi_rules",
+                                    icon_name="rules",
                                     item=make_simple_link(
                                         self.url_to_pack([("mode", "bi_rules")], self.bi_pack),),
                                     is_shortcut=True,
@@ -1825,13 +1844,16 @@ class BIModeAggregations(ABCBIMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def page(self):
         html.begin_form("bulk_action_form", method="POST")
         self._render_aggregations()
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+        init_rowselect(self.name())
 
     def _render_bulk_move_form(self) -> str:
         with html.plugged():
@@ -1985,7 +2007,7 @@ class ModeBIRuleTree(ABCBIMode):
             self._rule_tree_bi_pack) + _("Rule tree of") + " " + self._rule_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb)
+        return make_simple_form_page_menu(_("Rule tree"), breadcrumb)
 
     def page(self):
         _aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(self._rule_id)

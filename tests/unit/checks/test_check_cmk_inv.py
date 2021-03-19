@@ -19,7 +19,6 @@ STATIC_ARGS = ["--cache", "--inventory-as-check", "$HOSTNAME$"]
         "timeout": 0
     }, ["--inv-fail-status=1", "--hw-changes=0", "--sw-changes=0", "--sw-missing=0"] + STATIC_ARGS),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_cmk_inv_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_cmk_inv")

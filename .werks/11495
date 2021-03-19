@@ -28,8 +28,4 @@ there. You are responsible for the installation and maintenance of the
 installation yourself. It would even be possible to create an MKP to share the
 installation with other users.
 
-The Checkmk sidebar snapin "Wiki" has also been removed from Checkmk. If
-you want to use it, you can find it at
-"share/doc/check_mk/treasures/wiki_sidebar_snapin.py" in your site. Copy
-the file to "local/share/check_mk/web/plugins/sidebar/" and restart your
-site apache to make the snapin available to the GUI.
+The Checkmk sidebar snapin "Wiki" has also been removed from Checkmk.

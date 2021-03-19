@@ -59,10 +59,6 @@ predefined_conditions: _Dict = {}
 http_proxies: _Dict = {}
 
 # SNMP communities and encoding
-# TODO: Rename use_inline_snmp and non_inline_snmp_hosts (different purpose now)
-# the names of the rules are kept because of backwards compatibility.
-# Old value is True or False and new value is a string for the respective backend.
-# From version 2.0.0i1 upwards old values are no longer configurable.
 
 # Global config for SNMP Backend
 snmp_backend_default: str = "inline"
@@ -97,6 +93,8 @@ management_protocol: _Dict = {}
 management_snmp_credentials: _Dict = {}
 # Mapping from hostname to IPMI credentials
 management_ipmi_credentials: _Dict = {}
+# Ruleset to specify whether or not to use bulkwalk
+management_bulkwalk_hosts: _List = []
 
 # RRD creation (only with CMC)
 cmc_log_rrdcreation = None  # also: "terse", "full"
@@ -108,7 +106,6 @@ cmc_service_rrd_config: _List = []
 # Inventory and inventory checks
 inventory_check_interval = None  # Nagios intervals (4h = 240)
 inventory_check_severity = 1  # warning
-inventory_check_do_scan = True  # include SNMP scan for SNMP devices
 inventory_max_cachefile_age = 120  # seconds
 inventory_check_autotrigger = True  # Automatically trigger inv-check after automation-inventory
 # TODO: Remove this already deprecated option
@@ -131,7 +128,7 @@ service_dependency_template = 'check_mk'
 generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
-nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()='
+nagios_illegal_chars = '`;~!$%^&*|\'"<>?,()=\t'  # Tab is an illegal character for CMC
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {

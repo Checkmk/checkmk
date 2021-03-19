@@ -13,7 +13,6 @@
 #include <vector>
 
 #include "Renderer.h"
-#include "data_encoding.h"
 class Logger;
 
 // Note: The CSV format is a bit underspecified, but the most "authorative"

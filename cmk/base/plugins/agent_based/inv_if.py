@@ -6,12 +6,12 @@
 
 from dataclasses import dataclass
 import time
-from typing import Dict, Iterable, List, Optional, Sequence, Union
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Union
 
-from .agent_based_api.v1.type_defs import InventoryResult, Parameters, StringByteTable
+from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
 from .agent_based_api.v1 import (
     Attributes,
-    matches,
+    exists,
     OIDBytes,
     register,
     SNMPTree,
@@ -129,8 +129,7 @@ register.snmp_section(
             ],
         ),
     ],
-    # match all cont/version strings >= 2
-    detect=matches(".1.3.6.1.2.1.2.1.0", r"([2-9]|\d\d+)(\.\d*)*"),
+    detect=exists(".1.3.6.1.2.1.2.2.1.*"),  # ifTable
 )
 
 
@@ -142,7 +141,7 @@ def round_to_day(ts):
 
 # TODO unify with other if inventory plugins
 def inventory_if(
-    params: Parameters,
+    params: Mapping[str, Any],
     section_inv_if: Optional[SectionInvIf],
     section_uptime: Optional[uptime.Section],
 ) -> InventoryResult:
@@ -186,6 +185,8 @@ def inventory_if(
             if_index_nr = ""
 
         interface_row: Dict[str, Union[str, float]] = {
+            "description": interface.descr,
+            "alias": interface.alias,
             "speed": interface.speed,
             "phys_address": interface.phys_address,
             "oper_status": interface.oper_status,
@@ -204,8 +205,6 @@ def inventory_if(
                        key_columns={"index": if_index_nr},
                        inventory_columns=interface_row,
                        status_columns={
-                           "description": interface.descr,
-                           "alias": interface.alias,
                            "last_change": int(last_change_timestamp),
                        })
 

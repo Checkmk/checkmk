@@ -15,7 +15,6 @@ pytestmark = pytest.mark.checks
                           (["foo", {
                               "port": 22
                           }], ["-H", "$HOSTADDRESS$", "-C", "foo", "-p", 22])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_by_ssh_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_by_ssh")

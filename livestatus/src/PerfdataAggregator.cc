@@ -6,18 +6,16 @@
 #include "PerfdataAggregator.h"
 
 #include <cmath>
-#include <functional>
 #include <iterator>
 #include <sstream>
 #include <stdexcept>
 
 #include "Renderer.h"
 #include "Row.h"
-#include "StringColumn.h"
 
 void PerfdataAggregator::consume(Row row, const contact * /* auth_user */,
                                  std::chrono::seconds /* timezone_offset */) {
-    std::istringstream iss(_column->getValue(row));
+    std::istringstream iss(_getValue(row));
     std::istream_iterator<std::string> end;
     for (auto it = std::istream_iterator<std::string>(iss); it != end; ++it) {
         auto pos = it->find('=');

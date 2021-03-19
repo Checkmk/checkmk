@@ -49,7 +49,7 @@ def test_openapi_livestatus_hosts_generic_filter(
         resp = wsgi_app.call_method(
             'get',
             base +
-            '/domain-types/host/collections/all?query={"op": "~", "left": "hosts.alias", "right": "heute"}',
+            '/domain-types/host/collections/all?query={"op": "~", "left": "alias", "right": "heute"}',
             status=200,
         )
         assert len(resp.json['value']) == 1

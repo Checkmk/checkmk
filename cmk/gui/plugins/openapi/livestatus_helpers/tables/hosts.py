@@ -130,8 +130,8 @@ class Hosts(Table):
     )
     """Whether checks of the object are enabled (0/1)"""
 
-    children = Column(
-        'childs',  # sic
+    childs = Column(
+        'childs',
         col_type='list',
         description='A list of all direct children of the host',
     )

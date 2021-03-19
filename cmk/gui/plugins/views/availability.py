@@ -6,6 +6,7 @@
 
 import time
 import itertools
+import json
 from typing import List, TYPE_CHECKING, Set, Tuple, Iterator
 
 import cmk.utils.version as cmk_version
@@ -109,7 +110,14 @@ def get_availability_options_from_request(what: AVObjectType) -> AVOptions:
     # trick will merge their options with our default options.
     avoptions.update(config.user.load_file("avoptions", {}))
 
-    avoption_entries = availability.get_av_display_options(what)
+    form_name = html.request.get_ascii_input("filled_in")
+    if form_name == "avoptions_display":
+        avoption_entries = availability.get_av_display_options(what)
+    elif form_name == "avoptions_computation":
+        avoption_entries = availability.get_av_computation_options()
+    else:
+        avoption_entries = []
+
     if html.request.var("avoptions") == "set":
         for name, _height, _show_in_reporting, vs in avoption_entries:
             try:
@@ -143,14 +151,15 @@ def _handle_availability_option_reset() -> None:
 
 def _show_availability_options(option_type: str, what: AVObjectType, avoptions: AVOptions,
                                valuespecs: AVOptionValueSpecs) -> None:
-    html.begin_form("avoptions")
+    form_name = "avoptions_%s" % option_type
+    html.begin_form(form_name)
     html.hidden_field("avoptions", "set")
 
     _show_availability_options_controls()
 
     container_id = "av_options_%s" % option_type
     html.open_div(id_=container_id, class_="side_popup_content")
-    if html.has_user_errors():
+    if html.has_user_errors() and html.form_submitted(form_name):
         html.show_user_errors()
 
     for name, height, _show_in_reporting, vs in valuespecs:
@@ -249,7 +258,7 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
         av_object = (None, None, html.request.get_unicode_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        title += view_title(view.spec)
+        title += view_title(view.spec, view.context)
 
     title += " - " + range_title
 
@@ -287,7 +296,8 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
             av_object=av_object,
             include_output=av_mode == "timeline",
             include_long_output=include_long_output,
-            avoptions=avoptions)
+            avoptions=avoptions,
+            view_process_tracking=view.process_tracking)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
     # Do CSV ouput
@@ -304,9 +314,22 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                          page_menu=_page_menu_availability(breadcrumb, view, what, av_mode,
                                                            av_object, time_range, avoptions)
                          if display_options.enabled(display_options.B) else None)
+        html.begin_page_content()
 
     if html.has_user_errors():
-        html.final_javascript("cmk.page_menu.open_popup('avoptions');")
+        form_name = html.request.get_ascii_input_mandatory("filled_in")
+        if form_name in ("avoptions_display", "avoptions_computation"):
+            html.final_javascript("cmk.page_menu.open_popup(%s);" %
+                                  json.dumps("popup_" + form_name))
+
+    missing_single_infos = view.missing_single_infos
+    if missing_single_infos:
+        raise MKUserError(
+            None,
+            _("Unable to render this availability view, because we miss some required context "
+              "information (%s). Please update the filters on the source view or add the "
+              "missing HTTP request variables to your request") %
+            ", ".join(sorted(missing_single_infos)))
 
     html.write(confirmation_html_code)
 
@@ -322,11 +345,10 @@ def show_availability_page(view: 'View', filterheaders: 'FilterHeaders') -> None
                 _('Repeat query without limit.'),
                 makeuri(request, [("_unset_logrow_limit", "1"), ("avo_logrow_limit", 0)]))
             html.show_warning(text)
-
         do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avoptions)
 
-    if display_options.enabled(display_options.Z):
-        html.bottom_footer()
+    if display_options.enabled(display_options.T):
+        html.end_page_content()
 
     if display_options.enabled(display_options.H):
         html.body_end()
@@ -497,11 +519,11 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.open_div(class_="avlegend levels")
         html.h3(_("Availability levels"))
 
-        html.div(_("OK"), class_="state state0")
+        html.div(html.render_span(_("OK")), class_="state state0")
         html.div("> %.3f%%" % warn, class_="level")
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
         html.div("> %.3f%%" % crit, class_="level")
-        html.div(_("CRIT"), class_="state state2")
+        html.div(html.render_span(_("CRIT")), class_="state state2")
         html.div("< %.3f%%" % crit, class_="level")
 
         html.close_div()
@@ -574,7 +596,9 @@ def _render_availability_timeline(what: AVObjectType, av_entry: AVEntry, avoptio
             table.cell(_("From"), row["from_text"], css="nobr narrow")
             table.cell(_("Until"), row["until_text"], css="nobr narrow")
             table.cell(_("Duration"), row["duration_text"], css="narrow number")
-            table.cell(_("State"), row["state_name"], css=row["css"] + " state narrow")
+            table.cell(_("State"),
+                       html.render_span(row["state_name"]),
+                       css=row["css"] + " state narrow")
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(_("Last known summary"),
@@ -593,21 +617,22 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.open_div(class_="avlegend timeline")
 
     html.h3(_('Timeline colors'))
-    html.div(_("UP") if what == "host" else _("OK"), class_="state state0")
+    html.div(html.render_span(_("UP") if what == "host" else _("OK")), class_="state state0")
 
     if what != "host":
-        html.div(_("WARN"), class_="state state1")
+        html.div(html.render_span(_("WARN")), class_="state state1")
 
-    html.div(_("DOWN") if what == "host" else _("CRIT"), class_="state state2")
-    html.div(_("UNREACH") if what == "host" else _("UNKNOWN"), class_="state state3")
-    html.div(_("Flapping"), class_="state flapping")
+    html.div(html.render_span(_("DOWN") if what == "host" else _("CRIT")), class_="state state2")
+    html.div(html.render_span(_("UNREACH") if what == "host" else _("UNKNOWN")),
+             class_="state state3")
+    html.div(html.render_span(_("Flapping")), class_="state flapping")
 
     if what != "host":
-        html.div(_("H.Down"), class_="state hostdown")
+        html.div(html.render_span(_("H.Down")), class_="state hostdown")
 
-    html.div(_("Downtime"), class_="state downtime")
-    html.div(_("OO/Service"), class_="state ooservice")
-    html.div(_("unmonitored"), class_="state unmonitored")
+    html.div(html.render_span(_("Downtime")), class_="state downtime")
+    html.div(html.render_span(_("OO/Service")), class_="state ooservice")
+    html.div(html.render_span(_("unmonitored")), class_="state unmonitored")
 
     html.close_div()
 
@@ -653,7 +678,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
             # Columns with the actual availability data
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], row["cells"]):
-                table.cell(title, text, css=css, help_txt=help_txt)
+                table.cell(title, html.render_span(text), css=css, help_txt=help_txt)
 
         if "summary" in av_table:
             table.row(css="summary", fixed=True)
@@ -666,7 +691,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
                 table.cell("", "")
 
             for (title, help_txt), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):
-                table.cell(title, text, css="heading " + css, help_txt=help_txt)
+                table.cell(title, html.render_span(text), css="heading " + css, help_txt=help_txt)
 
 
 def render_timeline_bar(timeline_layout, style, timeline_nr=0):
@@ -763,7 +788,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
     _handle_availability_option_reset()
     avoptions = get_availability_options_from_request("bi")
 
-    title = view_title(view.spec)
+    title = view_title(view.spec, view.context)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:
@@ -827,6 +852,7 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
 
         timeline_containers, av_rawdata, has_reached_logrow_limit = _get_bi_availability(
             avoptions, aggr_rows, timewarp)
+        view.process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree
@@ -932,7 +958,6 @@ def show_bi_availability(view: "View", aggr_rows: 'Rows') -> None:
         html.write(timewarpcode)
         do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)
 
-    html.bottom_footer()
     html.body_end()
 
 
@@ -1124,7 +1149,6 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     html.hidden_fields()
     html.end_form()
 
-    html.bottom_footer()
     html.body_end()
     return True
 
@@ -1138,7 +1162,10 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
 
 
 def _edit_annotation_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    return make_simple_form_page_menu(breadcrumb, form_name="editanno", button_name="save")
+    return make_simple_form_page_menu(_("Annotation"),
+                                      breadcrumb,
+                                      form_name="editanno",
+                                      button_name="save")
 
 
 def _validate_reclassify_of_states(value, varprefix):

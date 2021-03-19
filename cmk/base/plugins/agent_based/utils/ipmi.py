@@ -80,7 +80,7 @@ def ignore_sensor(
 
 def check_ipmi(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
@@ -110,19 +110,20 @@ def _unit_to_render_func(unit: str) -> Callable[[float], str]:
 def _check_numerical_levels(
     sensor_name: str,
     val: float,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     unit: str,
-) -> type_defs.CheckResult:
+) -> Optional[Result]:
     for this_sensorname, levels in params.get("numerical_sensor_levels", []):
         if this_sensorname == sensor_name and levels:
-            yield from check_levels(
+            result, *_ = check_levels(
                 val,
                 levels_upper=levels.get('upper', (None, None)),
                 levels_lower=levels.get('lower', (None, None)),
                 render_func=_unit_to_render_func(unit),
                 label=sensor_name,
             )
-            break
+            return result
+    return None
 
 
 def _sensor_levels_to_check_levels(
@@ -137,7 +138,7 @@ def _sensor_levels_to_check_levels(
 
 def check_ipmi_detailed(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     sensor: Sensor,
     temperature_metrics_only: bool,
     status_txt_mapping: StatusTxtMapping,
@@ -167,28 +168,27 @@ def check_ipmi_detailed(
                 levels=(None, sensor.crit_high),
             )
 
-        sensor_result = next(
-            check_levels(
-                sensor.value,
-                levels_upper=_sensor_levels_to_check_levels(sensor.warn_high, sensor.crit_high),
-                levels_lower=_sensor_levels_to_check_levels(sensor.warn_low, sensor.crit_low),
-                render_func=_unit_to_render_func(sensor.unit),
-            ),
-            None,
+        sensor_result, *_ = check_levels(
+            sensor.value,
+            levels_upper=_sensor_levels_to_check_levels(sensor.warn_high, sensor.crit_high),
+            levels_lower=_sensor_levels_to_check_levels(sensor.warn_low, sensor.crit_low),
+            render_func=_unit_to_render_func(sensor.unit),
         )
-        assert isinstance(sensor_result, Result)
         yield Result(
             state=sensor_result.state,
             summary=sensor_result.summary,
         )
         if metric:
             yield metric
-        yield from _check_numerical_levels(
+
+        num_result = _check_numerical_levels(
             item,
             sensor.value,
             params,
             sensor.unit,
         )
+        if num_result is not None:
+            yield num_result
 
     for wato_status_txt, wato_status in params.get("sensor_states", []):
         if sensor.status_txt.startswith(wato_status_txt):
@@ -201,7 +201,7 @@ def check_ipmi_detailed(
 
 
 def check_ipmi_summarized(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
     status_txt_mapping: StatusTxtMapping,
 ) -> type_defs.CheckResult:
@@ -228,18 +228,13 @@ def check_ipmi_summarized(
                 break
 
         if sensor.value is not None:
-            sensor_result = next(
-                iter(_check_numerical_levels(
-                    sensor_name,
-                    sensor.value,
-                    params,
-                    sensor.unit,
-                )),
-                None,
+            sensor_result = _check_numerical_levels(
+                sensor_name,
+                sensor.value,
+                params,
+                sensor.unit,
             )
-
             if sensor_result:
-                assert isinstance(sensor_result, Result)
                 sensor_state = state.worst(sensor_state, sensor_result.state)
                 txt = sensor_result.summary
 

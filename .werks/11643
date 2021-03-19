@@ -6,7 +6,7 @@ Date: 1604911393
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Docker sockets do not have recv method anymore. Docker offers
 handling for this (docker.utils.socket.read()).

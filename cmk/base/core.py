@@ -16,6 +16,7 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.tty as tty
 import cmk.utils.store as store
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
 from cmk.utils.type_defs import TimeperiodName
 
@@ -23,7 +24,6 @@ import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
-from cmk.base.caching import config_cache as _config_cache
 from cmk.base.core_config import MonitoringCore
 
 # suppress "Cannot find module" error from mypy
@@ -148,7 +148,7 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
 
     # Note: This also returns True when the timeperiod is unknown
     #       The following function timeperiod_active handles this differently
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod, True)
+    return _config_cache.get("timeperiods_cache").get(timeperiod, True)
 
 
 def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
@@ -160,13 +160,13 @@ def timeperiod_active(timeperiod: TimeperiodName) -> Optional[bool]:
     Raises an exception if e.g. a timeout or connection error appears.
     This way errors can be handled upstream."""
     update_timeperiods_cache()
-    return _config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    return _config_cache.get("timeperiods_cache").get(timeperiod)
 
 
 def update_timeperiods_cache() -> None:
     # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
     # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.get_dict("timeperiods_cache")
+    tp_cache = _config_cache.get("timeperiods_cache")
 
     if not tp_cache:
         response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
@@ -175,7 +175,7 @@ def update_timeperiods_cache() -> None:
 
 
 def cleanup_timeperiod_caches() -> None:
-    _config_cache.get_dict("timeperiods_cache").clear()
+    _config_cache.get("timeperiods_cache").clear()
 
 
 cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

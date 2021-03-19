@@ -87,5 +87,5 @@ def test_chrony_offet_crit():
                 state=state.WARN,
                 summary="Offset: 0.2751 ms (warn/crit at 0.1200 ms/0.4200 ms)",
             ),
-            Metric("offset", 0.275117, levels=(0.12, 0.42)),
+            Metric("offset", 0.275117, levels=(0.12, 0.42), boundaries=(0.0, None)),
         ]

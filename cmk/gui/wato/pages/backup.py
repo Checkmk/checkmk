@@ -181,7 +181,7 @@ class ModeAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         config.user.need_permission("wato.backups")
@@ -246,7 +246,7 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
         return ModeBackupKeyManagement
 
     def _upload_key(self, key_file, value):
-        watolib.log_audit(None, "upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
+        watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
 
 

@@ -4,14 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.time import *  # pylint: disable=wildcard-import,unused-wildcard-import
 import cmk.base.plugins.agent_based.agent_based_api.v1.render as render
 
+# last_synchronized default values increased since a few systems required longer time
 factory_settings["timesyncd_default_levels"] = {
     "stratum_level": 10,
     "quality_levels": (200.0, 500.0),
     "alert_delay": (300, 3600),
-    "last_synchronised": (3600, 7200)
+    "last_synchronized": (7200, 10800)
 }
 
 
@@ -86,7 +91,7 @@ def check_timesyncd(_item, params, parsed):
         # now we have set it, but not yet checked it. Check it!
         yield from tolerance_check(
             set_sync_time=None,  # use the time we just set.
-            levels=params.get("last_synchronised"),
+            levels=params.get("last_synchronized"),
         )
 
     server = parsed.get("server")
@@ -108,7 +113,7 @@ def check_timesyncd(_item, params, parsed):
                            human_readable_func=get_age_human_readable,
                            infoname="Jitter")
 
-    yield 0, "synchronised on %s" % server
+    yield 0, "synchronized on %s" % server
 
 
 check_info["timesyncd"] = {

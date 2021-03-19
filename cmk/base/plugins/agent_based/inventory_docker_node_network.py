@@ -7,20 +7,14 @@ from typing import Any, Dict
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 from .agent_based_api.v1 import Attributes, register, TableRow
-from .utils import docker, legacy_docker
+from .utils import docker
 
 Section = Dict[str, Any]
 
 
 def parse_docker_node_network(string_table: StringTable) -> Section:
-    version = docker.get_version(string_table)
-
-    if version is None:
-        network_list = legacy_docker.parse_network_inspect(string_table)
-        return legacy_docker.DeprecatedDict((n["Id"], n) for n in network_list)
-
-    networks = (docker.json_get_obj(line) for line in string_table[1:])
-    return {n["Id"]: n for n in networks if n is not None}
+    networks = docker.parse_multiline(string_table).data
+    return {n["Id"]: n for n in networks}
 
 
 register.agent_section(
@@ -55,7 +49,7 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
             "name": network_name,
             "network_id": docker.get_short_id(network_id),
             "scope": network["Scope"],
-            "labels": docker.format_labels(network),
+            "labels": docker.format_labels(network.get("Labels", {})),
         }
         try:
             network_inventory_attributes.update(

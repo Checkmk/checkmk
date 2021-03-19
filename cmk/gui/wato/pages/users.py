@@ -46,15 +46,19 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
     make_simple_link,
     make_simple_form_page_menu,
     make_confirmed_form_submit_link,
 )
-from cmk.gui.watolib.users import delete_users, edit_users
+from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.changes import make_object_audit_log_url
 
 from cmk.gui.plugins.wato import (
     WatoMode,
@@ -139,6 +143,7 @@ class ModeUsers(WatoMode):
                             title=_("Notify users"),
                             entries=list(self._page_menu_entries_notify_users()),
                         ),
+                        make_checkbox_selection_topic(self.name()),
                     ],
                 ),
                 PageMenuDropdown(
@@ -153,6 +158,7 @@ class ModeUsers(WatoMode):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
@@ -174,7 +180,7 @@ class ModeUsers(WatoMode):
         if config.user.may("general.notify"):
             yield PageMenuEntry(
                 title=_("Notify users"),
-                icon_name="notification",
+                icon_name="notifications",
                 item=make_simple_link("notify.py"),
             )
 
@@ -314,13 +320,15 @@ class ModeUsers(WatoMode):
                 table.row()
 
                 # Checkboxes
-                table.cell(html.render_input("_toggle_group",
-                                             type_="button",
-                                             class_="checkgroup",
-                                             onclick="cmk.selection.toggle_all_rows();",
-                                             value='X'),
-                           sortable=False,
-                           css="checkbox")
+                table.cell(
+                    html.render_input("_toggle_group",
+                                      type_="button",
+                                      class_="checkgroup",
+                                      onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);" %
+                                      make_checkbox_selection_json_text(),
+                                      value='X'),
+                    sortable=False,
+                    css="checkbox")
 
                 if uid != config.user.id:
                     html.checkbox("_c_user_%s" % ensure_str(base64.b64encode(uid.encode("utf-8"))))
@@ -575,31 +583,37 @@ class ModeEditUser(WatoMode):
         return _("Edit user %s") % self._user_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(breadcrumb, form_name="user", button_name="save")
+        menu = make_simple_form_page_menu(_("User"),
+                                          breadcrumb,
+                                          form_name="user",
+                                          button_name="save")
 
-        menu.dropdowns.insert(
-            1,
-            PageMenuDropdown(
-                name="related",
-                title=_("Related"),
-                topics=[
-                    PageMenuTopic(
-                        title=_("Setup"),
-                        entries=list(self._page_menu_entries_related()),
-                    ),
-                ],
+        action_dropdown = menu.dropdowns[0]
+        action_dropdown.topics.append(
+            PageMenuTopic(
+                title=_("This user"),
+                entries=list(self._page_menu_entries_this_user()),
             ))
 
         return menu
 
-    def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+    def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
         if self._rbn_enabled and not self._is_new_user:
             yield PageMenuEntry(
-                title=_("Notifications"),
-                icon_name="notifications",
+                title=_("Notification rules"),
+                icon_name="topic_events",
                 item=make_simple_link(
                     watolib.folder_preserving_link([("mode", "user_notifications"),
                                                     ("user", self._user_id)])),
+            )
+
+        if config.user.may("wato.auditlog") and not self._is_new_user:
+            assert self._user_id is not None
+            yield PageMenuEntry(
+                title=_("Audit log"),
+                icon_name="auditlog",
+                item=make_simple_link(
+                    make_object_audit_log_url(make_user_object_ref(UserId(self._user_id)))),
             )
 
     def action(self) -> ActionResult:
@@ -611,7 +625,7 @@ class ModeEditUser(WatoMode):
             user_attrs = {}
         else:
             self._user_id = html.request.get_unicode_input_mandatory("edit").strip()
-            user_attrs = self._users[UserId(self._user_id)]
+            user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
         user_attrs["alias"] = html.request.get_unicode_input_mandatory("alias").strip()
@@ -620,9 +634,8 @@ class ModeEditUser(WatoMode):
         user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
 
-        if (UserId(self._user_id) in self._users and
-                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"] and
-                user_attrs["locked"]):
+        if (UserId(self._user_id) in self._users and user_attrs["locked"] and
+                self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"]):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
@@ -697,6 +710,16 @@ class ModeEditUser(WatoMode):
         elif "authorized_sites" in user_attrs:
             del user_attrs["authorized_sites"]
 
+        # ntopng
+        if config.is_ntop_available():
+            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding WATO rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                user_attrs[ntop_username_attribute] = html.request.get_unicode_input_mandatory(
+                    ntop_username_attribute)
+
         # Roles
         user_attrs["roles"] = [
             role for role in self._roles.keys() if html.get_checkbox("role_" + role)
@@ -757,7 +780,7 @@ class ModeEditUser(WatoMode):
         forms.header(_("Identity"))
 
         # ID
-        forms.section(_("Username"), simple=not self._is_new_user)
+        forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
             vs_user_id = UserID(allow_empty=False)
 
@@ -773,7 +796,7 @@ class ModeEditUser(WatoMode):
                 html.hidden_field(name, self._user.get(name, dflt))
 
         # Full name
-        forms.section(_("Full name"))
+        forms.section(_("Full name"), is_required=True)
         lockable_input('alias', self._user_id)
         html.help(_("Full name or alias of the user"))
 
@@ -813,6 +836,20 @@ class ModeEditUser(WatoMode):
         custom_user_attr_topics = userdb_utils.get_user_attributes_by_topic()
 
         self._show_custom_user_attributes(custom_user_attr_topics.get('ident', []))
+
+        # ntopng
+        if config.is_ntop_available():
+            ntop_connection = config.ntop_connection  # type: ignore[attr-defined]
+            # ntop_username_attribute will be the name of the custom attribute or false
+            # see corresponding WATO rule
+            ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
+            if ntop_username_attribute:
+                forms.section(_("ntopng Username"))
+                lockable_input(ntop_username_attribute, '')
+                html.help(
+                    _("The corresponding username in ntopng of the current checkmk user. "
+                      "It is used, in case the user mapping to ntopng is configured to use this "
+                      "custom attribute"))
 
         forms.header(_("Security"))
         forms.section(_("Authentication"))
@@ -938,8 +975,15 @@ class ModeEditUser(WatoMode):
         forms.header(_("Contact Groups"), isopen=False)
         forms.section()
         groups_page_url = watolib.folder_preserving_link([("mode", "contact_groups")])
-        group_assign_url = watolib.folder_preserving_link([("mode", "rulesets"),
-                                                           ("group", "grouping")])
+        hosts_assign_url = watolib.folder_preserving_link([
+            ("mode", "edit_ruleset"),
+            ("varname", "host_contactgroups"),
+        ])
+        services_assign_url = watolib.folder_preserving_link([
+            ("mode", "edit_ruleset"),
+            ("varname", "service_contactgroups"),
+        ])
+
         if not self._contact_groups:
             html.write(
                 _("Please first create some <a href='%s'>contact groups</a>") % groups_page_url)
@@ -969,11 +1013,13 @@ class ModeEditUser(WatoMode):
         html.help(
             _("Contact groups are used to assign monitoring "
               "objects to users. If you haven't defined any contact groups yet, "
-              "then first <a href='%s'>do so</a>. Hosts and services can be "
-              "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
+              "then first <a href='%s'>do so</a>. "
+              "Hosts and services can be assigned to contact groups using this "
+              "<a href='%s'>rule for hosts</a> and this "
+              "<a href='%s'>rule for services</a>.<br><br>"
               "If you do not put the user into any contact group "
               "then no monitoring contact will be created for the user.") %
-            (groups_page_url, group_assign_url))
+            (groups_page_url, hosts_assign_url, services_assign_url))
 
         forms.header(_("Notifications"), isopen=False)
         if not self._rbn_enabled():
@@ -987,7 +1033,7 @@ class ModeEditUser(WatoMode):
 
             # Notification period
             forms.section(_("Notification time period"))
-            user_np = self._user.get("notification_period")
+            user_np = self._user.get("notification_period", "24X7")
             if not isinstance(user_np, str):
                 raise Exception("invalid notification period %r" % (user_np,))
             choices: Choices = [
@@ -1083,10 +1129,8 @@ class ModeEditUser(WatoMode):
     def _pw_suffix(self) -> str:
         if self._is_new_user:
             return 'new'
-        # mypy complaines that None has no attribute "encode" and
-        # "bytes", expected "str"
         assert self._user_id is not None
-        return str(base64.b64encode(self._user_id.encode("utf-8")))
+        return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
     def _is_locked(self, attr):
         """Returns true if an attribute is locked and should be read only. Is only
@@ -1106,7 +1150,7 @@ class ModeEditUser(WatoMode):
                 ),
                 DualListChoice(
                     title=_("Specific sites"),
-                    choices=config.site_choices,
+                    choices=config.get_configured_site_choices,
                 ),
             ],
         )

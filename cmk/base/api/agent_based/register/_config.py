@@ -6,7 +6,6 @@
 
 from typing import Any, Dict, Iterable, List, Optional, Set
 from collections import defaultdict
-import itertools
 
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -35,10 +34,18 @@ registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}
 registered_check_plugins: Dict[CheckPluginName, CheckPlugin] = {}
 registered_inventory_plugins: Dict[InventoryPluginName, InventoryPlugin] = {}
 
-stored_discovery_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
+# N O T E: This currently contains discovery *and* host_label rulesets.
+# The rules are deliberately put the same dictionary, as we allow for
+# the host_label_function and the discovery_function to share a ruleset.
+# We provide seperate API functions however, should the need arise to
+# seperate them.
+stored_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
+
+_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName,
+                                                       SectionPlugin]] = defaultdict(dict)
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
@@ -48,7 +55,11 @@ def add_check_plugin(check_plugin: CheckPlugin) -> None:
 
 
 def add_discovery_ruleset(ruleset_name: RuleSetName) -> None:
-    stored_discovery_rulesets.setdefault(ruleset_name, [])
+    stored_rulesets.setdefault(ruleset_name, [])
+
+
+def add_host_label_ruleset(ruleset_name: RuleSetName) -> None:
+    stored_rulesets.setdefault(ruleset_name, [])
 
 
 def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
@@ -56,6 +67,8 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
+    _sections_by_parsed_name[section_plugin.parsed_section_name][
+        section_plugin.name] = section_plugin
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:
@@ -72,16 +85,23 @@ def get_check_plugin(plugin_name: CheckPluginName) -> Optional[CheckPlugin]:
         return plugin
 
     # create management board plugin on the fly:
-    non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_host_name())
+    non_mgmt_plugin = registered_check_plugins.get(plugin_name.create_basic_name())
     if non_mgmt_plugin is not None:
-        return management_plugin_factory(non_mgmt_plugin)
+        mgmt_plugin = management_plugin_factory(non_mgmt_plugin)
+        add_check_plugin(mgmt_plugin)
+        return mgmt_plugin
 
     return None
 
 
 def get_discovery_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
     """Returns all rulesets of a given name"""
-    return stored_discovery_rulesets.get(ruleset_name, [])
+    return stored_rulesets.get(ruleset_name, [])
+
+
+def get_host_label_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
+    """Returns all rulesets of a given name"""
+    return stored_rulesets.get(ruleset_name, [])
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
@@ -106,7 +126,7 @@ def get_ranked_sections(
 def get_relevant_raw_sections(
     *,
     check_plugin_names: Iterable[CheckPluginName],
-    consider_inventory_plugins: bool,
+    inventory_plugin_names: Iterable[InventoryPluginName],
 ) -> Dict[SectionName, SectionPlugin]:
     """return the raw sections potentially relevant for the given check or inventory plugins"""
     parsed_section_names: Set[ParsedSectionName] = set()
@@ -116,25 +136,24 @@ def get_relevant_raw_sections(
         if check_plugin:
             parsed_section_names.update(check_plugin.sections)
 
-    if consider_inventory_plugins:
-        for inventory_plugin in iter_all_inventory_plugins():
+    for inventory_plugin_name in inventory_plugin_names:
+        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
+        if inventory_plugin:
             parsed_section_names.update(inventory_plugin.sections)
 
-    iter_all_sections: Iterable[SectionPlugin] = itertools.chain(
-        iter_all_agent_sections(),
-        iter_all_snmp_sections(),
-    )
-
     return {
-        section.name: section
-        for section in iter_all_sections
-        if section.parsed_section_name in parsed_section_names
+        section_name: section for parsed_name in parsed_section_names
+        for section_name, section in _sections_by_parsed_name[parsed_name].items()
     }
 
 
 def get_section_plugin(section_name: SectionName) -> SectionPlugin:
     return (registered_agent_sections.get(section_name) or
             registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
+
+
+def get_section_producers(parsed_section_name: ParsedSectionName) -> Set[SectionName]:
+    return set(_sections_by_parsed_name[parsed_section_name])
 
 
 def get_snmp_section_plugin(section_name: SectionName) -> SNMPSectionPlugin:
@@ -162,7 +181,11 @@ def iter_all_check_plugins() -> Iterable[CheckPlugin]:
 
 
 def iter_all_discovery_rulesets() -> Iterable[RuleSetName]:
-    return stored_discovery_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
+
+
+def iter_all_host_label_rulesets() -> Iterable[RuleSetName]:
+    return stored_rulesets.keys()  # pylint: disable=dict-keys-not-iterating
 
 
 def iter_all_inventory_plugins() -> Iterable[InventoryPlugin]:
@@ -173,9 +196,25 @@ def iter_all_snmp_sections() -> Iterable[SNMPSectionPlugin]:
     return registered_snmp_sections.values()  # pylint: disable=dict-values-not-iterating
 
 
+def len_snmp_sections() -> int:
+    return len(registered_snmp_sections)
+
+
 def set_discovery_ruleset(
     ruleset_name: RuleSetName,
     rules: List[Dict[str, Any]],
 ) -> None:
     """Set a ruleset to a given value"""
-    stored_discovery_rulesets[ruleset_name] = rules
+    stored_rulesets[ruleset_name] = rules
+
+
+def set_host_label_ruleset(
+    ruleset_name: RuleSetName,
+    rules: List[Dict[str, Any]],
+) -> None:
+    """Set a ruleset to a given value"""
+    stored_rulesets[ruleset_name] = rules
+
+
+def is_registered_snmp_section_plugin(section_name: SectionName) -> bool:
+    return section_name in registered_snmp_sections

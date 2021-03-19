@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
 from cmk.base.plugins.agent_based import esx_vsphere_counters
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -13,8 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 
 def test_parse_esx_vsphere_counters():
     assert esx_vsphere_counters.parse_esx_vsphere_counters(
-        [['disk.numberRead', 'naa.5000cca05688e814', '0#0', 'number'],
-         ['disk.numberRead', 'naa.60002ac0000000000000000e0000586d', '0#0', 'number'],
+        [['disk.numberReadAveraged', 'naa.5000cca05688e814', '0#0', 'number'],
+         ['disk.numberReadAveraged', 'naa.60002ac0000000000000000e0000586d', '0#0', 'number'],
          ['disk.write', 'naa.6000eb39f31c58130000000000000015', '0#0', 'kiloBytesPerSecond'],
          ['net.bytesRx', 'vmnic0', '1#1', 'kiloBytesPerSecond'],
          ['net.droppedRx', 'vmnic1', '0#0', 'number'], ['net.errorsRx', '', '0#0', 'number'],
@@ -31,7 +29,7 @@ def test_parse_esx_vsphere_counters():
          ['sys.resourceMemConsumed', 'host/vim/vmvisor/vmsupport', '0#0', 'kiloBytes'],
          ['sys.resourceMemConsumed', 'host/vim/vmvisor/vvold', '9192#9192', 'kiloBytes'],
          ['net.macaddress', 'vmnic4', '64:51:06:f0:c5:d0', 'mac']]) == {
-             'disk.numberRead': {
+             'disk.numberReadAveraged': {
                  'naa.5000cca05688e814': [(['0', '0'], 'number')],
                  'naa.60002ac0000000000000000e0000586d': [(['0', '0'], 'number')]
              },
@@ -403,14 +401,14 @@ def test_discovery_counters_diskio():
             'disk.read': {
                 '': [(['11', '12', '13'], 'kiloBytesPerSecond')]
             },
-            'disk.numberRead': {
+            'disk.numberReadAveraged': {
                 '': [(['110', '140', '150'], 'number')]
             },
             'disk.write': {
                 '': [(['51', '49', '53'], 'kiloBytesPerSecond')]
             },
-            'disk.numberWrite': {
-                '': [(['11', '102', '5'], 'kiloBytesPerSecond')]
+            'disk.numberWriteAveraged': {
+                '': [(['11', '102', '5'], 'number')]
             },
             'disk.deviceLatency': {
                 '': [(['700', '900', '23'], 'millisecond')]
@@ -427,14 +425,14 @@ def test_check_counters_diskio():
                 'disk.read': {
                     '': [(['11', '12', '13'], 'kiloBytesPerSecond')]
                 },
-                'disk.numberRead': {
+                'disk.numberReadAveraged': {
                     '': [(['110', '140', '150'], 'number')]
                 },
                 'disk.write': {
                     '': [(['51', '49', '53'], 'kiloBytesPerSecond')]
                 },
-                'disk.numberWrite': {
-                    '': [(['11', '102', '5'], 'kiloBytesPerSecond')]
+                'disk.numberWriteAveraged': {
+                    '': [(['11', '102', '5'], 'number')]
                 },
                 'disk.deviceLatency': {
                     '': [(['700', '900', '23'], 'millisecond')]
@@ -445,10 +443,10 @@ def test_check_counters_diskio():
             Metric('disk_read_throughput', 12288.0),
             Result(state=State.OK, summary='Write: 52.2 kB/s'),
             Metric('disk_write_throughput', 52224.0),
-            Result(state=State.OK, notice='Read operations: 6.67/s'),
-            Metric('disk_read_ios', 6.666666666666667),
-            Result(state=State.OK, notice='Write operations: 1.97/s'),
-            Metric('disk_write_ios', 1.9666666666666668),
+            Result(state=State.OK, notice='Read operations: 133.33/s'),
+            Metric('disk_read_ios', 133.33333333333334),
+            Result(state=State.OK, notice='Write operations: 39.33/s'),
+            Metric('disk_write_ios', 39.333333333333336),
             Result(state=State.OK, summary='Latency: 900 milliseconds'),
             Metric('disk_latency', 0.9),
         ]

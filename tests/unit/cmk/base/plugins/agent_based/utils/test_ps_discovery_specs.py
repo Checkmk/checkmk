@@ -27,117 +27,115 @@ TEST_LABELS = DiscoveredHostLabels.from_dict({
 
 def test_get_discovery_specs():
     assert ps.get_discovery_specs([
-        type_defs.Parameters(par) for par in [
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified'
-                },
-                "descr": "smss",
-                "match": "~smss.exe"
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified'
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "cpulevels": (90.0, 98.0),
-                    "handle_count": (1000, 2000),
-                    "levels": (1, 1, 99999, 99999),
-                    "max_age": (3600, 7200),
-                    "resident_levels": (104857600, 209715200),
-                    "resident_levels_perc": (25.0, 50.0),
-                    "single_cpulevels": (90.0, 98.0),
-                    "virtual_levels": (1073741824000, 2147483648000),
-                },
-                "descr": "svchost",
-                "match": "svchost.exe"
+            "descr": "smss",
+            "match": "~smss.exe"
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "cpulevels": (90.0, 98.0),
+                "handle_count": (1000, 2000),
+                "levels": (1, 1, 99999, 99999),
+                "max_age": (3600, 7200),
+                "resident_levels": (104857600, 209715200),
+                "resident_levels_perc": (25.0, 50.0),
+                "single_cpulevels": (90.0, 98.0),
+                "virtual_levels": (1073741824000, 2147483648000),
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "process_info": "text"
-                },
-                "match": "~.*(fire)fox",
-                "descr": "firefox is on %s",
-                "user": None,
+            "descr": "svchost",
+            "match": "svchost.exe"
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "process_info": "text"
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "process_info": "text"
-                },
-                "match": "~.*(fire)fox",
-                "descr": "firefox is on %s",
-                "user": None,
-                "label": TEST_LABELS,
+            "match": "~.*(fire)fox",
+            "descr": "firefox is on %s",
+            "user": None,
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "process_info": "text"
             },
-            {
-                "default_params": {
-                    "cpu_rescale_max": True,
-                    "cpu_average": 15,
-                    "process_info": "html",
-                    "resident_levels_perc": (25.0, 50.0),
-                    "virtual_levels": (1024**3, 2 * 1024**3),
-                    "resident_levels": (1024**3, 2 * 1024**3),
-                    "icon": "emacs.png",
-                },
-                "descr": "emacs %u",
-                "match": "emacs",
-                "user": False
+            "match": "~.*(fire)fox",
+            "descr": "firefox is on %s",
+            "user": None,
+            "label": TEST_LABELS,
+        },
+        {
+            "default_params": {
+                "cpu_rescale_max": True,
+                "cpu_average": 15,
+                "process_info": "html",
+                "resident_levels_perc": (25.0, 50.0),
+                "virtual_levels": (1024**3, 2 * 1024**3),
+                "resident_levels": (1024**3, 2 * 1024**3),
+                "icon": "emacs.png",
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "max_age": (3600, 7200),
-                    "resident_levels_perc": (25.0, 50.0),
-                    "single_cpulevels": (90.0, 98.0),
-                    "resident_levels": (104857600, 209715200),
-                },
-                "match": "~.*cron",
-                "descr": "cron",
-                "user": "root"
+            "descr": "emacs %u",
+            "match": "emacs",
+            "user": False
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "max_age": (3600, 7200),
+                "resident_levels_perc": (25.0, 50.0),
+                "single_cpulevels": (90.0, 98.0),
+                "resident_levels": (104857600, 209715200),
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified'
-                },
-                "descr": "sshd",
-                "match": "~.*sshd"
+            "match": "~.*cron",
+            "descr": "cron",
+            "user": "root"
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified'
             },
-            {
-                'default_params': {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified'
-                },
-                'descr': 'PS counter',
-                'user': 'zombie',
+            "descr": "sshd",
+            "match": "~.*sshd"
+        },
+        {
+            'default_params': {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified'
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "process_info": "text"
-                },
-                "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
-                "descr": "Checkhelpers %s",
-                "user": None,
+            'descr': 'PS counter',
+            'user': 'zombie',
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "process_info": "text"
             },
-            {
-                "default_params": {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    "process_info": "text"
-                },
-                "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
-                "descr": "Checkhelpers Overall",
-                "user": None,
+            "match": r"~/omd/sites/(\w+)/lib/cmc/checkhelper",
+            "descr": "Checkhelpers %s",
+            "user": None,
+        },
+        {
+            "default_params": {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "process_info": "text"
             },
-            {
-                'descr': 'cron',
-                'match': '/usr/sbin/cron',
-                'user': None,
-                'default_params': {
-                    'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-                    'levels': (1, 1, 20, 20),
-                }
-            },
-            {},
-        ]
+            "match": r"~/omd/sites/\w+/lib/cmc/checkhelper",
+            "descr": "Checkhelpers Overall",
+            "user": None,
+        },
+        {
+            'descr': 'cron',
+            'match': '/usr/sbin/cron',
+            'user': None,
+            'default_params': {
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'levels': (1, 1, 20, 20),
+            }
+        },
+        {},
     ]) == [
         ("smss", "~smss.exe", None, (None, False), DiscoveredHostLabels(), {
             'cpu_rescale_max': 'cpu_rescale_max_unspecified'

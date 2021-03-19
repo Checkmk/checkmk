@@ -68,7 +68,6 @@ range_data = {
         (0, 'At or above 500+ ms: 0%', []),
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_nimble_latency_ranges(params, data, result):
     ''' The user can specify a parameter range_reference, which serves as a starting
     point from which values should start to be stacked and checked against levels.
@@ -94,7 +93,6 @@ def test_nimble_latency_ranges(params, data, result):
         (0, 'At or above 20-50 ms: 20.0%', []),
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_nimble_latency_read_params(params, data, result):
     '''Test that latency read levels are applied to read types only.'''
 
@@ -121,7 +119,6 @@ def test_nimble_latency_read_params(params, data, result):
         (2, 'At or above 20-50 ms: 20.0% (warn/crit at 1.0%/2.0%)', []),
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_nimble_latency_write_params(params, data, result):
     '''Test that latency write levels are applied to write types only.'''
 

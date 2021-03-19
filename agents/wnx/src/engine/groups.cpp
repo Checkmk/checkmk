@@ -175,6 +175,11 @@ void Global::updateLogNames() {
 // used to set values during start
 void Global::setLogFolder(const std::filesystem::path& forced_path) {
     std::unique_lock lk(lock_);
+    if (cma::IsService()) {
+        XLOG::details::LogWindowsEventAlways(
+            XLOG::EventLevel::information, 35,
+            "checkmk service uses log path '{}'", forced_path);
+    }
     if (forced_path.empty()) return;
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);
@@ -220,6 +225,12 @@ void WinPerf::loadFromMainConfig() {
 
         timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
                           cma::cfg::kDefaultWinPerfTimeout);
+
+        fork_ = GetVal(groups::kWinPerf, vars::kWinPerfFork,
+                       cma::cfg::kDefaultWinPerfFork);
+
+        trace_ = GetVal(groups::kWinPerf, vars::kWinPerfTrace,
+                        cma::cfg::kDefaultWinPerfTrace);
 
         enabled_in_cfg_ =
             GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
@@ -433,7 +444,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
         cli.cmd_line_.pop_back();
 
     XLOG::t.i("Expected to execute [{}] plugins '{}'", files.size(),
-              wtools::ConvertToUTF8(cli.cmd_line_));
+              wtools::ToUtf8(cli.cmd_line_));
 
     return cli;
 }

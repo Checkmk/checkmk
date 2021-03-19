@@ -4,7 +4,7 @@
 
 import {call_ajax} from "ajax";
 import {add_class, remove_class} from "utils";
-import {toggle_popup} from "popup_menu";
+import {toggle_popup, resize_mega_menu_popup} from "popup_menu";
 var g_call_ajax_obj = null;
 
 class Search {
@@ -25,15 +25,20 @@ class Search {
             add_class(document.getElementById(this.clear_id), "clearable");
             this.display_search_results();
             const obj = document.getElementById(this.search_id);
+            add_class(obj, "search");
             g_call_ajax_obj = call_ajax(
                 "ajax_search_" + this.id + ".py?q=" + encodeURIComponent(this.get_current_input()),
                 {
                     response_handler: Search.handle_search_response,
-                    handler_data: {obj: obj},
+                    handler_data: {
+                        obj: obj,
+                        menu_popup: document.getElementById("popup_menu_" + this.id),
+                    },
                 }
             );
         } else {
             remove_class(document.getElementById(this.clear_id), "clearable");
+            remove_class(document.getElementById(this.search_id, "search"));
             this.display_menu_items();
         }
     }
@@ -78,6 +83,7 @@ class Search {
             handler_data.obj.innerHTML = "Ajax Call returned non-zero result code.";
         } else {
             handler_data.obj.innerHTML = response.result;
+            resize_mega_menu_popup(handler_data.menu_popup);
         }
         return;
     }
@@ -111,8 +117,7 @@ export function on_click_show_all_results(topic) {
     let topic_results = document.getElementById(topic).getElementsByTagName("li");
     add_class(window.event.target, "hidden");
     topic_results.forEach(li => {
-        let link = li.getElementsByTagName("a")[0];
-        link.className == "hidden" && remove_class(link, "hidden");
+        li.className == "hidden" && remove_class(li, "hidden");
     });
 }
 
@@ -140,6 +145,7 @@ export function on_click_reset(id) {
         current_search.display_menu_items();
         remove_class(document.getElementById(current_search.clear_id), "clearable");
     }
+    resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
 export function on_key_down(id) {
     let current_search = get_current_search(id);
@@ -156,6 +162,9 @@ export function on_key_down(id) {
             break;
         case "Enter":
             follow_current_search_query(current_search);
+            break;
+        case "Escape":
+            on_click_reset(id);
             break;
     }
 }
@@ -178,6 +187,7 @@ function follow_current_search_query(current_search) {
                     null,
                     false
                 );
+                on_click_reset(current_search.id);
                 break;
             default:
                 // TODO: Implement ajax call for setup
@@ -191,6 +201,7 @@ function follow_current_search_query(current_search) {
         .getElementsByTagName("li")
         [current_search.current_search_position].getElementsByClassName("active")[0]
         .click();
+    on_click_reset(current_search.id);
 }
 
 function move_current_search_position(step, current_search) {

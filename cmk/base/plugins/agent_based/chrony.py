@@ -123,6 +123,7 @@ def check_chrony(params, section_chrony, section_ntp):
             metric_name="offset",
             render_func=lambda x: "%.4f ms" % x,
             label="Offset",
+            boundaries=(0, None),
         )
 
     if stratum is not None:
@@ -131,6 +132,7 @@ def check_chrony(params, section_chrony, section_ntp):
             levels_upper=(crit_stratum, crit_stratum),
             render_func=lambda v: "%d" % v,
             label="Stratum",
+            boundaries=(0, None),
         )
 
 

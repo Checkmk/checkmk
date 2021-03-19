@@ -14,7 +14,6 @@ pytestmark = pytest.mark.checks
     ([[u'29', u'0']], 'Board', {}),
     ([[u'0', u'29']], 'CPU', {}),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_function(info, item_expected, data_expected):
     """
     Verifies if the item is detected corresponding to info content.
@@ -34,7 +33,6 @@ def test_inventory_function(info, item_expected, data_expected):
         ((30, 40), u'Slot 1 CPU', [[u'0', u'31']], 1, '31', [('temp', 31, 30, 40)]),
         ((30, 40), u'Slot 1 CPU', [[u'0', u'41']], 2, '41', [('temp', 41, 30, 40)]),
     ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_function(parameters, item, info, state_expected, infotext_expected,
                         perfdata_expected):
     """

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+import re
 
 import pytest  # type: ignore[import]
 from six import ensure_str
@@ -12,24 +13,24 @@ from six import ensure_str
 # No stub file
 from testlib.base import Scenario  # type: ignore[import]
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
+import cmk.utils.version as cmk_version
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import (
     CheckPluginName,
+    ConfigSerial,
     HostKey,
+    LATEST_SERIAL,
     SectionName,
     SourceType,
-    ConfigSerial,
-    LATEST_SERIAL,
 )
 
-from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.snmplib.type_defs import OIDBytes, OIDCached
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -816,7 +817,6 @@ def test_host_config_inventory_parameters(monkeypatch, hostname, result):
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", {
         'check_interval': None,
-        'inventory_check_do_scan': True,
         'severity_unmonitored': 1,
         'severity_vanished': 0,
     }),
@@ -1131,7 +1131,7 @@ def test_host_config_snmp_credentials_of_version(monkeypatch, hostname, version,
     assert config_cache.get_host_config(hostname).snmp_credentials_of_version(version) == result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname,section_name,result", [
     ("testhost1", "uptime", None),
     ("testhost2", "uptime", None),
@@ -1145,7 +1145,7 @@ def test_host_config_snmp_check_interval(monkeypatch, hostname, section_name, re
     ])
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(hostname).snmp_fetch_interval(
-        SectionName(section_name)) == result
+        SectionName(section_name)) == (60 * result if result else None)
 
 
 def test_http_proxies():
@@ -1183,6 +1183,69 @@ def test_http_proxy(http_proxy, result, monkeypatch):
         })
 
     assert config.get_http_proxy(http_proxy) == result
+
+
+@pytest.fixture(name="service_list")
+def _service_list():
+    return [
+        Service(
+            check_plugin_name=CheckPluginName("plugin_%s" % d),
+            item="item",
+            description="description %s" % d,
+            parameters={},
+        ) for d in "FDACEB"
+    ]
+
+
+def test_get_sorted_check_table_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: True)
+
+    assert service_list == config.resolve_service_dependencies(
+        host_name="",
+        services=service_list,
+    )
+
+
+def test_get_sorted_check_table_no_cmc(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description C"],
+            "description B": ["description D"],
+            "description D": ["description A", "description F"],
+        }.get(descr, []))
+
+    sorted_service_list = config.resolve_service_dependencies(
+        host_name="",
+        services=service_list,
+    )
+    assert [s.description for s in sorted_service_list] == [
+        "description F",  #
+        "description C",  # no deps => input order maintained
+        "description E",  #
+        "description A",
+        "description D",
+        "description B",
+    ]
+
+
+def test_resolve_service_dependencies_cyclic(monkeypatch, service_list):
+    monkeypatch.setattr(config, "is_cmc", lambda: False)
+    monkeypatch.setattr(
+        config, "service_depends_on", lambda _hn, descr: {
+            "description A": ["description B"],
+            "description B": ["description D"],
+            "description D": ["description A"],
+        }.get(descr, []))
+
+    with pytest.raises(
+            MKGeneralException,
+            match=re.escape("Cyclic service dependency of host MyHost:"
+                            " 'description D' (plugin_D / item),"
+                            " 'description A' (plugin_A / item),"
+                            " 'description B' (plugin_B / item)"),
+    ):
+        _ = config.resolve_service_dependencies(host_name="MyHost", services=service_list)
 
 
 def test_service_depends_on_unknown_host():
@@ -1420,7 +1483,7 @@ def test_labels_of_service(monkeypatch):
     }
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 def test_labels_of_service_discovered_labels(monkeypatch, tmp_path):
     ts = Scenario().add_host("test-host")
 
@@ -1481,7 +1544,7 @@ def test_config_cache_extra_attributes_of_service(monkeypatch, hostname, result)
     assert config_cache.extra_attributes_of_service(hostname, "CPU load") == result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
+@pytest.mark.usefixtures("load_all_agent_based_plugins")
 @pytest.mark.parametrize("hostname,result", [
     ("testhost1", []),
     ("testhost2", ["icon1", "icon2"]),
@@ -1608,7 +1671,7 @@ def test_config_cache_get_host_config(monkeypatch, edition_short, expected_cache
                                       expected_host_class_name):
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
-    _config_cache.reset()
+    _config_cache.clear()
 
     ts = Scenario()
     ts.add_host("xyz")
@@ -1662,19 +1725,22 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch):
 
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         None,
-        lambda _x: "dummy.test.ip.0",
     ) is None
     # still None, we have no cluster:
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) is None
 
 
@@ -1683,19 +1749,22 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(monkeyp
     ts.add_cluster('cluster.test', nodes=['node1.test', 'node2.test'])
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     # None for a node:
     assert config_cache.get_clustered_service_node_keys(
         'node1.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) is None
     # empty list for cluster (we have not clustered the service)
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda _x: "dummy.test.ip.0",
     ) == []
 
 
@@ -1713,27 +1782,34 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch):
     }])
     config_cache = ts.apply(monkeypatch)
 
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
+    )
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Service',
-        lambda host_config: "dummy.test.ip.%s" % host_config.hostname[4],
     ) == [
         HostKey('node1.test', "dummy.test.ip.1", SourceType.HOST),
         HostKey('node2.test', "dummy.test.ip.2", SourceType.HOST),
     ]
+    monkeypatch.setattr(
+        config,
+        'lookup_ip_address',
+        lambda host_config, *, family=None: "dummy.test.ip.0",
+    )
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         'Test Unclustered',
-        lambda _x: "dummy.test.ip.0",
     ) == []
     # regardless of config: descr == None -> return None
     assert config_cache.get_clustered_service_node_keys(
         'cluster.test',
         SourceType.HOST,
         None,
-        lambda _x: "dummy.test.ip.0",
     ) is None
 
 
@@ -2032,36 +2108,21 @@ def test_save_packed_config(monkeypatch, serial):
 
     assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
                     "precompiled_check_config.mk").exists()
-    assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                    "precompiled_check_config.mk.orig").exists()
 
     config.save_packed_config(serial, config_cache)
 
     assert Path(cmk.utils.paths.core_helper_config_dir, serial,
                 "precompiled_check_config.mk").exists()
-    assert Path(cmk.utils.paths.core_helper_config_dir, serial,
-                "precompiled_check_config.mk.orig").exists()
 
 
 def test_load_packed_config(serial):
-    config.PackedConfigStore(serial).write("abc = 1")
+    config.PackedConfigStore(serial).write({"abc": 1})
 
     assert "abc" not in config.__dict__
     config.load_packed_config(serial)
     # Mypy does not understand that we add some new member for testing
     assert config.abc == 1  # type: ignore[attr-defined]
     del config.__dict__["abc"]
-
-
-# These types are currently imported into the cmk.base.config namespace, just to be able to load
-# objects of this type from the configuration
-def test_packed_config_able_to_load_snmp_types(serial):
-    config.PackedConfigStore(serial).write(
-        "test_var1 = OIDBytes('6')\n\ntest_var2 = OIDCached('6')\n\n")
-
-    config.load_packed_config(serial)
-    assert config.test_var1 == OIDBytes('6')  # type: ignore[attr-defined]
-    assert config.test_var2 == OIDCached('6')  # type: ignore[attr-defined]
 
 
 class TestPackedConfigStore:
@@ -2071,13 +2132,13 @@ class TestPackedConfigStore:
 
     def test_latest_serial_path(self):
         store = config.PackedConfigStore(serial=LATEST_SERIAL)
-        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
-                                            "precompiled_check_config.mk")
+        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "latest",
+                                  "precompiled_check_config.mk")
 
     def test_given_serial_path(self):
         store = config.PackedConfigStore(serial=ConfigSerial("42"))
-        assert store._compiled_path == Path(cmk.utils.paths.core_helper_config_dir, "42",
-                                            "precompiled_check_config.mk")
+        assert store.path == Path(cmk.utils.paths.core_helper_config_dir, "42",
+                                  "precompiled_check_config.mk")
 
     def test_read_not_existing_file(self, store):
         with pytest.raises(FileNotFoundError):
@@ -2086,16 +2147,12 @@ class TestPackedConfigStore:
     def test_write(self, store, serial):
         assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
                         "precompiled_check_config.mk").exists()
-        assert not Path(cmk.utils.paths.core_helper_config_dir, serial,
-                        "precompiled_check_config.mk.orig").exists()
 
-        store.write("abc = 1\n")
+        store.write({"abc": 1})
 
         packed_file_path = Path(cmk.utils.paths.core_helper_config_dir, serial,
                                 "precompiled_check_config.mk")
         assert packed_file_path.exists()
-        assert Path(cmk.utils.paths.core_helper_config_dir, serial,
-                    "precompiled_check_config.mk.orig").exists()
 
         assert store.read() == {
             "abc": 1,

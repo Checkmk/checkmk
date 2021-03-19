@@ -13,7 +13,7 @@ NET_SNMP_INSTALL_PERL := $(BUILD_HELPER_DIR)/$(NET_SNMP_DIR)-install-perl
 NET_SNMP_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(NET_SNMP_DIR)
 #NET_SNMP_WORK_DIR := $(PACKAGE_WORK_DIR)/$(NET_SNMP_DIR)
 
-$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODULES_BUILD)
+$(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODULES_CACHE_PKG_PROCESS)
 # Skip Perl-Modules because of build errors when MIB loading is disabled.
 # Skip Python binding because we need to use our own python, see install target.
 	cd $(NET_SNMP_BUILD_DIR) \

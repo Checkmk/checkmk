@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Any,
     Dict,
     List,
+    Mapping,
     Optional,
     Sequence,
     Tuple,
@@ -177,7 +179,7 @@ register.agent_section(
 
 
 def discover_netapp_api_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -196,7 +198,7 @@ INFO_INCLUDED_MAP = {"dont_show_and_check": False}
 
 def check_netapp_api_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
 
@@ -277,7 +279,7 @@ register.check_plugin(
     name="netapp_api_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_netapp_api_if,
     check_ruleset_name="if",

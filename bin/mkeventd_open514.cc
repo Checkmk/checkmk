@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
     if (do_syslog != 0 && syslog_fd > 0) {
         // Create socket
         int syslog_sock;
-        if (0 > (syslog_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+        if (0 > (syslog_sock = ::socket(PF_INET, SOCK_DGRAM, 0))) {
             perror("Cannot create UDP socket for syslog");
             exit(1);
         }
@@ -77,8 +77,8 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
         // Make sure it is at the correct FD
         if (syslog_sock != 0 && syslog_sock != syslog_fd) {
             ::dup2(syslog_sock, syslog_fd);
-            close(syslog_sock);
+            ::close(syslog_sock);
         }
     }
 
@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     if (do_syslog_tcp != 0 && syslog_tcp_fd > 0) {
         // Create socket
         int syslog_tcp_sock;
-        if (0 > (syslog_tcp_sock = socket(PF_INET, SOCK_STREAM, 0))) {
+        if (0 > (syslog_tcp_sock = ::socket(PF_INET, SOCK_STREAM, 0))) {
             perror("Cannot create TCP socket for syslog-tcp");
             exit(1);
         }
@@ -114,9 +114,9 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(syslog_tcp_sock,
-                      reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(syslog_tcp_sock,
+                        reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind TCP socket for syslog-tcp to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
         // Make sure it is at the correct FD
         if (syslog_tcp_sock != 0 && syslog_tcp_sock != syslog_tcp_fd) {
             ::dup2(syslog_tcp_sock, syslog_tcp_fd);
-            close(syslog_tcp_sock);
+            ::close(syslog_tcp_sock);
         }
     }
 
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     if (do_snmptrap != 0 && snmptrap_fd > 0) {
         // Create socket
         int snmptrap_sock;
-        if (0 > (snmptrap_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+        if (0 > (snmptrap_sock = ::socket(PF_INET, SOCK_DGRAM, 0))) {
             perror("Cannot create UDP socket for snmptrap");
             exit(1);
         }
@@ -152,8 +152,9 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SNMPTRAP_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(snmptrap_sock,
+                        reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind UDP socket for snmptrap to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -163,7 +164,7 @@ int main(int argc, char **argv) {
         // Make sure it is at the correct FD
         if (snmptrap_sock != 0 && snmptrap_sock != snmptrap_fd) {
             ::dup2(snmptrap_sock, snmptrap_fd);
-            close(snmptrap_sock);
+            ::close(snmptrap_sock);
         }
     }
 

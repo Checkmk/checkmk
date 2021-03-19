@@ -81,24 +81,6 @@ class RulespecGroupActiveChecks(RulespecGroup):
                  "you to monitor network services directly from the outside.")
 
 
-@rulespec_group_registry.register
-class RulespecGroupBI(RulespecGroup):
-    @property
-    def name(self):
-        return "bi"
-
-    @property
-    def title(self):
-        return _("Check state of BI aggregations")
-
-    @property
-    def help(self):
-        return _(
-            "Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
-            "several states to a single BI aggregation, which you want to show up as a single "
-            "service.")
-
-
 # These elements are also used in check_parameters.py
 def check_icmp_params():
     return [
@@ -882,14 +864,19 @@ rulespec_registry.register(
 def _ip_address_family_element():
     return (
         "address_family",
-        DropdownChoice(title=_("IP Address Family"),
+        DropdownChoice(title=_("IP address family"),
                        choices=[
-                           (None, _("Primary Address Family")),
+                           (None, _("Primary address family")),
                            ('ipv4', _("Enforce IPv4")),
                            ('ipv6', _("Enforce IPv6")),
                        ],
                        default_value=None),
     )
+
+
+def _transform_add_address_family(v):
+    v.setdefault("address_family", None)
+    return v
 
 
 def _active_checks_http_proxyspec():
@@ -1792,7 +1779,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupBI,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,
@@ -1940,50 +1927,54 @@ rulespec_registry.register(
 
 
 def _valuespec_active_checks_traceroute():
-    return Dictionary(
-        title=_("Check current routing (uses <tt>traceroute</tt>)"),
-        help=_("This active check uses <tt>traceroute</tt> in order to determine the current "
-               "routing from the monitoring host to the target host. You can specify any number "
-               "of missing or expected routes in that way detect e.g. an (unintended) failover "
-               "to a secondary route."),
-        elements=[
-            ("dns",
-             Checkbox(
-                 title=_("Name resolution"),
-                 label=_("Use DNS to convert IP addresses into hostnames"),
-                 help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
-                        "called with the option <tt>-n</tt>. That means that all IP addresses "
-                        "are tried to be converted into names. This usually adds additional "
-                        "execution time. Also DNS resolution might fail for some addresses."),
-             )),
-            _ip_address_family_element(),
-            ("routers",
-             ListOf(
-                 Tuple(elements=[
-                     TextAscii(
-                         title=_("Router (FQDN, IP-Address)"),
-                         allow_empty=False,
-                     ),
-                     DropdownChoice(title=_("How"),
-                                    choices=[
-                                        ('W', _("WARN - if this router is not being used")),
-                                        ('C', _("CRIT - if this router is not being used")),
-                                        ('w', _("WARN - if this router is being used")),
-                                        ('c', _("CRIT - if this router is being used")),
-                                    ]),
-                 ]),
-                 title=_("Router that must or must not be used"),
-                 add_label=_("Add Condition"),
-             )),
-            ("method",
-             DropdownChoice(title=_("Method of probing"),
-                            choices=[
-                                (None, _("UDP (default behaviour of tcpdump)")),
-                                ("icmp", _("ICMP Echo Request")),
-                                ("tcp", _("TCP SYN")),
-                            ])),
-        ],
-        optional_keys=False,
+    return Transform(
+        Dictionary(
+            title=_("Check current routing"),
+            help=_(
+                "This active check uses <tt>traceroute</tt> in order to determine the current "
+                "routing from the monitoring host to the target host. You can specify any number "
+                "of missing or expected routes in order to detect e.g. an (unintended) failover "
+                "to a secondary route."),
+            elements=[
+                ("dns",
+                 Checkbox(
+                     title=_("Name resolution"),
+                     label=_("Use DNS to convert IP addresses into hostnames"),
+                     help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
+                            "called with the option <tt>-n</tt>. That means that all IP addresses "
+                            "are tried to be converted into names. This usually adds additional "
+                            "execution time. Also DNS resolution might fail for some addresses."),
+                 )),
+                _ip_address_family_element(),
+                ("routers",
+                 ListOf(
+                     Tuple(elements=[
+                         TextAscii(
+                             title=_("Router (FQDN, IP-Address)"),
+                             allow_empty=False,
+                         ),
+                         DropdownChoice(title=_("How"),
+                                        choices=[
+                                            ('W', _("WARN - if this router is not being used")),
+                                            ('C', _("CRIT - if this router is not being used")),
+                                            ('w', _("WARN - if this router is being used")),
+                                            ('c', _("CRIT - if this router is being used")),
+                                        ]),
+                     ]),
+                     title=_("Router that must or must not be used"),
+                     add_label=_("Add Condition"),
+                 )),
+                ("method",
+                 DropdownChoice(title=_("Method of probing"),
+                                choices=[
+                                    (None, _("UDP (default behaviour of traceroute)")),
+                                    ("icmp", _("ICMP Echo Request")),
+                                    ("tcp", _("TCP SYN")),
+                                ])),
+            ],
+            optional_keys=False,
+        ),
+        forth=_transform_add_address_family,
     )
 
 

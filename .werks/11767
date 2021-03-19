@@ -1,0 +1,12 @@
+Title: job: Crash upon certain killed jobs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606910248
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The jobs plugin crashed with a key error if jobs were killed in a very specific moment.

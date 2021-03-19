@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include Makefile.omd
+include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
@@ -20,6 +20,7 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     openssl \
+    redis \
     libgsf \
     postgresql \
     perl-modules \
@@ -31,6 +32,8 @@ PACKAGES := \
     msitools \
     net-snmp \
     apache-omd \
+    lasso \
+    mod_auth_mellon \
     mod_fcgid \
     python3-mod_wsgi \
     check_mk \
@@ -276,6 +279,7 @@ deb: debian/changelog debian/control
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \

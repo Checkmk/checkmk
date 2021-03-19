@@ -6,6 +6,7 @@
 
 import dataclasses
 from typing import (
+    Any,
     Dict,
     Iterator,
     List,
@@ -414,11 +415,12 @@ def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
 register.agent_section(
     name='winperf_if',
     parse_function=parse_winperf_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_winperf_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
 ) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
@@ -429,7 +431,7 @@ def discover_winperf_if(
 
 def check_winperf_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
     agent_timestamp, if_table, dhcp_info = section
@@ -476,7 +478,7 @@ register.check_plugin(
     name="winperf_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
     check_ruleset_name="if",

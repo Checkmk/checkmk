@@ -1,0 +1,11 @@
+Title: Windows agent removes own Windows Firewall rule after uninstall
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610719471
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

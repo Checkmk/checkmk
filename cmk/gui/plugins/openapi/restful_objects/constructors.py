@@ -3,14 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import contextlib
 import hashlib
 import json
 import re
+from http import HTTPStatus
 from typing import Any, Dict, List, Optional, Union
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
+from cmk.gui import config
 from cmk.gui.globals import request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -19,7 +22,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionObject,
     DomainObject,
     DomainType,
-    EndpointName,
+    LinkRelation,
     HTTPMethod,
     LinkType,
     ObjectProperty,
@@ -29,9 +32,54 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
 )
 from cmk.gui.plugins.openapi.utils import ProblemException
 
+API_VERSION = "v0"
+
+
+@contextlib.contextmanager
+def _request_context(secure=True):
+    import os
+    import mock
+    from werkzeug.test import create_environ
+    from cmk.gui.utils.script_helpers import request_context
+    if secure:
+        protocol = 'https'
+    else:
+        protocol = 'http'
+    with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}), \
+            request_context(create_environ(base_url=f"{protocol}://localhost:5000/")):
+        yield
+
+
+def absolute_url(href):
+    """Give an absolute URL.
+
+    Examples:
+
+
+        This function has to be used within an request context.
+
+        >>> with _request_context(secure=False):
+        ...     absolute_url("objects/host_config/example.com")
+        'http://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+
+        >>> with _request_context(secure=True):
+        ...     absolute_url("objects/host_config/example.com")
+        'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/host_config/example.com'
+
+    Args:
+        href:
+
+    Returns:
+
+    """
+    if href.startswith("/"):
+        href = href.lstrip("/")
+
+    return f"{request.host_url}{config.omd_site()}/check_mk/api/{API_VERSION}/{href}"
+
 
 def link_rel(
-    rel: EndpointName,
+    rel: LinkRelation,
     href: str,
     method: HTTPMethod = 'get',
     content_type: str = 'application/json',
@@ -66,16 +114,17 @@ def link_rel(
 
     Examples:
 
-        >>> link = link_rel('.../update', 'update',
-        ...                 method='get', profile='.../object', title='Update the object')
         >>> expected = {
         ...     'domainType': 'link',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/update',
         ...     'title': 'Update the object',
-        ...     'href': 'update'
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/foo/update'
         ... }
+        >>> with _request_context():
+        ...     link = link_rel('.../update', '/objects/foo/update',
+        ...                     method='get', profile='.../object', title='Update the object')
         >>> assert link == expected, link
 
     Returns:
@@ -88,7 +137,7 @@ def link_rel(
 
     link_obj = {
         'rel': expand_rel(rel, parameters),
-        'href': href,
+        'href': absolute_url(href),
         'method': method.upper(),
         'type': expand_rel(content_type, content_type_params),
         'domainType': 'link',
@@ -143,11 +192,19 @@ def require_etag(etag: ETags) -> None:
         etag: An Werkzeug ETag instance to compare the global request instance to.
 
     Raises:
-        ProblemException: When ETag doesn't match.
+        ProblemException: When If-Match missing or ETag doesn't match.
     """
+    # TODO: Make configurable in WATO config
+    etags_required = True
+    if not request.if_match:
+        if not etags_required:
+            return
+        raise ProblemException(HTTPStatus.PRECONDITION_REQUIRED, "Precondition required",
+                               "If-Match header required for this operation. See documentation.")
+
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
-            412,
+            HTTPStatus.PRECONDITION_FAILED,
             "Precondition failed",
             "ETag didn't match. Probable cause: Object changed by another user.",
         )
@@ -158,7 +215,8 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
 
     Examples:
 
-        >>> action = object_action('move', {'from': 'to'}, '')
+        >>> with _request_context():
+        ...     action = object_action('move', {'from': 'to'}, '')
         >>> assert len(action['links']) > 0
 
     Args:
@@ -217,14 +275,15 @@ def object_collection(
         ...     'links': [
         ...         {
         ...             'rel': 'self',
-        ...             'href': '/domain-types/host/collections/all',
+        ...             'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/domain-types/host/collections/all',
         ...             'method': 'GET',
         ...             'type': 'application/json',
         ...             'domainType': 'link',
         ...         }
         ...     ]
         ... }
-        >>> result = object_collection('all', 'host', [], '')
+        >>> with _request_context():
+        ...     result = object_collection('all', 'host', [], '')
         >>> assert result == expected, result
 
     Returns:
@@ -371,9 +430,7 @@ def object_property(
         'choices': [],
     }
     if linkable:
-        property_obj['links'] = [
-            link_rel('self', f"{base}/properties/{name}", profile='.../object_property')
-        ]
+        property_obj['links'] = [link_rel('self', f"{base}/properties/{name}")]
         if links:
             property_obj['links'].extend(links)
 
@@ -401,7 +458,7 @@ def domain_type_action_href(domain_type: DomainType, action: str) -> str:
     return f"/domain-types/{domain_type}/actions/{action}/invoke"
 
 
-def domain_object_sub_collection_href(
+def domain_object_collection_href(
     domain_type: DomainType,
     obj_id: str,
     collection_name: str,
@@ -419,7 +476,7 @@ def domain_object_sub_collection_href(
             The name of the collection.
 
     Examples:
-        >>> domain_object_sub_collection_href('folder_config', 'stuff', 'hosts')
+        >>> domain_object_collection_href('folder_config', 'stuff', 'hosts')
         '/objects/folder_config/stuff/collections/hosts'
 
     Returns:
@@ -653,7 +710,7 @@ def collection_object(domain_type: DomainType,
 
 def link_endpoint(
     module_name: str,
-    rel: EndpointName,
+    rel: LinkRelation,
     parameters: Dict[str, str],
 ) -> LinkType:
     """Link to a specific endpoint by name.
@@ -696,13 +753,14 @@ def collection_item(
 
         >>> expected = {
         ...     'domainType': 'link',
-        ...     'href': '/objects/folder_config/3',
+        ...     'href': 'https://localhost:5000/NO_SITE/check_mk/api/v0/objects/folder_config/3',
         ...     'method': 'GET',
         ...     'rel': 'urn:org.restfulobjects:rels/value;collection="all"',
         ...     'title': 'Foo',
         ...     'type': 'application/json;profile="urn:org.restfulobjects:rels/object"',
         ... }
-        >>> res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
+        >>> with _request_context():
+        ...     res = collection_item('folder_config', {'title': 'Foo', 'id': '3'})
         >>> assert res == expected, res
 
     Returns:
@@ -753,6 +811,9 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         >>> etag_of_dict({'a': 'b', 'c': {'d': {'e': 'f'}}})
         <ETags '"bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721"'>
 
+        >>> etag_of_dict({'a': [{'b': 1, 'd': 2}, {'d': 2, 'b': 3}]})
+        <ETags '"6ea899bec9b061d54f1f8fcdb7405363126c0e96d198d09792eff0996590ee3e"'>
+
     Args:
         dict_ (dict): A dictionary.
 
@@ -760,17 +821,33 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+    def _first(sequence):
+        try:
+            return sequence[0]
+        except IndexError:
+            pass
+
     def _update(_hash_obj, _d):
-        if isinstance(_d, list):
-            for value in sorted(_d):
-                _update(_hash_obj, value)
-        else:
-            for key, value in sorted(_d.items()):
-                _hash_obj.update(key.encode('utf-8'))
-                if isinstance(value, (dict, list)):
+        if isinstance(_d, (list, tuple)):
+            first = _first(_d)
+            if isinstance(first, dict):
+                for entry in _d:
+                    _update(_hash_obj, entry)
+            else:
+                for value in sorted(_d):
                     _update(_hash_obj, value)
-                else:
-                    _hash_obj.update(value.encode('utf-8'))
+        else:
+            if isinstance(_d, dict):
+                for key, value in sorted(_d.items()):
+                    _hash_obj.update(key.encode('utf-8'))
+                    if isinstance(value, (dict, list, tuple)):
+                        _update(_hash_obj, value)
+                    elif isinstance(value, bool):
+                        _hash_obj.update(str(value).lower().encode('utf-8'))
+                    else:
+                        _hash_obj.update(str(value).encode('utf-8'))
+            else:
+                _hash_obj.update(str(_d).encode('utf-8'))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

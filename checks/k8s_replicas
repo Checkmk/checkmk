@@ -30,7 +30,9 @@ def parse_k8s_unavailability(value, total):
 
 
 def inventory_k8s_replicas(parsed):
-    if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
+    # the deployment must either be paused or return numbers for running pods
+    if (parsed['ready_replicas'] is not None and
+            parsed['replicas'] is not None) or parsed['paused']:
         yield (None, {})
 
 
@@ -59,7 +61,7 @@ def check_k8s_replicas(_no_item, _params, parsed):
         infotext += " (crit below %d)" % crit_lower
 
     perfdata = [
-        ('ready_replicas', ready, None, crit),
+        ('ready_replicas', ready, None, crit, 0, total),
         ('total_replicas', total),
     ]
     yield state, infotext, perfdata

@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.if_include import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
 
 check_info['fsc_if64'] = {
     'check_function': lambda x, y, z: (1, "This check is deprecated. Please rediscover the services "\

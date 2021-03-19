@@ -34,13 +34,11 @@ RA32E_SWITCH = 'ra32e_switch'
      ('Sensor 05', None), ('Sensor 06', None), ('Sensor 07', None), ('Sensor 08', None),
      ('Sensor 09', None), ('Sensor 10', None), ('Sensor 11', None), ('Sensor 12', None),
      ('Sensor 13', None), ('Sensor 14', None), ('Sensor 15', None), ('Sensor 16', None)])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ra32e_switch_discovery(info, result):
     check = Check(RA32E_SWITCH)
     assert list(check.run_discovery(info)) == result
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ra32e_switch_check_closed_no_rule():
     check = Check(RA32E_SWITCH)
     result = BasicCheckResult(*check.run_check("Sensor 01", None, [['1']]))
@@ -49,7 +47,6 @@ def test_ra32e_switch_check_closed_no_rule():
     assert result.infotext.startswith("closed")
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ra32e_switch_check_open_expected_close():
     check = Check(RA32E_SWITCH)
     result = BasicCheckResult(*check.run_check(
@@ -61,7 +58,6 @@ def test_ra32e_switch_check_open_expected_close():
     assert "expected closed" in result.infotext
 
 
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_ra32e_switch_check_no_input():
     check = Check(RA32E_SWITCH)
     result = BasicCheckResult(*check.run_check("Sensor 01", 'ignore', [['']]))

@@ -12,7 +12,6 @@ pytestmark = pytest.mark.checks
 
 @pytest.mark.parametrize("params,expected_args", [(("foo", 60, ()), ["-r", 60]),
                                                   (("foo", 60, (20, 50)), ["-r", 60])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_notify_count_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_notify_count")

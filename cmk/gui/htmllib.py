@@ -60,8 +60,6 @@ from typing import (
     Sequence,
     TYPE_CHECKING,
     TypeVar,
-    NamedTuple,
-    Text,
 )
 from pathlib import Path
 import urllib.parse
@@ -139,7 +137,13 @@ from cmk.gui.page_menu import (
     PageMenuPopupsRenderer,
     enable_page_menu_entry,
 )
-from cmk.gui.type_defs import CSSSpec, Icon
+from cmk.gui.type_defs import (
+    CSSSpec,
+    Icon,
+    Choices,
+    ChoiceGroup,
+    GroupedChoices,
+)
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request
@@ -153,14 +157,7 @@ HTMLContent = Union[None, int, HTML, str]
 HTMLTagAttributeValue = Union[None, CSSSpec, HTMLTagValue, List[str]]
 HTMLTagAttributes = Dict[str, HTMLTagAttributeValue]
 HTMLMessageInput = Union[HTML, str]
-Choices = List[Tuple[Optional[str], str]]
 DefaultChoice = str
-
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
-GroupedChoices = List[ChoiceGroup]
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -242,6 +239,9 @@ class ABCHTMLGenerator(metaclass=abc.ABCMeta):
                 continue
 
             key = escaping.escape_attribute(key_unescaped.rstrip('_'))
+
+            if key.startswith('data_'):
+                key = key.replace('_', '-', 1)  # HTML data attribute: 'data-name'
 
             if v == '':
                 options.append(key)
@@ -1019,7 +1019,6 @@ class html(ABCHTMLGenerator):
 
         # Browser options
         self.user_errors: Dict[Optional[str], str] = {}
-        self.focus_object: Union[None, Tuple[Optional[str], str], str] = None
         self.final_javascript_code = ""
         self.page_context: 'VisualContext' = {}
 
@@ -1125,7 +1124,9 @@ class html(ABCHTMLGenerator):
             # TODO: Make private
             self.mobile = bool(self.request.var("mobile"))
             # Persist the explicitly set state in a cookie to have it maintained through further requests
-            self.response.set_http_cookie("mobile", str(int(self.mobile)))
+            self.response.set_http_cookie("mobile",
+                                          str(int(self.mobile)),
+                                          secure=self.request.is_secure)
 
         elif self.request.has_cookie("mobile"):
             self.mobile = self.request.cookie("mobile", "0") == "1"
@@ -1335,10 +1336,11 @@ class html(ABCHTMLGenerator):
         self.link_target = framename
 
     def set_focus(self, varname: str) -> None:
-        self.focus_object = (self.form_name, varname)
+        self.final_javascript("cmk.utils.set_focus_by_name(%s, %s)" %
+                              (json.dumps(self.form_name), json.dumps(varname)))
 
     def set_focus_by_id(self, dom_id: str) -> None:
-        self.focus_object = dom_id
+        self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
 
     def set_render_headfoot(self, render: bool) -> None:
         self.render_headfoot = render
@@ -1366,12 +1368,9 @@ class html(ABCHTMLGenerator):
     def final_javascript(self, code: str) -> None:
         self.final_javascript_code += code + "\n"
 
-    def reload_sidebar(self) -> None:
+    def reload_whole_page(self, url: Optional[str] = None) -> None:
         if not self.request.has_var("_ajaxid"):
-            self.write_html(self.render_reload_sidebar())
-
-    def render_reload_sidebar(self) -> HTML:
-        return self.render_javascript("cmk.utils.reload_sidebar()")
+            return self.final_javascript("cmk.utils.reload_whole_page(%s)" % json.dumps(url))
 
     def finalize(self) -> None:
         """Finish the HTTP request processing before handing over to the application server"""
@@ -1411,16 +1410,12 @@ class html(ABCHTMLGenerator):
             cls = 'error'
             prefix = _('ERROR')
 
-        code = HTML()
-
         if self.output_format == "html":
-            code += self.render_div(self.render_text(msg), class_=cls)
+            code = self.render_div(self.render_text(msg), class_=cls)
             if self.mobile:
-                code += self.render_center(code)
-        else:
-            code += self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
-
-        return code
+                return self.render_center(code)
+            return code
+        return self.render_text('%s: %s\n' % (prefix, escaping.strip_tags(msg)))
 
     def show_localization_hint(self) -> None:
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -1657,7 +1652,7 @@ class html(ABCHTMLGenerator):
                    javascripts: Optional[List[str]] = None,
                    force: bool = False) -> None:
         self.html_head(title, javascripts, force)
-        self.open_body(class_=self._get_body_css_classes())
+        self.open_body(class_=self._get_body_css_classes(), data_theme=self.get_theme())
 
     def _get_body_css_classes(self) -> List[str]:
         classes = self._body_classes[:]
@@ -1700,7 +1695,8 @@ class html(ABCHTMLGenerator):
         if page_menu:
             PageMenuRenderer().show(
                 page_menu,
-                hide_suggestions=not self.foldable_container_is_open("suggestions", "all", True))
+                hide_suggestions=not config.user.get_tree_state("suggestions", "all", True),
+            )
 
         self.close_div()  # top_heading
 
@@ -1716,13 +1712,12 @@ class html(ABCHTMLGenerator):
             return None
 
         return PageState(
-            top_line=_("%d sec. update") % self.browser_reload,
-            bottom_line=self.render_a(_("Reload now"),
-                                      href="javascript:void(0)",
-                                      onclick="this.innerHTML=\'%s\'; document.location.reload();" %
-                                      _("Reloading...")),
+            text=self.render_span("%d" % self.browser_reload),
             icon_name="trans",
             css_classes=["default"],
+            url="javascript:document.location.reload()",
+            tooltip_text=_("Automatic page reload in %d seconds." % self.browser_reload) + "\n" +
+            _("Click for instant reload."),
         )
 
     def begin_page_content(self):
@@ -1733,36 +1728,12 @@ class html(ABCHTMLGenerator):
     def end_page_content(self):
         self.close_div()
 
-    def footer(self, show_footer: bool = True, show_body_end: bool = True) -> None:
+    def footer(self, show_body_end: bool = True) -> None:
         if self.output_format == "html":
             self.end_page_content()
-            if show_footer:
-                self.bottom_footer()
 
             if show_body_end:
                 self.body_end()
-
-    def bottom_footer(self) -> None:
-        self.bottom_focuscode()
-
-    def bottom_focuscode(self) -> None:
-        if self.focus_object:
-            if isinstance(self.focus_object, tuple):
-                formname, varname = self.focus_object
-                assert formname is not None
-                obj_ident = formname + "." + varname
-            else:
-                obj_ident = "getElementById(\"%s\")" % self.focus_object
-
-            js_code = "<!--\n" \
-                      "var focus_obj = document.%s;\n" \
-                      "if (focus_obj) {\n" \
-                      "    focus_obj.focus();\n" \
-                      "    if (focus_obj.select)\n" \
-                      "        focus_obj.select();\n" \
-                      "}\n" \
-                      "// -->\n" % obj_ident
-            self.javascript(js_code)
 
     def focus_here(self) -> None:
         self.a("", href="#focus_me", id_="focus_me")
@@ -1913,8 +1884,16 @@ class html(ABCHTMLGenerator):
                cssclass: Optional[str] = None,
                style: Optional[str] = None,
                help_: Optional[str] = None,
-               form: Optional[str] = None) -> None:
-        self.write_html(self.render_button(varname, title, cssclass, style, help_=help_, form=form))
+               form: Optional[str] = None,
+               formnovalidate: bool = False) -> None:
+        self.write_html(
+            self.render_button(varname,
+                               title,
+                               cssclass,
+                               style,
+                               help_=help_,
+                               form=form,
+                               formnovalidate=formnovalidate))
 
     def render_button(self,
                       varname: str,
@@ -1922,7 +1901,8 @@ class html(ABCHTMLGenerator):
                       cssclass: Optional[str] = None,
                       style: Optional[str] = None,
                       help_: Optional[str] = None,
-                      form: Optional[str] = None) -> HTML:
+                      form: Optional[str] = None,
+                      formnovalidate: bool = False) -> HTML:
         self.add_form_var(varname)
         return self.render_input(name=varname,
                                  type_="submit",
@@ -1931,7 +1911,8 @@ class html(ABCHTMLGenerator):
                                  value=title,
                                  title=help_,
                                  style=style,
-                                 form=form)
+                                 form=form,
+                                 formnovalidate='' if formnovalidate else None)
 
     def buttonlink(self,
                    href: str,
@@ -2058,7 +2039,9 @@ class html(ABCHTMLGenerator):
                    onblur: Optional[str] = None,
                    placeholder: Optional[str] = None,
                    data_world: Optional[str] = None,
-                   data_max_labels: Optional[int] = None) -> None:
+                   data_max_labels: Optional[int] = None,
+                   required: bool = False,
+                   title: Optional[str] = None) -> None:
 
         # Model
         error = self.user_errors.get(varname)
@@ -2107,6 +2090,8 @@ class html(ABCHTMLGenerator):
             "placeholder": placeholder,
             "data-world": data_world,
             "data-max-labels": None if data_max_labels is None else str(data_max_labels),
+            "required": "" if required else None,
+            "title": title,
         }
 
         if error:
@@ -2114,7 +2099,7 @@ class html(ABCHTMLGenerator):
 
         if label:
             assert id_ is not None
-            self.label(label, for_=id_)
+            self.label(label, for_=id_, class_="required" if required else None)
 
         input_type = "text" if type_ is None else type_
         assert isinstance(input_type, str)
@@ -2173,7 +2158,8 @@ class html(ABCHTMLGenerator):
                        submit: Optional[str] = None,
                        try_max_width: bool = False,
                        read_only: bool = False,
-                       autocomplete: Optional[str] = None) -> None:
+                       autocomplete: Optional[str] = None,
+                       placeholder: Optional[str] = None) -> None:
         self.text_input(varname,
                         default_value,
                         cssclass=cssclass,
@@ -2184,7 +2170,8 @@ class html(ABCHTMLGenerator):
                         type_="password",
                         try_max_width=try_max_width,
                         read_only=read_only,
-                        autocomplete=autocomplete)
+                        autocomplete=autocomplete,
+                        placeholder=placeholder)
 
     def text_area(self,
                   varname: str,
@@ -2423,41 +2410,50 @@ class html(ABCHTMLGenerator):
                                  icon: Optional[str] = None,
                                  fetch_url: Optional[str] = None,
                                  title_url: Optional[str] = None,
-                                 title_target: Optional[str] = None) -> bool:
-        isopen = self.foldable_container_is_open(treename, id_, isopen)
+                                 title_target: Optional[str] = None,
+                                 padding: int = 15) -> bool:
+        isopen = config.user.get_tree_state(treename, id_, isopen)
         onclick = self.foldable_container_onclick(treename, id_, fetch_url)
         img_id = self.foldable_container_img_id(treename, id_)
         container_id = self.foldable_container_id(treename, id_)
 
         self.open_div(class_=["foldable", "open" if isopen else "closed"])
 
-        if not icon:
-            self.img(id_=img_id,
-                     class_=["treeangle", "open" if isopen else "closed"],
-                     src="themes/%s/images/tree_closed.png" % (self._theme),
-                     align="absbottom",
-                     onclick=onclick)
         if isinstance(title, HTML):  # custom HTML code
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon),
-                         onclick=onclick)
             self.write_text(title)
-            if indent != "form":
-                self.br()
+
         else:
             self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
-            if icon:
-                self.img(class_=["treeangle", "title"],
-                         src="themes/%s/images/icon_%s.png" % (self._theme, icon))
+
             if title_url:
                 self.a(title, href=title_url, target=title_target)
             else:
                 self.write_text(title)
             self.close_b()
+
+        if icon:
+            self.img(
+                id_=img_id,
+                class_=[
+                    "treeangle",
+                    "title",
+                    # Although foldable_sidebar is given via the argument icon it should not be
+                    # displayed as big as an icon.
+                    "icon" if icon != "foldable_sidebar" else None,
+                    "open" if isopen else "closed",
+                ],
+                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                onclick=onclick)
+        else:
+            self.img(id_=img_id,
+                     class_=["treeangle", "open" if isopen else "closed"],
+                     src="themes/%s/images/tree_closed.svg" % (self._theme),
+                     onclick=onclick)
+
+        if indent != "form" or not isinstance(title, HTML):
             self.br()
 
-        indent_style = "padding-left: %dpx; " % (indent is True and 15 or 0)
+        indent_style = "padding-left: %dpx; " % (padding if indent else 0)
         if indent == "form":
             self.close_td()
             self.close_tr()
@@ -2472,14 +2468,6 @@ class html(ABCHTMLGenerator):
     def end_foldable_container(self) -> None:
         self.close_ul()
         self.close_div()
-
-    def foldable_container_is_open(self, treename: str, id_: str, isopen: bool) -> bool:
-        # try to get persisted state of tree
-        tree_state = config.user.get_tree_states(treename)
-
-        if id_ in tree_state:
-            isopen = tree_state[id_] == "on"
-        return isopen
 
     def foldable_container_onclick(self, treename: str, id_: str, fetch_url: Optional[str]) -> str:
         return "cmk.foldable_container.toggle(%s, %s, %s)" % (
@@ -2511,17 +2499,11 @@ class html(ABCHTMLGenerator):
     def icon(self,
              icon: Icon,
              title: Optional[str] = None,
-             middle: bool = True,
              id_: Optional[str] = None,
              cssclass: Optional[str] = None,
              class_: CSSSpec = None) -> None:
         self.write_html(
-            self.render_icon(icon=icon,
-                             title=title,
-                             middle=middle,
-                             id_=id_,
-                             cssclass=cssclass,
-                             class_=class_))
+            self.render_icon(icon=icon, title=title, id_=id_, cssclass=cssclass, class_=class_))
 
     def empty_icon(self) -> None:
         self.write_html(self.render_icon("trans"))
@@ -2529,7 +2511,6 @@ class html(ABCHTMLGenerator):
     def render_icon(self,
                     icon: Icon,
                     title: Optional[str] = None,
-                    middle: bool = True,
                     id_: Optional[str] = None,
                     cssclass: Optional[str] = None,
                     class_: CSSSpec = None) -> HTML:
@@ -2540,21 +2521,51 @@ class html(ABCHTMLGenerator):
             classes.append(class_)
 
         icon_name = icon["icon"] if isinstance(icon, dict) else icon
+        src = icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon")
+        if src.endswith(".png"):
+            classes.append("png")
+        if src.endswith("/icon_missing.svg") and title:
+            title += " (%s)" % _("icon not found")
+
         icon_element = self._render_start_tag(
             'img',
             close_tag=True,
             title=title,
             id_=id_,
             class_=classes,
-            align='absmiddle' if middle else None,
-            src=icon_name if "/" in icon_name else self.detect_icon_path(icon_name, prefix="icon"),
+            src=src,
         )
 
         if isinstance(icon, dict) and icon["emblem"] is not None:
-            emblem_path = self.detect_icon_path(icon["emblem"], prefix="emblem")
-            return self.render_span(icon_element + self.render_img(emblem_path, class_="emblem"),
-                                    class_="emblem")
+            return self.render_emblem(icon["emblem"], title, id_, icon_element)
+
         return icon_element
+
+    def render_emblem(
+        self,
+        emblem: str,
+        title: Optional[str],
+        id_: Optional[str],
+        icon_element: Optional[HTML] = None,
+    ) -> HTML:
+        """ Render emblem to corresponding icon (icon_element in function call)
+        or render emblem itself as icon image, used e.g. in view options."""
+
+        emblem_path = self.detect_icon_path(emblem, prefix="emblem")
+        if not icon_element:
+            return self._render_start_tag(
+                'img',
+                close_tag=True,
+                title=title,
+                id_=id_,
+                class_="icon",
+                src=emblem_path,
+            )
+
+        return self.render_span(
+            icon_element + self.render_img(emblem_path, class_="emblem"),
+            class_="emblem",
+        )
 
     def detect_icon_path(self, icon_name: str, prefix: str) -> str:
         """Detect from which place an icon shall be used and return it's path relative to htdocs/
@@ -2569,16 +2580,21 @@ class html(ABCHTMLGenerator):
         7. images/icons/[name].png in site local hierarchy
         8. images/icons/[name].png in standard hierarchy
         """
+        path = "share/check_mk/web/htdocs"
         for theme in self.icon_themes():
-            path = "share/check_mk/web/htdocs/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
+            theme_path = path + "/themes/%s/images/%s_%s" % (theme, prefix, icon_name)
             for file_type in ["svg", "png"]:
-                for base_dir in [cmk.utils.paths.omd_root, cmk.utils.paths.omd_root + "/local"]:
-                    if os.path.exists(base_dir + "/" + path + "." + file_type):
+                for base_dir in [
+                        cmk.utils.paths.omd_root + "/", cmk.utils.paths.omd_root + "/local/"
+                ]:
+                    if os.path.exists(base_dir + theme_path + "." + file_type):
                         return "themes/%s/images/%s_%s.%s" % (self._theme, prefix, icon_name,
                                                               file_type)
+                    if os.path.exists(base_dir + path + "/images/icons/%s.%s" %
+                                      (icon_name, file_type)):
+                        return "images/icons/%s.%s" % (icon_name, file_type)
 
-        # TODO: This fallback is odd. Find use cases and clean this up
-        return "images/icons/%s.png" % icon_name
+        return "themes/facelift/images/icon_missing.svg"
 
     def render_icon_button(self,
                            url: Union[None, str, str],
@@ -2631,7 +2647,7 @@ class html(ABCHTMLGenerator):
                     dom_levels_up: int,
                     additional_js: str = "",
                     with_text: bool = False) -> None:
-        if config.user.get_attribute("show_mode") == "enforce_show_more":
+        if config.user.show_mode == "enforce_show_more":
             return
 
         self.open_a(href="javascript:void(0)",
@@ -2640,13 +2656,13 @@ class html(ABCHTMLGenerator):
                     onfocus="if (this.blur) this.blur();",
                     onclick="cmk.utils.toggle_more(this, %s, %d);%s" %
                     (json.dumps(id_), dom_levels_up, additional_js))
-        self.open_div(title="Show more items" if not with_text else "", class_="show_more")
+        self.open_div(title=_("Show more") if not with_text else "", class_="show_more")
         if with_text:
-            self.span(_("show more"))
+            self.write_text(_("show more"))
         self.close_div()
-        self.open_div(title="Show less items" if not with_text else "", class_="show_less")
+        self.open_div(title=_("Show less") if not with_text else "", class_="show_less")
         if with_text:
-            self.span(_("show less"))
+            self.write_text(_("show less"))
         self.close_div()
         self.close_a()
 

@@ -493,9 +493,6 @@ export function iconselector_select(event, varprefix, value) {
 
     // Set the new choosen icon in the valuespecs image
     let img = document.getElementById(varprefix + "_img");
-    if (varprefix.match(/_emblem$/)) {
-        img = img.nextSibling;
-    }
     img.src = src_img.src;
 
     popup_menu.close_popup();
@@ -736,6 +733,13 @@ export function autocomplete(input, completion_ident, completion_params, on_chan
     });
 }
 
+export function transfer_context_onchange(from, to) {
+    let source_field = $(`input[name='${from}']`);
+    let target_field = $(`input[name='${to}']`);
+    target_field.val(source_field.val());
+    source_field.on("change", () => target_field.val(source_field.val()));
+}
+
 function autocomplete_handle_response(handler_data, ajax_response) {
     let input_id = handler_data[0];
     let on_change = handler_data[1];
@@ -794,7 +798,6 @@ function autocomplete_show_choices(input_id, on_change, choices) {
 function autocomplete_show(input_id, select) {
     var input = $(`#${input_id}`);
     input.parent().append(select);
-    input.parent().addClass("vs_autocomplete");
     // make sure select is at the correct position
     select.insertBefore(input);
     // hide original input field
@@ -805,6 +808,7 @@ function autocomplete_show(input_id, select) {
         width: input.outerWidth(),
         tags: true,
         allowClear: true,
+        selectOnClose: true,
     });
 
     select.on("select2:open", function (e) {
@@ -940,4 +944,25 @@ export function visual_filter_list_reset(varprefix, page_request_vars, page_name
     // Disable the reset button
     let reset_button = document.getElementById(varprefix + "_reset");
     reset_button.disabled = true;
+}
+
+export function update_unit_selector(selectbox, metric_prefix) {
+    let change_unit_to_match_metric = metric => {
+        const post_data = "request=" + encodeURIComponent(JSON.stringify({metric: metric}));
+        ajax.call_ajax("ajax_vs_unit_resolver.py", {
+            method: "POST",
+            post_data: post_data,
+            response_handler: (_indata, response) => {
+                let json_data = JSON.parse(response);
+                // Error handling is: If request failed do nothing
+                if (json_data.result_code == 0)
+                    $("#" + selectbox + "_sel")
+                        .val(json_data.result.option_place)
+                        .trigger("change");
+            },
+        });
+    };
+    let metric_selector = $("#" + metric_prefix);
+    change_unit_to_match_metric(metric_selector.val());
+    metric_selector.on("change", event => change_unit_to_match_metric(event.target.value));
 }

@@ -10,3 +10,7 @@ x64/
 extlibs/
 .vs/
 *vcxproj.user
+*.h.hpp
+compile_commands.json
+
+.clang-tidy.cpt_backup

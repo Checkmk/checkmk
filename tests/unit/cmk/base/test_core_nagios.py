@@ -17,6 +17,7 @@ import pytest  # type: ignore[import]
 from testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+import cmk.utils.paths as paths
 from cmk.utils.type_defs import CheckPluginName, ConfigSerial
 
 import cmk.base.core_config as core_config
@@ -215,11 +216,11 @@ def fixture_serial() -> ConfigSerial:
 class TestHostCheckStore:
     def test_host_check_file_path(self, serial):
         assert core_nagios.HostCheckStore.host_check_file_path(serial, "abc") == Path(
-            config.make_helper_config_path(serial), "host_checks", "abc")
+            paths.make_helper_config_path(serial), "host_checks", "abc")
 
     def test_host_check_source_file_path(self, serial):
         assert core_nagios.HostCheckStore.host_check_source_file_path(serial, "abc") == Path(
-            config.make_helper_config_path(serial), "host_checks", "abc.py")
+            paths.make_helper_config_path(serial), "host_checks", "abc.py")
 
     def test_write(self, serial):
         hostname = "aaa"

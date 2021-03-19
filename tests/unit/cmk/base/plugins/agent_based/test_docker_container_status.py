@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
 )
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 from cmk.base.plugins.agent_based.utils import uptime
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
@@ -85,7 +85,6 @@ PARSED_NOT_RUNNING = {"Status": "stopped"}
 
 @pytest.mark.parametrize("string_table, parse_type", [
     (STRING_TABLE_WITH_VERSION, dict),
-    (STRING_TABLE_WITHOUT_VERSION, DeprecatedDict),
 ])
 def test_parse_docker_container_status(string_table, parse_type):
     actual_parsed = docker.parse_docker_container_status(string_table)
@@ -93,12 +92,25 @@ def test_parse_docker_container_status(string_table, parse_type):
     assert isinstance(actual_parsed, parse_type)
 
 
-def test_discovery_docker_container_status():
-    expected_discovery = [
-        Service(item=None, parameters={}, labels=[]),
-    ]
+@pytest.mark.parametrize("string_table, exception_type", [
+    (STRING_TABLE_WITHOUT_VERSION, AgentOutputMalformatted),
+])
+def test_parse_docker_container_status_legacy_raises(string_table, exception_type):
+    with pytest.raises(exception_type):
+        docker.parse_docker_container_status(string_table)
 
-    assert list(docker.discover_docker_container_status(PARSED)) == expected_discovery
+
+def _test_discovery(discovery_function, section, expected_discovery):
+    for status in ['running', 'exited']:
+        assert list(discovery_function({**section, 'Status': status})) == expected_discovery
+
+
+def test_discovery_docker_container_status():
+    _test_discovery(
+        docker.discover_docker_container_status,
+        PARSED,
+        [Service(item=None, parameters={}, labels=[])],
+    )
 
 
 def test_check_docker_container_status():
@@ -119,8 +131,11 @@ def test_check_docker_container_status():
     ),
 ])
 def test_discovery_docker_container_status_uptime(section_uptime, expected_services):
-    assert list(docker.discover_docker_container_status_uptime(PARSED,
-                                                               section_uptime)) == expected_services
+    _test_discovery(
+        lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
+        PARSED,
+        expected_services,
+    )
 
 
 @pytest.mark.parametrize("params, expected_results", [
@@ -155,10 +170,11 @@ def test_check_docker_container_status_uptime(params, expected_results):
 
 
 def test_discover_docker_container_status_health():
-
-    yielded_services = list(docker.discover_docker_container_status_health(PARSED))
-    expected_services = [Service()]
-    assert yielded_services == expected_services
+    _test_discovery(
+        docker.discover_docker_container_status_health,
+        PARSED,
+        [Service()],
+    )
 
 
 @pytest.mark.parametrize("section, expected", [

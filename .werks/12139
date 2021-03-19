@@ -1,0 +1,14 @@
+Title: Backup schedule: Fix empty "time of day" selection
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1614074829
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The "time of day" field could previously be saved with an empty field. This
+resulted to an exception (TypeError (cannot unpack non-iterable NoneType object))
+on the resulting page. The previously saved configs can now be read.

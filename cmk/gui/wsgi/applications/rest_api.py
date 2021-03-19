@@ -4,29 +4,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
+import http.client
 import json
 import logging
 import mimetypes
+import os
 import re
 import urllib.parse
-from typing import Dict, Type, Any, Optional, Callable
+from typing import Any, Callable, Dict, Optional, Tuple, Type, List, Literal
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
-from werkzeug import Response
-from werkzeug.exceptions import HTTPException
+from werkzeug import Request, Response
+from werkzeug.exceptions import HTTPException, NotFound
+from werkzeug.routing import Map, Rule, Submount
 
-from werkzeug.routing import Map, Submount, Rule
-
-from cmk.gui import config
-from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
-from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.wsgi.auth import verify_user, bearer_auth
-from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
-from cmk.gui.wsgi.wrappers import ParameterDict
 from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
+from cmk.utils.type_defs import UserId
+
+from cmk.gui import config, userdb
+from cmk.gui.config import omd_site
+from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
+from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
+from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
+from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
+from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
+from cmk.gui.wsgi.type_defs import RFC7662
+from cmk.gui.wsgi.wrappers import ParameterDict
 
 ARGS_KEY = 'CHECK_MK_REST_API_ARGS'
 
@@ -37,7 +44,70 @@ EXCEPTION_STATUS: Dict[Type[Exception], int] = {
     MKAuthException: 401,
 }
 
+SpecExtension = Literal['json', 'yaml']
 WSGIEnvironment = Dict[str, Any]
+
+
+def _verify_user(environ) -> RFC7662:
+    verified: List[RFC7662] = []
+
+    auth_header = environ.get('HTTP_AUTHORIZATION', '')
+    if auth_header:
+        user_id, secret = user_from_bearer_header(auth_header)
+        automation_user = automation_auth(user_id, secret)
+        gui_user = gui_user_auth(user_id, secret)
+
+        if not (automation_user or gui_user):
+            raise MKAuthException(f"{user_id} not authorized.")
+
+        if automation_user:
+            verified.append(automation_user)
+
+        if gui_user:
+            verified.append(gui_user)
+
+    remote_user = environ.get('REMOTE_USER', '')
+    if remote_user and userdb.user_exists(UserId(remote_user)):
+        verified.append(rfc7662_subject(UserId(remote_user), 'webserver'))
+
+    cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
+    if cookie:
+        user_id, session_id, cookie_hash = user_from_cookie(cookie)
+        check_parsed_auth_cookie(user_id, session_id, cookie_hash)
+        verified.append(rfc7662_subject(user_id, 'cookie'))
+
+    if not verified:
+        raise MKAuthException("You need to be authenticated to use the REST API.")
+
+    # We pick the first successful authentication method, which means the precedence is the same
+    # as the oder in the code.
+    final_candidate = verified[0]
+    if not userdb.is_customer_user_allowed_to_login(final_candidate['sub']):
+        raise MKAuthException(f"{final_candidate['sub']} may not log in here.")
+
+    if userdb.user_locked(final_candidate['sub']):
+        raise MKAuthException(f"{final_candidate['sub']} not authorized.")
+
+    return final_candidate
+
+
+def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
+    try:
+        _, token = auth_header.split("Bearer", 1)
+    except ValueError:
+        raise MKAuthException("Not a valid Bearer token.")
+    try:
+        user_id, secret = token.strip().split(' ', 1)
+    except ValueError:
+        raise MKAuthException("No user/password combination in Bearer token.")
+    if not secret:
+        raise MKAuthException("Empty password not allowed.")
+    if not user_id:
+        raise MKAuthException("Empty user not allowed.")
+    if "/" in user_id:
+        raise MKAuthException("No slashes / allowed in username.")
+
+    return UserId(user_id), secret
 
 
 class Authenticate:
@@ -53,23 +123,23 @@ class Authenticate:
 
     def __call__(self, environ, start_response):
         path_args = environ[ARGS_KEY]
-        auth_header = environ.get('HTTP_AUTHORIZATION', '')
+
         try:
-            rfc7662 = bearer_auth(auth_header)
+            rfc7662 = _verify_user(environ)
         except MKException as exc:
             return problem(
                 status=401,
                 title=str(exc),
-                ext={'auth_header': auth_header},
             )(environ, start_response)
 
-        with verify_user(rfc7662['sub'], rfc7662):
+        with set_user_context(rfc7662['sub'], rfc7662):
             wsgi_app = self.func(ParameterDict(path_args))
             return wsgi_app(environ, start_response)
 
 
 @functools.lru_cache
 def serve_file(file_name: str, content: str) -> Response:
+    """Construct and cache a Response from a static file."""
     content_type, _ = mimetypes.guess_type(file_name)
 
     resp = Response()
@@ -82,6 +152,32 @@ def serve_file(file_name: str, content: str) -> Response:
 
 
 def get_url(environ: WSGIEnvironment) -> str:
+    """Reconstruct an URL from a WSGI environment
+
+    >>> get_url({
+    ...     'HTTP_HOST': 'localhorst',
+    ...     'SERVER_PORT': '81',
+    ...     'SERVER_NAME': 'localhost',
+    ...     'wsgi.url_scheme': 'http',
+    ... })
+    'http://localhorst'
+
+    >>> get_url({
+    ...     'SERVER_PORT': '443',
+    ...     'SERVER_NAME': 'localhost',
+    ...     'wsgi.url_scheme': 'https',
+    ...     'PATH_INFO': '/NO_SITE/check_mk/view.py'
+    ... })
+    'https://localhost/NO_SITE/check_mk/view.py'
+
+    Args:
+        environ:
+            A WSGI environment
+
+    Returns:
+        A HTTP URL.
+
+    """
     url = environ['wsgi.url_scheme'] + '://'
 
     if environ.get('HTTP_HOST'):
@@ -104,11 +200,12 @@ def get_url(environ: WSGIEnvironment) -> str:
 @functools.lru_cache(maxsize=512)
 def serve_spec(
     site: str,
+    target: EndpointTarget,
     url: str,
     content_type: str,
     serializer: Callable[[Dict[str, Any]], str],
 ) -> Response:
-    data = generate_data()
+    data = generate_data(target=target)
     data.setdefault('servers', [])
     data['servers'].append({
         'url': url,
@@ -133,21 +230,25 @@ class ServeSwaggerUI:
     def _url(self, environ: WSGIEnvironment):
         return '/'.join(get_url(environ).split("/")[:-1])
 
-    def serve_json(self, environ: WSGIEnvironment, start_response):
-        return serve_spec(
-            site=self._site(environ),
-            url=self._url(environ),
-            content_type='application/json',
-            serializer=json.dumps,
-        )(environ, start_response)
+    def serve_spec(self, target: EndpointTarget, extension: SpecExtension):
+        def _serve(environ: WSGIEnvironment, start_response):
+            serializers = {
+                'yaml': dict_to_yaml,
+                'json': json.dumps,
+            }
+            content_types = {
+                'json': 'application/json',
+                'yaml': 'application/x-yaml; charset=utf-8'
+            }
+            return serve_spec(
+                site=self._site(environ),
+                target=target,
+                url=self._url(environ),
+                content_type=content_types[extension],
+                serializer=serializers[extension],
+            )(environ, start_response)
 
-    def serve_yaml(self, environ: WSGIEnvironment, start_response):
-        return serve_spec(
-            site=self._site(environ),
-            url=self._url(environ),
-            content_type='application/x-yaml; charset=utf-8',
-            serializer=dict_to_yaml,
-        )(environ, start_response)
+        return _serve
 
     def _relative_path(self, environ: WSGIEnvironment):
         path_info = environ['PATH_INFO']
@@ -161,24 +262,35 @@ class ServeSwaggerUI:
 
     def _serve_file(self, environ, start_response):
         current_url = get_url(environ)
+        yaml_filename = "openapi-swagger-ui.yaml"
         if current_url.endswith("/ui/"):
-            yaml_file = current_url[:-4] + "/openapi.yaml"
-        else:
-            yaml_file = current_url + "/openapi.yaml"
+            current_url = current_url[:-4]
 
+        yaml_file = f"{current_url}/{yaml_filename}"
         file_path = swagger_ui_3_path + self._relative_path(environ)
 
-        with open(file_path) as fh:
+        if not os.path.exists(file_path):
+            return NotFound()(environ, start_response)
+
+        with open(file_path, 'r') as fh:
             content = fh.read()
 
         if file_path.endswith("/index.html"):
-            content = content.replace("<title>Swagger UI</title>",
-                                      "<title>REST-API Interactive GUI - Checkmk</title>")
-            content = content.replace("https://petstore.swagger.io/v2/swagger.json", yaml_file)
-            content = content.replace(
-                "        dom_id",
-                '        validatorUrl: null,\n        dom_id',
-            )
+            page = []
+            for line in content.splitlines():
+                if "<title>" in line:
+                    page.append("<title>REST-API Interactive GUI - Checkmk</title>")
+                elif "favicon" in line:
+                    continue
+                elif "petstore.swagger.io" in line:
+                    page.append(f'        url: "{yaml_file}",')
+                    page.append('        validatorUrl: null,')
+                    page.append('        displayOperationId: false,')
+                else:
+                    page.append(line)
+
+            content = '\n'.join(page)
+
         return serve_file(file_path, content)(environ, start_response)
 
 
@@ -204,8 +316,12 @@ class CheckmkRESTAPI:
                 [
                     Rule("/ui/", endpoint=swagger_ui),
                     Rule("/ui/<path:path>", endpoint=swagger_ui),
-                    Rule("/openapi.yaml", endpoint=swagger_ui.serve_yaml),
-                    Rule("/openapi.json", endpoint=swagger_ui.serve_json),
+                    Rule("/openapi-swagger-ui.yaml",
+                         endpoint=swagger_ui.serve_spec('swagger-ui', 'yaml')),
+                    Rule("/openapi-swagger-ui.json",
+                         endpoint=swagger_ui.serve_spec('swagger-ui', 'json')),
+                    Rule("/openapi-doc.yaml", endpoint=swagger_ui.serve_spec('doc', 'yaml')),
+                    Rule("/openapi-doc.json", endpoint=swagger_ui.serve_spec('doc', 'json')),
                     *rules,
                 ],
             ),
@@ -229,16 +345,20 @@ class CheckmkRESTAPI:
             return wsgi_app(environ, start_response)
         except HTTPException as exc:
             # We don't want to log explicit HTTPExceptions as these are intentional.
-            # HTTPExceptions are WSGI apps
-            return exc(environ, start_response)
+            assert isinstance(exc.code, int)
+            return problem(
+                status=exc.code,
+                title=http.client.responses[exc.code],
+                detail=str(exc),
+            )(environ, start_response)
         except MKException as exc:
             if self.debug:
                 raise
 
             return problem(
                 status=EXCEPTION_STATUS.get(type(exc), 500),
-                title=str(exc),
-                detail="An exception occurred.",
+                title="An exception occurred.",
+                detail=str(exc),
             )(environ, start_response)
         except Exception as exc:
             crash = APICrashReport.from_exception()
@@ -252,7 +372,7 @@ class CheckmkRESTAPI:
                 ("site", config.omd_site()),
             ],)
 
-            return problem(status=EXCEPTION_STATUS.get(type(exc), 500),
+            return problem(status=500,
                            title=str(exc),
                            detail="An internal error occured while processing your request.",
                            ext={

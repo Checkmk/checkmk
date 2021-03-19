@@ -9,11 +9,11 @@ from typing import (
     Callable,
     Dict,
     Generator,
-    List,
     Mapping,
     MutableMapping,
     Optional,
     Set,
+    Sequence,
     Tuple,
     Union,
 )
@@ -28,7 +28,8 @@ from ..agent_based_api.v1 import (
 )
 from .size_trend import size_trend
 
-state = State  # TODO: clean this up
+FSBlock = Tuple[str, float, float, float]
+FSBlocks = Sequence[FSBlock]
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent
@@ -52,10 +53,10 @@ def savefloat(raw: Any) -> float:
 
 def ungrouped_mountpoints_and_groups(
     mount_points: Dict[str, Dict],
-    group_patterns: Mapping[str, Tuple[List[str], List[str]]],
-) -> Tuple[Set[str], Dict[str, bytes]]:
+    group_patterns: Mapping[str, Tuple[Sequence[str], Sequence[str]]],
+) -> Tuple[Set[str], Dict[str, Set[str]]]:
     ungrouped_mountpoints = set(mount_points)
-    groups = {}
+    groups: Dict[str, Set[str]] = {}
     for group_name, (patterns_inlcude, patterns_exclude) in group_patterns.items():
         mp_groups = mountpoints_in_group(mount_points, patterns_inlcude, patterns_exclude)
         if mp_groups:
@@ -72,7 +73,7 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
      'levels': (80.0, 90.0),
      'levels_low': (50.0, 60.0),
      'levels_mb': (1010892.8, 1137254.4),
-     'levels_text': '(warn/crit at 80.0%/90.0%)',
+     'levels_text': '(warn/crit at 80.00%/90.00%)',
      'magic_normsize': 20,
      'show_inodes': 'onlow',
      'show_levels': 'onmagic',
@@ -208,7 +209,11 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
     return levels
 
 
-def mountpoints_in_group(mplist: Dict[str, Dict], patterns_include: List, patterns_exclude: List):
+def mountpoints_in_group(
+    mplist: Dict[str, Dict],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+) -> Set[str]:
     matching_mountpoints = set()
     for mountpoint in mplist:
         if any(
@@ -238,18 +243,18 @@ def _check_inodes(
     ... }
     >>> for r in _check_inodes(levels, 80, 60): print(r)
     Metric('inodes_used', 20.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='', details='Inodes used: 20, Inodes available: 60 (75.0%)')
+    Result(state=<State.OK: 0>, notice='Inodes used: 20, Inodes available: 60 (75.00%)')
 
     >>> levels["show_inodes"] = "always"
     >>> for r in _check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(70.0, 75.0), boundaries=(0.0, 80.0))
-    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.0%)')
+    Result(state=<State.OK: 0>, summary='Inodes used: 60, Inodes available: 20 (25.00%)')
 
     >>> levels["show_inodes"]="onlow"
     >>> levels["inodes_levels"]= (40, 35)
     >>> for r in _check_inodes(levels, 80, 20): print(r)
     Metric('inodes_used', 60.0, levels=(40.0, 45.0), boundaries=(0.0, 80.0))
-    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.0%)')
+    Result(state=<State.CRIT: 2>, summary='Inodes used: 60 (warn/crit at 40/45), Inodes available: 20 (25.00%)')
     """
     inodes_warn_variant, inodes_crit_variant = levels["inodes_levels"]
 
@@ -310,7 +315,7 @@ def df_check_filesystem_single(
     this_time=None,
 ) -> CheckResult:
     if size_mb == 0:
-        yield Result(state=state.WARN, summary="Size of filesystem is 0 MB")
+        yield Result(state=State.WARN, summary="Size of filesystem is 0 MB")
         return
 
     # params might still be a tuple
@@ -344,16 +349,21 @@ def df_check_filesystem_single(
         crit_mb = used_max + crit_mb
         warn_mb = used_max + warn_mb
 
-    status = state.CRIT if used_mb >= crit_mb else state.WARN if used_mb >= warn_mb else state.OK
+    status = State.CRIT if used_mb >= crit_mb else State.WARN if used_mb >= warn_mb else State.OK
     yield Metric("fs_used", used_mb, levels=(warn_mb, crit_mb), boundaries=(0, size_mb))
-    yield Metric("fs_size", size_mb)
-    yield Metric("fs_used_percent", 100.0 * used_mb / size_mb)
+    yield Metric("fs_size", size_mb, boundaries=(0, None))
+    yield Metric(
+        "fs_used_percent",
+        100.0 * used_mb / size_mb,
+        levels=(_mb_to_perc(warn_mb, size_mb), _mb_to_perc(crit_mb, size_mb)),
+        boundaries=(0.0, 100.0),
+    )
 
     # Expand infotext according to current params
     infotext = ["%s used (%s of %s)" % (used_perc_hr, used_hr, used_max_hr)]
     if (show_levels == "always" or  #
-        (show_levels == "onproblem" and status is not state.OK) or  #
-        (show_levels == "onmagic" and (status is not state.OK or levels.get("magic", 1.0) != 1.0))):
+        (show_levels == "onproblem" and status is not State.OK) or  #
+        (show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0))):
         infotext.append(levels["levels_text"])
     yield Result(state=status, summary=", ".join(infotext).replace('), (', ', '))
 
@@ -390,7 +400,7 @@ def df_check_filesystem_list(
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],
-    fslist_blocks: List[Tuple[str, float, float, float]],
+    fslist_blocks: FSBlocks,
     fslist_inodes=None,
     this_time=None,
 ) -> CheckResult:
@@ -436,7 +446,7 @@ def df_check_filesystem_list(
 
     matching_mountpoints = mountpoints_in_group(blocks_info, *params["patterns"])
     if not matching_mountpoints:
-        yield Result(state=state.UNKNOWN, summary="No filesystem matching the patterns")
+        yield Result(state=State.UNKNOWN, summary="No filesystem matching the patterns")
         return
 
     total_size_mb = group_sum("size_mb", blocks_info, matching_mountpoints)
@@ -458,4 +468,8 @@ def df_check_filesystem_list(
         this_time,
     )
 
-    yield Result(state=state.OK, summary="%d filesystems" % len(matching_mountpoints))
+    yield Result(state=State.OK, summary="%d filesystems" % len(matching_mountpoints))
+
+
+def _mb_to_perc(value: Optional[float], size_mb: float) -> Optional[float]:
+    return None if value is None else 100.0 * value / size_mb

@@ -27,7 +27,7 @@ public:
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(Row row, const contact *ctc) const override;
-    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row get(const std::string &primary_key) const override;
 };
 
 #endif  // TableServices_h

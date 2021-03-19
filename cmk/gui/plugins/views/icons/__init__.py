@@ -133,7 +133,7 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
                         n = n[5:]
                     if n.endswith(".png"):
                         n = n[:-4]
-                    yield icon.sort_index(), n.encode('utf-8'), None, None
+                    yield icon.sort_index(), n, None, None
             return
 
         icon_name = result

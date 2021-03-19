@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
 from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
 
-from cmk.gui.watolib.changes import activation_sites
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
     ACResultOK,
@@ -114,7 +113,7 @@ class ModeAnalyzeConfig(WatoMode):
             if not site_id:
                 raise MKUserError("_ack_site_id", _("Needed variable missing"))
 
-            if site_id not in activation_sites():
+            if site_id not in config.activation_sites():
                 raise MKUserError("_ack_site_id", _("Invalid site given"))
 
         if html.request.var("_do") == "ack":
@@ -343,7 +342,7 @@ class ModeAnalyzeConfig(WatoMode):
         return results_by_category
 
     def _analyze_sites(self):
-        return activation_sites()
+        return config.activation_sites()
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)

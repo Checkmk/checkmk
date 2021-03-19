@@ -14,7 +14,6 @@ pytestmark = pytest.mark.checks
                                                   ({
                                                       "hostspec": "foobar"
                                                   }, ["foobar"])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_mkevents_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_mkevents")

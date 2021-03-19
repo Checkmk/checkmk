@@ -12,17 +12,18 @@ Example:
     For a parse function that creates a dictionary for every item, for instance,
     you could use
 
-        def parse_my_plugin(string_table: StringTable)= -> Dict[str, Dict[str, str]]:
-            pass
-
-    A check function handling such data should be annotated
-
-        def check_my_plugin(
-            item: str,
-            params: Parameters,
-            section: Dict[str, str],
-        ) -> CheckResult:
-            pass
+    >>> from typing import Any, Mapping
+    >>>
+    >>> def parse_my_plugin(string_table: StringTable) -> Mapping[str, Mapping[str, str]]:
+    ...     pass
+    >>>
+    >>> # A check function handling such data should be annotated
+    >>> def check_my_plugin(
+    ...     item: str,
+    ...     params: Mapping[str, Any],
+    ...     section: Mapping[str, Mapping[str, str]],
+    ... ) -> CheckResult:
+    ...     pass
 
 """
 
@@ -33,22 +34,15 @@ from cmk.base.api.agent_based.checking_classes import (
 )
 from cmk.base.api.agent_based.type_defs import (
     HostLabelGenerator,
-    Parameters,
     StringByteTable,
     StringTable,
-    ValueStore,
 )
-
-from cmk.snmplib.type_defs import SNMPDeviceTypes  # pylint: disable=cmk-module-layer-violation
 
 __all__ = [
     "CheckResult",
     "DiscoveryResult",
     "HostLabelGenerator",
     "InventoryResult",
-    "Parameters",
     "StringByteTable",
     "StringTable",
-    "ValueStore",
-    "SNMPDeviceTypes",
 ]

@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import sys
 import errno
 import os
 import copy
 import json
 from types import ModuleType
-from typing import Set, Any, AnyStr, Callable, Dict, List, Optional, Tuple, Union
+from typing import Set, Any, AnyStr, Callable, Dict, Iterator, List, Optional, Tuple, Union
 from pathlib import Path
 import time
 
@@ -73,7 +74,7 @@ config_dir = cmk.utils.paths.var_dir + "/web"
 # Stores the initial configuration values
 default_config: Dict[str, Any] = {}
 # Needed as helper to determine the builtin variables
-_vars_before_plugins: Set[str] = set()
+_legacy_plugin_vars: Dict[str, Any] = {}
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -226,15 +227,16 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def _initialize_with_default_config() -> None:
-    # Since plugin loading changes the global namespace and these changes are kept
-    # for the whole module lifetime, the "vars before plugins" can only be determined
-    # once before the first plugin loading
-    if not _vars_before_plugins:
-        _vars_before_plugins.update(all_nonfunction_vars(globals()))
-
+    vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
-    _load_default_config(_vars_before_plugins, vars_after_plugins)
+    new_vars = vars_after_plugins.difference(vars_before_plugins)
+
+    # Keep the known plugin vars during whole module lifetime.
+    # Extend the known plugin vars with each config loading.
+    _legacy_plugin_vars.update({k: globals()[k] for k in new_vars})
+
+    _load_default_config(_legacy_plugin_vars)
 
     _apply_default_config()
 
@@ -246,10 +248,10 @@ def _apply_default_config() -> None:
         globals()[k] = v
 
 
-def _load_default_config(vars_before_plugins: Set[str], vars_after_plugins: Set[str]) -> None:
+def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
     default_config.clear()
     _load_default_config_from_module_plugins()
-    _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
+    _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults)
 
 
 def _load_default_config_from_module_plugins() -> None:
@@ -269,10 +271,8 @@ def _load_default_config_from_module_plugins() -> None:
         default_config[k] = v
 
 
-def _load_default_config_from_legacy_plugins(vars_before_plugins: Set[str],
-                                             vars_after_plugins: Set[str]) -> None:
-    new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update({k: copy.deepcopy(globals()[k]) for k in new_vars})
+def _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
+    default_config.update(legacy_plugin_var_defaults)
 
 
 def _config_plugin_modules() -> List[ModuleType]:
@@ -306,6 +306,59 @@ def all_nonfunction_vars(var_dict: Dict[str, Any]) -> Set[str]:
 
 def get_language() -> Optional[str]:
     return default_language
+
+
+def get_ntop_connection() -> Optional[Dict]:
+    # Use this function if you *really* want to try accessing the ntop connection settings
+    try:
+        # ntop is currently part of CEE and will *only* be defined if we are a CEE
+        return ntop_connection  # type: ignore[name-defined]
+    except NameError:
+        return None
+
+
+def get_ntop_connection_mandatory() -> Dict:
+    connection = get_ntop_connection()
+    return connection if connection else {}
+
+
+def is_ntop_available() -> bool:
+    # Use this function if you want to know if the ntop intergration is available in general
+    return isinstance(get_ntop_connection(), dict)
+
+
+def is_ntop_configured() -> bool:
+    # Use this function if you want to know if the connection to ntop is fully set-up
+    # e.g. to decide if ntop links should be hidden
+
+    if is_ntop_available():
+        ntop = get_ntop_connection_mandatory()
+        if not ntop.get("is_activated", False):
+            return False
+        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
+
+        # We currently have two options to get an ntop username
+        # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
+        # 2) Take the checkmk username as ntop username -> always declare ntop as configured
+        return (bool(user.get_attribute(custom_attribute_name, '')) if isinstance(
+            custom_attribute_name, str) else not custom_attribute_name)
+
+    return False
+
+
+def get_ntop_misconfiguration_reason() -> str:
+    if not is_ntop_available():
+        return _("ntopng integration is only available in CEE")
+    ntop = get_ntop_connection()
+    assert isinstance(ntop, dict)
+    if not ntop.get("is_activated", False):
+        return _("ntopng integration is not activated under global settings.")
+    custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+    if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
+        return _("The ntopng username should be derived from \'ntopng Username\' "
+                 "under the current's user settings (identity) but this is not "
+                 "set for the current user.")
+    return ""
 
 
 #.
@@ -356,6 +409,10 @@ def get_role_permissions() -> Dict[str, List[str]]:
             if _may_with_roles([role_id], perm.name):
                 role_permissions[role_id].append(perm.name)
     return role_permissions
+
+
+def base_roles_with_permission(pname: str) -> List[str]:
+    return [r for r in builtin_role_ids if _may_with_roles([r], pname)]
 
 
 def _may_with_roles(some_role_ids: List[str], pname: str) -> bool:
@@ -461,7 +518,7 @@ class LoggedInUser:
         self._tableoptions: Dict[str, Dict[str, Any]] = {}
 
     @property
-    def ident(self) -> str:
+    def ident(self) -> UserId:
         """Return the user-id as a string, or crash.
 
         Returns:
@@ -510,12 +567,24 @@ class LoggedInUser:
         self._unset_attribute("language")
 
     @property
+    def show_mode(self) -> str:
+        return self.get_attribute("show_mode") or show_mode
+
+    @property
+    def show_more_mode(self) -> bool:
+        return "show_more" in self.show_mode
+
+    @property
     def customer_id(self) -> Optional[str]:
         return self.get_attribute("customer")
 
     @property
     def contact_groups(self) -> List:
         return self.get_attribute("contactgroups", [])
+
+    @property
+    def start_url(self) -> Optional[str]:
+        return self.load_file("start_url", None)
 
     @property
     def show_help(self) -> bool:
@@ -607,6 +676,14 @@ class LoggedInUser:
     def get_tree_states(self, tree):
         return self.tree_states.get(tree, {})
 
+    def get_tree_state(self, treename: str, id_: str, isopen: bool) -> bool:
+        # try to get persisted state of tree
+        tree_state = self.get_tree_states(treename)
+
+        if id_ in tree_state:
+            isopen = tree_state[id_] == "on"
+        return isopen
+
     def set_tree_state(self, tree, key, val):
         if tree not in self.tree_states:
             self.tree_states[tree] = {}
@@ -618,6 +695,16 @@ class LoggedInUser:
 
     def save_tree_states(self) -> None:
         self.save_file("treestates", self._tree_states)
+
+    def get_show_more_setting(self, more_id: str) -> bool:
+        if self.show_mode == "enforce_show_more":
+            return True
+
+        return self.get_tree_state(
+            treename="more_buttons",
+            id_=more_id,
+            isopen=self.show_mode == "default_show_more",
+        )
 
     @property
     def bi_assumptions(self):
@@ -806,6 +893,18 @@ def _set_user(_user: LoggedInUser) -> None:
     local.user will set the current RequestContext to _user and it will be accessible via
     cmk.gui.globals.user directly. This is imported here."""
     local.user = _user
+
+
+@contextlib.contextmanager
+def UserContext(user_id: UserId) -> Iterator[None]:
+    """Managing authenticated user context
+
+    After the user has been authenticated, initialize the global user object."""
+    try:
+        set_user_by_id(user_id)
+        yield
+    finally:
+        clear_user_login()
 
 
 #.
@@ -1090,13 +1189,6 @@ def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> boo
     return False
 
 
-def default_site() -> Optional[SiteId]:
-    for site_name, _site in sites.items():
-        if site_is_local(site_name):
-            return site_name
-    return None
-
-
 def is_single_local_site() -> bool:
     if len(sites) > 1:
         return False
@@ -1108,27 +1200,26 @@ def is_single_local_site() -> bool:
     return site_is_local(sitename)
 
 
+def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
+
+
 def site_attribute_default_value() -> Optional[SiteId]:
-    def_site = default_site()
+    site_id = omd_site()
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if def_site and def_site in authorized_site_ids:
-        return def_site
+    if site_id in authorized_site_ids:
+        return site_id
     return None
 
 
 def site_attribute_choices() -> List[Tuple[SiteId, str]]:
-    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
 
 
-def site_choices(
-    filter_func: Optional[Callable[[SiteId, SiteConfiguration], bool]] = None
-) -> List[Tuple[SiteId, str]]:
+def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
+    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
     choices = []
-    for site_id, site_spec in sites.items():
-        if filter_func and not filter_func(site_id, site_spec):
-            continue
-
+    for site_id, site_spec in site_configs.items():
         title = site_id
         if site_spec.get("alias"):
             title += " - " + site_spec["alias"]
@@ -1139,13 +1230,27 @@ def site_choices(
 
 
 def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(
-        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
+    return site_choices({
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication_ec", False)
+    })
 
 
-def get_wato_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
-        "replication") is not None)
+def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(activation_sites())
+
+
+def activation_sites() -> SiteConfigurations:
+    """Returns sites that are affected by WATO changes
+
+    These sites are shown on activation page and get change entries
+    added during WATO changes."""
+    return {
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication")
+    }
 
 
 #.
@@ -1198,6 +1303,14 @@ def theme_choices() -> List[Tuple[str, str]]:
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
 
 
 def get_page_heading() -> str:

@@ -217,7 +217,7 @@ run_real_time_checks() {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0i2"
+echo "Version: 2.1.0i1"
 echo "AgentOS: openwrt"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"
@@ -334,12 +334,15 @@ if type ethtool >/dev/null; then
 fi
 
 # Current state of bonding interfaces
-if [ -e /proc/net/bonding ]; then
-    echo '<<<lnx_bonding:sep(58)>>>'
-    pushd /proc/net/bonding >/dev/null
-    head -v -n 1000 *
-    popd >/dev/null
-fi
+section_bonding_interfaces() {
+    (
+        cd /proc/net/bonding 2>/dev/null || return
+        echo '<<<lnx_bonding:sep(58)>>>'
+        head -v -n 1000 *
+    )
+}
+
+section_bonding_interfaces
 
 # Same for Open vSwitch bonding
 if type ovs-appctl >/dev/null; then
@@ -703,20 +706,26 @@ fi
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-if pushd $MK_VARDIR/job >/dev/null; then
-    echo '<<<job>>>'
-    for username in *; do
-        if [ -d "$username" ] && cd "$username"; then
-            if [ $EUID -eq 0 ]; then
-                su -s "$SHELL" "$username" -c "head -n -0 -v *"
-            else
-                head -n -0 -v *
-            fi
-            cd ..
-        fi
-    done
-    popd >/dev/null
-fi
+section_job() {
+    (
+        cd $MK_VARDIR/job 2>/dev/null || return
+        echo '<<<job>>>'
+        for username in *; do
+            (
+                # the return below only terminates the subshell, not the entire function
+                cd "$username" 2>/dev/null || return
+                if [ $EUID -eq 0 ]; then
+                    su -s "$SHELL" "$username" -c "head -n -0 -v *"
+                else
+                    head -n -0 -v *
+                fi
+                cd ..
+            )
+        done
+    )
+}
+
+section_job
 
 # Gather thermal information provided e.g. by acpi
 # At the moment only supporting thermal sensors
@@ -799,34 +808,38 @@ if cd $PLUGINSDIR; then
 fi
 
 # Agent output snippets created by cronjobs, etc.
-if [ -d "$SPOOLDIR" ] && [ -r "$SPOOLDIR" ]; then
-    pushd "$SPOOLDIR" >/dev/null
-    now=$(date +%s)
+spooldir_files() {
+    (
+        cd "$SPOOLDIR" 2>/dev/null || return
+        test -r "$SPOOLDIR" || return
+        now=$(date +%s)
 
-    for file in *; do
-        # output every file in this directory. If the file is prefixed
-        # with a number, then that number is the maximum age of the
-        # file in seconds. If the file is older than that, it is ignored.
-        maxage=""
-        part="$file"
+        for file in *; do
+            # output every file in this directory. If the file is prefixed
+            # with a number, then that number is the maximum age of the
+            # file in seconds. If the file is older than that, it is ignored.
+            maxage=""
+            part="$file"
 
-        # Each away all digits from the front of the filename and
-        # collect them in the variable maxage.
-        while [ "${part/#[0-9]/}" != "$part" ]; do
-            maxage=$maxage${part:0:1}
-            part=${part:1}
-        done
+            # Each away all digits from the front of the filename and
+            # collect them in the variable maxage.
+            while [ "${part/#[0-9]/}" != "$part" ]; do
+                maxage=$maxage${part:0:1}
+                part=${part:1}
+            done
 
-        # If there is at least one digit, than we honor that.
-        if [ "$maxage" ]; then
-            mtime=$(stat -c %Y "$file")
-            if [ $((now - mtime)) -gt $maxage ]; then
-                continue
+            # If there is at least one digit, than we honor that.
+            if [ "$maxage" ]; then
+                mtime=$(stat -c %Y "$file")
+                if [ $((now - mtime)) -gt $maxage ]; then
+                    continue
+                fi
             fi
-        fi
 
-        # Output the file
-        cat "$file"
-    done
-    popd >/dev/null
-fi
+            # Output the file
+            cat "$file"
+        done
+    )
+}
+
+spooldir_files

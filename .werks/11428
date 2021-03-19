@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Label changes from foo:bar1 to foo:bar2 where not detected properly.

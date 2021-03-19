@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[var-annotated,list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_bytes_human_readable
 
 from .df import df_check_filesystem_list
@@ -75,4 +75,5 @@ def check_storeonce_space(item, params, values):
 
     dedupl_ratio_str = values.get('Deduplication Ratio') or values.get("dedupeRatio")
     if dedupl_ratio_str is not None:
-        yield 0, "Dedup ratio: %.2f" % float(dedupl_ratio_str)
+        dedupl_ratio = float(dedupl_ratio_str)
+        yield 0, "Dedup ratio: %.2f" % dedupl_ratio, [("dedup_rate", dedupl_ratio)]

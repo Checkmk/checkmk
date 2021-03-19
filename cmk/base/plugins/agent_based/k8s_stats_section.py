@@ -66,8 +66,8 @@ def parse_k8s(string_table: StringTable) -> Section:
 
     stats_data = json.loads(string_table[0][0])
     return {
-        "filesystem": to_filesystems(stats_data["filesystem"]),
-        "interfaces": to_interfaces(stats_data["network"]["interfaces"]),
+        "filesystem": to_filesystems(stats_data.get("filesystem", [])),
+        "interfaces": to_interfaces(stats_data.get("network", {}).get("interfaces", [])),
         "timestamp": float(stats_data["timestamp"]),
     }
 

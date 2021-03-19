@@ -1,38 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 387 339" style="enable-background:new 0 0 387 339;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#FFC107;}
-	.st1{fill:#FFD54F;}
-	.st2{fill:#FFCA28;}
-	.st3{fill:#DEA806;}
-	.st4{fill:#FFD90A;}
-</style>
-<g id="Menu-Icons-EXPORT">
-	<g id="EXPORT" transform="translate(-514.000000, -561.000000)">
-		<g id="distributed" transform="translate(514.000000, 561.000000)">
-			<g id="services" transform="translate(96.000000, 0.000000)">
-				<polygon id="Path" class="st0" points="97.4,0.1 194.8,41.8 97.4,83.5 0.1,41.8 				"/>
-				<polygon id="Path_1_" class="st1" points="0.1,41.8 97.4,83.5 97.4,194.8 0.1,153.1 				"/>
-				<polygon id="Path_2_" class="st2" points="194.8,41.8 97.4,83.5 97.4,194.8 194.8,153.1 				"/>
-				<polygon id="Path_3_" class="st3" points="97.4,0.1 0.1,41.8 97.4,83.5 				"/>
-				<polygon id="Path_4_" class="st4" points="0.1,41.8 0.1,153.1 97.4,194.8 97.4,83.5 				"/>
-			</g>
-			<g id="services_1_" transform="translate(0.000000, 144.000000)">
-				<polygon id="Path_5_" class="st0" points="97.4,0.1 194.8,41.8 97.4,83.5 0.1,41.8 				"/>
-				<polygon id="Path_6_" class="st1" points="0.1,41.8 97.4,83.5 97.4,194.8 0.1,153.1 				"/>
-				<polygon id="Path_7_" class="st2" points="194.8,41.8 97.4,83.5 97.4,194.8 194.8,153.1 				"/>
-				<polygon id="Path_8_" class="st3" points="97.4,0.1 0.1,41.8 97.4,83.5 				"/>
-				<polygon id="Path_9_" class="st4" points="0.1,41.8 0.1,153.1 97.4,194.8 97.4,83.5 				"/>
-			</g>
-			<g id="services_2_" transform="translate(192.000000, 144.000000)">
-				<polygon id="Path_10_" class="st0" points="97.4,0.1 194.8,41.8 97.4,83.5 0.1,41.8 				"/>
-				<polygon id="Path_11_" class="st1" points="0.1,41.8 97.4,83.5 97.4,194.8 0.1,153.1 				"/>
-				<polygon id="Path_12_" class="st2" points="194.8,41.8 97.4,83.5 97.4,194.8 194.8,153.1 				"/>
-				<polygon id="Path_13_" class="st3" points="97.4,0.1 0.1,41.8 97.4,83.5 				"/>
-				<polygon id="Path_14_" class="st4" points="0.1,41.8 0.1,153.1 97.4,194.8 97.4,83.5 				"/>
-			</g>
-		</g>
-	</g>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="267px" height="267px" viewBox="0 0 267 267" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 58 (84663) - https://sketch.com -->
+    <title>distributed</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="EXPORT" transform="translate(-127.000000, -72.000000)">
+            <g id="distributed" transform="translate(144.000000, 89.000000)">
+                <polygon id="Fill-6" fill="#B894EE" points="18.676 91.2788 121.296 137.9268 224 91.2788 121.296 44.6028"></polygon>
+                <polygon id="Fill-7" fill="#AC85E6" points="121.3268 137.952 121.3268 249.952 223.9748 203.276 223.9748 91.276"></polygon>
+                <polygon id="Fill-8" fill="#AC85E6" points="121.324 44.5888 18.648 91.2648 121.324 137.9128"></polygon>
+                <polygon id="Fill-9" fill="#B894EE" points="18.6872 203.2956 121.3072 249.9156 121.3072 137.9436 18.6872 91.2676"></polygon>
+                <path d="M120.176,69.128 L119.28,0.052" id="Stroke-10" stroke="#646262" stroke-width="33.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M232.4,215.4 L176.4,179" id="Stroke-10" stroke="#646262" stroke-width="33.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M60,215.4 L0,179" id="Stroke-10" stroke="#646262" stroke-width="33.6" stroke-linecap="round" stroke-linejoin="round" transform="translate(30.000000, 197.200000) scale(-1, 1) translate(-30.000000, -197.200000) "></path>
+            </g>
+        </g>
+    </g>
 </svg>

@@ -53,6 +53,10 @@ JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                               $(foreach edir,. enterprise managed, \
                                   $(foreach subdir,* */* */*/*,$(edir)/web/htdocs/js/$(subdir).js))))
 
+SCSS_SOURCES := $(wildcard \
+					$(foreach edir,. enterprise managed, \
+						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
+
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
@@ -74,9 +78,9 @@ LOCK_PATH := .venv.lock
 
 .PHONY: all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker cppcheck dist documentation \
-        format format-c format-python format-shell format-js GTAGS headers help \
-        install iwyu mrproper mrclean optimize-images packages setup setversion \
-        tidy version am--refresh skel openapi openapi-doc
+        documentation-quick format format-c format-python format-shell format-js \
+        GTAGS headers help install iwyu mrproper mrclean optimize-images packages \
+        setup setversion tidy version am--refresh skel openapi openapi-doc
 
 
 help:
@@ -162,7 +166,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	$(MAKE) -C agents build
-	$(MAKE) -C doc/plugin-api apidoc html
+	$(MAKE) -C doc/plugin-api html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
 	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
@@ -223,6 +227,7 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 		windows/check_mk_agent.exe \
 		windows/check_mk_agent.msi \
 		windows/python-3.8.zip \
+		windows/python-3.4.zip \
 		windows/check_mk.user.yml \
 		windows/CONTENTS \
 		windows/mrpe \
@@ -240,6 +245,9 @@ omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe:
 	$(MAKE) -C omd openhardwaremonitor-dist
 
 omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll: omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
+
+ntop-mkp:
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-ntop-mkp.py
 
 .werks/werks: $(WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
@@ -349,17 +357,24 @@ node_modules/.bin/redoc-cli: .ran-npm
 	npm install --audit=false --unsafe-perm $$REGISTRY
 	touch node_modules/.bin/webpack node_modules/.bin/redoc-cli
 
-web/htdocs/js/%_min.js: node_modules/.bin/webpack webpack.config.js $(JAVASCRIPT_SOURCES)
+# NOTE 1: Match anything patterns % cannot be used in intermediates. Therefore, we
+# list all targets separately.
+#
+# NOTE 2: For the touch command refer to the notes above.
+#
+# NOTE 3: The cma_facelift.scss target is used to generate a css file for the virtual
+# appliance. It is called from the cma git's makefile and the built css file is moved
+# to ~/git/cma/skel/usr/share/cma/webconf/htdocs/
+.INTERMEDIATE: .ran-webpack
+web/htdocs/js/main_min.js: .ran-webpack
+web/htdocs/js/side_min.js: .ran-webpack
+web/htdocs/js/mobile_min.js: .ran-webpack
+web/htdocs/themes/facelift/theme.css: .ran-webpack
+web/htdocs/themes/modern-dark/theme.css: .ran-webpack
+web/htdocs/themes/facelift/cma_facelift.css: .ran-webpack
+.ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
 	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-web/htdocs/themes/%/theme.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/%/theme.scss web/htdocs/themes/%/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
-
-# This target is used to generate a css file for the virtual appliance. It is
-# called from the cma git's Makefile and the built css file is moved to
-# ~/git/cma/skel/usr/share/cma/webconf/htdocs/
-web/htdocs/themes/facelift/cma_facelift.css: node_modules/.bin/webpack webpack.config.js postcss.config.js web/htdocs/themes/facelift/cma_facelift.scss web/htdocs/themes/facelift/scss/*.scss
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	touch web/htdocs/js/*_min.js web/htdocs/themes/*/theme.css
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
 # which is needed to run configure, this should live in a separate target. In
@@ -378,19 +393,21 @@ clean:
 
 mrproper:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea"\
-	    --exclude='\.werks/.last'\
-	    --exclude='\.werks/.my_ids'
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea" \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids"
 
 mrclean:
 	git clean -d --force -x \
-	    --exclude="**/.vscode"\
-	    --exclude="**/.idea" \
-	    --exclude='\.werks/.last' \
-	    --exclude='\.werks/.my_ids' \
+	    --exclude="**/.vscode" \
+	    --exclude="**/.idea"  \
+	    --exclude=".werks/.last" \
+	    --exclude=".werks/.my_ids" \
 	    --exclude=".venv" \
-	    --exclude=".venv.lock"
+	    --exclude=".venv.lock" \
+	    --exclude="livestatus/src/doc/plantuml.jar" \
+	    --exclude="enterprise/core/src/doc/plantuml.jar"
 
 setup:
 # librrd-dev is still needed by the python rrd package we build in our virtual environment
@@ -404,6 +421,7 @@ setup:
 	    clang-tidy-10 \
 	    clang-tools-10 \
 	    clangd-10 \
+	    curl \
 	    libclang-10-dev \
 	    libclang-common-10-dev \
 	    libclang1-10 \
@@ -519,7 +537,7 @@ endif
 # Not really perfect rules, but better than nothing
 analyze: config.h
 	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++2a"
+	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: config.h
@@ -569,6 +587,12 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif
 
+documentation-quick: config.h
+	$(MAKE) -C livestatus/src documentation-quick
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src documentation-quick
+endif
+
 # TODO: pipenv and make don't really cooperate nicely: Locking alone already
 # creates a virtual environment with setuptools/pip/wheel. This could lead to a
 # wrong up-to-date status of it later, so let's remove it here. What we really
@@ -599,5 +623,5 @@ Pipfile.lock: Pipfile
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh:
-	@:
+am--refresh: config.status
+	./config.status

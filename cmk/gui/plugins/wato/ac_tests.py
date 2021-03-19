@@ -11,6 +11,7 @@ from typing import Type, Iterator
 
 import requests
 import urllib3  # type: ignore[import]
+import multiprocessing
 
 from livestatus import LocalConnection
 
@@ -439,6 +440,46 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
                 yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
             else:
                 yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
+
+
+@ac_test_registry.register
+class ACTestEscapeHTMLDisabled(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    def title(self) -> str:
+        return _("Escape HTML globally enabled")
+
+    def help(self) -> str:
+        return _(
+            "By default, for security reasons, the GUI does not interpret any HTML "
+            "code received from external sources, like service output or log messages. "
+            "But there are specific reasons to deactivate this security feature. E.g. when "
+            "you want to display the HTML output produced by a specific check plugin."
+            "Disabling the escaping also allows the plugin to execute not only HTML, but "
+            "also Javascript code in the context of your browser. This makes it possible to "
+            "execute arbritary Javascript, even for injection attacks.<br>"
+            "For this reason, you should only disable this for a small, very specific number of "
+            "services, to be sure that not every random check plugin can make produce code "
+            "which your browser interprets.")
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACResult]:
+        if not self._get_effective_global_setting("escape_plugin_output"):
+            yield ACResultCRIT(
+                _("Please consider configuring the host or service rulesets "
+                  "<a href=\"%s\">Escape HTML in service output</a> or "
+                  "<a href=\"%s\">Escape HTML in host output</a> instead "
+                  "of <a href=\"%s\">disabling escaping globally</a>") %
+                ("wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
+                 "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+                 "wato.py?mode=edit_configvar&varname=escape_plugin_output"))
+        else:
+            yield ACResultOK(
+                _("Escaping is <a href=\"%s\">enabled globally</a>") %
+                "wato.py?mode=edit_configvar&varname=escape_plugin_output")
 
 
 class ABCACApacheTest(ACTest, metaclass=abc.ABCMeta):
@@ -1047,3 +1088,39 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         return [(folder.title(), state_map[rule.value.get('restricted_address_mismatch', 1)])
                 for folder, _rule_index, rule in ruleset.get_rules()
                 if rule.value.get('restricted_address_mismatch') != '1']
+
+
+@ac_test_registry.register
+class ACTestCheckMKCheckerNumber(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.performance
+
+    def title(self) -> str:
+        return _("Checkmk checker count")
+
+    def help(self) -> str:
+        return _(
+            "The Checkmk Microcore uses Checkmk checker processes to process the results "
+            "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
+            "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
+            "the number of available CPUs has a negative effect, because it increases the "
+            "the amount of context switches.")
+
+    def is_relevant(self) -> bool:
+        return self._uses_microcore()
+
+    def execute(self) -> Iterator[ACResult]:
+        try:
+            num_cpu = multiprocessing.cpu_count()
+        except NotImplementedError:
+            yield ACResultOK(
+                _("Cannot test. Unable to determine the number of CPUs on target system."))
+            return
+
+        if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
+            yield ACResultWARN(
+                _("Configuring more checkers than the number of available CPUs (%d) have "
+                  "a detrimental effect, since they are not IO bound.") % num_cpu)
+            return
+
+        yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))

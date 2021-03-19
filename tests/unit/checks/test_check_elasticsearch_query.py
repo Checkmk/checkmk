@@ -14,7 +14,6 @@ pytestmark = pytest.mark.checks
     "index": "foo",
     "pattern": "bar",
 }, ["-i", "f o o", "-q", "bar", "-H", "$HOSTADDRESS$"])])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_elasticsearch_query_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_elasticsearch_query")

@@ -34,14 +34,15 @@ from cmk.gui.watolib.search import (
     match_item_generator_registry,
 )
 from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
     ModuleRegistry,
-    main_module_registry,
 )
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.utils.urls import (
     makeuri,
-    makeuri_contextless_ruleset_group,
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
 )
 
 
@@ -135,9 +136,6 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
-            if main_group.name == "static":
-                continue
-
             choices.append((main_group.name, main_group.choice_title))
 
             sub_groups = [g_class() for g_class in self._get_sub_groups_of(main_group.__class__)]
@@ -164,7 +162,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
     def get_host_rulespec_group_names(self) -> List[str]:
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
         names: List[str] = []
-        hidden_groups = ("static", "checkparams", "activechecks")
+        hidden_groups = ("static", "activechecks")
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
@@ -1232,50 +1230,54 @@ class TimeperiodValuespec(ValueSpec):
         return self._get_used_valuespec(value).transform_value(value)
 
 
+def main_module_from_rulespec_group_name(
+    group_name: str,
+    main_module_reg: ModuleRegistry,
+) -> ABCMainModule:
+    return main_module_reg[makeuri_contextless_rulespec_group(
+        request,
+        group_name,
+    )]()
+
+
 class MatchItemGeneratorRules(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        main_module_reg: ModuleRegistry,
         rulesepc_group_reg: RulespecGroupRegistry,
         rulespec_reg: RulespecRegistry,
     ) -> None:
         super().__init__(name)
-        self._main_module_registry = main_module_reg
         self._rulespec_group_registry = rulesepc_group_reg
         self._rulespec_registry = rulespec_reg
 
-    def _topic_from_group_name(self, group_name: str) -> str:
-
-        main_group = self._rulespec_group_registry[group_name]()
-        if isinstance(main_group, RulespecSubGroup):
-            main_group = main_group.main_group()
-
-        main_module_cls = self._main_module_registry.get(
-            makeuri_contextless_ruleset_group(
-                request,
-                main_group.name,
-            ))
-        if main_module_cls:
-            topic_prefix = main_module_cls().topic.title
-        else:
-            topic_prefix = _('Rules')
-
-        return f"{topic_prefix} > {main_group.title}"
+    def _topic(self, rulespec: Rulespec) -> str:
+        if rulespec.is_deprecated:
+            return _("Deprecated rulesets")
+        return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
 
     def generate_match_items(self) -> MatchItems:
         yield from (MatchItem(
             title=rulespec.title,
-            topic=self._topic_from_group_name(group),
-            url="wato.py?mode=edit_ruleset&varname=%s" % rulespec.name,
+            topic=self._topic(rulespec),
+            url=makeuri_contextless(
+                request,
+                [("mode", "edit_ruleset"), ("varname", rulespec.name)],
+                filename="wato.py",
+            ),
             match_texts=[rulespec.title, rulespec.name],
         )
                     for group in self._rulespec_registry.get_all_groups()
                     for rulespec in self._rulespec_registry.get_by_group(group)
                     if rulespec.title)
 
-    def is_affected_by_change(self, *_, **__) -> bool:
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
         return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
 
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
@@ -1283,7 +1285,6 @@ rulespec_registry = RulespecRegistry(rulespec_group_registry)
 match_item_generator_registry.register(
     MatchItemGeneratorRules(
         'rules',
-        main_module_registry,
         rulespec_group_registry,
         rulespec_registry,
     ))

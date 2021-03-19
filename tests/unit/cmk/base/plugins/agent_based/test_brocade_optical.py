@@ -18,62 +18,59 @@ from cmk.base.plugins.agent_based.utils import interfaces
 
 @pytest.mark.parametrize('params, expect_service', [
     (
-        [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+        [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
         True,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (False, {}),
-                    'matching_conditions': (True, {}),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (False, {}),
+                'matching_conditions': (True, {}),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         False,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'alias',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'porttypes': ['6'],
-                            'portstates': ['1', '3']
-                        },
-                    ),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'alias',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'porttypes': ['6'],
+                        'portstates': ['1', '3']
+                    },
+                ),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         True,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'index',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_desc': ['10GigabitEthernet']
-                        },
-                    ),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'index',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_desc': ['10GigabitEthernet']
+                    },
+                ),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         True,
     ),
@@ -665,13 +662,13 @@ def test_regression(
 
     assert list(
         brocade_optical.discover_brocade_optical(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
             section,
         )) == discovery_results
 
     for item, par, res in items_params_results:
         assert list(brocade_optical.check_brocade_optical(
             item,
-            type_defs.Parameters(par),
+            (par),
             section,
         )) == res

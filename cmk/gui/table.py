@@ -7,30 +7,47 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import Any, Dict, Iterator, List, Literal, NamedTuple, Optional, Tuple, Union, cast
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+    TYPE_CHECKING,
+    cast,
+)
 
 from six import ensure_str
 
+from cmk.gui.utils.html import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
+import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
-from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes
 from cmk.gui.utils.urls import makeuri
+
+if TYPE_CHECKING:
+    from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
+    from cmk.gui.type_defs import CSSSpec
 
 TableHeader = NamedTuple(
     "TableHeader",
     [
         ("title", Union[int, HTML, str]),  # basically HTMLContent without None
-        ("css", CSSSpec),
+        ("css", 'CSSSpec'),
         ("help_txt", Optional[str]),
         ("sortable", bool),
     ])
 
 CellSpec = NamedTuple("CellSpec", [
     ("content", str),
-    ("css", CSSSpec),
+    ("css", 'CSSSpec'),
     ("colspan", Optional[int]),
 ])
 
@@ -39,13 +56,13 @@ TableRow = NamedTuple("TableRow", [
     ("css", Optional[str]),
     ("state", int),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 GroupHeader = NamedTuple("GroupHeader", [
     ("title", str),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 TableRows = List[Union[TableRow, GroupHeader]]
@@ -54,7 +71,7 @@ TableRows = List[Union[TableRow, GroupHeader]]
 @contextmanager
 def table_element(
     table_id: Optional[str] = None,
-    title: HTMLContent = None,
+    title: 'HTMLContent' = None,
     searchable: bool = True,
     sortable: bool = True,
     foldable: bool = False,
@@ -113,7 +130,7 @@ class Table:
     def __init__(
         self,
         table_id: Optional[str] = None,
-        title: HTMLContent = None,
+        title: 'HTMLContent' = None,
         searchable: bool = True,
         sortable: bool = True,
         foldable: bool = False,
@@ -171,9 +188,9 @@ class Table:
 
     def text_cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -187,9 +204,9 @@ class Table:
 
     def cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -230,9 +247,9 @@ class Table:
 
     def _add_cell(
         self,
-        title: HTMLContent = "",
-        text: HTMLContent = "",
-        css: CSSSpec = None,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
@@ -282,6 +299,7 @@ class Table:
 
         if self.title:
             if self.options["foldable"]:
+                html.open_div(class_="foldable_wrapper")
                 html.begin_foldable_container(treename="table",
                                               id_=self.id,
                                               isopen=True,
@@ -334,13 +352,11 @@ class Table:
 
         if self.title and self.options["foldable"]:
             html.end_foldable_container()
+            html.close_div()
 
         return
 
     def _show_action_row(self) -> bool:
-        if self.options["searchable"]:
-            return True
-
         if self.options["sortable"] and self._get_sort_column(config.user.tableoptions[self.id]):
             return True
 
@@ -365,19 +381,12 @@ class Table:
             actions_visible = html.request.get_ascii_input('_%s_actions' % table_id) == '1'
             table_opts['actions_visible'] = actions_visible
 
-        if html.request.get_ascii_input('_%s_reset' % table_id):
-            html.request.del_var('_%s_search' % table_id)
-            if 'search' in table_opts:
-                del table_opts['search']  # persist
-
         if self.options["searchable"]:
+            search_term = html.request.get_unicode_input_mandatory('search', '')
             # Search is always lower case -> case insensitive
-            search_term = html.request.get_unicode_input_mandatory('_%s_search' % table_id,
-                                                                   table_opts.get('search', ''))
             search_term = search_term.lower()
             if search_term:
-                html.request.set_var('_%s_search' % table_id, search_term)
-                table_opts['search'] = search_term  # persist
+                html.request.set_var('search', search_term)
                 rows = _filter_rows(rows, search_term)
 
         if html.request.get_ascii_input('_%s_reset_sorting' % table_id):
@@ -405,9 +414,8 @@ class Table:
     def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
                      actions_visible: bool, search_term: Optional[str]) -> None:
         if not self.options["omit_update_header"]:
-            headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
-
-            html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+            row_info = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
+            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
         table_id = self.id
 
@@ -432,14 +440,6 @@ class Table:
             html.open_td(colspan=num_cols)
             if not html.in_form():
                 html.begin_form("%s_actions" % table_id)
-
-            if self.options["searchable"]:
-                html.open_div(class_="search")
-                html.text_input("_%s_search" % table_id)
-                html.button("_%s_submit" % table_id, _("Search"))
-                html.button("_%s_reset" % table_id, _("Reset search"))
-                html.set_focus("_%s_search" % table_id)
-                html.close_div()
 
             if html.request.has_var('_%s_sort' % table_id):
                 html.open_div(class_=["sort"])
@@ -469,14 +469,14 @@ class Table:
                     self._render_headers(actions_enabled, actions_visible, empty_columns)
                 continue
 
-            oddeven_name = "even" if (nr - 1) % 2 == 0 else "odd"
+            oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
             if row.css:
                 class_.append(row.css)
             else:
                 for k in ["class_", "class"]:
                     if k in row.row_attributes:
-                        cls_spec = cast(CSSSpec, row.row_attributes.pop(k))
+                        cls_spec = cast('CSSSpec', row.row_attributes.pop(k))
                         if isinstance(cls_spec, list):
                             class_.extend([c for c in cls_spec if c is not None])
                         elif cls_spec is not None:
@@ -562,7 +562,7 @@ class Table:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class: CSSSpec = [header.css]
+                css_class: 'CSSSpec' = [header.css]
             else:
                 css_class = header.css
 
@@ -629,6 +629,9 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             continue  # skip filtering of headers or fixed rows
 
         for cell in row.cells:
+            # Filter out buttons
+            if cell.css is not None and "buttons" in cell.css:
+                continue
             if match_regex.search(cell.content):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
@@ -661,3 +664,13 @@ def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
             rows.insert(index, cells)
 
     return rows
+
+
+def init_rowselect(selection_key: str) -> None:
+    selected = config.user.get_rowselection(weblib.selection_id(), selection_key)
+    selection_properties = {
+        "page_id": selection_key,
+        "selection_id": weblib.selection_id(),
+        "selected_rows": selected,
+    }
+    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))

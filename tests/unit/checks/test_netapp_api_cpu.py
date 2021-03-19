@@ -71,7 +71,6 @@ result_parsed_over_time = [
         ]),
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_cluster_mode_check_function(monkeypatch, params, first_result_change,
                                      second_result_change):
     check = Check("netapp_api_cpu")

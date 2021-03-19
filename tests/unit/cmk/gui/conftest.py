@@ -29,13 +29,14 @@ import cmk.utils.paths as paths
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
-from cmk.gui.watolib import search
+from cmk.gui.watolib import search, hosts_and_folders
 from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
-from cmk.gui.background_job import BackgroundProcessInterface
+import cmk.gui.watolib.activate_changes as activate_changes
 
 SPEC_LOCK = threading.Lock()
 
@@ -57,7 +58,7 @@ def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 
@@ -68,7 +69,7 @@ def module_wide_request_context():
     # course wrong. These other fixtures have to be fixed.
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 
@@ -158,7 +159,7 @@ def with_user(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_user_login(with_user):
     user_id = with_user[0]
-    with login.UserContext(user_id):
+    with login.UserSessionContext(user_id):
         yield user_id
 
 
@@ -171,7 +172,7 @@ def with_admin(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_admin_login(with_admin):
     user_id = with_admin[0]
-    with login.UserContext(user_id):
+    with login.UserSessionContext(user_id):
         yield user_id
 
 
@@ -296,7 +297,7 @@ class WebTestAppForCMK(webtest.TestApp):
         rel = _expand_rel(rel)
         if resp.status.startswith("2") and resp.content_type.endswith("json"):
             link = get_link(resp.json, rel)
-            return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
+            resp = self.call_method(link.get('method', 'GET').lower(), link['href'], **kw)
         return resp
 
     def api_request(self, action, request, output_format='json', **kw):
@@ -354,17 +355,36 @@ def wsgi_app_debug_off(monkeypatch):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def store_search_index():
-    search.get_index_store().store_index({})
-
-
-@pytest.fixture(scope='function', autouse=True)
 def avoid_search_index_update_background(monkeypatch):
     monkeypatch.setattr(
         search,
-        'update_and_store_index_background',
-        lambda change_action_name: search._update_and_store_index_background(
-            change_action_name,
-            MagicMock(BackgroundProcessInterface),
-        ),
+        'update_index_background',
+        lambda _change_action_name:...,
     )
+
+
+@pytest.fixture(scope='function')
+def logged_in_wsgi_app(wsgi_app, with_user):
+    username, password = with_user
+    wsgi_app.username = username
+    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    login.form['_username'] = username
+    login.form['_password'] = password
+    resp = login.form.submit('_login', index=1)
+    assert "Invalid credentials." not in resp.text
+    return wsgi_app
+
+
+@pytest.fixture(scope='function')
+def with_host(module_wide_request_context, with_user_login, suppress_automation_calls):
+    hostnames = ["heute", "example.com"]
+    hosts_and_folders.CREFolder.root_folder().create_hosts([
+        (hostname, {}, []) for hostname in hostnames
+    ])
+    yield hostnames
+    hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
+
+
+@pytest.fixture(autouse=True)
+def mock__add_extensions_for_license_usage(monkeypatch):
+    monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)

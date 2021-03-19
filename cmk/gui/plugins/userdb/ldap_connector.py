@@ -48,6 +48,7 @@ from six import ensure_str
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.macros import replace_macros_in_str
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -281,8 +282,8 @@ class LDAPUserConnector(UserConnector):
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError) as e:
             self.clear_nearest_dc_cache()
-            if isinstance(e[0], dict):
-                msg = e[0].get('info', e[0].get('desc', ''))
+            if hasattr(e, 'message') and 'desc' in e.message:
+                msg = e.message['desc']
             else:
                 msg = "%s" % e
 
@@ -678,15 +679,7 @@ class LDAPUserConnector(UserConnector):
 
     # Returns the given distinguished name template with replaced vars
     def _replace_macros(self, tmpl):
-        dn = tmpl
-
-        for key, val in [('$OMD_SITE$', config.omd_site())]:
-            if val:
-                dn = dn.replace(key, val)
-            else:
-                dn = dn.replace(key, '')
-
-        return dn
+        return replace_macros_in_str(tmpl, {'$OMD_SITE$': config.omd_site() or ''})
 
     def _sanitize_user_id(self, user_id):
         if self._config.get('lower_user_ids', False):
@@ -1182,7 +1175,7 @@ class LDAPUserConnector(UserConnector):
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
-        for user_id, user in users.items():
+        for user_id, user in list(users.items()):
             user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self._strip_suffix(
                     user_id) not in ldap_users:
@@ -1292,6 +1285,9 @@ class LDAPUserConnector(UserConnector):
     def _find_changed_user_keys(self, keys, user, new_user):
         changed = {}
         for key in keys:
+            # Skip user notification rules, not relevant here
+            if key == "notification_rules":
+                continue
             value = user[key]
             new_value = new_user[key]
             if isinstance(value, list) and isinstance(new_value, list):
@@ -1460,7 +1456,7 @@ class LDAPConnectionValuespec(Transform):
         connection_elements = [
             ("directory_type",
              CascadingDropdown(
-                 title=_("Directory Type"),
+                 title=_("Directory type"),
                  help=_("Select the software the LDAP directory is based on. Depending on "
                         "the selection e.g. the attribute names used in LDAP queries will "
                         "be altered."),
@@ -1473,7 +1469,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("bind",
              Tuple(
-                 title=_("Bind Credentials"),
+                 title=_("Bind credentials"),
                  help=_("Set the credentials to be used to connect to the LDAP server. The "
                         "used account must not be allowed to do any changes in the directory "
                         "the whole connection is read only. "
@@ -1491,7 +1487,7 @@ class LDAPConnectionValuespec(Transform):
                          size=63,
                      ),
                      Password(
-                         title=_("Bind Password"),
+                         title=_("Bind password"),
                          help=_("Specify the password to be used to bind to "
                                 "the LDAP directory."),
                      ),
@@ -1499,7 +1495,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("port",
              Integer(
-                 title=_("TCP Port"),
+                 title=_("TCP port"),
                  help=_("This variable allows to specify the TCP port to "
                         "be used to connect to the LDAP server. "),
                  minvalue=1,
@@ -1519,7 +1515,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("connect_timeout",
              Float(
-                 title=_("Connect Timeout"),
+                 title=_("Connect timeout"),
                  help=_("Timeout for the initial connection to the LDAP server in seconds."),
                  unit=_("Seconds"),
                  minvalue=1.0,
@@ -1527,7 +1523,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("version",
              DropdownChoice(
-                 title=_("LDAP Version"),
+                 title=_("LDAP version"),
                  help=_("Select the LDAP version the LDAP server is serving. Most modern "
                         "servers use LDAP version 3."),
                  choices=[(2, "2"), (3, "3")],
@@ -1535,7 +1531,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("page_size",
              Integer(
-                 title=_("Page Size"),
+                 title=_("Page size"),
                  help=_(
                      "LDAP searches can be performed in paginated mode, for example to improve "
                      "the performance. This enables pagination and configures the size of the pages."
@@ -1545,7 +1541,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("response_timeout",
              Integer(
-                 title=_("Response Timeout"),
+                 title=_("Response timeout"),
                  unit=_("Seconds"),
                  help=_("Timeout for LDAP query responses."),
                  minvalue=0,
@@ -1639,7 +1635,7 @@ class LDAPConnectionValuespec(Transform):
         user_elements = [
             ("user_dn",
              LDAPDistinguishedName(
-                 title=_("User Base DN"),
+                 title=_("User base DN"),
                  help=_(
                      "Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
                      "All user accounts to synchronize must be located below this one."),
@@ -1647,7 +1643,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_scope",
              DropdownChoice(
-                 title=_("Search Scope"),
+                 title=_("Search scope"),
                  help=_(
                      "Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
                      "the base DN</i> is the best choice. "
@@ -1661,7 +1657,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_filter",
              TextUnicode(
-                 title=_("Search Filter"),
+                 title=_("Search filter"),
                  help=
                  _("Using this option you can define an optional LDAP filter which is used during "
                    "LDAP searches. It can be used to only handle a subset of the users below the given "
@@ -1680,7 +1676,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_filter_group",
              LDAPDistinguishedName(
-                 title=_("Filter Group (Only use in special situations)"),
+                 title=_("Filter group (see help)"),
                  help=
                  _("Using this option you can define the DN of a group object which is used to filter the users. "
                    "Only members of this group will then be synchronized. This is a filter which can be "
@@ -1698,7 +1694,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_id",
              TextAscii(
-                 title=_("User-ID Attribute"),
+                 title=_("User-ID attribute"),
                  help=_("The attribute used to identify the individual users. It must have "
                         "unique values to make an user identifyable by the value of this "
                         "attribute."),
@@ -1707,14 +1703,14 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("lower_user_ids",
              FixedValue(
-                 title=_("Lower Case User-IDs"),
+                 title=_("Lower case User-IDs"),
                  help=_("Convert imported User-IDs to lower case during synchronization."),
                  value=True,
                  totext=_("Enforce lower case User-IDs."),
              )),
             ("user_id_umlauts",
              Transform(DropdownChoice(
-                 title=_("Translate Umlauts in User-IDs (deprecated)"),
+                 title=_("Umlauts in User-IDs (deprecated)"),
                  help=_("Checkmk was not not supporting special characters (like Umlauts) in "
                         "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
                         "you had the choice to replace umlauts with other characters. This option "
@@ -1742,7 +1738,7 @@ class LDAPConnectionValuespec(Transform):
         group_elements = [
             ("group_dn",
              LDAPDistinguishedName(
-                 title=_("Group Base DN"),
+                 title=_("Group base DN"),
                  help=_(
                      "Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
                      "All groups used must be located below this one."),
@@ -1750,7 +1746,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_scope",
              DropdownChoice(
-                 title=_("Search Scope"),
+                 title=_("Search scope"),
                  help=_("Scope to be used in group related LDAP searches. In most cases "
                         "<i>Search whole subtree below the base DN</i> "
                         "is the best choice. It searches for matching objects in the given base "
@@ -1764,7 +1760,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_filter",
              TextUnicode(
-                 title=_("Search Filter"),
+                 title=_("Search filter"),
                  help=_("Using this option you can define an optional LDAP filter which is used "
                         "during group related LDAP searches. It can be used to only handle a "
                         "subset of the groups below the given base DN.<br><br>"
@@ -1776,7 +1772,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_member",
              TextAscii(
-                 title=_("Member Attribute"),
+                 title=_("Member attribute"),
                  help=_("The attribute used to identify users group memberships."),
                  default_value=lambda: ldap_attr_of_connection(self._connection_id, 'member'),
                  attrencode=True,
@@ -1789,7 +1785,7 @@ class LDAPConnectionValuespec(Transform):
         other_elements = [
             ("active_plugins",
              Dictionary(
-                 title=_('Attribute Sync Plugins'),
+                 title=_('Attribute sync plugins'),
                  help=
                  _('It is possible to fetch several attributes of users, like Email or full names, '
                    'from the LDAP directory. This is done by plugins which can individually enabled '
@@ -1801,7 +1797,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("cache_livetime",
              Age(
-                 title=_('Sync Interval'),
+                 title=_('Sync interval'),
                  help=
                  _('This option defines the interval of the LDAP synchronization. This setting is only '
                    'used by sites which have the '

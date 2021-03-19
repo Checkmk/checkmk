@@ -6,6 +6,7 @@
 
 import time
 import os
+import functools
 
 from typing import Callable, Set, Dict, Any, Union, List, NamedTuple, Tuple as _Tuple, Optional as _Optional
 from six import ensure_str
@@ -18,6 +19,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName, ServiceName
 from cmk.utils.prediction import lq_logic
+from cmk.utils.cpu_tracking import CPUTracker
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
@@ -38,6 +40,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.utils.html import HTML
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = str  # TODO: Improve this type
@@ -52,7 +55,7 @@ AVEntry = Any
 AVData = List[AVEntry]
 AVTimelineSpan = _Tuple[_Optional[int], str, float, CSSClass]
 AVObjectCells = List[_Tuple[str, str]]
-AVRowCells = List[_Tuple[str, CSSClass]]
+AVRowCells = List[_Tuple[Union[HTML, str], CSSClass]]
 AVGroups = List[_Tuple[_Optional[str], AVData]]
 HostOrServiceGroupName = str
 AVGroupKey = Union[SiteHost, HostOrServiceGroupName, None]
@@ -674,8 +677,18 @@ def get_outage_statistic_options(avoptions):
 # of spans. Each span is a dictionary that describes one span of time where
 # a specific host or service has one specific state.
 # what is either "host" or "service" or "bi".
-def get_availability_rawdata(what, context, filterheaders, only_sites, av_object, include_output,
-                             include_long_output, avoptions):
+def get_availability_rawdata(what,
+                             context,
+                             filterheaders,
+                             only_sites,
+                             av_object,
+                             include_output,
+                             include_long_output,
+                             avoptions,
+                             view_process_tracking=None):
+    # 'view_process_tracking=None': this function is also called from the grafana module
+    # which has not the task to track the processed rows/cpu time but the views module does
+    # track these steps.
     if what == "bi":
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output,
                                            avoptions)
@@ -729,14 +742,18 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     query += filterheaders
     logrow_limit = avoptions["logrow_limit"]
 
-    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(logrow_limit):
+    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(
+            logrow_limit or None), CPUTracker() as fetch_rows_tracker:
         data = sites.live().query(query)
+
     columns = ["site"] + columns
     spans: List[AVSpan] = [dict(zip(columns, span)) for span in data]
+    amount_filtered_rows = len(spans)
 
     # When a group filter is set, only care about these groups in the group fields
-    if avoptions["grouping"] not in [None, "host"]:
-        filter_groups_of_entries(context, avoptions, spans)
+    with CPUTracker() as filter_rows_tracker:
+        if avoptions["grouping"] not in [None, "host"]:
+            filter_groups_of_entries(context, avoptions, spans)
 
     # Now we find out if the log row limit was exceeded or
     # if the log's length is the limit by accident.
@@ -746,6 +763,13 @@ def get_availability_rawdata(what, context, filterheaders, only_sites, av_object
     if logrow_limit and len(data) > logrow_limit:
         exceeded_log_row_limit = True
         spans = spans[:-1]
+
+    if view_process_tracking:
+        view_process_tracking.amount_unfiltered_rows = len(data)
+        view_process_tracking.amount_filtered_rows = amount_filtered_rows
+        view_process_tracking.rows_after_limit = len(spans)
+        view_process_tracking.duration_fetch_rows = fetch_rows_tracker.duration
+        view_process_tracking.duration_filter_rows = filter_rows_tracker.duration
 
     return spans_by_object(spans), exceeded_log_row_limit
 
@@ -1142,11 +1166,13 @@ def compute_availability_groups(what: AVObjectType, av_data: AVData,
     for title, group_id in sorted(titled_groups, key=lambda x: x[1] or ""):
         group_table = []
         for entry in av_data:
-            group_ids: AVGroupIds = entry["groups"]
-            if group_id is None and group_ids:
+            row_group_ids: AVGroupIds = entry["groups"]
+            if group_id is None and row_group_ids:
                 continue  # This is not an ungrouped object
-            if group_id and group_ids and group_id not in group_ids:
+            if group_id and row_group_ids and group_id not in row_group_ids:
                 continue  # Not this group
+            if group_id and not row_group_ids:
+                continue  # This is an ungrouped object
             group_table.append(entry)
         availability_tables.append((title, group_table))
 
@@ -1444,7 +1470,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                     css = "state%d" % check_av_levels(number, av_levels,
                                                       entry["considered_duration"])
 
-                css = css + " narrow number"
+                css = css + " state narrow number"
                 cells.append((render_number(number, entry["considered_duration"]), css))
 
                 # Statistics?
@@ -1477,7 +1503,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
     # We ignore unmonitored objects
     len_availability_table = len(availability_table) - unmonitored_objects
     if show_summary and len_availability_table > 0:
-        summary_cells = []
+        summary_cells: AVRowCells = []
 
         for timeformat, render_number in timeformats:
             for sid, css, sname, help_txt in availability_columns[what]:
@@ -1497,7 +1523,7 @@ def layout_availability_table(what: AVObjectType, group_title: _Optional[str],
                 if number and av_levels and sid in ["ok", "up"]:
                     css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
-                css = css + " narrow number"
+                css = css + " state narrow number"
                 summary_cells.append((render_number(number, int(total_duration)), css))
                 if sid in os_states:
                     for aggr in os_aggrs:
@@ -1655,6 +1681,8 @@ def layout_timeline(what: AVObjectType, timeline_rows: AVTimelineRows, considere
                 })
                 if "log_output" in row and row["log_output"]:
                     table[-1]["log_output"] = row["log_output"]
+                if "long_log_output" in row and row["long_log_output"]:
+                    table[-1]["long_log_output"] = row["long_log_output"]
 
             # If the width is very small then we group several phases into
             # one single "chaos period".
@@ -1693,97 +1721,114 @@ def layout_timeline_choords(time_range):
     from_time, until_time = time_range
     duration = until_time - from_time
 
-    # Now comes the difficult part: decide automatically, whether to use
-    # hours, days, weeks or months. Days and weeks needs to take local time
-    # into account. Months are irregular.
-    hours = duration / 3600.0
-    if hours < 12:
-        scale = "hours"
-    elif hours < 24:
-        scale = "2hours"
-    elif hours < 48:
-        scale = "6hours"
-    elif hours < 24 * 14:
-        scale = "days"
-    elif hours < 24 * 60:
-        scale = "weeks"
-    else:
-        scale = "months"
+    increment, render = _dispatch_scale(duration / 3600.0)
 
-    broken = list(time.localtime(from_time))
+    ordinate = time.localtime(from_time)
     while True:
-        next_choord, title = find_next_choord(broken, scale)
-        if next_choord >= until_time:
-            break
-        position = (next_choord - from_time) / float(duration)  # ranges from 0.0 to 1.0
-        yield position, title
+        ordinate = increment(ordinate)
+        position = (time.mktime(ordinate) - from_time) / float(duration)  # ranges from 0.0 to 1.0
+        if position >= 1.0:
+            return
+        yield position, render(ordinate)
 
 
-def find_next_choord(broken, scale):
-    # Elements in broken:
-    # 0: year
-    # 1: month (1 = January)
-    # 2: day of month
-    # 3: hour
-    # 4: minute
-    # 5: second
-    # 6: day of week (0 = monday)
-    # 7: day of year
-    # 8: isdst (0 or 1)
-    broken[4:6] = [0, 0]  # always set min/sec to 00:00
-    old_dst = broken[8]
+def _dispatch_scale(
+    hours: float
+) -> _Tuple[Callable[[time.struct_time], time.struct_time], Callable[[time.struct_time], str],]:
+    """decide automatically whether to use hours, days, weeks or months
 
-    if scale == "hours":
-        epoch = time.mktime(broken)
-        epoch += 3600
-        broken[:] = list(time.localtime(epoch))
-        title = time.strftime("%H:%M", broken)
+    Days and weeks needs to take local time into account. Months are irregular.
+    """
+    if hours < 12:
+        return _increment_hour, _render_hour
 
-    elif scale == "2hours":
-        broken[3] = int(broken[3] / 2) * 2
-        epoch = time.mktime(broken)
-        epoch += 2 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = defines.weekday_name(broken[6]) + time.strftime(" %H:%M", broken)
+    if hours < 24:
+        return _increment_2hours, _render_2hours
 
-    elif scale == "6hours":
-        broken[3] = int(broken[3] / 6) * 6
-        epoch = time.mktime(broken)
-        epoch += 6 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = defines.weekday_name(broken[6]) + time.strftime(" %H:%M", broken)
+    if hours < 48:
+        return _increment_6hours, _render_6hours
 
-    elif scale == "days":
-        broken[3] = 0
-        epoch = time.mktime(broken)
-        epoch += 24 * 3600
-        broken[:] = list(time.localtime(epoch))
-        title = defines.weekday_name(broken[6]) + time.strftime(", %d.%m. 00:00", broken)
+    if hours < 24 * 14:
+        return _increment_day, _render_day
 
-    elif scale == "weeks":
-        broken[3] = 0
-        at_00 = int(time.mktime(broken))
-        at_monday = at_00 - 86400 * broken[6]
-        epoch = at_monday + 7 * 86400
-        broken[:] = list(time.localtime(epoch))
-        title = defines.weekday_name(broken[6]) + time.strftime(", %d.%m.", broken)
+    if hours < 24 * 60:
+        return _increment_week, _render_week
 
-    else:  # scale == "months":
-        broken[3] = 0
-        broken[2] = 0
-        broken[1] += 1
-        if broken[1] > 12:
-            broken[1] = 1
-            broken[0] += 1
-        epoch = time.mktime(broken)
-        title = "%s %d" % (defines.month_name(broken[1] - 1), broken[0])
+    return _increment_month, _render_month
 
-    dst = broken[8]
-    if old_dst == 1 and dst == 0:
-        epoch += 3600
-    elif old_dst == 0 and dst == 1:
-        epoch -= 3600
-    return epoch, title
+
+def _render_hour(tst: time.struct_time) -> str:
+    return time.strftime("%H:%M", tst)
+
+
+def _render_2hours(tst: time.struct_time) -> str:
+    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+
+
+def _render_6hours(tst: time.struct_time) -> str:
+    return defines.weekday_name(tst.tm_wday) + time.strftime(" %H:%M", tst)
+
+
+def _render_day(tst: time.struct_time) -> str:
+    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m. 00:00", tst)
+
+
+def _render_week(tst: time.struct_time) -> str:
+    return defines.weekday_name(tst.tm_wday) + time.strftime(", %d.%m.", tst)
+
+
+def _render_month(tst: time.struct_time) -> str:
+    return "%s %d" % (defines.month_name(tst.tm_mon - 1), tst.tm_year)
+
+
+def _make_struct(year: int, month: int, day: int, hour: int, *, offset: int) -> time.struct_time:
+    # do not 'shorten' to time.struct_time! This fixes tm_isdst, tm_wday and others
+    return time.localtime(time.mktime((year, month, day, hour, 0, 0, 0, 0, 0)) + offset)
+
+
+def _fix_dst_change(
+    incrementor: Callable[[time.struct_time], time.struct_time],
+) -> Callable[[time.struct_time], time.struct_time]:
+    """Fix up one hour offset in case the incrementor crosses the DST switch"""
+    @functools.wraps(incrementor)
+    def wrapped(intime: time.struct_time) -> time.struct_time:
+        outtime = incrementor(intime)
+        if intime.tm_isdst == outtime.tm_isdst:
+            return outtime
+        shift = (intime.tm_isdst - outtime.tm_isdst) * 3600
+        return time.localtime(time.mktime(outtime) + shift)
+
+    return wrapped
+
+
+@_fix_dst_change
+def _increment_hour(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour, offset=3600)
+
+
+@_fix_dst_change
+def _increment_2hours(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 2 * 2, offset=7200)
+
+
+@_fix_dst_change
+def _increment_6hours(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, tst.tm_hour // 6 * 6, offset=6 * 3600)
+
+
+@_fix_dst_change
+def _increment_day(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=24 * 3600)
+
+
+@_fix_dst_change
+def _increment_week(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year, tst.tm_mon, tst.tm_mday, 0, offset=86400 * (7 - tst.tm_wday))
+
+
+@_fix_dst_change
+def _increment_month(tst: time.struct_time) -> time.struct_time:
+    return _make_struct(tst.tm_year + (tst.tm_mon == 12), (tst.tm_mon % 12) + 1, 1, 0, offset=0)
 
 
 #.

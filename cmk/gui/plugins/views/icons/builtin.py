@@ -51,8 +51,9 @@ from cmk.gui.plugins.views import (
     is_stale,
     paint_age,
     render_cache_info,
-    url_to_view,
+    url_to_visual,
 )
+from cmk.gui.type_defs import VisualLinkSpec
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.utils.popups import MethodAjax
@@ -75,6 +76,10 @@ class ActionMenuIcon(Icon):
     @classmethod
     def ident(cls):
         return "action_menu"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Action menu")
 
     def default_toplevel(self):
         return True
@@ -125,6 +130,10 @@ class IconImageIcon(Icon):
     def ident(cls):
         return "icon_image"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Icon image")
+
     def columns(self):
         return ["icon_image"]
 
@@ -162,6 +171,10 @@ class RescheduleIcon(Icon):
     def ident(cls):
         return "reschedule"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Reschedule")
+
     def columns(self):
         return ['check_type', 'active_checks_enabled', 'check_command']
 
@@ -179,9 +192,9 @@ class RescheduleIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow hosts/services cannot be rescheduled
 
-        if (row[what + "_active_checks_enabled"] == 1
-            or row[what + '_check_command'].startswith('check_mk-')) \
-            and config.user.may('action.reschedule'):
+        if (row[what + "_active_checks_enabled"] == 1 or
+                row[what + '_check_command'].startswith('check_mk-')) \
+                and config.user.may('action.reschedule'):
 
             servicedesc = ''
             wait_svc = ''
@@ -222,6 +235,10 @@ class RuleEditorIcon(Icon):
     @classmethod
     def ident(cls):
         return "rule_editor"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Rule editor")
 
     def columns(self):
         return ['check_type']
@@ -271,13 +288,19 @@ class ManpageIcon(Icon):
     def ident(cls):
         return "check_manpage"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Check manual page")
+
     def service_columns(self):
         return ['check_command']
 
     def render(self, what, row, tags, custom_vars):
         if what == "service" and config.wato_enabled and config.user.may("wato.use"):
             command = row["service_check_command"]
-            if command.startswith("check_mk-"):
+            if command.startswith("check_mk-mgmt_"):
+                check_type = command[14:]
+            elif command.startswith("check_mk-"):
                 check_type = command[9:]
             elif command.startswith("check_mk_active-"):
                 check_name = command[16:].split("!")[0]
@@ -318,6 +341,10 @@ class AcknowledgeIcon(Icon):
     def ident(cls):
         return "status_acknowledged"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status acknowledged")
+
     def columns(self):
         return ['acknowledged']
 
@@ -348,6 +375,10 @@ class PerfgraphIcon(Icon):
     def ident(cls):
         return "perfgraph"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Performance graph")
+
     def columns(self):
         return ['pnpgraph_present']
 
@@ -372,13 +403,13 @@ class PerfgraphIcon(Icon):
             return
 
         return html.render_a(
-            content=html.render_icon('pnp', ''),
+            content=html.render_icon('graph', ''),
             href=url,
             onmouseout="cmk.hover.hide()",
             onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
                 json.dumps(row['site']),
                 json.dumps(row["host_name"]),
-                json.dumps(row.get('service_description', '_HOST_')),
+                json.dumps(row['service_description'] if what == "service" else '_HOST_'),
             ))
 
     def _graph_icon_link(self, row, what):
@@ -405,6 +436,10 @@ class PredictionIcon(Icon):
     @classmethod
     def ident(cls):
         return "prediction"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Prediction")
 
     def columns(self):
         return ['perf_data']
@@ -452,6 +487,10 @@ class CustomActionIcon(Icon):
     def ident(cls):
         return "custom_action"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Custom action")
+
     def columns(self):
         return ['action_url_expanded', 'pnpgraph_present']
 
@@ -483,6 +522,10 @@ class LogwatchIcon(Icon):
     @classmethod
     def ident(cls):
         return "logwatch"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Logwatch")
 
     def service_columns(self):
         return ['host_name', 'service_description', 'check_command']
@@ -522,6 +565,10 @@ class NotesIcon(Icon):
     def ident(cls):
         return "notes"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Notes")
+
     def columns(self):
         return ['notes_url_expanded', 'check_command']
 
@@ -553,6 +600,10 @@ class DowntimesIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_downtimes"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status downtimes")
 
     def default_toplevel(self):
         return True
@@ -594,13 +645,14 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_view(row, 'downtimes_of_' + what)
+            return icon, title, url_to_visual(row, VisualLinkSpec('views', 'downtimes_of_' + what))
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
             title += detail_txt(row["host_downtimes_with_extra_info"])
 
-            return 'derived_downtime', title, url_to_view(row, 'downtimes_of_host')
+            return 'derived_downtime', title, url_to_visual(
+                row, VisualLinkSpec('views', 'downtimes_of_host'))
 
 
 #.
@@ -622,6 +674,10 @@ class CommentsIcon(Icon):
     def ident(cls):
         return "status_comments"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status comments")
+
     def columns(self):
         return ['comments_with_extra_info']
 
@@ -637,7 +693,8 @@ class CommentsIcon(Icon):
                 comment = comment.replace("\n", "<br>")
                 text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0,
                                                         'abs')[1], author, comment)
-            return 'comment', text, url_to_view(row, 'comments_of_' + what)
+            return 'comment', text, url_to_visual(row, VisualLinkSpec('views',
+                                                                      'comments_of_' + what))
 
 
 #.
@@ -658,6 +715,10 @@ class NotificationsIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_notifications_enabled"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notifications enabled")
 
     def columns(self):
         return ['modified_attributes_list', 'notifications_enabled']
@@ -694,6 +755,10 @@ class FlappingIcon(Icon):
     def ident(cls):
         return "status_flapping"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status flapping")
+
     def columns(self):
         return ['is_flapping']
 
@@ -725,6 +790,10 @@ class StalenessIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_stale"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status stale")
 
     def columns(self):
         return ['staleness']
@@ -762,6 +831,10 @@ class ActiveChecksIcon(Icon):
     def ident(cls):
         return "status_active_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status active checks")
+
     def columns(self):
         return ['modified_attributes_list', 'active_checks_enabled']
 
@@ -796,6 +869,10 @@ class PassiveChecksIcon(Icon):
     def ident(cls):
         return "status_passive_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status passive checks")
+
     def columns(self):
         return ['modified_attributes_list', 'accept_passive_checks']
 
@@ -827,6 +904,10 @@ class NotificationPeriodIcon(Icon):
     def ident(cls):
         return "status_notification_period"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notification period")
+
     def columns(self):
         return ['in_notification_period']
 
@@ -854,6 +935,10 @@ class ServicePeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_service_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status service period")
 
     def columns(self):
         return ['in_service_period']
@@ -885,13 +970,15 @@ class AggregationsIcon(Icon):
     def ident(cls):
         return "aggregations"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregations")
+
     def render(self, what, row, tags, custom_vars):
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
         # otherwise only for the hosts/services which are part of aggregations.
-        if config.bi_precompile_on_demand \
-           or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
-                                        row.get("service_description")):
+        if bi.is_part_of_aggregation(row["host_name"], row.get("service_description")):
             view_name = "aggr_%s" % what
 
             if not config.user.may("view.%s" % view_name):
@@ -925,6 +1012,10 @@ class StarsIcon(Icon):
     @classmethod
     def ident(cls):
         return "stars"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Stars")
 
     def render(self, what, row, tags, custom_vars):
         if 'stars' not in g:
@@ -960,6 +1051,10 @@ class AggregationIcon(Icon):
     @classmethod
     def ident(cls):
         return "aggregation_checks"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregation checks")
 
     def host_columns(self):
         return ['check_command', 'name', 'address']
@@ -1005,6 +1100,10 @@ class CrashdumpsIcon(Icon):
     def ident(cls):
         return "crashed_check"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Crashed check")
+
     def default_toplevel(self):
         return True
 
@@ -1013,8 +1112,8 @@ class CrashdumpsIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if what == "service" \
-            and row["service_state"] == 3 \
-            and "check failed - please submit a crash report!" in row["service_plugin_output"]:
+                and row["service_state"] == 3 \
+                and "check failed - please submit a crash report!" in row["service_plugin_output"]:
 
             if not config.user.may("general.see_crash_reports"):
                 return 'crash', _(
@@ -1060,6 +1159,10 @@ class CheckPeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "check_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Check period")
 
     def columns(self):
         return ['in_check_period']

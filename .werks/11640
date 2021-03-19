@@ -6,7 +6,7 @@ Date: 1604411423
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 Since Python 3 handle.read() returns byte values but Checkmk
 needs Unicode decoded strings to write the agent output.

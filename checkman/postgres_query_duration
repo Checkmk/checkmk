@@ -15,3 +15,5 @@ item:
 inventory:
  One service is created for each database.
 
+cluster:
+  On a cluster all queries corresponding to the same item are aggregated.

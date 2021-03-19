@@ -176,6 +176,14 @@ winperf:
     # changes only section name winperf_******
     # prefix: winperf
 
+    # no - nothing(default), yes output trace to the log/winperf.log
+    #trace: no
+
+    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
+    #fork: yes
+    
+
+
     # default value,  increase for heavy loaded machine
     # timeout: 10
     
@@ -328,6 +336,15 @@ mrpe:
         # - include user_name = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
         # - include = $CUSTOM_AGENT_PATH$\mrpe_checks.cfg
 
+
+modules:
+    enabled: yes
+
+    #python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
+
+    #quick_reinstall: yes                  # use %temp% as temporary storage for modules when Windows agent is updated
+
+
 system:
     enabled: yes
 
@@ -337,6 +354,8 @@ system:
 
     #cleanup_uninstall: smart # allowed none, smart and all
 
+    # wait_network: 30
+    # 
     #service:
     #    restart_on_crash: yes  # service will restart if crashed, you may set no to disable restarting
     #                           # no may be used if you have serious problems with crasghing and starting

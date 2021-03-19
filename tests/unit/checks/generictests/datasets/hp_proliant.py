@@ -10,7 +10,7 @@ checkname = 'hp_proliant'
 
 info = [['2', '2.60 May 23 2018', 'CXX43801XX']]
 
-discovery = {'': [(None, None)]}
+discovery = {'': [(None, {})]}
 
 checks = {
     '': [

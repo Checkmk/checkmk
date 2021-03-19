@@ -6,7 +6,7 @@ Date: 1603899303
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.0.0i2
+Version: 2.0.0b1
 
 In case a Nutanix Prism Cluster was configured to use the alert check ({prism_alerts}) an alert
 addressing a certain VM could have been reported twice since it would have also been reported

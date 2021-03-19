@@ -19,13 +19,11 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.watolib.automation_commands import (
     AutomationCommand,
     automation_command_registry,
 )
+from cmk.gui.watolib.sites import get_effective_global_setting
 
 
 class ACResult:
@@ -202,20 +200,11 @@ class ACTest:
         return version.startswith("Check_MK")
 
     def _get_effective_global_setting(self, varname: str) -> Any:
-        global_settings = load_configuration_settings()
-        default_values = ABCConfigDomain.get_all_default_globals()
-
-        if cmk.gui.config.is_wato_slave_site():
-            current_settings = load_configuration_settings(site_specific=True)
-        else:
-            sites = SiteManagementFactory.factory().load_sites()
-            current_settings = sites[config.omd_site()].get("globals", {})
-
-        if varname in current_settings:
-            return current_settings[varname]
-        if varname in global_settings:
-            return global_settings[varname]
-        return default_values[varname]
+        return get_effective_global_setting(
+            config.omd_site(),
+            cmk.gui.config.is_wato_slave_site(),
+            varname,
+        )
 
 
 class ACTestRegistry(cmk.utils.plugin_registry.Registry[Type[ACTest]]):

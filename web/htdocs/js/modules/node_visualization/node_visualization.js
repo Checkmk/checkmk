@@ -23,8 +23,6 @@ class NodeVisualization {
     constructor(div_id) {
         this.div_id = div_id;
 
-        this.gui_theme = "facelift";
-
         this._div_selection = null;
         this.datasource_manager = null;
         this.viewport = null;
@@ -34,14 +32,6 @@ class NodeVisualization {
         this._initialize_components();
 
         this.datasource_manager.schedule();
-    }
-
-    get_theme_prefix(new_theme) {
-        return "themes/" + this.gui_theme;
-    }
-
-    set_theme(new_theme) {
-        this.gui_theme = new_theme;
     }
 
     set_initial_overlays_config(overlay_config) {
@@ -113,7 +103,12 @@ export class TopologyVisualization extends NodeVisualization {
         this._max_nodes = 200; // Maximum allowed nodes
         this._growth_auto_max_nodes = null; // Automatically stop growth when this limit is reached (handled on server side)
         this.custom_topology_fetch_parameters = {}; // Custom parameter, added to each fetch request
+
+        // Parameters used for throttling the GUI update
+        this._last_update_request = 0;
+        this._update_request_timer_active = false;
     }
+
     show_topology(list_of_hosts) {
         let topo_ds = this.datasource_manager.get_datasource(
             node_visualization_datasources.TopologyDatasource.id()
@@ -268,6 +263,8 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     update_data() {
+        if (this._throttle_update()) return;
+
         let growth_root_nodes = [];
         let growth_forbidden_nodes = [];
         let growth_continue_nodes = [];
@@ -295,5 +292,20 @@ export class TopologyVisualization extends NodeVisualization {
             config[key] = this.custom_topology_fetch_parameters[key];
         }
         ds.fetch_hosts(config);
+    }
+
+    _throttle_update() {
+        let now = new Date().getTime() / 1000;
+        let min_delay = 0.2;
+        if (now - self._last_update_request < min_delay) {
+            if (!self._update_request_timer_active) {
+                self._update_request_timer_active = true;
+                setTimeout(() => this.update_data(), min_delay * 1000);
+            }
+            return true;
+        }
+        self._last_update_request = now;
+        self._update_request_timer_active = false;
+        return false;
     }
 }

@@ -332,6 +332,9 @@ class TagConfig:
         self.aux_tag_list += other.aux_tag_list
         return self
 
+    def get_tag_groups(self):
+        return self.tag_groups
+
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
@@ -568,7 +571,7 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Checkmk Agent'),
+                'title': _('Checkmk agent'),
                 'topic': _('Data sources'),
                 'tags': [
                     {
@@ -646,7 +649,7 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'address_family',
-                'title': _('IP Address Family'),
+                'title': _('IP address family'),
                 'topic': u'Address',
                 'tags': [
                     {

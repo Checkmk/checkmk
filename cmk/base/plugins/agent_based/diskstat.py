@@ -71,6 +71,7 @@ from typing import (
     Any,
     Dict,
     Mapping,
+    MutableMapping,
     Optional,
     Sequence,
     Tuple,
@@ -294,7 +295,7 @@ def diskstat_convert_info(
 
 
 def discover_diskstat(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
 ) -> type_defs.DiscoveryResult:
@@ -311,14 +312,13 @@ def discover_diskstat(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
     raised_ignore_res_excpt = False
-    disk_with_rates = {
-        'queue_length': disk['queue_length'],
-    }
+    disk_with_rates = {k: disk[k] for k in ('queue_length',) if k in disk}
+
     for metric in set(disk) - {'queue_length', 'timestamp'}:
         try:
             disk_with_rates[metric] = get_rate(
@@ -333,6 +333,10 @@ def _compute_rates_single_disk(
 
     if raised_ignore_res_excpt:
         raise IgnoreResultsError('Initializing counters')
+
+    # statgrab_disk does not provide these
+    if not all(k in disk for k in ('read_ticks', 'read_ios', 'utilization')):
+        return disk_with_rates
 
     read_ticks_rate = disk_with_rates.pop('read_ticks')
     write_ticks_rate = disk_with_rates.pop('write_ticks')
@@ -377,7 +381,7 @@ def _compute_rates_single_disk(
 
 def check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
 ) -> type_defs.CheckResult:
@@ -429,7 +433,7 @@ def _merge_cluster_sections(
 
 def cluster_check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
     section_multipath: Mapping[str, Optional[SectionMultipath]],
 ) -> type_defs.CheckResult:
@@ -446,7 +450,7 @@ register.check_plugin(
     sections=["diskstat", "multipath"],
     service_name="Disk IO %s",
     discovery_ruleset_name="diskstat_inventory",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_function=discover_diskstat,
     check_ruleset_name="diskstat",

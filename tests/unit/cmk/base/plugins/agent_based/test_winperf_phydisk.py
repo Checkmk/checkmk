@@ -136,14 +136,14 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
     with pytest.raises(IgnoreResultsError):
         list(check_func(
             item,
-            type_defs.Parameters({}),
+            {},
             section_1,
         ))
 
     # second call: get values
     check_results = list(check_func(
         item,
-        type_defs.Parameters({}),
+        {},
         section_2,
     ))
 

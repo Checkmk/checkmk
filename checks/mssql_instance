@@ -38,6 +38,8 @@ def _parse_prod_version(entry):
         version = "2016"
     elif entry.startswith("14."):
         version = "2017"
+    elif entry.startswith("15."):
+        version = "2019"
     else:
         return "unknown[%s]" % entry
     return "Microsoft SQL Server %s" % version

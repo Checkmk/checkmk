@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -63,7 +43,7 @@ def _item_help_logwatch_rules():
 def _valuespec_logwatch_rules():
     return Transform(
         Dictionary(
-            title=_('Logwatch Patterns'),
+            title=_('Logfile patterns'),
             elements=[
                 ("reclassify_patterns",
                  ListOf(
@@ -163,6 +143,7 @@ def _valuespec_logwatch_rules():
                  )),
             ],
             optional_keys=["reclassify_states"],
+            ignored_keys=["pre_comp_group_patterns", "group_patterns"],
         ),
         forth=lambda x: isinstance(x, dict) and x or {"reclassify_patterns": x},
     )
@@ -181,34 +162,44 @@ rulespec_registry.register(
 
 
 def _valuespec_logwatch_groups():
-    return ListOf(
-        Tuple(
-            help=_("This defines one logfile grouping pattern"),
-            show_titles=True,
-            orientation="horizontal",
+    return Transform(
+        Dictionary(
+            title=_('Logfile Grouping'),
             elements=[
-                TextAscii(title=_("Name of group"),),
-                Tuple(
-                    show_titles=True,
-                    orientation="vertical",
-                    elements=[
-                        TextAscii(title=_("Include Pattern")),
-                        TextAscii(title=_("Exclude Pattern"))
-                    ],
-                ),
+                ("grouping_patterns",
+                 ListOf(
+                     Tuple(
+                         help=_("This defines one logfile grouping pattern"),
+                         show_titles=True,
+                         orientation="horizontal",
+                         elements=[
+                             TextAscii(title=_("Name of group"),),
+                             Tuple(
+                                 show_titles=True,
+                                 orientation="vertical",
+                                 elements=[
+                                     TextAscii(title=_("Include Pattern")),
+                                     TextAscii(title=_("Exclude Pattern"))
+                                 ],
+                             ),
+                         ],
+                     ),
+                     add_label=_("Add pattern group"),
+                     title=_('List Grouping Patterns'),
+                 )),
             ],
+            optional_keys=[],
+            help=
+            _('The check <tt>logwatch</tt> normally creates one service for each logfile. '
+              'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
+              'If the pattern begins with a tilde then this pattern is interpreted as a regular '
+              'expression instead of as a filename globbing pattern and  <tt>*</tt> and <tt>?</tt> '
+              'are treated differently. '
+              'That check monitors a list of logfiles at once. This is useful if you have '
+              'e.g. a folder with rotated logfiles where the name of the current logfile'
+              'also changes with each rotation'),
         ),
-        title=_('Logfile Grouping Patterns'),
-        help=_(
-            'The check <tt>logwatch</tt> normally creates one service for each logfile. '
-            'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
-            'If the pattern begins with a tilde then this pattern is interpreted as a regular '
-            'expression instead of as a filename globbing pattern and  <tt>*</tt> and <tt>?</tt> '
-            'are treated differently. '
-            'That check monitors a list of logfiles at once. This is useful if you have '
-            'e.g. a folder with rotated logfiles where the name of the current logfile'
-            'also changes with each rotation'),
-        add_label=_("Add pattern group"),
+        forth=lambda p: p if isinstance(p, dict) else {"grouping_patterns": p},
     )
 
 
@@ -227,7 +218,6 @@ def _parameter_valuespec_logwatch_ec():
         help=_("Instead of using the regular logwatch check all lines received by logwatch can "
                "be forwarded to a Check_MK event console daemon to be processed. The target event "
                "console can be configured for each host in a separate rule."),
-        style="dropdown",
         elements=[
             FixedValue(
                 "",
@@ -242,7 +232,6 @@ def _parameter_valuespec_logwatch_ec():
                         Transform(
                             # TODO: Clean this up to some CascadingDropdown()
                             Alternative(
-                                style="dropdown",
                                 title=_("Forwarding Method"),
                                 elements=[
                                     FixedValue(

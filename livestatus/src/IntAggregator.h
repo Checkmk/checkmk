@@ -1,46 +1,41 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef IntAggregator_h
 #define IntAggregator_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
+#include <functional>
+#include <variant>
+
 #include "Aggregator.h"
-#include "IntColumn.h"
+#include "Column.h"
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
 
 class IntAggregator : public Aggregator {
+    using f0_t = std::function<int(Row)>;
+    using f1_t = std::function<int(Row, const contact *)>;
+    using function_type = std::variant<f0_t, f1_t>;
+
 public:
-    IntAggregator(const AggregationFactory &factory, const IntColumn *column)
-        : _aggregation(factory()), _column(column) {}
+    IntAggregator(const AggregationFactory &factory, const function_type &f)
+        : _aggregation{factory()}, f_{f} {}
 
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds /* timezone_offset*/) override {
-        _aggregation->update(_column->getValue(row, auth_user));
+        if (std::holds_alternative<f0_t>(f_)) {
+            _aggregation->update(std::get<f0_t>(f_)(row));
+        } else if (std::holds_alternative<f1_t>(f_)) {
+            _aggregation->update(std::get<f1_t>(f_)(row, auth_user));
+        } else {
+            throw std::runtime_error("unreachable");
+        }
     }
 
     void output(RowRenderer &r) const override {
@@ -49,7 +44,7 @@ public:
 
 private:
     std::unique_ptr<Aggregation> _aggregation;
-    const IntColumn *const _column;
+    const function_type f_;
 };
 
 #endif  // IntAggregator_h

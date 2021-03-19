@@ -1,28 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /*-------------------------------------------------------------------------.
 |  _____     _            ___      ___        _   _                        |
@@ -47,60 +26,33 @@ table.filterform {
 }
 
 div.floatfilter {
-  float: left;
-  width: 310px;
-  height: 53px;
+  width: 333px;
   padding: 4px;
-  margin: 0 4px 3px 0;
+  padding-left: 10px;
+  margin: 0 5px 5px 0;
   color: $primary-font-color;
-  background-color: rgba(160, 181, 190, 0.6);
-  border-color: rgb(170, 204, 204) rgb(34, 64, 77) rgb(34, 65, 77) rgb(136, 170, 187);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 5px;
-  box-shadow: 0.5px 0.5px 1px rgb(68, 68, 68);
-
-  &.double {
-    display: table-cell;
-    height: 120.5px;
-
-    .content {
-      height: 82px;
-    }
-  }
-
-  input[type=text] {
-    width: 100%;
-    box-sizing: border-box;
-
-    &.number {
-      text-align: center;
-    }
-
-    &.neg {
-      width: 229px;
-    }
-  }
+  background-color: $bg-color-secondary;
 
   .legend {
-    width: 300px;
+    width: 100%;
     height: 17px;
-    padding: 3px 5px 0;
-    //margin-bottom: 1px;
-    font-size: 10px;
-    color: rgb(255, 255, 255);
+    padding: 5px 8px;
+    padding-left: 0;
+    font-weight: bold;
+    color: $font-color;
     background-color: $floatfilter-bg-color;
-    border-radius: 5px 5px 0 0;
+
+    span {
+      padding-bottom: 3px;
+      border-bottom: $floatfilter-legend-border;
+    }
   }
 
   .content {
-    display: table-cell;
-    width: 311px;
-    //height: 30px;
-    padding-top: 5px;
-    padding-left: 4px;
-    margin-top: 0;
-    margin-left: 0;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin: 0;
     text-align: left;
 
     > select {
@@ -132,42 +84,117 @@ div.floatfilter {
     .filtertime select {
       width: 136px;
     }
-  }
-
-  &.service_custom_variable, &.host_custom_variable {
-    .select2-container {
-      max-width: 55%;
-    }
-
-    input, select {
-      display: inline-block;
-      width: 45%;
-    }
 
     select {
-      margin-right: 10px;
+      box-sizing: border-box;
+    }
+
+    .checkbox {
+      display: inline-block;
+      margin: 3px 0;
+
+      &:not(:last-of-type) {
+        margin-right: 8px;
+      }
+    }
+
+    input,
+    select,
+    textarea,
+    #mk_side_search_field {
+      margin-bottom: 0;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 12px); // subtract padding
+
+      &.number {
+        text-align: center;
+      }
+
+      &.neg {
+        width: 229px;
+      }
+    }
+
+    input.neg[type="text"] {
+      position: relative;
+      top: -1px;
+      width: 237px;
+    }
+
+    input[type^="radio"],
+    select[type^="radio"],
+    textarea[type^="radio"],
+    [type^="radio"]#mk_side_search_field {
+      width: auto;
+      margin-bottom: 0;
+    }
+
+    input[type="radio"] {
+      margin-left: 5px;
+    }
+
+    .radiobutton_group {
+      display: inline-block;
+
+      input[type="radio"] {
+        margin-left: 0;
+      }
+
+      &:not(:last-of-type) label {
+        margin-right: 5px;
+      }
+    }
+
+    .valuespec_tuple {
+      width: 100%;
+      border-spacing: 2px 2px;
+    }
+
+    nobr {
+      margin-left: 4px;
+    }
+
+    table {
+      border-spacing: 0;
+
+      td {
+        padding: 0 4px 4px 0;
+      }
+    }
+  }
+
+  &.service_custom_variable,
+  &.host_custom_variable {
+    .select2-container {
+      max-width: 52%;
+    }
+
+    input[type="text"] {
+      display: inline-block;
+      width: 40%;
+      margin-left: 4px;
     }
   }
 
   table.vs_duallist {
     width: 300px;
-    border-spacing: 0px 3px !important;
+    border-spacing: 0 3px;
 
     a.control {
-      padding: 0px 6px;
+      padding: 0 6px;
     }
 
-    /* TODO: Get rid of these important styles */
     select {
-      height: 43px !important; /* Is hardcoded to 48px in generated HTML code.
-                                  This is bad but we cannot break compatibility
-                                  with the classic theme for the while. */
-      padding: 0 !important;
-      margin-bottom: 0 !important;
+      height: 43px;
+      padding: 0;
+      margin-bottom: 0;
     }
   }
 
-  &.invswpac_version, &.invswpac_package_version {
+  &.invswpac_version,
+  &.invswpac_package_version {
     input.text {
       margin-left: 4px;
     }
@@ -186,45 +213,34 @@ div.floatfilter {
   &.downtimes span.checkbox {
     white-space: normal;
   }
-}
 
-.filterform > tbody > tr > td div.floatfilter {
-  position: relative;
-  width: 326px;
-  height: auto;
-  margin-right: 5px;
-  margin-bottom: 5px;
-  overflow: auto;
-  background: $bg-color-secondary;
-  border: 1px solid $color-table-border;
-  box-shadow: none;
-  box-sizing: border-box;
+  span.select2 {
+    position: relative;
+  }
 
-
-  &.single {
-    height: 60px;
+  > div.content > span.select2:last-child {
+    width: 100%;
   }
 
   &.double {
-    height: 125px;
-
-    &.log_class .content, &.log_state .content {
+    &.log_class .content,
+    &.log_state .content {
       table {
-	border-spacing: 6px 0;
+        border-spacing: 6px 0;
 
-	&.alertstatefilter {
-	  td {
-	    vertical-align: top;
-	  }
+        &.alertstatefilter {
+          td {
+            vertical-align: top;
+          }
 
-	  .checkbox {
-	    margin: 3px 3px 0 0;
-	  }
-	}
+          .checkbox {
+            margin: 3px 3px 0 0;
+          }
+        }
       }
 
       .checkbox {
-	margin-bottom: 4px;
+        margin-bottom: 4px;
       }
     }
 
@@ -237,77 +253,8 @@ div.floatfilter {
     }
   }
 
-  .legend {
-    width: 100%;
-    height: auto;
-    padding: 5px 8px;
-    color: $secondary-font-color;
-    text-transform: uppercase;
-    box-sizing: border-box;
-  }
-
-  .content {
-    display: block;
-    width: 100%;
-    padding: 2px 6px;
-    box-sizing: border-box;
-
-    select {
-      box-sizing: border-box;
-    }
-
-    .checkbox {
-      margin: 3px 0;
-      display: inline-block;
-
-      &:not(:last-of-type) {
-	margin-right: 8px;
-      }
-    }
-
-    input, select, textarea, #mk_side_search_field {
-      margin-bottom: 0;
-    }
-
-    input[type^=radio],
-    select[type^=radio],
-    textarea[type^=radio],
-    [type^=radio]#mk_side_search_field {
-      width: auto;
-      margin-bottom: 0;
-    }
-
-    input[type=radio] {
-      margin-left: 5px;
-    }
-
-    .radiobutton_group {
-      display: inline-block;
-
-      input[type=radio] {
-	margin-left: 0;
-      }
-
-      &:not(:last-of-type) label {
-	margin-right: 5px;
-      }
-    }
-
-    .valuespec_tuple {
-      width: 100%;
-      border-spacing: 2px 2px;
-    }
-
-    nobr {
-      margin-left: 4px;
-    }
-  }
-
-  &.host_tags .content table {
-    border-spacing: 4px 0;
-  }
-
-  &.svchardstate .content, &.svcstate .content {
+  &.svchardstate .content,
+  &.svcstate .content {
     .checkbox:not(:last-of-type) {
       margin-right: 8px;
     }
@@ -325,8 +272,7 @@ div.floatfilter {
     height: 22px;
   }
 
-  .select2-container--default .select2-selection--single
-  .select2-selection__rendered {
+  .select2-container--default .select2-selection--single .select2-selection__rendered {
     line-height: 20px;
   }
 
@@ -334,40 +280,66 @@ div.floatfilter {
     border-color: $select2-border-color;
   }
 
-  &.single span.select2 {
-    position: relative;
+  &.rangespec table.valuespec_tuple {
+    width: 100%;
+
+    span.title {
+      top: 7px;
+    }
+
+    input {
+      padding: 3px;
+    }
   }
 
-  /* TODO: Get rid of this important style */
-  &.single > div.content > span.select2:last-child {
-    width: 100% !important;
+  &.address_families {
+    span.radiobutton_group {
+      margin-bottom: 4px;
+    }
   }
 
-  &.single input.neg[type=text] {
-    position: relative;
-    top: -2px;
-    width: 237px;
+  &.host_address,
+  &.host_ipv4_address,
+  &.host_ipv6_address {
+    input[type="text"] {
+      margin-bottom: 8px;
+    }
+  }
+
+  &.invswpac {
+    div.content > input[type="text"] {
+      margin-bottom: 8px;
+    }
+
+    span.min_max_row {
+      display: inline-block;
+      margin: 8px 0;
+    }
   }
 }
 
-/* Improving styling of floatfilters that are contained in a ListOf() */
-table.valuespec_listof.filter {
-  *.filter {
-    width: 300px;
-    border-spacing: 0;
+/* Specific styling for side popup floatfilters that are contained in a ListOf() */
+div.side_popup_content table.valuespec_listof.filter {
+  td.vlof_buttons {
+    width: 0;
+
+    a.delete_button img {
+      position: absolute;
+      top: 4px;
+      right: $spacing;
+      z-index: 5;
+      width: 12px;
+      height: 12px;
+    }
   }
 
-  td {
-    &.vlof_content {
-      width: 1px;
-      border-style: none;
-    }
+  td.vlof_content {
+    position: relative;
+    left: -4px;
+  }
 
-    &.vlof_buttons {
-      width: 1px;
-      vertical-align: top;
-      border-style: none;
-    }
+  > tbody > tr {
+    position: relative;
   }
 }
 
@@ -382,12 +354,13 @@ table.nform table.valuespec_listof {
     vertical-align: middle;
   }
 
-  .vlof_content, .vlof_buttons {
+  .vlof_content,
+  .vlof_buttons {
     border-bottom: 1px solid $nform-vlof-border-color;
   }
 
   .vlof_content {
-    padding: 8px 0;
+    padding: $spacing-half 0 0;
     vertical-align: top;
 
     .valuespec_tuple {
@@ -401,100 +374,25 @@ table.nform table.valuespec_listof {
   }
 
   .vlof_buttons {
-    width: 1px;
-    padding-top: 14px;
-    padding-bottom: 26px;
+    width: 44px;
+    min-width: 44px;
+    padding-right: $spacing-half;
+    text-align: center;
     vertical-align: middle;
-  }
 
-  &.filter {
-    .vlof_content .floatfilter {
-      width: 400px;
-      height: auto;
-      background-color: $bg-color-tertiary;
-      border: 1px solid $color-table-border;
-      box-shadow: none;
-
-      .legend {
-        padding: 16px 0 0 16px;
-        font-size: $font-size-global;
-        letter-spacing: $letter-spacing-table;
-        color: $secondary-font-color;
-        text-transform: uppercase;
-      }
-
-      .content {
-        width: 100%;
-        padding: 16px;
-
-        table {
-          border-spacing: 8px 4px;
-        }
-      }
+    img {
+      width: 12px;
+      height: 15px;
     }
 
-    .vlof_buttons.filter img {
-      top: 8px;
-      left: -40px;
+    a:not(:last-child) {
+      margin-right: $spacing-half;
     }
   }
 }
 
 table.filtertime td {
   vertical-align: middle;
-}
-
-div.optiondial {
-  &, &.num_columns, &.refresh {
-    top: 0;
-    width: 80.5px;
-    height: 28px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    color: $color-text;
-    background: $bg-color-secondary;
-    border: 1px solid $color-table-border;
-    box-shadow: none;
-    box-sizing: border-box;
-
-
-    div {
-      padding: 0;
-      line-height: 27px;
-    }
-  }
-
-  & {
-    position: relative;
-    float: left;
-    margin-top: 0;
-    margin-left: 0;
-    overflow: hidden;
-    color: rgb(34, 34, 34);
-    text-shadow: 0 0.5px 0.5px rgb(255, 255, 255);
-    cursor: pointer;
-    border-radius: $primary-border-radius;
-    box-shadow: 0 0 3px rgb(17, 34, 51);
-  }
-
-  &.num_columns {
-    margin-right: 0;
-    border-right: none;
-    border-radius: $first-child-border-radius;
-  }
-
-  &.refresh {
-    margin-left: -6px;
-    border-radius: $last-child-border-radius;
-  }
-
-  div {
-    position: relative;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    text-align: center;
-  }
 }
 
 div.view_form {
@@ -512,19 +410,9 @@ div.view_form {
 | Styles used by layouts of the views (plugins/views/layouts.py)           |
 '-------------------------------------------------------------------------*/
 
-
-table.data tr.data > td.gap,
-table.data tr > td.last_col,
-table.data tr > th.last_col {
-  border-right: none;
-}
-
-td.gap, table.data .checkbox_hover.gap {
+td.gap,
+table.data .checkbox_hover.gap {
   width: 5px;
-  /* #TODO: Check whether these background styles are needed */
-  background-attachment: fixed;
-  background-image: url("images/contentframe_background.jpg");
-  background-repeat: repeat;
 }
 
 /* boxed layout */
@@ -532,32 +420,21 @@ table.boxlayout {
   border-spacing: 0;
 
   td.boxcolumn {
-    padding-right: 20px;
-  }
-
-  tr > td {
+    padding-right: $spacing;
     vertical-align: top;
-  }
 
-  &.graph table.data tr.data {
-    background: $boxlayout-tr-bg-color;
+    &:last-child {
+      padding-right: 0;
+    }
   }
 }
 
 /* tiled layout */
-table.tiled td {
-  border-style: none;
-}
-
 .tile {
   float: left;
   width: 180px;
   margin-right: 6px;
   margin-bottom: 6px;
-  background-color: rgb(204, 204, 204);
-  border: 1px solid rgb(0, 0, 0);
-  border-radius: 0;
-  box-shadow: 1px 1px 3px rgb(0, 0, 0);
 
   img.icon {
     width: 16px;
@@ -570,14 +447,16 @@ table.tiled td {
   }
 
   td {
-    font-size: 9px;
+    font-size: $font-size-small;
     border-style: none;
 
-    &.tl, &.bl {
+    &.tl,
+    &.bl {
       text-align: left;
     }
 
-    &.tr, &.br {
+    &.tr,
+    &.br {
       text-align: right;
     }
 
@@ -585,15 +464,20 @@ table.tiled td {
       vertical-align: middle;
     }
 
-    &.center, &.cont {
+    &.center,
+    &.cont {
       text-align: center;
     }
 
-    &.bl, &.br {
+    &.bl,
+    &.br {
       vertical-align: bottom;
     }
 
-    &.bl, &.br, &.tl, &.tr {
+    &.bl,
+    &.br,
+    &.tl,
+    &.tr {
       height: 20px;
     }
   }
@@ -606,7 +490,6 @@ table.data.tiled td.tiles {
     width: 240px;
     padding: 4px;
     background: $bg-color-secondary;
-    border: 1px solid $color-table-border;
     border-radius: $theme-border-radius;
     box-shadow: none;
 
@@ -616,14 +499,19 @@ table.data.tiled td.tiles {
       td {
         padding: 8px;
 
+        &.state {
+          height: 30px;
+          padding: 0;
+        }
+
         &.states {
           border-radius: $theme-border-radius;
         }
 
-	&.center {
-	  white-space: break-spaces;
-	  word-wrap: anywhere;
-	}
+        &.center {
+          white-space: break-spaces;
+          overflow-wrap: anywhere;
+        }
       }
     }
 
@@ -648,7 +536,6 @@ table.data.single {
 
   tr.data {
     > td {
-      height: 16px;
       padding: 4px 5px 2px;
       padding-bottom: 4px;
       line-height: 14px;
@@ -656,9 +543,13 @@ table.data.single {
     }
 
     td.left {
-      width: 10%;
-      padding: $td-single-left-padding;
+      width: 1%;
+      padding: 2px 20px 2px 16px;
       white-space: nowrap;
+    }
+
+    td:not(.left) {
+      width: auto;
     }
 
     td.invtree table {
@@ -666,22 +557,17 @@ table.data.single {
       border: 1px solid $color-table-border;
       box-shadow: none;
 
-      th, td {
-	height: 14px;
-	padding: 2px 6px;
-	background-color: $invtree-td-bg-color;
-	border: 1px solid $color-table-border;
+      th,
+      td {
+        height: 14px;
+        padding: 2px 6px;
+        background-color: $invtree-td-bg-color;
+        border: 1px solid $color-table-border;
       }
 
       th {
-	color: $color-text;
-	background-color: $invtree-th-bg-color;
-      }
-    }
-
-    &.odd0, &.even0 {
-      .state, .svcstate:not(.statex), .badflag {
-	padding-left: 16px;
+        color: $font-color;
+        background-color: $invtree-th-bg-color;
       }
     }
   }
@@ -689,14 +575,12 @@ table.data.single {
   > tbody > tr > td,
   > tbody tr.odd0 > td,
   > tbody tr.even0 > td {
-    padding: $table-data-single-padding;
-    background-color: $td-single-bg-color;
+    padding: 2px;
     border-radius: 0;
 
     &.left {
       font-weight: $font-weight-bold;
-      border-right: $td-single-left-border-right;
-      transition: .15s ease-in-out;
+      transition: 0.15s ease-in-out;
     }
 
     &.perfometer {
@@ -730,22 +614,16 @@ table.data.matrix {
   tbody > tr.data {
     > td {
       padding: 8px;
-      border: 1px solid $color-table-border;
-      border-left: none;
 
       &.left {
         font-weight: $font-weight-bold;
-        background-color: $bg-color-tertiary;
-        transition: .15s ease-in-out;
-
-	&:not(.state) {
-	  border-right: 1px solid $color-table-border;
-	  border-left: 1px solid $color-table-border;
-	}
+        background-color: $bg-color-secondary;
+        transition: 0.15s ease-in-out;
       }
 
       &.cell td.perfometer {
-        div.title, div.content {
+        div.title,
+        div.content {
           padding: 0;
         }
       }
@@ -755,15 +633,16 @@ table.data.matrix {
       background: transparent;
 
       td.matrixhead {
-	font-size: $font-size-global;
-	letter-spacing: $letter-spacing-table;
-	text-transform: uppercase;
+        letter-spacing: $letter-spacing-table;
+        text-transform: uppercase;
       }
     }
   }
 
   td.minority {
-    &, a, a:link {
+    &,
+    a,
+    a:link {
       color: $minority-font-color;
     }
   }
@@ -780,10 +659,11 @@ table.data.matrix {
     }
   }
 
-  tr.even0, tr.odd0 {
+  tr.even0,
+  tr.odd0 {
     tbody & td.matrixhead {
       font-weight: $font-weight-bold;
-      color: $color-text;
+      color: $font-color;
     }
   }
 
@@ -824,7 +704,6 @@ input#try {
   float: left;
 }
 
-
 /*-------------------------------------------------------------------------.
 |       _     _     _            __         _                              |
 |      | |   (_)___| |_    ___  / _| __   _(_) _____      _____            |
@@ -844,7 +723,8 @@ table.views {
   border-collapse: collapse;
   empty-cells: show;
 
-  td, th{
+  td,
+  th {
     padding: 2px 1ex;
     color: rgb(255, 255, 255);
     border: 1px solid rgb(68, 68, 68);
@@ -883,10 +763,6 @@ table.views {
 
 /* Availability */
 table.data.availability {
-  width: 100%;
-  border: $availability-data-table-border;
-  box-shadow: $availability-data-table-box-shadow;
-
   td.number {
     width: 60px;
   }
@@ -896,67 +772,60 @@ table.data.availability {
   }
 
   tr.summary td {
-    padding-top: 1px;
-    padding-bottom: 1px;
     font-weight: bold;
-    border-top: 1px solid $color-table-border;
-    border-bottom-style: none;
   }
 
   tr.odd0 td.number.stats {
-    opacity: .5;
+    opacity: 0.5;
   }
 
-  td {
-    border-color: $color-table-border !important;
-  }
-
-  th {
-    background: $availability-data-th-bg-color;
+  td.state span {
+    font-weight: $font-weight-default;
   }
 }
 
-table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
+table.data td.flapping,
+table.timeline td.flapping,
+div.avlegend.timeline div.state.flapping span {
   background-color: rgb(255, 0, 255);
 }
-table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
+
+table.data td.downtime,
+table.timeline td.downtime,
+div.avlegend.timeline div.state.downtime span {
   background-color: rgb(0, 170, 255);
 }
-table.data tr.data > td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
+
+table.data tr.data > td.hostdown,
+table.timeline td.hostdown,
+div.avlegend.timeline div.state.hostdown span {
   color: $white;
   background-color: $hostdown-bg-color;
 }
 
 table.data tr.data td.unmonitored,
 table.timeline td.unmonitored,
-div.avlegend.timeline div.state.unmonitored {
+div.avlegend.timeline div.state.unmonitored span {
   color: $unmonitored-font-color;
   background-color: $unmonitored-bg-color;
 }
 
-table.data.availability tr.even0 td {
+table.data.availability tr td {
   &.unmonitored {
-    background-color: $lightened-unmonitored-bg-color;
+    background-color: lighten($unmonitored-bg-color, 10%);
   }
 
   &.hostdown {
-    background-color: $lightened-hostdown-bg-color;
+    background-color: lighten($hostdown-bg-color, 10%);
   }
 }
 
-table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
+table.timeline td.ooservice,
+div.avlegend.timeline div.state.ooservice span {
+  color: $black;
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
-}
-
-div.floatfilter.rangespec table.valuespec_tuple {
-  width: 100%;
-
-  span.title {
-    position: relative;
-    top: 7px;
-  }
 }
 
 /* #TODO: Reproduce this html element */
@@ -996,7 +865,8 @@ table.timeline {
     padding: 0;
     border-style: none;
 
-    &.hilite, &.hilite.state2 {
+    &.hilite,
+    &.hilite.state2 {
       padding: 0;
       border: $timeline-hilite-border;
       filter: brightness(80%);
@@ -1043,27 +913,14 @@ div.timelinerange {
 
 table.timelineevents {
   width: 800px;
-  border: $wato-data-table-border;
-  box-shadow: $wato-data-table-box-shadow;
-
-  th{
-    background: $timelineevents-data-th-bg-color;
-  }
 }
 
 table.data.oddeven.timelineevents > tbody > tr.hilite {
-  filter: $timetable-hilite-filter;
-
-  &[class*="even"] {
-    background-color: $timetable-hilite-even-bg-color;
-  }
-
-  &[class*="odd"] {
-    background-color: $timetable-hilite-odd-bg-color;
-  }
+  background-color: $timetable-hilite-bg-color;
 }
 
-.timelinerange .from, .timelinerange .until {
+.timelinerange .from,
+.timelinerange .until {
   display: inline-block;
   margin-top: 8px;
   margin-bottom: 4px;
@@ -1074,10 +931,6 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
 
 .timelinerange .timeline {
   box-shadow: none;
-
-  &.standalone td {
-    border: 1px solid $color-table-border;
-  }
 }
 
 /* #TODO: Reproduce this html element */
@@ -1090,25 +943,26 @@ div.avlegend {
   padding: 5px 15px;
   margin-top: 10px;
   text-align: right;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: $headline-color;
   border-radius: 5px;
 
   h3 {
     margin-top: 0;
-    font-size: 13px;
-    color: rgb(0, 0, 0);
   }
 
   div {
     display: inline-block;
-    width: 50px;
-    margin-right: 5px;
+    margin-right: $spacing-half;
     white-space: nowrap;
 
     &.state {
       padding: 2px 0;
-      font-size: 12px;
       text-align: center;
+
+      span {
+        padding: 2px $spacing-half;
+        border-radius: $theme-border-radius;
+      }
     }
 
     &:last-child {
@@ -1116,20 +970,13 @@ div.avlegend {
     }
   }
 
-  &.levels div.level {
-    margin-right: 15px;
-    color: rgb(0, 0, 0);
-  }
-
-  &.timeline div.state {
-    width: 75px;
-
-    &.ooservice {
-      color: rgb(0, 0, 0);
+  &.levels div.level,
+  &.timeline div {
+    &:not(:last-child) {
+      margin-right: $spacing;
     }
   }
 }
-
 
 /*--Inventory--------------------------------------------------------------.
 |            ___                      _                                    |
@@ -1161,7 +1008,8 @@ td.invtree {
     border-collapse: collapse;
   }
 
-  table td, table th {
+  table td,
+  table th {
     height: 14px;
     padding: 1px 5px;
     border: 1px solid rgb(136, 136, 136);
@@ -1177,11 +1025,14 @@ td.invtree {
 }
 
 /* TODO: Reproduce this html element */
-td.invtree span.invold, span.invold table.data {
+td.invtree span.invold,
+span.invold table.data {
   color: rgb(255, 0, 0);
 }
+
 /* TODO: Reproduce this html element */
-td.invtree span.invnew, span.invnew table.data {
+td.invtree span.invnew,
+span.invnew table.data {
   color: rgb(0, 191, 0);
 }
 
@@ -1226,12 +1077,9 @@ table.data tr.data td.if_state {
 
 /* #TODO: Reproduce all .sla elements */
 table.data.headerleft.sla {
-  margin-bottom: 20px;
-
   th {
     width: 130px;
     padding: 4px 5px;
-    text-align: left;
 
     &.sla_state {
       width: 30px;
@@ -1308,14 +1156,6 @@ td.sla > div.foldable > b {
   color: rgb(0, 0, 0);
 }
 
-h2.sla {
-  margin-bottom: 3px;
-}
-
-h3.sla {
-  margin-top: 3px;
-}
-
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
   height: 1px;
 
@@ -1346,7 +1186,8 @@ div.timelinerange.sla {
 table.data.headerleft.sla {
   tbody tr {
     td {
-      &, &.sla {
+      &,
+      &.sla {
         padding: 4px 8px;
       }
 
@@ -1371,15 +1212,12 @@ table.data.headerleft.sla {
           padding-left: 0;
           margin: 0;
           vertical-align: baseline;
-          border: none;
-          box-shadow: none;
 
           &.title {
             display: table-cell;
             width: 280px;
             font-weight: $font-weight-bold;
-            color: $color-text;
-            background: transparent;
+            color: $font-color;
           }
 
           table {
@@ -1404,7 +1242,7 @@ table.data.headerleft.sla {
   a,
   body.main .popup_menu span,
   body.main .popup_menu & span {
-    color: $color-text;
+    color: $font-color;
   }
 }
 
@@ -1434,7 +1272,9 @@ table.data tr.notification_context table {
 table.data tr.ac_test_details td {
   padding: 8px;
 
-  p, ul, table {
+  p,
+  ul,
+  table {
     margin: 8px 0;
 
     &:first-child:not(:last-child) {
@@ -1447,7 +1287,6 @@ table.data tr.ac_test_details td {
   }
 }
 
-td.sla_spec table td,
 td.agent_config table.rulesets table td,
 td.agent_config table.rulesets table td.title,
 table.data tr.ac_test_details table td,
@@ -1469,15 +1308,13 @@ table.data tr.notification_context table th {
   text-align: left;
 }
 
-td.sla_spec table td,
 td.agent_config table.rulesets table td,
 table.data tr.ac_test_details table td,
 table.data tr.notification_context table td,
 td.rule_conditions table td {
-  background-color: $bg-color-default;
+  background-color: $bg-color;
 }
 
-td.sla_spec table td.title,
 td.agent_config table.rulesets table td.title,
 table.data tr.notification_context table th,
 td.rule_conditions table td.title {
@@ -1499,9 +1336,6 @@ td.agent_config table.rulesets td {
   vertical-align: top;
 
   table {
-    border: none solid;
-    box-shadow: none;
-
     td {
       padding: 4px 8px;
       vertical-align: top;

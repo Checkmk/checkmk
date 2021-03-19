@@ -1,4 +1,4 @@
-title: Fujitsu storage systems: RLUNs FW 2013
+title: Fujitsu Storage Systems: RLUNs FW 2013
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2
@@ -23,5 +23,4 @@ item:
  has index {1}.
 
 inventory:
- All RLUNs with byte 4 being {A0} (assumed to mean "present") are inventorized.
-
+ One service is created for each present RLUN.

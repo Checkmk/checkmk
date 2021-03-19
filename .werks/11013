@@ -1,0 +1,13 @@
+Title: Fixed validation of datasource type for cluster and its nodes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1585817133
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Cluster and there nodes must have the same datasource. This was not validated
+and has now been fixed.

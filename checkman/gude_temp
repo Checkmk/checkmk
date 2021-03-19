@@ -12,7 +12,7 @@ description:
  levels are configurable.
 
 item:
- The sensor name.
+ The name of the temperature sensor
 
 inventory:
  One service is created.

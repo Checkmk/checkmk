@@ -1,0 +1,12 @@
+Title: Monitoring of the number of users for Pulse Secure
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1585081117
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces a new check to monitor the number of
+signed-in web users for Pulse Secure via SNMP.

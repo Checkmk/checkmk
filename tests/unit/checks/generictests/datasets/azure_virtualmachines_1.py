@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = "azure_virtualmachines"
 
 info = [
@@ -79,10 +87,10 @@ checks = {
         (2, "Provisioning: 1 failed (warn/crit at 1/1) / 2 succeeded", []),
         (0, "Power states: 1 deallocated / 1 running / 1 stopped", []),
         (0, "VMs per group: Glastonbury: 3\n", []),
-        (0, "provfailedserv: Provisioning failed, VM stopped, Resource group: Glastonbury\n", []),
         (0,
          "NotRunningUbuntu: Provisioning succeeded, VM deallocated, Resource group: Glastonbury\n",
          []),
+        (0, "provfailedserv: Provisioning failed, VM stopped, Resource group: Glastonbury\n", []),
         (0, "winserv2016: Provisioning succeeded, VM running, Resource group: Glastonbury\n", []),
     ]),],
     '': [

@@ -1,19 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 
-from bs4 import BeautifulSoup as bs  # type: ignore
-import pytest  # type: ignore
-import six
+from bs4 import BeautifulSoup as bs  # type: ignore[import]
+import pytest  # type: ignore[import]
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
 from cmk.gui.globals import html
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def read_out_simple_table(text):
-    assert isinstance(text, six.string_types)
+    assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
     for row in bs(text, 'lxml').findAll('tr'):
@@ -113,15 +116,15 @@ def test_nesting(register_builtin_html):
         written_text = "".join(html.drain())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
+                            <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text
@@ -146,15 +149,15 @@ def test_nesting_context(register_builtin_html):
         written_text = "".join(html.drain())
     assert compare_html(
         written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
+                            <tr class="data even0">  <td>   1  </td>  <td>
                                 <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text
@@ -170,7 +173,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     def save_user_mock(name, data, user, unlock=False):
         pass
 
-    import cmk.gui.config as config
+    import cmk.gui.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
 
     # Test data

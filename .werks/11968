@@ -1,0 +1,13 @@
+Title: REST API: restricting host tag group id to the same pattern as in WATO
+Class: fix
+Compatible: compat
+Component: core
+Date: 1611233548
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The REST API previously allowed more flexibility for the host tag group id
+than allowed in WATO. This werk fixes this behaviour to reflect the same
+restriction.

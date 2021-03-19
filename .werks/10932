@@ -1,0 +1,11 @@
+Title: Make scan functions of fast_lta_* more strict
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1587032201
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+

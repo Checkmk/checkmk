@@ -1,0 +1,13 @@
+Title: docker_container_status: discovery fix where healthcheck is not available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1583325864
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+A Healthcheck can be explicitly blocked for a container. In consequence,
+there will be no information concerning the health status. For such instances,
+the service should not be discovered. This change implements this behaviour.

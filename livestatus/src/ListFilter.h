@@ -1,64 +1,71 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef ListFilter_h
 #define ListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <algorithm>
 #include <chrono>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
-#include "ListColumn.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class RegExp;
+class Logger;
 
 class ListFilter : public ColumnFilter {
+    using column_type = std::vector<std::string>;
+    using f0_t = std::function<column_type(Row)>;
+    using f1_t = std::function<column_type(Row, const contact *)>;
+    using f2_t = std::function<column_type(Row, std::chrono::seconds)>;
+    using f3_t =
+        std::function<column_type(Row, const contact *, std::chrono::seconds)>;
+    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
+
 public:
-    ListFilter(Kind kind, const ListColumn &column, RelationalOperator relOp,
-               const std::string &value);
+    ListFilter(Kind kind, std::string columnName, function_type,
+               RelationalOperator relOp, const std::string &value, Logger *);
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
-    std::optional<std::string> stringValueRestrictionFor(
+    [[nodiscard]] std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const override;
-    std::unique_ptr<Filter> copy() const override;
-    std::unique_ptr<Filter> negate() const override;
+    [[nodiscard]] std::unique_ptr<Filter> copy() const override;
+    [[nodiscard]] std::unique_ptr<Filter> negate() const override;
+    [[nodiscard]] Logger *logger() const;
 
 private:
-    const ListColumn &_column;
+    const function_type f_;
+    Logger *const _logger;
     std::shared_ptr<RegExp> _regExp;
 
     template <typename UnaryPredicate>
     bool any(Row row, const contact *auth_user,
              std::chrono::seconds timezone_offset, UnaryPredicate pred) const {
-        auto val = _column.getValue(row, auth_user, timezone_offset);
+        auto val = column_type{};
+        if (std::holds_alternative<f0_t>(f_)) {
+            val = std::get<f0_t>(f_)(row);
+        } else if (std::holds_alternative<f1_t>(f_)) {
+            val = std::get<f1_t>(f_)(row, auth_user);
+        } else if (std::holds_alternative<f2_t>(f_)) {
+            val = std::get<f2_t>(f_)(row, timezone_offset);
+        } else if (std::holds_alternative<f3_t>(f_)) {
+            val = std::get<f3_t>(f_)(row, auth_user, timezone_offset);
+        } else {
+            throw std::runtime_error("unreachable");
+        }
         return std::any_of(val.begin(), val.end(), pred);
     }
 };

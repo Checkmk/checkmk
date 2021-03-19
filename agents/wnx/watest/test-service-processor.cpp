@@ -10,6 +10,7 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
+using namespace std::chrono_literals;
 
 namespace cma::provider {
 class Empty : public Synchronous {
@@ -61,6 +62,7 @@ TEST(ServiceProcessorTest, Generate) {
 
     AsyncAnswer::DataBlock db;
     auto ret = sp.wrapResultWithStaticSections(db);
+    ret.push_back(0);
     std::string data = reinterpret_cast<const char*>(ret.data());
     ASSERT_TRUE(ret.size() > 5);
     auto t = cma::tools::SplitString(data, "\n");
@@ -72,10 +74,11 @@ TEST(ServiceProcessorTest, Generate) {
 }
 
 TEST(ServiceProcessorTest, StartStopExe) {
-    using namespace cma::srv;
     using namespace cma::cfg;
-    using namespace std::chrono;
     int counter = 0;
+    auto temp_fs{tst::TempCfgFs::CreateNoIo()};
+    ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
+
     auto processor =
         new ServiceProcessor(100ms, [&counter](const void* Processor) {
             xlog::l("pip").print();
@@ -84,8 +87,9 @@ TEST(ServiceProcessorTest, StartStopExe) {
         });
     ON_OUT_OF_SCOPE(delete processor;);
 
-    cma::MailSlot mailbox(kServiceMailSlot, 0);
-    mailbox.ConstructThread(SystemMailboxCallback, 20, processor);
+    cma::MailSlot mailbox(kTestingMailSlot, 0);
+    mailbox.ConstructThread(SystemMailboxCallback, 20, processor,
+                            wtools::SecurityLevel::admin);
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     using namespace cma::carrier;
     processor->internal_port_ =
@@ -153,7 +157,7 @@ TEST(ServiceProcessorTest, Base) {
             cma::carrier::kCarrierFileName, tmp.u8string());
         sp.tryToDirectCall(uptime_provider, a.getId(), "0");
         auto table = tst::ReadFileAsTable(tmp.u8string());
-        EXPECT_EQ(table.size(), 2);
+        ASSERT_EQ(table.size(), 2);
         EXPECT_EQ(table[0] + "\n", MakeHeader(cma::section::kUptimeName));
     }
 

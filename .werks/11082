@@ -1,0 +1,13 @@
+Title: jobs: Exit codes of jobs can now be mapped to states
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1591958919
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+In previous versions, all exit codes except 0 were evaluated as CRITICAL.  Now
+it is possible to determine the evaluation of the exit codes in the check
+parameters.

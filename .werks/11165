@@ -1,0 +1,19 @@
+Title: Windows agent service can be set in mode delayed auto start
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1591081835
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Any Windows service can be marked  as <tt>Automatic (Delayed Start)</tt>. 
+This mode means short wait for other Windows services marked as <tt>Automatic</tt>.
+The delayed mode may help to have network services ready when the service starts, 
+for example.
+
+With this release Checkmk Windows Agent supports this mode.
+
+<tt>Automatic (Delayed Start)</tt> mode  may be enabled using either config 
+file or WATO.

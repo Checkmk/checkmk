@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Example for output from agent (contents of /proc/mdstat):
 # ---------------------------------------------------------
@@ -92,6 +72,21 @@
 # unused devices: <none>
 # ----------------------------------------------------------
 
+# Example of RAID5 being checked
+#Personalities : [raid1] [raid6] [raid5] [raid4]
+#md125 : active raid1 sdb2[0] sdd2[1]
+#      182751552 blocks super 1.2 [2/2] [UU]
+#      bitmap: 1/2 pages [4KB], 65536KB chunk
+#
+#md126 : active raid5 sdf1[5] sde1[2] sdc1[1] sdg1[3] sda1[0]
+#      31255568384 blocks super 1.2 level 5, 512k chunk, algorithm 2 [5/5] [UUUUU]
+#      [===============>.....]  check = 76.0% (5938607824/7813892096) finish=255.8min speed=122145K/sec
+#      bitmap: 0/59 pages [0KB], 65536KB chunk
+#
+#md127 : active raid1 sdd1[1] sdb1[0]
+#      67107840 blocks super 1.2 [2/2] [UU]
+#      bitmap: 1/1 pages [4KB], 65536KB chunk
+
 # And now for something completely different:
 # ---------------------------------------------------------
 # Personalities : [raid1] [raid10]
@@ -142,7 +137,7 @@ def parse_md(info):
                     if e.startswith("finish=") or e.startswith("speed="):
                         k, v = e.split("=")
                         instance[k] = v
-                    elif e in ["recovery", "resync"]:
+                    elif e in ["recovery", "resync", "check"]:
                         instance["%s_values" % e] = line[idx + 3]
                 continue
 
@@ -159,7 +154,7 @@ def parse_md(info):
 
 
 def inventory_md(parsed):
-    for device, attrs in parsed.iteritems():
+    for device, attrs in parsed.items():
         if attrs["raid_name"] != "raid0":
             yield device, None
 
@@ -213,7 +208,12 @@ def check_md(item, _no_params, parsed):
     if "speed" in data:
         infotexts.append("Speed: %s" % data["speed"])
 
-    if infotexts:
+    if "check_values" in data:
+        header = "[Check]"
+        infotexts.append("Status: %s" % data["check_values"])
+        yield 0, "%s %s" % (header, ", ".join(infotexts))
+
+    elif infotexts:
         yield 1, "%s %s" % (header, ", ".join(infotexts))
 
 

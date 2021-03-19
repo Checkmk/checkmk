@@ -1,4 +1,4 @@
-title: Primergy BX600 Blade Server: Power fan
+title: Primergy BX600 Blade Server: Power Fan
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
@@ -17,5 +17,5 @@ item:
   The name of the fan as returned by SNMP.
 
 inventory:
-  Returns one Check for each fan.
+  One service is created for each fan.
 

@@ -1,9 +1,13 @@
-import pytest
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 pytestmark = pytest.mark.checks
-
-from cmk_base.check_api import MKGeneralException
-from checktestlib import CheckResult, assertCheckResultsEqual
 
 
 @pytest.mark.parametrize("config, result", [
@@ -32,8 +36,8 @@ from checktestlib import CheckResult, assertCheckResultsEqual
         'horizon': 90
     }),
 ])
-def test_get_conn_rate_params(check_manager, config, result):
-    check = check_manager.get_check("f5_bigip_conns")
+def test_get_conn_rate_params(config, result):
+    check = Check("f5_bigip_conns")
     assert check.context["get_conn_rate_params"](config) == result
 
 
@@ -49,7 +53,7 @@ def test_get_conn_rate_params(check_manager, config, result):
     "connections per second is setup in predictive levels. Please use the given "
     "lower bound specified in the maximum connections, or set maximum "
     "connections to use fixed levels."))])
-def test_get_conn_rate_params_exception(check_manager, config, exception_msg):
-    check = check_manager.get_check("f5_bigip_conns")
+def test_get_conn_rate_params_exception(config, exception_msg):
+    check = Check("f5_bigip_conns")
     with pytest.raises(ValueError, match=exception_msg):
         check.context["get_conn_rate_params"](config)

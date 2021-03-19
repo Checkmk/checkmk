@@ -1,0 +1,16 @@
+Title: mssql_connections: Remove default levels 20, 50 which are not useful in general
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1573387403
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Due to very different MSSQL environments we cannot state default levels in
+general.  One result is that there are a lot of {{MSSQL Connections}} services
+which report WARN but which may be OK.
+
+If you count on these default levels for some {{MSSQL Connections}} services
+you have to create rules {{MSSQL Connections}} for these services.

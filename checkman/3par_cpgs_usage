@@ -1,0 +1,27 @@
+title: HPE 3PAR: CPGs Usage
+agents: 3par
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check measure the
+
+ - total space
+
+ - free space
+
+ of each usage type in a CPG member.
+
+ You can define thresholds for warning and critical (0 by default).
+ If there is failed space above a configurable threshold the service goes
+ to a {WARN} or {CRIT} state and shows the failed space.
+
+ This check uses the 3PAR special agent.
+
+item:
+ The item is {{SAUsage}} (Snapshot administration usage),
+ {{SDUsage}} (Snapshot data space usage) or {{UsrUsage}} (User data space usage)
+ and prefixed with the name of the {{CPG}} (Common Provisioning Group).
+
+inventory:
+ One service is created for each usage type of a CPG member.

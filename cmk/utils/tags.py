@@ -1,41 +1,19 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
 import re
 import abc
-from typing import Dict  # pylint: disable=unused-import
-import six
+from typing import Any, Dict, List, Optional, Set
 
 from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
 
 
-def get_effective_tag_config(tag_config):
-    # type: (Dict) -> TagConfig
+def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
     # We don't want to access the plain config data structure during GUI code processing
     tags = TagConfig()
     tags.parse_config(tag_config)
@@ -65,11 +43,21 @@ def _validate_tag_id(tag_id):
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
+class ABCTag(metaclass=abc.ABCMeta):
     def __init__(self):
         super(ABCTag, self).__init__()
-        self._initialize()
+        # TODO: See below, this was self._initialize()
+        # NOTE: All the Optionals below are probably just plain wrong and just
+        # an artifact of our broken 2-stage initialization.
+        self.id: Optional[str] = None
+        self.title: Optional[str] = None
+        self.topic: Optional[str] = None
 
+    # TODO: We *really* have to nuke these _initialize methods everywhere, they
+    # either effectively blocking sane typing or lead to code duplication. The
+    # solution is actually quite easy and standard: The parse_config method
+    # should *not* be an instance method at all, it should just be a factory
+    # method/function.
     def _initialize(self):
         self.id = None
         self.title = None
@@ -98,6 +86,12 @@ class ABCTag(six.with_metaclass(abc.ABCMeta, object)):
     def _parse_legacy_format(self, tag_info):
         self.id, self.title = tag_info[:2]
 
+    @property
+    def choice_title(self):
+        if self.topic:
+            return "%s / %s" % (self.topic, self.title)
+        return self.title
+
 
 class AuxTag(ABCTag):
     is_aux_tag = True
@@ -122,14 +116,8 @@ class AuxTag(ABCTag):
             response["topic"] = self.topic
         return response
 
-    @property
-    def choice_title(self):
-        if self.topic:
-            return "%s / %s" % (self.topic, self.title)
-        return self.title
 
-
-class AuxTagList(object):
+class AuxTagList:
     def __init__(self):
         self._tags = []
 
@@ -165,7 +153,7 @@ class AuxTagList(object):
                 return
 
     def validate(self):
-        seen = set()
+        seen: Set[str] = set()
         for aux_tag in self._tags:
             aux_tag.validate()
 
@@ -230,7 +218,7 @@ class GroupedTag(ABCTag):
         return {"id": self.id, "title": self.title, "aux_tags": self.aux_tag_ids}
 
 
-class TagGroup(object):
+class TagGroup:
     def __init__(self, data=None):
         super(TagGroup, self).__init__()
         self._initialize()
@@ -290,7 +278,7 @@ class TagGroup(object):
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):
-        response = {"id": self.id, "title": self.title, "tags": []}
+        response: Dict[str, Any] = {"id": self.id, "title": self.title, "tags": []}
         if self.topic:
             response["topic"] = self.topic
 
@@ -323,13 +311,14 @@ class TagGroup(object):
         return tag_groups
 
 
-class TagConfig(object):
+class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
     def __init__(self):
         super(TagConfig, self).__init__()
         self._initialize()
 
+    # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
     def _initialize(self):
         self.tag_groups = []
         self.aux_tag_list = AuxTagList()
@@ -342,6 +331,9 @@ class TagConfig(object):
 
         self.aux_tag_list += other.aux_tag_list
         return self
+
+    def get_tag_groups(self):
+        return self.tag_groups
 
     def get_topic_choices(self):
         names = set([])
@@ -358,7 +350,7 @@ class TagConfig(object):
         return sorted(list(names), key=lambda x: x[1])
 
     def get_tag_groups_by_topic(self):
-        by_topic = {}
+        by_topic: Dict[str, List[str]] = {}
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _('Tags')
             by_topic.setdefault(topic, []).append(tag_group)
@@ -367,10 +359,11 @@ class TagConfig(object):
     def tag_group_exists(self, tag_group_id):
         return self.get_tag_group(tag_group_id) is not None
 
-    def get_tag_group(self, tag_group_id):
+    def get_tag_group(self, tag_group_id: str) -> Optional[TagGroup]:
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
+        return None
 
     def remove_tag_group(self, tag_group_id):
         group = self.get_tag_group(tag_group_id)
@@ -393,7 +386,7 @@ class TagConfig(object):
         return aux_tag_map
 
     def get_aux_tags_by_topic(self):
-        by_topic = {}
+        by_topic: Dict[str, List[str]] = {}
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _('Tags')
             by_topic.setdefault(topic, []).append(aux_tag)
@@ -401,7 +394,7 @@ class TagConfig(object):
 
     def get_tag_ids(self):
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response = set()
+        response: Set[str] = set()
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
@@ -474,7 +467,7 @@ class TagConfig(object):
 
     def _validate_ids(self):
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids = set()
+        seen_ids: Set[str] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
@@ -484,6 +477,16 @@ class TagConfig(object):
             if aux_tag.id in seen_ids:
                 raise MKGeneralException(_("The tag ID \"%s\" is used twice.") % aux_tag.id)
             seen_ids.add(aux_tag.id)
+
+    def valid_id(self, tag_aux_id):
+        """Verify if the proposed id is not already in use"""
+        if tag_aux_id in [tag_group.id for tag_group in self.tag_groups]:
+            return False
+
+        if tag_aux_id in [aux_tag.id for aux_tag in self.aux_tag_list.get_tags()]:
+            return False
+
+        return True
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
@@ -538,7 +541,7 @@ class TagConfig(object):
             raise MKGeneralException(_("Tag groups with only one choice must have a tag ID."))
 
     def get_dict_format(self):
-        result = {"tag_groups": [], "aux_tags": []}
+        result: Dict[str, Any] = {"tag_groups": [], "aux_tags": []}
         for tag_group in self.tag_groups:
             result["tag_groups"].append(tag_group.get_dict_format())
 
@@ -568,7 +571,7 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Check_MK Agent'),
+                'title': _('Checkmk agent'),
                 'topic': _('Data sources'),
                 'tags': [
                     {
@@ -646,7 +649,7 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'address_family',
-                'title': _('IP Address Family'),
+                'title': _('IP address family'),
                 'topic': u'Address',
                 'tags': [
                     {
@@ -694,7 +697,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'tcp',
                 'topic': _('Data sources'),
-                'title': _('Monitor via Check_MK Agent'),
+                'title': _('Monitor via Checkmk Agent'),
             },
             {
                 'id': 'ping',

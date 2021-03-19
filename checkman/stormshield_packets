@@ -1,4 +1,4 @@
-title: Stormshield Packages
+title: Stormshield: Information Packages
 agents: snmp
 catalog: app/stormshield
 license: GPL
@@ -11,9 +11,8 @@ description:
  Additional to that you can the the active UDP and TCP Sessions.
 
 item:
- The description of the service as provided by
- the device.
+ The description of the package
 
 inventory:
- The check creates a service for each interface, which is an ethernet
- or ipsec interface.
+ One service is created for each interface
+ if it is an ethernet or ipsec interface.

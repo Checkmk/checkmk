@@ -1,0 +1,13 @@
+Title: Fix possible crash when trying to save site multiple times
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1586334238
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+When saving a site configuration and trying to submit the form again
+a second time, this could result in an error message. No information
+was lost, just the result of the page is not displayed correctly

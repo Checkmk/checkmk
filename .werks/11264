@@ -1,0 +1,13 @@
+Title: Fix building agent MSI packages on SLES15SP1
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1598355153
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Using the Agent bakery on SLES15SP1 Checkmk servers it was not possible to
+build MSI packages because the tools (msibuild, msiinfo) were missing on that
+platform.

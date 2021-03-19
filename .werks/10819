@@ -1,0 +1,12 @@
+Title: openbsd_sensors.indicator, openbsd_sensors.drive, openbsd_sensors.powersupply: New openbsd sensor checks
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1583141564
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+It's now possible to monitor the state of openbsd indicator, drive and
+powersupply sensors.

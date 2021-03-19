@@ -1,6 +1,7 @@
-# MS Exchange Database counters
+$CMK_VERSION = "2.1.0i1"
+## MS Exchange Database counters
 
-# localize counter name
+## localize counter name
 $locale = ([System.Globalization.Cultureinfo]::CurrentCulture.name)
 switch -wildcard($locale){
     "en-*" {$counter_name = "\MSExchange Database ==> Instances(*)\*"}

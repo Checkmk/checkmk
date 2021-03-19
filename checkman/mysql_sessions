@@ -1,0 +1,21 @@
+title: MySQL: Sessions
+agents: linux
+catalog: app/mysql
+license: GPL
+distribution: check_mk
+description:
+ This check allows tracking of the session parameters for a MySQL database.
+ It reports how many sessions there are in total, how many of them are
+ active, and at what rate new sessions are generated.
+
+ It allows to set {WARN} and {CRIT} tresholds on any of these parameters.
+
+ The data is gathered from the {show global status} query.
+
+item:
+ The name of the instance
+
+inventory:
+ One service is created for each instance for each session connected
+ to the MySQL daemon.
+

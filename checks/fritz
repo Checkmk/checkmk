@@ -1,37 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-
-def parse_fritz(info):
-    return {l[0]: ' '.join(l[1:]) for l in info if len(l) > 1}
-
-
-check_info["fritz"] = {
-    'parse_function': parse_fritz,
-}
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 #
@@ -70,7 +47,6 @@ check_info['fritz.conn'] = {
     "inventory_function": inventory_fritz_conn,
     "check_function": check_fritz_conn,
     "service_description": "Connection",
-    "includes": ["uptime.include"],
     "has_perfdata": True,
 }
 
@@ -105,58 +81,6 @@ check_info['fritz.config'] = {
     "inventory_function": inventory_fritz_config,
     "check_function": check_fritz_config,
     "service_description": "Configuration",
-}
-
-
-#
-# WAN Interface Check
-#
-def fritz_wan_if_to_if64(parsed):
-    link_stat = parsed.get('NewLinkStatus')
-    if not link_stat:
-        oper_status = None
-    elif link_stat == 'Up':
-        oper_status = '1'
-    else:
-        oper_status = '2'
-
-    return [
-        # ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus,
-        # ifInOctets,  inucast,  inmcast,  inbcast,  ifInDiscards,  ifInErrors,
-        # ifOutOctets, outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors,
-        # ifOutQLen, ifAlias, ifPhysAddress
-        ('0', 'WAN', '6', parsed.get('NewLayer1DownstreamMaxBitRate'), oper_status,
-         parsed.get('NewTotalBytesReceived'), '0', '0', '0', '0', '0',
-         parsed.get('NewTotalBytesSent'), '0', '0', '0', '0', '0', '0', 'WAN', '')
-    ]
-
-
-def inventory_fritz_wan_if(parsed):
-    return inventory_if_common(fritz_wan_if_to_if64(parsed))
-
-
-def check_fritz_wan_if(item, params, parsed):
-    if not parsed:
-        return 3, 'Interface info is missing'
-
-    if_common_params = {
-        'assumed_speed_in': int(parsed['NewLayer1DownstreamMaxBitRate']),
-        'assumed_speed_out': int(parsed['NewLayer1UpstreamMaxBitRate']),
-        'unit': 'bit',
-    }
-    if_common_params.update(params)
-
-    return check_if_common(item, if_common_params, fritz_wan_if_to_if64(parsed))
-
-
-check_info["fritz.wan_if"] = {
-    'check_function': check_fritz_wan_if,
-    'inventory_function': inventory_fritz_wan_if,
-    'service_description': 'Interface %s',
-    'has_perfdata': True,
-    'group': 'if',
-    'default_levels_variable': 'if_default_levels',
-    'includes': ['if.include'],
 }
 
 

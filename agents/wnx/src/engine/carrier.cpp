@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "commander.h"
+#include "common/mailslot_transport.h"
 #include "logger.h"
 #include "tools/_misc.h"
 
@@ -94,7 +95,6 @@ bool CoreCarrier::sendData(const std::string& PeerName, uint64_t Marker,
 }
 
 // BASE API
-// gtest [+]
 bool CoreCarrier::sendLog(const std::string& PeerName, const void* Data,
                           size_t Length) {
     std::lock_guard lk(lock_);
@@ -149,17 +149,24 @@ bool CoreCarrier::mailSlotSend(DataType Type, const std::string& PeerName,
         return false;
     }
 
-    return postman.ExecPost(cdh.get(), cdh->fullLength());
+    auto ret = postman.ExecPost(cdh.get(), cdh->fullLength());
+    if (!ret) {
+        XLOG::l("Failed to send data to mail slot");
+    }
+    return ret;
 }
 
-bool CoreCarrier::dumpSlotSend(DataType Type, const std::string&, uint64_t,
-                               const void* Data, size_t) {
-    auto data = static_cast<const char*>(Data);
-    if (Data) {
-        if (Type == kSegment)
-            std::cout << (const char*)Data;
+bool CoreCarrier::dumpSlotSend(DataType type, const std::string& peer_name,
+                               uint64_t marker, const void* data_in,
+                               size_t length)
+
+{
+    auto data = static_cast<const char*>(data_in);
+    if (data) {
+        if (type == kSegment)
+            std::cout << data;
         else
-            std::cerr << (const char*)Data << '\n';
+            std::cerr << data << '\n';
     }
     return true;
 }
@@ -181,7 +188,8 @@ bool CoreCarrier::fileSlotSend(DataType Type, const std::string& PeerName,
                 break;
             case kCommand: {
                 std::string cmd(static_cast<const char*>(Data), Length);
-                cma::commander::RunCommand(PeerName, cmd);
+                auto rcp = cma::commander::ObtainRunCommandProcessor();
+                if (rcp) rcp(PeerName, cmd);
             } break;
 
             default:
@@ -207,17 +215,26 @@ bool CoreCarrier::fileSlotSend(DataType Type, const std::string& PeerName,
 }
 
 // nothing
-bool CoreCarrier::nullSlotSend(DataType Type, const std::string& PeerName,
-                               uint64_t Marker, const void* Data,
-                               size_t Length) {
+bool CoreCarrier::nullSlotSend(DataType, const std::string&, uint64_t,
+                               const void*, size_t) {
     return true;
 }
 
 // nothing
-bool CoreCarrier::asioSlotSend(DataType Type, const std::string& PeerName,
-                               uint64_t Marker, const void* Data,
-                               size_t Length) {
+bool CoreCarrier::asioSlotSend(DataType, const std::string&, uint64_t,
+                               const void*, size_t) {
     return false;
+}
+
+void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
+    cma::carrier::CoreCarrier cc;
+
+    using namespace cma::carrier;
+    auto internal_port = BuildPortName(kCarrierMailslotName, mail_slot.data());
+    auto ret = cc.establishCommunication(internal_port);
+    cc.sendCommand(cma::commander::kMainPeer, cmd);
+
+    cc.shutdownCommunication();
 }
 
 }  // namespace cma::carrier

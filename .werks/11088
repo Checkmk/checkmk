@@ -1,0 +1,20 @@
+Title: Monitoring of AWS WAFV2
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1587648848
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces monitoring of AWS Web Application
+Firewalls (WAF, V2 only). The monitoring includes overall
+limits for AWS WAFV2 (both region-wide and per-Web ACL
+limits) and a summary of all Web Access Control Lists
+(ACLs). Furthermore, the werk includes monitoring of the
+number of requests (total, allowed and blocked) for each
+Web ACL. To use this werk, you have to configure the
+related AWS special agent to monitor AWS WAFV2. Note that
+there is a specific option to also include WAFs in front
+of CloudFront resources in the monitoring.

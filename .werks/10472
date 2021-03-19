@@ -1,0 +1,11 @@
+Title: ad_replication: Introduce long output and only display summary
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573567832
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+

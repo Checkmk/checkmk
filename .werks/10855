@@ -1,0 +1,13 @@
+Title: agent_prometheus: addition of piggyback host naming option for cadvisor containers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1581427256
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change allows the user to select the preferred naming of cadvisor containers.
+The mechanism is similar to the existing Docker plugin where one can choose between
+three options for piggyback host naming.

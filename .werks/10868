@@ -1,0 +1,30 @@
+Title: Tags: Custom "Agent type" tag group cleanup is now easier
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1583270573
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.0.0i1
+
+Werk #5535 introduced with Checkmk moved the "Agent type" tag group from
+a tag group that could be customized to a builtin tag group.
+
+In case you have modified it in any way, the tag group could not be migrated
+manually. In this situation the new builtin tag choices have been added to
+the tag group and the titles of the previously existing tag choices have been
+prefixed with "Legacy: ".
+
+To perform the cleanup now you have to perform the following steps:
+
+<ul>
+<li>Remove all tag choices except <tt>cmk-agent</tt>, <tt>all-agents</tt>,
+    <tt>special-agents</tt> and <tt>no-agent</tt>.</li>
+<li>Then you can try to delete the tag group.</li>
+</ul>
+
+If you have prepared the tag group as mentioned in the first step, the second
+step should result in a message "Cleaned up user tag group to builtin". The
+tag group is visible as "(builtin)" tag group.

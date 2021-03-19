@@ -1,4 +1,4 @@
-title: MS Exchange Database Latency
+title: MS Exchange: Database Latency
 agents: windows
 catalog: app/exchange
 license: GPL
@@ -12,5 +12,8 @@ description:
 
  This check requires the msexch_database.ps1 agent plugin to work.
 
+item:
+ Name of the database instance
+
 inventory:
- One item per database instance.
+ One service is created for each database instance.

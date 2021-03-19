@@ -1,0 +1,13 @@
+Title: metrics: retrieve graph for 'Number of processes'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1573198166
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The graph for 'Number of processes' was removed in some previous commit.
+Some checks e.g. 'ps' where missing this graph.
+It now got added again as a graph.

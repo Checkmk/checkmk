@@ -1,4 +1,4 @@
-title: MongoDB Cluster Information
+title: MongoDB: Cluster Information
 agents: linux
 catalog: app/mongodb
 license: GPL
@@ -14,5 +14,8 @@ description:
 
 Note: This check will only be discovered, if the agent runs on the primary mongos router node.
 
+item:
+ Name of the cluster
+
 inventory:
- One service is created for each database named 'MongoDB Database: <database name>'
+ One service is created for each database named 'MongoDB Database: <database name>'.

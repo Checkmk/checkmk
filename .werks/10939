@@ -1,0 +1,12 @@
+Title: Fixed non functional JSON and PNG export function in graphs
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1584721061
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

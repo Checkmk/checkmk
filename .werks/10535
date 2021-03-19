@@ -1,0 +1,24 @@
+Title: Activate Changes: Now able to specifiy the number of parallel site activations
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1586865599
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Earlier versions may have run into memory problems when too much sites were activated at the same time.
+Each site was handled in a separate helper process. This consumed quite a lot of memory when your
+WATO setup included lots (>50) of sites.
+
+
+You can now configure how much helper processes are spawned during the activate changes phase.
+If there are more sites to activate then available helper processes, the remaining sites are put into a
+queue and will be processed once a helper process becomes idle again.
+
+
+Per default the optimal number of helper processes is calculated automatically (up to 90% remaining RAM is used),
+which should be OK for most setups. The new global settings option <tt>Maximum parallel processes during activate changes</tt> allows
+you to adjust this value. The hardcoded minium value is 5.

@@ -1,17 +1,17 @@
-title: Version of VirtualBox guest additions in Linux guests
+title: VirtualBox: Linux Guest Additions
 agents: linux
 catalog: os/services
 license: GPL
 distribution: check_mk
 description:
- This check uses {VBoxControl} to query to version und revision of the
+ This check uses {VBoxControl} to query the version and revision of the
  guest additions installed in a VirtualBox Linux guest. If no guest additions
  are installed at all, the check will get critical. if the version and
  revision of the guest additions do not match the version and revision
  of the virtual box host, the check will warn.
 
 inventory:
- One check will be created on each Linux VBox host having guest
+ One service is created on each Linux VBox host having guest
  additions installed(!). If you want to force the check on {all}
  of your Linux guests, you need to configure explicit checks using
  {checks=}.

@@ -1,0 +1,12 @@
+Title: check_bi_aggr: Option "Track downtimes" was broken in version 1.6.0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580293316
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Aggregations in downtime did not automatically put the host into downtime.
+

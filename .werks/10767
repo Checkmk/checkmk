@@ -1,0 +1,19 @@
+Title: Implement Forecast Graph prediction engine
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1579519270
+Edition: cee
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+To avoid the need for extenal dependencies for the Forecasting Graphs
+Checkmk now ships its own implementation of the prediction algorithm.
+
+This Werk replaces Werk #7451. The script {bin/install_fbprophet} available
+in Checkmk 1.6 can be used to unistall the external dependencies before
+updating to Checkmk 1.7. Once updated to Checkmk 1.7 which also uses
+Python3 as default, no script can be provided to clean up python2 runtime
+dependecies. As such the user is advised to manually remove the unused
+contents of his local folders in {local/lib/python}

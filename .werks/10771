@@ -1,0 +1,18 @@
+Title: Fix Service rediscovery for ucd_cpu_util
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580898052
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+With werk 6952, ucd_cpu_util default configuration changed. However, your
+checkmk configuration might still rely on our old default values. Service
+rediscovery would crash as old defaults could not be found anymore.
+
+This werk includes the previous default for backwards compatibility,
+allowing you to correctly update the service configuration in a service
+rediscovery whenever you decide to trigger it.

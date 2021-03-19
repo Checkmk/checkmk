@@ -1,0 +1,17 @@
+Title: Fix site certificate being overwritten during version update
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.6.0p9
+Date: 1579783193
+Class: fix
+
+The sites SSL certificate (etc/ssl/sites/[site].pem), which is used by
+encrypted livestatus communication, was replaced with a fresh certificate
+during each "omd update".
+
+When using certificates issued by the site CA, this was not an issue, because
+the trust at the central site was established with the site CA. It was only an
+issue when trying to replace the site certificate with a certificate signed
+by an external CA.

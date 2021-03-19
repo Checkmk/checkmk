@@ -1,4 +1,4 @@
-title: Microsoft Azure Storage Accounts
+title: Microsoft Azure Storage Accounts: Location
 agents: azure
 catalog: cloud/azure
 license: GPL
@@ -13,5 +13,4 @@ item:
  The name of the resource.
 
 inventory:
- One service is created per storage account.
-
+ One service is created for each storage account.

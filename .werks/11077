@@ -1,0 +1,15 @@
+Title: Web API: Fix set_hosttags call when any rule uses "one of" or "none of" tag conditions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1591187144
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+It was not possible to set_hosttags via WEBAPI call in case any rule uses the
+operators "one of" or "none of" in host tag conditions. This caused an
+"Unhandled exception: ... NotImplementedError" when trying to execute the
+"set_hosttags" API call.

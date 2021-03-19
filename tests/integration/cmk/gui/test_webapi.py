@@ -1,26 +1,29 @@
-#!/usr/bin/env python
-# encoding: utf-8
-# pylint: disable=redefined-outer-name
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
 import copy
+from io import BytesIO
 import json
 import os
-from StringIO import StringIO
 import subprocess
 import sys
 import time
-import six
+from typing import Any, Dict, List
 
-import pytest  # type: ignore
-from PIL import Image  # type: ignore
+import pytest  # type: ignore[import]
+from PIL import Image  # type: ignore[import]
 
-import cmk
-from testlib import web, APIError, wait_until, repo_path  # pylint: disable=unused-import
+import cmk.utils.version as cmk_version
+from testlib import web, APIError, wait_until  # noqa: F401 # pylint: disable=unused-import
+from testlib.utils import get_standard_linux_agent_output
 
 
-@pytest.fixture
-def local_test_hosts(web, site):
+@pytest.fixture(name="local_test_hosts")
+def fixture_local_test_hosts(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     site.makedirs("var/check_mk/agent_output/")
 
     web.add_hosts([
@@ -38,10 +41,8 @@ def local_test_hosts(web, site):
     )
 
     for hostname in ["test-host", "test-host2"]:
-        site.write_file(
-            "var/check_mk/agent_output/%s" % hostname,
-            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
-                 repo_path()).read())
+        site.write_file("var/check_mk/agent_output/%s" % hostname,
+                        get_standard_linux_agent_output())
 
     yield
 
@@ -51,12 +52,12 @@ def local_test_hosts(web, site):
     site.delete_file("etc/check_mk/conf.d/local-test-hosts.mk")
 
 
-def test_global_settings(site, web):
-    r = web.get("wato.py")
-    assert "Global Settings" in r.text
+def test_global_settings(site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+    r = web.get("wato.py?mode=globalvars")
+    assert "Global settings" in r.text
 
 
-def test_add_host(web):
+def test_add_host(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         # Also tests get_host
         web.add_host("test-host", attributes={
@@ -66,7 +67,7 @@ def test_add_host(web):
         web.delete_host("test-host")
 
 
-def test_add_host_folder_create(web):
+def test_add_host_folder_create(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host(
             "test-host",
@@ -80,7 +81,7 @@ def test_add_host_folder_create(web):
         web.delete_host("test-host")
 
 
-def test_add_host_no_folder_create(web):
+def test_add_host_no_folder_create(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     with pytest.raises(APIError) as e:
         web.add_host(
             "test-host",
@@ -96,7 +97,7 @@ def test_add_host_no_folder_create(web):
     assert "Unable to create parent folder" in exc_msg
 
 
-def test_add_hosts(web):
+def test_add_hosts(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     hosts = ["test-hosts1", "test-hosts2"]
     try:
         web.add_hosts([(hostname, "", {
@@ -106,7 +107,7 @@ def test_add_hosts(web):
         web.delete_hosts(hosts)
 
 
-def test_edit_host(web):
+def test_edit_host(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-edit-host", attributes={
             "ipaddress": "127.0.0.1",
@@ -117,7 +118,7 @@ def test_edit_host(web):
         web.delete_host("test-edit-host")
 
 
-def test_edit_hosts(web):
+def test_edit_hosts(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-edit-hosts1", attributes={
             "ipaddress": "127.0.0.1",
@@ -138,7 +139,7 @@ def test_edit_hosts(web):
         web.delete_hosts(["test-edit-hosts1", "test-edit-hosts2"])
 
 
-def test_get_all_hosts_basic(web):
+def test_get_all_hosts_basic(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-list", attributes={
             "ipaddress": "127.0.0.1",
@@ -150,7 +151,7 @@ def test_get_all_hosts_basic(web):
         web.delete_host("test-host-list")
 
 
-def test_delete_host(web):
+def test_delete_host(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-delete", attributes={
             "ipaddress": "127.0.0.1",
@@ -159,7 +160,7 @@ def test_delete_host(web):
         web.delete_host("test-host-delete")
 
 
-def test_delete_hosts(web):
+def test_delete_hosts(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-hosts-delete1", attributes={
             "ipaddress": "127.0.0.1",
@@ -171,7 +172,7 @@ def test_delete_hosts(web):
         web.delete_hosts(["test-hosts-delete1", "test-hosts-delete2"])
 
 
-def test_get_host_effective_attributes(web):
+def test_get_host_effective_attributes(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host", attributes={
             "ipaddress": "127.0.0.1",
@@ -187,7 +188,7 @@ def test_get_host_effective_attributes(web):
         web.delete_host("test-host")
 
 
-def test_get_all_hosts_effective_attributes(web):
+def test_get_all_hosts_effective_attributes(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host", attributes={
             "ipaddress": "127.0.0.1",
@@ -205,24 +206,46 @@ def test_get_all_hosts_effective_attributes(web):
         web.delete_host("test-host")
 
 
-def test_get_ruleset(web):
+def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_ruleset("extra_host_conf:notification_options")
     assert response == {
         'ruleset': {
             '': [{
+                'id': '814bf932-6341-4f96-983d-283525b5416d',
                 'value': 'd,r,f,s',
                 'condition': {}
             }]
         },
-        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+        'configuration_hash': 'a8ee55e0ced14609df741e5a82462e3a',
+    }
+
+    # TODO: Move testing of initial wato rules to unit tests
+    response = web.get_ruleset("inventory_df_rules")
+    assert response == {
+        'ruleset': {
+            '': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
+                'condition': {
+                    'host_labels': {
+                        u'cmk/check_mk_server': u'yes',
+                    },
+                },
+                'value': {
+                    'ignore_fs_types': ['tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660'],
+                    'never_ignore_mountpoints': [u'~.*/omd/sites/[^/]+/tmp$']
+                }
+            }]
+        },
+        'configuration_hash': '68e05dd8ab82cea5bebc9c6184c0ee08',
     }
 
 
-def test_set_ruleset(web):
+def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     orig_ruleset = web.get_ruleset("bulkwalk_hosts")
     assert orig_ruleset == {
         'ruleset': {
             '': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'value': True,
                 'condition': {
                     'host_tags': {
@@ -237,7 +260,7 @@ def test_set_ruleset(web):
                 }
             }]
         },
-        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+        'configuration_hash': '9abf6316805b3daf10ac7745864f13f8',
     }
 
     # Now modify something
@@ -256,12 +279,12 @@ def test_set_ruleset(web):
         assert response is None
 
 
-def test_get_site(web, site):
+def test_get_site(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_site(site.id)
     assert "site_config" in response
 
 
-def test_get_all_sites(web, site):
+def test_get_all_sites(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_all_sites()
     assert "sites" in response
     assert site.id in response["sites"]
@@ -274,7 +297,7 @@ def test_get_all_sites(web, site):
         "tls": ("plain_text", {}),
     }),
 ])
-def test_set_site(web, site, sock_spec):
+def test_set_site(web, site, sock_spec):  # noqa: F811 # pylint: disable=redefined-outer-name
     original_site = web.get_site(site.id)
     assert site.id == original_site["site_id"]
 
@@ -309,7 +332,7 @@ def test_set_site(web, site, sock_spec):
         "tls": ("plain_text", {}),
     }),
 ])
-def test_set_all_sites(web, site, sock_spec):
+def test_set_all_sites(web, site, sock_spec):  # noqa: F811 # pylint: disable=redefined-outer-name
     response = web.get_all_sites()
     del response["configuration_hash"]
 
@@ -336,7 +359,7 @@ def test_set_all_sites(web, site, sock_spec):
         web.delete_site(new_site_id)
 
 
-def test_write_host_tags(web, site):
+def test_write_host_tags(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-dmz",
                      attributes={
@@ -359,7 +382,7 @@ def test_write_host_tags(web, site):
         assert hosts["test-host-lan"]["attributes"]["tag_networking"] == "lan"
         assert hosts["test-host-lan2"]["attributes"]["tag_networking"] == "lan"
 
-        cfg = {
+        cfg: Dict[str, Any] = {
             "FOLDER_PATH": "/",
             "all_hosts": [],
             "host_tags": {},
@@ -368,7 +391,7 @@ def test_write_host_tags(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert "dmz" in cfg["host_tags"]["test-host-dmz"]["networking"]
         assert "lan" not in cfg["host_tags"]["test-host-dmz"]["networking"]
@@ -383,7 +406,7 @@ def test_write_host_tags(web, site):
         web.delete_hosts(["test-host-lan2", "test-host-lan", "test-host-dmz"])
 
 
-def test_write_host_labels(web, site):
+def test_write_host_labels(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-lan",
                      attributes={
@@ -397,7 +420,7 @@ def test_write_host_labels(web, site):
         hosts = web.get_all_hosts(effective_attributes=True)
         assert hosts["test-host-lan"]["attributes"]["labels"] == {u'blä': u'blüb'}
 
-        cfg = {
+        cfg: Dict[str, Any] = {
             "FOLDER_PATH": "/",
             "all_hosts": [],
             "host_tags": {},
@@ -406,15 +429,15 @@ def test_write_host_labels(web, site):
             "host_attributes": {},
         }
 
-        exec (site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
 
         assert cfg["host_labels"]["test-host-lan"] == {
             u"blä": u"blüb",
         }
 
-        for label_id, label_value in cfg["host_labels"]["test-host-lan"].iteritems():
-            assert isinstance(label_id, six.text_type)
-            assert isinstance(label_value, six.text_type)
+        for label_id, label_value in cfg["host_labels"]["test-host-lan"].items():
+            assert isinstance(label_id, str)
+            assert isinstance(label_value, str)
 
     finally:
         web.delete_hosts(["test-host-lan"])
@@ -422,13 +445,13 @@ def test_write_host_labels(web, site):
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_add_group(web, group_type):
+def test_add_group(web, group_type):  # noqa: F811 # pylint: disable=redefined-outer-name
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -437,7 +460,7 @@ def test_add_group(web, group_type):
         assert group_id in all_groups
         assert group_alias == all_groups[group_id]["alias"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             assert all_groups[group_id]["provider"] == "provider"
     finally:
         all_groups = web.get_all_groups(group_type)
@@ -447,14 +470,14 @@ def test_add_group(web, group_type):
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_edit_group(web, group_type):
+def test_edit_group(web, group_type):  # noqa: F811 # pylint: disable=redefined-outer-name
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -466,7 +489,7 @@ def test_edit_group(web, group_type):
         assert group_id in all_groups
         assert group_alias2 == all_groups[group_id]["alias"]
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             assert all_groups[group_id]["customer"] == "provider"
     finally:
         web.delete_group(group_type, group_id)
@@ -474,14 +497,14 @@ def test_edit_group(web, group_type):
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_edit_group_missing(web, group_type):
+def test_edit_group_missing(web, group_type):  # noqa: F811 # pylint: disable=redefined-outer-name
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -500,7 +523,7 @@ def test_edit_group_missing(web, group_type):
 
 
 # TODO: Parameterize test for cme / non cme
-def test_edit_cg_group_with_nagvis_maps(web, site):
+def test_edit_cg_group_with_nagvis_maps(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
@@ -509,7 +532,7 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
 
         attributes = {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group("contact", "nagvis_test", attributes)
@@ -528,13 +551,13 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
 
 # TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), ["contact", "host", "service"])
-def test_delete_group(web, group_type):
+def test_delete_group(web, group_type):  # noqa: F811 # pylint: disable=redefined-outer-name
     group_id = "%s_testgroup_id" % group_type
     group_alias = "%s_testgroup_alias" % group_type
     try:
         attributes = {"alias": group_alias}
 
-        if cmk.is_managed_edition():
+        if cmk_version.is_managed_edition():
             attributes["customer"] = "provider"
 
         web.add_group(group_type, group_id, attributes)
@@ -542,7 +565,7 @@ def test_delete_group(web, group_type):
         web.delete_group(group_type, group_id)
 
 
-def test_get_all_users(web):
+def test_get_all_users(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     users = {
         "klaus": {
             "alias": "mr. klaus",
@@ -553,16 +576,16 @@ def test_get_all_users(web):
             "alias": "mr. monroe"
         }
     }
-    expected_users = set(["cmkadmin", "automation"] + users.keys())
+    expected_users = set(["cmkadmin", "automation"] + list(users.keys()))
     try:
-        _response = web.add_htpasswd_users(users)
+        web.add_htpasswd_users(users)
         all_users = web.get_all_users()
         assert not expected_users - set(all_users.keys())
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_add_htpasswd_users(web):
+def test_add_htpasswd_users(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     users = {
         "klaus": {
             "alias": "mr. klaus",
@@ -576,10 +599,10 @@ def test_add_htpasswd_users(web):
     try:
         web.add_htpasswd_users(users)
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_edit_htpasswd_users(web):
+def test_edit_htpasswd_users(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     users = {
         "klaus": {
             "alias": "mr. klaus",
@@ -603,38 +626,31 @@ def test_edit_htpasswd_users(web):
             }
         })
         all_users = web.get_all_users()
-        assert not "pager" in all_users["klaus"]
+        assert "pager" not in all_users["klaus"]
         assert all_users["monroe"]["alias"] == "ms. monroe"
     finally:
-        web.delete_htpasswd_users(users.keys())
+        web.delete_htpasswd_users(list(users.keys()))
 
 
-def test_discover_services(web):
-    try:
-        web.add_host("test-host-discovery", attributes={
-            "ipaddress": "127.0.0.1",
-        })
-
-        web.discover_services("test-host-discovery")
-    finally:
-        web.delete_host("test-host-discovery")
+def test_discover_services(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
+    web.discover_services("test-host")
 
 
-def test_bulk_discovery_start_with_empty_hosts(web):
+def test_bulk_discovery_start_with_empty_hosts(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     with pytest.raises(APIError, match="specify some host"):
         web.bulk_discovery_start({
             "hostnames": [],
         }, expect_error=True)
 
 
-def test_bulk_discovery_unknown_host(web):
+def test_bulk_discovery_unknown_host(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     with pytest.raises(APIError, match="does not exist"):
         web.bulk_discovery_start({
             "hostnames": ["nono"],
         }, expect_error=True)
 
 
-def _wait_for_bulk_discovery_job(web):
+def _wait_for_bulk_discovery_job(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     def job_completed():
         status = web.bulk_discovery_status()
         return status["job"]["state"] != "initialized" and status["is_active"] is False
@@ -642,7 +658,7 @@ def _wait_for_bulk_discovery_job(web):
     wait_until(job_completed, timeout=30, interval=1)
 
 
-def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
+def test_bulk_discovery_start_with_defaults(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.bulk_discovery_start({
         "hostnames": ["test-host"],
     })
@@ -656,11 +672,9 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    assert "63 added" in status["job"]["output"]
-    assert "discovery successful" in status["job"]["output"]
 
 
-def test_bulk_discovery_start_with_parameters(web, local_test_hosts):
+def test_bulk_discovery_start_with_parameters(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.bulk_discovery_start({
         "hostnames": ["test-host"],
         "mode": "new",
@@ -678,7 +692,7 @@ def test_bulk_discovery_start_with_parameters(web, local_test_hosts):
     assert status["job"]["state"] == "finished"
 
 
-def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
+def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.bulk_discovery_start({
         "hostnames": ["test-host", "test-host2"],
         "mode": "new",
@@ -696,7 +710,7 @@ def test_bulk_discovery_start_multiple_with_subdir(web, local_test_hosts):
     assert status["job"]["state"] == "finished"
 
 
-def test_activate_changes(web, site):
+def test_activate_changes(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
         web.add_host("test-host-activate", attributes={
             "ipaddress": "127.0.0.1",
@@ -712,7 +726,7 @@ def test_activate_changes(web, site):
 
 
 @pytest.fixture(scope="module")
-def graph_test_config(web, site):
+def graph_test_config(web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
     # No graph yet...
     with pytest.raises(APIError) as exc_info:
         web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
@@ -730,10 +744,8 @@ def graph_test_config(web, site):
         )
 
         site.makedirs("var/check_mk/agent_output/")
-        site.write_file(
-            "var/check_mk/agent_output/test-host-get-graph",
-            open("%s/tests/integration/cmk_base/test-files/linux-agent-output" %
-                 repo_path()).read())
+        site.write_file("var/check_mk/agent_output/test-host-get-graph",
+                        get_standard_linux_agent_output())
 
         web.discover_services("test-host-get-graph")
         web.activate_changes()
@@ -741,13 +753,14 @@ def graph_test_config(web, site):
 
         # Wait for RRD file creation. Isn't this a bug that the graph is not instantly available?
         rrd_path = site.path("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd")
-        for attempt in xrange(50):
+        for attempt in range(50):
             time.sleep(0.1)
             proc = subprocess.Popen([site.path("bin/unixcat"),
                                      site.path("tmp/run/rrdcached.sock")],
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
+                                    stderr=subprocess.PIPE,
+                                    encoding="utf-8")
             out, err = proc.communicate("FLUSH %s\n" % rrd_path)
             if os.path.exists(rrd_path):
                 break
@@ -766,19 +779,19 @@ def graph_test_config(web, site):
     web.activate_changes()
 
 
-def test_get_graph_api(web, graph_test_config):
+def test_get_graph_api(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     # Now we get a graph
     data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
 
     assert len(data["curves"]) == 5
     assert data["curves"][0]["title"] == "CPU time in user space"
     assert data["curves"][1]["title"] == "CPU time in operating system"
-    assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
+    assert data["curves"][2]["title"] == "Time spent waiting for Checkmk agent"
     assert data["curves"][3]["title"] == "Time spent waiting for special agent"
     assert data["curves"][4]["title"] == "Total execution time"
 
 
-def test_get_graph_image(web, graph_test_config):
+def test_get_graph_image(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.post("graph_image.py",
                       data={
                           "request": json.dumps({
@@ -795,15 +808,15 @@ def test_get_graph_image(web, graph_test_config):
 
     content = result.content
 
-    assert content.startswith('\x89PNG')
+    assert content.startswith(b'\x89PNG')
 
     try:
-        Image.open(StringIO(content))
+        Image.open(BytesIO(content))
     except IOError:
         raise Exception("Failed to open image: %r" % content)
 
 
-def test_get_graph_notification_image(web, graph_test_config):
+def test_get_graph_notification_image(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.get("ajax_graph_images.py?host=test-host-get-graph&service=Check_MK")
 
     # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -814,15 +827,66 @@ def test_get_graph_notification_image(web, graph_test_config):
     for encoded_graph_image in encoded_graph_list:
         graph_image = base64.b64decode(encoded_graph_image)
 
-        assert graph_image.startswith('\x89PNG')
+        assert graph_image.startswith(b'\x89PNG')
 
         try:
-            Image.open(StringIO(graph_image))
+            Image.open(BytesIO(graph_image))
         except IOError:
             raise Exception("Failed to open image: %r" % graph_image)
 
 
-def test_get_graph_hover(web, graph_test_config):
+def test_get_graph_hover(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
+    metrics: List[Dict[str, Any]] = [{
+        u'color': u'#87f058',
+        u'line_type': u'stack',
+        u'expression': [
+            u'operator', u'+',
+            [[
+                u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'user_time',
+                None, 1
+            ],
+             [
+                 u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                 u'children_user_time', None, 1
+             ]]
+        ],
+        u'unit': u's',
+        u'title': u'CPU time in user space'
+    }, {
+        u'color': u'#ff8840',
+        u'line_type': u'stack',
+        u'expression': [
+            u'operator', u'+',
+            [[
+                u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'system_time',
+                None, 1
+            ],
+             [
+                 u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
+                 u'children_system_time', None, 1
+             ]]
+        ],
+        u'unit': u's',
+        u'title': u'CPU time in operating system'
+    }, {
+        u'color': u'#00b2ff',
+        u'line_type': u'stack',
+        u'expression': [
+            u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
+            None, 1
+        ],
+        u'unit': u's',
+        u'title': u'Time spent waiting for Check_MK agent'
+    }, {
+        u'color': u'#d080af',
+        u'line_type': u'line',
+        u'expression': [
+            u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK', u'execution_time',
+            None, 1
+        ],
+        u'unit': u's',
+        u'title': u'Total execution time'
+    }]
     graph_context = {
         u'definition': {
             u'explicit_vertical_range': [None, None],
@@ -837,57 +901,7 @@ def test_get_graph_hover(web, graph_test_config):
                 }
             ],
             u'consolidation_function': u'max',
-            u'metrics': [{
-                u'color': u'#87f058',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'operator', u'+',
-                    [[
-                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                        u'user_time', None, 1
-                    ],
-                     [
-                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                         u'children_user_time', None, 1
-                     ]]
-                ],
-                u'unit': u's',
-                u'title': u'CPU time in user space'
-            }, {
-                u'color': u'#ff8840',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'operator', u'+',
-                    [[
-                        u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                        u'system_time', None, 1
-                    ],
-                     [
-                         u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                         u'children_system_time', None, 1
-                     ]]
-                ],
-                u'unit': u's',
-                u'title': u'CPU time in operating system'
-            }, {
-                u'color': u'#00b2ff',
-                u'line_type': u'stack',
-                u'expression': [
-                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                    u'cmk_time_agent', None, 1
-                ],
-                u'unit': u's',
-                u'title': u'Time spent waiting for Check_MK agent'
-            }, {
-                u'color': u'#d080af',
-                u'line_type': u'line',
-                u'expression': [
-                    u'rrd', u'test-host-get-graph', u'test-host-get-graph', u'Check_MK',
-                    u'execution_time', None, 1
-                ],
-                u'unit': u's',
-                u'title': u'Total execution time'
-            }],
+            u'metrics': metrics,
             u'omit_zero_metrics': False,
             u'unit': u's'
         },
@@ -932,7 +946,7 @@ def test_get_graph_hover(web, graph_test_config):
     assert "rendered_hover_time" in data
     assert len(data["curve_values"]) == 4
 
-    for index, metric in enumerate(graph_context["definition"]["metrics"][::-1]):
+    for index, metric in enumerate(metrics[::-1]):
         curve_value = data["curve_values"][index]
 
         assert curve_value["color"] == metric["color"]
@@ -945,7 +959,7 @@ def test_get_graph_hover(web, graph_test_config):
         #assert curve_value["rendered_value"][1] != ""
 
 
-def test_get_inventory(web):
+def test_get_inventory(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     host_name = "test-host"
     inventory_dir = "var/check_mk/inventory"
     try:
@@ -975,15 +989,16 @@ def test_get_inventory(web):
         web.delete_host(host_name)
 
 
-def test_get_user_sites(web, graph_test_config):
+def test_get_user_sites(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert web.get_user_sites()[0][0] == web.site.id
 
 
-def test_get_host_names(web, graph_test_config):
+def test_get_host_names(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert "test-host-get-graph" in web.get_host_names(request={})
 
 
-def test_get_metrics_of_host(web, graph_test_config):
+@pytest.mark.skip("the test is too strict, the indices are a random permutation of 0..2")
+def test_get_metrics_of_host(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     # Do not validate the whole response, just a sample entry
     response = web.get_metrics_of_host(request={"hostname": "test-host-get-graph"})
     assert response["CPU load"] == {
@@ -1008,7 +1023,7 @@ def test_get_metrics_of_host(web, graph_test_config):
     }
 
 
-def test_get_graph_recipes(web, graph_test_config):
+def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert web.get_graph_recipes(
         request={
             "specification": [
@@ -1030,11 +1045,11 @@ def test_get_graph_recipes(web, graph_test_config):
                         u'operator', u'+',
                         [[
                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'user_time',
-                            None, 1.0
+                            'max', 1.0
                         ],
                          [
                              u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                             u'children_user_time', None, 1.0
+                             u'children_user_time', 'max', 1.0
                          ]]
                     ],
                     u'line_type': u'stack',
@@ -1046,11 +1061,11 @@ def test_get_graph_recipes(web, graph_test_config):
                         u'operator', u'+',
                         [[
                             u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                            u'system_time', None, 1.0
+                            u'system_time', 'max', 1.0
                         ],
                          [
                              u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK',
-                             u'children_system_time', None, 1.0
+                             u'children_system_time', 'max', 1.0
                          ]]
                     ],
                     u'line_type': u'stack',
@@ -1060,16 +1075,16 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'color': u'#0093ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_agent',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'stack',
-                    u'title': u'Time spent waiting for Check_MK agent',
+                    u'title': u'Time spent waiting for Checkmk agent',
                     u'unit': u's'
                 }, {
                     u'color': u'#00d1ff',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'cmk_time_ds',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'stack',
                     u'title': u'Time spent waiting for special agent',
@@ -1078,7 +1093,7 @@ def test_get_graph_recipes(web, graph_test_config):
                     u'color': u'#d080af',
                     u'expression': [
                         u'rrd', web.site.id, u'test-host-get-graph', u'Check_MK', u'execution_time',
-                        None, 1.0
+                        'max', 1.0
                     ],
                     u'line_type': u'line',
                     u'title': u'Total execution time',
@@ -1088,6 +1103,7 @@ def test_get_graph_recipes(web, graph_test_config):
                 u'specification': [
                     u'template', {
                         u'graph_index': 0,
+                        'graph_id': 'cmk_cpu_time_by_phase',
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
                         u'site': web.site.id
@@ -1096,10 +1112,10 @@ def test_get_graph_recipes(web, graph_test_config):
                 u'title': u'Time usage by phase',
                 u'unit': u's'
             },
-        ]
+        ]  # noqa: E123
 
 
-def test_get_combined_graph_identifications(web, graph_test_config):
+def test_get_combined_graph_identifications(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     result = web.get_combined_graph_identifications(
         request={
             "single_infos": ["host"],
@@ -1111,7 +1127,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
                 "site": {
                     "site": web.site.id
                 },
-                "host_name": "test-host-get-graph",
+                "host": "test-host-get-graph",
             },
         })
 
@@ -1120,7 +1136,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
             u'identification': [
                 u'combined', {
                     u'context': {
-                        u'host_name': u'test-host-get-graph',
+                        u'host': u'test-host-get-graph',
                         u'service': {
                             u'service': u'CPU load'
                         },
@@ -1139,7 +1155,7 @@ def test_get_combined_graph_identifications(web, graph_test_config):
     ]
 
 
-def test_get_graph_annotations(web, graph_test_config):
+def test_get_graph_annotations(web, graph_test_config):  # noqa: F811 # pylint: disable=redefined-outer-name
     now = time.time()
     start_time, end_time = now - 3601, now
 
@@ -1152,7 +1168,7 @@ def test_get_graph_annotations(web, graph_test_config):
                 "service": {
                     "service": "CPU load",
                 },
-                "host_name": "test-host-get-graph",
+                "host": "test-host-get-graph",
             },
             "start_time": start_time,
             "end_time": end_time,
@@ -1162,7 +1178,7 @@ def test_get_graph_annotations(web, graph_test_config):
     assert result["availability_timelines"][0]["display_name"] == "CPU load"
 
 
-def test_get_hosttags(web):
+def test_get_hosttags(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     host_tags = web.get_hosttags()
     assert isinstance(host_tags["configuration_hash"], str)
     assert host_tags["aux_tags"] == []
@@ -1171,7 +1187,7 @@ def test_get_hosttags(web):
     assert host_tags["tag_groups"][0]["id"] == "criticality"
 
 
-def test_set_hosttags(web):
+def test_set_hosttags(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     original_host_tags = web.get_hosttags()
 
     location_tag_group = {

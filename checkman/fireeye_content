@@ -1,4 +1,4 @@
-title: FireEye Appliances: Content version
+title: FireEye Appliances: Content Version
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL

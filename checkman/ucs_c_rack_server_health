@@ -1,4 +1,4 @@
-title: UCS C-Series Rack Server: Storage controller health
+title: UCS C-Series Rack Server: Storage Controller Health
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPL
@@ -32,7 +32,7 @@ description:
  - {UNKNOW} in case of any other health value than {Good}
 
 inventory:
- All server racks included in the special agent output are found automatically.
+ One service is created for each server rack included in the special agent output.
 
 item:
- One item per rack.
+ {{Rack unit}} followed by the index of the rack followed by {{Storage}} and the storage location

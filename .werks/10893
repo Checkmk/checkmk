@@ -1,0 +1,13 @@
+Title: dell_poweredge_amperage.current: Check plugin for current of power units of Dell PowerEdge Servers
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1582807227
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This check plugin allows to monitor the current of power units of
+Dell PowerEdge Servers. The check also displays the upper warning
+and critical limits as configured in the device.

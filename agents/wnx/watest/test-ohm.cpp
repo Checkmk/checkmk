@@ -117,7 +117,7 @@ int CalcOhmCount() {
 
     wtools::ScanProcessList(
         [ohm_name, &count](const PROCESSENTRY32& entry) -> bool {
-            std::string incoming_name = wtools::ConvertToUTF8(entry.szExeFile);
+            std::string incoming_name = wtools::ToUtf8(entry.szExeFile);
             StringLower(incoming_name);
             if (ohm_name == incoming_name) count++;
             return true;
@@ -193,7 +193,7 @@ TEST(SectionProviderOhm, ErrorReporting) {
 
 TEST(SectionProviderOhm, ResetOhm) {
     std::wstring x(cma::provider::ohm::kResetCommand);
-    XLOG::l.i("out = {}", wtools::ConvertToUTF8(x));
+    XLOG::l.i("out = {}", wtools::ToUtf8(x));
     EXPECT_FALSE(x.empty());
 }
 

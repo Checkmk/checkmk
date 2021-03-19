@@ -1,4 +1,4 @@
-title: 3COM and H3C switches: CPU utilization
+title: 3Com and H3C Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/h3c
 license: GPL
@@ -23,9 +23,9 @@ description:
  or even have to disable the check.
 
 inventory:
- The check will create one separate service per CPU.
+ One service is created for each CPU.
 
 item:
- A string describing the switch and unit number, for example {"Switch 2 CPU 0"}
- or {"Switch 1 Slot 11"}.
+ {{Switch}} followed by the ID of the switch followed by the CPU type
+ (i.e. {{Slot}}, {{CPU}} or {{Unknown}}) followed by the number of the CPU
 

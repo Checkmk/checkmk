@@ -1,0 +1,11 @@
+Title: ipmi: Go to CRIT if a sensor reports "In critical array"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1579859621
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+

@@ -1,0 +1,15 @@
+Title: pushover: Fix TypeError
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1608280949
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The pushover notification script crashed with the following TypeError:
+"unsupported operand type(s) for /: 'str' and 'float'"
+
+This has been fixed.

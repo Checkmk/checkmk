@@ -1,0 +1,12 @@
+Title: SLA: Fix rendering of timelines
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612951726
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The state phases were not rendered at all in the SLA timelines.

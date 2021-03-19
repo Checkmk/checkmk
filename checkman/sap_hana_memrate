@@ -1,4 +1,4 @@
-title: SAP HANA Memory
+title: SAP HANA: Memory
 agents: linux
 catalog: app/sap_hana
 license: GPL
@@ -12,7 +12,7 @@ description:
  levels are configurable, both percentual and absolute levels.
 
 item:
- The instance name
+ The sid instance name
 
 inventory:
- One service is created per instance.
+ One service is created for each instance.

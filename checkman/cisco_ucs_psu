@@ -1,8 +1,12 @@
-title: Cisco UCS: PSU operation status
+title: Cisco UCS: PSU Operation Status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
+
+item:
+ Name of the PSU
+
 description:
  This check allows to monitor the operational status of
  the PSUs in a Cisco UCS device. The check will report {OK} as long as the operational
@@ -10,4 +14,4 @@ description:
  a {WARNING} or {CRITICAL} status, based on the severity of the issue.
 
 inventory:
- One service per PSU is created.
+ One service is created for each PSU.

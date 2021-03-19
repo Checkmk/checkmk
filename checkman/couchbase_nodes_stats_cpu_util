@@ -1,0 +1,15 @@
+title: Coubase Nodes: CPU Utilization
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+ This service monitors the nodes cpu utilization.
+ Levels can be configured using the WATO rule
+ "CPU utilization of Devices with Modules".
+
+inventory:
+ One service is created for each node.
+
+item:
+ The name of the node.

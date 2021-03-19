@@ -1,10 +1,11 @@
-title: AWS/EC2 Limits
+title: AWS EC2: Limits
 agents: aws
 catalog: cloud/aws
 license: GPL
 distribution: check_mk
 description:
  This check monitors the AWS/EC2 limits.
+
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS)}.
 
@@ -14,9 +15,9 @@ description:
 
  - Elastic IP Addresses, 5
 
- - Rules of VPC security group, 50
+ - Rules of VPC security group, 120
 
- - Security Groups of VPC, 500
+ - VPC security groups, 2500
 
  - VPC security groups of elastic network interface, 5
 
@@ -34,11 +35,13 @@ description:
  instances/space per limit type.
 
  With both values we calculate the usage of each limit type
- in percent. Default levels are set to 80, 90 percent per type.
+ in percent.
+
+ The upper levels for {WARN}/{CRIT} are set to 80, 90 percent per type.
  For each limit type the limit and usage levels are configurable.
 
  If limits are enabled account attributes of EC2 resource are
  additionally fetched.
 
 inventory:
- One service will be created.
+ One service is created per monitored AWS region.

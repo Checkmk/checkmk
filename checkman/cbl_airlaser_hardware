@@ -1,0 +1,22 @@
+title: CBL Airlaser: General Status
+agents: snmp
+catalog: hw/network/cbl
+license: GPL
+distribution: check_mk
+description:
+ The CBL Airlaser is a device to transparently transport Gigabit Ethernet
+ over an optical link with optional microwave fallback.
+
+ The check queries a list containing all known power and temperature "status"
+ information from the device.
+ If one of the status OIDs indicates an error, the check will go to {WARN} or
+ {CRIT} according to the error reported.
+ For the temperature sensors, default values are included and can be adjusted.
+ If these are exceeded, the check will also alert.
+
+ Note: Monitoring rx/tx attentuation will be added after more testing.
+
+inventory:
+ One service is created for each remote device
+ if the CBL-AIRLASOR-IP1000 MIB is supported.
+

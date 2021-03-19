@@ -1,35 +1,14 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "ListFilter.h"
-#include <sstream>
-#include <string>
-#include "Filter.h"
-#include "ListColumn.h"
+
+#include <utility>
+
 #include "Logger.h"
 #include "RegExp.h"
-#include "Row.h"
 
 namespace {
 RelationalOperator relOpForElement(RelationalOperator relOp) {
@@ -56,18 +35,20 @@ RelationalOperator relOpForElement(RelationalOperator relOp) {
 }
 }  // namespace
 
-ListFilter::ListFilter(Kind kind, const ListColumn &column,
-                       RelationalOperator relOp, const std::string &value)
-    : ColumnFilter(kind, column, relOp, value)
-    , _column(column)
-    , _regExp(makeRegExpFor(relOpForElement(relOp), value)) {}
+ListFilter::ListFilter(Kind kind, std::string columnName,
+                       function_type getValue, RelationalOperator relOp,
+                       const std::string &value, Logger *logger)
+    : ColumnFilter{kind, std::move(columnName), relOp, value}
+    , f_{std::move(getValue)}
+    , _logger{logger}
+    , _regExp{makeRegExpFor(relOpForElement(relOp), value)} {}
 
 bool ListFilter::accepts(Row row, const contact *auth_user,
                          std::chrono::seconds timezone_offset) const {
     switch (oper()) {
         case RelationalOperator::equal:
             if (!value().empty()) {
-                Informational(_column.logger())
+                Informational(logger())
                     << "Sorry, equality for lists implemented only for emptiness";
                 return false;
             }
@@ -75,7 +56,7 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                         [](const std::string & /*unused*/) { return true; });
         case RelationalOperator::not_equal:
             if (!value().empty()) {
-                Informational(_column.logger())
+                Informational(logger())
                     << "Sorry, inequality for lists implemented only for emptiness";
                 return false;
             }
@@ -103,9 +84,8 @@ bool ListFilter::accepts(Row row, const contact *auth_user,
                 [&](const std::string &elem) { return _regExp->match(elem); });
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
-            Informational(_column.logger())
-                << "Sorry. Operator " << oper()
-                << " for list columns not implemented.";
+            Informational(logger()) << "Sorry. Operator " << oper()
+                                    << " for list columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -140,6 +120,9 @@ std::unique_ptr<Filter> ListFilter::copy() const {
 }
 
 std::unique_ptr<Filter> ListFilter::negate() const {
-    return std::make_unique<ListFilter>(
-        kind(), _column, negateRelationalOperator(oper()), value());
+    return std::make_unique<ListFilter>(kind(), columnName(), f_,
+                                        negateRelationalOperator(oper()),
+                                        value(), logger());
 }
+
+Logger *ListFilter::logger() const { return _logger; }

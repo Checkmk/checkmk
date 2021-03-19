@@ -1,4 +1,4 @@
-title: Infoblox devices: Grid replication status
+title: Infoblox Devices: Grid Replication Status
 agents: snmp
 catalog: hw/network/infoblox
 license: GPL
@@ -8,9 +8,6 @@ description:
  support the IB-PLATFORMONE MIB.
 
  The check is OK if the status is online. Otherwise it's CRIT.
-
-item:
- No item.
 
 inventory:
  One service is created.

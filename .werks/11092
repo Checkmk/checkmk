@@ -1,0 +1,25 @@
+Title: One service per region for AWS limits
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1588749225
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+With this werk, the monitoring of limits for AWS
+services is split into one service per region. Before,
+all regions were combined into a single service, which
+resulted in potentially quite a lot of output and
+caused problems with the graphs for 2 or more regions.
+
+To apply this werk, users have to re-discover the
+corresponding services, which will result in a loss
+of the historically recorded metrics. This is best done
+using "Automatic refresh (tabula rasa)" in the WATO-menus
+of the affected hosts. Note that rules for upper or lower
+levels created before this werk are not affected and will
+apply to all newly discovered services. After installing
+the werk, they can be modified to only apply to certain
+regions.

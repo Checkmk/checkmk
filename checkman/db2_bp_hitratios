@@ -1,4 +1,4 @@
-title: DB2 Bufferpool Hitratios
+title: DB2: Databases Bufferpool Hitratios
 agents: aix, linux
 catalog: app/db2
 license: GPL
@@ -15,6 +15,6 @@ item:
  joined by ":". For example db2aml:SIRONT4:BP16_GWG
 
 inventory:
- One separate check is created for each bufferpool in a database. Bufferpools named IBMSYSTEMBP*
- are ignored.
+ One service is created for each bufferpool in a database.
+ Bufferpools named IBMSYSTEMBP* are ignored.
 

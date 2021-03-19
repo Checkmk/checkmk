@@ -1,0 +1,13 @@
+Title: The websphere_mq plugin is now deprecated
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1584353557
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The webphsere_mq plugin is now deprecated in favour of
+the ibm_mq plugin. If you use this plugin we recommend
+a change to the ibm_mq plugin.

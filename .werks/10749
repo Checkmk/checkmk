@@ -1,0 +1,16 @@
+Title: IBM MQ: new agent plugin, checks, and inventory plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1583419514
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces the new agent plugin ibm_mq along
+with check and inventory plugins to monitor the Managers,
+Channels, and Queues of IBM MQ.
+
+Thanks to the Swisscom and Daniel Steinmann for the
+contribution.

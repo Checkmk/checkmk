@@ -1,0 +1,19 @@
+Title: winperf_phydisk: Interpret averaging parameter correctly
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1595406511
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The check <tt>winperf_phydisk</tt> now interprets the timespan parameter for
+computing averaged values correctly (ruleset "Levels on disk IO (old style
+checks)"). Previously, the user was supposed to specify a value in minutes,
+however, the check plugin actually expected a value in seconds. This has been
+corrected.
+
+This change is incompatible, since the check plugin now behaves differently
+for a given averaging timespan. User-defined rules might have to be adjusted
+to account for this.

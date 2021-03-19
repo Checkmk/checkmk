@@ -1,4 +1,4 @@
-title: FireEye Appliances: Quarantine usage
+title: FireEye Appliances: Quarantine Usage
 agents: snmp
 catalog: hw/network/fireeye
 license: GPL
@@ -10,9 +10,6 @@ description:
 
  The check goes WARN or CRIT if the percentage
  exceeds configurable values.
-
-item:
- No item.
 
 inventory:
  One service is created.

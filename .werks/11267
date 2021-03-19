@@ -1,0 +1,35 @@
+Title: if_fortigate: Use ifName as ifAlias
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1599126829
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The original check plugin {{if_fortigate}} uses the {{ifName}} under the guise
+of {{ifAlias}} because on Fortigate devices the {{ifName}} contains the
+technical interface names. By contrast {{ifDescr}} or {{ifAlias}} may contain
+user defined names.
+
+In the ruleset {{Network Interface and Switch Port Discovery}} under
+{{Appearance of network interface}} the item can be specified: Either use the
+{{Use index}}, {{Use description}} or {{Use alias}}.
+
+With the incompatible werk 6638 the {{ifName}} was substituted with
+{{ifAlias}}. This means that the technical interface names are not available
+any more. This werk reverts the check plugin back to its original state: use
+{{ifName}} as {{ifAlias}} in order to make these technical names available
+again.
+
+We cannot simply add another SNMP field because this may cause unforeseen
+performance loss.
+
+In the future we have to find a performant solution to make the following four
+SNMP fields available for item names: {{ifIndex}}, {{ifName}}, {{ifDescr}} and
+{{ifAlias}}.
+
+Thus if you have configure {{Use alias}} in the ruleset
+{{Network Interface and Switch Port Discovery}} under {{Appearance of network interface}}
+on Fortigate devices you have to rediscover these hosts.

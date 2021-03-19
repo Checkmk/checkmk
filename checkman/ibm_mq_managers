@@ -1,0 +1,28 @@
+title: IBM MQ: Availability of Queue Manager
+agents: linux, solaris, aix, hpux
+catalog: app/ibm_mq
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of an IBM MQ Queue Manager. It uses the output
+ of the {dspmq} command, especially the version and the multi-instance setup.
+
+ The state is CRITICAL if the queue manager was stopped abnormally.  The state
+ is also CRITICAL if the queue manager does not run under a specific or minimal
+ IBM MQ version.
+
+ This check shows the
+
+ - queue manager name
+
+ - version
+
+ - installation name
+
+ - current status
+
+item:
+ The name of the queue manager.
+
+inventory:
+ One service is created for each queue manager.

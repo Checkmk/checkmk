@@ -1,0 +1,16 @@
+title: EMC VNX Storage: Configuration Settings
+agents: emcvnx
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports information about the configuration settings like the statistics
+ logging and the read cache state of the storage processor.
+
+ This subcheck always returns the status {OK}.
+
+ The information is retrieved by the special agent agent_emcvnx which uses
+ EMC's command line tool naviseccli.
+
+inventory:
+ One service is created for each EMC VNX storage system called EMC VNX Config.

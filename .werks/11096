@@ -1,0 +1,24 @@
+Title: hyperv_vms: use default levels instead of discovered state
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1589359062
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The check hyperv_vms now uses a set of default levels to map the
+state of VMs to monitoring states. Before, by default, the check
+compared the current VM state against the state at the point when
+the service was discovered and went CRIT if the two states did not
+match. This behavior is still available, but the check now has to
+be specifically configured to do this, see the rule "State of 
+Microsoft Hyper-V Server VMs".
+
+Furthermore, the check now always works when executed as a manual
+check. Before, it might have crashed in this case, depending on
+the used configuration.
+
+This change is incompatible in the sense that users have to adjust
+the rules for this check to make it behave the way it did before.

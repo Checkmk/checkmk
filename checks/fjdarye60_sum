@@ -1,49 +1,22 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 fjdarye60_sum_status = {1: 'unknown', 2: 'unused', 3: 'ok', 4: 'warning', 5: 'failed'}
 
 
 def inventory_fjdarye60_sum(info):
-    return [(int(index), '', None) for index, _status in info if index != '']
+    yield from ((index, {}) for index, _status in info if index != '')
 
 
 def check_fjdarye60_sum(index, _no_param, info):
     for line in info:
-        if int(line[0]) == index:
+        if line[0] == index:
             status = int(line[1])
             text = "Status is %s" % fjdarye60_sum_status[status]
-
-            if status == 3:
-                return (0, "%s" % text)
-            elif status == 4:
-                return (1, "%s" % text)
-            return (2, "%s" % text)
-
-    return (3, "No status summary %d present" % index)
+            return (0 if status == 3 else 1 if status == 4 else 2, text)
 
 
 # 1: fjdaryUnitStatus

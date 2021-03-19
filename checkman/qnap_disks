@@ -14,5 +14,5 @@ item:
  The name of the disk like reported in the MIB
 
 inventory:
- One check is created for each Disk
+ One service is created for each Disk.
 

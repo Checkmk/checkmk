@@ -22,6 +22,6 @@ item:
  The name of the location variable configured for the memory module
 
 inventory:
- All memory modules of the device are detected
+ One service is created for each memory module of the device.
 
 

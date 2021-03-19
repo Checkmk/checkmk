@@ -1,28 +1,20 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import FSBlocks
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
 def _sanitize_line(line):
@@ -37,18 +29,17 @@ def _sanitize_line(line):
     return sanitized_line
 
 
-def parse_ceph_df(info):
+def parse_ceph_df(info) -> FSBlocks:
     parsed = {}
     section = None
     global_headers = None
     pools_headers = None
 
     for line in info:
-        if line[0] in ["GLOBAL:", "RAW"]:
+        if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", ''.join(line)) == 'RAWSTORAGE':
             section = "global"
             continue
-
-        elif line[0] == "POOLS:":
+        elif re.sub("[-: ]", "", ''.join(line)) == "POOLS":
             section = "pools"
             continue
 
@@ -91,6 +82,37 @@ def parse_ceph_df(info):
                     'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
                 ]
 
+            elif line == [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL',
+                    'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
+                    'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
+                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY',
+                    'USED COMPR', 'UNDER COMPR'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'PGS', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
+                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'PGS', 'STORED', 'STORED (DATA)', 'STORED (OMAP)', 'OBJECTS',
+                    'USED', 'USED (DATA)', 'USED (OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS',
+                    'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
             elif pools_headers is not None:
                 parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
 
@@ -118,7 +140,7 @@ def parse_ceph_df(info):
         return float(value_str) / (1024**2)
 
     mps = []
-    for mp, data in parsed.iteritems():
+    for mp, data in parsed.items():
         # http://docs.ceph.com/docs/master/rados/operations/monitoring/
         # GLOBAL section:
         #   SIZE: The overall storage capacity of the cluster.
@@ -146,7 +168,6 @@ check_info['ceph_df'] = {
     'check_function': df_check_filesystem_list,
     'service_description': 'Ceph Pool %s',
     'has_perfdata': True,
-    'includes': ['df.include', 'size_trend.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }

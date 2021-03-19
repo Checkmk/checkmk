@@ -1,0 +1,14 @@
+Title: jira notification: fix issue creation
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1595238391
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Creation of Jira issues sometimes failed because the field 'labels' is not existing.
+Jira Service Desk does not have the 'labels' field by default, but Jira Software does.
+With this change, the labels field will only be set if the WATO rule for 'labels' is activated.
+If 'labels' is activated but not value is defined it will use the default labels 'monitoring'.

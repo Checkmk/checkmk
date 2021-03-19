@@ -1,0 +1,13 @@
+Title: hr_mem: exclude invalid memory stats from discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1601555775
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Sometimes SNMP delivers invalid data for a device's memory, causing the hr_mem
+check to crash when trying to evaluate it. The check has been modified to
+exclude the Memory service if invalid data is received.

@@ -1,0 +1,34 @@
+Title: Support local files in Agent Bakery
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1584431802
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+The agent bakery now recognizes files placed under the local hierachy of
+the Checkmk site and packages them as a replacement for the corresponding
+non-local/builtin-files.
+
+Previously, this feature was available for some files like "custom-files" or the agent
+itself. Now this holds true for all files that get packaged into the baked agent package.
+
+For example, if you want to replace a plugin file, that is located at
+<code>~/share/check_mk/agents/plugins/my_plugin</code>, you would place
+your own version at <code>~/local/share/check_mk/agents/plugins/my_plugin</code>.
+
+Additionally, the agent bakery watches all files that are relevant for a package
+and will invalidate the current package upon changes in file size, modification 
+date, or file permissions, resulting in a newly baked package with new agent hash on
+bake request.
+This is visible by an orange-colored "Bake agents" button at the agent bakery.
+
+Especially, if a file is added to the local hierarchy as a replacement for a builtin-file,
+this will be recognized as a file change and result in a new package on bake request.
+
+Please note: Some files will get renamed by the bake process, e.g. the source file
+<code>check_mk_agent.linux</code> will result in <code>check_mk_agent</code> in the final
+agent package. In order to get a local file packaged, you always have to place your local
+file using the source name (Here: <code>~/local/share/check_mk/agents/check_mk_agent.linux</code>).

@@ -4,13 +4,26 @@ catalog: hw/storagehw/hpe
 license: GPL
 distribution: check_mk
 description:
- This check displays the state of a connection, the associated
- WWN and the mode. If there is information about it, it will
- display also the failover state and the label of this port.
+ This check displays the
+
+ - state of a connection
+
+ - the associated WWN
+
+ - mode
+
+ - failover state (optional)
+
+ - label of this port (optional)
 
  The service state depends on the link and failover state.
- You can define the service state for each possible value a port can
- have.
+ You can configure the service state ({OK}: 0, {WARN}: 1, {CRIT}: 2)
+ for each possible value a port can have.
+
+ This check uses the 3PAR special agent.
+
+item:
+ {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP or SAS) and {{Node}}, {{Slot}} and {{Cardport}} values.
 
 inventory:
- One service is created for each port connection.
+ One service is created for each port connection if type is not 3 (FREE).

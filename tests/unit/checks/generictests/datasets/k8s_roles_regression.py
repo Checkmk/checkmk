@@ -1,4 +1,13 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
+
 checkname = 'k8s_roles'
 
 info = [[
@@ -10,25 +19,16 @@ discovery = {'': [(None, {})]}
 checks = {
     '': [(
         None,
-        {},
-        [
-            (0, 'Total: 61', [('k8s_total_roles', 61, None, None, None, None)]),
-            (0, 'Cluster roles: 53', [('k8s_cluster_roles', 53, None, None, None, None)]),
-            (0, 'Roles: 8', [('k8s_roles', 8, None, None, None, None)]),
-        ],
-    )],
-    '': [(
-        None,
         {
             'total': (50, 80),
             'cluster_roles': (30, 50),
             'roles': (10, 20)
         },
         [
-            (1, 'Total: 61 (warn/crit at 50/80)', [('k8s_total_roles', 61, 50, 80, None, None)]),
-            (2, 'Cluster roles: 53 (warn/crit at 30/50)', [('k8s_cluster_roles', 53, 30, 50, None,
+            (1, 'Total: 61 (warn/crit at 50/80)', [('k8s_total_roles', 61, 50, 80, 0.0, None)]),
+            (2, 'Cluster roles: 53 (warn/crit at 30/50)', [('k8s_cluster_roles', 53, 30, 50, 0.0,
                                                             None)]),
-            (0, 'Roles: 8', [('k8s_roles', 8, 10, 20, None, None)]),
+            (0, 'Roles: 8', [('k8s_roles', 8, 10, 20, 0.0, None)]),
         ],
     )]
 }

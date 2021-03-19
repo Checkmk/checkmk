@@ -1,0 +1,13 @@
+Title: juniper_cpu_util: discover new items for CPU utilization
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1594132018
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously, this check only discovered items named 'Routing Engine'. We have
+expanded the discovery function to include any items with CPU utilization > 0
+as described in the Juniper MIB document (jnxOperatingCPU). 

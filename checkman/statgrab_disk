@@ -13,9 +13,9 @@ description:
  machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
 
 item:
-  {read} for Disk IO read and
-  {write} for Disk IO write
+ {read} for Disk IO read and
+ {write} for Disk IO write
 
 inventory:
-  Finds two checks on every machine with statgrab: Disk IO read and
-  Disk IO write
+ Two services are created on every machine with statgrab:
+ One for Disk IO read and one for Disk IO write

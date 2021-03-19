@@ -1,0 +1,19 @@
+title: UCS Bladecenter Fans: Temperature Information
+agents: agent_ucs_bladecenter
+catalog: hw/server/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature of the fans of the various
+ components inside an UCS bladecenter.
+ For each chassis a temperature summmary check is created.
+ You can configure levels which apply to all of the sensors.
+ If one sensor breaches the temperature limits the summary
+ check will point out its location.
+
+item:
+ Location of the fans prefixed by {{Ambient}} and suffixed by {{FAN}}
+
+inventory:
+ One summary service is created for each component.
+

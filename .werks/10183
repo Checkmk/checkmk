@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 For some check related caches it is important that the files installed by MKPs set
 a new modification time in the moment the files are extracted. This makes it possible

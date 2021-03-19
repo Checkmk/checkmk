@@ -1,0 +1,37 @@
+Title: Windows Agent can configure Windows Firewall
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1573633562
+Edition: cre
+Knowledge: undoc
+Level: 2
+State: unknown
+Version: 2.0.0i1
+
+Previously the Windows Firewall could prevent a connection to the Windows Agent
+(this is the default behavior) thus forcing a system administrator to configure
+potentially every host with Windows Agent installed.
+
+Now the Windows Agent can configure the Windows Firewall rules that are needed
+for the agent.
+
+There are two possibilities:
+
+For Windows Agent service you may edit Checkmk configuration file adding at the end:
+
+C+:
+system:
+  firewall:
+    mode: configure
+C-:
+
+Then restart the agent service or trigger a agent configuration reload.
+
+You could also execute the agent exe to set the rules for you. The command
+<tt>\path\to\check_mk_agent.exe fw -configure</tt> will configure the firewall
+correctly for <tt>\path\to\check_mk_agent.exe</tt>.
+
+It is also possible to make the agent remove the firewall configuration by
+setting the mode option to "clear" in the agent configuration file or by
+executing the command <tt>\path\to\check_mk_agent.exe fw -clear</tt>.

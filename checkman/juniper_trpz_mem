@@ -7,5 +7,5 @@ description:
  This check monitors the current usage of the internal memory.
 
 inventory:
- One service will be created
+ One service is created.
 

@@ -1,0 +1,27 @@
+Title: mk_logwatch supports single backslash in Windows paths
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1584955104
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+In previous versions it was needed to escape backslashes with another backslash.
+This has been cleaned up now. You could leave your configuration untouched and
+it still works as before.
+
+In a rare case, if your configuration contains double escaped backslashes, i.e
+"\\\\" or even "\\\\\\", this change  will result in one old service being removed
+and one new services being discovered. For example, the service "LOG C:\\\\Back\\test.log"
+previously discovered as "LOG C:\\Back\test.log" will be discovered now as
+"LOG C:\Back\test.log". In this case you will have to rediscover the related Log
+services on your hosts.
+
+We recommend finding and replacing the escaped backslashes (if any) with plain
+backslash "\" for better usability. You do not need to rediscover services again.
+
+In case you have configured "Logwatch to Event Console forwarding", you may have to
+update your forwarding and Event Console rules to match the new log path.
+

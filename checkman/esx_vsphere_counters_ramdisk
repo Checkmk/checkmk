@@ -1,0 +1,22 @@
+title: VMWare ESX Host Systems: Ramdisks
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the usage of ramdisks used by the operating system
+ of ESX host systems.
+
+ The check needs a host system with version 5.1 or newer. Older versions
+ do not provide the needed information.
+
+ The check makes use of generic the {df} check code. Therefor parameters,
+ perfdata, configuration and results are similar to the {df} check. So
+ please take a look at that check man page for details.
+
+item:
+ Mountpoint or grouped mountpoints
+
+inventory:
+ One service is created for each ramdisk from the counters reported by
+ the vsphere special agent.

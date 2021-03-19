@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cee
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1562760919
 
 In the moment a check timeout occured while checking a host when using the Microcore an exception

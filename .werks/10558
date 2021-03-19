@@ -1,0 +1,13 @@
+Title: Extension packages: Fixed performance issue
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.6.0p7
+Date: 1574942175
+Class: fix
+
+The performance of the calculation of the packaged files has been improved to
+make the extension package management faster. Especially when managing a larger
+number of files, this change can improve the user experience of the package
+management.

@@ -1,0 +1,13 @@
+Title: agent_rabbitmq, rabbitmq_cluster, rabbitmq_queues, rabbitmq_vhosts, rabbitmq_nodes: New special agent and checks to monitor RabbitMQ
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1583432119
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+It is now possible to monitor your RabbitMQ clusters with checkmk. If you
+configure the datasource rule "Check state of RabbitMQ", you can monitor
+clusterwide, detailed node, queue and vhost statistics.

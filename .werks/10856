@@ -1,0 +1,12 @@
+Title: sophos_memory: fix of metric name for correct performance graph display
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1581595726
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+This change fixes the metric name. The new version subsequently
+allows to display the memory stats in the correct perf-graph.

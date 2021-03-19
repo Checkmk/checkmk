@@ -11,7 +11,7 @@ description:
  the last recent growth can be compared to the average growth.
 
 inventory:
- One check for each indice will be created
+ One service is created for each indice.
 
 item:
  The name of the index

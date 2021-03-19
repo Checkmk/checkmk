@@ -1,0 +1,25 @@
+Title: Removed option to configure 'customer' in default_user_profile
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1591283822
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Prevously, you could configure the 'customer' entry for the default user
+profile in global or site specific configuration of a site. This option was
+removed because the standard user profile should always have the customer of
+the site in question.
+
+If you have used the rule "Default user profile" in global settings or site
+specific global settings before, please update the configuration files as
+follows:
+
+<ul>
+<li>If you just configured an explicit customer before, please use "reset to
+default" once</li>
+<li>If you have used one of the other configuration options like "User role",
+please save the rule again</li>
+</ul>

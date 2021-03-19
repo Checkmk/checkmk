@@ -1,11 +1,18 @@
-# -*- encoding: utf-8
-# yapf: disable
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# yapf: disable
+# type: ignore
+
+from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_section import parse_esx_vsphere_hostsystem
 
 checkname = 'esx_vsphere_hostsystem'
 
 
-info = [[[u'config.multipathState.path',
+parsed = parse_esx_vsphere_hostsystem([[u'config.multipathState.path',
           u'fc.2000001b329d47ad:2100001b329d47ad-fc.207000c0ffd76501:207000c0ffd76501-naa.600c0ff000d775af138c0a5601000000',
           u'active',
           u'fc.2000001b329d47ad:2100001b329d47ad-fc.207800c0ffd76501:217800c0ffd76501-naa.600c0ff000d7ba43d28c0a5601000000',
@@ -75,8 +82,7 @@ info = [[[u'config.multipathState.path',
          [u'runtime.inMaintenanceMode', u'false'],
          [u'runtime.powerState', u'poweredOn'],
          [u'summary.quickStats.overallCpuUsage', u'10733'],
-         [u'summary.quickStats.overallMemoryUsage', u'53325']],
-        None]
+         [u'summary.quickStats.overallMemoryUsage', u'53325']])
 
 
 discovery = {'': [],
@@ -102,8 +108,8 @@ checks = {'cpu_usage': [(None,
           'mem_usage': [(None,
                          (80.0, 90.0),
                          [(1,
-                           '82% (Levels at 80%/90%) used - 52.08 GB/63.25 GB',
-                           [('usage',
+                           'Usage: 82.33% - 52.08 GB of 63.25 GB (warn/crit at 80.00%/90.00% used)',
+                           [('mem_used',
                              55915315200.0,
                              54330723532.8,
                              61122063974.4,

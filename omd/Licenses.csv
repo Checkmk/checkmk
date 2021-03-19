@@ -1,6 +1,5 @@
 Name,Version,License,Link License Text,Repository path,Comment,,,
 boost,1.66.0,BSL-1.0,https://opensource.org/licenses/BSL-1.0,omd/packages/boost/boost_1_66_0.tar.gz,,,,
-check_multi,0.26_581_2013-01-30-19:05,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/check_multi/check_multi-latest-83346b6.tar.gz,,,,
 check_mysql_health,2.2.2,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/check_mysql_health/check_mysql_health-2.2.2.tar.gz,,,,
 check_oracle_health,3.0.1,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/check_oracle_health/check_oracle_health-3.0.1.tar.gz,,,,
 FreeTDS,0.95.95,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/freetds/freetds-0.95.95.tar.gz,,,,

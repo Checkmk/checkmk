@@ -1,0 +1,39 @@
+Title: Dashboard: Improve context sensitive dashboard handling
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1593670445
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+Each user opening a dashboard is now able to apply custom filters to a dashboard
+when viewing it. This can be done by opening the "Update context" dialog from
+the dashboard menu.
+
+From that menu it is possible to select one or multiple filters that will then
+be used to filter the data shown by the dashboard.
+
+This is much like the filter form in the views.
+
+One additional feature has been added that can be used to enforce the user to
+use one or multiple filters when initially opening a dashboard.
+
+Imagine you want to have a dashboard that shows data of hosts in a given
+hostgroup, for example you want to have a linux, windows, unix dashboard and so
+on.
+
+In previous versions you could build one dashboard and clone it multiple times
+while changing the filter group name for each of the cloned dashboards.  That
+would work, but you would end up with a lot of similar dashboards where only
+the hard coded host group filter was different.
+
+Now you can define a single dashboard and select the "Host is Group" filter in
+the new "Required context filters" option from the dashboard properties. Once
+you have done this, the dashboard will automatically open the "Dashboard Context"
+dialog when initially opening the dashboard. After selecting the host group, the
+dashboard will be rendered.
+
+Btw.: You could also open the dashboard with the prefilled URL parameters to
+prevent the "Dashboard Context" dialog from popping up.

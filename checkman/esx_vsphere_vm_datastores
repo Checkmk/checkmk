@@ -1,0 +1,17 @@
+title: Virtual Machine under ESX: Name and Disk Free of Datastores
+agents: vsphere
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check provices information about any datastores the virtualmachine is running on.
+ Reported fields are the name, the total capacity and the percentage of free space.
+
+ The check returns {OK}, unless the datastore information is missing.
+ In this case it returns {UNKNOWN}.
+
+ See "Monitoring VMWare ESX with Checkmk" in the online documentation
+ as well.
+
+inventory:
+ One service is created for each Virtual Machine.

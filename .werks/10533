@@ -1,0 +1,17 @@
+Title: WATO Rule Search: Performance Improvements
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1585143007
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The WATO rule search is now faster for rulesets with lots of
+<ul>
+<li>Timeperiod references</li>
+<li>Contact groups</li>
+<li>Host/Service groups</li>
+</ul>

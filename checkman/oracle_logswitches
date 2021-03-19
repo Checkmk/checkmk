@@ -1,14 +1,14 @@
-title: Log switch activity of ORACLE database
+title: Oracle Database: Log Switch Activity
 agents: linux, hpux, windows, solaris
 catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This check monitors the number of log switches of an ORACLE
+ This check monitors the number of log switches of an Oracle
  database instance in the last 60 minutes. You can set levels
  for upper and lower bounds.
 
- This check needs the Check_MK {mk_oracle}-plugin installed in
+ This check needs the Checkmk {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
@@ -17,6 +17,5 @@ item:
  name of the pmon_... process).
 
 inventory:
- One separate check for each database found running will
- be created.
+ One service is created for each running database.
 

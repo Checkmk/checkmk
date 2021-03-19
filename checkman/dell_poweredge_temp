@@ -26,6 +26,7 @@ item:
  the chassis index and sensor index seperated by a dash.
 
 inventory:
- All temperature sensors which do not have the state settings unknown are detected
+ One service is created for each temperature sensor
+ if the state setting is not {unknown}.
 
 

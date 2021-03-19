@@ -1,0 +1,11 @@
+Title: Don't show disabled sites in sidebar snapins
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615219193
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

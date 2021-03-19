@@ -1,9 +1,0 @@
---- a/etc/dokuwiki/acl.auth.php	2015-04-22 09:33:05.102772154 +0200
-+++ b/etc/dokuwiki/acl.auth.php	2015-04-22 09:38:15.694770887 +0200
-@@ -18,4 +18,5 @@
- # upload 8
- # delete 16
- 
--*               @ALL        8
-+*               @ALL        1
-+*               @admin      16

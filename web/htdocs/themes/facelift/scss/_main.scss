@@ -1,29 +1,7 @@
-/*
-+------------------------------------------------------------------+
-|             ____ _               _        __  __ _  __           |
-|            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-|           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-|           | |___| | | |  __/ (__|   <    | |  | | . \            |
-|            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-|                                                                  |
-| Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
-+------------------------------------------------------------------+
-
-This file is part of Check_MK.
-The official homepage is at http://mathias-kettner.de/check_mk.
-
-check_mk is free software;  you can redistribute it and/or modify it
-under the  terms of the  GNU General Public License  as published by
-the Free Software Foundation in version 2.  check_mk is  distributed
-in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-tails.  You should have received  a copy of the  GNU  General Public
-License along with GNU Make; see the file  COPYING.  If  not,  write
-to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-Boston, MA 02110-1301 USA.
-
-*/
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 /* Global style used by all HTML pages, even by sidebar and
    mobile interface */
@@ -42,7 +20,10 @@ Boston, MA 02110-1301 USA.
 '-------------------------------------------------------------------------*/
 
 /* Change some general defaults of HTML that we do not like */
-td, th {
+td,
+th {
+  padding: 0;
+  font-weight: $font-weight-default;
   vertical-align: top;
 }
 
@@ -59,58 +40,66 @@ th {
   white-space: nowrap;
 }
 
-/* Default font size for the complete Multisite GUI */
-button, input, td, th, select, textarea {
-  font-size: 12px;
-}
-
-input.number {
-  text-align: right;
-}
-
 /* Styling for input elements */
-input, select, textarea {
+button,
+input,
+select,
+textarea {
   padding: 3px;
   margin-top: 0;
   font-family: arial, helvetica, sans-serif;
   vertical-align: middle;
   background-color: rgb(255, 255, 255);
-  border: 1px rgb(115, 118, 122) solid;
+  border: none;
   outline-style: none;
   outline-width: medium;
 }
 
 /* consistent dropdown field styling for all browsers */
 select:not([multiple]) {
-  padding: 8px 16px;
   padding-right: 2.5em;
-  background: $bg-color-default url("images/select_arrow.png") right 50% / 20px 11px no-repeat;
-  -webkit-appearance: none;  /* Removes default chrome and safari style */
-  -moz-appearance: none;     /* Removes default style Firefox */
+  background-image: url("images/select_arrow.png");
+  background-position: right 50%;
+  background-repeat: no-repeat;
+  background-size: 20px 11px;
+  -webkit-appearance: none; /* Removes default chrome and safari style */
+  -moz-appearance: none; /* Removes default style Firefox */
 }
 
 div.popup_menu select:not([multiple]) {
-  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px no-repeat;
+  background: $popup-menu-select-bg-color url("images/select_arrow.png") right 10% / 20px 11px
+    no-repeat;
 }
 
 select::-ms-expand {
   display: none;
 }
 
-input[type=file] {
+input[type="file"] {
   color: rgb(0, 0, 0);
 }
 
 form {
   margin: 0;
+
+  label + input:not([type="checkbox"]) {
+    margin-left: $spacing;
+  }
+
+  label.required::after {
+    color: $success;
+    content: " (required)";
+  }
 }
 
-input:hover, select:hover, textarea:hover,
-input[type="checkbox"]:hover + label:before {
+input:hover,
+select:hover,
+textarea:hover,
+input[type="checkbox"]:hover + label::before {
   background-color: $input-hover-bg-color;
 }
 
-td.checkbox input[type="checkbox"] + label:before {
+td.checkbox input[type="checkbox"] + label::before {
   margin: 0;
 }
 
@@ -118,34 +107,23 @@ td.checkbox input[type="checkbox"] + label:before {
 input[type="checkbox"] {
   display: none;
 
-  &[disabled] + label:before {
-    display: none;
-  }
-
-  + label:before {
+  + label::before {
     display: inline-block;
     width: 12.5px;
     height: 12.5px;
     padding: 0;
     margin: -2px 4px 0 0;
-    font-size: 12px;
     vertical-align: middle;
-    background-color: $bg-color-default;
-    border: 1px $checkbox-border-color solid;
+    background-color: $inpage-highlight-color;
+    border: 1px $inpage-highlight-color solid;
     content: "\00a0";
-    box-shadow: 0.1px 1px 1.2px 0 $checkbox-shadow inset;
   }
 
   &:checked {
-    + label:before {
+    + label::before {
       color: $checkbox-checked-color;
       text-align: center;
-      background-color: $checkbox-checked-bg-color;
       content: "\2716";
-    }
-
-    + label:after {
-      font-weight: bold;
     }
   }
 }
@@ -159,83 +137,69 @@ select.icon option {
   background-size: 18px;
 }
 
-
-// TODO : Figure out where these can be found in the front end
+button,
 input.button,
-table.vs_duallist a.control,
-.wato div.mainmenu a {
+table.vs_duallist a.control {
   padding: 2px 6px;
   margin-left: 5px;
   color: rgb(255, 255, 255);
   cursor: pointer;
-  background-color: rgb(73, 126, 149);
-  border-color: rgb(134, 169, 184) rgb(34, 64, 77) rgb(34, 65, 77) rgb(134, 169, 184);
-  border-style: solid;
-  border-width: 1px;
-  border-radius: 5px;
-  box-shadow: 0 0 1.5px rgb(0, 0, 0);
+  border-radius: $theme-border-radius;
 }
 
 table.vs_duallist a.control,
 table.vs_duallist body.main .popup_menu span.control,
 body.main .popup_menu table.vs_duallist span.control {
-  background-color: $color-table-border;
-  border-color: $color-nuance-1;
-  border-style: solid;
+  background-color: $button-bg-color-default;
   box-shadow: none;
 }
 
+button,
 input.button,
 table.vs_duallist a.control,
 .wato div.mainmenu a {
   &:hover {
     text-decoration: none;
-    background-color: rgb(109, 161, 184);
   }
 
   &:active {
-    background-color: rgb(59, 102, 120);
-    border-color:  rgb(34, 65, 77) rgb(134, 169, 184) rgb(134, 169, 184) rgb(34, 64, 77);
     box-shadow: inset 0 0 0.5px rgb(68, 68, 68);
   }
 }
 
+button,
 input.button,
-input.button:not([type=text]),
-input.button:not([type=password]) {
-  &[disabled="disabled"], &:disabled {
-    &, &:hover, &:active {
-      cursor: initial;
-      background-color: rgb(19, 211, 137);
-      filter: grayscale(100%);
-    }
-
+input.button:not([type="text"]),
+input.button:not([type="password"]) {
+  &[disabled="disabled"],
+  &:disabled {
+    &,
+    &:hover,
     &:active {
-      border-color: rgb(134, 169, 184) rgb(34, 64, 77) rgb(34, 65, 77) rgb(134, 169, 184);
-      box-shadow: 0 0 1.5px rgb(0, 0, 0);
+      color: $font-color-disabled;
+      cursor: initial;
+      background-color: $input-button-hover-bg-color;
+      filter: grayscale(80%);
     }
   }
 }
 
+button.hot,
 input.button.hot {
-  &, &:active {
+  &,
+  &:active {
     color: $hot-font-color;
     background-color: rgb(17, 189, 123);
-    border: 1px solid rgb(17, 189, 123);
   }
 
   &:hover {
-    background-color: rgb(19, 211, 137);
+    background-color: $success;
   }
 }
 
 /* on/off toggle button */
 .toggle_switch {
-  width: 56px;
-  height: 22px;
-  padding: 2px;
-  background: $bg-color-default;
-  border: 1px solid $color-table-border;
+  background: $bg-color;
   border-radius: 11px;
   box-shadow: none;
   box-sizing: border-box;
@@ -249,42 +213,47 @@ input.button.hot {
   .wato div.globalvars & a,
   .wato div.globalvars & body.main .popup_menu span,
   body.main .popup_menu .wato div.globalvars & {
+    width: $toggle-switch-width;
     height: $toggle-switch-height;
-    font-size: 8px;
+    font-size: $font-size-small;
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
-    text-transform: uppercase;
     border: none;
     border-radius: 8px;
     box-shadow: none;
   }
 
-  a, .wato div.globalvars & a {
+  a,
+  .wato div.globalvars & a {
     display: block;
     width: 30px;
-    color: $toggle-switch-font-color;
+    color: $toggle-switch-font-color-on;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
   }
 
   &.on {
-    a, .wato div.globalvars & a {
-      float: right;
-      background-color: $toggle-switch-on-bg-color;
-      border: $toggle-switch-on-border;
+    a,
+    .wato div.globalvars & a {
+      float: left;
+      color: $toggle-switch-font-color-on;
+      background-color: $success;
     }
   }
 
   &.off {
-    a, .wato div.globalvars & a {
-      background-color: $toggle-switch-off-bg-color;
-      border: $toggle-switch-off-border;
+    a,
+    .wato div.globalvars & a {
+      float: left;
+      color: $toggle-switch-font-color-off;
+      background-color: $inpage-highlight-color;
     }
   }
 
-  a:hover, .wato div.globalvars & a:hover {
+  a:hover,
+  .wato div.globalvars & a:hover {
     /* TODO: create a better hover effect */
     text-decoration: none;
     opacity: 0.5;
@@ -300,6 +269,17 @@ input.button.hot {
   }
 }
 
+.dots {
+  margin-left: 5px;
+  overflow: hidden;
+  color: rgba($font-color, 0.4);
+
+  &.required::before {
+    color: $success;
+    content: "(required) ";
+  }
+}
+
 a.button {
   height: 24px;
   padding: 0.1ex 1ex;
@@ -311,8 +291,8 @@ a.button {
   border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
   border-style: solid;
   border-width: 1px;
-  -webkit-border-radius: 4px;
   border-radius: 4px;
+  -webkit-border-radius: 4px;
 }
 
 /*for IE8 */
@@ -329,7 +309,25 @@ img.icon {
   height: 20px;
 }
 
-a.inline img.icon, img.icon.inline, div.icon {
+span.emblem {
+  position: relative;
+}
+
+img.emblem {
+  position: absolute;
+  right: 3px;
+  bottom: -3px;
+  width: 10px;
+  height: 10px;
+}
+
+td.buttons img.emblem {
+  right: 0;
+}
+
+a.inline img.icon,
+img.icon.inline,
+div.icon {
   width: 16px;
   height: 16px;
   vertical-align: middle;
@@ -339,7 +337,7 @@ h1 {
   margin-top: 0;
   margin-bottom: 5px;
   margin-left: 5px;
-  font-size: 23px;
+  font-size: $font-size-page-title;
   color: rgb(255, 255, 255);
 }
 
@@ -348,7 +346,6 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  font-size: 11px;
   color: rgb(0, 0, 0);
 }
 
@@ -364,20 +361,14 @@ div.livestatus.message {
 '-------------------------------------------------------------------------*/
 
 img.treeangle {
-  width: 13px;
-  height: 12px;
-  margin-top: 0;
-  margin-right: 3px;
+  width: 8px;
+  height: 8px;
+  margin: 0 3px;
   vertical-align: middle;
   cursor: pointer;
-  filter: invert(20%);
-  transition: transform .2s ease-in-out;
-  -webkit-transition: -webkit-transform .2s ease-in-out;
-  -moz-transition: -moz-transform .2s ease-in-out;
+  transition: transform 0.2s ease-in-out;
 
   &.open {
-    -webkit-transform: rotate(90deg);
-    -moz-transform: rotate(90deg);
     transform: rotate(90deg);
   }
 
@@ -386,16 +377,15 @@ img.treeangle {
   }
 
   &.title {
-    width: 16px;
-    height: 16px;
     margin-right: 5px;
     vertical-align: middle;
+    filter: none;
   }
 }
 
 b.treeangle.title {
   font-weight: bold;
-  color: rgb(255, 255, 255);
+  color: $font-color;
   cursor: pointer;
 
   table.data & {
@@ -403,8 +393,30 @@ b.treeangle.title {
   }
 }
 
-img.treeangle+.treeangle.title {
-  display: inline-block;
+div.foldable_wrapper {
+  margin-top: $spacing;
+  background-color: $headline-color;
+  border-radius: $theme-border-radius $theme-border-radius 0 0;
+
+  &:not(:last-of-type) {
+    margin-bottom: 2 * $spacing;
+  }
+
+  img.treeangle {
+    margin-left: $spacing;
+  }
+
+  h3 {
+    margin-top: 0;
+  }
+
+  ul.treeangle {
+    margin: 0;
+  }
+}
+
+img.treeangle + .treeangle.title {
+  margin: 0;
 }
 
 ul.treeangle {
@@ -425,8 +437,6 @@ ul.closed {
   display: none;
 }
 
-
-
 /*-------------------------------------------------------------------------.
 |             __  __                                                       |
 |            |  \/  | ___  ___ ___  __ _  __ _  ___  ___                   |
@@ -438,25 +448,51 @@ ul.closed {
 | Styles for messages-boxes in various situations (called by htmllib.py)   |
 '-------------------------------------------------------------------------*/
 
-div.really, div.success, div.error, div.message, div.warning {
-  padding: 0.5em 1em;
-  margin: 0.25em;
-  border-radius: 1ex;
-  box-shadow: 0 0 3px rgb(68, 68, 68);
+div.really,
+div.success,
+div.error,
+div.message,
+div.warning {
+  padding: 16px;
+  margin: $spacing 0;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
+
+  h1 {
+    margin-bottom: 5px;
+    margin-left: 0;
+    font-size: $font-size-large;
+    font-weight: $font-weight-bold;
+    color: $white;
+  }
+
+  input.button {
+    padding: 8px 16px;
+    margin-top: 0;
+    margin-bottom: 0;
+  }
 }
 
 div.really {
-  background-color: rgb(253, 196, 0);
-  border-color: rgb(136, 0, 0);
+  &,
+  h3,
+  body.main & a {
+    color: $black;
+    background-color: $warning;
+  }
+
+  h3 {
+    padding-left: 0;
+  }
 }
 
 div.success {
-  background-color: $success-alert-bg-color;
-  border: 1px solid $success-alert-border-color;
+  color: $primary-font-color;
+  background-color: $base-color;
 }
 
 div.message {
-  color: rgb(0, 0, 0);
+  color: $black; // TODO: Check whether this must be $primary-font-color as is for .success
   background-color: rgb(157, 190, 205);
   border-color: rgb(0, 68, 136);
 }
@@ -466,7 +502,8 @@ div.error {
   background-color: $color-state-2-background;
   border-color: rgb(238, 68, 0);
 
-  a {
+  a,
+  a:link {
     color: rgb(255, 255, 255);
   }
 
@@ -477,19 +514,41 @@ div.error {
 
 .warning,
 body.main div.warning {
-  color: rgb(0, 0, 0);
-  background-color: $yellow;
-  border-color: rgb(255, 204, 0);
+  color: $black;
+  background-color: $warning;
 
-  a, a:link {
+  a,
+  a:link {
     color: $black;
   }
+}
+
+form.confirm {
+  margin-top: $spacing;
 }
 
 /* Warnings embedded in tables without margins and padding, those are
    just needed for body */
 
-td div.warning, td > div.error {
+h2,
+h3 {
+  margin-bottom: $h3-margin-bottom;
+
+  + div.info,
+  + div.success {
+    padding: $wato-info-padding;
+    padding-top: 10px;
+    margin-top: 0;
+    background-color: $data-container-bg-color;
+  }
+
+  + div.success {
+    margin-bottom: 0; // don't leave a spacing between the directly following table
+  }
+}
+
+td div.warning,
+td > div.error {
   padding: 5px 10px;
   margin-top: 3px;
   margin-bottom: 3px;
@@ -513,9 +572,10 @@ td div.warning, td > div.error {
 
 table.dictionary {
   width: 100%;
+  border-collapse: collapse;
 
   b.header {
-    font-size: 80%;
+    font-size: $font-size-small;
     font-weight: normal;
   }
 
@@ -530,12 +590,20 @@ table.dictionary {
     width: 1%;
     white-space: nowrap;
 
+    span.required {
+      color: $success;
+    }
+
     div.popup_menu {
       white-space: normal;
     }
 
     div.help {
       white-space: normal;
+    }
+
+    > span {
+      margin: $input-field-margin;
     }
   }
 }
@@ -545,16 +613,18 @@ td.dictleft div.dictelement {
   margin-top: 3px;
   margin-bottom: 10px;
   margin-left: 0;
-  font-size: 11px;
 
   * {
-    font-size: 11px;
+  }
+
+  &:empty {
+    margin: 0;
   }
 
   &.indent {
     padding-left: 10px;
-    margin-left: 8px;
-    border-left: 2px solid rgb(204, 204, 204);
+    margin-left: 6px;
+    border-left: 2px solid $inpage-highlight-color;
 
     ul {
       margin-top: 1px;
@@ -576,7 +646,11 @@ table.vs_dict_text {
 }
 
 table.valuespec_tuple {
-  border-spacing: 2px;
+  border-collapse: collapse;
+
+  &.horizontal tr:nth-child(1) td {
+    padding-top: 0; // override nform default
+  }
 
   td {
     padding: 0;
@@ -587,7 +661,7 @@ table.valuespec_tuple {
   }
 
   span.title {
-    font-size: 8pt;
+    font-size: $font-size-small;
   }
 }
 
@@ -603,7 +677,7 @@ table.vs_date {
 
   th {
     padding: 0;
-    font-size: 7pt;
+    font-size: $font-size-small;
     font-weight: normal;
     text-align: center;
   }
@@ -614,7 +688,7 @@ table.valuespec_listof {
 
   &.regular {
     > tbody > tr > td {
-      padding: 3px 0 5px 0;
+      padding: 3px 0 5px;
       border-bottom: 1px solid rgb(153, 187, 204);
 
       &:first-child {
@@ -642,10 +716,27 @@ table.valuespec_listof {
   .unused {
     display: none;
   }
+
+  tr:first-child > td {
+    &.vlof_buttons,
+    &.vlof_content {
+      padding-top: 0;
+    }
+
+    &.vlof_buttons {
+      padding-bottom: $spacing-half;
+    }
+  }
 }
 
-div.valuespec_listof.floating > table > tbody > tr > td:first-child {
-  vertical-align: top;
+div.valuespec_listof {
+  table {
+    border-collapse: collapse;
+  }
+
+  &.floating > table > tbody > tr > td:first-child {
+    vertical-align: top;
+  }
 }
 
 div.valuespec_listof_floating_container {
@@ -659,31 +750,39 @@ div.valuespec_listof_floating_container {
       vertical-align: top;
 
       &.vlof_buttons img {
-	margin-top: 4px;
+        width: 12px;
+        height: 15px;
+        margin-top: 4px;
       }
 
       &.vlof_content .tagify {
-	tag {
-	  margin: 4px 5px 2px 4px;
+        tag {
+          margin: 4px 5px 2px 4px;
 
-	  x {
-	    display: none;
-	  }
+          x {
+            display: none;
+          }
 
-	  > div {
-	    padding-right: .3em;
-	  }
-	}
+          > div {
+            padding-right: 0.3em;
+          }
+        }
 
-	span.tagify__input {
-	  margin: 3px 5px 2px 4px;
-	}
+        span.tagify__input {
+          margin: 3px 5px 2px 4px;
+        }
       }
     }
   }
 }
 
-table.nform table.valuespec_listof div.valuespec_listof_floating_container > table > tbody > tr > td {
+table.nform
+  table.valuespec_listof
+  div.valuespec_listof_floating_container
+  > table
+  > tbody
+  > tr
+  > td {
   border-bottom: none;
 }
 
@@ -705,7 +804,7 @@ table.valuespec_listof.regular > tbody > tr {
 
 table.vs_duallist {
   td {
-  width: 50%;
+    width: 50%;
 
     select {
       width: 100%;
@@ -714,7 +813,7 @@ table.vs_duallist {
     }
 
     &.head {
-      text-align:center;
+      text-align: center;
     }
   }
 
@@ -740,52 +839,15 @@ table.vs_duallist {
   }
 }
 
-div.vs_autocomplete {
-  position: absolute;
-  z-index: 20;
-  display: block;
-  width: 160px;
-  color: rgb(0, 0, 0);
-  background-color: rgb(223, 223, 223);
-  border: 1px solid;
-  border-color: rgb(255, 255, 255) rgb(0, 0, 0) rgb(0, 0, 0) rgb(255, 255, 255);
-  box-shadow: 0 0 1.5px rgb(0, 0, 0);
-
-  ul {
-    max-height: 80px;
-    padding-left:0;
-    margin: 0;
-    overflow-y: scroll;
-    list-style-type:none;
-  }
-
-  li {
-    padding: 1px 3px;
-
-    &:hover {
-      color: rgb(255, 255, 255);
-      cursor: default;
-      background-color: rgb(44, 87, 102);
-    }
-  }
-}
-
 textarea.tt {
   font-family: monospace;
 }
 
-div.listofstrings {
+div.listofstrings.horizontal {
+  clear: left;
+
   > div {
-    margin-bottom: 2px;
-  }
-
-  &.horizontal {
-    clear: left;
-
-    > div {
-      float: left;
-      margin-right: 2px;
-    }
+    float: left;
   }
 }
 
@@ -798,20 +860,21 @@ table.listchoice {
     margin: 0;
 
     span.checkbox {
-      height: 10px;
+      height: $input-field-height;
     }
 
-    input[type=checkbox] {
+    input[type="checkbox"] {
       height: 12px;
       margin: 0;
     }
   }
+}
 
-  div.floatfilter.double > div.content > & {
-    display: block;
-    height: 80px;
-    overflow: hidden;
-    overflow-y:scroll;
+table.alternative {
+  border-collapse: collapse;
+
+  td:first-child {
+    padding-right: 0.5 * $spacing;
   }
 }
 
@@ -826,12 +889,12 @@ div.popup {
   z-index: 200;
   width: -moz-max-content;
   width: intrinsic;
-  padding:10px;
+  padding: 10px;
   color: rgb(255, 255, 255);
   background-color: rgb(69, 130, 157);
   border: 1px solid rgb(255, 255, 255);
-  -webkit-border-radius: 5px;
   border-radius: 5px;
+  -webkit-border-radius: 5px;
 
   span {
     display: block;
@@ -844,31 +907,37 @@ div#hover_menu {
   position: absolute;
   /* The hover menu needs to have a higher z-index than the highest element
      on the pages. In this case it was the perfometer which had 30. */
-  z-index: 40;
+  z-index: 50;
   width: auto;
-  color: rgb(0, 0, 0);
+  color: $font-color;
 
-  div.error, div.message {
+  div.error,
+  div.message {
     width: 350px;
     margin: 0;
   }
 
   div.message {
-    color: $primary-sidebar-font-color;
-    background-color: $black;
+    color: $font-color;
+    background-color: $bg-color;
   }
 
-  .graph_container div.title {
+  .graph_container {
     display: block;
-  }
+    float: left;
+    margin: 0 2px 2px 0;
+    color: $graph-hover-popup-font-color;
+    background-color: $graph-hover-popup-bg-color;
+    border: $graph-hover-popup-border;
+    box-shadow: $graph-hover-popup-box-shadow;
 
-  .graph_container div.time {
-    letter-spacing: 0;
-  }
+    div.title {
+      display: block;
+    }
 
-  /* For pnp4nagios hover_menu graphs in the Raw Edition */
-  table tbody tr td img {
-    filter: $pnp4nagios-img-filter;
+    div.time {
+      letter-spacing: 0;
+    }
   }
 }
 
@@ -948,11 +1017,15 @@ div.popup_trigger.colorpicker div.popup_menu {
 .cp-input {
   float: left;
   margin-top: 2px;
-  color: $color-text;
+  color: $font-color;
 
-  input, select, textarea,
-  div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea,
+  input,
+  select,
+  textarea,
+  div.snapin select,
+  div.snapin & select,
+  div.snapin textarea,
+  div.snapin & textarea,
   #mk_side_search_field {
     margin: 0;
     margin-bottom: 8px;
@@ -979,14 +1052,19 @@ div.popup_trigger.colorpicker .popup_menu {
 | Pages showing the Check_MK change log (werks.py)                         |
 '-------------------------------------------------------------------------*/
 
-tr.data td.werklevel, tr.data td.werkclass, tr.data td.werkcomp {
+tr.data td.werklevel,
+tr.data td.werkclass,
+tr.data td.werkcomp {
   width: 100px;
   text-align: center;
   white-space: nowrap;
 }
 
 table.data.werks {
-  td.werkclassfeature, td.werkclassfix, td.werklevel2, td.werklevel3,
+  td.werkclassfeature,
+  td.werkclassfix,
+  td.werklevel2,
+  td.werklevel3,
   td.werkcompincomp_ack {
     color: $dark-font-color;
   }
@@ -1082,11 +1160,10 @@ body.main .popup_menu table.werks td span {
   text-decoration: underline;
 }
 
-
 /* NOWIKI formatting in Werks */
 td.nowiki {
   h3 {
-    font-size: 13px;
+    font-size: $font-size-large;
     font-weight: bold;
     color: rgb(0, 0, 0);
   }
@@ -1116,7 +1193,8 @@ td.nowiki {
     border: 1px solid rgb(0, 0, 0);
     border-collapse: collapse;
 
-    table td, table th {
+    table td,
+    table th {
       border: 1px solid rgb(136, 136, 136);
     }
   }
@@ -1129,17 +1207,17 @@ table.modifydowntimes > tbody > tr {
     vertical-align: middle;
   }
 
-  &:nth-child(1) > td:nth-child(1)  {
+  &:nth-child(1) > td:nth-child(1) {
     padding-top: 0;
   }
 }
 
 .select2-container .select2-selection--single {
-  height: 23px;
+  height: $input-field-height;
+  border: none;
 }
 
 .select2-container--default {
-
   .select2-results {
     color: rgb(0, 0, 0);
   }
@@ -1148,7 +1226,7 @@ table.modifydowntimes > tbody > tr {
     border-radius: 4px;
 
     .select2-selection__rendered {
-      line-height: 23px;
+      line-height: $input-field-height;
       color: $select2-rendered-color;
     }
 
@@ -1158,57 +1236,100 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-dropdown {
-    background-color: $bg-color-default;
-    border: $primary-border;
+    background-color: $inpage-highlight-color;
+    border: 1px solid $select2-border-color;
   }
 
   .select2-results__option {
     color: $select2-rendered-color;
-    background-color: $bg-color-default;
+    background-color: $inpage-highlight-color;
   }
 
-  .select2-results__option[aria-selected=true] {
-    background-color: $select2-selected-bg-color;
+  .select2-results__option[aria-selected="true"] {
+    background-color: $inpage-highlight-color;
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    background-color: $select2-highlighted-bg-color;
+    color: $success;
+    background-color: $inpage-highlight-color;
   }
+
+  .select2-search--dropdown .select2-search__field {
+    background-color: $select2-search-field-color;
+    border: $select2-search-field-border;
+  }
+}
+
+div.vs_autocomplete {
+  height: 22px;
+
+  .error {
+    padding: 0.5em 2em;
+    margin: 0;
+  }
+}
+
+div.metricchoice div.vs_autocomplete .select2-dropdown--below {
+  top: -11px;
+}
+
+span.vs_autocomplete {
+  .select2-dropdown {
+    position: inherit;
+    border: none;
+  }
+
+  .select2-dropdown--below {
+    top: -7px;
+    border-radius: $theme-border-radius;
+  }
+
+  .select2-search--dropdown {
+    padding: 0;
+    margin: 0;
+  }
+
+  .select2-search__field {
+    height: 22px;
+    padding-left: 6px;
+    border-radius: 4px;
+  }
+
+  .select2-results__options {
+    border: 1px solid $button-bg-color-default;
+    border-radius: 4px;
+  }
+}
+
+div.vs_age.inline {
+  display: inline-block;
 }
 
 /* TODO: Go through these following styles and move them to specific scss
  *       where needed
  */
 * {
+  font-size: inherit;
   letter-spacing: $letter-spacing-default;
   text-shadow: none;
 }
 
 html {
-  font-size: $font-size-global;
+  font-size: $font-size-normal;
+  height: 100%;
 }
 
-.link, .title {
+.link,
+.title {
   display: inline-block;
   padding: 0 2px; /* affects spacing in sidebar plugins */
-  font-size: $font-size-default;
   font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-table;
-  color: $color-text;
-  transition: color .15s ease-in-out;
-}
-
-a.iconlink img, body.main .popup_menu span.iconlink img {
-  display: block;
-  float: left;
+  color: $font-color;
+  transition: color 0.15s ease-in-out;
 }
 
 div.graph {
-  border: 1px solid $color-table-border;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
-
-
   &.preview {
     padding: 4px !important;
   }
@@ -1256,12 +1377,8 @@ div.graph_hover_popup {
 div.content {
   top: 64px;
   width: 100%;
-  padding: 16px;
+  padding: $spacing;
   box-sizing: border-box;
-}
-
-body.main img.treeangle {
-  filter: invert($filter-inversion-percentage);
 }
 
 /* TODO: Reproduce this element then get rid of important styles */
@@ -1269,14 +1386,15 @@ body.main img.treeangle {
   width: 60px !important;
 }
 
-.bi_rule_tree img.treeangle, .invtree img.treeangle,
-.grouped_row_header img.treeangle.nform, .aggrtree img.treeangle {
-  &, body.main & {
-    filter: invert(0%);
-
-    &.open, &.closed {
+.bi_rule_tree img.treeangle,
+.invtree img.treeangle,
+.grouped_row_header img.treeangle.nform,
+.aggrtree img.treeangle {
+  &,
+  body.main & {
+    &.open,
+    &.closed {
       margin: 1px 4px 0;
-      filter: $tree-collapse-img-filter;
     }
   }
 }
@@ -1315,7 +1433,7 @@ div.graph_with_timeranges {
       width: calc(100% - 16px);
       padding: 8px 0;
       font-weight: $font-weight-default;
-      color: $color-text;
+      color: $font-color;
       text-shadow: none;
       box-sizing: border-box;
     }
@@ -1335,15 +1453,6 @@ div.graph_with_timeranges {
 
   table.timeranges > tbody > tr > td {
     padding: 0 8px 4px;
-    border: none;
-
-    &:first-child {
-      border-right: none solid;
-    }
-
-    &:last-child {
-      border-left: none solid;
-    }
   }
 }
 
@@ -1355,8 +1464,11 @@ table.data td > div:last-child div.graph_with_timeranges {
   margin-bottom: 8px;
 }
 
-div.metricchoice select, div.metricchoice input, div.metricchoice select,
-div.metricchoice textarea, div.metricchoice #mk_side_search_field {
+div.metricchoice select,
+div.metricchoice input,
+div.metricchoice select,
+div.metricchoice textarea,
+div.metricchoice #mk_side_search_field {
   margin: 4px 0;
 }
 
@@ -1364,7 +1476,9 @@ td.title {
   display: table-cell;
 }
 
-#form_search input, #form_search select, #form_search textarea,
+#form_search input,
+#form_search select,
+#form_search textarea,
 #form_search #mk_side_search_field {
   width: auto;
   border: $primary-border;
@@ -1375,31 +1489,16 @@ select.vlof_filter {
 }
 
 div.timerange {
-  font-size: $font-size-default;
   color: $darkgrey;
 }
 
 body.main.visible div.foldable .title {
-  color: $color-text;
+  color: $font-color;
 }
 
-div.color {
-  border-color: $color-div-border-color !important;
-  border-radius: 0;
-  box-shadow: $color-div-box-shadow;
-}
-
-/* TODO: Reproduce this element then get rid of important styles */
-th.header_state {
-  color: $color-text !important;
-  background: transparent !important;
-
-  &:hover {
-    background: transparent !important;
-  }
-}
-
-.hot a, .hot body.main .popup_menu span, body.main .popup_menu .hot span {
+.hot a,
+.hot body.main .popup_menu span,
+body.main .popup_menu .hot span {
   color: $hot-font-color;
   background-color: $hot-bg-color;
   border-color: $color-nuance-16;
@@ -1407,29 +1506,30 @@ th.header_state {
 
 div.info {
   margin: 16px 0 8px;
-  font-size: $font-size-default;
   font-weight: 500;
   letter-spacing: $letter-spacing-default;
-  color: $color-text;
+  color: $font-color;
 }
 
 .age {
-  input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  div.snapin select,
+  div.snapin & select,
+  div.snapin textarea,
+  div.snapin & textarea,
+  #mk_side_search_field {
     box-sizing: content-box;
   }
 }
 
-.filterform {
-  input, select, textarea, div.snapin select, div.snapin & select,
-  div.snapin textarea, div.snapin & textarea, #mk_side_search_field {
-    column-span: all;
-  }
-}
-
-body.main a, body.main .popup_menu span, body.main .popup_menu a,
-body.main a:link, body.main a:visited {
-  color: $color-text;
+body.main a,
+body.main .popup_menu span,
+body.main .popup_menu a,
+body.main a:link,
+body.main a:visited {
+  color: $font-color;
 }
 
 img.glass {
@@ -1438,4 +1538,31 @@ img.glass {
 
 tr.hidden {
   display: none;
+}
+
+.simplebar-scrollbar::before {
+  background: $simplebar-scrollbar-color;
+  border-radius: 2px;
+}
+
+.simplebar-track {
+  &.simplebar-vertical div.simplebar-scrollbar::before {
+    left: 3px;
+    width: $simplebar-scrollbar-width;
+  }
+
+  &.simplebar-horizontal div.simplebar-scrollbar {
+    top: 3px;
+    height: $simplebar-scrollbar-width;
+  }
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1;
+}
+
+div#row_info {
+  padding-bottom: $spacing-half;
+  font-weight: $font-weight-default;
+  text-align: right;
 }

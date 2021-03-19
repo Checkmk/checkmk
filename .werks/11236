@@ -1,0 +1,28 @@
+Title: Event Console/SNMP Credentials: Add additional privacy and authentication protocols
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1595419387
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The following authentication protocols are configurable now:
+<ul>
+<li>SHA-224</li>
+<li>SHA-256</li>
+<li>SHA-384</li>
+<li>SHA-512</li>
+</ul>
+These protocols are also supported for classic or inline SNMP configurations.
+
+The following privacy protocols are configurable now:
+<ul>
+<li>3DES-EDE</li>
+<li>AES-192</li>
+<li>AES-256</li>
+<li>AES-192 (Blumenthal)</li>
+<li>AES-256 (Blumenthal)</li>
+</ul>
+These protocols are {{NOT}} supported for classic or inline SNMP configurations.

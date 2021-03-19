@@ -16,7 +16,7 @@ description:
  and {CRIT} if some of the components are in the states "acute" or "serious".
 
 inventory:
- One service for every DKU chassis found
+ One service is created for each DKU chassis.
 
 item:
  The serial number (dkuRaidListIndexSerialNumber) of the DKU

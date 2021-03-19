@@ -1,0 +1,23 @@
+Title: Check_MK service: State if "Unexpected allowed IP ranges" is configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1595337693
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+If a Checkmk site is updated to a newer version but the agents of Windows hosts
+are not, then the warning {{Unexpected allowed IP ranges}} may be displayed in
+the details of the {{Check_MK}} service and the service state changes to
+{{WARN}} (by default).
+With this setting you can overwrite the default service state. This will help
+you to reduce above warnings during the update process of your Checkmk sites
+and agents.
+We recommend to set this option only for the affected hosts as long as you
+monitor agents older than Checkmk 1.7. After updating them, you should change
+this setting back to it's original value.
+There is also an {{Analyze Configuration Test}} {{Restricted address missmatch}}
+below {{Security}} that informs you if there are configured rules which differ
+from default state {{WARN}}.

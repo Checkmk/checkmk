@@ -1,0 +1,16 @@
+title: Graylog: Cluster Elasticsearch Statistics
+agents: graylog
+catalog: app/graylog
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the Elasticsearch cluster stats of a Graylog instance.
+ Beside the name, version and status it outputs the number of nodes, data nodes,
+ active shards, active primary shards, initializing shards, relocating shards
+ and unassigned shards. Further more, it shows timeouts, the number of indices,
+ and the store, ID cache and field data size.
+
+ Needs the datasource "Check state of Graylog" to be configured.
+
+inventory:
+ One service is created.

@@ -1,8 +1,11 @@
-#!/usr/bin/env python
-# encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import os
+import pytest  # type: ignore[import]
 
 
 @pytest.mark.parametrize("plugin", [
@@ -45,7 +48,6 @@ import os
     "check_mkevents",
     "check_mrtg",
     "check_mrtgtraf",
-    "check_multi",
     "check_mysql",
     "check_mysql_health",
     "check_mysql_query",
@@ -93,6 +95,11 @@ import os
     "utils.sh",
 ])
 def test_monitoring_plugins(site, plugin):
+    # TODO: Extend use of our own postgres library to make this plugin compile again
+    if (plugin == "check_pgsql" and os.path.exists("/etc/redhat-release") and
+            "CentOS release 6" in open("/etc/redhat-release").read()):
+        raise pytest.skip("Temporarily disabled during py3 migration")
+
     plugin_path = site.path(os.path.join("lib/nagios/plugins", plugin))
     assert os.path.exists(plugin_path)
     assert os.access(plugin_path, os.X_OK)

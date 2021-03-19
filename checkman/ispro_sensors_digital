@@ -1,4 +1,4 @@
-title: Interseptor Pro devices: Digital in sensors
+title: Interseptor Pro Devices: Digital Input Sensors
 agents: snmp
 catalog: hw/environment/ispro
 license: GPL
@@ -11,7 +11,7 @@ description:
  otherwise CRIT.
 
 item:
- The sensor name.
+ The name of the digital input sensor
 
 inventory:
- One service per sensor is created.
+ One service is created for each sensor.

@@ -1,0 +1,21 @@
+title: FireEye Appliances: Attachment Rates
+agents: snmp
+catalog: hw/network/fireeye
+license: GPL
+distribution: check_mk
+description:
+ This check monitors email attachment rates
+ on Fireeye Appliances which support the FE-FIREEYE-MIB.
+
+ It monitors the count of all attachments received, attachments
+ that were analyzed for malicousness and attachments that
+ were determinde to be malicius.
+ As performance data, the rate of attachments per minute is
+ computed. For the service output, a different time frame
+ can be configured via WATO.
+
+ The check is always in OK state.
+
+inventory:
+ One service is created.
+

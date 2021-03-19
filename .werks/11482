@@ -1,0 +1,12 @@
+Title: Add option for host and service labels in notification rule conditions
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1601210120
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+You can now configure conditions for host and service labels in notification
+rules.

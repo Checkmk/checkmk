@@ -1,0 +1,14 @@
+Title: CMC parallelize config generation ON: fixed randomly vanishing services
+Class: fix
+Compatible: compat
+Component: core
+Date: 1583483756
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+When using the <tt>Parallelize core config creation feature</tt> option (defaults to ON), there was
+a risk of losing services in the configuration. The risk was increased when the system had lots of CPUs
+and a low number of hosts and services.

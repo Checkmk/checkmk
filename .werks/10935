@@ -1,0 +1,17 @@
+Title: Monitor migration state of SAP HANA ESS
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1587642753
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+A new check to monitor the migration state of SAP HANA's embedded statistics server (ESS).
+One service is created per SID.
+
+State is OK if the migration was succesful.
+State is WARNING if an installation is in progress.
+State is UNKNOWN if the agent plugin returnsi a non-mappable output.
+

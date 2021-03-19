@@ -1,0 +1,14 @@
+Title: Fix exporting of rules for API
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1614799793
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you used the "Export for API" option in rules, the error 'The parameter
+"rule_id"is missing." occurred.
+
+Now the correct landing page will be shown.

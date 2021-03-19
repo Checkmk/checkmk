@@ -1,0 +1,16 @@
+Title: Inventory plugin and mk_inventory agent plugin feature for Linux block devices
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1593590286
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+{{mk_inventory}} now writes a section {{<<<lnx_block_devices>>>}} block device
+information collected from system device tree.
+{{lnx_block_devices}} inventory plugin extends the sites inventory section
+{{Hardware/Storage/Block Devices}} with the collected information.
+Current items are {{Disk ID}}, {{Filesystem Node}}, {{Firmware}},
+{{Product}}, {{Serial Number}}, {{Size}} and {{Vendor}}.

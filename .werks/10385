@@ -1,0 +1,28 @@
+Title: Do not expose download credentials to the image history
+Class: fix
+Compatible: compat
+Component: packages
+Date: 1573056050
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The previous "docker build" mechanism was using docker build arguments for
+handing over the Checkmk enterprise download credentials to the docker image
+build procedure. This was making the credentials available in the meta
+information of the docker image, which may not be acceptable in many
+situations.
+
+If you simply want to use the Checkmk docker container, you don't need to care
+about the details below. This is just relevant for the ones building own docker
+images with Checkmk using the standard build logic.
+
+This change switches the image build logic to use a small busybox based
+container during image building that manages the secret download credentials
+and provides it to the "docker build" command. These containers will either be
+stopped and removed after the build finished successfully or after 180 seconds.
+
+If you build images on your own, you don't have to change anything if you use
+our build logic (docker/Makefile).

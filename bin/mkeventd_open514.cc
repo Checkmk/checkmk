@@ -1,26 +1,7 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 /* This small helper program is intended to be installed SUID root.
    Otherwise it is pointless. It creates a UDP socket with port 514.
@@ -33,6 +14,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -77,7 +59,7 @@ int main(int argc, char **argv) {
     if (do_syslog != 0 && syslog_fd > 0) {
         // Create socket
         int syslog_sock;
-        if (0 > (syslog_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+        if (0 > (syslog_sock = ::socket(PF_INET, SOCK_DGRAM, 0))) {
             perror("Cannot create UDP socket for syslog");
             exit(1);
         }
@@ -95,8 +77,8 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(syslog_sock, reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind UDP socket for syslog to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -105,8 +87,8 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (syslog_sock != 0 && syslog_sock != syslog_fd) {
-            dup2(syslog_sock, syslog_fd);
-            close(syslog_sock);
+            ::dup2(syslog_sock, syslog_fd);
+            ::close(syslog_sock);
         }
     }
 
@@ -114,7 +96,7 @@ int main(int argc, char **argv) {
     if (do_syslog_tcp != 0 && syslog_tcp_fd > 0) {
         // Create socket
         int syslog_tcp_sock;
-        if (0 > (syslog_tcp_sock = socket(PF_INET, SOCK_STREAM, 0))) {
+        if (0 > (syslog_tcp_sock = ::socket(PF_INET, SOCK_STREAM, 0))) {
             perror("Cannot create TCP socket for syslog-tcp");
             exit(1);
         }
@@ -132,9 +114,9 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SYSLOG_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(syslog_tcp_sock,
-                      reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(syslog_tcp_sock,
+                        reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind TCP socket for syslog-tcp to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -143,8 +125,8 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (syslog_tcp_sock != 0 && syslog_tcp_sock != syslog_tcp_fd) {
-            dup2(syslog_tcp_sock, syslog_tcp_fd);
-            close(syslog_tcp_sock);
+            ::dup2(syslog_tcp_sock, syslog_tcp_fd);
+            ::close(syslog_tcp_sock);
         }
     }
 
@@ -152,7 +134,7 @@ int main(int argc, char **argv) {
     if (do_snmptrap != 0 && snmptrap_fd > 0) {
         // Create socket
         int snmptrap_sock;
-        if (0 > (snmptrap_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+        if (0 > (snmptrap_sock = ::socket(PF_INET, SOCK_DGRAM, 0))) {
             perror("Cannot create UDP socket for snmptrap");
             exit(1);
         }
@@ -170,8 +152,9 @@ int main(int argc, char **argv) {
         addr.sin_family = AF_INET;
         addr.sin_port = htons(SNMPTRAP_PORT);
         addr.sin_addr.s_addr = 0;
-        if (0 != bind(snmptrap_sock, reinterpret_cast<struct sockaddr *>(&addr),
-                      sizeof(addr))) {
+        if (0 != ::bind(snmptrap_sock,
+                        reinterpret_cast<struct sockaddr *>(&addr),
+                        sizeof(addr))) {
             perror(
                 "Cannot bind UDP socket for snmptrap to port "
                 "(Is SUID bit set on mkeventd_open514? Is \"nosuid\" not set on the filesystem?)");
@@ -180,8 +163,8 @@ int main(int argc, char **argv) {
 
         // Make sure it is at the correct FD
         if (snmptrap_sock != 0 && snmptrap_sock != snmptrap_fd) {
-            dup2(snmptrap_sock, snmptrap_fd);
-            close(snmptrap_sock);
+            ::dup2(snmptrap_sock, snmptrap_fd);
+            ::close(snmptrap_sock);
         }
     }
 
@@ -212,6 +195,6 @@ int main(int argc, char **argv) {
 
     memcpy(newpath, argv[0], len_to_copy);
     strncpy(newpath + len_to_copy, PROGRAM, 511 - len_to_copy);
-    execv(newpath, argv);
+    ::execv(newpath, argv);
     perror("Cannot execute mkeventd");
 }

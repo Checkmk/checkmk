@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = 'msexch_rpcclientaccess'
 
 info = [
@@ -31,11 +39,20 @@ info = [
 discovery = {'': [(None, None)]}
 
 checks = {
-    '': [(None, {
-        'latency': (200.0, 250.0),
-        'requests': (30, 40)
-    }, [(0, '18ms average latency', [('average_latency', 18.0, 200.0, 250.0, None, None)]),
-        (0, '0.00 RPC Requests', [('requests_per_sec', 0.0, 30, 40, None, None)]),
-        (0, '0 users', [('current_users', 0.0, None, None, None, None)]),
-        (0, '11 active users', [('active_users', 11.0, None, None, None, None)])])]
+    '': [
+        (None, {'latency': (200.0, 250.0), 'requests': (30, 40)}, [
+            (0, 'Average latency: 18 ms', [
+                ('average_latency', 18.0, 200.0, 250.0, None, None),
+            ]),
+            (0, 'RPC Requests/sec: 0.00', [
+                ('requests_per_sec', 0.0, 30, 40, None, None),
+            ]),
+            (0, 'Users: 0', [
+                ('current_users', 0.0, None, None, None, None),
+            ]),
+            (0, 'Active users: 11', [
+                ('active_users', 11.0, None, None, None, None),
+            ]),
+        ]),
+    ],
 }

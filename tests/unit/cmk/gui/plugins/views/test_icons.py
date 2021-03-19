@@ -1,8 +1,16 @@
-import cmk
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from typing import Dict, Any
+
+import cmk.utils.version as cmk_version
 import cmk.gui.views
 
-if not cmk.is_raw_edition():
-    import cmk.gui.cee.plugins.views.icons
+if not cmk_version.is_raw_edition():
+    import cmk.gui.cee.plugins.views.icons  # pylint: disable=no-name-in-module
 
 import cmk.gui.plugins.views.icons as icons
 
@@ -42,11 +50,12 @@ def test_builtin_icons_and_actions():
         'wato',
     ]
 
-    if not cmk.is_raw_edition():
+    if not cmk_version.is_raw_edition():
         expected_icons_and_actions += [
             'agent_deployment',
             'deployment_status',
             'status_shadow',
+            'ntop_host',
         ]
 
     cmk.gui.views.transform_old_dict_based_icons()
@@ -55,7 +64,7 @@ def test_builtin_icons_and_actions():
 
 
 def test_legacy_icon_plugin():
-    icon = {
+    icon: Dict[str, Any] = {
         "columns": ["column"],
         "host_columns": ["hcol"],
         "service_columns": ["scol"],

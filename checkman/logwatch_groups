@@ -1,0 +1,19 @@
+title: Grouping of Logfiles
+agents: linux, windows, aix, solaris
+catalog: os/files
+license: GPL
+distribution: check_mk
+description:
+ This check is used to group multiple logfiles together. This is useful in cases when a logrotation mechanism is used,
+ with no permanent name for the current logfile.
+
+ Please refer to to manpage of {{logwatch}} for more details about logfile monitoring.
+
+item:
+ Name of the group
+
+inventory:
+ One service is created for each group.
+
+cluster:
+ In a cluster setup all messages are aggregated across the nodes.

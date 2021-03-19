@@ -1,4 +1,4 @@
-title: Innovaphone Gateway: CPU utilization
+title: Innovaphone Gateway: CPU Utilization
 agents: special
 catalog: hw/network/innovaphone
 license: GPL
@@ -8,5 +8,5 @@ description:
 
 
 inventory:
- One check will be created
+ One service is created.
 

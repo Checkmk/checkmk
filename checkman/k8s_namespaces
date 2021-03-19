@@ -1,4 +1,4 @@
-title: Kubernetes namespaces
+title: Kubernetes: Namespaces
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -8,7 +8,7 @@ description:
  If a namespace is active the check returns {OK} otherwise {CRIT}.
 
 inventory:
- One service per namespace is created.
+ One service is created for each namespace.
 
 item:
  The name of the namespace.

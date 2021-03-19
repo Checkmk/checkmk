@@ -1,0 +1,24 @@
+Title: Resolving of plugins default parameters during discovery
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1593170232
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk only affects users that use an *.mk file in etc/check_mk/conf.d/ to override
+the default parameters of a check plugin.
+
+Previously the reference to this variable was saved in the autochecks, such that the value of
+corresponding variable was determined just before each execution of the check plugin.
+
+Now the value of the variable is evaluated during discovery, and the resulting value will be
+saved in the autochecks and used for every subsequent execution of the check plugin.
+
+Autochecks that have references to variable names in them will be converted during the update
+process to Checkmk 1.7 or by running `cmk-update-config -v` manually.
+
+Users that use an etc/check_mk/conf.d/*.mk file to set these default parameters are encouraged
+to configure an appropriate WATO rule instead.

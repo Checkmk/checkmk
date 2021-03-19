@@ -1,52 +1,32 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 aironet_default_error_levels = (1.0, 10.0)  # per second
 
 
 def inventory_aironet_errors(info):
-    return [(int(line[0]), 'aironet_default_error_levels') for line in info]
+    yield from ((line[0], 'aironet_default_error_levels') for line in info)
 
 
 def check_aironet_errors(item, params, info):
     for line in info:
-        if int(line[0]) == item:
+        if line[0] == item:
             value = int(line[1])
             this_time = time.time()
             persec = get_rate("aironet_errors.%s" % item, this_time, value)
             warn, crit = params
             perfdata = [("errors", persec, None, None, warn, crit)]
             infotxt = "%.2f errors/s" % persec
-            if persec >= crit:
-                return (2, infotxt, perfdata)
-            elif persec >= warn:
-                return (1, infotxt, perfdata)
-            return (0, infotxt, perfdata)
-
-    return (3, "No radio %s available" % item)
+            return (
+                2 if persec >= crit else  #
+                1 if persec >= warn else  #
+                0,
+                infotxt,
+                perfdata,
+            )
 
 
 check_info["aironet_errors"] = {

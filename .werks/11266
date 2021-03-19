@@ -1,0 +1,15 @@
+Title: ups_out_load, ups_power: Fix discovery of output lines with zero load resp. power
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1598877171
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Previously output lines were discovered in the check plugins {{ups_out_load}},
+{{ups_power}} if and only if they had a value greater than zero.
+
+Now we use the voltage value in order to decide whether a line is connected or
+not.

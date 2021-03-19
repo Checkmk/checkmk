@@ -1,29 +1,19 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.filerdisks import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
 # 0:online::member:sas_hdd:558.4GB:7:V7BRZ_mdisk08:4:1:24::
@@ -51,6 +41,8 @@
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
+factory_settings['filer_disks_default_levels'] = FILER_DISKS_CHECK_DEFAULT_PARAMETERS
+
 
 def parse_ibm_svc_disks(info):
     dflt_header = [
@@ -69,7 +61,7 @@ def parse_ibm_svc_disks(info):
         'drive_class_id',
     ]
     parsed = []
-    for rows in parse_ibm_svc_with_header(info, dflt_header).itervalues():
+    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
         parsed.extend(rows)
     return parsed
 
@@ -112,7 +104,6 @@ check_info["ibm_svc_disks"] = {
     'check_function': check_ibm_svc_disks,
     'inventory_function': discover_single,
     'service_description': 'Disk Summary',
-    'includes': ['ibm_svc.include', 'filerdisks.include'],
     'group': 'netapp_disks',
     'default_levels_variable': 'filer_disks_default_levels',
     'has_perfdata': True,

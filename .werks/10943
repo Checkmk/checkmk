@@ -1,0 +1,12 @@
+Title: sap_hana_data_volume: Added netdata of SAP HANA data volumes
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1584974595
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+You can now monitor the netdata of SAP HANA volumes. This adjustment results in
+services like "SAP HANA Volume <SID> <SYSNR> - DATA <NR> Disk Net Data".

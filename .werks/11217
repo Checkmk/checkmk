@@ -1,0 +1,26 @@
+Title: Configurable timeouts for MSSQL agent plugin
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1592838023
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk adds the option to configure timeouts for the MSSQL agent
+plugin (rule "Microsoft SQL Server (Windows)"). There are two types of
+timeouts. The connection timeout is triggered when the agent plugin takes
+too long to connect to an instance. The command timeout controls the
+time available for executing commands such as SQL queries on the instances.
+
+If a connection timeout is triggered, the plugin skips the entire instance
+and continues with the next one. Note that this werk also changes the default
+connection timeout from 2 seconds to the default value used by ADO (15 s).
+In case of a command timeout, only the current command is skipped and the
+plugin continues with the next command on the same instance.
+
+Finally, this werk also fixes a bug in the handling of errors for the check
+<tt>mssql_tablespaces</tt>. Errors such as timeouts reported by the agent
+plugin are now displayed in the GUI and the check goes to CRITICAL instead of
+UNKNOWN.

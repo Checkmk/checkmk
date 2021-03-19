@@ -1,48 +1,31 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
 import json
 import pprint
-import xml.dom.minidom  # type: ignore
+import xml.dom.minidom  # type: ignore[import]
+from typing import Any, Callable, Dict, Tuple, Union
 
-import dicttoxml  # type: ignore
+import dicttoxml  # type: ignore[import]
 
-import cmk
+import cmk.utils.version as cmk_version
 
 import cmk.utils.store as store
 
 import cmk.gui.pages
+import cmk.gui.escaping as escaping
 from cmk.gui.log import logger
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
 import cmk.gui.i18n
-from cmk.gui.i18n import _
+from cmk.gui.watolib.activate_changes import update_config_generation
+from cmk.gui.i18n import _, _l
 from cmk.gui.globals import html
 from cmk.gui.exceptions import (
     MKUserError,
@@ -57,16 +40,16 @@ from cmk.gui.permissions import (
 
 import cmk.gui.plugins.webapi
 
-if not cmk.is_raw_edition():
+if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (  # pylint: disable=unused-import
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
     add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
     validate_host_attributes,
 )
 
-loaded_with_language = False
+loaded_with_language: Union[bool, None, str] = False
 
 
 def load_plugins(force):
@@ -82,32 +65,20 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-@permission_registry.register
-class PermissionWATOAllowedAPI(Permission):
-    @property
-    def section(self):
-        return PermissionSectionWATO
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
+        name="api_allowed",
+        title=_l("Access to Web-API"),
+        description=_l("This permissions specifies if the role "
+                       "is able to use Web-API functions. It is only available "
+                       "for automation users."),
+        defaults=config.builtin_role_ids,
+    ))
 
-    @property
-    def permission_name(self):
-        return "api_allowed"
+Formatter = Callable[[Dict[str, Any]], str]
 
-    @property
-    def title(self):
-        return _("Access to Web-API")
-
-    @property
-    def description(self):
-        return _("This permissions specifies if the role "
-                 "is able to use Web-API functions. It is only available "
-                 "for automation users.")
-
-    @property
-    def defaults(self):
-        return config.builtin_role_ids
-
-
-_FORMATTERS = {
+_FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
     "json":
         (json.dumps,
          lambda response: json.dumps(response, sort_keys=True, indent=4, separators=(',', ': '))),
@@ -131,7 +102,7 @@ def page_api():
                 " and ".join('"%s"' % f for f in _FORMATTERS))
 
         # TODO: Add some kind of helper for boolean-valued variables?
-        pretty_print_var = html.request.var("pretty_print", "no").lower()
+        pretty_print_var = html.request.get_str_input_mandatory("pretty_print", "no").lower()
         if pretty_print_var not in ("yes", "no"):
             raise MKUserError(None, 'pretty_print must be "yes" or "no"')
         pretty_print = pretty_print_var == "yes"
@@ -150,8 +121,8 @@ def page_api():
             "result": _("Authorization Error. Insufficent permissions for '%s'") % e
         }
     except MKException as e:
-        response = {"result_code": 1, "result": _("Check_MK exception: %s") % e}
-    except Exception as e:
+        response = {"result_code": 1, "result": _("Checkmk exception: %s") % e}
+    except Exception:
         if config.debug:
             raise
         logger.exception("error handling web API call")
@@ -173,7 +144,7 @@ def _get_api_call():
         api_call = cls().get_api_calls().get(action)
         if api_call:
             return api_call
-    raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
+    raise MKUserError(None, "Unknown API action %s" % escaping.escape_attribute(action))
 
 
 def _check_permissions(api_call):
@@ -190,7 +161,8 @@ def _check_permissions(api_call):
 
 def _get_request(api_call):
     if api_call.get("dont_eval_request"):
-        return html.request.var("request", {})
+        req = html.request.var("request")
+        return {} if req is None else req
     return html.get_request(exclude_vars=["action", "pretty_print"])
 
 
@@ -235,6 +207,10 @@ def _execute_action_no_lock(api_call, request_object):
     if cmk.gui.watolib.read_only.is_enabled() and \
        not cmk.gui.watolib.read_only.may_override():
         raise MKUserError(None, cmk.gui.watolib.read_only.message())
+
+    # We assume something will be modified and increase the config generation
+    update_config_generation()
+
     return {
         "result_code": 0,
         "result": api_call["handler"](request_object),

@@ -1,34 +1,23 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # Author: Goetz Golla, gg@mathias-kettner.de
 
 # This script extracts data of the hardware inventory to csv files
 
-from __future__ import print_function
+# TODO: Fix the horrible mix between local/global naming.
+# pylint: disable=redefined-outer-name
+
+import hashlib
+import os
+import re
+import sys
+import time
+from typing import Any, Dict
+
 relations = {
     "devices": {
         "columns": (
@@ -104,9 +93,7 @@ relations = {
         },
         "converter": {},
     },
-}
-
-import os, sys, re, time, hashlib
+}  # type: Dict[str, Dict[str, Any]]
 
 omd_root = os.environ["OMD_ROOT"]
 
@@ -148,7 +135,7 @@ def filt_it(package, relation):
     for field in relation["filter"].keys():
         if field:
             should_be = relation["filter"][field]
-            field = re.sub(list_start + ":\*.", "", field)
+            field = re.sub(list_start + ":\\*.", "", field)
             for item in field.split("."):
                 value = package[item]
                 if type(value) in (str, int, float) and re.search(should_be, value):
@@ -175,10 +162,9 @@ def print_line(out_rel, items):
 def special_value(item, hostname):
     if item == "@hostname":
         return hostname
-    elif item == "@inventory_date":
+    if item == "@inventory_date":
         return inventory_date[hostname]
-    else:
-        return ""
+    return ""
 
 
 def no_list_get(hostname, field):
@@ -193,7 +179,7 @@ def no_list_get(hostname, field):
             else:
                 try:
                     subtree = subtree[item]
-                except:
+                except Exception:
                     break
             if type(subtree) in (str, int, float):
                 out_line = convert_it(relations[ofs]['converter'], subtree, field)
@@ -206,7 +192,7 @@ def list_get(hostname, list_start):
     for item in list_start.split("."):
         try:
             subtree = subtree[item]
-        except:
+        except Exception:
             print("   %s does not exist in database of host" % item)
     if isinstance(subtree, list):
         for package in subtree:
@@ -214,14 +200,14 @@ def list_get(hostname, list_start):
                 continue
             for field in elements:
                 if field:
-                    field = re.sub(list_start + ":\*.", "", field)
+                    field = re.sub(list_start + ":\\*.", "", field)
                     for item in field.split("."):
                         if item.startswith("@"):  # take subtree vom special_value
                             value = special_value(item, hostname)
                         else:
                             try:
                                 value = package[item]
-                            except:
+                            except Exception:
                                 break
                     if type(value) in (str, int, float):
                         items.append(value)
@@ -266,7 +252,7 @@ for ofs in relations:
             for item in list_start.split("."):
                 try:
                     subtree = subtree[item]
-                except:
+                except Exception:
                     print("   %s does not exist in database of host" % item)
             if isinstance(subtree, list):
                 for package in subtree:
@@ -275,7 +261,7 @@ for ofs in relations:
                     items = []
                     for field in elements:
                         if field:
-                            field = re.sub(list_start + ":\*.", "", field)
+                            field = re.sub(list_start + ":\\*.", "", field)
                             concat = ""
                             for item in field.split("."):
                                 if item.startswith("@"):  # take subtree vom special_value
@@ -289,13 +275,13 @@ for ofs in relations:
                                             else:
                                                 try:
                                                     concat += package[item2]
-                                                except:
+                                                except Exception:
                                                     continue
-                                    value = hashlib.md5(concat).hexdigest()
+                                    value = hashlib.md5(concat.encode("utf-8")).hexdigest()
                                 else:
                                     try:
                                         value = package[item]
-                                    except:
+                                    except Exception:
                                         items.append("")
                                         break
                                 if type(value) in (str, int, float):

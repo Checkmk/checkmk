@@ -1,34 +1,11 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    TextUnicode,
-    Integer,
-)
+from cmk.gui.valuespec import (TextUnicode, Integer, MonitoredHostname, MonitoredServiceDescription)
 
 from cmk.gui.plugins.visuals import (
     VisualInfo,
@@ -52,11 +29,15 @@ class VisualInfoHost(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('host', TextUnicode(title=_('Hostname'),))]
+        return [('host', MonitoredHostname(title=_('Hostname'),))]
 
     @property
     def multiple_site_filters(self):
         return ["hostgroup"]
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -75,11 +56,15 @@ class VisualInfoService(VisualInfo):
 
     @property
     def single_spec(self):
-        return [('service', TextUnicode(title=_('Service Description'),))]
+        return [('service', MonitoredServiceDescription(title=_('Service Description')))]
 
     @property
     def multiple_site_filters(self):
         return ["servicegroup"]
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -103,6 +88,10 @@ class VisualInfoHostgroup(VisualInfo):
     @property
     def single_site(self):
         return False
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -128,6 +117,10 @@ class VisualInfoServicegroup(VisualInfo):
     @property
     def single_site(self):
         return False
+
+    @property
+    def sort_index(self):
+        return 10
 
 
 @visual_info_registry.register
@@ -253,6 +246,10 @@ class VisualInfoBIAggregation(VisualInfo):
             ('aggr_name', TextUnicode(title=_('Aggregation Name'),)),
         ]
 
+    @property
+    def sort_index(self):
+        return 20
+
 
 @visual_info_registry.register
 class VisualInfoBIAggregationGroup(VisualInfo):
@@ -273,6 +270,10 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return [
             ('aggr_group', TextUnicode(title=_('Aggregation group'),)),
         ]
+
+    @property
+    def sort_index(self):
+        return 20
 
 
 @visual_info_registry.register

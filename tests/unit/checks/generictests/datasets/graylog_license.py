@@ -1,5 +1,12 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = 'graylog_license'
 
 freeze_time = '2019-11-08T08:56:00'
@@ -16,7 +23,8 @@ checks = {
     '': [
         (
             None, {
-                'violated': 1,
+                'no_enterprise': 0,
+                'violated': 2,
                 'valid': 2,
                 'cluster_not_covered': 1,
                 'traffic_exceeded': 1,
@@ -24,13 +32,13 @@ checks = {
                 'expired': 2,
                 'remote_checks_failed': 1
             }, [
-                (0, 'Is expired: no', []), (0, 'Is violated: yes', []),
+                (0, 'Is expired: no', []), (2, 'Is violated: yes', []),
                 (2, 'Is valid: no', []), (0, 'Traffic is exceeded: no', []),
                 (0, 'Cluster is not covered: no', []),
                 (0, 'Nodes exceeded: no', []),
                 (1, 'Remote checks failed: yes', []),
                 (0, 'Traffic limit: 5.00 GB', []),
-                (0, 'Expires in: - 15 d', []),
+                (0, 'Expires in: -15 d', []),
                 (0, 'Subject: /license/enterprise', []), (0, 'Trial: yes', []),
                 (0, 'Requires remote checks: yes', [])
             ]

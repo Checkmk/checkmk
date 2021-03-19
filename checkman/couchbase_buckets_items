@@ -1,0 +1,17 @@
+title: Couchbase Buckets: Items
+agents: special
+catalog: app/couchbase
+license: GPL
+distribution: check_mk
+description:
+
+ This service monitors the total number of items in vBuckets, number of
+ fetched items from disk and the disk queue fill and dran rates associated
+ to a single bucket.
+ Levels can be configured in the WATO rule "Couchbase Items".
+
+inventory:
+ One service is created for each bucket.
+
+item:
+ The name of the bucket.

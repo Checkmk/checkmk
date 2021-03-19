@@ -1,10 +1,45 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include <bitset>
 #include <cstddef>
 #include <sstream>
 #include <string>
 #include <vector>
+
 #include "StringUtils.h"
 #include "gtest/gtest.h"
+
+TEST(StringUtilTest, StartsWith) {
+    EXPECT_TRUE(mk::starts_with("", ""));
+
+    EXPECT_TRUE(mk::starts_with("foo", ""));
+    EXPECT_FALSE(mk::starts_with("", "foo"));
+
+    EXPECT_TRUE(mk::starts_with("foo", "foo"));
+    EXPECT_FALSE(mk::starts_with("foo", "fox"));
+    EXPECT_FALSE(mk::starts_with("foo", "too"));
+
+    EXPECT_TRUE(mk::starts_with("foobar", "foo"));
+    EXPECT_FALSE(mk::starts_with("foo", "foobar"));
+}
+
+TEST(StringUtilTest, EndsWith) {
+    EXPECT_TRUE(mk::ends_with("", ""));
+
+    EXPECT_TRUE(mk::ends_with("foo", ""));
+    EXPECT_FALSE(mk::ends_with("", "foo"));
+
+    EXPECT_TRUE(mk::ends_with("foo", "foo"));
+    EXPECT_FALSE(mk::ends_with("foo", "fox"));
+    EXPECT_FALSE(mk::ends_with("foo", "too"));
+
+    EXPECT_FALSE(mk::ends_with("foobar", "foo"));
+    EXPECT_TRUE(mk::ends_with("foobar", "bar"));
+    EXPECT_FALSE(mk::ends_with("foo", "foobar"));
+}
 
 TEST(StringUtilTest, JoinTest) {
     using v = std::vector<std::string>;

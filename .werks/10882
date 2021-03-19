@@ -1,0 +1,18 @@
+Title: Fix "Customers" dashlet shown on customer sites
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1586337518
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The customer sites only have information for a single customer.
+It does not make sense to show the customers snapin in the main
+dashboard. You can view the numbers and open the related objects
+using the Tactical overview snapin.
+
+The customer snapin is now removed automatically from the builtin
+main dashboard. In case you have built a custom dashboard, it will
+not be affected by this change.

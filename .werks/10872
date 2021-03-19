@@ -1,0 +1,17 @@
+Title: agent_vsphere: Removed ESX 4.1 compatibility mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1583755132
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0i1
+
+The ESX 4.1 compatibility mode of the ESX vSphere special agent has been
+removed.  This separate implementation, which was based on the pysphere python
+API, was outdated, much slower and missed several features of the current ESX
+vSphere special agent.
+
+In case you still need this, you may have to setup a separate site which uses
+the old special agent to collect the needed information.

@@ -1,6 +1,6 @@
-title: SuSE Linux Enterprise Server license information
+title: SuSE Linux Enterprise Server: License Information
 agents: linux
-catalog: os/linux
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:
@@ -16,8 +16,5 @@ description:
  The check can be configured via the corresponding WATO rule {SLES License}.
 
 inventory:
- The service {SLES license} is created.
-
-item:
- No item.
+ One service named {SLES license} is created.
 

@@ -1,0 +1,29 @@
+Title: Disable dangerous commands on hosts / services by default
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1594794394
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In the views you have the option to execute commands on the visible
+hosts or services. The most popular ones are the ones for setting
+downtimes or acknowledging problems.
+
+Significantly less used, but rather dangerous, commands include "Toggle
+notifications", "Toggle active checks", "Toggle passive checks" and "clear
+modified attributes".
+
+These commands modify the behaviour of the core for the selected objects, e.g.
+checks or notifications are deactivated, which overwrites the configuration of
+the core. This can easily lead to confusion, as it is not very transparent for
+which objects this modification is active.
+
+The commands were previously only available by default for users with the role
+"admin". We have now also withdrawn these rights from the role "admin" by
+default.
+
+Admins who still need these commands can reactivate the rights under "Roles &
+Permissions" in the configuration.

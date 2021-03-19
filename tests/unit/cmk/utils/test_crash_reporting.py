@@ -1,6 +1,18 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 import copy
-import pytest  # type: ignore
+import itertools
+import shutil
+import struct
+import uuid
+from typing import Any, Dict
+
+import pytest  # type: ignore[import]
 
 import cmk.utils.paths
 from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export, CrashReportStore
@@ -33,8 +45,7 @@ def test_crash_report_ident_to_text(crash):
 
 
 def test_crash_report_crash_dir(crash):
-    assert crash.crash_dir() == cmk.utils.paths.crash_dir.joinpath(crash.type(),
-                                                                   crash.ident_to_text())
+    assert crash.crash_dir() == (cmk.utils.paths.crash_dir / crash.type() / crash.ident_to_text())
 
 
 def test_crash_report_local_crash_report_url(crash):
@@ -43,7 +54,7 @@ def test_crash_report_local_crash_report_url(crash):
 
 
 def test_format_var_for_export_strip_nested_dict():
-    orig_var = {
+    orig_var: Dict[str, Any] = {
         "a": {
             "b": {
                 "c": {
@@ -81,7 +92,7 @@ def test_format_var_for_export_strip_large_data():
 
 
 def test_format_var_for_export_strip_nested_dict_with_list():
-    orig_var = {
+    orig_var: Dict[str, Any] = {
         "a": {
             "b": {
                 "c": [{}],
@@ -99,20 +110,41 @@ def test_format_var_for_export_strip_nested_dict_with_list():
     assert orig_var == var
 
 
-def test_crash_report_store_cleanup():
+@pytest.fixture
+def crash_dir():
+    d = cmk.utils.paths.crash_dir / "test"
+    yield d
+    try:
+        shutil.rmtree(str(d))
+    except OSError:
+        pass
+
+
+@pytest.fixture
+def patch_uuid1(monkeypatch):
+    """Generate a uuid1 with known values."""
+    c = itertools.count()
+
+    def uuid1(node=None, clock_seq=None):
+        return uuid.UUID(bytes=struct.pack(b">I", next(c)) + 12 * b"\0")
+
+    monkeypatch.setattr("uuid.uuid1", uuid1)
+
+
+@pytest.mark.usefixtures("patch_uuid1")
+@pytest.mark.parametrize("n_crashes", [15, 45])
+def test_crash_report_store_cleanup(crash_dir, n_crashes):
     store = CrashReportStore()
-    base_dir = cmk.utils.paths.crash_dir / "test"
+    assert not set(crash_dir.glob("*"))
 
-    expected_crash_ids = set()
-    assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids
-
-    for num in range(store._keep_num_crashes + 1):
+    crash_ids = []
+    for num in range(n_crashes):
         try:
             raise ValueError("Crash #%d" % num)
         except ValueError:
             crash = UnitTestCrashReport.from_exception()
-            if num != 0:
-                expected_crash_ids.add(crash.ident_to_text())
             store.save(crash)
+            crash_ids.append(crash.ident_to_text())
 
-    assert set(e.name for e in base_dir.glob("*")) == expected_crash_ids
+    assert len(set(crash_dir.glob("*"))) <= store._keep_num_crashes
+    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes:])

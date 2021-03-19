@@ -1,7 +1,11 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 
 from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
 
@@ -26,13 +30,15 @@ thermal_zone5|-|x86_pkg_temp|48000|0|passive|0|passive
 thermal_zone6|-|B0D4|61000|127000|critical|127000|hot|99000|passive|99000|active|94000|active""",
         '|')
 ]
-result_discovery = [[('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
-                    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6]]]
+result_discovery = [  # type: ignore
+    [('Zone %s' % i, {}) for i in [0, 1, 3, 5]],
+    [('Zone %s' % i, {}) for i in [0, 3, 4, 5, 6]],
+]
 
 
-@pytest.mark.parametrize("info, result", zip(agent_info, result_discovery))
-def test_parse_and_discovery_function(check_manager, info, result):
-    check = check_manager.get_check("lnx_thermal")
+@pytest.mark.parametrize("info, result", list(zip(agent_info, result_discovery)))
+def test_parse_and_discovery_function(info, result):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
     discovery = DiscoveryResult(check.run_discovery(parsed))
     assertDiscoveryResultsEqual(check, discovery, DiscoveryResult(result))
@@ -55,10 +61,10 @@ result_check = [
 ]
 
 
-@pytest.mark.parametrize("info, discovered, checked", zip(agent_info, result_discovery,
-                                                          result_check))
-def test_check_functions_perfdata(check_manager, info, discovered, checked):
-    check = check_manager.get_check("lnx_thermal")
+@pytest.mark.parametrize("info, discovered, checked",
+                         list(zip(agent_info, result_discovery, result_check)))
+def test_check_functions_perfdata(info, discovered, checked):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
-    for (item, params), result in zip(discovered, checked):
+    for (item, _params), result in zip(discovered, checked):
         assert check.run_check(item, {}, parsed) == result

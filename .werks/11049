@@ -1,0 +1,13 @@
+Title: Classical passive checks now allow OK in case of absent updates
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1595586224
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Classical passive monitoring checks can now be configured
+to return the state OK if data does not arrive within the
+expected update interval.

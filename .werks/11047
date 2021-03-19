@@ -1,0 +1,19 @@
+Title: mknotifyd, mknotifyd.connection: resolve wrong warnings
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1594388811
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If another process tried to connect to the mknotifyd via TCP the
+notification spooler service returned CRIT together with the
+message "The state file seems to be empty or corrupted. It is very
+likely that the spooler is not working properly". This wrong warning
+is now fixed. Furthermore, any non-readable characters in the
+message header of log entries starting with "Bogus message
+header 'message header'" are now represented as '\xhh' where h is
+a hexadecimal number.

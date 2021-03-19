@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1569422126
 
 When a local check reported perfdata that had one or multiple a trailing ";" signs, this could

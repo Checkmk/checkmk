@@ -1,4 +1,4 @@
-title: CISCO Switch Catalyst 3750-E Series: Stack Port Link States
+title: Cisco Switch Catalyst 3750-E Series: Stack Port Link States
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
@@ -15,4 +15,4 @@ item:
  The stackpower interface number.
 
 inventory:
- One service per stackpower interface is created.
+ One service is created for each stackpower interface.

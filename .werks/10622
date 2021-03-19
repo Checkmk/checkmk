@@ -1,0 +1,12 @@
+Title: Passive objects cannot be activated
+Class: fix
+Compatible: compat
+Component: core
+Date: 1582186159
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The scheduler could miss transitions from passive
+to active and fail to schedule newly actived objects.

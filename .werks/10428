@@ -6,7 +6,7 @@ Date: 1572874347
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 It is now possible to deploy baked agents via remote sites within a distributed
 monitoring configuration. Prerequisites for this feature are a monitoring setup

@@ -1,16 +1,33 @@
-title: ACME devices: Agent sessions
+title: ACME Devices: Agent Sessions
 agents: snmp
 catalog: hw/environment/acme
 license: GPL
 distribution: check_mk
 description:
- This check monitors the agent sessions of ACME devices which support APSYSMGMT-MIB.
- The status is OK, if the device status is "disabled", "standby" or "in service", it is
- WARN if "contraints violation", "in service timed out" or "oos provisioned response" and
- CRIT if "out of service".
+ This check monitors the device status of agent sessions of ACME devices.
+
+ The status is {OK}, if the device status is
+
+ - "disabled"
+
+ - "standby"
+
+ - "in service"
+
+ it is {WARN} if the device status is
+
+ - "contraints violation"
+
+ - "in service timed out"
+
+ - "oos provisioned response"
+
+ and it is {CRIT} if the device status is "out of service".
+
+ The check uses the APSYSMGMT-MIB.
 
 item:
- The hostname.
+ Name of the host.
 
 inventory:
- One service per hostname is created.
+ One service is created for each hostname.

@@ -1,0 +1,23 @@
+Title: Fix different issues with hosts created via Web API using JSON
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1582642573
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+When hosts are created using the Web API with data structures in JSON format,
+configuring these hosts could lead to problems in different situations.
+
+One example is that configuration rules that are created explicitly for such
+a host can not be loaded for editing. One often used feature is creating
+"ad hoc" disabled services rules on the service discovery page. These rules
+lead to an error message "Unable to read current conditions of this rule. Falling back to default values."
+when trying to edit the created rule.
+
+This issue has been fixed. Starting with the 1.6.0p10 the hosts are initially
+correctly saved. Existing host and rule configurations will be fixed during
+the update to 1.6.0p10.

@@ -1,0 +1,18 @@
+title: AWS WAFV2: Summary
+agents: aws
+catalog: cloud/aws
+license: GPL
+distribution: check_mk
+description:
+ This check gives an overall summary of the Web Access Control Lists
+ (ACLs) managed by WAFV2. It reports the total number of Web ACLs and
+ it also displays the description of each Web ACL and the number of
+ attached rules and rule groups.
+
+ To make this check work, you have to configure the related special
+ agent {Amazon Web Services (AWS)}. Note that when configuring the agent,
+ there is the option to include Web ACLs in front of CloudFront resources
+ in the monitoring.
+
+inventory:
+ One service is created.

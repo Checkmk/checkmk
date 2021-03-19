@@ -1,0 +1,30 @@
+Title: Introducing new checks for huawei switches
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1581353938
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces new checks to support monitoring huawei switches.
+
+Specifically tested with models S5720 or S6720.
+
+All checks support the stacking function of huawei switches in which multiple devices are connected together to logically function as one device.
+
+With this werk it is possible to monitor the following components of huawei switches:
+
+<ul>
+<li>huawei_switch_cpu: Monitors CPU utilization. Levels can be configured in WATO.</li>
+<li>huawei_switch_mem: Monitors Memory utilization. Levels can be configured in WATO.</li>
+<li>huawei_switch_fan: Monitors fan speed in percentage. Levels can be configured in WATO.</li>
+<li>huawei_switch_temp: Monitors the temperature in celcius. Levels can be configured in WATO.</li>
+<li>huawei_switch_psu: Monitors the operational status of the PSUs. Reports "CRITICAL" status if a PSU is not enabled.</li>
+<li>huawei_switch_stack: Monitors the stack composition and the roles of its members.
+There are three kinds of roles that members of a stack can be in: "master", "standby" and "slave".
+If the current role of a member is different from when it was discovered, the state of the service changes to CRIT.</li>
+</ul>
+
+

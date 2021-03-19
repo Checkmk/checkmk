@@ -1,4 +1,4 @@
-title: Alcatel switches: CPU utilization
+title: Alcatel Switches: CPU Utilization
 agents: snmp
 catalog: hw/network/alcatel
 license: GPL
@@ -15,8 +15,12 @@ description:
 
  - OmniSwitch 6450-10: AOS 6.7.2.191.R04 GA
 
+ The check has configurable levels for {WARN}/{CRIT} (default: 45, 50).
+
  The value is a average in percent over the last hour. This average is calculated by the device.
 
+ The check uses the ALCATEL-IND1-HEALTH-MIB.
+
 inventory:
- One check is created
+ One service is created
 

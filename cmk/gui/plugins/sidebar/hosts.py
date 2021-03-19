@@ -1,37 +1,15 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
-import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import request, html
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.plugins.sidebar import (
     link,
     SidebarSnapin,
@@ -39,12 +17,12 @@ from cmk.gui.plugins.sidebar import (
 )
 
 
-class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         raise NotImplementedError()
 
-    def show(self):
+    def show(self) -> None:
         mode = self._host_mode_ident()
         sites.live().set_prepend_site(True)
         query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
@@ -75,7 +53,6 @@ class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
         else:
             num_columns = 2
 
-        target = views.get_context_link(config.user.id, view)
         html.open_table(class_="allhosts")
         col = 1
         for site, host, state, worstsvc in hosts:
@@ -94,7 +71,16 @@ class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
             html.open_div(class_=["statebullet", "state%d" % statecolor])
             html.nbsp()
             html.close_div()
-            link(host, target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
+            link(text=host,
+                 url=makeuri_contextless(
+                     request,
+                     [
+                         ("view_name", view),
+                         ("host", host),
+                         ("site", site),
+                     ],
+                     filename="view.py",
+                 ))
             html.close_td()
             if col == num_columns:
                 html.close_tr()
@@ -107,42 +93,46 @@ class HostSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
         html.close_table()
 
     @classmethod
-    def refresh_on_restart(cls):
+    def refresh_on_restart(cls) -> bool:
         return True
 
 
 @snapin_registry.register
 class Hosts(HostSnapin):
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         return "hosts"
 
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "hosts"
 
     @classmethod
-    def title(cls):
-        return _("All Hosts")
+    def title(cls) -> str:
+        return _("All hosts")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A summary state of each host with a link to the view showing its services")
 
 
 @snapin_registry.register
 class ProblemHosts(HostSnapin):
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         return "problems"
 
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "problem_hosts"
 
     @classmethod
-    def title(cls):
-        return _("Problem Hosts")
+    def title(cls) -> str:
+        return _("Problem hosts")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A summary state of all hosts that have a problem, with "
                  "links to problems of those hosts")
+
+    @classmethod
+    def refresh_regularly(cls) -> bool:
+        return True

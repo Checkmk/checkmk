@@ -16,7 +16,7 @@ description:
  if the refclock state is "not synchronized".
 
 inventory:
- One service per non-gps refclock is created.
+ One service is created for each non-gps refclock.
 
 item:
  The index number of the refclock.

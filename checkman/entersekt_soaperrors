@@ -1,0 +1,9 @@
+title: Entersekt Soap: Number of Errors
+agents: snmp
+catalog: app/entersekt
+license: GPL
+distribution: check_mk
+description:
+ This checks verifies the number of errors for Entersekt Soap.
+inventory:
+ One service is created for all Entersekt Soap Service Errors.

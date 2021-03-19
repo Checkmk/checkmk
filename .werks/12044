@@ -1,0 +1,12 @@
+Title: Host rename: Keep discovered host labels during renaming
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1612944250
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // Wrapping asio.hpp to hook socket creation with
 // internal control of the options and mode
@@ -12,7 +15,7 @@
 #ifndef asio_h__
 #define asio_h__
 
-#if defined(_WIN32) // Windows MSDN 32/64 bits for ARM/x86
+#if defined(_WIN32)  // Windows MSDN 32/64 bits for ARM/x86
 #include <WinSock2.h>
 
 // asio will call this function instead of the WSASocketW
@@ -22,11 +25,11 @@ SOCKET WSASocketW_Hook(int af, int type, int protocol,
                        DWORD dwFlags);
 
 #define WSASocketW WSASocketW_Hook
-#include "asio.hpp"
+#include <asio.hpp>
 #undef WSASocketW
 #else
 #error \
     "Please, double check, that your handles are not kept by spawning processes"
-#include "asio.hpp"
+#include <asio.hpp>
 #endif
 #endif  // asio_h__

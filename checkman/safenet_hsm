@@ -9,4 +9,4 @@ description:
  and the number of errors since the last reset.
 
 inventory:
- One check per device is created.
+ One service is created for each device.

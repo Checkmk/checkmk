@@ -1,0 +1,18 @@
+title: NVIDIA Graphics Card: Temperature (core)
+agents: linux
+catalog: os/hardware
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the temperatures of the
+ GPU core temperatur of an NVIDIA graphics card using the
+ command line tool {nvidia-settings}. The check only works
+ if that tool is installed and a X server is running on
+ display {:0}.
+
+item:
+ The name of the sensor as reported by {nvidia-settings -q all}
+
+inventory:
+ One service is created for each available core temperature sensor.
+

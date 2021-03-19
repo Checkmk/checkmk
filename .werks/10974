@@ -1,0 +1,18 @@
+Title: Agent Bakery: require minimum length of 8 characters for agent signing key
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1584374758
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+A minimum length of 8 characters is now required for the password for newly generated agent signing
+keys at the agent bakery.
+
+Already existing keys or keys that get imported are not affected.
+
+However, we would always suggest to choose a strong password, as the private
+key of the agent signing certificate is encrypted using this very password, and a weak/short
+combination could introduce a vulnerability.

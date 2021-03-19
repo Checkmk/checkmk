@@ -1,4 +1,4 @@
-title: Meinberg LANTIME devices: Power Supply (NG MIB)
+title: Meinberg LANTIME Devices: Power Supply (NG MIB)
 agents: snmp
 catalog: hw/time/meinberg
 license: GPL
@@ -11,7 +11,7 @@ description:
  All states other than "up" raise CRIT.
 
 inventory:
- One service per power supply is created.
+ One service is created for each power supply.
 
 item:
  The index number of the power supply.

@@ -1,0 +1,26 @@
+Title: Cisco CPU checks: relax SNMP scan function
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1587118270
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The Cisco CPU checks discovery ordering from Werk 7458 is revisited.
+
+There are four Cisco CPU checks: cisco_cpu, cisco_cpu_multiitem, cisco_nexus_cpu, cisco_oldcpu. We discover the Cisco CPU utilization services in the following order:
+
+- if it's a Nexus device the cisco_nexus_cpu check is used
+
+- if the device contains the SNMP table .1.3.6.1.4.1.9.9.109.1.1.1.1.2.* then cisco_cpu_multiitem is used
+
+- if the device either the OID .1.3.6.1.4.1.9.9.109.1.1.1.1.8.1 or
+  .1.3.6.1.4.1.9.9.109.1.1.1.1.5.1 then cisco_cpu. This acts now as a
+  fallback and is not strict about verifying device not belonging to cisco
+  nexus family. This as a relaxed condition to werk 5748.
+
+- if .1.3.6.1.4.1.9.2.1.57.0 exists then cisco_oldcpu is used
+
+There may be Cisco hosts which have discovered the 'wrong' check type. After a re-discovery the CPU check type may change.

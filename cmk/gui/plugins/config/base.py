@@ -1,29 +1,18 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Default configuration settings for the Check_MK GUI"""
+
+from typing import (
+    Any as _Any,
+    Dict as _Dict,
+    List as _List,
+    Tuple as _Tuple,
+    Union as _Union,
+    Literal as _Literal,
+)
 
 #.
 #   .--Generic-------------------------------------------------------------.
@@ -35,17 +24,17 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-roles = {}  # User supplied roles
+# User supplied roles
+roles: _Dict = {}
 
 # define default values for all settings
 debug = False
 screenshotmode = False
-profile = False
-users = []
-admin_users = ["omdadmin", "cmkadmin"]
-guest_users = []
+profile: _Union[bool, str] = False
+users: _List[str] = []
+admin_users: _List[str] = ["omdadmin", "cmkadmin"]
+guest_users: _List[str] = []
 default_user_role = "user"
-save_user_access_times = False
 user_online_maxage = 30  # seconds
 
 log_levels = {
@@ -54,12 +43,16 @@ log_levels = {
     "cmk.web.auth": 30,
     "cmk.web.bi.compilation": 30,
     "cmk.web.automations": 30,
+    "cmk.web.background-job": 30,
+    "cmk.web.slow-views": 30,
 }
 
-multisite_users = {}
-multisite_hostgroups = {}
-multisite_servicegroups = {}
-multisite_contactgroups = {}
+slow_views_duration_threshold = 60
+
+multisite_users: _Dict = {}
+multisite_hostgroups: _Dict = {}
+multisite_servicegroups: _Dict = {}
+multisite_contactgroups: _Dict = {}
 
 #    ____  _     _      _
 #   / ___|(_) __| | ___| |__   __ _ _ __
@@ -68,8 +61,11 @@ multisite_contactgroups = {}
 #   |____/|_|\__,_|\___|_.__/ \__,_|_|
 #
 
-sidebar = [('tactical_overview', 'open'), ('search', 'open'), ('views', 'open'), ('admin', 'open'),
-           ('bookmarks', 'open'), ('master_control', 'closed')]
+sidebar = [
+    ('tactical_overview', 'open'),
+    ('bookmarks', 'open'),
+    ('master_control', 'closed'),
+]
 
 # Interval of snapin updates in seconds
 sidebar_update_interval = 30.0
@@ -77,17 +73,20 @@ sidebar_update_interval = 30.0
 # It is possible (but ugly) to enable a scrollbar in the sidebar
 sidebar_show_scrollbar = False
 
-# Enable regular checking for popup notifications
-sidebar_notify_interval = None
-
-sidebar_show_version_in_sidebar = True
+# Enable regular checking for notification messages
+sidebar_notify_interval = 30
 
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80
 
 # Quicksearch search order
-quicksearch_search_order = [("h", "continue"), ("al", "continue"), ("ad", "continue"),
-                            ("s", "continue")]
+quicksearch_search_order = [
+    ("menu", "continue"),
+    ("h", "continue"),
+    ("al", "continue"),
+    ("ad", "continue"),
+    ("s", "continue"),
+]
 
 failed_notification_horizon = 7 * 60 * 60 * 24
 
@@ -144,7 +143,8 @@ view_action_defaults = {
 #  \____\__,_|___/\__\___/|_| |_| |_| |_____|_|_| |_|_|\_\___/
 #
 
-custom_links = {}
+# TODO: Improve type below, see cmk.gui.plugins.sidebar.custom_links
+custom_links: _Dict[str, _List[_Tuple]] = {}
 
 # Links for everyone
 custom_links['guest'] = [
@@ -158,7 +158,6 @@ custom_links['guest'] = [
 custom_links['user'] = custom_links['guest'] + [("Open Source Components", False, [
     ("CheckMK", "https://checkmk.com", None, "_blank"),
     ("Nagios", "https://www.nagios.org/", None, "_blank"),
-    ("PNP4Nagios", "https://pnp4nagios.org/", None, "_blank"),
     ("NagVis", "https://nagvis.org/", None, "_blank"),
     ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
 ])]
@@ -194,13 +193,16 @@ visible_views = None
 hidden_views = None
 
 # Patterns to group services in table views together
-service_view_grouping = []
+service_view_grouping: _List = []
 
 # Custom user stylesheet to load (resides in htdocs/)
 custom_style_sheet = None
 
 # UI theme to use
-ui_theme = "classic"
+ui_theme = "modern-dark"
+
+# Show mode to use
+show_mode = "default_show_less"
 
 # URL for start page in main frame (welcome page)
 start_url = "dashboard.py"
@@ -208,7 +210,7 @@ start_url = "dashboard.py"
 # Page heading for main frame set
 page_heading = "Checkmk %s"
 
-login_screen = {}
+login_screen: _Dict = {}
 
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
@@ -220,14 +222,10 @@ filter_columns = 2
 default_language = None
 
 # Hide these languages from user selection
-hide_languages = []
+hide_languages: _List = []
 
 # Default timestamp format to be used in multisite
 default_ts_format = 'mixed'
-
-# Show only most used buttons, set to None if you want
-# always all buttons to be shown
-context_buttons_to_show = 5
 
 # Maximum livetime of unmodified selections
 selection_livetime = 3600
@@ -243,7 +241,7 @@ table_row_limit = 100
 multisite_draw_ruleicon = True
 
 # Default downtime configuration
-adhoc_downtime = {}
+adhoc_downtime: _Dict = {}
 
 # Display dashboard date
 pagetitle_date_format = None
@@ -256,10 +254,7 @@ staleness_threshold = 1.5
 escape_plugin_output = True
 
 # Virtual host trees for the "Virtual Host Trees" snapin
-virtual_host_trees = []
-
-# Fall back to PNP4Nagios as graphing GUI even on CEE
-force_pnp_graphing = False
+virtual_host_trees: _List = []
 
 # Target URL for sending crash reports to
 crash_report_url = "https://crash.checkmk.com"
@@ -273,9 +268,34 @@ guitests_enabled = False
 bulk_discovery_default_settings = {
     "mode": "new",
     "selection": (True, False, False, False),
-    "performance": (True, True, 10),
+    "performance": (True, 10),
     "error_handling": True,
 }
+
+use_siteicons = False
+
+graph_timeranges: _List[_Dict[str, _Any]] = [
+    {
+        'title': "The last 4 hours",
+        "duration": 4 * 60 * 60
+    },
+    {
+        'title': "The last 25 hours",
+        "duration": 25 * 60 * 60
+    },
+    {
+        'title': "The last 8 days",
+        "duration": 8 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 35 days",
+        "duration": 35 * 24 * 60 * 60
+    },
+    {
+        'title': "The last 400 days",
+        "duration": 400 * 24 * 60 * 60
+    },
+]
 
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
@@ -289,18 +309,22 @@ bulk_discovery_default_settings = {
 # in previous versions and is set on remote sites during WATO synchronization.
 userdb_automatic_sync = "master"
 
-# Holds dicts defining user connector instances and their properties
-user_connections = []
+# Permission to login to the web gui of a site (can be changed in sites
+# configuration)
+user_login = True
 
-default_user_profile = {
+# Holds dicts defining user connector instances and their properties
+user_connections: _List = []
+
+default_user_profile: _Dict[str, _Any] = {
     'contactgroups': [],
     'roles': ['user'],
     'force_authuser': False,
 }
 lock_on_logon_failures = False
-user_idle_timeout = None
+user_idle_timeout = 5400
 single_user_session = None
-password_policy = {}
+password_policy: _Dict = {}
 
 user_localizations = {
     u'Agent type': {
@@ -357,12 +381,12 @@ user_localizations = {
 }
 
 # Contains user specified icons and actions for hosts and services
-user_icons_and_actions = {}
+user_icons_and_actions: _Dict = {}
 
 # Defintions of custom attributes to be used for services
-custom_service_attributes = {}
+custom_service_attributes: _Dict = {}
 
-user_downtime_timeranges = [
+user_downtime_timeranges: _List[_Dict[str, _Any]] = [
     {
         'title': "2 hours",
         'end': 2 * 60 * 60
@@ -386,10 +410,7 @@ user_downtime_timeranges = [
 ]
 
 # Override toplevel and sort_index settings of builtin icons
-builtin_icon_visibility = {}
-
-# Name of the hostgroup to filter the network topology view by default
-topology_default_filter_group = None
+builtin_icon_visibility: _Dict = {}
 
 trusted_certificate_authorities = {
     "use_system_wide_cas": True,
@@ -434,10 +455,10 @@ mkeventd_service_levels = [
 #   '----------------------------------------------------------------------'
 
 # Pre 1.6 tag configuration variables
-wato_host_tags = []
-wato_aux_tags = []
+wato_host_tags: _List = []
+wato_aux_tags: _List = []
 # Tag configuration variable since 1.6
-wato_tags = {
+wato_tags: _Dict[str, _List] = {
     "tag_groups": [],
     "aux_tags": [],
 }
@@ -448,24 +469,27 @@ wato_hide_hosttags = False
 wato_upload_insecure_snapshots = False
 wato_hide_varnames = True
 wato_hide_help_in_lists = True
+wato_activate_changes_concurrency = "auto"
 wato_max_snapshots = 50
 wato_num_hostspecs = 12
 wato_num_itemspecs = 15
 wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 wato_use_git = False
-wato_hidden_users = []
-wato_user_attrs = []
-wato_host_attrs = []
-wato_legacy_eval = False
-wato_read_only = {}
+wato_hidden_users: _List = []
+wato_user_attrs: _List = []
+wato_host_attrs: _List = []
+wato_read_only: _Dict = {}
 wato_hide_folders_without_read_permissions = False
 wato_pprint_config = False
 wato_icon_categories = [
-    ("logos", "Logos"),
-    ("parts", "Parts"),
-    ("misc", "Misc"),
+    ("logos", u"Logos"),
+    ("parts", u"Parts"),
+    ("misc", u"Misc"),
 ]
+
+_ActivateChangesCommentMode = _Literal["enforce", "optional", "disabled"]
+wato_activate_changes_comment_mode: _ActivateChangesCommentMode = "disabled"
 
 #.
 #   .--BI------------------------------------------------------------------.
@@ -477,15 +501,15 @@ wato_icon_categories = [
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-aggregation_rules = {}
-aggregations = []
-host_aggregations = []
-bi_packs = {}
-bi_precompile_on_demand = True
-bi_use_legacy_compilation = False
+aggregation_rules: _Dict = {}
+aggregations: _List = []
+host_aggregations: _List = []
+bi_packs: _Dict = {}
 
 default_bi_layout = {"node_style": "builtin_hierarchy", "line_style": "straight"}
-bi_layouts = {"templates": {}, "aggregations": {}}
+bi_layouts: _Dict[str, _Dict] = {"templates": {}, "aggregations": {}}
 
 # Deprecated. Kept for compatibility.
 bi_compile_log = None
+bi_precompile_on_demand = False
+bi_use_legacy_compilation = False

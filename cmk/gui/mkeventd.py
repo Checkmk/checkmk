@@ -1,45 +1,25 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import ast
 import re
 import socket
 import time
-from typing import List, Tuple, Text  # pylint: disable=unused-import
+from typing import Dict, List, Optional, Tuple
+from pathlib import Path
 
-from pathlib2 import Path
+from six import ensure_binary, ensure_str
+
 import livestatus
+from livestatus import SiteId
 
+import cmk.utils.version as cmk_version
 import cmk.utils.paths
 # It's OK to import centralized config load logic
-import cmk.ec.settings  # pylint: disable=cmk-module-layer-violation
-import cmk.ec.export  # pylint: disable=cmk-module-layer-violation
-import cmk.utils.store
-import cmk.utils
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -50,20 +30,18 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
+from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
 
 
-def _socket_path():
-    # type: () -> Path
+def _socket_path() -> Path:
     return Path(cmk.utils.paths.omd_root, "tmp", "run", "mkeventd", "status")
 
 
-def mib_upload_dir():
-    # type: () -> Path
+def mib_upload_dir() -> Path:
     return cmk.utils.paths.local_mib_dir
 
 
-def mib_dirs():
-    # type: () -> List[Tuple[Path, Text]]
+def mib_dirs() -> List[Tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
         (mib_upload_dir(), _('Custom MIBs')),
@@ -72,7 +50,7 @@ def mib_dirs():
     ]
 
 
-syslog_priorities = [
+syslog_priorities: List[DropdownChoiceEntry] = [
     (0, "emerg"),
     (1, "alert"),
     (2, "crit"),
@@ -83,7 +61,7 @@ syslog_priorities = [
     (7, "debug"),
 ]
 
-syslog_facilities = [
+syslog_facilities: DropdownChoices = [
     (0, "kern"),
     (1, "user"),
     (2, "mail"),
@@ -175,15 +153,14 @@ def eventd_configuration():
     if cached_config and cached_config[0] is html:
         return cached_config[1]
 
-    settings = cmk.ec.settings.settings('', Path(cmk.utils.paths.omd_root),
-                                        Path(cmk.utils.paths.default_config_dir), [''])
-    cfg = cmk.ec.export.load_config(settings)
+    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
+                           Path(cmk.utils.paths.default_config_dir), [''])
+    cfg = ec.load_config(settings)
     cached_config = (html, cfg)
     return cfg
 
 
-def daemon_running():
-    # type: () -> bool
+def daemon_running() -> bool:
     return _socket_path().exists()
 
 
@@ -200,19 +177,23 @@ def send_event(event):
         (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
     ]
 
-    execute_command("CREATE", map(cmk.utils.make_utf8, rfc), site=event["site"])
+    execute_command("CREATE", [ensure_str(r) for r in rfc], site=event["site"])
 
     return ";".join(rfc)
 
 
 def get_local_ec_status():
     response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    if len(response) == 1:
+        return None  # In case the EC is not running, there may be some
     return dict(zip(response[0], response[1]))
 
 
 def replication_mode():
     try:
         status = get_local_ec_status()
+        if not status:
+            return "stopped"
         return status["status_replication_slavemode"]
     except livestatus.MKLivestatusSocketError:
         return "stopped"
@@ -227,15 +208,15 @@ def query_ec_directly(query):
         sock.sendall(query)
         sock.shutdown(socket.SHUT_WR)
 
-        response_text = ""
+        response_text = b""
         while True:
             chunk = sock.recv(8192)
             response_text += chunk
             if not chunk:
                 break
 
-        return ast.literal_eval(response_text)
-    except SyntaxError as e:
+        return ast.literal_eval(ensure_str(response_text))
+    except SyntaxError:
         raise MKGeneralException(
             _("Invalid response from event daemon: "
               "<pre>%s</pre>") % response_text)
@@ -245,7 +226,9 @@ def query_ec_directly(query):
             _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
 
 
-def execute_command(name, args=None, site=None):
+def execute_command(name: str,
+                    args: Optional[List[str]] = None,
+                    site: Optional[SiteId] = None) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -274,7 +257,7 @@ def get_total_stats(only_sites):
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats = {}
+    total_stats: Dict[str, float] = {}
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):
@@ -283,8 +266,7 @@ def get_total_stats(only_sites):
     if not total_stats:
         if only_sites is None:
             raise MKGeneralException(_("Got no data from any site"))
-        else:
-            raise MKGeneralException(_("Got no data from this site"))
+        raise MKGeneralException(_("Got no data from this site"))
 
     for row in stats_per_site:
         for time_key, in_relation_to in [
@@ -313,8 +295,11 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" %
-                                           " ".join(stats_keys)):
+        # Do not mark the site as dead in case the Event Console is not available.
+        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                      livestatus.MKLivestatusBadGatewayError))
+        for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)
@@ -355,7 +340,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
             cp = True
 
         match_groups = match(rule.get("match_ok", ""), event["text"], complete=False)
-        if match_groups != False and cp:
+        if match_groups is not False and cp:
             if match_groups is True:
                 match_groups = ()
             return True, match_groups
@@ -391,8 +376,8 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
         if reason:
             return reason
 
-    if cmk.is_managed_edition():
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    if cmk_version.is_managed_edition():
+        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
         else:
@@ -400,7 +385,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
         site_customer_id = managed.get_customer_id(config.sites[event["site"]])
 
-        if rule_customer_id != managed.SCOPE_GLOBAL and site_customer_id != rule_customer_id:
+        if rule_customer_id not in (managed.SCOPE_GLOBAL, site_customer_id):
             return _("Wrong customer")
 
     if match_groups is True:
@@ -412,12 +397,12 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname)
+        livesock.send(ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
-        if answer == "":
+        if answer == b"":
             return _("The timeperiod %s is not known to the local monitoring core") % tpname
-        elif int(answer) == 0:
+        if int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
     except Exception as e:
         if config.debug:
@@ -428,16 +413,15 @@ def check_timeperiod(tpname):
 def match(pattern, text, complete=True):
     if pattern is None:
         return True
+    if complete:
+        if not pattern.endswith("$"):
+            pattern += '$'
+        m = re.compile(pattern, re.IGNORECASE).match(text)
     else:
-        if complete:
-            if not pattern.endswith("$"):
-                pattern += '$'
-            m = re.compile(pattern, re.IGNORECASE).match(text)
-        else:
-            m = re.compile(pattern, re.IGNORECASE).search(text)
-        if m:
-            return m.groups()
-        return False
+        m = re.compile(pattern, re.IGNORECASE).search(text)
+    if m:
+        return m.groups()
+    return False
 
 
 def match_ipv4_network(pattern, ipaddress_text):
@@ -464,7 +448,7 @@ def match_ipv4_network(pattern, ipaddress_text):
 
 
 def parse_ipv4_address(text):
-    parts = map(int, text.split("."))
+    parts = tuple(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 

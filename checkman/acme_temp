@@ -1,18 +1,28 @@
-title: ACME devices: Temperature
+title: ACME Devices: Temperature
 agents: snmp
 catalog: hw/environment/acme
 license: GPL
 distribution: check_mk
 description:
- This check monitors the temperature sensors of ACME devices which support ACMEPACKET-ENVMON-MIB.
- The state is OK if "initial" or "normal" is reported, it is WARN if "minor" or
- "major" and CRIT if "critical", "shutdown", "not present", "not functioning" or
- "unknown".
+ This check monitors the temperature sensors of ACME devices.
 
- Upper and lower levels can be set. There are no default levels.
+ The state is
+
+ - {OK} if "initial" or "normal"
+
+ - {WARN} if "minor" or "major"
+
+ - {CRIT} if "critical", "shutdown", "not present", "not functioning" or "unknown"
+
+ is reported.
+
+ Upper and lower levels have to be configured.
+ There are no default levels.
+
+ This check uses the ACMEPACKET-ENVMON-MIB.
 
 item:
- The name of the temperature sensor.
+ Name of the temperature sensor.
 
 inventory:
- One service per sensor is created.
+ One service is created for each temperature sensor.

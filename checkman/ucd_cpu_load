@@ -1,4 +1,4 @@
-title: CPU load average on systems using UCD SNMP Daemon
+title: UCD SNMP Daemon: CPU Load Average
 agents: snmp
 catalog: os/kernel
 license: GPL
@@ -16,7 +16,7 @@ description:
  as values {per cpu} (like the in agent based load check).
 
 inventory:
- One service will be created for each check supporting the UCD
+ One service is created for each device supporting the UCD
  MIB. Currently the SNMP scan function will only consider hosts
  with the text {linux} in their system description. You can
  try an explicit inventory with {cmk --checks ucd_cpu_load -I HOSTNAME}

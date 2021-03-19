@@ -1,30 +1,11 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import urlparse
+from typing import Any, Dict, List
+import urllib.parse
 
 import cmk.utils.store as store
 
@@ -45,7 +26,7 @@ from cmk.gui.valuespec import (
     OptionalDropdownChoice,
 )
 
-from . import (
+from cmk.gui.plugins.sidebar import (
     SidebarSnapin,
     snapin_registry,
     iconlink,
@@ -58,6 +39,10 @@ from . import (
 class BookmarkList(pagetypes.Overridable):
     @classmethod
     def type_name(cls):
+        return "bookmark_list"
+
+    @classmethod
+    def type_icon(cls):
         return "bookmark_list"
 
     @classmethod
@@ -121,7 +106,7 @@ class BookmarkList(pagetypes.Overridable):
                                         allow_empty=False,
                                         validate=cls.validate_url,
                                     )),
-                                    (IconSelector(title=_("Icon"),)),
+                                    (IconSelector(title=_("Icon"), with_emblem=False)),
                                     (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
@@ -157,7 +142,6 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             ],
             title=_("Topic") + "<sup>*</sup>",
-            style="dropdown",
             orientation="horizontal",
         )
 
@@ -175,7 +159,7 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def validate_url(cls, value, varprefix):
-        parsed = urlparse.urlparse(value)
+        parsed = urllib.parse.urlparse(value)
 
         # Absolute URLs are allowed, but limit it to http/https
         if parsed.scheme != "" and parsed.scheme not in ["http", "https"]:
@@ -218,8 +202,10 @@ class BookmarkList(pagetypes.Overridable):
 
     @classmethod
     def _do_load_legacy_bookmarks(cls):
+        if config.user.confdir is None:
+            raise Exception("user confdir is None")
         path = config.user.confdir + "/bookmarks.mk"
-        return store.load_data_from_file(path, [])
+        return store.load_object_from_file(path, default=[])
 
     @classmethod
     def new_bookmark(cls, title, url):
@@ -234,9 +220,10 @@ class BookmarkList(pagetypes.Overridable):
         return self._["default_topic"]
 
     def bookmarks_by_topic(self):
-        topics = {}
+        topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
@@ -263,33 +250,32 @@ class Bookmarks(SidebarSnapin):
                  "bookmarks to views and other content in the main frame")
 
     def show(self):
-        html.javascript("""
-function add_bookmark() {
-    url = parent.frames[1].location;
-    title = parent.frames[1].document.title;
-    cmk.ajax.get_url("add_bookmark.py?title=" + encodeURIComponent(title)
-            + "&url=" + encodeURIComponent(url), cmk.utils.update_contents, "snapin_bookmarks");
-}""")
-
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            html.begin_foldable_container(
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
+            )
 
             for bookmark in bookmarks:
                 icon = bookmark["icon"]
                 if not icon:
-                    icon = "kdict"
+                    icon = "bookmark_list"
 
                 iconlink(bookmark["title"], bookmark["url"], icon)
 
             html.end_foldable_container()
 
         begin_footnote_links()
-        link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()")
+        link(_("Add Bookmark"), "javascript:void(0)", onclick="cmk.sidebar.add_bookmark()")
         link(_("Edit"), "bookmark_lists.py")
         end_footnote_links()
 
     def _get_bookmarks_by_topic(self):
-        topics = {}
+        topics: Dict[Any, List[Any]] = {}
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
             if (instance.is_mine() and instance.may_see()) or \
@@ -326,8 +312,8 @@ function add_bookmark() {
     def _try_shorten_url(self, url):
         referer = html.request.referer
         if referer:
-            ref_p = urlparse.urlsplit(referer)
-            url_p = urlparse.urlsplit(url)
+            ref_p = urllib.parse.urlsplit(referer)
+            url_p = urllib.parse.urlsplit(url)
 
             # If http/https or user, pw, host, port differ, don't try to shorten
             # the URL to be linked. Simply use the full URI

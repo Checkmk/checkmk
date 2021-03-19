@@ -1,4 +1,4 @@
-title: CPU load on HP-UX
+title: HP-UX: CPU Load
 agents: hpux
 catalog: os/kernel
 license: GPL
@@ -12,5 +12,5 @@ description:
  agent.
 
 inventory:
-  One service is created if the agent outputs valid data.
+ One service is created if the agent outputs valid data.
 

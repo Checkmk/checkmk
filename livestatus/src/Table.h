@@ -1,35 +1,18 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef Table_h
 #define Table_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "Row.h"
 #include "contact_fwd.h"
 class Column;
@@ -38,23 +21,42 @@ class Logger;
 class MonitoringCore;
 class Query;
 
-// NOTE: This macro leads to undefined behaviour for non-POD/non-standard-layout
-// classes, e.g. Entity, Host, etc., nevertheless we have to use it below. :-/
-#define DANGEROUS_OFFSETOF(typename, member) \
-    (reinterpret_cast<size_t>(&(reinterpret_cast<typename *>(32))->member) - 32)
-
 /// A table-like view for some underlying data, exposed via LQL.
+///
+/// table               | primary key
+/// ------------------- | ---------------------------------------
+/// columns             | table;name
+/// commands            | name
+/// comments            | id
+/// contactgroups       | name
+/// contacts            | name
+/// crashreports        | id
+/// downtimes           | id
+/// eventconsoleevents  | event_id
+/// eventconsolehistory | _none, problem: history_line unusable_
+/// eventconsolerules   | rule_id
+/// eventconsolestatus  | _none, but just a single-row table_
+/// hostgroups          | name
+/// hosts               | name
+/// hostsbygroup        | hostgroup_name;name
+/// log                 | time;lineno
+/// servicegroups       | name
+/// services            | host_name;description
+/// servicesbygroup     | servicegroup_name;host_name;description
+/// servicesbyhostgroup | hostgroup_name;host_name;description
+/// statehist           | _none, totally unclear_
+/// status              | _none, but just a single-row table_
+/// timeperiods         | name
 class Table {
 public:
     explicit Table(MonitoringCore *mc);
     virtual ~Table();
-
     void addColumn(std::unique_ptr<Column> col);
     void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {
-        for (auto &c : _columns) {
+        for (const auto &c : _columns) {
             if (pred(c.second)) {
                 return true;
             }
@@ -63,7 +65,7 @@ public:
     }
 
     /// The name of the table, as used in the GET command.
-    virtual std::string name() const = 0;
+    [[nodiscard]] virtual std::string name() const = 0;
 
     /// \brief An optional prefix for column names.
     ///
@@ -73,7 +75,7 @@ public:
     /// multisite sometimes even seems to use a *sequence* of prefixes, which is
     /// yet another a bug. Instead of fixing it there, it is currently papered
     /// over on the cmc side. :-/
-    virtual std::string namePrefix() const = 0;
+    [[nodiscard]] virtual std::string namePrefix() const = 0;
 
     /// \brief Retrieve a column with a give name.
     ///
@@ -87,7 +89,8 @@ public:
     /// TableLog override it for some dubious reason: They first try the normal
     /// lookup, and if that didn't find a column, the lookup is retried with a
     /// "current_" prefix. This logic should probably not live in cmc at all.
-    virtual std::shared_ptr<Column> column(std::string colname) const;
+    [[nodiscard]] virtual std::shared_ptr<Column> column(
+        std::string colname) const;
 
     // NOTE: We can't make the query argument 'const' right now, because we call
     // the non-const Query::processDataset() member function on it. This is a
@@ -102,21 +105,25 @@ public:
     // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(Row row, const contact *ctc) const;
-    virtual Row findObject(const std::string &objectspec) const;
+
+    [[nodiscard]] virtual Row get(const std::string &primary_key) const;
+
+    // We have funny single-row tables without a primary key!
+    [[nodiscard]] virtual Row getDefault() const;
 
     template <typename T>
-    const T *rowData(Row row) const {
+    [[nodiscard]] const T *rowData(Row row) const {
         return row.rawData<T>();
     }
 
-    MonitoringCore *core() const { return _mc; }
-    Logger *logger() const;
+    [[nodiscard]] MonitoringCore *core() const { return _mc; }
+    [[nodiscard]] Logger *logger() const;
 
 private:
     MonitoringCore *_mc;
 
-    std::unique_ptr<Column> dynamicColumn(const std::string &colname,
-                                          const std::string &rest) const;
+    [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
+        const std::string &colname, const std::string &rest) const;
 
     std::map<std::string, std::shared_ptr<Column>> _columns;
     std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;

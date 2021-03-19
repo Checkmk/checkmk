@@ -19,5 +19,5 @@ description:
  {Unproblematic alarms}: 'UPS test in progress', 'In economic mode', 'In standby mode'
 
 inventory:
- Creates one item.
+ One service is created.
 

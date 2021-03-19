@@ -1,4 +1,4 @@
-title: Generic Printer: Number of printed pages
+title: Generic Printer: Number of Printed Pages
 agents: snmp
 catalog: hw/printer
 license: GPL
@@ -8,4 +8,4 @@ description:
  The printer has to support the generic PRINTER-MIB.
 
 inventory:
- Supported.
+ One service is created.

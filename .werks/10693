@@ -1,0 +1,15 @@
+Title: Windows Agent supports log file paths which contain white spaces
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1594367393
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Previously, such log file path, for example E:\Log Files\log_file,
+prevents automatic windows agent update.
+
+With this release the problem have been solved.
+

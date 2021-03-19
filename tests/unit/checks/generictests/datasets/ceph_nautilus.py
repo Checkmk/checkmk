@@ -1,69 +1,68 @@
-# -*- encoding: utf-8
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
 checkname = 'ceph_df'
 
 info = [
-    [u'RAW', u'STORAGE:'],
-    [u'CLASS', u'SIZE', u'AVAIL', u'USED', u'RAW', u'USED', u'%RAW', u'USED'],
+    ['RAW', 'STORAGE:'],
+    ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW', 'USED', '%RAW', 'USED'],
+    ['ssd', '84', 'TiB', '81', 'TiB', '2.9', 'TiB', '3.0', 'TiB', '3.52'],
+    ['TOTAL', '84', 'TiB', '81', 'TiB', '2.9', 'TiB', '3.0', 'TiB', '3.52'],
+    ['POOLS:'],
     [
-        u'ssd', u'84', u'TiB', u'81', u'TiB', u'2.9', u'TiB', u'3.0', u'TiB',
-        u'3.52'
+        'POOL', 'ID', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL',
+        'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR',
+        'UNDER', 'COMPR'
     ],
     [
-        u'TOTAL', u'84', u'TiB', u'81', u'TiB', u'2.9', u'TiB', u'3.0', u'TiB',
-        u'3.52'
-    ], [u'POOLS:'],
-    [
-        u'POOL', u'ID', u'STORED', u'OBJECTS', u'USED', u'%USED', u'MAX',
-        u'AVAIL', u'QUOTA', u'OBJECTS', u'QUOTA', u'BYTES', u'DIRTY', u'USED',
-        u'COMPR', u'UNDER', u'COMPR'
+        'glance-images', '1', '25', 'GiB', '5.88k', '75', 'GiB', '0.10', '25',
+        'TiB', 'N/A', 'N/A', '5.88k', '0', 'B', '0', 'B'
     ],
     [
-        u'glance-images', u'1', u'25', u'GiB', u'5.88k', u'75', u'GiB',
-        u'0.10', u'25', u'TiB', u'N/A', u'N/A', u'5.88k', u'0', u'B', u'0',
-        u'B'
+        'cinder-volumes', '2', '616', 'GiB', '158.31k', '1.8', 'TiB', '2.32',
+        '25', 'TiB', 'N/A', 'N/A', '158.31k', '0', 'B', '0', 'B'
     ],
     [
-        u'cinder-volumes', u'2', u'616', u'GiB', u'158.31k', u'1.8', u'TiB',
-        u'2.32', u'25', u'TiB', u'N/A', u'N/A', u'158.31k', u'0', u'B', u'0',
-        u'B'
+        'nova-vms', '3', '349', 'GiB', '91.08k', '1.0', 'TiB', '1.32', '25',
+        'TiB', 'N/A', 'N/A', '91.08k', '0', 'B', '0', 'B'
     ],
     [
-        u'nova-vms', u'3', u'349', u'GiB', u'91.08k', u'1.0', u'TiB', u'1.32',
-        u'25', u'TiB', u'N/A', u'N/A', u'91.08k', u'0', u'B', u'0', u'B'
+        'cephfs_data', '4', '0', 'B', '0', '0', 'B', '0', '25', 'TiB', 'N/A',
+        'N/A', '0', '0', 'B', '0', 'B'
     ],
     [
-        u'cephfs_data', u'4', u'0', u'B', u'0', u'0', u'B', u'0', u'25',
-        u'TiB', u'N/A', u'N/A', u'0', u'0', u'B', u'0', u'B'
+        'cephfs_metadata', '5', '15', 'KiB', '60', '969', 'KiB', '0', '25',
+        'TiB', 'N/A', 'N/A', '60', '0', 'B', '0', 'B'
     ],
     [
-        u'cephfs_metadata', u'5', u'15', u'KiB', u'60', u'969', u'KiB', u'0',
-        u'25', u'TiB', u'N/A', u'N/A', u'60', u'0', u'B', u'0', u'B'
+        '.rgw.root', '6', '2.6', 'KiB', '6', '288', 'KiB', '0', '25', 'TiB',
+        'N/A', 'N/A', '6', '0', 'B', '0', 'B'
     ],
     [
-        u'.rgw.root', u'6', u'2.6', u'KiB', u'6', u'288', u'KiB', u'0', u'25',
-        u'TiB', u'N/A', u'N/A', u'6', u'0', u'B', u'0', u'B'
+        'default.rgw.control', '7', '0', 'B', '8', '0', 'B', '0', '25', 'TiB',
+        'N/A', 'N/A', '8', '0', 'B', '0', 'B'
     ],
     [
-        u'default.rgw.control', u'7', u'0', u'B', u'8', u'0', u'B', u'0',
-        u'25', u'TiB', u'N/A', u'N/A', u'8', u'0', u'B', u'0', u'B'
+        'default.rgw.meta', '8', '0', 'B', '0', '0', 'B', '0', '25', 'TiB',
+        'N/A', 'N/A', '0', '0', 'B', '0', 'B'
     ],
     [
-        u'default.rgw.meta', u'8', u'0', u'B', u'0', u'0', u'B', u'0', u'25',
-        u'TiB', u'N/A', u'N/A', u'0', u'0', u'B', u'0', u'B'
-    ],
-    [
-        u'default.rgw.log', u'9', u'0', u'B', u'207', u'0', u'B', u'0', u'25',
-        u'TiB', u'N/A', u'N/A', u'207', u'0', u'B', u'0', u'B'
+        'default.rgw.log', '9', '0', 'B', '207', '0', 'B', '0', '25', 'TiB',
+        'N/A', 'N/A', '207', '0', 'B', '0', 'B'
     ]
 ]
 
 discovery = {
     '': [
-        ('SUMMARY', {}), (u'.rgw.root', {}), (u'cephfs_data', {}),
-        (u'cephfs_metadata', {}), (u'cinder-volumes', {}),
-        (u'default.rgw.control', {}), (u'default.rgw.log', {}),
-        (u'default.rgw.meta', {}), (u'glance-images', {}), (u'nova-vms', {})
+        ('.rgw.root', {}), ('SUMMARY', {}), ('cephfs_data', {}),
+        ('cephfs_metadata', {}), ('cinder-volumes', {}),
+        ('default.rgw.control', {}), ('default.rgw.log', {}),
+        ('default.rgw.meta', {}), ('glance-images', {}), ('nova-vms', {})
     ]
 }
 
@@ -71,260 +70,252 @@ checks = {
     '': [
         (
             'SUMMARY', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '3.57% used (3.00 of 84.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '3.57% used (3.00 of 84.00 TB)', [
                         (
-                            'SUMMARY', 3145728.0, 70464307.2, 79272345.6, 0,
+                            'fs_used', 3145728.0, 70464307.2, 79272345.6, 0,
                             88080384.0
                         ), ('fs_size', 88080384.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 3670016.0)
+                        (
+                            'fs_used_percent', 3.5714285714285716, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
         ),
         (
-            u'.rgw.root', {
+            '.rgw.root', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0.000001% used (288.00 kB of 25.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.000001% used (288.00 kB of 25.00 TB)', [
                         (
-                            u'.rgw.root', 0.28125, 20971520.225,
-                            23592960.253125, 0, 26214400.28125
+                            'fs_used', 0.28125, 20971520.225, 23592960.253125,
+                            0, 26214400.28125
                         ), ('fs_size', 26214400.28125, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6783854167)
+                        (
+                            'fs_used_percent', 1.0728835944462391e-06, None,
+                            None, None, None
+                        )
                     ]
                 )
             ]
         ),
         (
-            u'cephfs_data', {
+            'cephfs_data', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
-                            u'cephfs_data', 0.0, 20971520.0, 23592960.0, 0,
+                            'fs_used', 0.0, 20971520.0, 23592960.0, 0,
                             26214400.0
                         ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ('fs_used_percent', 0.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
-            u'cephfs_metadata', {
+            'cephfs_metadata', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0.000004% used (969.00 kB of 25.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0.000004% used (969.00 kB of 25.00 TB)', [
                         (
-                            u'cephfs_metadata', 0.9462890625,
-                            20971520.75703125, 23592960.851660155, 0,
-                            26214400.946289062
+                            'fs_used', 0.9462890625, 20971520.75703125,
+                            23592960.851660155, 0, 26214400.946289062
                         ),
                         (
                             'fs_size', 26214400.946289062, None, None, None,
                             None
-                        ), ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.7060953777)
+                        ),
+                        (
+                            'fs_used_percent', 3.6098061689025844e-06, None,
+                            None, None, None
+                        )
                     ]
                 )
             ]
         ),
         (
-            u'cinder-volumes', {
+            'cinder-volumes', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '6.72% used (1.80 of 26.80 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '6.72% used (1.80 of 26.80 TB)', [
                         (
-                            u'cinder-volumes', 1887436.8000000007, 22481469.44,
+                            'fs_used', 1887436.8000000007, 22481469.44,
                             25291653.12, 0, 28101836.8
                         ), ('fs_size', 28101836.8, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1170909.8666666667)
+                        (
+                            'fs_used_percent', 6.716417910447763, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
         ),
         (
-            u'default.rgw.control', {
+            'default.rgw.control', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
-                            u'default.rgw.control', 0.0, 20971520.0,
-                            23592960.0, 0, 26214400.0
-                        ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
-                    ]
-                )
-            ]
-        ),
-        (
-            u'default.rgw.log', {
-                'trend_range': 24,
-                'show_levels': 'onmagic',
-                'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
-                'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
-            }, [
-                (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
-                        (
-                            u'default.rgw.log', 0.0, 20971520.0, 23592960.0, 0,
+                            'fs_used', 0.0, 20971520.0, 23592960.0, 0,
                             26214400.0
                         ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ('fs_used_percent', 0.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
-            u'default.rgw.meta', {
+            'default.rgw.log', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0% used (0.00 B of 25.00 TB), trend: 0.00 B / 24 hours', [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
-                            u'default.rgw.meta', 0.0, 20971520.0, 23592960.0,
-                            0, 26214400.0
+                            'fs_used', 0.0, 20971520.0, 23592960.0, 0,
+                            26214400.0
                         ), ('fs_size', 26214400.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1092266.6666666667)
+                        ('fs_used_percent', 0.0, None, None, None, None)
                     ]
                 )
             ]
         ),
         (
-            u'glance-images', {
+            'default.rgw.meta', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '0.29% used (75.00 GB of 25.07 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '0% used (0.00 B of 25.00 TB)', [
                         (
-                            u'glance-images', 76800.0, 21032960.0, 23662080.0,
-                            0, 26291200.0
+                            'fs_used', 0.0, 20971520.0, 23592960.0, 0,
+                            26214400.0
+                        ), ('fs_size', 26214400.0, None, None, None, None),
+                        ('fs_used_percent', 0.0, None, None, None, None)
+                    ]
+                )
+            ]
+        ),
+        (
+            'glance-images', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
+                'trend_range': 24,
+                'trend_perfdata': True,
+                'show_levels': 'onmagic',
+                'inodes_levels': (10.0, 5.0),
+                'show_inodes': 'onlow',
+                'show_reserved': False
+            }, [
+                (
+                    0, '0.29% used (75.00 GB of 25.07 TB)', [
+                        (
+                            'fs_used', 76800.0, 21032960.0, 23662080.0, 0,
+                            26291200.0
                         ), ('fs_size', 26291200.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1095466.6666666667)
+                        (
+                            'fs_used_percent', 0.2921129503407984, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]
         ),
         (
-            u'nova-vms', {
+            'nova-vms', {
+                'levels': (80.0, 90.0),
+                'magic_normsize': 20,
+                'levels_low': (50.0, 60.0),
                 'trend_range': 24,
+                'trend_perfdata': True,
                 'show_levels': 'onmagic',
                 'inodes_levels': (10.0, 5.0),
-                'magic_normsize': 20,
                 'show_inodes': 'onlow',
-                'levels': (80.0, 90.0),
-                'show_reserved': False,
-                'levels_low': (50.0, 60.0),
-                'trend_perfdata': True
+                'show_reserved': False
             }, [
                 (
-                    0,
-                    '3.85% used (1.00 of 26.00 TB), trend: 0.00 B / 24 hours',
-                    [
+                    0, '3.85% used (1.00 of 26.00 TB)', [
                         (
-                            u'nova-vms', 1048576.0, 21810380.8, 24536678.4, 0,
+                            'fs_used', 1048576.0, 21810380.8, 24536678.4, 0,
                             27262976.0
                         ), ('fs_size', 27262976.0, None, None, None, None),
-                        ('growth', 0.0, None, None, None, None),
-                        ('trend', 0, None, None, 0, 1135957.3333333333)
+                        (
+                            'fs_used_percent', 3.8461538461538463, None, None,
+                            None, None
+                        )
                     ]
                 )
             ]

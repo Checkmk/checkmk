@@ -1,0 +1,18 @@
+Title: Additional calendar aware time ranges
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1588697688
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Particularly useful for Metric History Painters this date aware time ranges
+have been added:
+
+<ul>
+<li>7 days back (this day last week)</li>
+<li>8 days back</li>
+<li>2 weeks back</li>
+</ul>

@@ -1,0 +1,49 @@
+Title: New agent rule for Checkmk agent service on Linux
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1597914709
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+It is now possible to choose which, if any, network service should
+be shipped and installed with a baked Linux Checkmk agent package.
+
+This can be configured with the new agent ruleset "Checkmk agent network service (Linux)"
+
+It is possible to choose between the following services/super servers setups:
+<ul>
+<li>Ship service files for systemd and xinetd, prefer to activate systemd service,
+fallback to xinetd if systemd is not available</li>
+<li>Ship and activate systemd service</li>
+<li>Ship and activate xinetd service</li>
+<li>Don't ship any service files</li>
+</ul>
+
+If no rule is configured, the behavior will be identical to the first of the mentioned
+choices (prefer systemd, fallback to xinetd).
+
+If the super server(s) of your choice is/are not available at the target system, you
+will be noticed about this on agent installation.
+
+The last option (no service) is a reasonable choice if you want to monitor the hosts
+without the use of a super server, e.g. via SSH.
+
+<b>Note</b>: Please be aware that the default is now the opposite behavior compared to
+before. If you leave the mentioned ruleset untouched, existing xinetd services of
+baked and installed Checkmk agents will be replaced with it's systemd counterpart.
+However, there will be no change in functionality.
+
+<b>Note</b>: With Werk #11400, the systemd socket shipped with the baked Checkmk agent
+supports IP Access Lists. If the ruleset "Allowed agent access via IP address" is active,
+please be aware that no systemd service/socket will be activated on a host if the
+available systemd version doesn't support IP Access Lists (i.e. systemd version < 235).
+If the "Checkmk agent network service (Linux)" ruleset is not configured or configured
+to "Prefer systemd...", the installation will try to fall back to xinetd with
+"only_from"-configuration.
+
+This change will yield no different behavior at the interface to the Checkmk agent.
+However, as the implicit change of the service depatcher is at least noticeable,
+this Werk is marked as incompatible.

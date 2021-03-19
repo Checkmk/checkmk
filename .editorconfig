@@ -14,7 +14,7 @@ charset = utf-8
 [*.{bat,ps1,vbs,cmd}]
 end_of_line = crlf
 
-[*.md]
+[*.{md,rst}]
 max_line_length = 80
 
 [active_checks/check_*]
@@ -32,8 +32,8 @@ max_line_length = 100
 [*.{js,py,pl,pm,t}]
 max_line_length = 100
 
-[{package.json,.envrc}]
+[{*.scss,package.json,.envrc}]
 indent_size = 2
 
-[{Makefile,*.make}]
+[{Makefile,*.make,*.am}]
 indent_style = tab

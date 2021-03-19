@@ -1,9 +1,13 @@
-import pytest
-import os
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 pytestmark = pytest.mark.checks
-
-exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/docker.include')).read())
 
 
 @pytest.mark.parametrize('indata,expected', [
@@ -11,5 +15,5 @@ exec (open(os.path.join(os.path.dirname(__file__), '../../../checks/docker.inclu
      "e3456c851a15"),
 ])
 def test_parse_short_id(indata, expected):
-    actual = docker_get_short_id(indata)
+    actual = docker.get_short_id(indata)  # type: ignore[name-defined] # pylint: disable=undefined-variable
     assert actual == expected

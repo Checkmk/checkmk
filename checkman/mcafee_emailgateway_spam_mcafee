@@ -1,4 +1,4 @@
-title: McAfee Email gateway: Spam Engine
+title: McAfee Email Gateway: Spam Engine
 agents: snmp
 catalog: app/mcafee
 license: GPL

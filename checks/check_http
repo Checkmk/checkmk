@@ -1,28 +1,8 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
 
@@ -83,7 +63,7 @@ def _get_host(params):
         address = "$_HOSTADDRESS_%s$" % family[-1]
 
     HostSettings = collections.namedtuple("HostSettings", ("address", "port", "family", "virtual"))
-    return HostSettings(address, host.get("port"), family, host.get("virthost", address))
+    return HostSettings(address, host.get("port"), family, host.get("virthost"))
 
 
 def _get_proxy(params):
@@ -196,8 +176,30 @@ def _url_args(host, _proxy, settings):
     return args
 
 
+def _server_address(host, proxy):
+    if proxy:
+        return proxy.address
+    return host.address
+
+
+def _host_name(host, proxy, params):
+    if proxy and host.port:
+        return "%s:%s" % (host.address, host.port)
+    if proxy:
+        return host.address
+    if host.virtual:
+        return host.virtual
+    if params['mode'][0] == 'cert':
+        return host.address
+    # Don't return the address in this case, because check_http would
+    # automatically set the HTTP Host header and use HTTP/1.1 instead of
+    # HTTP/1.0. This can lead to request timeouts on hosts which are
+    # not compliant with HTTP/1.1.
+    return None
+
+
 def _common_args(host, proxy, params):
-    args = ["-H", host.virtual]
+    args = []
 
     if host.family == "ipv6":
         args.append("-6")
@@ -211,12 +213,10 @@ def _common_args(host, proxy, params):
         args += ["-p", "%s" % specify_port]
 
     # last two arguments correspond to -I/-H, respectively
-    if proxy:
-        args.append(proxy.address)
-    address = host.address
-    if proxy and host.port:
-        address += ":%s" % host.port
-    args.append(address)
+    args += [_server_address(host, proxy)]
+    host_name = _host_name(host, proxy, params)
+    if host_name:
+        args += [host_name]
 
     return args
 

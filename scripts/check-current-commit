@@ -1,0 +1,44 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This extracts all the files of the current commit and passes it to `pre-commit` so the
+# hooks can test the commit for validity.
+#
+# Optionally you can pass "diff" as the first parameter, then it will check the diff between
+# the local HEAD and the HEAD of origin/master.
+#
+# You can use this script to lint your tree in a rebase like so:
+#
+#      git rebase --exec scripts/check-current-commit
+#
+# Or if you already have a commit which is ready, just execute
+#
+#      scripts/check-current-commit
+#
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV=$REPO_PATH/scripts/run-pipenv
+
+if [ "$1" == "diff" ]; then
+    HEAD=origin/master..HEAD
+else
+    HEAD=HEAD
+fi
+
+run_pipenv() {
+    PIPENV_VENV_IN_PROJECT=true \
+        PIPENV_NOSPIN=true \
+        PIPENV_HIDE_EMOJIS=true \
+        PIPENV_NO_INHERIT=true \
+        PIPENV_PIPFILE="$REPO_PATH/Pipfile" \
+        PIPENV_IGNORE_VIRTUALENVS=1 \
+        $PIPENV $*
+}
+
+# This has the effect that the virtual-envs are kept up-to-date before pre-commit starts.
+# If we don't do this there might be a possibility that the virtual-env will change even if
+# it's python binary is currently being executed. This would lead to a "Text file busy" OSError.
+run_pipenv run true
+
+pre-commit run --files $(git diff-tree --no-commit-id --name-only -r $HEAD)

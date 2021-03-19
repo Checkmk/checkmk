@@ -1,0 +1,18 @@
+Title: Monitoring of AWS DynamoDB tables
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1587362683
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces monitoring of AWS DynamoDB tables. The
+monitoring includes overall limits for AWS DynamoDB (both
+account-wide and per-table limits on Read and Write Capacity
+Units) and a summary of all tables. Furthermore, we also
+monitor read and write capacities as well as latencies on a
+per-table basis. To make use of this werk, you have to
+configure the related AWS special agent to monitor Dynamo
+DB.

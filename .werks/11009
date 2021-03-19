@@ -1,0 +1,11 @@
+Title: Fixed possible ValueError while searching for werk id in release notes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1585722746
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+

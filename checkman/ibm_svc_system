@@ -13,5 +13,4 @@ description:
  can be configured by WATO.
 
 inventory:
- Creates exactly one check for every IBM SVC / V7000 named
- IBM SVC Info.
+ One service is created for each device named IBM SVC Info.

@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1569398032
 
 When using the LDAP authentication with multiple LDAP servers where one of the

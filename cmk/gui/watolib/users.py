@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.gui.type_defs import UserId
 import cmk.gui.userdb as userdb
+from cmk.gui.plugins.userdb.utils import add_internal_attributes
 import cmk.gui.config as config
 import cmk.gui.mkeventd
 from cmk.gui.i18n import _
@@ -20,14 +28,14 @@ from cmk.gui.valuespec import (
     Age,
     FixedValue,
     Alternative,
-    EmailAddressUnicode,
+    EmailAddress,
 )
-from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
 from cmk.gui.watolib.user_scripts import (
     user_script_title,
     user_script_choices,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings
+import cmk.gui.watolib.global_settings as global_settings
 
 
 def delete_users(users_to_delete):
@@ -45,6 +53,10 @@ def delete_users(users_to_delete):
             raise MKUserError(None, _("Unknown user: %s") % entry)
 
     if deleted_users:
+        for user_id in deleted_users:
+            log_audit("edit-user",
+                      _("Deleted user: %s") % user_id,
+                      object_ref=make_user_object_ref(user_id))
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users)
 
@@ -62,14 +74,49 @@ def edit_users(changed_users):
         else:
             modified_users_info.append(user_id)
 
+        if is_new_user:
+            add_internal_attributes(user_attrs)
+
+        old_object = make_user_audit_log_object(all_users.get(user_id, {}))
+        log_audit(action="edit-user",
+                  message=(_("Created new user: %s") %
+                           user_id if is_new_user else _("Modified user: %s") % user_id),
+                  diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
+                  object_ref=make_user_object_ref(user_id))
+
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _("Created new user: %s") % ", ".join(new_users_info))
+        add_change("edit-users", _("Created new users: %s") % ", ".join(new_users_info))
     if modified_users_info:
-        add_change("edit-users", _("Modified user: %s") % ", ".join(modified_users_info))
+        add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
 
     userdb.save_users(all_users)
+
+
+def make_user_audit_log_object(attributes):
+    """The resulting object is used for building object diffs"""
+    obj = attributes.copy()
+
+    # Password hashes should not be logged
+    obj.pop("password", None)
+
+    # Skip internal attributes
+    obj.pop("user_scheme_serial", None)
+
+    # Skip default values (that will not be persisted)
+    if obj.get("start_url") is None:
+        obj.pop("start_url", None)
+    if obj.get("ui_sidebar_position") is None:
+        obj.pop("ui_sidebar_position", None)
+    if obj.get("ui_theme") is None:
+        obj.pop("ui_theme", None)
+
+    return obj
+
+
+def make_user_object_ref(user_id: UserId) -> ObjectRef:
+    return ObjectRef(ObjectRefType.User, str(user_id))
 
 
 def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
@@ -107,7 +154,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
 
     # Email
     email = user_attrs.get("email")
-    vs_email = EmailAddressUnicode()
+    vs_email = EmailAddress()
     vs_email.validate_value(email, "email")
 
     # Idle timeout
@@ -116,8 +163,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
 
     # Notification settings are only active if we do *not* have rule based notifications!
-    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
-    if not rulebased_notifications:
+    if not global_settings.rulebased_notifications_enabled():
         # Notifications
         notifications_enabled = user_attrs.get("notification_enabled")
 
@@ -182,7 +228,6 @@ def get_vs_user_idle_timeout():
                 default_value=3600,
             ),
         ],
-        style="dropdown",
         orientation="horizontal",
     )
 
@@ -210,7 +255,6 @@ def get_vs_flexible_notifications():
                                 "match_sl"
                             ],
                             columns=1,
-                            headers=True,
                             elements=[
                                 (
                                     "plugin",

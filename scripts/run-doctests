@@ -1,0 +1,43 @@
+#!/bin/bash
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# This file is for execution by the pre-commit framework.
+#
+set -e
+
+source "$(dirname $0)/lib-precommit"
+
+# Filter out all tests/* files.
+declare -a FILES
+
+for param in "$@"; do
+    if [[ "$param" == tests* ]]; then
+        continue
+    fi
+    FILES+=($(readlink -f "$param"))
+done
+
+NUM_PARAM=${#FILES[@]}
+
+if [ "$NUM_PARAM" == "0" ]; then
+    echo No files to check. >&2
+    exit 0
+fi
+
+REPO_PATH="$(git rev-parse --show-toplevel)"
+PIPENV="$REPO_PATH/scripts/run-pipenv"
+
+pushd $REPO_PATH > /dev/null
+
+$PIPENV run pytest --doctest-modules $FILES || (
+EXIT=$?
+if test $EXIT -eq 5 || test $EXIT -eq 4; then
+    # This means no tests have been found.
+    exit 0
+else
+    exit $EXIT
+fi
+)
+popd > /dev/null

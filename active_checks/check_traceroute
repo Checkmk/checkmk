@@ -1,28 +1,8 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 # This check does a traceroute to the specified target host
 # (usually $HOSTADDRESS$ itself) and checks which route(s) are
@@ -93,13 +73,11 @@ def parse_exception(exc):
     return str(exc)
 
 
-def output_check_result(rc, s, perfdata):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
+def output_check_result(s, perfdata):
     if perfdata:
         perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
-        output += ' | %s' % " ".join(perfdata_output_entries)
-    sys.stdout.write('%s\n' % output)
+        s += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % s)
 
 
 def option_to_state(c):
@@ -148,12 +126,7 @@ def check_traceroute(lines, routes):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info_text = "%s - %d hops, missing routers: %s, bad routers: %s" % (
-        {
-            0: "OK",
-            1: "WARN",
-            2: "CRIT"
-        }[state],
+    info_text = "%d hops, missing routers: %s, bad routers: %s" % (
         hops,
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
@@ -164,7 +137,13 @@ def check_traceroute(lines, routes):
 
 def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    try:
+        ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    except ValueError:
+        # May be a host or DNS name, don't execute the validation in this case.
+        # check_traceroute will perform the name resolution for us.
+        return
+
     if not ip_address_version == ip_version_arg:
         raise ProtocolVersionError(
             'IP protocol version "%s" not the same as the IP address version "%s".' %
@@ -270,5 +249,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     exitcode, info, perf = main()
-    output_check_result(exitcode, info, perf)
+    output_check_result(info, perf)
     sys.exit(exitcode)

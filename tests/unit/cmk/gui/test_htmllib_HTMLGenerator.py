@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import print_function
 import traceback
-import six
 
 from cmk.gui.globals import html
-from tools import compare_html
+from tools import compare_html  # type: ignore[import]
 
 
 def test_ABCHTMLGenerator(register_builtin_html):
@@ -47,11 +48,11 @@ def test_ABCHTMLGenerator(register_builtin_html):
             html.render_a(u"test", href=u"www.test.case")
             try:
                 assert html.render_a(u"test",
-                                     href=six.text_type("www.test.case"),
-                                     id_=six.text_type("something"),
-                                     class_=six.text_type("test_%s") % a)
+                                     href=str("www.test.case"),
+                                     id_=str("something"),
+                                     class_=str("test_%s") % a)
             except Exception as e:
-                print(traceback.print_exc())
+                traceback.print_exc()
                 print(e)
 
 
@@ -66,4 +67,45 @@ def test_exception_handling(register_builtin_html):
     try:
         raise Exception("Test")
     except Exception as e:
-        assert compare_html(html.render_div(e), "<div>%s</div>" % e)
+        assert compare_html(html.render_div(str(e)), "<div>%s</div>" % e)
+
+
+def test_text_input(register_builtin_html):
+    with html.plugged():
+        html.text_input('tralala')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+
+    with html.plugged():
+        html.text_input('blabla', cssclass='blubb')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
+
+    with html.plugged():
+        html.text_input('blabla', autocomplete='yep')
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text,
+            '<input style="" name="blabla" autocomplete="yep" type="text" class="text" value=\'\' />'
+        )
+
+    with html.plugged():
+        html.text_input('blabla', placeholder='placido', data_world='welt', data_max_labels=42)
+        written_text = "".join(html.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+
+
+def test_render_a(register_builtin_html):
+    a = html.render_a("bla", href="blu", class_=["eee"], target="_blank")
+    assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
+
+    a = html.render_a("b<script>alert(1)</script>la",
+                      href="b<script>alert(1)</script>lu",
+                      class_=["eee"],
+                      target="_blank")
+    assert compare_html(
+        a, '<a href="b&lt;script&gt;alert(1)&lt;/script&gt;lu" target="_blank" '
+        'class="eee">b&lt;script&gt;alert(1)&lt;/script&gt;la</a>')

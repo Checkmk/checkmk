@@ -1,4 +1,4 @@
-title: Status of small Quantum tape libraries
+title: Quantum Tape Libraries: Components Status
 agents: snmp
 catalog: hw/storagehw/quantum
 license: GPL
@@ -10,4 +10,4 @@ description:
  Operator action request goes critical if flagged and OK otherwise.
 
 inventory:
- One service for each small Quantum tape library is created.
+ One service is created for each small Quantum tape library.

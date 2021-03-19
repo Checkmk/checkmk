@@ -1,0 +1,23 @@
+Title: Report front matter templates
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1580127678
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Some reports would benefit from a front matter to introduce the
+content. For this purpose a report layout can now be transformed into a
+front matter layout. In this case the layout is exclusively dedicated to
+describe the front matter of the report, like cover page, table of contents
+and other static elements one wishes the report to include.
+
+Reports wishing to use the front matter template need simply to select it
+in the {{report properties}}->{{Use settings and page layout from}}. The
+front matter always generates an even number of pages and is numbered with
+roman numerals.
+
+The Table of contents report element(werk #10409) is only active in the
+front matter templates.

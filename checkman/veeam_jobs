@@ -1,4 +1,4 @@
-title: Veeam Backup Jobs
+title: Veeam: Jobs Backup
 agents: windows
 catalog: os/storage
 license: GPL
@@ -16,7 +16,7 @@ description:
  {UNKNOWN} in all other cases.
 
 inventory:
- A check will be created for all backup jobs run by the Veeam tool.
+ One service is created for each backup job created by the Veeam tool.
 
 item:
  The name of the backup job.

@@ -1,4 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # yapf: disable
+# type: ignore
+
 checkname = 'dotnet_clrmemory'
 
 info = [
@@ -102,7 +110,11 @@ info = [
 discovery = {'': [(u'_Global_', 'dotnet_clrmemory_defaultlevels')]}
 
 checks = {
-    '': [(u'_Global_', {
-        "upper": (10.0, 15.0)
-    }, [(0, '4.08% time in GC', [('percent', 4.082020000573718, 10.0, 15.0, 0, 100)])])]
+    '': [
+        (u'_Global_', {"upper": (10.0, 15.0)}, [
+            (0, 'Time in GC: 4.08%', [
+                ('percent', 4.082020000573718, 10.0, 15.0, 0, 100),
+            ]),
+        ]),
+    ],
 }

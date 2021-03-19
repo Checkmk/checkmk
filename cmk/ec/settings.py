@@ -1,45 +1,18 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Settings handling for the Check_MK event console."""
-
-from __future__ import print_function
 
 # For some background about various design decisions below, see the concise
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog
 # at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
 
-# NOTE: pylint/astroid doesn't fully understand typing annotations and the
-# typing module yet, so we may have to suppress some things, see e.g. the
-# issues https://github.com/PyCQA/pylint/issues/1063 for unused-import and
-# https://github.com/PyCQA/pylint/issues/1290 for invalid-name.
-
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
-from typing import List, NamedTuple, Optional, Union  # pylint: disable=unused-import
-
-from pathlib2 import Path
+import sys
+from typing import List, NamedTuple, Optional, Union
+from pathlib import Path
 
 # a filesystem path with a user-presentable description
 AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])
@@ -68,8 +41,7 @@ Paths = NamedTuple('Paths', [
 ])
 
 
-def _default_paths(omd_root, default_config_dir):
-    # type: (Path, Path) -> Paths
+def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
     """Returns all default filesystem paths related to the event console"""
     run_dir = omd_root / 'tmp/run/mkeventd'
     state_dir = omd_root / 'var/mkeventd'
@@ -111,8 +83,7 @@ PortNumbers = NamedTuple('PortNumbers', [
 ])
 
 
-def _default_port_numbers():
-    # type: () -> PortNumbers
+def _default_port_numbers() -> PortNumbers:
     """Returns all port numbers related to the event console"""
     return PortNumbers(syslog_udp=PortNumber(514),
                        syslog_tcp=PortNumber(514),
@@ -125,8 +96,7 @@ FileDescriptor = NamedTuple('FileDescriptor', [('value', int)])
 
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
-    def __init__(self, prog, version, paths, port_numbers):
-        # type: (str, str, Paths, PortNumbers) -> None
+    def __init__(self, prog: str, version: str, paths: Paths, port_numbers: PortNumbers) -> None:
         super(ECArgumentParser, self).__init__(prog=prog,
                                                formatter_class=RawDescriptionHelpFormatter,
                                                description='Start the Check_MK event console.',
@@ -134,14 +104,12 @@ class ECArgumentParser(ArgumentParser):
         self._add_arguments(version, port_numbers)
 
     @staticmethod
-    def _epilog(paths):
-        # type: (Paths) -> str
+    def _epilog(paths: Paths) -> str:
         width = max([len(p.description) for p in paths]) + 1  # for colon
         return ('Paths used by the event console:\n\n' + '\n'.join(
             '  {:<{width}} {}'.format(p.description + ':', p.value, width=width) for p in paths))
 
-    def _add_arguments(self, version, port_numbers):
-        # type: (str, PortNumbers) -> None
+    def _add_arguments(self, version: str, port_numbers: PortNumbers) -> None:
         self.add_argument('-V',
                           '--version',
                           action='version',
@@ -183,8 +151,7 @@ class ECArgumentParser(ArgumentParser):
                           help='create performance profile for event thread')
 
     @staticmethod
-    def _file_descriptor(value):
-        # type: (str) -> FileDescriptor
+    def _file_descriptor(value: str) -> FileDescriptor:
         """A custom argument type for file descriptors, i.e. non-negative integers"""
         try:
             file_desc = int(value)
@@ -196,11 +163,11 @@ class ECArgumentParser(ArgumentParser):
 
 
 # a communication endpoint, e.g. for syslog or SNMP
-EndPoint = Union[PortNumber, FileDescriptor]  # pylint: disable=invalid-name
+EndPoint = Union[PortNumber, FileDescriptor]
 
 
-def _endpoint(enabled, file_descriptor, default_port_number):
-    # type: (bool, FileDescriptor, PortNumber) -> Optional[EndPoint]
+def _endpoint(enabled: bool, file_descriptor: FileDescriptor,
+              default_port_number: PortNumber) -> Optional[EndPoint]:
     """Returns a communication endpoint based on given commandline arguments"""
     if not enabled:
         return None
@@ -228,8 +195,7 @@ Settings = NamedTuple('Settings', [
 ])
 
 
-def settings(version, omd_root, default_config_dir, argv):
-    # type: (str, Path, Path, List[str]) -> Settings
+def settings(version: str, omd_root: Path, default_config_dir: Path, argv: List[str]) -> Settings:
     """Returns all event console settings"""
     paths = _default_paths(omd_root, default_config_dir)
     port_numbers = _default_port_numbers()
@@ -249,8 +215,8 @@ def settings(version, omd_root, default_config_dir, argv):
 
 
 if __name__ == "__main__":
-    import sys
-    import cmk
+    import cmk.utils.version as cmk_version
     import cmk.utils.paths
-    print(settings(cmk.__version__, Path(cmk.utils.paths.omd_root),
-                   Path(cmk.utils.paths.default_config_dir), sys.argv))
+    print(
+        settings(str(cmk_version.__version__), Path(cmk.utils.paths.omd_root),
+                 Path(cmk.utils.paths.default_config_dir), sys.argv))

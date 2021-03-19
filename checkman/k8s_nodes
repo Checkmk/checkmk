@@ -1,4 +1,4 @@
-title: Kubernetes nodes
+title: Kubernetes: Nodes
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL

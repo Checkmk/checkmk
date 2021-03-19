@@ -1,0 +1,20 @@
+title: HP Devices: Module States
+agents: snmp
+catalog: hw/network/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the administrative and operational status
+ of modules of HP devices which support the HH3C-ENTITY-EXT MIB.
+
+ The check goes WARN if the administrative state is 'not supported',
+ it's CRIT in case of 'shutting down' or 'unlocked', otherwise OK.
+
+ The check also goes WARN if the operational state is 'not supported',
+ it's CRIT in case of 'disabled' or 'dangerous', otherwise OK.
+
+item:
+ The module name from ENTITY-MIB.
+
+inventory:
+ One service is created for each module.

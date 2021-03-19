@@ -1,15 +1,30 @@
-title: AKCP Sensor Temperature
+title: AKCP sensorProbe: Temperature
 agents: snmp
 catalog: hw/environment/akcp
 license: GPL
 distribution:
 description:
- This check monitors the temperature of sensors attached
- to AKCP SensorProbe.
+ This check monitors the temperature of sensors attached to AKCP SensorProbe.
+
+ The check has configureable default levels for {WARN}/{CRIT} (default: 32, 35).
+
+ The service goes {WARN} if the warning level is passed.
+
+ The service goes {CRIT}
+
+ - if the critical level is passed
+
+ - the sensor is offline
+
+ - the sensor state is "no status"
+
+ - the sensor state is "sensor error"
+
+ The check uses the SPAGENT-MIB.
 
 item:
  The description of the sensor as string as specified by the user during board configuration.
 
 inventory:
- All available temperature sensors are automatically inventorized.
+ One service is created for each available temperature sensor if the sensor is online.
 

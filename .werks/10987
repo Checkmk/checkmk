@@ -1,0 +1,23 @@
+Title: HW/SW Inventory Service: Fix "State when inventory fails"
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1588754222
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The state of the HW/SW Inventory service can be determined by
+{{State when inventory fails}} in the ruleset {{Do hardware/software Inventory}}.
+This state was overwritten by the following error cases:
+<ul>
+<li>Empty output, default CRIT</li>
+<li>Connection, default CRIT</li>
+<li>Timeout, default CRIT</li>
+<li>Exception, default UNKNOWN</li>
+</ul>
+
+This behaviour was introduced with 1.5.0 and and has been fixed now:
+The HW/SW Inventory service state won't be overwritten any more.

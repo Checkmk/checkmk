@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 260 200" style="enable-background:new 0 0 260 200;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#1697C4;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#B3E3FA;}
+</style>
+<desc>Created with Sketch.</desc>
+<g id="Icons">
+	<g id="Artboard" transform="translate(-380.000000, -538.000000)">
+		<g id="rename" transform="translate(380.000000, 538.000000)">
+			<path id="Rectangle" class="st0" d="M20,40h60l0,0v120H20c-11,0-20-9-20-20V60C0,49,9,40,20,40z"/>
+			<path id="Rectangle_1_" class="st0" d="M240,160H140l0,0V40h100c11,0,20,9,20,20v80C260,151,251,160,240,160z"/>
+			<rect id="Rectangle_2_" x="100" class="st1" width="20" height="200"/>
+		</g>
+	</g>
+</g>
+</svg>

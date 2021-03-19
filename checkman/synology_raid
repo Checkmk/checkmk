@@ -13,5 +13,5 @@ item:
  The name of the Raid Volume like reported in the MIB
 
 inventory:
- One check is created for Volume
+ One service is created.
 

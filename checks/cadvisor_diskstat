@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+import json
+
+
+def parse_cadvisor_diskstat(info):
+    diskstat_info = json.loads(info[0][0])
+    diskstat_mapping = {
+        "disk_utilisation": "utilization",
+        "disk_write_operation": "write_ios",
+        "disk_read_operation": "read_ios",
+        "disk_write_throughput": "write_throughput",
+        "disk_read_throughput": "read_throughput",
+    }
+    parsed = {}
+    for diskstat_name, diskstat_entries in diskstat_info.items():
+        if len(diskstat_entries) != 1:
+            continue
+        try:
+            parsed[diskstat_mapping[diskstat_name]] = float(diskstat_entries[0]["value"])
+        except KeyError:
+            continue
+    return {"Summary": parsed}
+
+
+def check_cadvisor_diskstat(item, params, parsed):
+    return check_diskstat_dict(item, params, parsed)
+
+
+check_info["cadvisor_diskstat"] = {
+    'parse_function': parse_cadvisor_diskstat,
+    'inventory_function': discover(),
+    'check_function': check_cadvisor_diskstat,
+    'service_description': 'Disk IO %s',
+    'has_perfdata': True,
+    'group': 'diskstat',
+}

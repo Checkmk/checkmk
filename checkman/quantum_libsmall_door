@@ -1,4 +1,4 @@
-title: Door status of small Quantum tape libraries
+title: Quantum Tape Libraries: Door Status
 agents: snmp
 catalog: hw/storagehw/quantum
 license: GPL
@@ -8,4 +8,4 @@ description:
  An open door triggers a critical status.
 
 inventory:
- One service for each small Quantum tape library is created.
+ One service is created for each small Quantum tape library.

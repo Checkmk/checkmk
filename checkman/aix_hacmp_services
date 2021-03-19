@@ -6,8 +6,18 @@ distribution: check_mk
 description:
  This check monitors the status of the daemons on a cluster node
  of the AIX HACMP.
- The status will be OK if all daemons are active. Otherwise it
- will change to CRIT.
+
+ It shows:
+
+ - the name of the system
+
+ - the status of the daemon
+
+ The status will be
+
+ - {OK} if all daemons are active
+
+ - {CRIT} in all other cases
 
  This check needs the check_mk_agent.aix agent.
 
@@ -15,4 +25,4 @@ item:
  The name of the cluster node.
 
 inventory:
- One service per cluster node.
+ One service is created for each cluster node.

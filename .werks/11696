@@ -1,0 +1,21 @@
+Title: filestats: added "Display name" parameter to additional rules functionality
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1606745427
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The filestats check has the option to enable additional rules for certain files
+within a file group. A new parameter has been added that gives the user the
+option to add a user-friendly name that is displayed in the service details,
+along with the matching pattern that is used to identify the files to which the
+additional rules should be applied.
+
+This is an incompatible change. If users have the additional rules
+functionality enabled, they should open the corresponding ruleset and adjust
+the parameter values.
+
+If the additional rules functionality is not enabled, no action is required.

@@ -1,4 +1,4 @@
-title: ORACLE tablespaces: perfomance data
+title: Oracle Tablespaces: Perfomance Data
 agents: linux, hpux, solaris, windows
 catalog: app/oracle
 license: GPL
@@ -13,4 +13,4 @@ item:
  The SID identifier.
 
 inventory:
- One service per SID is created.
+ One service is created for each SID.

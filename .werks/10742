@@ -1,0 +1,13 @@
+Title: mssql_tablespaces: reintroduce missing performance data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580463347
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Since version 1.6.0 the check plugin mssql_tablespaces did not
+output performance data besides "Database size". This is fixed.

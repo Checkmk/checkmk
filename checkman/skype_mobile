@@ -1,0 +1,16 @@
+title: Skype for Business: Mobile Usage
+agents: windows
+catalog: app/skype
+license: GPL
+distribution: check_mk
+description:
+ This check monitors mobile usage of the skype server.
+ It reports the number of sessions from android, ipad and iphone
+ individually as well as the number of requests being processed.
+
+ The session counts are purely informational, a threshold can be
+ set on the number of requests in processing.
+
+inventory:
+ One service is created.
+

@@ -1,0 +1,26 @@
+Title: New bakery rule "Set cache age for plugins (UNIX)"
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1584372131
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+It is now possible to set a cache age for all UNIX agent plugins
+via agent bakery rule.
+
+In the new ruleset "Set cache age for plugins (UNIX)", you can define a
+set of a glob style pattern and an interval, that gets applied to all
+plugin files (files at /usr/lib/check_mk_agent/plugins on the target hosts)
+of the matching agent package and that results in caching the plugin's
+agent outputs for the given interval. Additionally, you can decide whether
+this set should override interval times from the plugin's dedicated ruleset.
+
+This ruleset can be specified and applied multiple times.
+
+Please note that no verification is done whether the configured intervals are
+suitable for the matching plugins. Especially, please be careful when overriding
+intervals from the plugin's dedicated rules, as there may be a default/minimal
+caching time for performance or other reasons.  

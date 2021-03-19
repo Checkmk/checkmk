@@ -1,3 +1,6 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
 
 // Windows Agent Version Data
 
@@ -13,7 +16,7 @@
 
 // This FILE version, normally no changes
 #define VERSION_MAJOR 2
-#define VERSION_MINOR 1
+#define VERSION_MINOR 0
 #define VERSION_REVISION 0
 #define VERSION_BUILD 0
 

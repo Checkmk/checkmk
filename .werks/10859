@@ -1,0 +1,17 @@
+Title: agent_prometheus: addition of kube-state-metrics compatibility
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1582719398
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change introduces the kube-state-metrics package into the Prometheus
+agent. It allows to monitor the connected Kubernetes cluster and associating
+entities through the Prometheus connection. This monitoring option along with
+selection of the entity levels can be configured in the Prometheus Datasource
+Programs ruleset. The queried information uses the same k8 check-plugins as
+the native Kubernetes agent. Information about the cluster, nodes, pods, daemon
+sets and services can be retrieved through this option.

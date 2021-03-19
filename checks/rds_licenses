@@ -1,29 +1,14 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
 # 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000
@@ -34,10 +19,13 @@
 # 17,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,18,32,20380101110453.000000-000
 # 18,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,65,22,43,20380101083530.000000-000
 # 19,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,600,0,600,20380101083248.000000-000
+# 4,C50-6.02-S,2,1,Windows Server 2012,4,300,0,300,20380101000000.000000-000
+# 3,C50-10.01-S,5,1,Windows Server 2019,6,2000,1,1999,20380101093636.000000-000
 
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
+    "6": "Windows Server 2019",
     "5": "Windows Server 2016",
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
@@ -91,5 +79,4 @@ check_info['rds_licenses'] = {
     'service_description': "RDS Licenses %s",
     'group': "rds_licenses",
     'has_perfdata': True,
-    'includes': ['license.include'],
 }

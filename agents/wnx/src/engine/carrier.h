@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // API "Internal transport"
 
@@ -7,7 +11,7 @@
 #include <functional>  // callback in the main function
 
 #include "common/cfg_info.h"  // default logfile name
-#include "common/mailslot_transport.h"
+#include "common/wtools.h"    // conversion
 #include "logger.h"
 #include "tools/_misc.h"
 #include "tools/_xlog.h"
@@ -158,14 +162,18 @@ public:
     virtual ~CoreCarrier() {}
 
     // BASE API
-    bool establishCommunication(const std::string& CarrierName);
+    bool establishCommunication(const std::string& internal_port);
     bool sendData(const std::string& PeerName, uint64_t Marker,
                   const void* Data, size_t Length);
     bool sendLog(const std::string& PeerName, const void* Data, size_t Length);
     bool sendCommand(std::string_view peer_name, std::string_view command);
     void shutdownCommunication();
 
-    // Helper API #TODO gtest
+    // Accessors
+    std::string getName() const noexcept { return carrier_name_; }
+    std::string getAddress() const noexcept { return carrier_address_; }
+
+    // Helper API
     static inline bool FireSend(
         const std::wstring& PeerName,  // assigned by caller
         const std::wstring& Port,      // standard format
@@ -175,16 +183,15 @@ public:
 
         auto id = ConvertToUint64(Id);
         if (id.has_value()) {
-            std::string port(Port.begin(), Port.end());
+            auto port = wtools::ToUtf8(Port);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(ConvertToString(PeerName), id.value(), Data,
-                                   Length);
+            auto ret =
+                cc.sendData(wtools::ToUtf8(PeerName), id.value(), Data, Length);
             cc.shutdownCommunication();
             return ret;
         } else {
-            XLOG::l("Failed to convert id value '{}'",
-                    wtools::ConvertToUTF8(Id));
+            XLOG::l("Failed to convert id value '{}'", wtools::ToUtf8(Id));
             return false;
         }
     }
@@ -194,10 +201,10 @@ public:
     static bool FireCommand(const std::wstring& Name, const T& Port,
                             const void* Data, size_t Length) {
         CoreCarrier cc;
-        std::string port(Port.begin(), Port.end());
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(cma::tools::ConvertToString(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -207,10 +214,10 @@ public:
     static bool FireLog(const std::wstring& Name, const T& Port,
                         const void* Data, size_t Length) {
         CoreCarrier cc;
-        std::string port(Port.begin(), Port.end());
+        auto port = wtools::ToUtf8(Port);
         cc.establishCommunication(port);
 
-        cc.sendLog(cma::tools::ConvertToString(Name), Data, Length);
+        cc.sendLog(wtools::ToUtf8(Name), Data, Length);
         cc.shutdownCommunication();
         return true;
     }
@@ -236,8 +243,8 @@ private:
                             uint64_t Marker, const void* Data, size_t Length);
     bool mailSlotSend(DataType Type, const std::string& PeerName,
                       uint64_t Marker, const void* Data, size_t Length);
-    bool dumpSlotSend(DataType Type, const std::string& PeerName,
-                      uint64_t Marker, const void* Data, size_t Length);
+    bool dumpSlotSend(DataType type, const std::string& peer_name,
+                      uint64_t marker, const void* data_in, size_t length);
     bool fileSlotSend(DataType Type, const std::string& PeerName,
                       uint64_t Marker, const void* Data, size_t Length);
     bool nullSlotSend(DataType Type, const std::string& PeerName,
@@ -255,12 +262,7 @@ private:
                        const std::string& PeerName, uint64_t Marker,
                        const void* Data, size_t Length)>
         data_sender_ = nullptr;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class CarrierTest;
-    FRIEND_TEST(CarrierTest, Mail);
-    FRIEND_TEST(CarrierTest, EstablishShutdown);
-#endif
 };
+void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 
 };  // namespace cma::carrier

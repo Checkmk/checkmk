@@ -1,0 +1,43 @@
+Title: apache_status: Configuration of Instance Names
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1589785346
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+It is now possible to configure names for instances in three ways:
+
+ - Autodetection according to OMD configuration
+ - Overwrite of automatically detected instances
+ - Setting an Instance Name for manual configured
+
+If ENABLE_OMD_SITE_DETECTION is set to 'True' in apache_status.cfg, the names
+for server instances are translated to OMD site names if the ip and port match
+the omd configuration.
+
+To overwrite instance names by preconfigured values, use CUSTOM_ADDRESS_OVERWRITE
+in apache_status.cfg. Use hostname/IP:Port as key, the new name as the value:
+<pre>
+
+    CUSTOM_ADDRESS_OVERWRITE = {
+        '127.0.0.1:5000' : "omd_site_mon",
+    }
+
+</pre>
+
+In custom server configurations use the key 'instance' to set a custom name
+<pre>
+
+    servers = [
+        {
+            'protocol' : 'http',
+            'address'  : 'localhost',
+            'port'     : 80 ,
+            'instance' : "my-webserver"
+        },
+    ]
+
+</pre>

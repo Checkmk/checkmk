@@ -1,0 +1,21 @@
+title: Tinkerforge Sensor Bricklet: Motion Detectors
+agents: special
+catalog: hw/environment/tinkerforge
+license: GPL
+distribution: check_mk
+description:
+ This check monitors motion detector bricklets on any tinkerforge stack.
+ For this check the time ranges during which movement shouldn't occur
+ can be configured.
+ Outside these times, a motion would be mentioned in the infotext but
+ the state remains {OK}.
+ Please note that the sensor has two hardware "wheels" to control its
+ sensitivity and how long, after motion ended, the motion detector will
+ remain in its warning states.
+ check_mk can not influence these values.
+
+item:
+ The bricks position inside the stack.
+
+inventory:
+ One service is created for each motion detector bricklet.

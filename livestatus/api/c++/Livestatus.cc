@@ -1,28 +1,10 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "Livestatus.h"
+
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -30,14 +12,14 @@
 #include <unistd.h>
 
 void Livestatus::connectUNIX(const char *socket_path) {
-    _connection = socket(PF_LOCAL, SOCK_STREAM, 0);
+    _connection = ::socket(PF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
     strncpy(sockaddr.sun_path, socket_path, sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
     if (0 > connect(_connection, (const struct sockaddr *)&sockaddr,
                     sizeof(sockaddr))) {
-        close(_connection);
+        ::close(_connection);
         _connection = -1;
     } else
         _file = fdopen(_connection, "r");
@@ -50,16 +32,16 @@ void Livestatus::disconnect() {
         if (_file)
             fclose(_file);
         else
-            close(_connection);
+            ::close(_connection);
     }
     _connection = -1;
     _file = 0;
 }
 
 void Livestatus::sendQuery(const char *query) {
-    write(_connection, query, strlen(query));
+    ::write(_connection, query, strlen(query));
     std::string separators = "Separators: 10 1 2 3\n";
-    write(_connection, separators.c_str(), separators.size());
+    ::write(_connection, separators.c_str(), separators.size());
     shutdown(_connection, SHUT_WR);
 }
 

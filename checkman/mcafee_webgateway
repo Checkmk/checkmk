@@ -1,4 +1,4 @@
-title: McAfee web gateway: statistics
+title: McAfee Web Gateway: Statistics
 agents: snmp
 catalog: app/mcafee
 license: GPL
@@ -9,9 +9,6 @@ description:
 
  No default levels are set. Upper levels for infections and blocked connections
  are configurable.
-
-item:
- No item.
 
 inventory:
  One service is created.

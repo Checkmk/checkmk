@@ -1,0 +1,16 @@
+Title: veeam_client: Remove all non-printable ASCII characters from piggyback section name
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1585565811
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If VM names contain non ASCII characters, the discovery could fail with an
+UnicodeDecodeError. This has been fixed.
+
+In case you are affected, you need to update the plugin
+{veeam_backup_status.ps1} and adjust the related rules for {Hostname
+translation for piggybacked hosts}.

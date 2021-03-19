@@ -1,0 +1,13 @@
+Title: Kubernetes: don't crash on invalid roles
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580374295
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The kubernetes special agent crashed with the message {{ Invalid value for `rules`, must not be `None`CRIT }}
+if a role without rules was configured in a cluster. This is fixed.

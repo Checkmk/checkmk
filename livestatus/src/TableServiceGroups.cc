@@ -1,44 +1,25 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "TableServiceGroups.h"
+
 #include <memory>
+
 #include "Column.h"
-#include "OffsetStringColumn.h"
+#include "IntLambdaColumn.h"
+#include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "ServiceGroupMembersColumn.h"
-#include "ServiceListStateColumn.h"
+#include "ServiceListState.h"
+#include "StringColumn.h"
 #include "auth.h"
 #include "nagios.h"
 
-/* this might be a hack (accessing Nagios' internal structures.
-Ethan: please help me here: how should this be code to be
-portable? */
-extern servicegroup *servicegroup_list;
-
 TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
-    addColumns(this, "", -1);
+    addColumns(this, "", ColumnOffsets{});
 }
 
 std::string TableServiceGroups::name() const { return "servicegroups"; }
@@ -47,104 +28,129 @@ std::string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 
 // static
 void TableServiceGroups::addColumns(Table *table, const std::string &prefix,
-                                    int indirect_offset) {
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "name", "The name of the service group", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(servicegroup, group_name)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
-        prefix + "alias", "An alias of the service group", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(servicegroup, alias)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+                                    const ColumnOffsets &offsets) {
+    auto offsets_members{
+        offsets.add([](Row r) { return &r.rawData<servicegroup>()->members; })};
+    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+        prefix + "name", "The name of the service group", offsets,
+        [](const servicegroup &r) {
+            return r.group_name == nullptr ? "" : r.group_name;
+        }));
+    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
+        prefix + "alias", "An alias of the service group", offsets,
+        [](const servicegroup &r) {
+            return r.alias == nullptr ? "" : r.alias;
+        }));
+    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
         prefix + "notes", "Optional additional notes about the service group",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, notes)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        offsets, [](const servicegroup &r) {
+            return r.notes == nullptr ? "" : r.notes;
+        }));
+    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
         prefix + "notes_url",
-        "An optional URL to further notes on the service group",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, notes_url)));
-    table->addColumn(std::make_unique<OffsetStringColumn>(
+        "An optional URL to further notes on the service group", offsets,
+        [](const servicegroup &r) {
+            return r.notes_url == nullptr ? "" : r.notes_url;
+        }));
+    table->addColumn(std::make_unique<StringColumn::Callback<servicegroup>>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, action_url)));
+        offsets, [](const servicegroup &r) {
+            return r.action_url == nullptr ? "" : r.action_url;
+        }));
+    auto *mc = table->core();
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), false));
+        offsets_members, mc, false));
     table->addColumn(std::make_unique<ServiceGroupMembersColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), true));
+        offsets_members, mc, true));
 
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+    auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), ServiceListStateColumn::Type::worst_state));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::worst_state}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services", "The total number of services in the group",
-        indirect_offset, -1, -1, DANGEROUS_OFFSETOF(servicegroup, members),
-        table->core(), ServiceListStateColumn::Type::num));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        offsets,
+        ServiceListState{get_service_auth, ServiceListState::Type::num}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_ok",
-        "The number of services in the group that are OK", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_ok));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are OK", offsets,
+        ServiceListState{get_service_auth, ServiceListState::Type::num_ok}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_warn",
-        "The number of services in the group that are WARN", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_warn));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are WARN", offsets,
+        ServiceListState{get_service_auth, ServiceListState::Type::num_warn}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_crit",
-        "The number of services in the group that are CRIT", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_crit));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are CRIT", offsets,
+        ServiceListState{get_service_auth, ServiceListState::Type::num_crit}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_unknown",
-        "The number of services in the group that are UNKNOWN", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_unknown));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are UNKNOWN", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_unknown}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_pending",
-        "The number of services in the group that are PENDING", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_pending));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are PENDING", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_pending}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
+        prefix + "num_services_handled_problems",
+        "The number of services in the group that have handled problems",
+        offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_handled_problems}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
+        prefix + "num_services_unhandled_problems",
+        "The number of services in the group that have unhandled problems",
+        offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_unhandled_problems}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_hard_ok",
-        "The number of services in the group that are OK", indirect_offset, -1,
-        -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_hard_ok));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are OK", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_hard_ok}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_hard_warn",
-        "The number of services in the group that are WARN", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_hard_warn));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are WARN", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_hard_warn}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_hard_crit",
-        "The number of services in the group that are CRIT", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_hard_crit));
-    table->addColumn(std::make_unique<ServiceListStateColumn>(
+        "The number of services in the group that are CRIT", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_hard_crit}));
+    table->addColumn(std::make_unique<IntColumn::Callback<servicegroup>>(
         prefix + "num_services_hard_unknown",
-        "The number of services in the group that are UNKNOWN", indirect_offset,
-        -1, -1, DANGEROUS_OFFSETOF(servicegroup, members), table->core(),
-        ServiceListStateColumn::Type::num_hard_unknown));
+        "The number of services in the group that are UNKNOWN", offsets,
+        ServiceListState{get_service_auth,
+                         ServiceListState::Type::num_hard_unknown}));
 }
 
 void TableServiceGroups::answerQuery(Query *query) {
-    for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        if (!query->processDataset(Row(sg))) {
+    for (const auto *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
+        const servicegroup *r = sg;
+        if (!query->processDataset(Row(r))) {
             break;
         }
     }
 }
 
-Row TableServiceGroups::findObject(const std::string &objectspec) const {
-    return Row(find_servicegroup(const_cast<char *>(objectspec.c_str())));
+Row TableServiceGroups::get(const std::string &primary_key) const {
+    // "name" is the primary key
+    return Row(find_servicegroup(const_cast<char *>(primary_key.c_str())));
 }
 
 bool TableServiceGroups::isAuthorized(Row row, const contact *ctc) const {
-    return is_authorized_for_service_group(core(), rowData<servicegroup>(row),
-                                           ctc);
+    return is_authorized_for_service_group(core()->groupAuthorization(),
+                                           core()->serviceAuthorization(),
+                                           rowData<servicegroup>(row), ctc);
 }

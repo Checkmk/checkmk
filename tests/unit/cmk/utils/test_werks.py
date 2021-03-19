@@ -1,14 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=redefined-outer-name
 
 import os
 import subprocess
 from collections import defaultdict
-from pathlib2 import Path
-import pytest  # type: ignore
+from pathlib import Path
+
+import pytest  # type: ignore[import]
+from six import ensure_binary, ensure_str
 
 import testlib
+
+import cmk.utils.version as cmk_version
 import cmk.utils.werks
 import cmk.utils.memoize
+
+
+@pytest.mark.parametrize("version_str,expected", [
+    ("1.2.0", 1020050000),
+    ("1.2.0i1", 1020010100),
+    ("1.2.0b1", 1020020100),
+    ("1.2.0b10", 1020021000),
+    ("1.2.0p10", 1020050010),
+    ("2.0.0i1", 2000010100),
+    ("1.6.0-2020.05.26", 1060090000),
+    ("2020.05.26", 2020052650000),
+    ("2020.05.26-sandbox-lm-1.7-drop-py2", 2020052600000),
+])
+def test_parse_check_mk_version(version_str, expected):
+    assert cmk.utils.werks.parse_check_mk_version(version_str) == expected
 
 
 @pytest.fixture(scope="function")
@@ -22,9 +47,9 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
-    cre_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cre"])
-    cee_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cee"])
-    cme_werks = dict([(w["id"], w) for w in all_werks.values() if w["edition"] == "cme"])
+    cre_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cre"}
+    cee_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cee"}
+    cme_werks = {w["id"]: w for w in all_werks.values() if w["edition"] == "cme"}
 
     assert len(cre_werks) > 1000
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
@@ -47,7 +72,7 @@ def test_write_precompiled_werks(tmp_path, monkeypatch):
 
 
 def test_werk_versions(precompiled_werks):
-    parsed_version = cmk.utils.werks.parse_check_mk_version(cmk.__version__)
+    parsed_version = cmk.utils.werks.parse_check_mk_version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
         parsed_werk_version = cmk.utils.werks.parse_check_mk_version(werk["version"])
@@ -57,13 +82,14 @@ def test_werk_versions(precompiled_werks):
 
 
 def test_werk_versions_after_tagged(precompiled_werks):
+    list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < 8800:
             continue  # Do not care about older versions for the moment
 
         # Some werks were added after the version was released. Mostly they were forgotten by
         # the developer. Consider it a hall of shame ;)
-        if werk_id in {10062, 10063, 10064}:
+        if werk_id in {10062, 10063, 10064, 10125}:
             continue
 
         tag_name = "v%s" % werk["version"]
@@ -74,11 +100,14 @@ def test_werk_versions_after_tagged(precompiled_werks):
         if not _werk_exists_in_git_tag(tag_name, ".werks/%d" % werk_id):
             werk_tags = sorted(_tags_containing_werk(werk_id),
                                key=lambda t: cmk.utils.werks.parse_check_mk_version(t[1:]))
+            list_of_offenders.append(
+                (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-"))
 
-            raise Exception(
-                "Werk #%d has version %s, but is not found in git tag %s. "
-                "Looks like the wrong version was declared in this werk. Earliest tag with this werk: %s"
-                % (werk_id, werk["version"], tag_name, werk_tags[0] if werk_tags else "-"))
+    assert not list_of_offenders, (
+        "The following Werks are not found in the git tag corresponding to their Version. "
+        "Looks like the wrong version was declared in these werks:\n" +
+        "\n".join("Werk #%d has version %s, not found in git tag %s, first found in %s" % entry
+                  for entry in list_of_offenders))
 
 
 @cmk.utils.memoize.MemoizeCache
@@ -99,13 +128,16 @@ def _tags_containing_werk(werk_id):
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)  # type: ignore
+_werk_to_git_tag = defaultdict(list)
 
 
 @cmk.utils.memoize.MemoizeCache
 def _werks_in_git_tag(tag):
-    werks_in_tag = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", tag, ".werks"],
-                                           cwd=testlib.cmk_path()).split("\n")
+    werks_in_tag = ensure_str(
+        subprocess.check_output(
+            [b"git", b"ls-tree", b"-r", b"--name-only",
+             ensure_binary(tag), b".werks"],
+            cwd=ensure_binary(testlib.cmk_path()))).split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

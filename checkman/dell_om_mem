@@ -17,5 +17,5 @@ item:
  The name of the module port
 
 inventory:
- One check is created for each module
+ One service is created for each module.
 

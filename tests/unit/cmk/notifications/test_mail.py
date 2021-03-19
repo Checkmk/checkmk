@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore
+import pytest  # type: ignore[import]
 
 import cmk.notification_plugins.mail as mail
 
@@ -247,8 +251,8 @@ def mock_service_context():
         'SUBJECT': u'Check_MK: heute/CPU utilization OK -> WARN',
         'SVC_SL': u'',
         'WHAT': u'SERVICE',
-        'PARAMETER_FROM': u'check_mk@myinstance.com',
-        'PARAMETER_REPLY_TO': u'reply@myinstance.com',
+        'PARAMETER_FROM_ADDRESS': u'check_mk@myinstance.com',
+        'PARAMETER_REPLY_TO_ADDRESS': u'reply@myinstance.com',
         'PARAMETER_URL_PREFIX_AUTOMATIC': u'http',
     }
 
@@ -259,8 +263,8 @@ Service:             CPU utilization
 Event:               OK -> WARN
 Address:             127.0.0.1
 Date / Time:         Wed Mar 20 16:51:46 CET 2019
-Plugin Output:       &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
-Additional Output:   &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
+Summary:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt; Ok (!)
+Details:             &lt;script&gt;console.log(&quot;evil&quot;);&lt;/script&gt;(!)
 another line\\nlast line
 Host Metrics:        \n\
 Service Metrics:     \n\
@@ -269,8 +273,6 @@ Service Metrics:     \n\
 
 # TODO: validate the HTML content
 def test_mail_content_from_service_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
-
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context
@@ -388,13 +390,12 @@ Host:                heute (heute)
 Event:               DOWN -> UP
 Address:             127.0.0.1
 Date / Time:         Fri Aug 23 11:13:17 CEST 2019
-Plugin Output:       Packet received via smart PING
+Summary:             Packet received via smart PING
 Metrics:             \n\
 """
 
 
 def test_mail_content_from_host_context(mocker):
-    mocker.patch("cmk.notification_plugins.mail.render_pnp_graphs", lambda context: [])
     mocker.patch("cmk.notification_plugins.mail.socket.getfqdn", lambda: 'mysite.com')
 
     context = mock_host_context()
@@ -424,7 +425,7 @@ def test_mail_content_from_host_context(mocker):
 
     assert content.mailto == 'test@abc.de'
     assert content.subject == 'Check_MK: heute - DOWN -> UP'
-    assert content.from_address == u'checkmk@mysite.com'
-    assert content.reply_to is None
+    assert content.from_address == u'NO_SITE@mysite.com'
+    assert content.reply_to == u''
     assert content.content_txt == HOST_CONTENT_TXT
     assert content.attachments == []

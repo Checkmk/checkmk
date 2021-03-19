@@ -1,0 +1,17 @@
+title: EMKA Electronic Locking & Monitoring: Handles
+agents: snmp
+catalog: hw/environment/emka
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the handles of EMKA devices which
+ support the ELM2-MIB.
+
+ The service status is OK if the handle is 'closed', it is
+ WARN if 'opened' otherwise UNKNOWN.
+
+item:
+ The handle name.
+
+inventory:
+ One service is created for each handle.

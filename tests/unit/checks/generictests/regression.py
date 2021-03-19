@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """Script to create regression tests
 
 This is actually a script, but we need all the test magic,
@@ -57,13 +62,16 @@ B. Update all or one selected test to match the current status quo
      * the regular "-k test-name-pattern"  option to py.test
 
 """
-import os
 import ast
+from importlib import import_module
+import os
+from pathlib import Path
+import pytest
 import sys
 import time
-from importlib import import_module
-from pathlib2 import Path
-import yapf
+from typing import Any, Iterable
+
+import yapf  # type: ignore[import]
 
 import generictests.run
 
@@ -73,9 +81,8 @@ YAPF_STYLE = {
 }
 
 
-class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
+class WritableDataset:
     def __init__(self, init_dict):
-        self.comments = [u'-*- encoding: utf-8', u'yapf: disable']
         self.writelist = (
             'checkname',
             'freeze_time',
@@ -131,7 +138,27 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
         )
 
         with Path(filename).open('w') as handle:
-            handle.writelines(u'# %s\n' % c for c in self.comments)
+            # Disabling yapf: yapf parses comment blocks and disables the next
+            # lines if and only if the FIRST line of that block contains
+            #   '# yapf: disable'
+            # Does not work:
+            #   '# -*- encoding: utf-8'
+            #   '# yapf: disable'
+            # Works:
+            #   '# -*- encoding: utf-8'
+            #   ''
+            #   '# yapf: disable'
+            comments = [
+                u'#!/usr/bin/env python3\n',
+                u'# -*- encoding: utf-8 -*-\n',
+                u'# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2\n',
+                u'# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n',
+                u'# conditions defined in the file COPYING, which is part of this source code package.\n',
+                u'\n',
+                u'# yapf: disable\n',
+                u'# type: ignore\n',
+            ]
+            handle.writelines(comments)
             handle.write(yapfed_content)
 
     def get_imports(self, value):
@@ -142,7 +169,7 @@ class WritableDataset(object):  # pylint: disable=too-many-instance-attributes
             pass
 
         if isinstance(value, dict):
-            iterate = value.iteritems()
+            iterate: Iterable[Any] = value.items()
         elif isinstance(value, (tuple, list)):
             iterate = value
         else:
@@ -166,8 +193,7 @@ def _get_out_filename(datasetfile, inplace):
 
     return out_name.replace('.py', '_regression.py')
 
-
-def test_main(check_manager, datasetfile, inplace):
+def test_main(fix_plugin_legacy, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -187,7 +213,6 @@ def test_main(check_manager, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(check_manager, regression, write=True)
+    generictests.run(fix_plugin_legacy.check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))
-    return

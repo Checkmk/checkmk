@@ -1,0 +1,19 @@
+Title: Standard xinetd config now limits parallel queries to 3 per source
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1588082904
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+To avoid intentional or unintentional overload due to too many parallel queries
+from one source we set the parameter "per_source" in the default Checkmk agent
+xinetd configuration and "MaxConnectionsPerSource" to 3.  It limits the number
+of concurrent connections per source address. If you need more requests per
+source system, you can of course increase or remove this value.
+
+In regular setups where a single Checkmk site or a small number of sites per
+Checkmk server monitors one host this should be no problem. Please let us know
+in case this limitation is a problem for you.

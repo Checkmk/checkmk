@@ -1,58 +1,48 @@
-#!/usr/bin/env python
-# encoding: utf-8
-# pylint: disable=redefined-outer-name
-
-from __future__ import print_function
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import glob
-import pwd
 import time
-import re
 import sys
-import ast
 import abc
 import tempfile
 import datetime
 from contextlib import contextmanager
-import six
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import urllib3  # type: ignore
-import freezegun  # type: ignore
-
-from testlib.utils import (
-    InterProcessLock,
-    repo_path,
-    cmk_path,
-    cme_path,
-    cmc_path,
-    current_branch_name,
-    virtualenv_path,
-    get_cmk_download_credentials,
-    is_running_as_site_user,
-    site_id,
-    add_python_paths,
-    is_enterprise_repo,
-    is_managed_repo,
+from pathlib import Path
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    Generator,
+    MutableMapping,
+    Optional,
+    Set,
 )
-from testlib.fixtures import web, ec
-from testlib.site import Site, SiteFactory
-from testlib.version import CMKVersion
-from testlib.web_session import CMKWebSession, APIError
-from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
+
+import urllib3  # type: ignore[import]
+import freezegun  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
+from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
+    get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
+    is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
+)
+from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
+from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
+from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
+from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
+from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -65,42 +55,55 @@ def skip_unwanted_test_types(item):
         pytest.skip("Not testing type %r" % test_type_name)
 
 
-# Some cmk.* code is calling things like cmk. is_raw_edition() at import time
-# (e.g. cmk_base/default_config/notify.py) for edition specific variable
+# Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
+# (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def fake_version_and_paths():
     if is_running_as_site_user():
         return
 
-    import _pytest.monkeypatch  # type: ignore
+    import _pytest.monkeypatch  # type: ignore # pylint: disable=import-outside-toplevel
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
+    import cmk.utils.paths  # pylint: disable=import-outside-toplevel
 
-    # TODO: handle CME case
-    #if is_managed_repo():
-    #    monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
-    #elif is_enterprise_repo():
-    if is_enterprise_repo():
-        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cee" % cmk.__version__)
+    if is_managed_repo():
+        edition_short = "cme"
+    elif is_enterprise_repo():
+        edition_short = "cee"
     else:
-        monkeypatch.setattr(cmk, "omd_version", lambda: "%s.cre" % cmk.__version__)
+        edition_short = "cre"
+
+    monkeypatch.setattr(cmk_version, "omd_version", lambda: "%s.%s" %
+                        (cmk_version.__version__, edition_short))
 
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
+    monkeypatch.setattr("cmk.utils.paths.inventory_output_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory"))
+    monkeypatch.setattr("cmk.utils.paths.inventory_archive_dir",
+                        os.path.join(tmp_dir, "var/check_mk/inventory_archive"))
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.omd_root", tmp_dir)
     monkeypatch.setattr("cmk.utils.paths.tmp_dir", os.path.join(tmp_dir, "tmp/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.counters_dir",
+                        os.path.join(tmp_dir, "tmp/check_mk/counters"))
     monkeypatch.setattr("cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir,
                                                                       "tmp/check_mk/cache"))
     monkeypatch.setattr("cmk.utils.paths.data_source_cache_dir",
                         os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.log_dir", os.path.join(tmp_dir, "var/log"))
+    monkeypatch.setattr("cmk.utils.paths.core_helper_config_dir",
+                        Path(tmp_dir, "var/check_mk/core/helper_config"))
+    monkeypatch.setattr("cmk.utils.paths.autochecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/autochecks"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
                         os.path.join(tmp_dir, "var/check_mk/precompiled_checks"))
     monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")
@@ -115,6 +118,39 @@ def fake_version_and_paths():
     monkeypatch.setattr("cmk.utils.paths.piggyback_source_dir",
                         Path(tmp_dir) / "var/check_mk/piggyback_sources")
     monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
+
+    monkeypatch.setattr("cmk.utils.paths.local_share_dir", Path(tmp_dir, "local/share/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.local_checks_dir",
+                        Path(tmp_dir, "local/share/check_mk/checks"))
+    monkeypatch.setattr("cmk.utils.paths.local_notifications_dir",
+                        Path(tmp_dir, "local/share/check_mk/notifications"))
+    monkeypatch.setattr("cmk.utils.paths.local_inventory_dir",
+                        Path(tmp_dir, "local/share/check_mk/inventory"))
+    monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir",
+                        Path(tmp_dir, "local/share/check_mk/checkman"))
+    monkeypatch.setattr("cmk.utils.paths.local_agents_dir",
+                        Path(tmp_dir, "local/share/check_mk/agents"))
+    monkeypatch.setattr("cmk.utils.paths.local_web_dir", Path(tmp_dir, "local/share/check_mk/web"))
+    monkeypatch.setattr("cmk.utils.paths.local_pnp_templates_dir",
+                        Path(tmp_dir, "local/share/check_mk/pnp-templates"))
+    monkeypatch.setattr("cmk.utils.paths.local_doc_dir", Path(tmp_dir, "local/share/doc/check_mk"))
+    monkeypatch.setattr("cmk.utils.paths.local_locale_dir",
+                        Path(tmp_dir, "local/share/check_mk/locale"))
+    monkeypatch.setattr("cmk.utils.paths.local_bin_dir", Path(tmp_dir, "local/bin"))
+    monkeypatch.setattr("cmk.utils.paths.local_lib_dir", Path(tmp_dir, "local/lib"))
+    monkeypatch.setattr("cmk.utils.paths.local_mib_dir", Path(tmp_dir, "local/share/snmp/mibs"))
+    monkeypatch.setattr("cmk.utils.paths.diagnostics_dir",
+                        Path(tmp_dir).joinpath("var/check_mk/diagnostics"))
+    monkeypatch.setattr("cmk.utils.paths.site_config_dir",
+                        Path(cmk.utils.paths.var_dir, "site_configs"))
+    monkeypatch.setattr("cmk.utils.paths.disabled_packages_dir",
+                        Path(cmk.utils.paths.var_dir, "disabled_packages"))
+    monkeypatch.setattr("cmk.utils.paths.nagios_objects_file",
+                        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"))
+    monkeypatch.setattr("cmk.utils.paths.precompiled_hostchecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/precompiled"))
+    monkeypatch.setattr("cmk.utils.paths.discovered_host_labels_dir",
+                        Path(tmp_dir, "var/check_mk/discovered_host_labels"))
 
 
 def import_module(pathname):
@@ -133,18 +169,11 @@ def import_module(pathname):
     modname = os.path.splitext(os.path.basename(pathname))[0]
     modpath = os.path.join(cmk_path(), pathname)
 
-    if sys.version_info[0] >= 3:
-        import importlib
-        return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # pylint: disable=no-value-for-parameter,deprecated-method
-
-    import imp
-    try:
-        return imp.load_source(modname, modpath)
-    finally:
-        try:
-            os.remove(modpath + "c")
-        except OSError:
-            pass
+    import importlib  # pylint: disable=import-outside-toplevel
+    # TODO: load_module() is deprecated, we should avoid using it.
+    # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
+    # mypy is confused about its arguments.
+    return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
 
 
 def wait_until(condition, timeout=1, interval=0.1):
@@ -157,7 +186,24 @@ def wait_until(condition, timeout=1, interval=0.1):
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
-class WatchLog(object):  # pylint: disable=useless-object-inheritance
+def wait_until_liveproxyd_ready(site, site_ids):
+    # First wait for the site sockets to appear
+    def _all_sockets_opened():
+        return all([site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids])
+
+    wait_until(_all_sockets_opened, timeout=60, interval=0.5)
+
+    # Then wait for the sites to be ready
+    def _all_sites_ready():
+        content = site.read_file("var/log/liveproxyd.state")
+        num_ready = content.count("State:                   ready")
+        print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
+        return len(site_ids) == num_ready
+
+    wait_until(_all_sites_ready, timeout=60, interval=0.5)
+
+
+class WatchLog:
     """Small helper for integration tests: Watch a sites log file"""
     def __init__(self, site, log_path, default_timeout=5):
         self._site = site
@@ -175,7 +221,8 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
 
     def __exit__(self, *exc_info):
         try:
-            self._log.close()
+            if self._log is not None:
+                self._log.close()
         except AttributeError:
             pass
 
@@ -194,6 +241,8 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
                             (match_for, self._log_path, timeout))
 
     def _check_for_line(self, match_for, timeout):
+        if self._log is None:
+            raise Exception("no log file")
         timeout_at = time.time() + timeout
         sys.stdout.write("Start checking for matching line at %d until %d\n" %
                          (time.time(), timeout_at))
@@ -210,16 +259,25 @@ class WatchLog(object):  # pylint: disable=useless-object-inheritance
         return False
 
 
-def create_linux_test_host(request, web, site, hostname):
+def create_linux_test_host(request, web_fixture, site, hostname):
     def finalizer():
-        web.delete_host(hostname)
-        web.activate_changes()
-        site.delete_file("var/check_mk/agent_output/%s" % hostname)
-        site.delete_file("etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname)
+        web_fixture.delete_host(hostname)
+        web_fixture.activate_changes()
+
+        for path in [
+                "var/check_mk/agent_output/%s" % hostname,
+                "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
+                "tmp/check_mk/status_data/%s" % hostname,
+                "tmp/check_mk/status_data/%s.gz" % hostname,
+                "var/check_mk/inventory/%s" % hostname,
+                "var/check_mk/inventory/%s.gz" % hostname,
+        ]:
+            if os.path.exists(path):
+                site.delete_file(path)
 
     request.addfinalizer(finalizer)
 
-    web.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
+    web_fixture.add_host(hostname, attributes={"ipaddress": "127.0.0.1"})
 
     site.write_file(
         "etc/check_mk/conf.d/linux_test_host_%s.mk" % hostname,
@@ -227,9 +285,7 @@ def create_linux_test_host(request, web, site, hostname):
         hostname)
 
     site.makedirs("var/check_mk/agent_output/")
-    site.write_file(
-        "var/check_mk/agent_output/%s" % hostname,
-        open("%s/tests/integration/cmk_base/test-files/linux-agent-output" % repo_path()).read())
+    site.write_file("var/check_mk/agent_output/%s" % hostname, get_standard_linux_agent_output())
 
 
 #.
@@ -241,86 +297,68 @@ def create_linux_test_host(request, web, site, hostname):
 #   |                   \____|_| |_|\___|\___|_|\_\___/                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Testing of Check_MK checks                                           |
+#   | Testing of Checkmk checks                                           |
 #   '----------------------------------------------------------------------'
-
-
-class CheckManager(object):  # pylint: disable=useless-object-inheritance
-    def load(self, file_names=None):
-        """Load either all check plugins or the given file_names"""
-        import cmk_base.config as config
-        import cmk_base.check_api as check_api
-        import cmk.utils.paths
-
-        if file_names is None:
-            config.load_all_checks(check_api.get_check_api_context)  # loads all checks
-        else:
-            config._initialize_data_structures()
-            config.load_checks(check_api.get_check_api_context,
-                               [os.path.join(cmk.utils.paths.checks_dir, f) for f in file_names])
-
-        return self
-
-    def get_check(self, name):
-        main_check = name.split(".", 1)[0]
-        self.load([main_check])
-        return Check(name)
-
-    def get_active_check(self, name):
-        self.load([name])
-        return ActiveCheck(name)
-
-    def get_special_agent(self, name):
-        self.load([name])
-        return SpecialAgent(name)
 
 
 class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(six.with_metaclass(abc.ABCMeta, object)):
+class BaseCheck(metaclass=abc.ABCMeta):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        import cmk_base.check_api_utils
-        self.set_hostname = cmk_base.check_api_utils.set_hostname
-        self.set_service = cmk_base.check_api_utils.set_service
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
+        self.current_host = cmk.base.plugin_contexts.current_host
+        self.current_service = cmk.base.plugin_contexts.current_service
         self.name = name
         self.info = {}
+        # we cant use the current_host context, b/c some tests rely on a persistent
+        # item state across several calls to run_check
+        cmk.base.plugin_contexts._hostname = 'non-existent-testhost'
 
-    def set_check_api_utils_globals(self, item=None, set_service=False):
-        description = None
-        if set_service:
-            description = self.info["service_description"]
-            assert description, '%r is missing a service_description' % self.name
-            if item is not None:
-                assert "%s" in description, \
-                    "Missing '%%s' formatter in service description of %r" \
-                    % self.name
-                description = description % item
-        self.set_service(self.name, description)
-        self.set_hostname('non-existent-testhost')
+    def _get_service(self, item: Optional[str]):
+        from cmk.utils.type_defs import CheckPluginName
+        from cmk.utils.check_utils import maincheckify
+        from cmk.base.check_utils import Service
+
+        description = self.info["service_description"]
+
+        assert description, '%r is missing a service_description' % self.name
+        if item is not None:
+            assert "%s" in description, ("Missing '%%s' formatter in service description of %r" %
+                                         self.name)
+            description = description % item
+
+        return Service(
+            item=item,
+            check_plugin_name=CheckPluginName(maincheckify(self.name)),
+            description=description,
+            parameters={},
+        )
 
 
 class Check(BaseCheck):
     def __init__(self, name):
-        import cmk_base.config as config
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
+        from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
         super(Check, self).__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
         self.info = config.check_info[self.name]
         self.context = config._check_contexts[self.name]
+        self._migrated_plugin = register.get_check_plugin(
+            config.CheckPluginName(self.name.replace('.', '_')))
 
     def default_parameters(self):
-        import cmk_base.config as config
-        params = {}
-        return config._update_with_default_check_parameters(self.name, params)
+        if self._migrated_plugin:
+            return self._migrated_plugin.check_default_parameters or {}
+        return {}
 
     def run_parse(self, info):
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        self.set_check_api_utils_globals()
         return parse_func(info)
 
     def run_discovery(self, info):
@@ -328,17 +366,15 @@ class Check(BaseCheck):
         if not disco_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no discovery function defined")
-        self.set_check_api_utils_globals()
-        # TODO: use standard sanitizing code
-        return disco_func(info)
+        with self.current_host('non-existent-testhost', write_state=False):
+            return disco_func(info)
 
     def run_check(self, item, params, info):
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        self.set_check_api_utils_globals(item, set_service=True)
-        # TODO: use standard sanitizing code
-        return check_func(item, params, info)
+        with self.current_service(self._get_service(item)):
+            return check_func(item, params, info)
 
     #def run_parse_with_walk(self, walk_name):
     #    if "parse_function" not in self.info:
@@ -363,23 +399,23 @@ class Check(BaseCheck):
 
 class ActiveCheck(BaseCheck):
     def __init__(self, name):
-        import cmk_base.config as config
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(ActiveCheck, self).__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
         self.info = config.active_check_info[self.name[len('check_'):]]
 
     def run_argument_function(self, params):
-        self.set_check_api_utils_globals()
-        return self.info['argument_function'](params)
+        with self.current_host('non-existent-testhost', write_state=False):
+            return self.info['argument_function'](params)
 
     def run_service_description(self, params):
         return self.info['service_description'](params)
 
 
-class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
+class SpecialAgent:
     def __init__(self, name):
-        import cmk_base.config as config
+        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         super(SpecialAgent, self).__init__()
         self.name = name
         assert self.name.startswith(
@@ -388,14 +424,45 @@ class SpecialAgent(object):  # pylint: disable=useless-object-inheritance
 
 
 @contextmanager
+def set_timezone(timezone):
+    if "TZ" not in os.environ:
+        tz_set = False
+        old_tz = ""
+    else:
+        tz_set = True
+        old_tz = os.environ['TZ']
+
+    os.environ['TZ'] = timezone
+    time.tzset()
+
+    yield
+
+    if not tz_set:
+        del os.environ['TZ']
+    else:
+        os.environ['TZ'] = old_tz
+
+    time.tzset()
+
+
+@contextmanager
 def on_time(utctime, timezone):
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)
 
-    os.environ['TZ'] = timezone
-    time.tzset()
-    with freezegun.freeze_time(utctime):
+    with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
-    os.environ.pop('TZ')
-    time.tzset()
+
+
+def get_value_store_fixture(
+        module: ModuleType
+) -> Callable[[MonkeyPatch], Generator[MutableMapping[str, Any], None, None]]:
+    """Creates a fixture for patching get_value_store (check API) in a given module"""
+    @pytest.fixture(name="value_store")
+    def value_store_fixture(monkeypatch):
+        value_store: MutableMapping[str, Any] = {}
+        monkeypatch.setattr(module, 'get_value_store', lambda: value_store)
+        yield value_store
+
+    return value_store_fixture

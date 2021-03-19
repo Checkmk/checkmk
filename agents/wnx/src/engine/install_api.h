@@ -1,3 +1,7 @@
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides api to automatic install MSI files by service
 
@@ -8,18 +12,43 @@
 #include <filesystem>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "tools/_tgt.h"
 
 namespace cma {
 
 namespace install {
-enum class UpdateType { exec_normal, exec_quiet };
+bool UseScriptToInstall();
+
 enum class UpdateProcess { execute, skip };
 enum class InstallMode { normal, reinstall };
 InstallMode GetInstallMode();
-std::pair<std::wstring, std::wstring> MakeCommandLine(
-    const std::filesystem::path& msi, UpdateType update_type);
+
+class ExecuteUpdate {
+public:
+    ExecuteUpdate() { determineFilePaths(); }
+    void prepare(const std::filesystem::path& exe,
+                 const std::filesystem::path& msi, bool validate_script_exists);
+
+    bool copyScriptToTemp() const;
+    void backupLog() const;
+
+    std::wstring getCommand() const noexcept { return command_; }
+    std::wstring getLogFileName() const noexcept { return log_file_name_; }
+
+    std::filesystem::path getTempScriptFile() const noexcept {
+        return temp_script_file_;
+    }
+
+private:
+    void determineFilePaths();
+
+    std::wstring command_;
+    std::wstring log_file_name_;
+    std::filesystem::path base_script_file_;
+    std::filesystem::path temp_script_file_;
+};
 
 constexpr const std::wstring_view kDefaultMsiFileName = L"check_mk_agent.msi";
 
@@ -40,18 +69,28 @@ const std::wstring kMsiRemoveLegacyDefault = L"";
 const std::wstring kMsiRemoveLegacyRequest = L"1";
 const std::wstring kMsiRemoveLegacyAlready = L"0";
 
+// to control post installation phase. While set disallow any command line calls
+// to service
+constexpr std::wstring_view kMsiPostInstallRequired = L"PostInstall_Required";
+constexpr std::wstring_view kMsiPostInstallDefault = L"no";
+constexpr std::wstring_view kMsiPostInstallRequest = L"yes";
+
+constexpr std::wstring_view kMsiMigrationRequired = L"Migration_Required";
+constexpr std::wstring_view kMsiMigrationDefault = L"";
+constexpr std::wstring_view kMsiMigrationRequest = L"1";
+
 inline const std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
 };  // namespace registry
 
-// TEST(InstallAuto, TopLevel)
+/// Returns command and success status
 // set StartUpdateProcess to 'skip' to test functionality
 // BackupPath may be empty, normally points out on the install folder
 // DirWithMsi is update dir in ProgramData
-bool CheckForUpdateFile(std::wstring_view Name, std::wstring_view DirWithMsi,
-                        UpdateType Update, UpdateProcess StartUpdateProcess,
-                        std::wstring_view BackupPath = L"");
+std::pair<std::wstring, bool> CheckForUpdateFile(
+    std::wstring_view msi_name, std::wstring_view msi_dir,
+    UpdateProcess start_update_process, std::wstring_view backup_dir = L"");
 
 std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
 std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
@@ -62,23 +101,27 @@ std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
 // Diagnostic is cma::install!
 
 // noexcept remove file
-bool RmFile(const std::filesystem::path& File) noexcept;
+bool RmFile(const std::filesystem::path& file_name) noexcept;
 
 // noexcept move file
-bool MvFile(const std::filesystem::path& Old,
-            const std::filesystem::path& New) noexcept;
+bool MvFile(const std::filesystem::path& source_file,
+            const std::filesystem::path& destination_file) noexcept;
 
 // noexcept backup file(if possible)
-void BackupFile(const std::filesystem::path& File,
-                const std::filesystem::path& Dir) noexcept;
+void BackupFile(const std::filesystem::path& file_name,
+                const std::filesystem::path& backup_dir) noexcept;
 
 // noexcept check whether incoming file is newer
-bool NeedInstall(const std::filesystem::path& IncomingFile,
-                 const std::filesystem::path& BackupDir) noexcept;
+bool NeedInstall(const std::filesystem::path& incoming_file,
+                 const std::filesystem::path& backup_dir) noexcept;
 // ****************************************
 
-}  // namespace install
+bool IsPostInstallRequired();
+void ClearPostInstallFlag();
 
-};  // namespace cma
+bool IsMigrationRequired();
+
+}  // namespace install
+}  // namespace cma
 
 #endif  // install_api_h__

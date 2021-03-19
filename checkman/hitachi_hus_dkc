@@ -18,7 +18,7 @@ description:
  and {CRIT} if some of the components are in the states "acute" or "serious".
 
 inventory:
- One item for every DKC chassis found
+ One service is created for each DKC chassis.
 
 item:
  The serial number (dkcRaidListIndexSerialNumber) of the DKC

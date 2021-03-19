@@ -1,0 +1,76 @@
+Title: Auto migration of check plugins to new section definitions
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1584701112
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+We are now converting all plugins to the format expected by
+the new API for check and inventory plugins.
+
+This 'auto-migration' is done in memory upon loading the plugins,
+all files will remain unchanged on disk.
+
+Migrated are plugins from
+
+<ul>
+  <li>share/check_mk/checks</li>
+  <li>local/share/check_mk/checks</li>
+  <li>share/check_mk/inventory</li>
+  <li>local/share/check_mk/inventory</li>
+</ul>
+
+Although we are trying to migrate as many check and inventory plugins
+as possible on the fly, for some plugins this may fail.
+You can check for failing auto-migrations running the command `cmk -R`.
+You will be informed of any auto-migration failures.
+
+If that is the case, you have to migrate your plugin manually.
+
+These are the anticipated reasons why auto-migration may fail:
+
+<h4>A cluster aware checkplugin</h4>
+
+Checkmk refuses to auto-migrate cluster aware check plugins (those
+with node_info set to True). Auto converting the data layout is too
+error prone.
+
+<h4>Checkplugins using 'extra_sections'</h4>
+
+Checkmk refuses to auto-migrate check plugins that make use of the
+'extra_sections' feature. In the new API the destiction between the
+regular section and additional 'extra_sections' is not made, and all
+section content will be passed in its 'parsed' version. Please refer
+to the Sphinx documentation of `register.check_plugin` for details
+on the usage of the `sections` keyword.
+
+<h4>A missing SNMP scan function</h4>
+
+Every Checkplugin that specifies an 'snmp_info' key must
+specify 'snmp_scan_function' as well.
+
+<h4>A complex SNMP scan function</h4>
+
+If Checkmk fails to auto-migrate a legacy SNMP plugin to a section
+definition, this is most likely due to an elaborate scan function.
+For the auto-migration to work, the scan function must be fairly
+simple. Make sure your scan function has the following properties:
+
+<ul>
+ <li>it only consists of one single return statement</li>
+ <li>it does not in turn call other functions (not even 'all' or 'any')</li>
+ <li>it does not negate compound expressions</li>
+</ul>
+
+If in doubt, take a look at scan functions that succeed to be migrated
+to see what options are available.
+
+<h4> Known limitations</h4>
+
+<ul>
+  <li>HostLabels are only supported via the new API (see werk #11117)</li>
+</ul>
+

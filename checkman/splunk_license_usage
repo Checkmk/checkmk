@@ -1,4 +1,4 @@
-title: Splunk: License usage
+title: Splunk: License Usage
 agents: splunk
 catalog: app/splunk
 license: GPL
@@ -8,5 +8,5 @@ description:
  You can check for the used quota in absolut or percentage levels
 
 inventory:
- One service will be created
+ One service is created.
 

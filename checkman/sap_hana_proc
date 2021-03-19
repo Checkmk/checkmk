@@ -1,4 +1,4 @@
-title: SAP HANA Process
+title: SAP HANA: Process
 agents: linux
 catalog: app/sap_hana
 license: GPL
@@ -15,7 +15,7 @@ description:
  If the active status is not YES the check goes CRIT.
 
 item:
- The instance and process name
+ The sid instance name and the process name seperated by a {{-}}
 
 inventory:
- One service is created per instance and process.
+ One service is created for each instance and process.

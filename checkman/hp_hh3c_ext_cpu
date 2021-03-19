@@ -1,0 +1,17 @@
+title: HP Devices: Module CPU
+agents: snmp
+catalog: hw/network/hp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the CPU utilization of modules of HP devices which
+ support the HH3C-ENTITY-EXT MIB.
+
+ No default levels are set. Upper levels are configurable.
+ Also averaging is supported.
+
+item:
+ The module name from ENTITY-MIB.
+
+inventory:
+ One service is created for each module.

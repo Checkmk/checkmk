@@ -1,0 +1,20 @@
+Title: Fix view crash when linking to views with missing context
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613491450
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Previous 2.0 versions produced crash reports (KeyErrors) when a column was
+linking to another view while a mandatory context information was missing in
+the source row. This could e.g. happen when trying to link to a "single
+hostgroup" view from a view showing host rows (where no single host group is
+availabile).
+
+Instead of showing the crash the GUI is now linking to the target view. Once
+a user opens up the view, the view is showing a warning message and asks for
+the missing context information.

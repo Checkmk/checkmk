@@ -1,6 +1,17 @@
-import pytest
-from checktestlib import CheckResult, assertCheckResultsEqual, \
-                         BasicItemState, MockItemState, assertMKCounterWrapped
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
+from checktestlib import (
+    CheckResult,
+    assertCheckResultsEqual,
+    MockItemState,
+    assertMKCounterWrapped,
+)
 
 pytestmark = pytest.mark.checks
 
@@ -62,9 +73,9 @@ expected_result_2 = CheckResult([
     (info_statgrab_cpu_hpux, mock_state_tuple, expected_result_1),
     (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
 ])
-def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
+def test_statgrab_cpu_check(info, mockstate, expected_result):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
     # set up mocking of `get_item_state`
     with MockItemState(mockstate):
@@ -75,9 +86,9 @@ def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
 @pytest.mark.parametrize("info,mockstate", [
     (info_statgrab_cpu_hpux, mock_state_function),
 ])
-def test_statgrab_cpu_check_error(check_manager, info, mockstate):
+def test_statgrab_cpu_check_error(info, mockstate):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
     with MockItemState(mockstate):
         # the mock values are designed to raise an exception.

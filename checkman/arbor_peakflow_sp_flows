@@ -1,0 +1,17 @@
+title: Arbor Peakflow SP: Flows
+agents: snmp
+catalog: hw/network/arbor
+license: GPL
+distribution: check_mk
+description:
+ Monitors accumulative flow count on Arbor Peakflow SP devices.
+
+ There is no supported configuration.
+
+ The service is always {OK}.
+
+ This check uses the PEAKFLOW-SP-MIB.
+
+inventory:
+ One service is created.
+

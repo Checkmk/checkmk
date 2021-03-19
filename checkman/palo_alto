@@ -8,4 +8,4 @@ description:
  and peer HA state. This check is purely informative and always OK.
 
 inventory:
- Creates one service per Palo Alto firewall.
+ One service is created for each Palo Alto firewall.

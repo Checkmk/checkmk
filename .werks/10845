@@ -1,0 +1,17 @@
+Title: mk_oracle: Fixed wrong credentials for remote intances in bakery
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1580816709
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+In some cases the credentials have been wrong for remote instances, if they
+should use the default login data. Instead the last login entry for selected
+databases has been used. Now the bakery uses the correct login data if the
+remote instance has not been defined in the selected databases.
+
+To make this fix work, you will have to rebuild your agents in the Agent
+Bakery.

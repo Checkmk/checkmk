@@ -13,5 +13,5 @@ description:
  state not defined in the MIB.
 
 inventory:
- Finds exactly one check on every HNAS having a Quorum Device.
+ One service is created on each HNAS having a Quorum Device.
 

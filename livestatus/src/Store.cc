@@ -1,36 +1,17 @@
-// +------------------------------------------------------------------+
-// |             ____ _               _        __  __ _  __           |
-// |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-// |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-// |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-// |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                                                  |
-// | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
-// +------------------------------------------------------------------+
-//
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
-//
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// tails. You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "Store.h"
+
 #include <ctime>
 #include <filesystem>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
-#include <vector>
+
+#include "CrashReport.h"
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"
@@ -38,13 +19,11 @@
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "StringUtils.h"
-#include "Table.h"
 #include "mk_logwatch.h"
+#include "nagios.h"
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _downtimes(mc)
-    , _comments(mc)
     , _log_cache(mc)
     , _table_columns(mc)
     , _table_commands(mc)
@@ -117,14 +96,6 @@ Table &Store::findTable(OutputBuffer &output, const std::string &name) {
     return *it->second;
 }
 
-void Store::registerDowntime(nebstruct_downtime_data *data) {
-    _downtimes.registerDowntime(data);
-}
-
-void Store::registerComment(nebstruct_comment_data *data) {
-    _comments.registerComment(data);
-}
-
 namespace {
 std::list<std::string> getLines(InputBuffer &input) {
     std::list<std::string> lines;
@@ -139,7 +110,7 @@ std::list<std::string> getLines(InputBuffer &input) {
 }  // namespace
 
 void Store::logRequest(const std::string &line,
-                       const std::list<std::string> &lines) {
+                       const std::list<std::string> &lines) const {
     Informational log(logger());
     log << "request: " << line;
     if (logger()->isLoggable(LogLevel::debug)) {
@@ -240,6 +211,10 @@ void Store::answerCommandRequest(const ExternalCommand &command) {
         answerCommandMkLogwatchAcknowledge(command);
         return;
     }
+    if (command.name() == "DEL_CRASH_REPORT") {
+        answerCommandDelCrashReport(command);
+        return;
+    }
     if (mk::starts_with(command.name(), "EC_")) {
         answerCommandEventConsole(command);
         return;
@@ -258,6 +233,15 @@ void Store::answerCommandMkLogwatchAcknowledge(const ExternalCommand &command) {
         return;
     }
     mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), args[0], args[1]);
+}
+
+void Store::answerCommandDelCrashReport(const ExternalCommand &command) {
+    auto args = command.args();
+    if (args.size() != 1) {
+        Warning(logger()) << "DEL_CRASH_REPORT expects 1 argument";
+        return;
+    }
+    mk::crash_report::delete_id(_mc->crashReportPath(), args[0], logger());
 }
 
 namespace {
@@ -294,7 +278,7 @@ void Store::answerCommandNagios(const ExternalCommand &command) {
     std::lock_guard<std::mutex> lg(_command_mutex);
     auto command_str = command.str();
     // The Nagios headers are (once again) not const-correct...
-    auto cmd = const_cast<char *>(command_str.c_str());
+    auto *cmd = const_cast<char *>(command_str.c_str());
 #ifdef NAGIOS4
     process_external_command1(cmd);
 #else

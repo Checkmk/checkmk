@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 240 215" style="enable-background:new 0 0 240 215;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#B894EE;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#8F5ED8;}
+</style>
+<g id="Icons">
+	<g id="EXIT" transform="translate(-628.000000, -376.000000)">
+		<g id="problem_dashboard" transform="translate(628.000000, 376.000000)">
+			<path id="Fill-1" class="st0" d="M134.9,121.8c0,8.5-6.9,15.4-15.4,15.4c-8.5,0-15.4-6.9-15.4-15.4V51.2c0-4,3.3-7.3,7.3-7.3
+				h16.2c4,0,7.3,3.3,7.3,7.3L134.9,121.8L134.9,121.8z M119.5,187.2c-8.4,0-15.3-6.9-15.3-15.3c0-8.4,6.9-15.3,15.3-15.3
+				s15.3,6.9,15.3,15.3C134.8,180.3,128,187.2,119.5,187.2L119.5,187.2z M235.9,179l-96-166.3C135.6,5.4,128,1,119.5,1
+				c-8.5,0-16.1,4.4-20.3,11.7L3.2,179c-4.2,7.4-4.2,16.1,0,23.5c4.2,7.4,11.8,11.7,20.3,11.7h192c8.5,0,16.1-4.4,20.3-11.7
+				C240.1,195.1,240.1,186.4,235.9,179L235.9,179z"/>
+			<path id="Fill-4" class="st1" d="M235.9,179l-96-166.3C135.6,5.4,128,1,119.5,1v43h8.1c4,0,7.3,3.3,7.3,7.3v70.6h0
+				c0,8.5-6.9,15.4-15.4,15.4l0,0v19.4l0,0c8.4,0,15.3,6.9,15.3,15.3c0,8.4-6.9,15.3-15.3,15.3l0,0v27.1h96
+				c8.5,0,16.1-4.4,20.3-11.7C240.1,195.1,240.1,186.4,235.9,179"/>
+		</g>
+	</g>
+</g>
+</svg>

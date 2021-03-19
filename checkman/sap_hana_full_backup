@@ -1,4 +1,4 @@
-title: SAP HANA: Full database backup
+title: SAP HANA: Full Database Backup
 agents: linux
 catalog: app/sap_hana
 license: GPL
@@ -12,9 +12,6 @@ description:
 
  Note: This check is deprecated and replaced by newer checks.
  See werk 7100 for detailed information.
-
-item:
- The instance name.
 
 inventory:
  One service is created.

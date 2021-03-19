@@ -1,4 +1,4 @@
-title: MS Exchange Active Sync Performance
+title: MS Exchange: Active Sync Performance
 agents: windows
 catalog: app/exchange
 license: GPL
@@ -10,4 +10,4 @@ description:
  The check is always in state {OK}.
 
 inventory:
- Exactly one item will be discovered.
+ One service is created.

@@ -18,5 +18,5 @@ description:
  the service.  "Online" triggers {OK} and "Unknown" triggers {UNKNOWN}
 
 inventory:
- One check for each device is created.
+ One service for each drive.
 

@@ -1,0 +1,16 @@
+Title: Windows agent ignores cmk-update-agent.exe in plugins directory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1614101708
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The only possibility to update agent automatically is the python script <tt>cmk_update_agent.checkmk.py</tt>. 
+With this release <tt>cmk-update-agent.exe</tt> in the plugins directory will be ignored by Windows 
+agent to prevent possible problems.
+
+This behavior is behavior by default and may be overriden using <tt>check_mk.user.yml</tt>
+

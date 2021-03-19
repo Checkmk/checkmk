@@ -1,10 +1,10 @@
 Source: check-mk-###EDITION###-###PKG_VERSION###
 Section: admin
 Priority: optional
-Maintainer: Checkmk Team <feedback@checkmk.com>
-Build-Depends:@dpatch,@debhelper@(>=@7)
+Maintainer: Checkmk team <feedback@checkmk.com>
+Build-Depends:@debhelper@(>=@7)
 Standards-Version: 3.8.3
-Homepage: http://mathias-kettner.de
+Homepage: https://checkmk.com
 
 Package: check-mk-###EDITION###-###PKG_VERSION###
 Architecture: any

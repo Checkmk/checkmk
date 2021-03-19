@@ -1,0 +1,15 @@
+Title: Show miniature graphs in mobile GUI
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1573573252
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The mobile GUI now shows miniature graphs with the
+smallest available graph timerange. Previously the
+legend and graph previews lead to an overflow on
+the right side of the screen.

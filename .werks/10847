@@ -1,0 +1,13 @@
+Title: mk_oracle: Broken instance specific login in some cases
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 2.0.0i1
+Date: 1590488741
+Class: fix
+
+In some cases the SID as it is displayed on the host process list and the
+SID specific login data does not match if the matching is case sensitive.
+As a consequense the variable for the specific login has not been found,
+e.g. if the process is lower case but the config uses upper case SID.

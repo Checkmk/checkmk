@@ -1,0 +1,17 @@
+Title: Windows service waits for network service during start
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1591082619
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+During the start Windows Agent service waits for network up to 30 seconds.
+
+This may help to prevent strange errors if some plugins require network 
+services available.
+
+Value 30 second is default and may be changed in config file using parameter
+<tt>system.wait_network</tt>

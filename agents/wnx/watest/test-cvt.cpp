@@ -5,6 +5,7 @@
 
 #include <filesystem>
 
+#include "common/yaml.h"
 #include "cvt.h"
 #include "lwa/types.h"
 #include "providers/logwatch_event.h"
@@ -14,7 +15,6 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_tgt.h"
-#include "yaml-cpp/yaml.h"
 
 template <class T>
 std::string type_name() {

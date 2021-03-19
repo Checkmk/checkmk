@@ -1,0 +1,14 @@
+Title: agent_prometheus: addition of Prometheus build check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1596180412
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This change introduces the build check for the Prometheus agent. The check
+lists relevant information regarding the Prometheus server itself including
+its version and number of connected Scrape Targets. Depending on the used
+Prometheus version, the amount of information may vary.

@@ -1,49 +1,34 @@
-#!/usr/bin/env python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-# +------------------------------------------------------------------+
-# |             ____ _               _        __  __ _  __           |
-# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
-# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
-# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-# |                                                                  |
-# | Copyright Mathias Kettner 2019             mk@mathias-kettner.de |
-# +------------------------------------------------------------------+
-#
-# This file is part of Check_MK.
-# The official homepage is at http://mathias-kettner.de/check_mk.
-#
-# check_mk is free software;  you can redistribute it and/or modify it
-# under the  terms of the  GNU General Public License  as published by
-# the Free Software Foundation in version 2.  check_mk is  distributed
-# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# tails. You should have  received  a copy of the  GNU  General Public
-# License along with GNU Make; see the file  COPYING.  If  not,  write
-# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA.
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
 import abc
-import json
-import time
-import datetime
-import string
-import sys
 import argparse
+import datetime
+import json
 import logging
 from multiprocessing import Process, Lock, Queue
-from Queue import Empty as QueueEmpty
-import adal  # type: ignore
-import requests
+from pathlib import Path
+from queue import Empty as QueueEmpty
+import string
+import sys
+import time
+from typing import Any, List, Tuple
 
-from pathlib2 import Path
+import adal  # type: ignore[import] # pylint: disable=import-error
+import requests
 
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import DataCache, vcrtrace
+from cmk.special_agents.utils import (
+    DataCache,
+    vcrtrace,
+    get_seconds_since_midnight,
+)
 import cmk.utils.password_store
 
 cmk.utils.password_store.replace_passwords()
@@ -103,11 +88,16 @@ def parse_arguments(argv):
                         choices=["grouphost", "self"],
                         help='''Send VM piggyback data to group host (default) or the VM iteself''')
 
+    parser.add_argument("--subscription",
+                        dest="subscriptions",
+                        action="append",
+                        default=[],
+                        help="Azure subscription IDs")
+
     # REQUIRED
-    parser.add_argument("--subscription", required=True, help="Azure subscription ID")
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -136,18 +126,18 @@ def parse_arguments(argv):
         args.sequential = True
 
     # LOGGING
-    if args.verbose >= 3:
+    if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
-    elif args.verbose == 2:
+    elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
         fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
-    elif args.verbose == 1:
+    elif args.verbose:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
@@ -168,9 +158,11 @@ class ApiError(RuntimeError):
     pass
 
 
-class BaseApiClient(object):
-    __METACLASS__ = abc.ABCMeta
+class ApiErrorMissingData(ApiError):
+    pass
 
+
+class BaseApiClient(metaclass=abc.ABCMeta):
     AUTHORITY = 'https://login.microsoftonline.com'
 
     def __init__(self, base_url):
@@ -204,14 +196,33 @@ class BaseApiClient(object):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        request_url = self._base_url + uri_end
-        response = requests.get(request_url, params=params, headers=self._headers)
-        self._update_ratelimit(response)
-        json_data = response.json()
-        LOGGER.debug('response: %r', json_data)
+        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
 
         if key is None:
             return json_data
+
+        data = self._lookup(json_data, key)
+
+        # The API will not send more than 1000 recources at once.
+        # See if we must fetch another page:
+        next_link = json_data.get('nextLink')
+        while next_link is not None:
+            json_data = self._get_json_from_url(next_link)
+            # we only know of lists. Let exception happen otherwise
+            data += self._lookup(json_data, key)
+            next_link = json_data.get('nextLink')
+
+        return data
+
+    def _get_json_from_url(self, url, *, params=None):
+        response = requests.get(url, params=params, headers=self._headers)
+        self._update_ratelimit(response)
+        json_data = response.json()
+        LOGGER.debug('response: %r', json_data)
+        return json_data
+
+    @staticmethod
+    def _lookup(json_data, key):
         try:
             return json_data[key]
         except KeyError:
@@ -228,8 +239,25 @@ class GraphApiClient(BaseApiClient):
     def resource(self):
         return 'https://graph.microsoft.com'
 
-    def users(self):
-        return self._get('users', key='value')
+    def users(self, data=None, uri=None):
+        if data is None:
+            data = []
+
+        # the uri is the link to the next page for pagination of results
+        if uri:
+            response = self._get(uri)
+        else:
+            response = self._get('users?$top=%s' % 500)
+        data += response.get('value', [])
+
+        # check if there is a next page, otherwise return result
+        next_page = response.get('@odata.nextLink')
+        if next_page is None:
+            return data
+
+        # if there is another page, remove the base url to get uri
+        uri = next_page.replace(self._base_url, '')
+        return self.users(data=data, uri=uri)
 
     def organization(self):
         return self._get('organization', key='value')
@@ -239,6 +267,16 @@ class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription):
         base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
         super(MgmtApiClient, self).__init__(base_url)
+
+    @staticmethod
+    def _get_available_metrics_from_exception(desired_names, api_error):
+        if not (api_error.message.startswith("Failed to find metric configuration for provider") and
+                "Valid metrics: " in api_error.message):
+            return None
+
+        available_names = api_error.message.split("Valid metrics: ")[1]
+        retry_names = set(desired_names.split(',')) & set(available_names.split(','))
+        return ','.join(sorted(retry_names))
 
     @property
     def resource(self):
@@ -262,7 +300,14 @@ class MgmtApiClient(BaseApiClient):
     def metrics(self, resource_id, **params):
         url = resource_id.split('/', 3)[-1] + "/providers/microsoft.insights/metrics"
         params['api-version'] = '2018-01-01'
-        return self._get(url, key='value', params=params)
+        try:
+            return self._get(url, key='value', params=params)
+        except ApiError as exc:
+            retry_names = self._get_available_metrics_from_exception(params['metricnames'], exc)
+            if retry_names:
+                params['metricnames'] = retry_names
+                return self._get(url, key='value', params=params)
+            raise
 
 
 # The following *Config objects provide a Configuration instance as described in
@@ -270,7 +315,7 @@ class MgmtApiClient(BaseApiClient):
 # For now the passed commandline arguments are used to create it.
 
 
-class GroupConfig(object):
+class GroupConfig:
     def __init__(self, name):
         super(GroupConfig, self).__init__()
         if not name:
@@ -294,7 +339,7 @@ class GroupConfig(object):
         return "[%s]\n" % self.name + "\n".join("resource: %s" % r for r in self.resources)
 
 
-class ExplicitConfig(object):
+class ExplicitConfig:
     def __init__(self, raw_list=()):
         super(ExplicitConfig, self).__init__()
         self.groups = {}
@@ -333,7 +378,7 @@ class ExplicitConfig(object):
         return "\n".join(str(group) for group in self.groups.values())
 
 
-class TagBasedConfig(object):
+class TagBasedConfig:
     def __init__(self, required, key_values):
         super(TagBasedConfig, self).__init__()
         self._required = required
@@ -356,7 +401,7 @@ class TagBasedConfig(object):
         return '\n'.join(lines)
 
 
-class Selector(object):
+class Selector:
     def __init__(self, args):
         super(Selector, self).__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
@@ -377,7 +422,7 @@ class Selector(object):
         return "\n".join(lines)
 
 
-class Section(object):
+class Section:
     LOCK = Lock()
 
     def __init__(self, name, piggytargets, separator, options):
@@ -386,7 +431,7 @@ class Section(object):
         self._piggytargets = list(piggytargets)
         self._cont = []
         section_options = ':'.join(['sep(%d)' % separator] + options)
-        self._title = '<<<%s:%s>>>\n' % (name, section_options)
+        self._title = '<<<%s:%s>>>\n' % (self._cleanse_section_header(name), section_options)
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -400,16 +445,19 @@ class Section(object):
         else:  # assume one single line
             self._cont.append(self.formatline(info))
 
-    def write(self):
-        if not self._cont:
+    def write(self, write_empty=False):
+        if not (write_empty or self._cont):
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write('<<<<%s>>>>\n' % self._cleanse_section_header(piggytarget))
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')
             sys.stdout.flush()
+
+    def _cleanse_section_header(self, section_name):
+        return section_name.replace('-', '_')
 
 
 class AzureSection(Section):
@@ -435,7 +483,7 @@ class UsageSection(Section):
         self.add(usage_details.dumpinfo())
 
 
-class IssueCollecter(object):
+class IssueCollecter:
     def __init__(self):
         super(IssueCollecter, self).__init__()
         self._list = []
@@ -451,10 +499,6 @@ class IssueCollecter(object):
         return len(self._list)
 
 
-class AzureMetricParseError(ValueError):
-    pass
-
-
 def create_metric_dict(metric, aggregation, interval_id, filter_):
 
     name = metric['name']['value']
@@ -462,7 +506,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
         'name': name,
         'aggregation': aggregation,
         'value': None,
-        'unit': metric['unit'],
+        'unit': metric['unit'].lower(),
         'timestamp': None,
         'filter': filter_,
         'interval_id': interval_id,
@@ -471,7 +515,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
 
     timeseries = metric.get('timeseries')
     if not timeseries:
-        raise AzureMetricParseError('info', "no timeseries found for metric %r" % name)
+        return None
 
     for measurement in reversed(timeseries):
         dataset = measurement.get('data', ())
@@ -492,7 +536,7 @@ def create_metric_dict(metric, aggregation, interval_id, filter_):
                 metric_dict['timestamp'] = data['timeStamp']
                 return metric_dict
 
-    raise AzureMetricParseError('warning', "not found: %s (%s)" % (name, aggregation))
+    return None
 
 
 def get_attrs_from_uri(uri):
@@ -509,7 +553,7 @@ def get_attrs_from_uri(uri):
     return attrs
 
 
-class AzureResource(object):
+class AzureResource:
     def __init__(self, info):
         super(AzureResource, self).__init__()
         self.info = info
@@ -524,7 +568,8 @@ class AzureResource(object):
         self.metrics = []
 
     def dumpinfo(self):
-        lines = [("Resource",), (json.dumps(self.info),)]
+        # TODO: Hmmm, should the variable-length tuples actually be lists?
+        lines: List[Tuple] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -566,34 +611,32 @@ class MetricCache(DataCache):
         return AZURE_CACHE_FILE_PATH / subdir
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         return self.timedelta.seconds
 
-    def get_validity_from_args(self, *args):
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self, mgmt_client, resource_id, err):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args: Any) -> Any:
+        mgmt_client, resource_id, err = args
         metricnames, interval, aggregation, filter_ = self.metric_definition
 
-        try:
-            raw_metrics = mgmt_client.metrics(resource_id,
-                                              timespan=self._timespan,
-                                              interval=interval,
-                                              metricnames=metricnames,
-                                              aggregation=aggregation,
-                                              filter=filter_)
-        except () if self.debug else ApiError as exc:
-            err.add("exception", resource_id, str(exc))
-            LOGGER.exception(exc)
-            return []
+        raw_metrics = mgmt_client.metrics(resource_id,
+                                          timespan=self._timespan,
+                                          interval=interval,
+                                          metricnames=metricnames,
+                                          aggregation=aggregation,
+                                          filter=filter_)
 
         metrics = []
         for raw_metric in raw_metrics:
-            try:
-                metrics.append(create_metric_dict(raw_metric, aggregation, interval, filter_))
-            except AzureMetricParseError as exc:
-                err.add(exc[0], resource_id, exc[1])
-                LOGGER.warning(exc.args[1])
+            parsed_metric = create_metric_dict(raw_metric, aggregation, interval, filter_)
+            if parsed_metric is not None:
+                metrics.append(parsed_metric)
+            else:
+                msg = "metric not found: %s (%s)" % (raw_metric['name']['value'], aggregation)
+                err.add('info', resource_id, msg)
+                LOGGER.info(msg)
 
         return metrics
 
@@ -616,32 +659,35 @@ class UsageClient(DataCache):
         self._client = client
 
     @property
-    def cache_interval(self):
+    def cache_interval(self) -> int:
         """Return the upper limit for allowed cache age.
 
         Data is updated at midnight, so the cache should not be older than the day.
         """
-        utc_today_start = NOW.combine(NOW.date(), datetime.time(0))
-        return (NOW - utc_today_start).seconds
+        cache_interval = int(get_seconds_since_midnight(NOW))
+        LOGGER.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
 
     @classmethod
     def offerid_has_no_consuption_api(cls, errmsg):
         return any(s in errmsg for s in cls.NO_CONSUPTION_API)
 
-    def get_validity_from_args(self, *args):
+    def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    def get_live_data(self):  # pylint: disable=arguments-differ
+    def get_live_data(self, *args: Any) -> Any:
         LOGGER.debug("UsageClient: get live data")
 
         try:
             # (mo) I am unable to get the filter for usage_end working :-(
             unfiltered_usages = self._client.usagedetails()
         except ApiError as exc:
-            if self.offerid_has_no_consuption_api(exc.message):
+            if self.offerid_has_no_consuption_api(exc.args[0]):
                 return []
             raise
         LOGGER.debug('unfiltered usage details: %d', len(unfiltered_usages))
+        if not unfiltered_usages:  # do not save this in the cache!
+            raise ApiErrorMissingData('Azure API did not return any usage details')
 
         yesterday = (NOW - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         usages = [u for u in unfiltered_usages if u['properties']['usageEnd'].startswith(yesterday)]
@@ -656,14 +702,23 @@ class UsageClient(DataCache):
         return usages
 
     def write_sections(self, monitored_groups):
+        try:
+            usage_data = self.get_data()
+        except ApiErrorMissingData if self.debug else Exception as exc:
+            LOGGER.warning("%s", exc)
+            write_exception_to_agent_info_section(exc, "Usage client")
+            # write an empty section to all groups:
+            AzureSection('usagedetails', monitored_groups + ['']).write(write_empty=True)
+            return
+
         cacheinfo = (self.cache_timestamp or time.time(), self.cache_interval)
-        for usage_details in self.get_data():
+        for usage_details in usage_data:
             usage_resource = AzureResource(usage_details)
             piggytargets = [g for g in usage_resource.piggytargets if g in monitored_groups] + ['']
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def process_azure_graph(graph_client):
+def write_section_ad(graph_client):
     section = AzureSection('ad')
 
     # users
@@ -687,10 +742,16 @@ def gather_metrics(mgmt_client, resource, debug=False):
     metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
-        resource.metrics += cache.get_data(mgmt_client,
-                                           resource.info['id'],
-                                           err,
-                                           use_cache=cache.cache_interval > 60)
+        try:
+            resource.metrics += cache.get_data(mgmt_client,
+                                               resource.info['id'],
+                                               err,
+                                               use_cache=cache.cache_interval > 60)
+        except ApiError as exc:
+            if debug:
+                raise
+            err.add("exception", resource.info['id'], str(exc))
+            LOGGER.exception(exc)
     return err
 
 
@@ -713,7 +774,7 @@ def process_resource(function_args):
     return [agent_info_section, section]
 
 
-def write_group_info(mgmt_client, monitored_groups):
+def write_group_info(mgmt_client, monitored_groups, monitored_resources):
 
     for group in mgmt_client.resourcegroups():
         name = group['name']
@@ -725,13 +786,14 @@ def write_group_info(mgmt_client, monitored_groups):
 
     section = AzureSection('agent_info')
     section.add(('monitored-groups', json.dumps(monitored_groups)))
+    section.add(('monitored-resources', json.dumps([r.info['name'] for r in monitored_resources])))
     section.write()
     # write empty agent_info section for all groups, otherwise
     # the service will only be discovered if something goes wrong
     AzureSection('agent_info', monitored_groups).write()
 
 
-def write_exception_to_agent_info_section(exception):
+def write_exception_to_agent_info_section(exception, component):
     # those exeptions are quite noisy. try to make them more concise:
     msg = str(exception).split('Trace ID')[0]
     msg = msg.split(':', 2)[-1].strip(' ,')
@@ -739,7 +801,7 @@ def write_exception_to_agent_info_section(exception):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    value = json.dumps((2, msg))
+    value = json.dumps((2, "%s: %s" % (component, msg)))
     section = AzureSection('agent_info')
     section.add(('agent-bailout', value))
     section.write()
@@ -758,8 +820,9 @@ def get_mapper(debug, sequential, timeout):
             for args in args_iter:
                 try:
                     yield func(args)
-                except () if debug else Exception:
-                    pass
+                except Exception:
+                    if debug:
+                        raise
 
         return sequential_mapper
 
@@ -776,13 +839,13 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         '''
-        queue = Queue()
+        queue: Queue[Tuple[Any, bool, Any]] = Queue()
         jobs = {}
 
         def produce(id_, args):
             try:
                 queue.put((id_, True, func(args)))
-            except Exception as _e:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 queue.put((id_, False, None))
                 if debug:
                     raise
@@ -808,50 +871,68 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
+def main_graph_client(args, secret):
+    graph_client = GraphApiClient()
+    try:
+        graph_client.login(args.tenant, args.client, secret)
+        write_section_ad(graph_client)
+    except Exception as exc:
+        if args.debug:
+            raise
+        write_exception_to_agent_info_section(exc, "Graph client")
+
+
+def main_subscription(args, secret, selector, subscription):
+    mgmt_client = MgmtApiClient(subscription)
+
+    try:
+        mgmt_client.login(args.tenant, args.client, secret)
+
+        all_resources = (AzureResource(r) for r in mgmt_client.resources())
+
+        monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
+
+        monitored_groups = sorted(set(r.info['group'] for r in monitored_resources))
+    except Exception as exc:
+        if args.debug:
+            raise
+        write_exception_to_agent_info_section(exc, "Management client")
+        return
+
+    write_group_info(mgmt_client, monitored_groups, monitored_resources)
+
+    usage_client = UsageClient(mgmt_client, subscription, args.debug)
+    usage_client.write_sections(monitored_groups)
+
+    func_args = ((mgmt_client, resource, args) for resource in monitored_resources)
+    mapper = get_mapper(args.debug, args.sequential, args.timeout)
+    for sections in mapper(process_resource, func_args):
+        for section in sections:
+            section.write()
+
+
 def main(argv=None):
 
     args = parse_arguments(argv or sys.argv[1:])
     selector = Selector(args)
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
-        return 0
+        return
     LOGGER.debug("%s", selector)
 
-    mgmt_client = MgmtApiClient(args.subscription)
-    try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
 
-        all_resources = (AzureResource(r) for r in mgmt_client.resources())
+    if not secret:
+        raise RuntimeError('secret is not set')
 
-        resources = [r for r in all_resources if selector.do_monitor(r)]
+    main_graph_client(args, secret)
 
-        monitored_groups = sorted(set(r.info['group'] for r in resources))
-    except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
-        return 1
-
-    write_group_info(mgmt_client, monitored_groups)
-
-    graph_client = GraphApiClient()
-    try:
-        graph_client.login(args.tenant, args.client, args.secret)
-        process_azure_graph(graph_client)
-    except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
-
-    try:
-        usage_client = UsageClient(mgmt_client, args.subscription, args.debug)
-        usage_client.write_sections(monitored_groups)
-    except () if args.debug else Exception as exc:
-        write_exception_to_agent_info_section(exc)
-
-    func_args = ((mgmt_client, resource, args) for resource in resources)
-    mapper = get_mapper(args.debug, args.sequential, args.timeout)
-    for sections in mapper(process_resource, func_args):
-        for section in sections:
-            section.write()
-
-    return 0
+    for subscription in args.subscriptions:
+        main_subscription(args, secret, selector, subscription)
 
 
 if __name__ == "__main__":

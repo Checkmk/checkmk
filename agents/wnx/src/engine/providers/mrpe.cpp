@@ -14,7 +14,6 @@
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/wtools.h"
-#include "fmt/format.h"
 #include "glob_match.h"
 #include "logger.h"
 #include "tools/_raii.h"
@@ -22,37 +21,103 @@
 
 namespace cma::provider {
 
+std::vector<std::string> TokenizeString(const std::string &val, int sub_match) {
+    // actual regex is ("([^"]+)"|'([^']+)'|[^" \t]+)
+    // verified https://regex101.com/r/p89I0B/1
+    // three groups "***" or '***' or
+    static const std::regex regex_possibly_quoted{
+        "(\"([^\"]+)\"|'([^']+)'|[^\" \\t]+)"};
+
+    // below a bit of magic
+    // Basic approach is:
+    // 1. std::sregex_token_iterator it(Val.begin(), Val.end(), Regex, 1);
+    // 2. std::sregex_token_iterator reg_end; // <--end
+    // 3. for (; it != reg_end; ++it) std::cout << it->str() << std::endl;
+    // we are using a bit more shortened syntax just to show that
+    // smart people works in MK.
+    return {std::sregex_token_iterator{val.cbegin(), val.cend(),
+                                       regex_possibly_quoted, sub_match},
+            std::sregex_token_iterator{}};
+}
+
+namespace {
+std::optional<std::tuple<int, bool>> ParseCacheAgeToken(std::string_view text) {
+    if (text.size() < 3) {
+        return {};
+    }
+
+    if (text[0] != '(' || text[text.size() - 1] != ')') {
+        return {};
+    }
+
+    auto tokens = tools::SplitString(std::string(text), ":");
+    if (tokens.size() != 2) {
+        return {};
+    }
+
+    auto add_age = tokens[1] == "yes)";
+
+    try {
+        auto cache_age = std::stoi(tokens[0].c_str() + 1);
+
+        return {{cache_age, add_age}};
+
+    } catch (std::invalid_argument const &e) {
+        XLOG::l("mrpe entry malformed '{}'", e.what());
+    } catch (std::out_of_range const &e) {
+        XLOG::l("mrpe entry malformed '{}'", e.what());
+    }
+
+    return {};
+}
+
+std::string BuildValidPath(const std::string &path) {
+    return cfg::ReplacePredefinedMarkers(tools::RemoveQuotes(path));
+}
+}  // namespace
+
 void MrpeEntry::loadFromString(const std::string &value) {
-    full_path_name_ = "";
+    full_path_name_.clear();
     namespace fs = std::filesystem;
     auto tokens = TokenizeString(value,  // string to tokenize
-                                 RegexPossiblyQuoted,
-                                 1);  // every passing will be added
+                                 1);     // every passing will be added
 
-    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
+    auto yml_name = cfg::GetPathOfLoadedConfigAsString();
     if (tokens.size() < 2) {
         XLOG::l("Invalid command specification for '{}' in '{}' '{}'",
-                cma::cfg::groups::kMrpe, yml_name, value);
+                cfg::groups::kMrpe, yml_name, value);
         return;
     }
 
-    auto exe_name = tokens[1];  // Intentional copy
+    int position_exe = 1;
+
+    auto optional_cache_data = ParseCacheAgeToken(tokens[1]);
+
+    if (optional_cache_data.has_value()) {
+        position_exe++;
+        std::tie(cache_max_age_, add_age_) = *optional_cache_data;
+    }
+
+    auto exe_name = tokens[position_exe];  // Intentional copy
     if (exe_name.size() <= 2) {
         XLOG::l("Invalid file specification for '{}' in '{}' '{}'",
-                cma::cfg::groups::kMrpe, yml_name, value);
+                cfg::groups::kMrpe, yml_name, value);
         return;
     }
 
     std::string argv;
-    for (size_t i = 2; i < tokens.size(); i++) argv += tokens[i] + " ";
+    for (size_t i = position_exe + 1; i < tokens.size(); i++) {
+        argv += tokens[i] + " ";
+    }
 
     // remove last space
-    if (argv.size()) argv.pop_back();
-    auto p = cma::cfg::ReplacePredefinedMarkers(tokens[1]);
-    p = cma::tools::RemoveQuotes(p);
-    fs::path exe_full_path = p;
+    if (!argv.empty()) {
+        argv.pop_back();
+    }
+
+    fs::path exe_full_path{BuildValidPath(tokens[position_exe])};
     if (exe_full_path.is_relative()) {
-        exe_full_path = cma::cfg::GetUserDir() / exe_full_path;
+        exe_full_path = cfg::GetUserDir() / exe_full_path;
     }
 
     full_path_name_ = exe_full_path.u8string();
@@ -60,10 +125,12 @@ void MrpeEntry::loadFromString(const std::string &value) {
     exe_name_ = exe_full_path.filename().u8string();
 
     command_line_ = full_path_name_;
-    if (!argv.empty()) command_line_ += " " + argv;
+    if (!argv.empty()) {
+        command_line_ += " " + argv;
+    }
 
     description_ = tokens[0];
-    description_ = cma::tools::RemoveQuotes(description_);
+    description_ = tools::RemoveQuotes(description_);
 }
 
 void MrpeProvider::addParsedConfig() {
@@ -73,9 +140,9 @@ void MrpeProvider::addParsedConfig() {
 
     if constexpr (kMrpeRemoveAbsentFiles) {
         auto end = std::remove_if(
-            entries_.begin(),      // from
-            entries_.end(),        // to
-            [](MrpeEntry entry) {  // lambda to delete
+            entries_.begin(),             // from
+            entries_.end(),               // to
+            [](const MrpeEntry &entry) {  // lambda to delete
                 auto ok = cma::tools::IsValidRegularFile(entry.full_path_name_);
                 if (!ok) {
                     XLOG::d("The file '{}' is no valid", entry.full_path_name_);
@@ -97,34 +164,36 @@ void MrpeProvider::addParsedChecks() {
 
 std::pair<std::string, std::filesystem::path> ParseIncludeEntry(
     const std::string &entry) {
-    using namespace cma::tools;
     namespace fs = std::filesystem;
 
-    auto table = SplitString(entry, "=", 2);
-    auto yml_name = cma::cfg::GetPathOfLoadedConfigAsString();
+    auto table = tools::SplitString(entry, "=", 2);
+    auto yml_name = cfg::GetPathOfLoadedConfigAsString();
 
     if (table.size() != 2) {
         XLOG::d("Invalid entry '{}' in '{}'", entry, yml_name);
         return {};
     }
 
-    for (auto &e : table) AllTrim(e);
+    for (auto &e : table) {
+        tools::AllTrim(e);
+    }
 
     auto include_user = table[0];
-    auto potential_path = table[table.size() - 1];
-    potential_path = cma::tools::RemoveQuotes(potential_path);
-    potential_path = cma::cfg::ReplacePredefinedMarkers(potential_path);
-    fs::path path = potential_path;  // last is path
-    if (path.is_relative()) path = cma::cfg::GetUserDir() / path;
+
+    fs::path path{BuildValidPath(table[table.size() - 1])};
+    if (path.is_relative()) {
+        path = cfg::GetUserDir() / path;
+    }
 
     return {include_user, path};
 }
 
-void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
+void AddCfgFileToEntries(const std::string &user,
+                         const std::filesystem::path &path,
                          std::vector<MrpeEntry> &entries) {
     std::ifstream ifs(path);
     if (!ifs) {
-        XLOG::d("mrpe: File is bad '{}'", path.u8string());
+        XLOG::d("mrpe: File is bad '{}'", path);
         return;
     }
 
@@ -137,8 +206,7 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
         // split up line at = sign
         auto tokens = cma::tools::SplitString(line, "=", 2);
         if (tokens.size() != 2) {
-            XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path.u8string(),
-                    lineno);
+            XLOG::d("mrpe: Invalid line '{}' in '{}:{}'", line, path, lineno);
             continue;
         }
 
@@ -151,22 +219,18 @@ void AddCfgFileToEntries(const std::string &user, std::filesystem::path &path,
             cma::tools::AllTrim(value);
             entries.emplace_back(user, value);
         } else {
-            XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line,
-                    path.u8string(), lineno);
+            XLOG::d("mrpe: Strange entry '{}' in '{}:{}'", line, path, lineno);
         }
     }
 }
 
 void MrpeProvider::addParsedIncludes() {
-    using namespace cma::tools;
-    namespace fs = std::filesystem;
-
     for (const auto &entry : includes_) {
         auto [user, path] = ParseIncludeEntry(entry);
 
         if (path.empty()) continue;
 
-        if (!cma::tools::IsValidRegularFile(path)) {
+        if (!tools::IsValidRegularFile(path)) {
             XLOG::d("File '{}' is not valid or missing for entry '{}'",
                     path.u8string(), entry);
             continue;
@@ -177,18 +241,17 @@ void MrpeProvider::addParsedIncludes() {
 }
 
 bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
-    auto str = entry;
-    auto table = cma::tools::SplitString(str, "=");
+    auto table = tools::SplitString(entry, "=");
     if (table.size() != 2) {
-        XLOG::t("Strange entry {} in {}", str,
-                cma::cfg::GetPathOfLoadedConfigAsString());
+        XLOG::t("Strange entry {} in {}", entry,
+                cfg::GetPathOfLoadedConfigAsString());
         return false;
     }
 
     // include entry determined when type is 'include'
     // the type
     auto type = table[0];
-    std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
+    std::ranges::transform(type, type.begin(), tolower);
     // include user = file   <-- src
     //        "user = file"  <-- value
     auto pos = type.find("include", 0);
@@ -196,20 +259,20 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
     if (pos != std::string::npos &&              // found
         (type[len] == 0 || type[len] == ' ')) {  // include has end
 
-        auto value = str.substr(len + pos, std::string::npos);
+        auto value = entry.substr(len + pos, std::string::npos);
         cma::tools::AllTrim(value);
         if (!value.empty()) {
             includes_.emplace_back(value);
             return true;
         }
 
-        XLOG::d("Strange include entry type '{}' '{}' ", type, str);
+        XLOG::d("Strange include entry type '{}' '{}' ", type, entry);
         return false;
     }
 
     // check entry determined when type is 'check'
-    cma::tools::AllTrim(type);
-    std::transform(type.cbegin(), type.cend(), type.begin(), tolower);
+    tools::AllTrim(type);
+    std::ranges::transform(type, type.begin(), tolower);
     if (type == "check") {
         // check = anything   <-- src
         //        "anything"  <-- value
@@ -219,21 +282,23 @@ bool MrpeProvider::parseAndLoadEntry(const std::string &entry) {
         return true;
     }
 
-    XLOG::d("Strange check entry type '{}' '{}'", type, str);
+    XLOG::d("Strange check entry type '{}' '{}'", type, entry);
     return false;
 }
 
 void MrpeProvider::parseConfig() {
-    using namespace cma::cfg;
     // reset all
     entries_.clear();
     checks_.clear();
     includes_.clear();
 
-    timeout_ = GetVal(groups::kMrpe, vars::kTimeout, 10);
+    timeout_ = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
+                           cfg::defaults::kMrpeTimeout);
     if (timeout_ < 1) timeout_ = 1;
 
-    auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);
+    auto strings =
+        cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
+
     if (strings.empty()) {
         XLOG::t("nothing to exec in the mrpe");
         return;
@@ -243,17 +308,14 @@ void MrpeProvider::parseConfig() {
         parseAndLoadEntry(str);
     }
 }
-// standard loader
-// include and check entries loaded into two member variables
 
 void MrpeProvider::loadConfig() {
-    XLOG::t(XLOG_FUNC + " entering");
     parseConfig();
     addParsedConfig();
 }
 
 void FixCrCnForMrpe(std::string &str) {
-    std::transform(str.cbegin(), str.cend(), str.begin(), [](char ch) {
+    std::ranges::transform(str, str.begin(), [](char ch) {
         if (ch == '\n') return '\1';
         if (ch == '\r') return ' ';
 
@@ -263,68 +325,146 @@ void FixCrCnForMrpe(std::string &str) {
 
 std::string ExecMrpeEntry(const MrpeEntry &entry,
                           std::chrono::milliseconds timeout) {
-    using namespace std::chrono;
-    auto hdr = fmt::format("({}) {} ", entry.exe_name_, entry.description_);
-    XLOG::t("{} run", hdr);
+    auto result = fmt::format("({}) {} ", entry.exe_name_, entry.description_);
+    XLOG::d.i("Run mrpe entry '{}'", result);
 
     TheMiniBox minibox;
     auto started = minibox.startBlind(entry.command_line_, entry.run_as_user_);
     if (!started) {
-        XLOG::l("Failed to start minibox sync {}", entry.command_line_);
-        // result is copy-pasted from the legacy agent
-        return hdr + "3 Unable to execute - plugin may be missing.\n";
+        XLOG::d("Failed to start minibox sync {}", entry.command_line_);
+
+        // string is form the legacy agent
+        return result + "3 Unable to execute - plugin may be missing.\n";
     }
 
-    auto proc_id = minibox.getProcessId();
     auto success = minibox.waitForEnd(timeout);
     ON_OUT_OF_SCOPE(minibox.clean());
     if (!success) {
-        //
-        XLOG::d("Wait on Timeout or Broken '{}'", entry.command_line_);
+        XLOG::d("Minibox failed on Timeout or just Broken '{}'",
+                entry.command_line_);
         return {};
     }
 
-    std::string accu;
-    minibox.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                               uint32_t Code, const std::vector<char> &Data) {
-        auto data = wtools::ConditionallyConvertFromUTF16(Data);
-        cma::tools::AllTrim(data);
-        // replace and fix output
+    minibox.processResults([&result](const std::wstring &cmd_line, uint32_t pid,
+                                     uint32_t error_code,
+                                     const std::vector<char> &data_block) {
+        auto data = wtools::ConditionallyConvertFromUTF16(data_block);
+        tools::AllTrim(data);
+
+        // mrpe output must be patched in a bit strange way
         FixCrCnForMrpe(data);
         data += "\n";
 
-        if (cma::cfg::LogMrpeOutput())
+        if (cfg::LogMrpeOutput()) {
             XLOG::t("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                    wtools::ConvertToUTF8(CmdLine), Pid, Code, data.data());
-        hdr += std::to_string(Code) + " ";
-        accu = hdr + data;
+                    wtools::ToUtf8(cmd_line), pid, error_code, data.data());
+        }
+
+        result += std::to_string(error_code) + " " + data;
     });
-    return accu;
+    return result;
 }
 
 void MrpeProvider::updateSectionStatus() {}
 
 std::string MrpeProvider::makeBody() {
-    using namespace cma::cfg;
-    using namespace std::chrono;
-    XLOG::t(XLOG_FUNC + " entering");
-
     std::string out;
-    std::mutex lock;
-    auto parallel = GetVal(groups::kMrpe, vars::kMrpeParallel, kParallelMrpe);
+    auto parallel = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kMrpeParallel,
+                                kParallelMrpe);
     if (parallel) {
+        std::mutex lock;
         std::for_each(std::execution::par_unseq, entries_.begin(),
                       entries_.end(), [&out, &lock, this](auto &&entry) {
-                          auto ret = ExecMrpeEntry(entry, seconds(timeout_));
+                          auto ret = ExecMrpeEntry(
+                              entry, std::chrono::seconds(timeout_));
                           std::lock_guard lk(lock);
                           out += ret;
                       });
     } else
         for (const auto &entry : entries_) {
-            out += ExecMrpeEntry(entry, seconds(timeout_));
+            out += ExecMrpeEntry(entry, std::chrono::seconds(timeout_));
         }
 
     return out;
+}
+
+void MrpeCache::createLine(std::string_view key, int max_age, bool add_age) {
+    try {
+        Line l;
+        l.add_age = add_age;
+        l.max_age = max_age;
+        cache_[std::string(key)] = l;
+    } catch (const std::exception &e) {
+        XLOG::l("exception '{}' in mrpe cache", e.what());
+    }
+}
+
+bool MrpeCache::updateLine(std::string_view key, std::string_view data) {
+    try {
+        auto k = std::string(key);
+        if (cache_.find(k) == cache_.end()) {
+            XLOG::d("Suspicious attempt to cache unknown mrpe line '{}'", k);
+            return false;
+        }
+
+        cache_[k].data = data;
+        cache_[k].tp = std::chrono::steady_clock::now();
+        return true;
+    } catch (const std::exception &e) {
+        XLOG::l("exception '{}' in mrpe update cache", e.what());
+    }
+
+    return false;
+}
+
+// returns true if erased
+bool MrpeCache::eraseLine(std::string_view key) {
+    try {
+        auto k = std::string(key);
+        if (cache_.find(k) == cache_.end()) {
+            return false;
+        }
+        cache_.erase(k);
+        return true;
+    } catch (const std::exception &e) {
+        XLOG::l("exception '{}' in mrpe update cache", e.what());
+    }
+
+    return false;
+}
+
+std::tuple<std::string, MrpeCache::LineState> MrpeCache::getLineData(
+    std::string_view key) {
+    try {
+        auto k = std::string(key);
+        auto it = cache_.find(k);
+        if (it == cache_.end()) {
+            return {"", LineState::absent};
+        }
+
+        auto &line = it->second;
+
+        if (line.data.empty()) {
+            return {"", LineState::old};
+        }
+
+        auto time_pos = std::chrono::steady_clock::now();
+
+        auto diff = duration_cast<std::chrono::seconds>(time_pos - line.tp);
+
+        auto result = line.data;
+        if (line.add_age)
+            result += fmt::format(" ({};{})", diff.count(), line.max_age);
+
+        auto status =
+            diff.count() > line.max_age ? LineState::old : LineState::ready;
+
+        return {result, status};
+    } catch (const std::exception &e) {
+        XLOG::l("exception '{}' in mrpe update cache", e.what());
+    }
+
+    return {"", LineState::absent};
 }
 
 }  // namespace cma::provider

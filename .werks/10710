@@ -1,0 +1,21 @@
+Title: systemd: Do not mark the agent unit failed on single agent failure
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1580052268
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+When the agent is queried via systemd, the socket unit creates an instance
+of the agent service unit template. These are named something like
+<tt>check-mk-agent@842-127.0.0.1:6556-127.0.0.1:33196.service</tt>.
+
+When one of these services failed in the past for some reason, the unit was
+left in a failed state and reported by the Checkmk systemd service monitoring
+as a failed service.
+
+In reality such errors can occur sporadically for various reasons. However,
+they are usually uninteresting. For this reason, the agent is now executed in
+such a way that erroneous executions do not lead to a faulty unit.

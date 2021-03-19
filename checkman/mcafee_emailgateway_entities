@@ -1,4 +1,4 @@
-title: McAfee Email gateway: Entities
+title: McAfee Email Gateway: Entities
 agents: snmp
 catalog: app/mcafee
 license: GPL
@@ -20,6 +20,9 @@ description:
  near end of life, disabled, not applicable, CRIT if it is corrupt dats,
  corrupt configuration, requires immediate attention, critical and
  UNKNOWN otherwise.
+
+item:
+ Title of the entity (e.g. {{RAID}}, {{Cooling}}, etc.)
 
 inventory:
  One service is created.

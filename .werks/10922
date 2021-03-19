@@ -1,0 +1,11 @@
+Title: Service Perf-O-Meter for LDAP active check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1584516344
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk adds a Service Perf-O-Meter for the active check {ldap}. The response time in {ms} is displayed.

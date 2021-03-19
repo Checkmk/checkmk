@@ -1,0 +1,13 @@
+Title: Alternative valuespec: Radio buttons are now displayed as dropdowns
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1599644444
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+All radio buttons are now displayed as dropdowns. To remain
+compatible with old user extensions the keyword "style" of
+the valuespec Alternative can still be used, but is ignored.

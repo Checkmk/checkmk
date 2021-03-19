@@ -12,7 +12,7 @@ description:
  set to 80, 100.
 
 item:
- No item.
+ Empty string.
 
 inventory:
  One service is created.

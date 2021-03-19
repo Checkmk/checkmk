@@ -1,6 +1,11 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
+import pytest  # type: ignore[import]
+from testlib import Check  # type: ignore[import]
 from checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
@@ -29,7 +34,7 @@ pytestmark = pytest.mark.checks
                 ('ra32e_sensors', "Heat Index", {},
                  BasicCheckResult(0, u'20.7 °C', [('temp', 20.70)])),
                 ('ra32e_sensors.humidity', "Internal", {},
-                 BasicCheckResult(0, '60.0%', [('humidity', 60.0, 101, 101, 0, 100)])),
+                 BasicCheckResult(0, '60.0%', [('humidity', 60.0, None, None, 0, 100)])),
             ]),
         (  # temp sensor (ignores fahrenheit value)
             [[[u'', u'', u'']], [[u'2.0', u'2580', u'9999', '', '', '']]], [
@@ -85,12 +90,12 @@ pytestmark = pytest.mark.checks
                                     [('humidity', 75.0, None, None, 0, 100)])),
               ]),
     ])
-def test_ra32e_sensors_inputs(check_manager, info, discoveries_expected, checks_expected):
+def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected):
     ra32e_sensors_checks = [
         'ra32e_sensors', 'ra32e_sensors.humidity', 'ra32e_sensors.voltage', 'ra32e_sensors.power'
     ]
 
-    checks = {name: check_manager.get_check(name) for name in ra32e_sensors_checks}
+    checks = {name: Check(name) for name in ra32e_sensors_checks}
     parsed = checks['ra32e_sensors'].run_parse(info)
 
     for check, expected in discoveries_expected:

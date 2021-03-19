@@ -1,0 +1,13 @@
+Title: Make monitoring state of Hyper-V VMs configurable
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1583923228
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk introduces a new rule called "State of Microsoft Hyper-V Server VMs", 
+which allows the user to configure the resulting monitoring state of a VM based
+on the reported state of the VM.

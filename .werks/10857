@@ -1,0 +1,14 @@
+Title: hp_proliant_power: removal of unsuitable default parameters
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1581604235
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Removal of the previous default parameters as different instances
+occasionally surpassed these values. The user should
+reperform a discovery in order to avoid unexpected behaviour of the
+service.

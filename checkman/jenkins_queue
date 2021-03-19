@@ -10,4 +10,4 @@ description:
  "Stuck", "Blocked", "In queue since", "Why kept").
 
 inventory:
- One service per {"Jenkins Queue"} will be created
+ One service is create for each queue ({"Jenkins Queue"}).

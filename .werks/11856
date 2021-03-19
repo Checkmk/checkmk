@@ -1,0 +1,19 @@
+Title: Windows agent installation now supresses reboot of a host even if reboot is requested
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615295902
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Windows msiexec may request a reboot if some of the Windows agent's files(directories) were locked during installation procedure. 
+Such reboot is performed automatically and immediately when the installation is silent. And silent installation is a typical use 
+case for Windows agent update routine.
+
+Evidently, this kind of spontaneous host's reboot is inacceptable in most cases and since this release will be fully suppressed. 
+
+It is important to note that although a reboot will be prevented, it is the user's responsibility to reboot the host at 
+convenient time. It is also strongly recommended to find out which software and for what reason locks the files/directories in 
+the Windows agent's directories.

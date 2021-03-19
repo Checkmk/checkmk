@@ -1,4 +1,4 @@
-title: UCS Bladecenter Fans: Health status of fans
+title: UCS Bladecenter Fans: Health Status of Fans
 agents: agent_ucs_bladecenter
 catalog: hw/server/cisco
 license: GPL
@@ -12,5 +12,5 @@ item:
  The component where the fans are located, e.g chassis or switch
 
 inventory:
- One summary check for each component is created
+ One summary service is created for each component.
 

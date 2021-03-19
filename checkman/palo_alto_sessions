@@ -8,5 +8,5 @@ description:
  compared to supported sessions.
 
 inventory:
- Creates one service per Palo Alto firewall.
+ One service is created for each Palo Alto firewall.
 

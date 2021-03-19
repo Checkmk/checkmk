@@ -1,0 +1,13 @@
+Title: Prevent duplicated rule packs when updating mkp
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1589465813
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+If a mkp contains event console rule packs and is updated with a new version,
+the rules are added to the existing rule pack configuration. This leads to duplicated entries.
+From now on, the related entry is updated in the rule configuration.

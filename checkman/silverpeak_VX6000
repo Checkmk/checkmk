@@ -1,0 +1,14 @@
+title: Silverpeak VX6000: Active Alarms
+agents: snmp
+catalog: app/silverpeak
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the active alarms of Silverpeak's VX6000 (Virtual WAN Optimization Software).
+ The most critical active alarm determines the overall service state.
+
+item:
+ The fixed statement {Alarmstates}.
+
+inventory:
+ One service is created. It collects all active alarms.

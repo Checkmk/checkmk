@@ -12,12 +12,16 @@ description:
  assumed.
 
  The check is known to run with genuscreen version 3.0 and 4.1, and supports
- genuas regular enterprise id 3717 as well as the id 3137 which was
+ genuas regular enterprise ID 3717 as well as the ID 3137 which was
  introduced in a bug in some versions of genuscreen.
 
 inventory:
- The inventory process checks if the device has a system description OID
- of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen",
- "genuscript" or "genubox" (case insensitive). If it also contains valid
- pf state output, the device is inventorized.
+ One service is created for the packetfilter engine
+ if the packetfilter engine
+
+ - has a system description OID (.1.3.6.1.2.1.1.2.0)
+
+ - has a valid pf state output
+
+ - OID name contains "genuscreen", "genuscript" or "genubox" (case insensitive).
 

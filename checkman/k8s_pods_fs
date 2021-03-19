@@ -1,4 +1,4 @@
-title: Kubernetes pods filesystem resources
+title: Kubernetes: Pods Filesystem Resources
 agents: kubernetes
 catalog: containerization/kubernetes
 license: GPL
@@ -10,4 +10,4 @@ item:
  The namespace whose filesystem resources are monitored
 
 inventory:
- One service per namespace is created.
+ One service is created for each namespace.

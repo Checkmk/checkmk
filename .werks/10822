@@ -1,0 +1,16 @@
+Title: HW/SW Inventory tree: Show error message if HW/SW inventory tree cannot be loaded instead of breaking the whole page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1580741505
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Previously if inventory trees of hosts could not be loaded (eg. caused by
+corrupt data) various views which use the inventory data were broken and only
+displayed the error 'Cannot read PATH/TO/INV_DATA ...'.
+Now an error message is shown at the top of the page and the page content is
+displayed as usual.

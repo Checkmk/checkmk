@@ -418,8 +418,8 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
             title=_("Context"),
             entries=[
                 PageMenuEntry(
-                    title=_("Show context") if context_hidden else _("Hide context"),
-                    icon_name="checkbox",
+                    title=_("Show context"),
+                    icon_name="checkbox" if context_hidden else "checked_checkbox",
                     item=make_simple_link(
                         html.makeactionuri([
                             ("_show_backlog", "no") if context_hidden else ("_hidecontext", "yes"),

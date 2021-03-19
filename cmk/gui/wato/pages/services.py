@@ -1330,8 +1330,8 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 def _page_menu_entry_show_parameters(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide check parameters") if options.show_parameters else _("Show check parameters"),
-        icon_name="checkbox",
+        title=_("Show check parameters"),
+        icon_name="checked_checkbox" if options.show_parameters else "checkbox",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1345,8 +1345,8 @@ def _page_menu_entry_show_parameters(host: watolib.CREHost,
 def _page_menu_entry_show_checkboxes(host: watolib.CREHost,
                                      options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide checkboxes") if options.show_checkboxes else _("Show checkboxes"),
-        icon_name="checkbox",
+        title=_("Show checkboxes"),
+        icon_name="checked_checkbox" if options.show_checkboxes else "checkbox",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1364,9 +1364,8 @@ def _checkbox_js_url(host: watolib.CREHost, options: DiscoveryOptions) -> str:
 def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
                                             options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide discovered service labels")
-        if options.show_discovered_labels else _("Show discovered service labels"),
-        icon_name="checkbox",
+        title=_("Show discovered service labels"),
+        icon_name="checked_checkbox" if options.show_discovered_labels else "checkbox",
         item=make_simple_link(
             _checkbox_js_url(
                 host,
@@ -1380,8 +1379,8 @@ def _page_menu_entry_show_discovered_labels(host: watolib.CREHost,
 def _page_menu_entry_show_plugin_names(host: watolib.CREHost,
                                        options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide plugin names") if options.show_plugin_names else _("Show plugin names"),
-        icon_name="checkbox",
+        title=_("Show plugin names"),
+        icon_name="checked_checkbox" if options.show_plugin_names else "checkbox",
         item=make_simple_link(
             _checkbox_js_url(
                 host,

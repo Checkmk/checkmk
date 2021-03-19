@@ -451,8 +451,8 @@ class ModeFolder(WatoMode):
              config.user.wato_folders_show_labels),
         ]:
             yield PageMenuEntry(
-                title=_("Hide %s" % title) if setting else _("Show %s" % title),
-                icon_name="checkbox",
+                title=_("Show %s" % title),
+                icon_name="checked_checkbox" if setting else "checkbox",
                 item=make_simple_link(
                     makeuri(global_request, [
                         (toggle_id, "" if setting else "1"),

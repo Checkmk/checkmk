@@ -438,9 +438,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
         yield PageMenuEntry(
-            title=_("Show all settings")
-            if self._show_only_modified else _("Show only modified settings"),
-            icon_name="checkbox",
+            title=_("Show all settings"),
+            icon_name="checked_checkbox" if self._show_only_modified else "checkbox",
             item=make_simple_link(
                 html.makeactionuri([
                     ("_show_only_modified", "0" if self._show_only_modified else "1"),

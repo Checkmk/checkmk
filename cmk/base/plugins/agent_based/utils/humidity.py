@@ -4,12 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ..agent_based_api.v1 import (
-    check_levels,
-    render,
-)
+from typing import Dict, Union, Tuple, TypedDict
 
-def check_humidity(humidity, params):
+from ..agent_based_api.v1 import check_levels, render
+
+from ..agent_based_api.v1.type_defs import CheckResult
+
+TwoLevelsType = Tuple[Optional[float], Optional[float]]
+FourLevelsType = Tuple[Optional[float], Optional[float]Optional[float], Optional[float]]
+ListType = list[Optional[float]]
+HumidityParamsDict = TypedDict(
+    'TempParamDict',
+    {
+        'levels': TwoLevelsType,
+        'levels_lower': TwoLevelsType,
+    },
+    total=False,
+)
+HumidityParamType = Union[None, FourLevelsType, ListType, TempParamDict]
+
+def check_humidity(humidity: float, params: HumidityParamType) -> CheckResult:
     if isinstance(params, dict):
         levels = ((params.get("levels") or (None, None)) + (params.get("levels_lower") or
                                                             (None, None)))

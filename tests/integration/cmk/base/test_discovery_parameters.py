@@ -50,6 +50,7 @@ def test_clear_cache(site):  # noqa: F811 # pylint: disable=redefined-outer-name
         site.delete_file(cache_file)
 
 
+@pytest.mark.skip(reason="test is flaky")
 @pytest.mark.usefixtures("clear_cache")
 def test_test_check_1_merged_rule(request, test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
 

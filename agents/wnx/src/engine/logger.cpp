@@ -261,7 +261,7 @@ void WriteToLogFileWithBackup(std::string_view filename, size_t max_size,
         fs::remove(filename, ec);
     }
 
-    xlog::internal_PrintStringFile(filename.data(), text.data());
+    xlog::internal_PrintStringFile(filename, text);
 }
 }  // namespace details
 

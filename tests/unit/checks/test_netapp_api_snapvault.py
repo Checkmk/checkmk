@@ -255,7 +255,121 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             (0, 'Policy: ABCDefault'),
             (0, 'Status: idle'),
             (0, 'State: snapmirrored'),
-            (0, 'Lag-Time: 25 h'),
+            (0, 'Lag Time: 25 h'),
+        ],
+    ),
+    (
+        'my_snap',
+        {
+            'policy_lag_time': [
+                ('ABC', (9000, 10000)),
+                ('ABCDef', (1, 2)),
+            ]
+        },
+        {
+            'my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 't1',
+                'destination-location': 'd2:my_snap',
+                'policy': 'ABCDefault',
+                'lag-time': '73487',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+        },
+        [
+            (0, 'Source-System: t1'),
+            (0, 'Destination-System: a2-b0-02'),
+            (0, 'Policy: ABCDefault'),
+            (0, 'Status: idle'),
+            (0, 'State: snapmirrored'),
+            (0, 'Lag Time: 20 h'),
+        ],
+    ),
+    (
+        'my_snap',
+        {
+            'policy_lag_time': [
+                ('ABC', (9000, 10000)),
+                ('ABCDefault', (1, 2)),
+            ]
+        },
+        {
+            'my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 't1',
+                'destination-location': 'd2:my_snap',
+                'policy': 'ABCDefault',
+                'lag-time': '73487',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+        },
+        [
+            (0, 'Source-System: t1'),
+            (0, 'Destination-System: a2-b0-02'),
+            (0, 'Policy: ABCDefault'),
+            (0, 'Status: idle'),
+            (0, 'State: snapmirrored'),
+            (2, 'Lag Time: 20 h (warn/crit at 1.00 s/2.00 s)'),
+        ],
+    ),
+    (
+        'my_snap',
+        {
+            'policy_lag_time': [
+                ('ABC', (9000, 10000)),
+                ('ABCDef', (9000, 10000)),
+            ],
+            'lag_time': (3, 4),
+        },
+        {
+            'my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 't1',
+                'destination-location': 'd2:my_snap',
+                'policy': 'ABCDefault',
+                'lag-time': '73487',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+        },
+        [
+            (0, 'Source-System: t1'),
+            (0, 'Destination-System: a2-b0-02'),
+            (0, 'Policy: ABCDefault'),
+            (0, 'Status: idle'),
+            (0, 'State: snapmirrored'),
+            (2, 'Lag Time: 20 h (warn/crit at 3.00 s/4.00 s)'),
+        ],
+    ),
+    (
+        'my_snap',
+        {
+            'lag_time': (3, 4),
+        },
+        {
+            'my_snap': {
+                'snapvault': 'my_snap',
+                'state': 'snapmirrored',
+                'source-system': 't1',
+                'destination-location': 'd2:my_snap',
+                'policy': 'ABCDefault',
+                'lag-time': '73487',
+                'destination-system': 'a2-b0-02',
+                'status': 'idle',
+            },
+        },
+        [
+            (0, 'Source-System: t1'),
+            (0, 'Destination-System: a2-b0-02'),
+            (0, 'Policy: ABCDefault'),
+            (0, 'Status: idle'),
+            (0, 'State: snapmirrored'),
+            (2, 'Lag Time: 20 h (warn/crit at 3.00 s/4.00 s)'),
         ],
     ),
 ])

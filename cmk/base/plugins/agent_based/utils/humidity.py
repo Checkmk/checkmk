@@ -13,7 +13,7 @@ from ..agent_based_api.v1.type_defs import CheckResult
 TwoLevelsType = Tuple[Optional[float], Optional[float]]
 FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
 ListType = list[Optional[float]]
-HumidityParamsDict = TypedDict(
+HumidityParamDict = TypedDict(
     'TempParamDict',
     {
         'levels': TwoLevelsType,
@@ -21,7 +21,7 @@ HumidityParamsDict = TypedDict(
     },
     total=False,
 )
-HumidityParamType = Union[None, FourLevelsType, ListType, TempParamDict]
+HumidityParamType = Union[None, FourLevelsType, ListType, HumidityParamDict]
 
 def check_humidity(humidity: float, params: HumidityParamType) -> CheckResult:
     if isinstance(params, dict):

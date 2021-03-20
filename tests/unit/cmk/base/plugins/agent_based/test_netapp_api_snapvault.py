@@ -1,17 +1,23 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
-from checktestlib import (
-    CheckResult,
-    DiscoveryResult,
-    assertDiscoveryResultsEqual,
-    assertCheckResultsEqual,
-    MockHostExtraConf,
+from cmk.base.plugins.agent_based.netapp_api_snapvault import (
+    parse_netapp_api_snapvault,
+    discover_netapp_api_snapvault,
+    check_netapp_api_snapvault,
 )
-from testlib import Check  # type: ignore[import]
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Result,
+    State,
+    Service,
+)
 
-pytestmark = pytest.mark.checks
 
-
-@pytest.mark.parametrize("info, expected_parsed", [
+@pytest.mark.parametrize("string_table, expected_parsed", [
     (
         [
             [
@@ -88,19 +94,28 @@ pytestmark = pytest.mark.checks
             }
         },
     ),
+    (
+        [
+            [
+                'snapvault /vol/ipb_user/', 'status idle state snapvaulted', 'lag-time 97007',
+                'source-system 172.31.12.15'
+            ],
+        ],
+        {
+            '/vol/ipb_user/': {
+                'snapvault': '/vol/ipb_user/',
+                'status': 'idle state snapvaulted',
+                'lag-time': '97007',
+                'source-system': '172.31.12.15',
+            },
+        },
+    ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_parse_netapp_api_snapvault(info, expected_parsed):
-    check = Check("netapp_api_snapvault")
-    for (actual_item, actual_parsed), (expected_item, expected_parsed) in zip(
-            sorted(check.run_parse(info).items()),
-            sorted(expected_parsed.items()),
-    ):
-        assert actual_item == expected_item
-        assert sorted(actual_parsed.items()) == sorted(expected_parsed.items())
+def test_parse_netapp_api_snapvault(string_table, expected_parsed):
+    assert parse_netapp_api_snapvault(string_table) == expected_parsed
 
 
-@pytest.mark.parametrize('info, discovery_params, expected_discovery', [
+@pytest.mark.parametrize('string_table, discovery_params, expected_discovery', [
     (
         [
             [
@@ -138,47 +153,7 @@ def test_parse_netapp_api_snapvault(info, expected_parsed):
             'exclude_destination_vserver': True,
         },
         [
-            ('my_snap', {}),
-        ],
-    ),
-    (
-        [
-            [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system c1',
-                u'destination-location d3:my_snap',
-                u'policy ABCDefault',
-                u'lag-time 91486',
-                u'destination-system a2-b0-02',
-                u'status idle',
-            ],
-            [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system i1',
-                u'destination-location d1:my_snap',
-                u'policy Default',
-                u'lag-time 82486',
-                u'destination-system a2-b0-02',
-                u'status idle',
-            ],
-            [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system t1',
-                u'destination-location d2:my_snap',
-                u'policy Default',
-                u'lag-time 73487',
-                u'destination-system a2-b0-02',
-                u'status idle',
-            ],
-        ],
-        {},
-        [
-            ('d1:my_snap', {}),
-            ('d2:my_snap', {}),
-            ('d3:my_snap', {}),
+            Service(item='my_snap'),
         ],
     ),
     (
@@ -218,21 +193,32 @@ def test_parse_netapp_api_snapvault(info, expected_parsed):
             'exclude_destination_vserver': False,
         },
         [
-            ('d1:my_snap', {}),
-            ('d2:my_snap', {}),
-            ('d3:my_snap', {}),
+            Service(item='d3:my_snap'),
+            Service(item='d1:my_snap'),
+            Service(item='d2:my_snap'),
+        ],
+    ),
+    (
+        [
+            [
+                'snapvault /vol/ipb_user/', 'status idle state snapvaulted', 'lag-time 97007',
+                'source-system 172.31.12.15'
+            ],
+        ],
+        {
+            'exclude_destination_vserver': False,
+        },
+        [
+            Service(item='/vol/ipb_user/'),
         ],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
-def test_discover_netapp_api_snapvault(info, discovery_params, expected_discovery):
-    check = Check('netapp_api_snapvault')
-    with MockHostExtraConf(check, discovery_params, 'host_extra_conf_merged'):
-        assertDiscoveryResultsEqual(
-            check,
-            DiscoveryResult(check.run_discovery(check.run_parse(info))),
-            DiscoveryResult(expected_discovery),
-        )
+def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_discovery):
+    assert list(
+        discover_netapp_api_snapvault(
+            discovery_params,
+            parse_netapp_api_snapvault(string_table),
+        )) == expected_discovery
 
 
 @pytest.mark.parametrize('item, params, parsed, expected_result', [
@@ -252,12 +238,12 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             },
         },
         [
-            (0, 'Source-System: c1'),
-            (0, 'Destination-System: a2-b0-02'),
-            (0, 'Policy: ABCDefault'),
-            (0, 'Status: idle'),
-            (0, 'State: snapmirrored'),
-            (0, 'Lag Time: 25 h'),
+            Result(state=State.OK, summary='Source-System: c1'),
+            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
+            Result(state=State.OK, summary='Policy: ABCDefault'),
+            Result(state=State.OK, summary='Status: idle'),
+            Result(state=State.OK, summary='State: snapmirrored'),
+            Result(state=State.OK, summary='Lag time: 1 day 1 hour'),
         ],
     ),
     (
@@ -272,21 +258,21 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             'my_snap': {
                 'snapvault': 'my_snap',
                 'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
+                'source-system': 'c1',
+                'destination-location': 'd3:my_snap',
                 'policy': 'ABCDefault',
-                'lag-time': '73487',
+                'lag-time': '91486',
                 'destination-system': 'a2-b0-02',
                 'status': 'idle',
             },
         },
         [
-            (0, 'Source-System: t1'),
-            (0, 'Destination-System: a2-b0-02'),
-            (0, 'Policy: ABCDefault'),
-            (0, 'Status: idle'),
-            (0, 'State: snapmirrored'),
-            (0, 'Lag Time: 20 h'),
+            Result(state=State.OK, summary='Source-System: c1'),
+            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
+            Result(state=State.OK, summary='Policy: ABCDefault'),
+            Result(state=State.OK, summary='Status: idle'),
+            Result(state=State.OK, summary='State: snapmirrored'),
+            Result(state=State.OK, summary='Lag time: 1 day 1 hour'),
         ],
     ),
     (
@@ -301,29 +287,30 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             'my_snap': {
                 'snapvault': 'my_snap',
                 'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
+                'source-system': 'c1',
+                'destination-location': 'd3:my_snap',
                 'policy': 'ABCDefault',
-                'lag-time': '73487',
+                'lag-time': '91486',
                 'destination-system': 'a2-b0-02',
                 'status': 'idle',
             },
         },
         [
-            (0, 'Source-System: t1'),
-            (0, 'Destination-System: a2-b0-02'),
-            (0, 'Policy: ABCDefault'),
-            (0, 'Status: idle'),
-            (0, 'State: snapmirrored'),
-            (2, 'Lag Time: 20 h (warn/crit at 1.00 s/2.00 s)'),
+            Result(state=State.OK, summary='Source-System: c1'),
+            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
+            Result(state=State.OK, summary='Policy: ABCDefault'),
+            Result(state=State.OK, summary='Status: idle'),
+            Result(state=State.OK, summary='State: snapmirrored'),
+            Result(state=State.CRIT,
+                   summary='Lag time: 1 day 1 hour (warn/crit at 1 second/2 seconds)'),
         ],
     ),
     (
         'my_snap',
         {
             'policy_lag_time': [
-                ('ABC', (9000, 10000)),
-                ('ABCDef', (9000, 10000)),
+                ('XDP', (9000, 10000)),
+                ('XDPDef', (9000, 10000)),
             ],
             'lag_time': (3, 4),
         },
@@ -331,21 +318,22 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             'my_snap': {
                 'snapvault': 'my_snap',
                 'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
+                'source-system': 'c1',
+                'destination-location': 'd3:my_snap',
                 'policy': 'ABCDefault',
-                'lag-time': '73487',
+                'lag-time': '91486',
                 'destination-system': 'a2-b0-02',
                 'status': 'idle',
             },
         },
         [
-            (0, 'Source-System: t1'),
-            (0, 'Destination-System: a2-b0-02'),
-            (0, 'Policy: ABCDefault'),
-            (0, 'Status: idle'),
-            (0, 'State: snapmirrored'),
-            (2, 'Lag Time: 20 h (warn/crit at 3.00 s/4.00 s)'),
+            Result(state=State.OK, summary='Source-System: c1'),
+            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
+            Result(state=State.OK, summary='Policy: ABCDefault'),
+            Result(state=State.OK, summary='Status: idle'),
+            Result(state=State.OK, summary='State: snapmirrored'),
+            Result(state=State.CRIT,
+                   summary='Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)'),
         ],
     ),
     (
@@ -357,28 +345,41 @@ def test_discover_netapp_api_snapvault(info, discovery_params, expected_discover
             'my_snap': {
                 'snapvault': 'my_snap',
                 'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
+                'source-system': 'c1',
+                'destination-location': 'd3:my_snap',
                 'policy': 'ABCDefault',
-                'lag-time': '73487',
+                'lag-time': '91486',
                 'destination-system': 'a2-b0-02',
                 'status': 'idle',
             },
         },
         [
-            (0, 'Source-System: t1'),
-            (0, 'Destination-System: a2-b0-02'),
-            (0, 'Policy: ABCDefault'),
-            (0, 'Status: idle'),
-            (0, 'State: snapmirrored'),
-            (2, 'Lag Time: 20 h (warn/crit at 3.00 s/4.00 s)'),
+            Result(state=State.OK, summary='Source-System: c1'),
+            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
+            Result(state=State.OK, summary='Policy: ABCDefault'),
+            Result(state=State.OK, summary='Status: idle'),
+            Result(state=State.OK, summary='State: snapmirrored'),
+            Result(state=State.CRIT,
+                   summary='Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)'),
+        ],
+    ),
+    (
+        '/vol/ipb_user/',
+        {},
+        {
+            '/vol/ipb_user/': {
+                'snapvault': '/vol/ipb_user/',
+                'status': 'idle state snapvaulted',
+                'lag-time': '97007',
+                'source-system': '172.31.12.15',
+            },
+        },
+        [
+            Result(state=State.OK, summary='Source-System: 172.31.12.15'),
+            Result(state=State.OK, summary='Status: idle state snapvaulted'),
+            Result(state=State.OK, summary='Lag time: 1 day 2 hours'),
         ],
     ),
 ])
-@pytest.mark.usefixtures("config_load_all_checks")
 def test_check_netapp_api_snapvault(item, params, parsed, expected_result):
-    check = Check('netapp_api_snapvault')
-    assertCheckResultsEqual(
-        CheckResult(check.run_check(item, params, parsed)),
-        CheckResult(expected_result),
-    )
+    assert list(check_netapp_api_snapvault(item, params, parsed)) == expected_result

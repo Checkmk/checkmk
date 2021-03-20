@@ -4,17 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, Union, Tuple, TypedDict
+from typing import Dict, Optional, Union, Tuple, TypedDict, List
 
 from ..agent_based_api.v1 import check_levels, render
 
 from ..agent_based_api.v1.type_defs import CheckResult
 
-TwoLevelsType = Tuple[Optional[float], Optional[float]]
-FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
-ListType = list[Optional[float]]
+TwoLevelsType = Optional[Tuple[float, float]]
+FourLevelsType = Tuple[iOptional[float], Optional[float], Optional[float], Optional[float]]
+ListType = List[Optional[float]]
 HumidityParamDict = TypedDict(
-    'TempParamDict',
+    'HumidityParamDict',
     {
         'levels': TwoLevelsType,
         'levels_lower': TwoLevelsType,

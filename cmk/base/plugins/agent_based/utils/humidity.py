@@ -11,7 +11,7 @@ from ..agent_based_api.v1 import check_levels, render
 from ..agent_based_api.v1.type_defs import CheckResult
 
 TwoLevelsType = Optional[Tuple[float, float]]
-FourLevelsType = Tuple[iOptional[float], Optional[float], Optional[float], Optional[float]]
+FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
 ListType = List[Optional[float]]
 HumidityParamDict = TypedDict(
     'HumidityParamDict',

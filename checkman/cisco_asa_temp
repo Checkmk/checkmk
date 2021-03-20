@@ -1,4 +1,4 @@
-title: Cisco ASA Temperature sesnors
+title: Cisco ASA Temperature sensors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

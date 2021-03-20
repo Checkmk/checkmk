@@ -1,4 +1,4 @@
-title: Cisco ASA Power supply sesnors
+title: Cisco ASA Power supply sensors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

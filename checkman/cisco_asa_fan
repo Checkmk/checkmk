@@ -1,4 +1,4 @@
-title: Cisco ASA Fan sesnors
+title: Cisco ASA Fan sensors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

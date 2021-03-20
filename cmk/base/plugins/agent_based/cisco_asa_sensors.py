@@ -144,7 +144,7 @@ from .agent_based_api.v1 import (
 
 class CiscoAsaSensor(NamedTuple):
     value: float
-    status: int
+    status: State
     state_readable: str
     unit: str
 
@@ -166,7 +166,7 @@ def parse_cisco_asa_sensors(string_table: List[StringTable]) -> Dict:
         }
         return states.get(st, State.CRIT)
 
-    sensors = {
+    sensors: dict = {
         'fan': {},
         'temp': {},
         'power': {},
@@ -174,38 +174,28 @@ def parse_cisco_asa_sensors(string_table: List[StringTable]) -> Dict:
 
     for sensorname, sensortype, sensorvalue, sensorstatus, sensorunits in string_table[0]:
         if sensorname != '':  # for asa context, there are no real sensors.
-            if sensorstatus.isdigit():
-                state_readable = get_state_readable(sensorstatus)
-                sensorstatus = get_sensor_status(sensorstatus)
-
             if sensortype == '8':  # Temperature
-                sensorname = sensorname.replace('Temperature ', '')
-
-                sensors['temp'].update({sensorname: CiscoAsaSensor(
+                sensors['temp'].update({sensorname.replace('Temperature ', ''): CiscoAsaSensor(
                     value=to_celsius(float(sensorvalue), sensorunits),
                     unit=sensorunits,
-                    status=sensorstatus,
-                    state_readable=state_readable,
+                    status=get_sensor_status(sensorstatus),
+                    state_readable=get_state_readable(sensorstatus),
                 )})
 
             if sensortype == '10':  # Fan
-                sensorname = sensorname.replace('Fan ', '')
-
-                sensors['fan'].update({sensorname: CiscoAsaSensor(
+                sensors['fan'].update({sensorname.replace('Fan ', ''): CiscoAsaSensor(
                     value=int(sensorvalue),
                     unit=sensorunits,
-                    status=sensorstatus,
-                    state_readable=state_readable,
+                    status=get_sensor_status(sensorstatus),
+                    state_readable=get_state_readable(sensorstatus),
                 )})
 
             if sensortype == '12':  # Power supply
-                sensorname = sensorname.replace('Power ', '')
-
-                sensors['power'].update({sensorname: CiscoAsaSensor(
+                sensors['power'].update({sensorname.replace('Power ', ''): CiscoAsaSensor(
                     value=0,
                     unit='',
-                    status=sensorstatus,
-                    state_readable=state_readable,
+                    status=get_sensor_status(sensorstatus),
+                    state_readable=get_state_readable(sensorstatus),
                 )})
 
     return sensors
@@ -303,7 +293,7 @@ def check_cisco_asa_fan(item, params, section) -> CheckResult:
             levels_lower=params.get('levels_lower', None),
             levels_upper=params.get('levels_upper', None),
             metric_name='fan' if params.get('output_metrics') else None,
-            render_func=lambda v: render_rpm(v),
+            render_func=render_rpm,
         )
 
     except KeyError:

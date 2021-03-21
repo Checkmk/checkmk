@@ -7,9 +7,10 @@
 # URL   : https://thl-cmk.hopto.org
 # Date  : 2021-03-18
 #
-# Monitor Cisco ASA temperature sensors
+# Monitor Cisco ASA Sensors (Temperature, Fan and Power supply)
 #
-# 2021-02-25: rewrite for CMK 2.x
+# 2021-03-21: fixed params in cisco_asa_fan
+#
 #
 # sample snmpwalk
 # .1.3.6.1.2.1.47.1.1.1.1.7.1 = STRING: "Chassis"
@@ -272,9 +273,6 @@ register.check_plugin(
 #
 # ##################################################################################################
 
-def render_rpm(value) -> str:
-    return '%s RPM' % str(value)
-
 
 def discovery_cisco_asa_fan(section: Dict) -> DiscoveryResult:
     for key in section['fan']:
@@ -290,10 +288,10 @@ def check_cisco_asa_fan(item, params, section) -> CheckResult:
         yield from check_levels(
             sensor.value,
             label='Speed',
-            levels_lower=params.get('levels_lower', None),
-            levels_upper=params.get('levels_upper', None),
+            levels_lower=params.get('lower', None),
+            levels_upper=params.get('upper', None),
             metric_name='fan' if params.get('output_metrics') else None,
-            render_func=render_rpm,
+            render_func=lambda v: '%s RPM' % str(v),
         )
 
     except KeyError:

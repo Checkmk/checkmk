@@ -178,10 +178,9 @@ class BIRuleSchema(Schema):
 
     id = ReqString(default="", example="rule1")
     nodes = ReqList(fields.Nested(BINodeGeneratorSchema), default=[], example=[])
-    params = create_nested_schema_for_class(BIParams,
-                                            example_config=[{
-                                                "arguments": ["foo", "bar"],
-                                            }])
+    params = create_nested_schema_for_class(BIParams, example_config={
+        "arguments": ["foo", "bar"],
+    })
     node_visualization = create_nested_schema(BINodeVisLayoutStyleSchema,
                                               default_schema=BINodeVisBlockStyleSchema)
     properties = create_nested_schema_for_class(BIRuleProperties)

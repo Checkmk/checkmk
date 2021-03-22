@@ -105,9 +105,13 @@ fi
 for INSTANCE in ${REDIS_INSTANCES[*]}; do
     redis_args $INSTANCE
     # print server section
-    echo "[[[$INSTANCE|${!HOST}|${!PORT}]]]"
-
-    # execute command
-    $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
-    echo
+    if  pidof redis-server >/dev/null; then
+        # execute command
+        $WAITMAX_CMD 3 $REDIS_CLI_CMD $REDIS_ARGS
+        echo
+    else
+        echo "# Server"
+        echo "redis_status:failed"
+        echo "redis_messg:Error: $INSTANCE instance is not running"
+    fi
 done

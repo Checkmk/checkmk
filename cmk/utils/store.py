@@ -41,6 +41,10 @@ logger = logging.getLogger("cmk.store")
 #   '----------------------------------------------------------------------'
 
 
+class MKConfigLockTimeout(MKTimeout):
+    """Special exception to signalize timeout waiting for the global configuration lock"""
+
+
 def configuration_lockfile() -> str:
     return default_config_dir + "/multisite.mk"
 
@@ -48,7 +52,15 @@ def configuration_lockfile() -> str:
 @contextmanager
 def lock_checkmk_configuration() -> Iterator[None]:
     path = configuration_lockfile()
-    aquire_lock(path)
+    try:
+        aquire_lock(path)
+    except MKTimeout as e:
+        raise MKConfigLockTimeout(
+            _("Couldn't lock the Checkmk configuration. Another "
+              "process is running that holds this lock. In order for you to be "
+              "able to perform the desired action, you have to wait until the "
+              "other process has finished. Please try again later.")) from e
+
     try:
         yield
     finally:

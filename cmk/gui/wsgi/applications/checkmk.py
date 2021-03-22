@@ -115,12 +115,11 @@ def _page_not_found() -> Response:
     return html.response
 
 
-def _render_exception(e: Exception, title: str = "") -> Response:
-    if title:
-        title = "%s: " % title
-
+def _render_exception(e: Exception, title: str) -> Response:
     if plain_error():
         html.set_output_format("text")
+        if title:
+            title = "%s: " % title
         html.write("%s%s\n" % (title, e))
 
     elif not fail_silently():
@@ -185,7 +184,7 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         response = _render_exception(e, title=_("Data not found"))
 
     except MKUserError as e:
-        response = _render_exception(e, title=_("Invalid user Input"))
+        response = _render_exception(e, title=_("Invalid user input"))
 
     except MKAuthException as e:
         response = _render_exception(e, title=_("Permission denied"))
@@ -202,9 +201,9 @@ def _process_request(environ, start_response, debug=False) -> Response:  # pylin
         response = _render_exception(e, title=_("Configuration error"))
         logger.error("MKConfigError: %s", e)
 
-    except MKGeneralException as e:
+    except (MKGeneralException, cmk.utils.store.MKConfigLockTimeout) as e:
         response = _render_exception(e, title=_("General error"))
-        logger.error("MKGeneralException: %s", e)
+        logger.error("%s: %s", e.__class__.__name__, e)
 
     except Exception:
         response = handle_unhandled_exception()

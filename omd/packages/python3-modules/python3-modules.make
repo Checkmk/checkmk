@@ -40,7 +40,7 @@ PYTHON3_MODULES_LIST += vcrpy-4.1.0.tar.gz # used by various unit tests to mock 
 PYTHON3_MODULES_LIST += pycparser-2.20.tar.gz # needed by cffi
 PYTHON3_MODULES_LIST += cffi-1.14.3.tar.gz # needed by PyNaCl, cryptography, bcrypt
 PYTHON3_MODULES_LIST += PyNaCl-1.3.0.tar.gz # needed by paramiko
-PYTHON3_MODULES_LIST += cryptography-3.3.1.tar.gz # needed by paramiko, pyOpenSSL
+PYTHON3_MODULES_LIST += cryptography-3.3.2.tar.gz # needed by paramiko, pyOpenSSL
 PYTHON3_MODULES_LIST += bcrypt-3.1.7.tar.gz # needed by paramiko
 PYTHON3_MODULES_LIST += paramiko-2.6.0.tar.gz # direct dependency, used for SFTP transactions in check_sftp
 
@@ -63,7 +63,7 @@ PYTHON3_MODULES_LIST += pykerberos-1.2.1.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += requests-kerberos-0.12.0.tar.gz # needed by check_bi_aggr
 PYTHON3_MODULES_LIST += MarkupSafe-1.1.1.tar.gz # needed by Jinja2
 PYTHON3_MODULES_LIST += itsdangerous-1.1.0.tar.gz # needed by Flask
-PYTHON3_MODULES_LIST += Jinja2-2.10.3.tar.gz # needed by Flask
+PYTHON3_MODULES_LIST += Jinja2-2.11.3.tar.gz # needed by Flask
 PYTHON3_MODULES_LIST += more-itertools-8.0.2.tar.gz # needed by zipp
 PYTHON3_MODULES_LIST += zipp-0.6.0.tar.gz # needed by importlib_metadata
 PYTHON3_MODULES_LIST += attrs-20.2.0.tar.gz # needed by jsonschema
@@ -92,7 +92,7 @@ PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
 PYTHON3_MODULES_LIST += adal-1.2.0.tar.gz # needed for agent_azure
 
-PYTHON3_MODULES_LIST += Pillow-7.2.0.tar.gz # needed by GUI, reportlab
+PYTHON3_MODULES_LIST += Pillow-8.1.2.tar.gz # needed by GUI, reportlab
 PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), python-active-directory
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.19.tar.gz # needed by numpy

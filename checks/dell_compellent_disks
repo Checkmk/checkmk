@@ -27,13 +27,14 @@ def parse_dell_compellent_disks(info):
     # Need to be compatible with shared inventory function
     parsed = {}
     disk_info, disk_serials = info
-    for idx, (number, status, health, health_message, enclosure) in enumerate(disk_info):
+    for idx, (number, status, disk_name_position, health, health_message,
+              enclosure) in enumerate(disk_info):
         inst_data = [status, health, health_message, enclosure]
         try:
             inst_data.append(disk_serials[idx][0])
         except IndexError:
             inst_data.append(None)
-        parsed.setdefault(number, inst_data)
+        parsed.setdefault(disk_name_position, inst_data)
     return parsed
 
 
@@ -64,6 +65,7 @@ check_info['dell_compellent_disks'] = {
             [
                 "2",  # DELL-STORAGE-SC-MIB::scDiskNbr
                 "3",  # DELL-STORAGE-SC-MIB::scDiskStatus
+                "4",  # DELL-STORAGE-SC-MIB::scDiskNamePosition
                 "5",  # DELL-STORAGE-SC-MIB::scDiskHealthy
                 "6",  # DELL-STORAGE-SC-MIB::scDiskStatusMsg
                 "11",  # DELL-STORAGE-SC-MIB::scDiskEnclosure

@@ -13,7 +13,7 @@ PYTHON 3.4.4, downloaded as msi installer from the python.org
 2. _mandatory_   Update build_the_module.cmd script to set new version
 3. _recommended_ Update documentation
 4. _optional_    Update root Makefile(for default parameters)
-5. _optional_    Add line 'del /Q python-<Version>.cab' to the clean_environment.cmd script
+5. _optional_    Add line 'del /Q python-<Version>.zip' to the clean_environment.cmd script
 
 ### Required Tools
 
@@ -80,7 +80,7 @@ build_the_cached artefact_dir credentials url 3.8 7
 
 All builds of the Python are cached. 
 Name of the cached file
-python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
+python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.zip
 
 This mean that you didn't get a new build till you increase valeu in the file *BUILD_NUM*.
 Just a commit is not enough, because some builds can't get data about current git hash. 
@@ -102,8 +102,8 @@ In latter case the git_hash is replaced with string "latest".
 11. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 12. Copy runtime from runtime to DLL
 13. Clean virtual environemtn *to_save*
-14. Compress *tmp/to_save* into *tmp/python-3.8.cab*. 
-15. Copy cab to *artefacts*
+14. Compress *tmp/to_save* into *tmp/python-3.8.zip*. Attention! Compression is done using cab format
+15. Copy zip to *artefacts*
 
 #### Steps 3.4.4
 
@@ -114,8 +114,8 @@ In latter case the git_hash is replaced with string "latest".
 5. Upgradepip and install packages
 6. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 7. Clean virtual environemtn *to_save*
-8. Compress *tmp/to_save* into *tmp/python-3.4.cab*.
-9. Copy cab to *artefacts*
+8. Compress *tmp/to_save* into *tmp/python-3.8.zip*. Attention! Compression is done using cab format
+9. Copy zip to *artefacts*
 
 IMPORTANT: You need Visual Studio 10 to build 3.4.4. 
 This can be difficult to obtain, you have to ask a person having Visual Studio Professional license to download.
@@ -127,7 +127,7 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |-- tmp/
 |    |
 |    |-- 3.8/
-|    |      |   python-3.8.cab  * resulting module file
+|    |      |   python-3.8.zip  * resulting module file
 |    |      |
 |    |      |-- to_save/		* to produce module *
 |    |      |
@@ -144,7 +144,7 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |    |      +-- to_install/	    * installation of the Python *
 |    |
 |    +-- 3.4/
-|           |   python-3.4.cab  * resulting module file
+|           |   python-3.4.zip  * resulting module file
 |           |
 |           |-- to_save/		* to produce module *
 |           |    |

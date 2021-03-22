@@ -122,7 +122,7 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exts_.empty());
     EXPECT_TRUE(m.name_.empty());
     EXPECT_TRUE(m.bin_.empty());
-    EXPECT_TRUE(m.package_.empty());
+    EXPECT_TRUE(m.zip_.empty());
 
     m.exec_ = L"a";
     m.exts_.emplace_back(".v");
@@ -135,8 +135,8 @@ TEST(ModulesTest, Internal) {
     m.bin_ = "z";
     EXPECT_EQ(m.bin(), "z");
 
-    m.package_ = "z";
-    EXPECT_EQ(m.package(), "z");
+    m.zip_ = "z";
+    EXPECT_EQ(m.zip(), "z");
 
     std::filesystem::path x = GetUserDir();
     EXPECT_EQ(m.buildCommandLine("q.v"), (x / m.exec()).wstring());
@@ -151,7 +151,7 @@ TEST(ModulesTest, Internal) {
     EXPECT_TRUE(m.exec().empty());
     EXPECT_TRUE(m.exts().empty());
     EXPECT_TRUE(m.name().empty());
-    EXPECT_TRUE(m.package().empty());
+    EXPECT_TRUE(m.zip().empty());
     EXPECT_TRUE(m.bin().empty());
 }
 
@@ -311,10 +311,10 @@ TEST(ModuleCommander, ReadConfig) {
         "modules:\n"
         "  enabled: yes\n"
         "  table:\n"
-        "    - name: the_module\n"     // valid
+        "    - name: unzip_test\n"     // valid
         "      exts: ['.test']\n"      //
         "      exec: 'nothing {}'\n"   //
-        "    - name: the_module2\n"    // valid
+        "    - name: unzip_test2\n"    // valid
         "      exts: ['.test2']\n"     //
         "      exec: 'nothing2 {}'\n"  //
         "      dir:  'plugins'\n";
@@ -323,11 +323,11 @@ TEST(ModuleCommander, ReadConfig) {
     auto node = YAML::Load(base);
     mc.readConfig(node);
     ASSERT_TRUE(mc.modules_.size() == 2);
-    EXPECT_EQ(mc.modules_[0].name(), "the_module");
-    EXPECT_EQ(mc.modules_[1].name(), "the_module2");
+    EXPECT_EQ(mc.modules_[0].name(), "unzip_test");
+    EXPECT_EQ(mc.modules_[1].name(), "unzip_test2");
     EXPECT_EQ(mc.modules_[0].exec(), L"nothing {}");
     EXPECT_EQ(mc.modules_[1].exec(), L"nothing2 {}");
-    EXPECT_EQ(mc.modules_[0].dir(), "modules\\the_module");
+    EXPECT_EQ(mc.modules_[0].dir(), "modules\\unzip_test");
     EXPECT_EQ(mc.modules_[1].dir(), "plugins");
 }
 
@@ -415,9 +415,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork) {
     ASSERT_TRUE(m.loadFrom(YAML::Load(test_1)));
     ASSERT_TRUE(m.name() == "zz" && m.exec() == L"zz.exe {}");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
-    tst::CreateTextFile(backup_dir / (m.name() + kExtension.data()), "cab");
+    tst::CreateTextFile(backup_dir / (m.name() + kExtension.data()), "zip");
     EXPECT_FALSE(m.prepareToWork(backup_dir, modules_dir));
-    EXPECT_EQ(m.package(), backup_dir / "zz.cab");
+    EXPECT_EQ(m.zip(), backup_dir / "zz.zip");
     EXPECT_TRUE(m.buildCommandLine("x.t").empty());
 
     fs::create_directories(modules_dir / m.name());
@@ -455,7 +455,7 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     mc.prepareToWork();
     for (auto& m : mc.modules_) {
         ASSERT_TRUE(m.bin().empty());
-        ASSERT_TRUE(m.package().empty());
+        ASSERT_TRUE(m.zip().empty());
     }
 
     tst::CreateTextFile(
@@ -463,9 +463,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     mc.prepareToWork();
     {
         ASSERT_TRUE(mc.modules_[0].bin().empty());
-        ASSERT_FALSE(mc.modules_[0].package().empty());
+        ASSERT_FALSE(mc.modules_[0].zip().empty());
         ASSERT_TRUE(mc.modules_[1].bin().empty());
-        ASSERT_TRUE(mc.modules_[1].package().empty());
+        ASSERT_TRUE(mc.modules_[1].zip().empty());
     }
 
     fs::create_directories(modules_dir / mc.modules_[0].name());
@@ -473,9 +473,9 @@ TEST_F(ModuleCommanderTest, PrepareToWork2) {
     mc.prepareToWork();
     {
         ASSERT_FALSE(mc.modules_[0].bin().empty());
-        ASSERT_FALSE(mc.modules_[0].package().empty());
+        ASSERT_FALSE(mc.modules_[0].zip().empty());
         ASSERT_TRUE(mc.modules_[1].bin().empty());
-        ASSERT_TRUE(mc.modules_[1].package().empty());
+        ASSERT_TRUE(mc.modules_[1].zip().empty());
     }
 
     EXPECT_TRUE(mc.isModuleScript("cc.t"));
@@ -563,17 +563,17 @@ TEST_F(ModuleCommanderTest, FindModules) {
     // check that name are correctly found in modules list
     EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module"));
     EXPECT_FALSE(mc.isBelongsToModules("c:\\windows\\real_module_module.zi"));
-    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module.cab"));
-    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module2.cab"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module.zip"));
+    EXPECT_TRUE(mc.isBelongsToModules("c:\\windows\\real_module_module2.zip"));
 
     EXPECT_FALSE(mc.isBelongsToModules(""));
 }
 
 TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
-    auto zip_file = tst::MakePathToUnitTestFiles(tst::G_SolutionPath) /
-                    tst::install_cab_to_test;
+    auto zip_file =
+        tst::MakePathToUnitTestFiles(tst::G_SolutionPath) / tst::zip_to_test;
     ASSERT_TRUE(fs::exists(zip_file))
-        << "Please make '" << tst::install_cab_to_test << "' available";
+        << "Please make '" << tst::zip_to_test << "' available";
 
     auto user = temp_fs_->data();
     auto root = temp_fs_->root();
@@ -583,7 +583,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
         "modules:\n"
         "  enabled: yes\n"
         "  table:\n"
-        "    - name: install_test\n"  // valid
+        "    - name: unzip_test\n"    // valid
         "      exts: ['.test']\n"     //
         "      exec: 'nothing {}'\n"  //
         ;
@@ -591,7 +591,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     ModuleCommander mc;
     auto cfg = YAML::Load(modules_text);
     mc.readConfig(cfg);
-    fs::copy_file(zip_file, install / tst::install_cab_to_test);
+    fs::copy_file(zip_file, install / tst::zip_to_test);
     ASSERT_EQ(mc.findModuleFiles(GetRootDir()), 1);
 
     // BAD MODULE installation
@@ -611,7 +611,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     ASSERT_FALSE(mc.InstallModule(bad_module, root, user, InstallMode::normal));
 
     // Clean install store
-    auto move_dir = ModuleCommander::GetMoveLocation(tst::install_cab_to_test);
+    auto move_dir = ModuleCommander::GetMoveLocation(tst::zip_to_test);
     std::error_code ec;
     fs::remove_all(move_dir, ec);
 
@@ -621,12 +621,11 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     auto [zzzz_backup_file, zzzz_target_folder] = makeExpectedPair("zzzz.zip");
     ASSERT_TRUE(IsAbsent(zzzz_backup_file, zzzz_target_folder));
 
-    auto [backup_file, target_folder] =
-        makeExpectedPair(tst::install_cab_to_test);
+    auto [backup_file, target_folder] = makeExpectedPair(tst::zip_to_test);
     ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
     auto target_postinstall_folder =
-        user / dirs::kUserModules / "install_test" / "DLLS";
+        user / dirs::kUserModules / "unzip_test" / "DLLS";
     EXPECT_TRUE(fs::is_directory(target_postinstall_folder))
         << fmt::format("'{}' is bad or not found", target_postinstall_folder);
 
@@ -676,8 +675,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
     ASSERT_TRUE(IsPresented(backup_file, target_folder));
 
     // Simulate install of the empty file(as packaged)
-    tst::CreateTextFile(root / dirs::kFileInstallDir / tst::install_cab_to_test,
-                        "");
+    tst::CreateTextFile(root / dirs::kFileInstallDir / tst::zip_to_test, "");
     mc.installModules(root, user, InstallMode::normal);
     ASSERT_TRUE(IsAbsent(backup_file, target_folder));
 
@@ -686,7 +684,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
                             move_dir / mc.modules_[0].name()));
 
     // Simulate full install to check quick install
-    fs::copy_file(zip_file, install / tst::install_cab_to_test,
+    fs::copy_file(zip_file, install / tst::zip_to_test,
                   fs::copy_options::overwrite_existing);
     mc.installModules(root, user, InstallMode::normal);
     ASSERT_TRUE(IsPresented(backup_file, target_folder));

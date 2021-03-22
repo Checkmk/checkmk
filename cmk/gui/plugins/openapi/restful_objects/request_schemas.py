@@ -7,7 +7,7 @@ import urllib.parse
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import config, watolib
+from cmk.gui import watolib
 from cmk.utils.defines import weekday_ids
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.commands.downtimes import (
@@ -26,7 +26,6 @@ from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 from cmk.gui.watolib.groups import is_alias_used
-from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 
 EXISTING_HOST_NAME = fields.HostField(
@@ -856,106 +855,8 @@ class DeleteDowntime(OneOfSchema):
     }
 
 
-class PasswordIdent(fields.String):
-    """A field representing a password identifier"""
-
-    default_error_messages = {
-        'should_exist': 'Identifier missing: {name!r}',
-        'should_not_exist': 'Identifier {name!r} already exists.',
-    }
-
-    def __init__(
-        self,
-        example,
-        required=True,
-        validate=None,
-        should_exist: bool = True,
-        **kwargs,
-    ):
-        self._should_exist = should_exist
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-
-        exists = password_exists(value)
-        if self._should_exist and not exists:
-            raise self.make_error("should_exist", name=value)
-        if not self._should_exist and exists:
-            raise self.make_error("should_not_exist", name=value)
-
-
-class PasswordOwner(fields.String):
-    """A field representing a password owner group"""
-
-    default_error_messages = {
-        'invalid': 'Specified owner value is not valid: {name!r}',
-    }
-
-    def __init__(
-        self,
-        example,
-        required=True,
-        validate=None,
-        **kwargs,
-    ):
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        """Verify if the specified owner is valid for the logged-in user
-
-        Non-admin users cannot specify admin as the owner
-
-        """
-        super()._validate(value)
-        permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
-        if config.user.may("wato.edit_all_passwords"):
-            permitted_owners.append("admin")
-
-        if value not in permitted_owners:
-            raise self.make_error("invalid", name=value)
-
-
-class PasswordShare(fields.String):
-    """A field representing a password share group"""
-
-    default_error_messages = {
-        'invalid': 'The password cannot be shared with specified group: {name!r}',
-    }
-
-    def __init__(
-        self,
-        example,
-        required=True,
-        validate=None,
-        **kwargs,
-    ):
-        super().__init__(
-            example=example,
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value):
-        super()._validate(value)
-        shareable_groups = [group[0] for group in contact_group_choices()]
-        if value not in ["all", *shareable_groups]:
-            raise self.make_error("invalid", name=value)
-
-
 class InputPassword(BaseSchema):
-    ident = PasswordIdent(
+    ident = fields.PasswordIdent(
         example="pass",
         description="An unique identifier for the password",
         should_exist=False,
@@ -985,7 +886,7 @@ class InputPassword(BaseSchema):
         description="The password string",
     )
 
-    owner = PasswordOwner(
+    owner = fields.PasswordOwner(
         example="admin",
         description=
         "Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
@@ -994,7 +895,7 @@ class InputPassword(BaseSchema):
     )
 
     shared = fields.List(
-        PasswordShare(
+        fields.PasswordShare(
             example="all",
             description=
             "By default only the members of the owner contact group are permitted to use a a configured password. It is possible to share a password with other groups of users to make them able to use a password in checks.",
@@ -1039,7 +940,7 @@ class UpdatePassword(BaseSchema):
         description="The password string",
     )
 
-    owner = PasswordOwner(
+    owner = fields.PasswordOwner(
         example="admin",
         description=
         "Each password is owned by a group of users which are able to edit, delete and use existing passwords.",
@@ -1047,7 +948,7 @@ class UpdatePassword(BaseSchema):
         attribute="owned_by")
 
     shared = fields.List(
-        PasswordShare(
+        fields.PasswordShare(
             example="all",
             description=
             "By default only the members of the owner contact group are permitted to use a a configured password. "

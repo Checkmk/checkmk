@@ -21,7 +21,6 @@ from cmk.gui.plugins.openapi.livestatus_helpers.expressions import tree_to_expr,
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
-
 from cmk.gui.plugins.openapi.utils import (
     attr_openapi_schema,
     BaseSchema,
@@ -29,6 +28,7 @@ from cmk.gui.plugins.openapi.utils import (
     ObjectContext,
     ObjectType,
 )
+from cmk.gui.watolib.passwords import password_exists, contact_group_choices
 from cmk.utils.exceptions import MKException
 import cmk.utils.version as version
 
@@ -1080,6 +1080,105 @@ class GroupField(String):
 
             if not self._should_be_monitored and monitored:
                 raise self.make_error("should_not_be_monitored", host_name=value)
+
+
+class PasswordIdent(String):
+    """A field representing a password identifier"""
+
+    default_error_messages = {
+        'should_exist': 'Identifier missing: {name!r}',
+        'should_not_exist': 'Identifier {name!r} already exists.',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        exists = password_exists(value)
+        if self._should_exist and not exists:
+            raise self.make_error("should_exist", name=value)
+
+        if not self._should_exist and exists:
+            raise self.make_error("should_not_exist", name=value)
+
+
+class PasswordOwner(String):
+    """A field representing a password owner group"""
+
+    default_error_messages = {
+        'invalid': 'Specified owner value is not valid: {name!r}',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        """Verify if the specified owner is valid for the logged-in user
+
+        Non-admin users cannot specify admin as the owner
+
+        """
+        super()._validate(value)
+        permitted_owners = [group[0] for group in contact_group_choices(only_own=True)]
+        if config.user.may("wato.edit_all_passwords"):
+            permitted_owners.append("admin")
+
+        if value not in permitted_owners:
+            raise self.make_error("invalid", name=value)
+
+
+class PasswordShare(String):
+    """A field representing a password share group"""
+
+    default_error_messages = {
+        'invalid': 'The password cannot be shared with specified group: {name!r}',
+    }
+
+    def __init__(
+        self,
+        example,
+        required=True,
+        validate=None,
+        **kwargs,
+    ):
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+        shareable_groups = [group[0] for group in contact_group_choices()]
+        if value not in ["all", *shareable_groups]:
+            raise self.make_error("invalid", name=value)
 
 
 Boolean = _fields.Boolean

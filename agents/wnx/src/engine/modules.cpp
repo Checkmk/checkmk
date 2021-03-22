@@ -31,7 +31,7 @@ void Module::reset() noexcept {
     exts_.clear();
     exec_.clear();
     dir_.clear();
-    zip_.clear();
+    package_.clear();
     bin_.clear();
 }
 
@@ -48,20 +48,21 @@ void Module::runPostInstall() {
     }
 }
 
-std::filesystem::path Module::findZip(
+std::filesystem::path Module::findPackage(
     const std::filesystem::path &backup_dir) const noexcept {
     namespace fs = std::filesystem;
     try {
-        auto zip = backup_dir / (name() + std::string{kExtension});
-        if (fs::exists(zip) && fs::is_regular_file(zip) &&
-            fs::file_size(zip) > 0)
-            return zip;
+        auto file = backup_dir / (name() + std::string{kExtension});
+        if (fs::exists(file) && fs::is_regular_file(file) &&
+            fs::file_size(file) > 0)
+            return file;
 
-        XLOG::d.i("Module '{}' has no zip installed, this is normal", name());
+        XLOG::d.i("Module '{}' has no package installed, this is normal",
+                  name());
 
     } catch (const std::exception &e) {
         XLOG::d.i(
-            "Module '{}' has no zip installed, this is normal, exception '{}'",
+            "Module '{}' has no package installed, this is normal, exception '{}'",
             name(), e.what());
     }
     return {};
@@ -116,9 +117,9 @@ bool Module::prepareToWork(const std::filesystem::path &backup_dir,
     namespace fs = std::filesystem;
 
     // Find Zip
-    zip_ = findZip(backup_dir);
-    if (zip_.empty()) {
-        XLOG::d("Module '{}' has no zip in backup dir '{}'", name(),
+    package_ = findPackage(backup_dir);
+    if (package_.empty()) {
+        XLOG::d("Module '{}' has no package in backup dir '{}'", name(),
                 backup_dir);
         return false;
     }
@@ -539,7 +540,7 @@ ModuleCommander::GetUninstallStore(const std::filesystem::path &file) {
     auto expected_file_data = ReadFileBeginning(expected_file, min_size);
     if (!file_data.empty() && file_data == expected_file_data) {
         return UninstallStore{.base_ = path,
-                              .zip_file_ = expected_file,
+                              .package_file_ = expected_file,
                               .module_dir_ = expected_dir};
     }
     XLOG::d.i(
@@ -567,7 +568,8 @@ bool ModuleCommander::TryQuickInstall(const Module &mod,
         fs::remove_all(default_dir);
         fs::remove(default_dir);
 
-        fs::rename(uninstall_store->zip_file_, GetBackupFileName(mod, user));
+        fs::rename(uninstall_store->package_file_,
+                   GetBackupFileName(mod, user));
         fs::rename(uninstall_store->module_dir_, default_dir);
         XLOG::l.i("Quick reinstall is finished");
 

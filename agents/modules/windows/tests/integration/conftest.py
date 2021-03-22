@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import List
 from subprocess import (Popen, PIPE)
 
-tested_pythons = ["python-3.4.zip", "python-3.8.zip"]
+tested_pythons = ["python-3.4.cab", "python-3.8.cab"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 
@@ -25,10 +25,10 @@ artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 # Above mentioned things must be done in fixture, while decompression process is quite expensive.
 # Also this give possibility to test literally everything
 regression_data = {
-    "python-3.8.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
+    "python-3.8.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
                       b"version_info = 3.8.7\r\n"
                       b"include-system-site-packages = false\r\n",
-    "python-3.4.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
+    "python-3.4.cab": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
                       b"version_info = 3.4.4\r\n"
                       b"include-system-site-packages = false\r\n"
 }

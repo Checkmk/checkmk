@@ -7,10 +7,11 @@
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based.cisco_asa_sensors import (
-    CiscoAsaSensor,
     CiscoAsaPowerSensor,
-    CiscoasaSensors,
-    get_state_readable,
+    CiscoAsaTempSensor,
+    CiscoAsaFanSensor,
+    CiscoAsaSensors,
+    get_status_readable,
     get_sensor_state,
     parse_cisco_asa_sensors,
 )
@@ -39,6 +40,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
                 ['Chassis Ambient Temperature Sensor 1', '8', '32', '1', 'celsius'],
                 ['Chassis Ambient Temperature Sensor 2', '8', '30', '1', 'celsius'],
                 ['Chassis Ambient Temperature Sensor 3', '8', '33', '1', 'celsius'],
+                ['Power supply 1', '12', '', '3', ''],
+                ['Power supply 2', '12', '', '1', ''],
                 ['Gi0/0', '', '', '', ''],
                 ['Gi0/1', '', '', '', ''],
                 ['Gi0/2', '', '', '', ''],
@@ -50,19 +53,24 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
                 ['Ma0/0', '', '', '', ''],
                 ['Po1', '', '', '', '']
             ]],
-            CiscoasaSensors(
-                fan={'Chassis Sensor 1': CiscoAsaSensor(value=7680, state=State.OK, state_readable='Ok', unit='rpm'),
-                     'Chassis Sensor 2': CiscoAsaSensor(value=7936, state=State.OK, state_readable='Ok', unit='rpm'),
-                     'Chassis Sensor 3': CiscoAsaSensor(value=7680, state=State.OK, state_readable='Ok', unit='rpm')
-                     },
-                temp={'CPU Sensor 0/0': CiscoAsaSensor(value=34.0, state=State.OK, state_readable='Ok', unit='celsius'),
-                      'Chassis Ambient Sensor 1': CiscoAsaSensor(value=32.0, state=State.OK, state_readable='Ok',
-                                                                 unit='celsius'),
-                      'Chassis Ambient Sensor 2': CiscoAsaSensor(value=30.0, state=State.OK, state_readable='Ok',
-                                                                 unit='celsius'),
-                      'Chassis Ambient Sensor 3': CiscoAsaSensor(value=33.0, state=State.OK, state_readable='Ok',
-                                                                 unit='celsius')},
-                power={})
+            CiscoAsaSensors(
+                temp={
+                    'CPU Sensor 0/0': CiscoAsaTempSensor(value=34.0, state=State.OK, status=0, status_readable='Ok',
+                                                         unit='celsius'),
+                    'Chassis Ambient Sensor 1': CiscoAsaTempSensor(value=32.0, state=State.OK, status=0,
+                                                                   status_readable='Ok', unit='celsius'),
+                    'Chassis Ambient Sensor 2': CiscoAsaTempSensor(value=30.0, state=State.OK, status=0,
+                                                                   status_readable='Ok', unit='celsius'),
+                    'Chassis Ambient Sensor 3': CiscoAsaTempSensor(value=33.0, state=State.OK, status=0,
+                                                                   status_readable='Ok', unit='celsius')},
+                fan={
+                    'Chassis Sensor 1': CiscoAsaFanSensor(value=7680, state=State.OK, status_readable='Ok', unit='rpm'),
+                    'Chassis Sensor 2': CiscoAsaFanSensor(value=7936, state=State.OK, status_readable='Ok', unit='rpm'),
+                    'Chassis Sensor 3': CiscoAsaFanSensor(value=7680, state=State.OK, status_readable='Ok',
+                                                          unit='rpm')},
+                power={'supply 1': CiscoAsaPowerSensor(state=State.CRIT, status_readable='nonoperational'),
+                       'supply 2': CiscoAsaPowerSensor(state=State.OK, status_readable='Ok')
+                       })
             ,
     ),
 ])

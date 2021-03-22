@@ -11,7 +11,7 @@
 # Monitor Cisco ASA Sensors (Temperature, Fan and Power supply)
 #
 # 2021-03-21: fixed params in cisco_asa_fan, removed params from cisco_asa_power
-#
+# 2021-03-22: code improvements
 #
 # sample snmpwalk
 # .1.3.6.1.2.1.47.1.1.1.1.7.1 = STRING: "Chassis"
@@ -90,6 +90,8 @@
 #   ['Chassis Ambient Temperature Sensor 1', '8', '32', '1', 'celsius'],
 #   ['Chassis Ambient Temperature Sensor 2', '8', '30', '1', 'celsius'],
 #   ['Chassis Ambient Temperature Sensor 3', '8', '33', '1', 'celsius'],
+#   ['Power supply 1', '12', '', '3', ''],
+#   ['Power supply 2', '12', '', '1', ''],
 #   ['Gi0/0', '', '', '', ''],
 #   ['Gi0/1', '', '', '', ''],
 #   ['Gi0/2', '', '', '', ''],
@@ -104,30 +106,36 @@
 # ]
 #
 # sample section
-# {'fan': {
-#    'Chassis Sensor 1': CiscoAsaSensor(value=7680, status=<State.OK: 0>, state_readable='Ok', unit='rpm'),
-#    'Chassis Sensor 2': CiscoAsaSensor(value=7936, status=<State.OK: 0>, state_readable='Ok', unit='rpm'),
-#    'Chassis Sensor 3': CiscoAsaSensor(value=7680, status=<State.OK: 0>, state_readable='Ok', unit='rpm')
-#   },
-#  'temp': {
-#    'CPU Sensor 0/0': CiscoAsaSensor(value=34.0, status=<State.OK: 0>, state_readable='Ok', unit='celsius'),
-#    'Chassis Ambient Sensor 1': CiscoAsaSensor(value=32.0, status=<State.OK: 0>, state_readable='Ok', unit='celsius'),
-#    'Chassis Ambient Sensor 2': CiscoAsaSensor(value=30.0, status=<State.OK: 0>, state_readable='Ok', unit='celsius'),
-#    'Chassis Ambient Sensor 3': CiscoAsaSensor(value=33.0, status=<State.OK: 0>, state_readable='Ok', unit='celsius')
-#   },
-#  'power': {}}
+# CiscoAsaSensors(
+#     temp={
+#         'CPU Sensor 0/0': CiscoAsaTempSensor(value=34.0, state=State.OK, status=0, status_readable='Ok',
+#                                              unit='celsius'),
+#         'Chassis Ambient Sensor 1': CiscoAsaTempSensor(value=32.0, state=State.OK, status=0,
+#                                                        status_readable='Ok', unit='celsius'),
+#         'Chassis Ambient Sensor 2': CiscoAsaTempSensor(value=30.0, state=State.OK, status=0,
+#                                                        status_readable='Ok', unit='celsius'),
+#         'Chassis Ambient Sensor 3': CiscoAsaTempSensor(value=33.0, state=State.OK, status=0,
+#                                                        status_readable='Ok', unit='celsius')},
+#     fan={
+#         'Chassis Sensor 1': CiscoAsaFanSensor(value=7680, state=State.OK, status_readable='Ok', unit='rpm'),
+#         'Chassis Sensor 2': CiscoAsaFanSensor(value=7936, state=State.OK, status_readable='Ok', unit='rpm'),
+#         'Chassis Sensor 3': CiscoAsaFanSensor(value=7680, state=State.OK, status_readable='Ok',
+#                                               unit='rpm')},
+#     power={'supply 1': CiscoAsaPowerSensor(state=State.CRIT, status_readable='nonoperational'),
+#            'supply 2': CiscoAsaPowerSensor(state=State.OK, status_readable='Ok')
+#            })
 #
 
 
-from typing import Dict, List, NamedTuple, Mapping
+from typing import List, NamedTuple, Mapping
 
-from .agent_based_api.v1.type_defs import (
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     CheckResult,
     StringTable,
 )
 
-from .agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
     Service,
     Result,
@@ -137,7 +145,7 @@ from .agent_based_api.v1 import (
     startswith,
 )
 
-from .utils.temperature import (
+from cmk.base.plugins.agent_based.utils.temperature import (
     check_temperature,
     TempParamType,
     to_celsius,
@@ -151,25 +159,33 @@ from .utils.temperature import (
 # ##################################################################################################
 
 
-class CiscoAsaSensor(NamedTuple):
+class CiscoAsaTempSensor(NamedTuple):
     value: float
     state: State
-    state_readable: str
+    status: int
+    status_readable: str
+    unit: str
+
+
+class CiscoAsaFanSensor(NamedTuple):
+    value: int
+    state: State
+    status_readable: str
     unit: str
 
 
 class CiscoAsaPowerSensor(NamedTuple):
     state: State
-    state_readable: str
+    status_readable: str
 
 
-class CiscoasaSensors(NamedTuple):
-    fan: Mapping[str, CiscoAsaSensor]
-    temp: Mapping[str, CiscoAsaSensor]
+class CiscoAsaSensors(NamedTuple):
+    fan: Mapping[str, CiscoAsaFanSensor]
+    temp: Mapping[str, CiscoAsaTempSensor]
     power: Mapping[str, CiscoAsaPowerSensor]
 
 
-def get_state_readable(st: str) -> str:
+def get_status_readable(st: str) -> str:
     states = {
         '1': 'Ok',
         '2': 'unavailable',
@@ -187,7 +203,7 @@ def get_sensor_state(st: str) -> State:
     return states.get(st, State.CRIT)
 
 
-def parse_cisco_asa_sensors(string_table: List[StringTable]) -> CiscoasaSensors:
+def parse_cisco_asa_sensors(string_table: List[StringTable]) -> CiscoAsaSensors:
     temp = {}
     fan = {}
     power = {}
@@ -195,28 +211,29 @@ def parse_cisco_asa_sensors(string_table: List[StringTable]) -> CiscoasaSensors:
     for sensorname, sensortype, sensorvalue, sensorstatus, sensorunits in string_table[0]:
         if sensorname != '':  # for asa context, there are no real sensors.
             if sensortype == '8':  # Temperature
-                temp.update({sensorname.replace('Temperature ', ''): CiscoAsaSensor(
+                temp.update({sensorname.replace('Temperature ', ''): CiscoAsaTempSensor(
                     value=to_celsius(float(sensorvalue), sensorunits),
                     unit=sensorunits,
                     state=get_sensor_state(sensorstatus),
-                    state_readable=get_state_readable(sensorstatus),
+                    status=int(sensorstatus) - 1,
+                    status_readable=get_status_readable(sensorstatus),
                 )})
 
             if sensortype == '10':  # Fan
-                fan.update({sensorname.replace('Fan ', ''): CiscoAsaSensor(
+                fan.update({sensorname.replace('Fan ', ''): CiscoAsaFanSensor(
                     value=int(sensorvalue),
                     unit=sensorunits,
                     state=get_sensor_state(sensorstatus),
-                    state_readable=get_state_readable(sensorstatus),
+                    status_readable=get_status_readable(sensorstatus),
                 )})
 
             if sensortype == '12':  # Power supply
                 power.update({sensorname.replace('Power ', ''): CiscoAsaPowerSensor(
                     state=get_sensor_state(sensorstatus),
-                    state_readable=get_state_readable(sensorstatus),
+                    status_readable=get_status_readable(sensorstatus),
                 )})
 
-    return CiscoasaSensors(temp=temp, fan=fan, power=power)
+    return CiscoAsaSensors(temp=temp, fan=fan, power=power)
 
 
 register.snmp_section(
@@ -245,23 +262,23 @@ register.snmp_section(
 # ##################################################################################################
 
 
-def discovery_cisco_asa_temp(section: CiscoasaSensors) -> DiscoveryResult:
+def discovery_cisco_asa_temp(section: CiscoAsaSensors) -> DiscoveryResult:
     yield from (Service(item=item) for item in section.temp.keys())
 
 
-def check_cisco_asa_temp(item, params: TempParamType, section: CiscoasaSensors) -> CheckResult:
+def check_cisco_asa_temp(item, params: TempParamType, section: CiscoAsaSensors) -> CheckResult:
     try:
         sensor = section.temp[item]
     except KeyError:
         return
 
-    yield Result(state=sensor.state, summary='Status: %s' % sensor.state_readable)
+    yield Result(state=sensor.state, summary='Status: %s' % sensor.status_readable)
 
     yield from check_temperature(
         sensor.value,
         dev_unit=sensor.unit,
-        dev_status=sensor.state,
-        dev_status_name=sensor.state_readable,
+        dev_status=sensor.status,
+        dev_status_name=sensor.status_readable,
         params=params,
         unique_name='check_cisco_asa_temp.%s' % item,
     )
@@ -285,17 +302,17 @@ register.check_plugin(
 # ##################################################################################################
 
 
-def discovery_cisco_asa_fan(section: CiscoasaSensors) -> DiscoveryResult:
+def discovery_cisco_asa_fan(section: CiscoAsaSensors) -> DiscoveryResult:
     yield from (Service(item=item) for item in section.fan.keys())
 
 
-def check_cisco_asa_fan(item, params, section: CiscoasaSensors) -> CheckResult:
+def check_cisco_asa_fan(item, params, section: CiscoAsaSensors) -> CheckResult:
     try:
         sensor = section.fan[item]
     except KeyError:
         return
 
-    yield Result(state=sensor.state, summary='Status: %s' % sensor.state_readable)
+    yield Result(state=sensor.state, summary='Status: %s' % sensor.status_readable)
 
     yield from check_levels(
         sensor.value,
@@ -324,17 +341,17 @@ register.check_plugin(
 #
 # ##################################################################################################
 
-def discovery_cisco_asa_power(section: CiscoasaSensors) -> DiscoveryResult:
+def discovery_cisco_asa_power(section: CiscoAsaSensors) -> DiscoveryResult:
     yield from (Service(item=item) for item in section.power.keys())
 
 
-def check_cisco_asa_power(item, section: CiscoasaSensors) -> CheckResult:
+def check_cisco_asa_power(item, section: CiscoAsaSensors) -> CheckResult:
     try:
         sensor = section.power[item]
     except KeyError:
         return
 
-    yield Result(state=sensor.state, summary='Status: %s' % sensor.state_readable)
+    yield Result(state=sensor.state, summary='Status: %s' % sensor.status_readable)
 
 
 register.check_plugin(

@@ -14,6 +14,20 @@ def reset_hooks():
     hooks.hooks.clear()
 
 
+def test_scoped_memoize():
+    @hooks.scoped_memoize(clear_events=['request-start'])
+    def blah(a=[]):  # pylint: disable=dangerous-default-value
+        a.append(1)
+        return a
+
+    assert blah() == [1]
+    assert blah() == [1]
+
+    hooks.call('request-start')
+
+    assert blah() == [1, 1]
+
+
 def test_hook_registration():
     assert hooks.hooks == {}
 

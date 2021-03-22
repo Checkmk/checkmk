@@ -10,7 +10,7 @@ import re
 import typing
 from typing import Any, Optional, Tuple, Callable
 
-from marshmallow import fields as _fields, ValidationError
+from marshmallow import fields as _fields, ValidationError, utils
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.gui import watolib, valuespec as valuespec, sites, config
@@ -22,8 +22,13 @@ from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
 from cmk.gui.plugins.openapi.livestatus_helpers.types import Table, Column
 
-from cmk.gui.plugins.openapi.utils import BaseSchema
-from cmk.gui.plugins.webapi import validate_host_attributes
+from cmk.gui.plugins.openapi.utils import (
+    attr_openapi_schema,
+    BaseSchema,
+    collect_attributes,
+    ObjectContext,
+    ObjectType,
+)
 from cmk.utils.exceptions import MKException
 import cmk.utils.version as version
 
@@ -926,22 +931,37 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
-class AttributesField(_fields.Dict):
-    default_error_messages = {
-        'attribute_forbidden': "Setting of attribute {attribute!r} is forbidden: {value!r}.",
-    }
+def attributes_field(object_type: ObjectType,
+                     object_context: ObjectContext,
+                     description: Optional[str] = None,
+                     example: Optional[Any] = None,
+                     required: bool = False,
+                     missing: Any = utils.missing,
+                     many: bool = False,
+                     names_only: bool = False) -> _fields.Field:
+    if not names_only:
+        return Nested(
+            attr_openapi_schema(object_type, object_context),
+            description=description,
+            example=example,
+            many=many,
+            missing=dict if missing is utils.missing else utils.missing,
+            required=required,
+        )
 
-    def _validate(self, value):
-        # Special keys:
-        #  - site -> validate against config.allsites().keys()
-        #  - tag_* -> validate_host_tags
-        #  - * -> validate against host_attribute_registry.keys()
-        try:
-            validate_host_attributes(value, new=True)
-            if 'meta_data' in value:
-                raise self.make_error("attribute_forbidden", attribute='meta_data', value=value)
-        except MKUserError as exc:
-            raise ValidationError(str(exc))
+    attrs = {attr.name for attr in collect_attributes(object_type, object_context)}
+
+    def validate(value):
+        if value not in attrs:
+            raise ValidationError(f"Unknown attribute: {value!r}")
+
+    return List(
+        String(validate=validate),
+        description=description,
+        example=example,
+        missing=missing,
+        required=required,
+    )
 
 
 class SiteField(_fields.String):
@@ -1101,5 +1121,5 @@ __all__ = [
     'HostField',
     'FOLDER_PATTERN',
     'query_field',
-    'AttributesField',
+    'attributes_field',
 ]

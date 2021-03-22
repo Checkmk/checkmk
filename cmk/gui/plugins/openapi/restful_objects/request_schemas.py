@@ -63,10 +63,11 @@ class CreateClusterHost(BaseSchema):
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = fields.AttributesField(
+    attributes = fields.attributes_field(
+        'cluster',
+        'create',
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
-        missing=dict,
     )
     nodes = fields.List(
         EXISTING_HOST_NAME,
@@ -92,10 +93,11 @@ class CreateHost(BaseSchema):
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = fields.AttributesField(
+    attributes = fields.attributes_field(
+        'host',
+        'create',
         description="Attributes to set on the newly created host.",
         example={'ipaddress': '192.168.0.123'},
-        missing=dict,
     )
 
 
@@ -126,22 +128,26 @@ class UpdateHost(BaseSchema):
       * `update_attributes`
       * `nodes`
     """
-    attributes = fields.AttributesField(
+    attributes = fields.attributes_field(
+        'host',
+        'update',
         description=("Replace all currently set attributes on the host, with these attributes. "
                      "Any previously set attributes which are not given here will be removed."),
         example={'ipaddress': '192.168.0.123'},
-        missing=dict,
         required=False,
     )
-    update_attributes = fields.AttributesField(
+    update_attributes = fields.attributes_field(
+        'host',
+        'update',
         description=("Just update the hosts attributes with these attributes. The previously set "
                      "attributes will not be touched."),
         example={'ipaddress': '192.168.0.123'},
-        missing=dict,
         required=False,
     )
-    remove_attributes = fields.List(
-        fields.String(),
+    remove_attributes = fields.attributes_field(
+        "host",
+        "update",
+        names_only=True,
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
         missing=list,
@@ -150,7 +156,11 @@ class UpdateHost(BaseSchema):
 
 
 class UpdateHostEntry(UpdateHost):
-    host_name = EXISTING_HOST_NAME
+    host_name = fields.HostField(
+        description="The hostname or IP address itself.",
+        required=True,
+        should_exist=True,
+    )
 
 
 class BulkUpdateHost(BaseSchema):
@@ -382,11 +392,13 @@ class CreateFolder(BaseSchema):
                      "specified by '/'."),
         example="/",
     )
-    attributes = fields.AttributesField(
+    attributes = fields.attributes_field(
+        'folder',
+        'create',
+        required=False,
         description=("Specific attributes to apply for all hosts in this folder "
                      "(among other things)."),
-        missing=dict,
-        example={},
+        example={'criticality': 'prod'},
     )
 
 
@@ -410,26 +422,30 @@ class UpdateFolder(BaseSchema):
         example="Virtual Servers.",
         required=False,
     )
-    attributes = fields.AttributesField(
+    attributes = fields.attributes_field(
+        'folder',
+        'update',
         description=("Replace all attributes with the ones given in this field. Already set"
                      "attributes, not given here, will be removed."),
-        example={},
-        missing=dict,
+        example={'networking': 'wan'},
         required=False,
     )
-    update_attributes = fields.AttributesField(
+    update_attributes = fields.attributes_field(
+        'folder',
+        'update',
         description=("Only set the attributes which are given in this field. Already set "
                      "attributes will not be touched."),
-        example={},
-        missing=dict,
+        example={'criticality': 'prod'},
         required=False,
     )
-    remove_attributes = fields.List(
-        fields.String(),
+    remove_attributes = fields.attributes_field(
+        'folder',
+        'update',
         description="A list of attributes which should be removed.",
         example=["tag_foobar"],
         missing=list,
         required=False,
+        names_only=True,
     )
 
 

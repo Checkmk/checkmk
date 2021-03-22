@@ -2,6 +2,12 @@
 Hosts
 =====
 
+Introduction and goals
+======================
+
+The hosts are the entities being monitored.  This document presents
+the interactions between the hosts and the server.
+
 There are two main categories of hosts the core monitors:
 :ref:`Agent-based hosts<arch-comp-hosts-agent>` and
 :ref:`SNMP hosts<arch-comp-hosts-snmp>`.  They are monitored
@@ -33,10 +39,21 @@ over different protocols.
    [CMK] -- SNMP
    [CMK] -- Trap
 
+Requirements overview
+---------------------
+
+The server-host communication is unidirectional.
+
+Architecture
+============
+
+White-box overall system and interfaces
+---------------------------------------
+
 .. _arch-comp-hosts-agent:
 
 Agent-based hosts
-=================
+~~~~~~~~~~~~~~~~~
 
 The data on the agent-based hosts are collected by a so-called agent.
 The monitoring core requests these data to the hosts, typically over
@@ -77,7 +94,7 @@ TCP, and they are treated by the :doc:`check engine<arch-comp-checkengine>`.
 .. _arch-comp-hosts-snmp:
 
 SNMP hosts
-==========
+~~~~~~~~~~
 
 .. uml::
 
@@ -99,3 +116,33 @@ SNMP hosts
    ' Connections:
    check_engine -- SNMP
    event_console -- Traps
+
+Deployment view
+===============
+
+The agent needs to be deployed on the host.  The program may be copied by
+the user or updated automatically in the enterprise edition.
+
+.. uml::
+
+   component "CheckMK Server" {
+      ' Components
+      component Bakery
+      artifact "Agent program" as agent
+      ' Connections
+      Bakery --> agent
+   }
+
+   cloud "Agent-based host" as host {
+   }
+
+   agent -0)-> host: TCP
+
+Risks and technical debts
+=========================
+
+* Every connection to and from the host must be encrypted, if possible.
+* An invalid payload in the agent protocol may produce critical errors
+  in the server.
+* Errors in the agent protocol may result in false positive or false
+  negatives in the monitoring.

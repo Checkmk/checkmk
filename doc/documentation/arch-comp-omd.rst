@@ -2,8 +2,18 @@
 OMD
 ===
 
-Processes and start sequence
-============================
+Introduction and goals
+======================
+
+WIP
+
+Architecture
+============
+
+WIP
+
+Runtime view
+============
 
 OMD is responsible for starting the main server processes up to the
 monitoring core.  The monitoring core has its own child processes.

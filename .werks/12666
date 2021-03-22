@@ -1,0 +1,14 @@
+Title: downtime.py: modifying script to fix the url verification and optionally ignore ssl verification
+Class: feature
+Compatible: compat
+Component: core
+Date: 1616413547
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p2
+
+This change modifies the url verification from checking if
+it ends with /check_mk to /check_mk/. In addition, the
+ignore-ssl-verification option is added which allows to bypass the ssl
+verification mechanism.

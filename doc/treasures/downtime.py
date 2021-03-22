@@ -22,11 +22,13 @@ import json
 import logging
 import os
 import datetime
+import ssl
 import sys
 import textwrap
 import traceback
 import urllib.request
 from typing import List, Literal, NamedTuple, Optional
+
 VERBOSITY = {
     0: logging.WARNING,
     1: logging.INFO,
@@ -50,6 +52,7 @@ DowntimeMode = Literal[
 
 def _set_downtime(
     api: ApiSettings,
+    ctx,
     mode: DowntimeMode,
     host_or_group: str,
     services: List[str],
@@ -98,16 +101,15 @@ def _set_downtime(
         data=json.dumps(keys).encode('utf-8'),
     )
     try:
-        response = urllib.request.urlopen(request)
+        with urllib.request.urlopen(request, context=ctx) as response:
+            print(f"{response.status}: {response.msg}")
     except urllib.error.HTTPError as e:
-        response_msg = f"{e.code}: {e.msg}"
-    else:
-        response_msg = f"{response.status}: {response.msg}"
-    print(response_msg)
+        print(f"{e.code}: {e.msg}")
 
 
 def _remove_downtime(
     api: ApiSettings,
+    context,
     downtime_id=None,
     host=None,
     services=None,
@@ -120,11 +122,11 @@ def _remove_downtime(
     elif host and services:
         keys = {
             "delete_type": "params",
-            "hostname": host,
-            "services": services,
+            "host_name": host,
+            "service_descriptions": services,
         }
     elif host:
-        keys = {"delete_type": "params", "hostname": host}
+        keys = {"delete_type": "params", "host_name": host}
     elif services:
         raise RuntimeError(
             f"Unsupported downtime remove action: host must be specified for {services}")
@@ -142,12 +144,10 @@ def _remove_downtime(
         data=json.dumps(keys).encode('utf-8'),
     )
     try:
-        response = urllib.request.urlopen(request)
+        with urllib.request.urlopen(request, context=context) as response:
+            print(f"{response.status}: {response.msg}")
     except urllib.error.HTTPError as e:
-        response_msg = f"{e.code}: {e.msg}"
-    else:
-        response_msg = f"{response.status}: {response.msg}"
-    print(response_msg)
+        print(f"{e.code}: {e.msg}")
 
 
 class MultilineFormatter(argparse.HelpFormatter):
@@ -254,7 +254,7 @@ def main():
 
     def api_url(value: str) -> Optional[str]:
         """Check for validity of the supplied API URL."""
-        if not value.endswith("/check_mk"):
+        if not value.endswith("/check_mk/"):
             return None
         return value
 
@@ -264,6 +264,14 @@ def main():
         type=api_url,
         dest='base_url',
         help="Base-URL of Multisite (default: guess local OMD site, fail if not possible).")
+    parser.add_argument(
+        '-I',
+        '--ignore-ssl-verification',
+        dest='ignore',
+        action='store_const',
+        const='ignore',
+        help="Ignore the ssl verification certificate",
+    )
     credentials = parser.add_argument_group(description="Credential options:")
     credentials.add_argument('-u',
                              '--user',
@@ -327,18 +335,28 @@ def manage_downtime(args: argparse.Namespace):
     output("Multisite-URL", args.base_url)
     output("User", args.user)
     output("Secret", args.secret or "(none specified)")
+
+    ctx = ssl.create_default_context()
+    if args.ignore:
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+
     if args.action == 'set':
-        _set_downtime(api,
-                      args.mode,
-                      args.host,
-                      args.services,
-                      args.start_time,
-                      args.end_time,
-                      duration=args.duration,
-                      comment=args.comment)
+        _set_downtime(
+            api,
+            ctx,
+            args.mode,
+            args.host,
+            args.services,
+            args.start_time,
+            args.end_time,
+            duration=args.duration,
+            comment=args.comment,
+        )
     elif args.action == 'remove':
         _remove_downtime(
             api,
+            ctx,
             args.downtime_id,
             args.host,
             args.services,

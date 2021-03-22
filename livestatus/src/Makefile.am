@@ -21,7 +21,7 @@ PACKAGE_ASIO := $(abs_top_srcdir)/omd/packages/asio
 ASIO_VERSION := asio-asio-1-18-0
 ASIO_INCLUDE := $(INCLUDES_DIR)/asio
 
-RRDTOOL_VERSION := rrdtool-1.7.1
+RRDTOOL_VERSION := rrdtool-1.7.2
 RRDTOOL_SRC_DIR := $(abs_top_srcdir)/omd/build/package_build/$(RRDTOOL_VERSION)/src
 RRDTOOL_BUILD_LOG := $(RRDTOOL_SRC_DIR)/build.log
 RRDTOOL_LD_FLAGS := -lrrd -L$(RRDTOOL_SRC_DIR)/.libs

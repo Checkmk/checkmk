@@ -305,6 +305,10 @@ class View(object):
         This is a performance feature. It is highly recommended to set the only_sites attribute
         whenever it is possible. In the moment it is set a livestatus query is not sent to all
         sites anymore but only to the given list of sites."""
+
+        if html.request.var("site"):
+            return [html.request.var("site")]
+
         return self._only_sites
 
     @only_sites.setter
@@ -1244,7 +1248,6 @@ def page_view():
 
     view = View(view_name, view_spec)
     view.row_limit = get_limit()
-    view.only_sites = get_only_sites()
     view.user_sorters = get_user_sorters()
 
     # Gather the page context which is needed for the "add to visual" popup menu

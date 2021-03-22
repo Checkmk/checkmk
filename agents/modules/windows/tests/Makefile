@@ -5,8 +5,8 @@
 INTEGRATION_TIMESTAMP   := results\integration.timestamp
 
 # Pythons for deploy
-PYTHON_1		:= ..\..\..\..\artefacts\python-3.8.zip
-PYTHON_2		:= ..\..\..\..\artefacts\python-3.4.zip
+PYTHON_1		:= ..\..\..\..\artefacts\python-3.8.cab
+PYTHON_2		:= ..\..\..\..\artefacts\python-3.4.cab
 
 # Scripts to be compatible with pythons
 SCRIPT_1		:= ..\..\..\..\enterprise\agents\plugins\cmk_update_agent.py

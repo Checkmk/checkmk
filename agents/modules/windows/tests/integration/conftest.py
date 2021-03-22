@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import List
 from subprocess import (Popen, PIPE)
 
-tested_pythons = ["python-3.4.zip", "python-3.8.zip"]
+tested_pythons = ["python-3.4.cab", "python-3.8.cab"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
 artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 

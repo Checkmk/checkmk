@@ -1,6 +1,6 @@
 //
 //
-// Support for the Zip Files
+// Support for the Zip and Cab Files
 //
 //
 

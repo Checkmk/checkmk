@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional, Sequence, List
 import json
 
 from ..agent_based_api.v1.type_defs import StringTable
@@ -37,3 +37,7 @@ def format_labels(obj: Dict) -> str:
     if isinstance(labels, dict):
         labels = iter(labels.items())
     return ", ".join("%s: %s" % item for item in sorted(labels))
+
+
+def is_string_table_heading(line: List[str]) -> bool:
+    return len(line) == 1 and line[0].startswith("[") and line[0].endswith("]")

@@ -20,6 +20,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.render import iobandwidth
+from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
+    DockerDiskstatParser,)
 
 # make value_store fixture available to tests in this file
 value_store_fixture = get_value_store_fixture(diskstat)
@@ -35,6 +37,8 @@ value_store_fixture = get_value_store_fixture(diskstat)
 # will display 256kb/s instead of 128kb/s because the logical and physical disk
 # is accumulated.
 # this will be fixed with the next major release.
+
+# the following comments belong to the test data:
 
 # check_mk_agent running inside a docker container
 
@@ -164,6 +168,85 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60 = [
     ],
 ]
 
+# those are gathered in a vm. could not get correct values on the developer machine.
+
+DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0 = [
+    ["[time]"],
+    ["1641207164"],
+    ["[io.stat]"],
+    [
+        "8:0",
+        "rbytes=0",
+        "wbytes=139948032",
+        "rios=0",
+        "wios=2391",
+        "dbytes=0",
+        "dios=0",
+    ],
+    ["[names]"],
+    ["sda", "8:0"],
+    ["sr0", "11:0"],
+]
+
+DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
+    ["[time]"],
+    ["1641207225"],
+    ["[io.stat]"],
+    [
+        "8:0",
+        "rbytes=536879104",
+        "wbytes=1750560768",
+        "rios=131074",
+        "wios=264986",
+        "dbytes=0",
+        "dios=0",
+    ],
+    ["[names]"],
+    ["sda", "8:0"],
+    ["sr0", "11:0"],
+]
+
+# rios and wios are missing. config: debian testing with kernel 5.10.84 and docker 20.10.5+dfsg1
+
+MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0 = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 0}, {"major"'
+        ': 8, "minor": 0, "op": "write", "value": 139948032}], "io_serviced_recursive": null, "io_que'
+        'ue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": null, "io_'
+        'merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "time": 16412'
+        '07165.4858, "names": {"11:0": "sr0", "8:0": "sda"}}'
+    ],
+]
+MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60 = [
+    [
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
+    ],
+    [
+        '{"io_service_bytes_recursive": [{"major": 8, "minor": 0, "op": "read", "value": 536879104}, '
+        '{"major": 8, "minor": 0, "op": "write", "value": 1750560768}], "io_serviced_recursive": null'
+        ', "io_queue_recursive": null, "io_service_time_recursive": null, "io_wait_time_recursive": n'
+        'ull, "io_merged_recursive": null, "io_time_recursive": null, "sectors_recursive": null, "tim'
+        'e": 1641207226.9843512, "names": {"11:0": "sr0", "8:0": "sda"}}'
+    ],
+]
+
+
+def test_parser() -> None:
+    # we had a little discussion about instance variables vs. class variable
+    # this test make sure to only use instance variables for the data stored.
+    # otherwise the second run would include data from the first run.
+    parser = DockerDiskstatParser()
+    parser.parse([["[names]"], ["1", "a"]])
+    assert parser.names.names == {"a": "1"}
+    parser = DockerDiskstatParser()
+    parser.parse([["[names]"], ["2", "b"]])
+    assert parser.names.names == {"b": "2"}
+
 
 @pytest.mark.parametrize(
     "section_name, plugin_name, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
@@ -187,6 +270,26 @@ MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV1_60 = [
             26184418.82719776,
             2128.9876272215433,
             4266.356583908161,
+        ],
+        [
+            "docker_container_diskstat_cgroupv2",
+            "diskstat",
+            DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0,
+            DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60,
+            8801296.786885247,
+            26403487.475409836,
+            2148.754098360656,
+            4304.836065573771,
+        ],
+        [
+            "docker_container_diskstat",
+            "diskstat",
+            MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_0,
+            MK_DOCKER_DOCKER_CONTAINER_DISKSTAT_CGROUPV2_60,
+            8729947.19603285,
+            26189441.968927883,
+            0,
+            0,
         ],
     ],
 )
@@ -218,22 +321,28 @@ def test_docker_container_diskstat(
                 item="SUMMARY",
             ))
     # now we have a rate:
-    assert list(
+    result = list(
         plugin.check_function(
             params={},
             section_multipath=None,
             section_diskstat=section_60_seconds,
             item="SUMMARY",
-        )) == [
-            Result(state=State.OK, summary=f"Read: {iobandwidth(read_bytes)}"),
-            Metric("disk_read_throughput", read_bytes),
-            Result(state=State.OK, summary=f"Write: {iobandwidth(write_bytes)}"),
-            Metric("disk_write_throughput", write_bytes),
+        ))
+
+    expected_result = [
+        Result(state=State.OK, summary=f"Read: {iobandwidth(read_bytes)}"),
+        Metric("disk_read_throughput", read_bytes),
+        Result(state=State.OK, summary=f"Write: {iobandwidth(write_bytes)}"),
+        Metric("disk_write_throughput", write_bytes),
+    ]
+    if write_ops != 0 and read_ops != 0:
+        expected_result += [
             Result(state=State.OK, notice=f"Read operations: {read_ops:.2f}/s"),
             Metric("disk_read_ios", read_ops),
             Result(state=State.OK, notice=f"Write operations: {write_ops:.2f}/s"),
             Metric("disk_write_ios", write_ops),
         ]
+    assert result == expected_result
 
 
 @pytest.mark.parametrize(

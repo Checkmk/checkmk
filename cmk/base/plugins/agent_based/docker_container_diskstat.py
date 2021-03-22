@@ -4,142 +4,110 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Iterable, Iterator, Literal, Tuple, TypedDict
+from collections import defaultdict
+from dataclasses import dataclass, field
+from itertools import chain
+from typing import Dict
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
 from .utils import diskstat, docker
+from .utils.docker import is_string_table_heading
+
+MAPPING = {
+    ("io_service_bytes_recursive", "read"): "read_throughput",
+    ("io_service_bytes_recursive", "write"): "write_throughput",
+    ("io_serviced_recursive", "read"): "read_ios",
+    ("io_serviced_recursive", "write"): "write_ios",
+}
 
 
-class DeviceData(TypedDict):
-    name: str
-    bytes: Dict[str, int]
-    ios: Dict[str, int]
+def __parse_docker_api(data, docker_key_name):
+    for entry in data[docker_key_name] or ():
+        yield f'{entry["major"]}:{entry["minor"]}', docker_key_name, entry["op"], entry["value"]
 
 
-Devices = Dict[Tuple[int, int], DeviceData]
-
-
-class PreParsed(TypedDict):
-    time: int
-    devices: Devices
-
-
-Section = Dict[str, Tuple[int, DeviceData]]
-
-
-def _parse_docker_container_diskstat_plugin(info: StringTable) -> PreParsed:
+def _parse_docker_container_diskstat_plugin(info: StringTable) -> diskstat.Section:
     raw = docker.json_get_obj(info[1])
 
-    devices: Devices = {}
+    devices_by_name: Dict[str, Dict[str, float]] = {}
+    devices_by_number: Dict[str, Dict[str, float]] = {}
     for major_minor, name in raw["names"].items():
-        major, minor = map(int, major_minor.split(":", 1))
-        devices[(major, minor)] = {
-            "name": name,
-            "bytes": {},
-            "ios": {},
+        devices_by_name[name] = devices_by_number[major_minor] = {
+            "timestamp": raw["time"],
         }
 
-    for entry in raw["io_service_bytes_recursive"] or ():
-        device = devices.get((entry["major"], entry["minor"]))
-        if device:
-            device["bytes"][entry["op"].title()] = entry["value"]
+    for major_minor, docker_key_name, docker_op, value in chain(
+            __parse_docker_api(raw, "io_service_bytes_recursive"),
+            __parse_docker_api(raw, "io_serviced_recursive"),
+    ):
+        diskstat_key = MAPPING.get((docker_key_name, docker_op.lower()))
+        if diskstat_key is not None:
+            devices_by_number[major_minor][diskstat_key] = value
 
-    for entry in raw["io_serviced_recursive"] or ():
-        device = devices.get((entry["major"], entry["minor"]))
-        if device:
-            device["ios"][entry["op"].title()] = entry["value"]
-
-    # only keep devices with counters
-    devices_with_counters = {}
-    for major_minor, diskstat_data in devices.items():
-        if diskstat_data["bytes"] or diskstat_data["ios"]:
-            devices_with_counters[major_minor] = diskstat_data
-
-    return {"time": raw["time"], "devices": devices_with_counters}
+    return devices_by_name
 
 
-def _parse_docker_container_diskstat_agent(info: StringTable) -> PreParsed:
-    sections: PreParsed = {}  # type: ignore[typeddict-item]
+@dataclass
+class ParsedDiskstatData:
+    time: int = 0
+    names: Dict[str, str] = field(default_factory=dict)
+    # names[device_number] = device_name
+    stat: Dict[str, Dict[str, Dict[str, int]]] = field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(dict)))
+    # stat[device_number][headline][counter_name] = value
 
-    phase: Literal["bytes", "ios", "names", "time"]
+
+def _parse_docker_container_diskstat_agent(info: StringTable) -> diskstat.Section:
+    lines_by_headline = defaultdict(list)
+    current_headline = None
     for line in info:
+        if is_string_table_heading(line):
+            current_headline = line[0]
+            continue
+        lines_by_headline[current_headline].append(line)
 
-        if line[0] == "[io_service_bytes]":
-            phase = "bytes"
-        elif line[0] == "[io_serviced]":
-            phase = "ios"
-        elif line[0] == "[names]":
-            phase = "names"
-        elif line[0] == "[time]":
-            phase = "time"
-        else:
-            if line[0] == "Total":
+    parsed = ParsedDiskstatData()
+    parsed.time = int(lines_by_headline["[time]"][0][0])
+    for headline in ("[io_service_bytes]", "[io_serviced]"):
+        for line in lines_by_headline[headline]:
+            if len(line) == 2 and line[0] == "Total":
                 continue
+            parsed.stat[line[0]][headline][line[1]] = int(line[2])
+    for line in lines_by_headline["[names]"]:
+        parsed.names[line[1]] = line[0]
 
-            if phase == "time":
-                sections["time"] = int(line[0])
-                continue
+    section: Dict[str, Dict[str, float]] = {}
+    for device_number, stats in parsed.stat.items():
+        device_name = parsed.names[device_number]
+        section[device_name] = {
+            "timestamp": parsed.time,
+            "read_ios": stats["[io_serviced]"]["Read"],
+            "write_ios": stats["[io_serviced]"]["Write"],
+            "read_throughput": stats["[io_service_bytes]"]["Read"],
+            "write_throughput": stats["[io_service_bytes]"]["Write"],
+        }
 
-            devices = sections.setdefault("devices", {})
-
-            if phase == "names":
-                major, minor = map(int, line[1].split(":"))
-            else:
-                major, minor = map(int, line[0].split(":"))
-
-            device_id = major, minor
-            device = devices.setdefault(device_id, {})  # type: ignore[typeddict-item]
-
-            if phase == "names":
-                device["name"] = line[0]
-            else:
-                device_phase = device.setdefault(phase, {})  # type: ignore[arg-type]
-                device_phase[line[1]] = int(line[2])
-
-    return sections
-
-
-MAPPING: Iterable[Tuple[str, Literal["ios", "bytes"], str]] = [
-    ("read_ios", "ios", "Read"),
-    ("write_ios", "ios", "Write"),
-    ("read_throughput", "bytes", "Read"),
-    ("write_throughput", "bytes", "Write"),
-]
+    return section
 
 
 def parse_docker_container_diskstat(string_table: StringTable) -> diskstat.Section:
-
     version = docker.get_version(string_table)
     if version is None:
-        pre_parsed = _parse_docker_container_diskstat_agent(string_table)
+        result = _parse_docker_container_diskstat_agent(string_table)
     else:
-        pre_parsed = _parse_docker_container_diskstat_plugin(string_table)
+        result = _parse_docker_container_diskstat_plugin(string_table)
 
-    def _filter(devices: Iterable[DeviceData]) -> Iterator[DeviceData]:
-        # Filter out unwanted things
-        for device in devices:
-            if device["name"].startswith("loop"):
-                continue
+    filtered_result = {}
+    for device_name, data in result.items():
+        if device_name.startswith("loop"):
+            continue
+        if sum(i[1] for i in data.items() if i[0] != "timestamp") == 0:
+            # all counters are 0
+            continue
+        filtered_result[device_name] = data
 
-            # Skip devices without counts
-            if "ios" not in device or "bytes" not in device:
-                continue
-            yield device
-
-    section: Dict[str, Dict[str, float]] = {}
-    this_time = pre_parsed["time"]
-
-    for pre_parsed_device in _filter(pre_parsed["devices"].values()):
-        device: Dict[str, float] = {}
-        section[pre_parsed_device["name"]] = device
-        old_key_1: Literal["ios", "bytes"]
-        for new_key, old_key_1, old_key_2 in MAPPING:
-            if old_key_1 in pre_parsed_device and old_key_2 in pre_parsed_device[old_key_1]:
-                device[new_key] = pre_parsed_device[old_key_1][old_key_2]
-        device["timestamp"] = this_time
-
-    return section
+    return filtered_result
 
 
 register.agent_section(

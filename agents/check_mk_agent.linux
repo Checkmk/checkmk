@@ -491,13 +491,18 @@ section_diskstat() {
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
     else
-        echo '<<<docker_container_diskstat>>>'
+        echo "<<<docker_container_diskstat$CGROUP_SECTION_SUFFIX>>>"
         echo "[time]"
         date +%s
-        for F in io_service_bytes io_serviced; do
-            echo "[$F]"
-            cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
-        done
+        if [ -n "$IS_CGROUP_V2" ]; then
+            echo "[io.stat]"
+            cat "/sys/fs/cgroup/io.stat"
+        else
+            for F in io_service_bytes io_serviced; do
+                echo "[$F]"
+                cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+            done
+        fi
         echo "[names]"
         for F in /sys/block/*; do
             echo "${F##*/} $(cat "$F/dev")"

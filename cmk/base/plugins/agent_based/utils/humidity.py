@@ -4,40 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, Union, Tuple, TypedDict, List
+from typing import Mapping, Tuple
 
 from ..agent_based_api.v1 import check_levels, render
 
 from ..agent_based_api.v1.type_defs import CheckResult
 
-TwoLevelsType = Optional[Tuple[float, float]]
-FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
-ListType = List[Optional[float]]
-HumidityParamDict = TypedDict(
-    'HumidityParamDict',
-    {
-        'levels': TwoLevelsType,
-        'levels_lower': TwoLevelsType,
-    },
-    total=False,
-)
-HumidityParamType = Union[None, FourLevelsType, ListType, HumidityParamDict]
+HumidityParamType = Mapping[str, Tuple[float, float]]
 
 def check_humidity(humidity: float, params: HumidityParamType) -> CheckResult:
-    if isinstance(params, dict):
-        levels = ((params.get("levels") or (None, None)) + (params.get("levels_lower") or
-                                                            (None, None)))
-    elif isinstance(params, (list, tuple)):
-        # old params = (crit_low , warn_low, warn, crit)
-        levels = (params[2], params[3], params[1], params[0])
-    else:
-        levels = (None, None, None, None)
-
     yield from check_levels(
         humidity,
         metric_name="humidity",
-        levels_upper=(levels[0], levels[1]),
-        levels_lower=(levels[2], levels[3]),
+        levels_upper=params.get("levels", (None, None)),
+        levels_lower=params.get("levels_lower", (None, None)),
         render_func=render.percent,
         boundaries=(0, 100),
     )

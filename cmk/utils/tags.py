@@ -197,6 +197,7 @@ class AuxTagList:
 class GroupedTag(ABCTag):
     def __init__(self, group, data=None):
         super(GroupedTag, self).__init__()
+        self.id: str
         self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
@@ -218,6 +219,11 @@ class GroupedTag(ABCTag):
 class TagGroup:
     def __init__(self, data=None):
         super(TagGroup, self).__init__()
+        self.id: Optional[str]
+        self.title: Optional[str]
+        self.topic: Optional[str]
+        self.help: Optional[str]
+        self.tags: List[GroupedTag]
         self._initialize()
 
         if data:

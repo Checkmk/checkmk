@@ -968,7 +968,7 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                                 default_value="unknown",
                             ),
                         ],
-                        default_value=config.user.id,
+                        default_value=lambda: config.user.id,
                     ),
                 ),
             ],

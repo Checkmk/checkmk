@@ -143,7 +143,11 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     )
 
 
-def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_calls):
+def test_openapi_bulk_hosts(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))
 
@@ -165,7 +169,8 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
                     "host_name": "sample",
                     "folder": "/",
                     "attributes": {
-                        "ipaddress": "127.0.0.2"
+                        "ipaddress": "127.0.0.2",
+                        "site": "NO_SITE",
                     }
                 },
             ]
@@ -182,7 +187,9 @@ def test_openapi_bulk_hosts(wsgi_app, with_automation_user, suppress_automation_
             "entries": [{
                 "host_name": "foobar",
                 "attributes": {
-                    "ipaddress": "192.168.1.1"
+                    "ipaddress": "192.168.1.1",
+                    "networking": "wan",
+                    "criticality": "prod",
                 },
             }],
         }),
@@ -225,7 +232,7 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
 
     base = '/NO_SITE/check_mk/api/1.0'
 
-    resp = wsgi_app.call_method(
+    wsgi_app.call_method(
         'post',
         base + "/domain-types/host_config/actions/bulk-create/invoke",
         params=json.dumps(

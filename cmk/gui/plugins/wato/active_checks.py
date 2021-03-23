@@ -897,7 +897,7 @@ def _active_checks_http_proxyspec():
 def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
-        help=_("Usually Check_MK will nail this check to the primary IP address of the host"
+        help=_("Usually Checkmk will nail this check to the primary IP address of the host"
                " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
                " default port (80/443). With this option you can override either of these"
                " parameters. By default no virtual host is set and HTTP/1.0 will be used."

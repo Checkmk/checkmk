@@ -591,7 +591,7 @@ def _valuespec_special_agents_kubernetes():
             optional_keys=["port", "url-prefix", "path-prefix"],
             title=_("Kubernetes"),
             help=
-            _("This rule selects the Kubenetes special agent for an existing Checkmk host. "
+            _("This rule selects the Kubernetes special agent for an existing Checkmk host. "
               "If you want to monitor multiple Kubernetes clusters "
               "we strongly recommend to set up "
               "<a href=\"wato.py?mode=edit_ruleset&varname=piggyback_translation\">Piggyback translation rules</a> "
@@ -804,7 +804,7 @@ def _valuespec_generic_metrics_prometheus():
                                                        _("Long - Use the full docker container ID")
                                                       ),
                                                       ("name",
-                                                       _("Name - Use the containers' name")),
+                                                       _("Name - Use the name of the container")),
                                                   ],
                                               ))],
                                             optional_keys=[],
@@ -833,7 +833,7 @@ def _valuespec_generic_metrics_prometheus():
                                                        _("Long - Use the full docker container ID")
                                                       ),
                                                       ("name",
-                                                       _("Name - Use the containers' name")),
+                                                       _("Name - Use the name of the container")),
                                                   ],
                                               )), namespace_element],
                                             optional_keys=[],

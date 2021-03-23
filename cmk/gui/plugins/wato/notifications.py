@@ -310,7 +310,7 @@ class NotificationParameterSlack(NotificationParameter):
                        "<a href=\"https://my.slack.com/services/new/incoming-webhook/\" target=\"_blank\">here</a>"
                        "<br />For Mattermost follow the documentation "
                        "<a href=\"https://docs.mattermost.com/developer/webhooks-incoming.html\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                       "<br />This URL can also be collected from the Password Store from Checkmk."
                       ),
                      choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
                                                                         allow_empty=False)),
@@ -343,7 +343,7 @@ class NotificationParameterCiscoWebexTeams(NotificationParameter):
                      help=
                      _("Webhook URL. Setup Cisco Webex Teams Webhook " +
                        "<a href=\"https://apphub.webex.com/messaging/applications/incoming-webhooks-cisco-systems-38054\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                       "<br />This URL can also be collected from the Password Store from Checkmk."
                       ),
                      choices=[("webhook_url", _("Webhook URL"), HTTPUrl(size=80,
                                                                         allow_empty=False)),
@@ -377,7 +377,7 @@ class NotificationParameterVictorOPS(NotificationParameter):
                      help=
                      _("Learn how to setup a REST endpoint "
                        "<a href=\"https://help.victorops.com/knowledge-base/victorops-restendpoint-integration/\" target=\"_blank\">here</a>"
-                       "<br />This URL can also be collected from the Password Store from Check_MK."
+                       "<br />This URL can also be collected from the Password Store from Checkmk."
                       ),
                      choices=[("webhook_url", _("REST Endpoint URL"),
                                HTTPUrl(allow_empty=False,

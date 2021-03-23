@@ -4375,7 +4375,22 @@ class PainterLogContactName(Painter):
         return ['log_contact_name']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("nowrap", row["log_contact_name"])
+        target_view_name = ("mobile_contactnotifications"
+                            if html.is_mobile() else "contactnotifications")
+        return (
+            "nowrap",
+            HTML(", ").join(
+                html.render_a(
+                    contact,
+                    makeuri_contextless(
+                        request,
+                        [
+                            ("view_name", target_view_name),
+                            ("log_contact_name", contact),
+                        ],
+                        filename="view.py",
+                    )) for contact in row["log_contact_name"].split(",")),
+        )
 
 
 @painter_registry.register

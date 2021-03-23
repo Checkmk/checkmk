@@ -93,29 +93,21 @@ def _reformat_sensor_name(name):
 
 
 def parse_entity_sensors(info):
-    # Some devices such as Palo Alto Network series 3000 support
-    # the ENTITY-MIB including sensor/entity names.
-    # Others (e.g. Palo Alto Networks Series 200) do not support
-    # this MIB, thus we use OID as item instead
-    pre_parsed = {}
-    for oid_end, name in info[0]:
-        sensor_name = ""
-        if name:
-            sensor_name = _reformat_sensor_name(name)
-
-        pre_parsed.setdefault(oid_end, sensor_name)
-
     parsed = {}
-    for oid_end, sensor_type_nr, sensor_scale, sensor_reading, operstate in info[1]:
-        sensor_name = pre_parsed.get(oid_end, "Sensor %s" % oid_end)
-
-        sensor_type, sensor_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
-        parsed.setdefault(sensor_type, {})
-        factor = ENTITY_SENSOR_SCALING[sensor_scale]
-        parsed[sensor_type][sensor_name] = \
-            ((_sensor_state(operstate),_sensor_status_descr(operstate)),
-             float(sensor_reading) * factor, sensor_unit)
-
+    sensor_names = {i[0]: i[1] for i in info[0]}
+    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr in info[1]:
+        # Some devices such as Palo Alto Network series 3000 support
+        # the ENTITY-MIB including sensor/entity names.
+        # Others (e.g. Palo Alto Networks Series 200) do not support
+        # this MIB, thus we use OID as item instead
+        sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
+        sensor_type, unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
+        parsed.setdefault(sensor_type, {})[sensor_name] = {
+            'unit': unit,
+            'reading': float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
+            'status_descr': _sensor_status_descr(status_nr),
+            'state': _sensor_state(status_nr),
+        }
     return parsed
 
 
@@ -137,14 +129,12 @@ def check_entity_sensors_temp(item, params, parsed):
     if not (sensor_reading := parsed.get('temp', {}).get(item)):
         return
 
-    operstate, reading, unit = sensor_reading
-    state, state_readable = operstate
-    yield check_temperature(reading,
+    yield check_temperature(sensor_reading['reading'],
                             params,
                             "temp",
-                            dev_unit=unit,
-                            dev_status=state,
-                            dev_status_name=state_readable)
+                            dev_unit=sensor_reading['unit'],
+                            dev_status=sensor_reading['state'],
+                            dev_status_name=sensor_reading['status_descr'])
 
 
 check_info['entity_sensors'] = {
@@ -187,14 +177,11 @@ def check_entity_sensors_fan(item, params, parsed):
     if not (sensor_reading := parsed.get('fan', {}).get(item)):
         return
 
-    operstate, reading, unit = sensor_reading
-    state, state_readable = operstate
-    yield state, "Operational status: %s" % state_readable
-
-    yield check_levels(reading,
+    yield sensor_reading['state'], f"Operational status: {sensor_reading['status_descr']}"
+    yield check_levels(sensor_reading['reading'],
                        "fan" if params.get("output_metrics") else None,
                        params.get("upper", (None, None)) + params["lower"],
-                       unit=unit,
+                       unit=sensor_reading['unit'],
                        human_readable_func=int,
                        infoname="Speed")
 

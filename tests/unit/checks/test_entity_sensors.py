@@ -29,12 +29,32 @@ pytestmark = pytest.mark.checks
         ],
         {
             'fan': {
-                'Sensor 1 Operational': ((0, 'OK'), 1.0, 'RPM'),
-                'Sensor 2 Operational': ((0, 'OK'), 1.0, 'RPM')
+                'Sensor 1 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor 2 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                }
             },
             'temp': {
-                'Sensor at MP [U6]': ((0, 'OK'), 37.0, 'c'),
-                'Sensor at DP [U7]': ((0, 'OK'), 40.0, 'c')
+                'Sensor at MP [U6]': {
+                    'unit': 'c',
+                    'reading': 37.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor at DP [U7]': {
+                    'unit': 'c',
+                    'reading': 40.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
             },
         },
     ),
@@ -96,12 +116,32 @@ def test_discover_entity_sensors(info, expected_discovery_temp, expected_discove
         },
         {
             'fan': {
-                'Sensor 1 Operational': ((0, 'OK'), 1.0, 'RPM'),
-                'Sensor 2 Operational': ((0, 'OK'), 1.0, 'RPM')
+                'Sensor 1 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor 2 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                }
             },
             'temp': {
-                'Sensor at MP [U6]': ((0, 'OK'), 37.0, 'c'),
-                'Sensor at DP [U7]': ((0, 'OK'), 40.0, 'c')
+                'Sensor at MP [U6]': {
+                    'unit': 'c',
+                    'reading': 37.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor at DP [U7]': {
+                    'unit': 'c',
+                    'reading': 40.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
             },
         },
         [
@@ -125,12 +165,32 @@ def test_check_entity_sensors_temp(item, params, parsed, expected_result):
         },
         {
             'fan': {
-                'Sensor 1 Operational': ((0, 'OK'), 1.0, 'RPM'),
-                'Sensor 2 Operational': ((0, 'OK'), 1.0, 'RPM')
+                'Sensor 1 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor 2 Operational': {
+                    'unit': 'RPM',
+                    'reading': 1.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                }
             },
             'temp': {
-                'Sensor at MP [U6]': ((0, 'OK'), 37.0, 'c'),
-                'Sensor at DP [U7]': ((0, 'OK'), 40.0, 'c')
+                'Sensor at MP [U6]': {
+                    'unit': 'c',
+                    'reading': 37.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
+                'Sensor at DP [U7]': {
+                    'unit': 'c',
+                    'reading': 40.0,
+                    'status_descr': 'OK',
+                    'state': 0
+                },
             },
         },
         [

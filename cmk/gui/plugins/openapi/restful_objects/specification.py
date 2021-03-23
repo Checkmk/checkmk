@@ -35,6 +35,70 @@ visualization for direct interaction with the API's resources).
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
 
+## JSON envelope attributes
+
+All objects are wrapped in a JSON structure called an "Domain Object" which take the following
+form:
+
+    {"domainType": "domain type identifier",
+     "instanceId": "string to uniquely identify domain object",
+     "title": "Human readable header for domain object",
+     "members": {},
+     "links": [],
+     "extensions": {}}
+
+The collections `members`, `extensions` and `links` are defined as such:
+
+ * members - this contains all relationships to other objects or collections which are present on
+   this domain object
+ * extensions - this contains all key-values pairs which are direct attributes of the domain object
+ * links - holds a collection of links to other resources or actions
+
+## Link relations
+
+Every response comes with a collection of `links` to inform the API client on possible
+follow-up actions. For example, a folder response can have links to resources for updating,
+deleting and moving the folder. The client does not have to know about the URL structure, it
+just needs to follow the link. In this sense, the API is quasi self-documenting.
+This provision of additional information as a REST-API principle is also called
+[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS). In this context,
+a `rel` specifies the type of relationship of the concerning resource to the resource that generated
+this representation. The rel attribute is only of informational nature for the client.
+
+Objects may have these possible generic link relations:
+
+ * self - The API location of the current object
+ * help - Documentation for the currently requested endpoint
+ * collection - The API location for a list of object of the current objects' type
+ * edit - The API location to update the current object
+ * edit-form - The GUI location to edit the current object
+ * delete - The API location to delete the current object
+
+Members of collections have also:
+
+ * item - The API location of a member of the current collection
+
+Please note that these (except for self) are completely optional and may or may not be available on
+certain endpoints. More specialized link relations are also available:
+
+ * invoke - The API location to invoke an action
+ * start - The API location to start a long running process, which the current object represents
+ * cancel - The API location to abort the long running process, which the current object represents
+ * download - The URL to download the object described by the current endpoint
+ * move - The API location to move the current object to another destination
+
+Endpoint specific link relations are also possible.
+
+## Host and Folder attributes
+
+Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
+host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
+community in a folder is equivalent to setting the same on all hosts in said folder.
+
+Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
+attributes up to the root.
+
+
 # Updating values
 
 When an object is updated by multiple requests at the same time, it can happen that the second
@@ -71,88 +135,25 @@ A detailed description of the columns can be found on GitHub:
  * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
  * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
-JSON envelope attributes
+## Some example queries
 
-All objects are wrapped in a JSON structure called an "Domain Object" which take the following
-form:
+To query a list of all hosts which have a problem, you can query the "status" column on the
+host table. A status of 0 means OK, 1 means WARN, 2 means CRIT and 3 means UNKNOWN.
 
-    {"domainType": "domain type identifier",
-     "instanceId": "string to uniquely identify domain object",
-     "title": "Human readable header for domain object",
-     "members": {},
-     "links": [],
-     "extensions": {}}
+The query expression for all non-OK hosts would be:
 
-The collections `members`, `extensions` and `links` are defined as such:
+    {'op': '!=', 'left': 'status', 'right': '0'}
 
- * members - this contains all relationships to other objects or collections which are present on
-   this domain object
- * extensions - this contains all key-values pairs which are direct attributes of the domain object
- * links - holds a collection of links to other resources or actions
+To search for all hosts with their host name or alias starting with 'location1-':
 
+    {'op': '~', 'left': 'name', 'right': 'location1-.*'}
 
-Some example queries:
+    {'op': '~', 'left': 'alias', 'right': 'location1-.*'}
 
-    To query a list of all hosts which have a problem, you can query the "status" column on the
-    host table. A status of 0 means OK, 1 means WARN, 2 means CRIT and 3 means UNKNOWN.
+To search for hosts with specific tags set on them:
 
-    The query expression for all non-OK hosts would be:
+    {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
-        {'op': '!=', 'left': 'status', 'right': '0'}
-
-    To search for all hosts with their host name or alias starting with 'location1-':
-
-        {'op': '~', 'left': 'name', 'right': 'location1-.*'}
-
-        {'op': '~', 'left': 'alias', 'right': 'location1-.*'}
-
-    To search for hosts with specific tags set on them:
-
-        {'op': '~', 'left': 'tag_names', 'right': 'windows'}
-
-# Host and Folder attributes
-
-Every host and folder can have "attributes" set, which determine the behavior of Checkmk. Each
-host inherits all attributes of it's folder and the folder's parent folders. So setting a SNMP
-community in a folder is equivalent to setting the same on all hosts in said folder.
-
-Some host endpoints allow one to view the "effective attributes", which is an aggregation of all
-attributes up to the root.
-
-# Link relations
-
-Every response comes with a collection of `links` to inform the API client on possible
-follow-up actions. For example, a folder response can have links to resources for updating,
-deleting and moving the folder. The client does not have to know about the URL structure, it
-just needs to follow the link. In this sense, the API is quasi self-documenting.
-This provision of additional information as a REST-API principle is also called
-[HATEOAS](https://en.wikipedia.org/wiki/HATEOAS). In this context,
-a `rel` specifies the type of relationship of the concerning resource to the resource that generated
-this representation. The rel attribute is only of informational nature for the client.
-
-Objects may have these possible generic link relations:
-
- * self - The API location of the current object
- * help - Documentation for the currently requested endpoint
- * collection - The API location for a list of object of the current objects' type
- * edit - The API location to update the current object
- * edit-form - The GUI location to edit the current object
- * delete - The API location to delete the current object
-
-Members of collections have also:
-
- * item - The API location of a member of the current collection
-
-Please note that these (except for self) are completely optional and may or may not be available on
-certain endpoints. More specialized link relations are also available:
-
- * invoke - The API location to invoke an action
- * start - The API location to start a long running process, which the current object represents
- * cancel - The API location to abort the long running process, which the current object represents
- * download - The URL to download the object described by the current endpoint
- * move - The API location to move the current object to another destination
-
-Endpoint specific link relations are also possible.
 
 # Authentication
 

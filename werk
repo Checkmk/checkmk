@@ -20,13 +20,6 @@ from typing import Dict, List, NoReturn, Optional, Set, Tuple, Union
 Werk = Dict[str, str]
 
 RESERVED_IDS_FILE_PATH = f"{os.getenv('HOME')}/.cmk-werk-ids"
-if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile('.my_ids'):
-    try:
-        # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
-        dest = shutil.move('.my_ids', RESERVED_IDS_FILE_PATH)
-        sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
-    except Exception:
-        sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 # colored output, if stdout is a tty
 if sys.stdout.isatty():
@@ -230,6 +223,17 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser_url.set_defaults(func=main_url)
 
     return parser.parse_args(argv)
+
+
+def try_migrate_werk_ids():
+
+    if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
+        try:
+            # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
+            dest = shutil.move(".my_ids", RESERVED_IDS_FILE_PATH)
+            sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
+        except Exception:
+            sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
 
 
 def get_tty_size() -> Tuple[int, int]:
@@ -986,6 +990,7 @@ online_url = ""
 
 versions: Set[str] = set([])
 goto_werksdir()
+try_migrate_werk_ids()
 load_config()
 load_werks()
 g_current_version = load_current_version()

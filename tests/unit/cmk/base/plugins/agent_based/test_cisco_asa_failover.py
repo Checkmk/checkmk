@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
       'remote': ['secondary', '10', 'standby unit']}),
 
     ([[['Failover LAN Interface', '3', 'not Configured'], ['Primary unit', '3', 'Failover Off'],
-       ['Secondary unit (this device)', '3', 'Failover Off']]], None,),
+       ['Secondary unit (this device)', '3', 'Failover Off']]], {}),
 ])
 def test_cisco_asa_failover_parse(string_table, expected):
     section = cisco_asa_failover.parse_cisco_asa_failover(string_table)
@@ -33,6 +33,7 @@ def test_cisco_asa_failover_parse(string_table, expected):
     ({'failover': ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
       'local': ['primary', '9', 'active unit'],
       'remote': ['secondary', '10', 'standby unit']}, [Service()]),
+    ({}, []),
 ])
 def test_cisco_asa_failover_discover(section, expected):
     services = list(cisco_asa_failover.discovery_cisco_asa_failover(section))
@@ -48,6 +49,5 @@ def test_cisco_asa_failover_discover(section, expected):
          [Result(state=State.OK, summary='Device (primary) is the active unit'), ]),
     ])
 def test_cisco_asa_failover(params, section, expected):
-    # section = cisco_asa_failover.parse_cisco_asa_failover(data)
     result = cisco_asa_failover.check_cisco_asa_failover(params, section)
     assert list(result) == expected

@@ -494,7 +494,7 @@ multisite_builtin_views.update({
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('log_plugin_output', None, ''),
         ],
@@ -636,7 +636,7 @@ multisite_builtin_views.update({
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
@@ -675,7 +675,7 @@ multisite_builtin_views.update({
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('host', None, ''),
             ('log_state', None, ''),
             ('log_plugin_output', None, ''),

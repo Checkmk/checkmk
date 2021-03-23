@@ -3780,7 +3780,7 @@ multisite_builtin_views.update({
                 None,
             ),
             ('log_time', None, ''),
-            ('log_contact_name', 'contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_command', '', ''),
             ('log_state', None, ''),
             ('log_plugin_output', None, ''),
@@ -3836,7 +3836,7 @@ multisite_builtin_views.update({
         'painters': [
             ('log_icon', None),
             ('log_time', None, ''),
-            ('log_contact_name', 'contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_command', '', ''),
             ('log_type', None, ''),
             ('host', 'hostsvcnotifications', ''),
@@ -3895,7 +3895,7 @@ multisite_builtin_views.update({
         'painters': [
             ('log_icon', None),
             ('log_time', None, ''),
-            ('log_contact_name', 'contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_command', '', ''),
             ('log_type', None, ''),
             ('host', 'hostsvcnotifications', ''),
@@ -3968,7 +3968,7 @@ multisite_builtin_views.update({
         'painters': [
             ('log_icon', None),
             ('log_time', None, ''),
-            ('log_contact_name', 'contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_command', '', ''),
             ('log_type', None, ''),
             ('host', 'hostsvcnotifications', ''),
@@ -4028,7 +4028,7 @@ multisite_builtin_views.update({
         'painters': [
             ('log_icon', None),
             ('log_time', None, ''),
-            ('log_contact_name', 'contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_command', '', ''),
             ('host', None, ''),
             ('log_state', None, ''),

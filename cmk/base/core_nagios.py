@@ -1061,9 +1061,9 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.utils\n")
     output.write("import cmk.base.config as config\n")
     output.write("from cmk.utils.log import console\n")
-    output.write("import cmk.base.checking as checking\n")
+    output.write("import cmk.base.agent_based.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
-    output.write("import cmk.base.ip_lookup as ip_lookup\n")
+    output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("\n")
     for module in _get_needed_agent_based_modules(
             needed_agent_based_check_plugin_names,

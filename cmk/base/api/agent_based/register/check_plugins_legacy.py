@@ -287,12 +287,13 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
         #
         # If legacy plugins are executed on clusters, the original check function is called,
         # as it is impossible to recreate the "complex" behavior of the legacy API using the new API.
-        # We maintain an extra code path in cmk/base/checking.py for those cases.
+        # We maintain an extra code path in cmk/base/agent_based/checking.py for those cases.
         #
         # Unfortunately, when discovering cluster hosts, this function will still be called, as
         # part of the code designed for the new API is used.
-        # Since fixing this issue would dramatically worsen the code in cmk/base/checking.py,
-        # We simply issue an Message here, similar to the preview for counter based checks:
+        # Since fixing this issue would dramatically worsen the code in
+        # cmk/base/agent_based/checking.py, we simply issue an Message here, similar to the preview
+        # for counter based checks:
         yield Result(
             state=State.OK,
             summary="Service preview for legacy plugins on clusters not available.",

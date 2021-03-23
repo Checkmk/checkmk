@@ -373,8 +373,8 @@ def make_broker(
         # Note: *Not* calling `fetch_all(sources)` here is probably buggy.
         # Note: `fetch_all(sources)` is almost always called in similar
         #       code in discovery and inventory.  The only two exceptions
-        #       are `cmk.base.checking.do_check(...)` and
-        #       `cmk.base.discovery.check_discovery(...)`.
+        #       are `cmk.base.agent_based.checking.do_check(...)` and
+        #       `cmk.base.agent_based.discovery.check_discovery(...)`.
         #       This does not seem right.
         fetcher_messages = list(fetch_all(
             nodes=nodes,

@@ -602,7 +602,7 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
     In case of item not existing as a key in parsed or parsed[item]
     evaluating to False the decorator gives an empty return leading to
     cmk.base returning 3 (unknown state) with an item not found message
-    (see cmk/base/checking.py).
+    (see cmk/base/agnet_based/checking.py).
 
     WATCH OUT:
     This will not work if valid item data evaluates to False (such as a

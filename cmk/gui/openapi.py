@@ -7,7 +7,7 @@
 import copy
 import json
 import sys
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
@@ -32,7 +32,7 @@ if not version.is_raw_edition():
     import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module
 
 
-def generate_data(target: EndpointTarget) -> Dict[str, Any]:
+def generate_data(target: EndpointTarget, validate: bool = True) -> Dict[str, Any]:
     endpoint: Endpoint
     methods = ['get', 'put', 'post', 'delete']
     for endpoint in sorted(ENDPOINT_REGISTRY,
@@ -44,16 +44,46 @@ def generate_data(target: EndpointTarget) -> Dict[str, Any]:
             operations=endpoint.to_operation_dict(),
         )
 
+    generated_spec = SPEC.to_dict()
+    _add_cookie_auth(generated_spec)
+    if not validate:
+        return generated_spec
+
     # NOTE: deepcopy the dict because validate_spec modifies the SPEC in-place, leaving some
     # internal properties lying around, which leads to an invalid spec-file.
-    check_dict = copy.deepcopy(SPEC.to_dict())
-    _add_cookie_auth(check_dict)
+    check_dict = copy.deepcopy(generated_spec)
     validate_spec(check_dict)
     # NOTE: We want to modify the thing afterwards. The SPEC object would be a global reference
     # which would make modifying the spec very awkward, so we deepcopy again.
-    rv = copy.deepcopy(SPEC.to_dict())
-    _add_cookie_auth(rv)
-    return rv
+    return generated_spec
+
+
+def add_once(coll: List[Dict[str, Any]], to_add: Dict[str, Any]) -> None:
+    """Add an entry to a collection, only once.
+
+    Examples:
+
+        >>> l = []
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+        >>> add_once(l, {'foo': []})
+        >>> l
+        [{'foo': []}]
+
+    Args:
+        coll:
+        to_add:
+
+    Returns:
+
+    """
+    if to_add in coll:
+        return None
+
+    coll.append(to_add)
+    return None
 
 
 def _add_cookie_auth(check_dict):
@@ -63,7 +93,7 @@ def _add_cookie_auth(check_dict):
     before this code here actually runs.
     """
     schema_name = 'cookieAuth'
-    check_dict['security'].append({schema_name: []})
+    add_once(check_dict['security'], {schema_name: []})
     check_dict['components']['securitySchemes'][schema_name] = {
         'in': 'cookie',
         'name': f'auth_{config.omd_site()}',
@@ -88,7 +118,7 @@ def generate(args=None):
     return output
 
 
-__all__ = ['ENDPOINT_REGISTRY', 'generate_data']
+__all__ = ['ENDPOINT_REGISTRY', 'generate_data', 'add_once']
 
 if __name__ == '__main__':
     print(generate(sys.argv))

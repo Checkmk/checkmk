@@ -545,6 +545,17 @@ filter_tests = [
         request_vars=[('hostnameoralias', "horst")],
         expected_filters="Filter: host_name ~~ horst\nFilter: alias ~~ horst\nOr: 2\n",
     ),
+    # Testing FilterCommaSeparatedStringList
+    FilterTest(
+        ident="log_contact_name",
+        request_vars=[('log_contact_name', "gottlob")],
+        expected_filters="Filter: log_contact_name ~ (,|^)gottlob(,|$)\n",
+    ),
+    FilterTest(
+        ident="log_contact_name",
+        request_vars=[('log_contact_name', "gott.lob"),('neg_log_contact_name', "on")],
+        expected_filters="Filter: log_contact_name ~ (,|^)gott\\.lob(,|$)\n",
+    ),
 ]
 
 

@@ -330,7 +330,12 @@ class ParserState(abc.ABC):
         self,
         section_header: SectionMarker,
     ) -> "HostSectionParser":
-        self._logger.debug("Transition %s -> %s", type(self).__name__, HostSectionParser.__name__)
+        self._logger.debug(
+            "%s / Transition %s -> %s",
+            section_header,
+            type(self).__name__,
+            HostSectionParser.__name__,
+        )
         return HostSectionParser(
             self.hostname,
             self.host_sections,
@@ -346,7 +351,12 @@ class ParserState(abc.ABC):
         self,
         header: PiggybackMarker,
     ) -> "PiggybackParser":
-        self._logger.debug("Transition %s -> %s", type(self).__name__, PiggybackParser.__name__)
+        self._logger.debug(
+            "%s / Transition %s -> %s",
+            header,
+            type(self).__name__,
+            PiggybackParser.__name__,
+        )
         return PiggybackParser(
             self.hostname,
             self.host_sections,
@@ -364,7 +374,9 @@ class ParserState(abc.ABC):
         section_header: SectionMarker,
     ) -> "PiggybackSectionParser":
         self._logger.debug(
-            "Transition %s -> %s",
+            "%r %r / Transition %s -> %s",
+            piggyback_header,
+            section_header,
             type(self).__name__,
             PiggybackSectionParser.__name__,
         )

@@ -6,6 +6,8 @@ CheckMK software architecture
 Top-level Architecture
 ======================
 
+.. _topo & interfaces:
+
 Topology and interfaces
 -----------------------
 

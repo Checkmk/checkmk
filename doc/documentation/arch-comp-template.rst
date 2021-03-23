@@ -7,7 +7,7 @@ The following sections are an excerpt of `arc42's <https://docs.arc42.org/sectio
 Try to fill all sections with the corresponding information of your component.
 
 **Important: Double check your exposed interfaces with the top-level
-architecture:** :doc:`arch-comp-omd`
+architecture:** :ref:`topo & interfaces`
 
 Introduction and goals
 ======================

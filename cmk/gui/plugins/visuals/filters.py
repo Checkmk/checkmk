@@ -1694,8 +1694,18 @@ filter_registry.register(
         op="~~",
     ))
 
+
+class FilterLogContactName(FilterText):
+    """Special filter class to correctly filter the column contact_name from the log table. This
+    list contains comma-separated contact names (user ids), but it is of type string."""
+    def filter(self, infoname: Any):
+        if current_value := self._current_value():
+            return self._filter("(,|^)" + current_value.replace(".", "\\.") + "(,|$)")
+        return ""
+
+
 filter_registry.register(
-    FilterText(
+    FilterLogContactName(
         ident="log_contact_name",
         title=_l("Log: contact name (exact match)"),
         sort_index=260,
@@ -1703,7 +1713,7 @@ filter_registry.register(
         info="log",
         column="log_contact_name",
         htmlvar="log_contact_name",
-        op="=",
+        op="~",
     ))
 
 filter_registry.register(

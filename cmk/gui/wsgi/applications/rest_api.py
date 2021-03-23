@@ -28,7 +28,7 @@ from cmk.gui import config, userdb
 from cmk.gui.config import omd_site
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
-from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data
+from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data, add_once
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
@@ -252,10 +252,7 @@ def serve_spec(
 ) -> Response:
     data = generate_data(target=target)
     data.setdefault('servers', [])
-    data['servers'].append({
-        'url': url,
-        'description': f"Site: {site}",
-    })
+    add_once(data['servers'], {'url': url, 'description': f"Site: {site}"})
     response = Response(status=200)
     response.data = serializer(data)
     response.content_type = content_type

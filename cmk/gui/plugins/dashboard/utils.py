@@ -705,13 +705,9 @@ class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
         assert isinstance(dashlet_params, Dictionary)  # help mypy
         dashlet_properties = dashlet_params.value_to_json(self._dashlet_spec)
 
-        context = visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(["host", "service"], self.single_infos()),
-            self._dashlet_spec["context"])
-
         args: HTTPVariables = []
         args.append(("settings", json.dumps(dashlet_settings)))
-        args.append(("context", json.dumps(context)))
+        args.append(("context", json.dumps(self.context)))
         args.append(("properties", json.dumps(dashlet_properties)))
 
         return args

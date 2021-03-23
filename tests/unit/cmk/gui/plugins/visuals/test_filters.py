@@ -539,6 +539,12 @@ filter_tests = [
         request_vars=[('wato_folder', "abc/xyz")],
         expected_filters="Filter: host_filename ~ ^/wato/abc/xyz/\n",
     ),
+    # Testing FilterHostnameOrAlias
+    FilterTest(
+        ident="hostnameoralias",
+        request_vars=[('hostnameoralias', "horst")],
+        expected_filters="Filter: host_name ~~ horst\nFilter: alias ~~ horst\nOr: 2\n",
+    ),
 ]
 
 

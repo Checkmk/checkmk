@@ -252,8 +252,8 @@ class Dashlet(metaclass=abc.ABCMeta):
             return None
 
         return visuals.get_merged_context(
-            visuals.get_context_from_uri_vars(self.infos(), self.single_infos()),
             self._dashboard["context"],
+            visuals.get_context_from_uri_vars(self.infos(), self.single_infos()),
             self._dashlet_spec["context"],
         )
 

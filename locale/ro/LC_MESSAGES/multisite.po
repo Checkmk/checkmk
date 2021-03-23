@@ -6093,14 +6093,14 @@ msgstr ""
 msgid "Backend connection errors"
 msgstr "Conexiune Noua"
 
-msgid "Backgroud in status color"
-msgstr ""
-
 msgid "Background Job"
 msgstr ""
 
 #, python-format
 msgid "Background Job %s already running"
+msgstr ""
+
+msgid "Background in status color and label"
 msgstr ""
 
 msgid "Background job"
@@ -24510,6 +24510,10 @@ msgstr ""
 
 msgid "Label"
 msgstr ""
+
+#, fuzzy
+msgid "Label with status color"
+msgstr " pe siteul de monitorizare: "
 
 msgid "Labelling Options"
 msgstr ""
@@ -43299,10 +43303,6 @@ msgstr ""
 
 msgid "Text groups from regular expression match, separated by spaces"
 msgstr ""
-
-#, fuzzy
-msgid "Text in status color"
-msgstr " pe siteul de monitorizare: "
 
 msgid "Text logfiles (Linux, Windows)"
 msgstr ""

@@ -107,21 +107,20 @@ class FilterText(Filter):
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
 
-    def filter(self, infoname):
-        current_value = self._current_value()
+    def _negate_symbol(self) -> str:
+        return "!" if self.negateable and html.get_checkbox(self.htmlvars[1]) else ""
 
-        if self.negateable and html.get_checkbox(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
+    def _filter(self, current_value: str) -> str:
+        return "Filter: %s %s%s %s\n" % (
+            self.column,
+            self._negate_symbol(),
+            self.op,
+            livestatus.lqencode(current_value),
+        )
 
-        if current_value:
-            return "Filter: %s %s%s %s\n" % (
-                self.column,
-                negate,
-                self.op,
-                livestatus.lqencode(current_value),
-            )
+    def filter(self, infoname: Any) -> str:
+        if current_value := self._current_value():
+            return self._filter(current_value)
         return ""
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
@@ -247,21 +246,12 @@ class FilterHostnameOrAlias(FilterText):
             description=_("Search field allowing regular expressions and partial matches"),
         )
 
-    def filter(self, infoname):
-        current_value = self._current_value()
-
-        if self.negateable and html.get_checkbox(self.htmlvars[1]):
-            negate = "!"
-        else:
-            negate = ""
-
-        if current_value:
-            return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
-                negate,
-                self.op,
-                livestatus.lqencode(current_value),
-            ) * 2)
-        return ""
+    def _filter(self, current_value: str) -> str:
+        return "Filter: host_name %s%s %s\nFilter: alias %s%s %s\nOr: 2\n" % ((
+            self._negate_symbol(),
+            self.op,
+            livestatus.lqencode(current_value),
+        ) * 2)
 
 
 class FilterIPAddress(Filter):

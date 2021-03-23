@@ -338,7 +338,7 @@ class ViewRenderer(object):
 
     @abc.abstractmethod
     def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               unfiltered_amount_of_rows):
+               num_rows):
         raise NotImplementedError()
 
 
@@ -348,7 +348,7 @@ class GUIViewRenderer(ViewRenderer):
         self._show_buttons = show_buttons
 
     def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               unfiltered_amount_of_rows):
+               num_rows):
         view_spec = self.view.spec
 
         if html.transaction_valid() and html.do_actions():
@@ -443,8 +443,7 @@ class GUIViewRenderer(ViewRenderer):
 
         if not has_done_actions:
             if display_options.enabled(display_options.W):
-                if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
-                                                         self.view.row_limit):
+                if cmk.gui.view_utils.row_limit_exceeded(num_rows, self.view.row_limit):
                     cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
                     del rows[self.view.row_limit:]
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
@@ -1402,8 +1401,6 @@ def show_view(view, view_renderer, only_count=False):
     else:
         rows = []
 
-    unfiltered_amount_of_rows = len(rows)
-
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:
         rows = filter_.filter_table(rows)
@@ -1455,7 +1452,7 @@ def show_view(view, view_renderer, only_count=False):
     # Until now no single byte of HTML code has been output.
     # Now let's render the view
     view_renderer.render(rows, group_cells, cells, show_checkboxes, layout, num_columns,
-                         show_filters, unfiltered_amount_of_rows)
+                         show_filters, len(rows))
 
 
 def _get_all_active_filters(view):

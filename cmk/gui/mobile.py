@@ -296,7 +296,7 @@ def page_view():
 
 class MobileViewRenderer(views.ViewRenderer):
     def render(self, rows, group_cells, cells, show_checkboxes, layout, num_columns, show_filters,
-               unfiltered_amount_of_rows):
+               num_rows):
         view_spec = self.view.spec
         home = ("mobile.py", "Home", "home")
 
@@ -353,8 +353,7 @@ class MobileViewRenderer(views.ViewRenderer):
                 html.write(_("No hosts/services found."))
             else:
                 try:
-                    if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
-                                                             self.view.row_limit):
+                    if cmk.gui.view_utils.row_limit_exceeded(num_rows, self.view.row_limit):
                         cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit,
                                                                      config.user)
                         del rows[self.view.row_limit:]

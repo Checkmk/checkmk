@@ -121,39 +121,99 @@ be found on the documentation of each affected endpoint.
 # Querying Status Data
 
 The endpoints in the category "Monitoring" support arbitrary Livestatus expressions (including And,
-Or combinators) and all columns of the host and service tables can be queried. Given this, very
-complex queries can be constructed.
+Or combinators) and all columns of some specific tables can be queried.
+
+
+### Note
 
 You can find an introduction to basic monitoring principles including host and service status in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/monitoring_basics.html).
 
-This endpoint supports all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
-which you can look up in the Checkmk documentation.
+## Filter expressions
 
-A detailed description of the columns can be found on GitHub:
+A *filter expression* is a recursively defined structure containing *binary expression nodes*,
+*negation nodes* or *combination nodes*. With *filter expressions*, very complex Livestatus queries
+can be constructed.
 
+## Binary expression node
+
+A *binary expression node* represents one condition on which to filter. `left` is always a
+Livestatus column name, `right` is always a value.
+
+### Definition
+
+    {'op': <livestatus operator>, 'left': <livestatus column>, 'right': <value>}
+
+### Operators
+
+A list of all list of all possible
+[Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
+can be found in the Checkmk documentation.
+
+### Table definitions
+
+To check what columns are available and what kind of value each column can have, please consult
+these definition files on GitHub.
+
+ * [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
  * [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
  * [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 
-## Some example queries
+### Example
 
-To query a list of all hosts which have a problem, you can query the "status" column on the
-host table. A status of 0 means OK, 1 means WARN, 2 means CRIT and 3 means UNKNOWN.
+This example filters for an entry where the host_name equals to "example.com".
 
-The query expression for all non-OK hosts would be:
+    {'op': '=', 'left': 'host_name', 'right': 'example.com'}
 
-    {'op': '!=', 'left': 'status', 'right': '0'}
+### Note
 
-To search for all hosts with their host name or alias starting with 'location1-':
+For the specific table used, please consult the endpoint documentation.
 
-    {'op': '~', 'left': 'name', 'right': 'location1-.*'}
+## Negation node
 
-    {'op': '~', 'left': 'alias', 'right': 'location1-.*'}
+There is only one negation node, the `not` expression, which logically negates a *filter
+expression*. `expr` is a valid *filter expression*, so any *binary expression node*, *negation
+node* or *combination node* may be used here.
 
-To search for hosts with specific tags set on them:
+### Definition
 
-    {'op': '~', 'left': 'tag_names', 'right': 'windows'}
+     {'op': 'not', 'expr': <any filter expr>}
 
+### Example
+
+This example filters for hosts which **do not** have the host_name "example.com".
+
+    {'op': 'not', 'expr': {'op': '=', 'left': 'host_name', 'right': 'example.com'}}
+
+This is equivalent to
+
+    {'op': '!=', 'left': 'host_name', 'right': 'example.com'}
+
+## Combination nodes
+
+`and` and `or` combinators are supported. They can be nested arbitrarily. `exprs` is a list of
+valid *filter expressions*, so any number of *binary nodes*, *negation nodes* or *combination nodes*
+may be used there. These expression do not have to all be of the same type, so a mix of *binary
+expression nodes*, *negation nodes* and *combination nodes* is also possible.
+
+### Definition
+
+This results in a *filter expression* in which all the contained expression must be true:
+
+    {'op': 'and', 'exprs': [<any filter expr>, ...]}
+
+This results in a *filter expression* in which only one of the contained expression needs to
+be true:
+
+    {'op': 'or', 'exprs': [<any filter expr>, ...]}
+
+### Example
+
+This example filters for the host "example.com" only when the `state` column is set to `0`, which
+means the state is OK.
+
+    {'op': 'and', 'exprs': [{'op': '=', 'left': 'host_name', 'right': 'example.com'},
+                            {'op': '=', 'left': 'state', 'right': 0}}
 
 # Authentication
 

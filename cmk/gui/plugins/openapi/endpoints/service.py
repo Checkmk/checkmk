@@ -10,8 +10,16 @@ The service status provides the service's "health" information.
 A service (for example, a file system or a process) is a property of a certain host that
 is monitored by Checkmk.
 
-For a more detailed description please have a look at the
-[Querying Status Data](#section/Querying-Status-Data) section.
+### Related documentation
+
+How to use the query DSL used in the `query` parameters of these endpoints, have a look at the
+[Querying Status Data](#section/Querying-Status-Data) section of this documentation.
+
+These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
+which you can look up in the Checkmk documentation.
+
+For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
+definition on GitHub.
 """
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields

@@ -144,7 +144,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     # Move to the same source should give a 400
     wsgi_app.follow_link(resp,
-                         '.../invoke;action="move"',
+                         'cmk/move',
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '~'}),
@@ -152,7 +152,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     # Check that unknown folders also give a 400
     wsgi_app.follow_link(resp,
-                         '.../invoke;action="move"',
+                         'cmk/move',
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": 'asdf'}),
@@ -160,7 +160,7 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     # Check that moving onto itself gives a 400
     wsgi_app.follow_link(other_folder,
-                         '.../invoke;action="move"',
+                         'cmk/move',
                          status=400,
                          headers={'If-Match': other_folder.headers['ETag']},
                          params=json.dumps({"destination": '~other_folder'}),
@@ -168,14 +168,14 @@ def test_openapi_folders(wsgi_app, with_automation_user):
 
     # Check that moving into it's own subfolder is not possible.
     wsgi_app.follow_link(new_folder,
-                         '.../invoke;action="move"',
+                         'cmk/move',
                          status=400,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '/new_folder/sub_folder'}),
                          content_type='application/json')
 
     wsgi_app.follow_link(new_folder,
-                         '.../invoke;action="move"',
+                         'cmk/move',
                          status=200,
                          headers={'If-Match': resp.headers['ETag']},
                          params=json.dumps({"destination": '\\other_folder'}),
@@ -373,4 +373,16 @@ def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_a
         }),
         status=400,
         content_type='application/json',
+    )
+
+
+def test_openapi_folder_root(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    _ = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/1.0/objects/folder_config/~",
+        params={'show_hosts': False},
+        status=200,
     )

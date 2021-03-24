@@ -329,33 +329,35 @@ def _serve_folder(
 ):
     folder_json = _serialize_folder(folder, show_hosts)
     response = constructors.serve_json(folder_json, profile=profile)
-    response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
+    if not folder.is_root():
+        response.headers.add("ETag", constructors.etag_of_obj(folder).to_header())
     return response
 
 
 def _serialize_folder(folder: CREFolder, show_hosts):
+    links = []
+
+    if not folder.is_root():
+        links.append(
+            constructors.link_rel(
+                rel='cmk/move',
+                href=constructors.object_action_href(
+                    "folder_config",
+                    folder_slug(folder),
+                    action_name='move',
+                ),
+                method='post',
+                title='Move the folder',
+            ))
+
     rv = constructors.domain_object(
         domain_type='folder_config',
         identifier=folder_slug(folder),
         title=folder.title(),
-        members={
-            'move': constructors.object_action(
-                name='move',
-                base=constructors.object_href('folder_config', folder_slug(folder)),
-                parameters=dict([
-                    constructors.action_parameter(
-                        action='move',
-                        parameter='destination',
-                        friendly_name='The destination folder of this move action',
-                        optional=False,
-                        pattern="[0-9a-fA-F]{32}|root",
-                    ),
-                ]),
-            ),
-        },
         extensions={
             'attributes': folder.attributes().copy(),
         },
+        links=links,
     )
     if show_hosts:
         rv['members']['hosts'] = constructors.collection_property(

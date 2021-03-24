@@ -9,8 +9,17 @@ A (scheduled) downtime is a planned maintenance period.
 Hosts and services are handled differently by Checkmk during a downtime, for example,
 notifications are disabled.
 
-You can find an introduction to downtimes in the
-[Checkmk guide](https://docs.checkmk.com/latest/en/basics_downtimes.html).
+### Related documentation
+
+How to use the query DSL used in the `query` parameters of these endpoints, have a look at the
+[Querying Status Data](#section/Querying-Status-Data) section of this documentation.
+
+These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
+which you can look up in the Checkmk documentation.
+
+For a detailed list of columns, please take a look at the [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
+definition on GitHub.
+
 """
 
 import json

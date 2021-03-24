@@ -25,8 +25,8 @@ from cmk.gui.plugins.wato import (
 def transform_printer_supply(params):
     if isinstance(params, tuple):
         if len(params) == 2:
-            return {"levels": params}
-        return {"levels": params[:2], "upturn_toner": params[2]}
+            return {"levels": params, "upturn_toner": False, "some_remaining": 1}
+        return {"levels": params[:2], "upturn_toner": params[2], "some_remaining": 1}
     return params
 
 

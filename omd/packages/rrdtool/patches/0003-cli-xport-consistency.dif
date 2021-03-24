@@ -1,5 +1,7 @@
 diff --git a/src/rrd_xport.c b/src/rrd_xport.c
 index e69a8070..823445b3 100644
+Declined upstream, yet makes debugging consistent between our livestatus an rddtool xport
+https://github.com/oetiker/rrdtool-1.x/pull/980#issuecomment-474408355
 --- a/src/rrd_xport.c
 +++ b/src/rrd_xport.c
 @@ -750,10 +750,10 @@ static int rrd_xport_format_xmljson(

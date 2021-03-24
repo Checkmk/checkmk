@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: faye.tandog@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2021-03-23 09:43+0000\n"
 "Last-Translator: Marcel Arentz <marcel.arentz@tribe29.com>\n"
@@ -10998,6 +10998,13 @@ msgstr ""
 msgid "Could not save changes: %s"
 msgstr "Kann Änderungen nicht speichern: %s"
 
+msgid ""
+"Couldn't lock the Checkmk configuration. Another process is running that "
+"holds this lock. In order for you to be able to perform the desired action, "
+"you have to wait until the other process has finished. Please try again "
+"later."
+msgstr ""
+
 msgid "Count"
 msgstr "Anzahl"
 
@@ -17119,6 +17126,10 @@ msgstr "\"Änderungen aktivieren\" für Zeitbereiche ausschließen"
 
 msgid "Exclude Pattern"
 msgstr "Ausschluss-Muster"
+
+#, fuzzy
+msgid "Exclude destination vserver"
+msgstr "Zieladresse hinzufügen"
 
 msgid "Exclude empty tag choices"
 msgstr "Leere Merkmale ausklammern"
@@ -25134,15 +25145,16 @@ msgstr "Ungültige Transaktion"
 msgid "Invalid type specified."
 msgstr "Ungültiger Typ"
 
-msgid "Invalid user Input"
-msgstr "Ungültige Benutzeeingabe"
-
 msgid "Invalid user authentication"
 msgstr "Ungültige Benutzeranmeldung"
 
 #, python-format
 msgid "Invalid user connection: %s"
 msgstr "Ungültige Benutzerverbindung: %s"
+
+#, fuzzy
+msgid "Invalid user input"
+msgstr "Ungültige Benutzeeingabe"
 
 msgid "Invalid valid for based on. Must be id of builtin rule."
 msgstr "Ungültiger Wert: muss ID einer eingebauten Regel sein."
@@ -30572,6 +30584,10 @@ msgstr "NetApp Snapvaults / Snapmirror Lag-Zeit"
 msgid "NetApp Volumes"
 msgstr "NetApp Volumes"
 
+#, fuzzy
+msgid "NetApp snapvault discovery"
+msgstr "Netapp Port-Erkennung"
+
 msgid "NetApp via WebAPI"
 msgstr "NetApp via WebAPI"
 
@@ -32816,6 +32832,15 @@ msgstr ""
 
 msgid "Only add matching hosts"
 msgstr "Nur passende Hosts hinzufügen"
+
+msgid ""
+"Only applicable to clustermode installations. The service description of "
+"snapvault services is composed of the destination vserver (SVM) and the "
+"destination volume by default. Check this box if you would like to use the "
+"destination volume as the service description on its own. Please be advised "
+"that this may lead to a service description that is not unique, resulting in "
+"some services, which are not shown!"
+msgstr ""
 
 msgid ""
 "Only apply the rule if the notification originates from certain types of "
@@ -51233,15 +51258,15 @@ msgid ""
 msgstr ""
 "Diese Regel wählt den Kubenetes-Spezialagenten für einen bestehenden Checkmk "
 "Host aus. Wenn Sie mehrere Kubernetes-Cluster überwachen möchten, empfehlen "
-"wir dringend, die <a "
-"href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>Übersetzung "
-"von Hostnamen für Huckepack-Hosts</a> einzurichten, um Namenskollisionen zu "
-"vermeiden. Andernfalls können z.B. gleichnamige Pods in verschiedenen "
-"Kubernetes-Clustern nicht unterschieden werden. <br> Bitte zusätzlich "
-"beachten, dass nicht jede Kubernetes API kompatibel mit jeder Version des "
-"offiziellen Python-Client für Kubernetes ist. Z.B. ist der Client v11 nur "
-"vollständig kompatibel mit der API v1.15. Bitte prüfen Sie, ob der "
-"aktuellste Client von der eingesetzten Kubernetes API unterstützt wird."
+"wir dringend, die <a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Übersetzung von Hostnamen "
+"für Huckepack-Hosts</a> einzurichten, um Namenskollisionen zu vermeiden. "
+"Andernfalls können z.B. gleichnamige Pods in verschiedenen Kubernetes-"
+"Clustern nicht unterschieden werden. <br> Bitte zusätzlich beachten, dass "
+"nicht jede Kubernetes API kompatibel mit jeder Version des offiziellen "
+"Python-Client für Kubernetes ist. Z.B. ist der Client v11 nur vollständig "
+"kompatibel mit der API v1.15. Bitte prüfen Sie, ob der aktuellste Client von "
+"der eingesetzten Kubernetes API unterstützt wird."
 
 msgid ""
 "This rule selects the Siemens PLC agent instead of the normal Check_MK Agent "

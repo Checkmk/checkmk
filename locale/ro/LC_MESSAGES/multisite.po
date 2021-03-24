@@ -10450,6 +10450,13 @@ msgstr ""
 msgid "Could not save changes: %s"
 msgstr "Activare schimbări"
 
+msgid ""
+"Couldn't lock the Checkmk configuration. Another process is running that "
+"holds this lock. In order for you to be able to perform the desired action, "
+"you have to wait until the other process has finished. Please try again "
+"later."
+msgstr ""
+
 msgid "Count"
 msgstr ""
 
@@ -16684,6 +16691,10 @@ msgstr " Activează această opțiune"
 
 msgid "Exclude Pattern"
 msgstr ""
+
+#, fuzzy
+msgid "Exclude destination vserver"
+msgstr "Linii de header adiționale"
 
 #, fuzzy
 msgid "Exclude empty tag choices"
@@ -23812,16 +23823,16 @@ msgstr "%d traduceri"
 msgid "Invalid type specified."
 msgstr ""
 
-#, fuzzy
-msgid "Invalid user Input"
-msgstr " Parametrul este: %r"
-
 msgid "Invalid user authentication"
 msgstr ""
 
 #, fuzzy, python-format
 msgid "Invalid user connection: %s"
 msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Invalid user input"
+msgstr " Parametrul este: %r"
 
 msgid "Invalid valid for based on. Must be id of builtin rule."
 msgstr ""
@@ -29530,6 +29541,10 @@ msgstr ""
 msgid "NetApp Volumes"
 msgstr ""
 
+#, fuzzy
+msgid "NetApp snapvault discovery"
+msgstr "Inventariere in masa"
+
 msgid "NetApp via WebAPI"
 msgstr ""
 
@@ -31824,6 +31839,15 @@ msgstr ""
 #, fuzzy
 msgid "Only add matching hosts"
 msgstr " pe siteul de monitorizare: "
+
+msgid ""
+"Only applicable to clustermode installations. The service description of "
+"snapvault services is composed of the destination vserver (SVM) and the "
+"destination volume by default. Check this box if you would like to use the "
+"destination volume as the service description on its own. Please be advised "
+"that this may lead to a service description that is not unique, resulting in "
+"some services, which are not shown!"
+msgstr ""
 
 msgid ""
 "Only apply the rule if the notification originates from certain types of "

@@ -1,0 +1,10 @@
+Title: Filestats: Sync rule and check text to code
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1616590649
+Class: fix
+
+It is now clearer that the check <tt>filestats</tt> always checks levels with greater & less equal (and not "<" and ">").

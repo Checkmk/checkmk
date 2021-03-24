@@ -98,7 +98,7 @@ def filestats_check_int_levels(value,
         warn, crit = lower_levels_pair
         if value <= warn:
             state = 1
-            msg = " (warn/crit below %s/%s)" % (hr_function(warn), hr_function(crit))
+            msg = " (warn/crit at %s/%s)" % (hr_function(warn), hr_function(crit))
         if value <= crit:
             return 2, msg
 

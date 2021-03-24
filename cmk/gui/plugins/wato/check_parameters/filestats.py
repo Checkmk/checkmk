@@ -55,80 +55,80 @@ def _parameter_valuespec_filestats():
              Tuple(
                  title=_("Minimal age of oldest file"),
                  elements=[
-                     Age(title=_("Warning if younger than")),
-                     Age(title=_("Critical if younger than")),
+                     Age(title=_("Warning at or younger than")),
+                     Age(title=_("Critical at or younger than")),
                  ],
              )),
             ("maxage_oldest",
              Tuple(
                  title=_("Maximal age of oldest file"),
                  elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than")),
+                     Age(title=_("Warning at or older than")),
+                     Age(title=_("Critical at or older than")),
                  ],
              )),
             ("minage_newest",
              Tuple(
                  title=_("Minimal age of newest file"),
                  elements=[
-                     Age(title=_("Warning if younger than")),
-                     Age(title=_("Critical if younger than")),
+                     Age(title=_("Warning at or younger than")),
+                     Age(title=_("Critical at or younger than")),
                  ],
              )),
             ("maxage_newest",
              Tuple(
                  title=_("Maximal age of newest file"),
                  elements=[
-                     Age(title=_("Warning if older than")),
-                     Age(title=_("Critical if older than")),
+                     Age(title=_("Warning at or older than")),
+                     Age(title=_("Critical at or older than")),
                  ],
              )),
             ("minsize_smallest",
              Tuple(
                  title=_("Minimal size of smallest file"),
                  elements=[
-                     Filesize(title=_("Warning if below")),
-                     Filesize(title=_("Critical if below")),
+                     Filesize(title=_("Warning at or below")),
+                     Filesize(title=_("Critical at or below")),
                  ],
              )),
             ("maxsize_smallest",
              Tuple(
                  title=_("Maximal size of smallest file"),
                  elements=[
-                     Filesize(title=_("Warning if above")),
-                     Filesize(title=_("Critical if above")),
+                     Filesize(title=_("Warning at or above")),
+                     Filesize(title=_("Critical at or above")),
                  ],
              )),
             ("minsize_largest",
              Tuple(
                  title=_("Minimal size of largest file"),
                  elements=[
-                     Filesize(title=_("Warning if below")),
-                     Filesize(title=_("Critical if below")),
+                     Filesize(title=_("Warning at or below")),
+                     Filesize(title=_("Critical at or below")),
                  ],
              )),
             ("maxsize_largest",
              Tuple(
                  title=_("Maximal size of largest file"),
                  elements=[
-                     Filesize(title=_("Warning if above")),
-                     Filesize(title=_("Critical if above")),
+                     Filesize(title=_("Warning at or above")),
+                     Filesize(title=_("Critical at or above")),
                  ],
              )),
             ("mincount",
              Tuple(
                  title=_("Minimal file count"),
                  elements=[
-                     Integer(title=_("Warning if below")),
-                     Integer(title=_("Critical if below")),
+                     Integer(title=_("Warning at or below")),
+                     Integer(title=_("Critical at or below")),
                  ],
              )),
             ("maxcount",
              Tuple(
                  title=_("Maximal file count"),
                  elements=[
-                     Integer(title=_("Warning if above")),
-                     Integer(title=_("Critical if above")),
+                     Integer(title=_("Warning at or above")),
+                     Integer(title=_("Critical at or above")),
                  ],
              )),
         ],

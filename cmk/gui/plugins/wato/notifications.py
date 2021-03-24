@@ -501,6 +501,45 @@ $LONGSERVICEOUTPUT$
 
 
 @notification_parameter_registry.register
+class NotificationParameterfreshservice(NotificationParameter):
+    @property
+    def ident(self):
+        return "freshservice"
+
+    @property
+    def spec(self):
+        return Dictionary(
+                title=_("Create notification with the following parameters"),
+                optional_keys=[],
+                elements=[
+                    ("freshservice_api_url",
+                     CascadingDropdown(title=_("freshservice api url"),
+                                        help=_("API URL for freshservice"),
+                                        choices=[(
+                                            "freshservice_api_url",
+                                            _("API url"),
+                                            TextAscii(size=180, allow_empty=False),
+                                      )])),
+                     ("freshservice_api_key",
+                      CascadingDropdown(title=_("freshservice api key"),
+                                        help=_("API KEY for freshservice"),
+                                         choices=[(
+                                             "freshservice_api_key",
+                                             _("API key"),
+                                             TextAscii(size=80, allow_empty=False),
+                                       )])),
+                     ("freshservice_requester_id",
+                      CascadingDropdown(title=_("freshservice requester id"),
+                                        help=_("Requester id for freshservice"),
+                                        choices=[(
+                                            "freshservice_requester_id",
+                                            _("Requester ID"),
+                                            TextAscii(size=80, allow_empty=False),
+                                       )])),
+                        ],
+                )
+
+@notification_parameter_registry.register
 class NotificationILert(NotificationParameter):
     @property
     def ident(self):

@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+from os import environ
+import requests
+import json
+from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
+from typing import Dict, List, Tuple, NamedTuple
+from datetime import datetime
+
+# The below value is taken from CheckMK UI which is stored in plugin utils.
+apikey = passwords(environ.get('NOTIFY_PARAMETER_FRESHSERVICE_API_KEY'))
+apiurl = passwords(environ.get('NOTIFY_PARAMETER_FRESHSERVICE_API_URL'))
+requester_id = passwords(environ.get('NOTIFY_PARAMETER_FRESHSERVICE_REQUESTER_ID'))
+headers = {'content-type': 'application/json'}
+
+def total_var() -> Dict[str, str]:
+    return {
+        var: value
+        for var, value in environ.items()
+    }
+
+total_out = total_var()  # Storing all environment variables into total_out.
+
+Site_Name = total_out['OMD_SITE']
+Log_file = f'''/omd/sites/{Site_Name}/var/log/api.log'''  # Log file for freshservice plugin
+f = open(Log_file, "a+")
+f.write(str(datetime.now()) + " ----- Calling freshservice plugin" + '\n')
+
+def find_pres_or_not(var):
+    if var in total_out:
+        return total_out[var]
+    else:
+        return ""
+
+chk_what = find_pres_or_not('NOTIFY_WHAT')
+host_group = find_pres_or_not('NOTIFY_HOSTGROUPNAMES')
+
+style = f'''
+ticket_original_request table td {{
+border: 2px solid black;
+border-collapse: collapse;
+padding: 4px;
+}}'''
+
+def host_ser_parm():
+    NOTIFY_NOTIFICATIONTYPE = find_pres_or_not('NOTIFY_NOTIFICATIONTYPE')
+    NOTIFY_HOSTGROUPNAMES = find_pres_or_not('NOTIFY_HOSTGROUPNAMES')
+    NOTIFY_HOSTNAME = find_pres_or_not('NOTIFY_HOSTNAME')
+    NOTIFY_HOSTADDRESS = find_pres_or_not('NOTIFY_HOSTADDRESS')
+    NOTIFY_HOSTSTATE = find_pres_or_not('NOTIFY_HOSTSTATE')
+    OMD_SITE = find_pres_or_not('OMD_SITE')
+    NOTIFY_SHORTDATETIME = find_pres_or_not('NOTIFY_SHORTDATETIME')
+    NOTIFY_HOSTOUTPUT = find_pres_or_not('NOTIFY_HOSTOUTPUT')
+    NOTIFY_HOSTURL = find_pres_or_not('NOTIFY_HOSTURL')
+    NOTIFY_HOSTCHECKCOMMAND = find_pres_or_not('NOTIFY_HOSTCHECKCOMMAND')
+    NOTIFY_HOSTPERFDATA = find_pres_or_not('NOTIFY_HOSTPERFDATA')
+    NOTIFY_SERVICE_SOP = find_pres_or_not('NOTIFY_SERVICE_SOP')
+    NOTIFY_SERVICEDESC = find_pres_or_not('NOTIFY_SERVICEDESC')
+    NOTIFY_SERVICESTATE = find_pres_or_not('NOTIFY_SERVICESTATE')
+    NOTIFY_SERVICEURL = find_pres_or_not('NOTIFY_SERVICEURL')
+    NOTIFY_SERVICEOUTPUT = find_pres_or_not('NOTIFY_SERVICEOUTPUT')
+    NOTIFY_SERVICECHECKCOMMAND = find_pres_or_not('NOTIFY_SERVICECHECKCOMMAND')
+    NOTIFY_SERVICEPERFDATA = find_pres_or_not('NOTIFY_SERVICEPERFDATA')
+    return NOTIFY_NOTIFICATIONTYPE, NOTIFY_HOSTGROUPNAMES, NOTIFY_HOSTNAME, NOTIFY_HOSTADDRESS, NOTIFY_HOSTSTATE, \
+            OMD_SITE, NOTIFY_SHORTDATETIME, NOTIFY_HOSTOUTPUT, NOTIFY_HOSTURL, NOTIFY_HOSTCHECKCOMMAND, NOTIFY_HOSTPERFDATA, \
+            NOTIFY_SERVICE_SOP, NOTIFY_SERVICEDESC, NOTIFY_SERVICESTATE, NOTIFY_SERVICEURL, NOTIFY_SERVICEOUTPUT, \
+            NOTIFY_SERVICECHECKCOMMAND, NOTIFY_SERVICEPERFDATA
+
+if chk_what == 'HOST':
+    tot_parm = host_ser_parm()
+    Subject = f'''{tot_parm[0]} Notification - {tot_parm[1]}_{tot_parm[2]}_{tot_parm[3]}_{tot_parm[4]}'''
+    Description = f'''<br />
+<!DOCTYPE html>
+<html><head><style>{style}</style></head><body><table>
+<tr><th colspan="8" style="text-align: center"><b>Alert Details</b></th></tr> 
+<tr><th><b>OMD_SITE</b></th><td>{tot_parm[5]}</td></tr>
+<tr><th><b>ALERT_TIME</b></th><td>{tot_parm[6]}</td></tr>
+<tr><th><b>NOTIFICATION_TYPE</b></th><td>{tot_parm[0]}</td></tr>
+<tr><th><b>ALERT_FOR</b></th><td>{total_out['NOTIFY_WHAT']}</td></tr>
+<tr><th><b>HOST_ADD</b></th><td>{tot_parm[3]}</td></tr>
+<tr><th><b>HOST_NAME</b></th><td>{tot_parm[2]}</td></tr>
+<tr><th><b>HOST_STATE</b></th><td>{tot_parm[4]}</td></tr>
+<tr><th><b>HOST_OUTPUT</b></th><td>{tot_parm[7]}</td></tr>
+<tr><th><b>HOST_URL</b></th><td>{tot_parm[8]}</td></tr>
+<tr><th><b>HOST_CHECK_COMMAND</b></th><td>{tot_parm[9]}</td></tr>
+<tr><th><b>HOST_PERF_DATA</b></th><td>{tot_parm[10]}</td></tr>
+<tr><th><b>HOST_GROUP</b></th><td>{tot_parm[1]}</td></tr>
+</table></body></html></br></br>'''
+
+    if tot_parm[4] == 'UP':
+        priority = 1
+    elif tot_parm[4] == 'DOWN':
+        priority = 4
+    else:
+        priority = 3
+
+else:
+    tot_parm = host_ser_parm()
+    Subject = f'''{tot_parm[0]} Notification - {tot_parm[1]}_{tot_parm[2]}_{tot_parm[3]}_{tot_parm[12]}_{tot_parm[13]}'''
+    Description = f'''<br />
+<!DOCTYPE html><html><head><style>{style}</style></head><body><table>
+<tr><th colspan="8" style="text-align: center"><b>Alert Details</b></th></tr> 
+<tr><th><b>OMD_SITE</b></th><td>{tot_parm[5]}</td></tr>
+<tr><th><b>ALERT_TIME</b></th><td>{tot_parm[6]}</td></tr>
+<tr><th><b>NOTIFICATION_TYPE</b></th><td>{tot_parm[0]}</td></tr>
+<tr><th><b>ALERT_FOR</b></th><td>{total_out['NOTIFY_WHAT']}</td></tr>
+<tr><th><b>HOST_ADD</b></th><td>{tot_parm[3]}</td></tr>
+<tr><th><b>HOST_NAME</b></th><td>{tot_parm[2]}</td></tr>
+<tr><th><b>SERVICE_DESC</b></th><td>{tot_parm[12]}</td></tr>
+<tr><th><b>SERVICE_OUTPUT</b></th><td>{tot_parm[15]}</td></tr>
+<tr><th><b>SERVICE_STATE</b></th><td>{tot_parm[13]}</td></tr>
+<tr><th><b>SERVICE_URL</b></th><td>{tot_parm[14]}</td></tr>
+<tr><th><b>SERVICE_CHECK_COMMAND</b></th><td>{tot_parm[16]}</td></tr>
+<tr><th><b>SERVICE_PERF_DATA</b></th><td>{tot_parm[17]}</td></tr>
+<tr><th><b>SOP</b></th><td>{tot_parm[11]}</td></tr>
+<tr><th><b>HOST_GROUP</b></th><td>{tot_parm[1]}</td></tr>
+</table></body></html></br></br>'''
+
+    if tot_parm[8] == 'OK':
+        priority = 1
+    elif tot_parm[8] == 'CRITICAL':
+        priority = 4
+    elif tot_parm[8] == 'WARN':
+        priority = 3
+    else:
+        priority = 3
+
+def create_ticket():
+    api_url = apiurl
+    data = {
+        "requester_id": int(requester_id),
+        "subject": Subject,
+        "status": 2,
+        "priority": int(priority),
+        "description": Description,
+        "source": 2
+    }
+    data = json.dumps(data)
+    try:
+        content = requests.post(api_url, data=data, auth=(apikey, 'xx'), headers=headers)
+        output = "Status of the this request : " + str(content.status_code) + "\n"
+        if int(content.status_code) == 201:
+            f.write(str(datetime.now()) + " ----- Creating ticket for " + str(Subject) + '\n')
+            f.write(str(datetime.now()) + " ----- " + output)
+        else:
+            f.write(str(datetime.now()) + " ----- Status code for API ticket creation is " + str(content.status_code) \
+                    + " Kindly investigate. " + '\n')
+    except:
+        f.write(str(datetime.now()) + " ----- Problem in creating ticket for " + str(Subject) + '\n')
+    f.close()
+
+create_ticket()
+

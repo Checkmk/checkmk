@@ -21,6 +21,7 @@ import pipes
 import subprocess
 import logging
 import shutil
+from contextlib import suppress
 from pathlib import Path
 
 # Make the testlib available
@@ -71,8 +72,12 @@ def main(args):
             if os.path.exists("/results"):
                 shutil.rmtree("/results")
                 os.mkdir("/results")
-            shutil.copy(site.path("junit.xml"), "/results")
-            shutil.copytree(site.path("var/log"), "/results/logs")
+
+            with suppress(FileNotFoundError):
+                shutil.copy(site.path("junit.xml"), "/results")
+
+            with suppress(FileNotFoundError):
+                shutil.copytree(site.path("var/log"), "/results/logs")
 
 
 def _is_dockerized():

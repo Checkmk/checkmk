@@ -15,11 +15,17 @@ from cmk.utils.exceptions import MKTerminate
 # TODO: Try to find a better place for them.
 
 
-def worst_service_state(*states: int) -> int:
-    """Aggregates several monitoring states to the worst state"""
+def worst_service_state(*states: int, default: int) -> int:
+    """Aggregates several monitoring states to the worst state
+
+    where 0 < 1 < 3 < 2 (not a typo).
+
+    `default` should probably be 0 (aka OK).
+
+    """
     if 2 in states:
-        return 2
-    return max(states)
+        return 2  # critical
+    return max(states, default=default)
 
 
 #.

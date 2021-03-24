@@ -192,7 +192,7 @@ def _sanitize_yield_check_result(result: Iterable[Any]) -> ServiceCheckResult:
 
     for subresult in subresults:
         st, text, perf = _sanitize_tuple_check_result(subresult, allow_missing_infotext=True)
-        status = worst_service_state(st, status)
+        status = worst_service_state(st, status, default=0)
 
         if text:
             infotexts.append(text + state_markers[st])

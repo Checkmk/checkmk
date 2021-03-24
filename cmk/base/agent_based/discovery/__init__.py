@@ -552,7 +552,7 @@ def check_discovery(
 def _aggregate_subresults(*subresults: _DiscoverySubresult) -> _DiscoverySubresult:
     stati, texts, long_texts, perfdata_list, need_rediscovery_flags = zip(*subresults)
     return (
-        cmk.base.utils.worst_service_state(*stati),
+        cmk.base.utils.worst_service_state(*stati, default=0),
         sum(texts, []),
         sum(long_texts, []),
         sum(perfdata_list, []),
@@ -600,7 +600,7 @@ def _check_service_lists(
         if affected_check_plugin_names:
             info = ", ".join(["%s:%d" % e for e in affected_check_plugin_names.items()])
             st = params.get(params_key, default_state)
-            status = cmk.base.utils.worst_service_state(status, st)
+            status = cmk.base.utils.worst_service_state(status, st, default=0)
             infotexts.append(u"%d %s services (%s)%s" % (
                 sum(affected_check_plugin_names.values()),
                 title,
@@ -648,7 +648,7 @@ def _check_data_sources(
 ) -> _DiscoverySubresult:
     summaries = [(source, source.summarize(host_sections)) for source, host_sections in result]
     return (
-        cmk.base.utils.worst_service_state(*(state for _s, (state, _t) in summaries)),
+        cmk.base.utils.worst_service_state(*(state for _s, (state, _t) in summaries), default=0),
         # Do not output informational (state = 0) things.  These information
         # are shown by the "Check_MK" service
         [f"[{src.id}] {text}" for src, (state, text) in summaries if state != 0],

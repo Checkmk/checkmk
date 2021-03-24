@@ -231,7 +231,7 @@ scripts works with the other method.
 
 <SecurityDefinitions />
 
-# Client compatibility issues
+# Compatibility
 
 ## HTTP client compatibility
 
@@ -239,12 +239,53 @@ If you have a client which cannot do the HTTP PUT or DELETE methods, you can use
 `X-HTTP-Method-Override` HTTP header to force the server into believing the client actually sent
 such a method. In these cases the HTTP method to use has to be POST. You cannot override from GET.
 
-## Backwards compatibility
+## Compatibility policy
 
-Future versions of this API may add additional fields in the responses. Clients must be written
-in a way to NOT expect the absence of a field, as we don't guarantee that.
-For backwards compatibility reasons we only keep the fields that have already been there in older
-versions. You can consult the documentation to see what changed in each API revision.
+It is our policy to keep all documented parts backwards compatible, as long as there is no
+compelling reason (like security, etc) to break compatibility.
+
+In the event of a break in backwards compatibility, these changes are documented and, if possible,
+announced by deprecating the field or endpoint in question beforehand. Please understand that this
+can't be promised for all cases (security, etc) though.
+
+## Versioning
+
+### Definition
+
+The REST API is versioned by a *major* and *minor* version number.
+
+The *major* number is incremented when backwards incompatible changes to the API have been made.
+This will reset the *minor* number to *0*. A *werk* which contains the details of the change and
+marking the change as incompatible will be released when this happens.
+
+Th *minor* number will be increased when backwards compatible changes are added to the API. A
+*werk* detailing the additions will be released when this happens.
+
+**Note:** Despite the noted backward compatibility, API consumers are best to ensure that their
+implementation does not disrupt use-case requirements.
+
+### Usage
+
+The *major* version is part of the URL of each endpoint, while the whole version (in the form
+*major*.*minor*) can be sent via the HTTP header `X-API-Version`. If the header is not sent,
+the most recent *minor* version of the through the URL selected *major* version is used.
+
+### Format
+
+ * URL: *v1*, *v2*, etc.
+ * X-API-Version HTTP header: *major.minor*
+
+### Notes
+
+ * In the first release, the version part in the URL has been documented as `1.0`. These
+   URLs will continue to work in the future, although using the `X-API-Version` header will not be
+   possible with this version identifier. You have to use the above documented format (v1, v2, ...)
+   in the URL to be able to use the `X-API-Version` header.
+
+## Undocumented behaviour
+
+We cannot guarantee bug-for-bug backwards compatibility. If a behaviour of an endpoint is not
+documented we may change it without incrementing the API version.
 
 """
 from typing import Dict, List, Literal, TypedDict

@@ -1,0 +1,13 @@
+Title: omd now restores all hardlinks
+Knowledge: doc
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p23
+Date: 1616519483
+
+<tt>omd restore</tt> is now able to restore <b>all</b> hard links.
+Previously, this was restricted to some special directories.

@@ -8,6 +8,7 @@
 # TODO: More feature related splitting up would be better
 
 import abc
+import functools
 import time
 import re
 import hashlib
@@ -22,6 +23,7 @@ from six import ensure_str
 import livestatus
 from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
 
+from cmk.utils.check_utils import worst_service_state
 import cmk.utils.plugin_registry
 import cmk.utils.render
 import cmk.utils.regex
@@ -1453,11 +1455,6 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn],
                               LivestatusColumn]] = [site_column_merge_func]
 
-    def worst_service_state(a, b):
-        if a == 2 or b == 2:
-            return 2
-        return max(a, b)
-
     def worst_host_state(a, b):
         if a == 1 or b == 1:
             return 1
@@ -1468,7 +1465,7 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
         if col.startswith("num_") or col.startswith("members"):
             mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
-            mergefunc = worst_service_state
+            mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:

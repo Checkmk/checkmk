@@ -22,6 +22,25 @@ def maincheckify(subcheck_name: str) -> str:
            )
 
 
+def worst_service_state(*states: int, default: int) -> int:
+    """Return the 'worst' aggregation of all states
+
+    Integers encode service states like this:
+
+        0 -> OK
+        1 -> WARN
+        2 -> CRIT
+        3 -> UNKNOWN
+
+    Unfortunately this does not reflect the order of severity, or "badness", where
+
+        OK -> WARN -> UNKNOWN -> CRIT
+
+    That's why this function is just not quite `max`.
+    """
+    return 2 if 2 in states else max(states, default=default)
+
+
 # (un)wrap_parameters:
 #
 # The old "API" allowed for check plugins to discover and use all kinds of parameters:

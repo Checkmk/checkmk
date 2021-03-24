@@ -24,6 +24,7 @@ from six import ensure_str
 
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import worst_service_state
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
@@ -163,7 +164,7 @@ def do_check(
             for source, host_sections in source_results:
                 source_state, source_output = source.summarize(host_sections)
                 if source_output != "":
-                    status = max(status, source_state)
+                    status = worst_service_state(status, source_state, default=3)
                     infotexts.append("[%s] %s" % (source.id, source_output))
 
             if plugins_missing_data:

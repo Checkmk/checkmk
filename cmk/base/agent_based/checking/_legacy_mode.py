@@ -21,7 +21,7 @@ from typing import (
 
 import cmk.utils.caching
 import cmk.utils.debug
-from cmk.utils.check_utils import section_name_of
+from cmk.utils.check_utils import section_name_of, worst_service_state
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKParseFunctionError
 from cmk.utils.type_defs import (
     HostAddress,
@@ -41,7 +41,6 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.item_state as item_state
-from cmk.base.utils import worst_service_state
 
 from cmk.base.api.agent_based import register as agent_based_register
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent

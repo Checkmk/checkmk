@@ -15,10 +15,11 @@
 def inventory_cisco_redundancy(info):
     try:
         swact_reason = info[0][5]
+        peer_state = info[0][3]
     except IndexError:
         pass
     else:
-        if swact_reason != "1":
+        if "1" not in [swact_reason, peer_state]:
             return [(None, {"init_states": info[0][:5]})]
     return []
 

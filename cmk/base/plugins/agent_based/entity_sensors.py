@@ -27,15 +27,23 @@
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Mapping, NamedTuple
 from .agent_based_api.v1 import (
     check_levels,
     register,
     OIDEnd,
+    Result,
+    Service,
     startswith,
     SNMPTree,
+    State,
 )
-from .utils.temperature import check_temperature
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from .utils.temperature import check_temperature, TempParamType
 
 ENTITY_SENSOR_TYPES = {
     "1": ("other", "other"),
@@ -73,31 +81,42 @@ ENTITY_SENSOR_SCALING = {
 }
 
 
-def _sensor_status_descr(status_nr):
+class EntitySensor(NamedTuple):
+    name: str
+    reading: float
+    unit: str
+    state: State
+    status_descr: str
+
+
+EntitySensorSection = Dict[str, Dict[str, EntitySensor]]
+
+
+def _sensor_status_descr(status_nr: str) -> str:
     return {
         "1": "OK",
         "2": "unavailable",
         "3": "non-operational",
-    }[status_nr]
+    }.get(status_nr, status_nr)
 
 
-def _sensor_state(status_nr):
+def _sensor_state(status_nr: str) -> State:
     return {
-        "1": 0,
-        "2": 2,
-        "3": 1,
-    }[status_nr]
+        "1": State.OK,
+        "2": State.CRIT,
+        "3": State.WARN,
+    }.get(status_nr, State.UNKNOWN)
 
 
-def _reformat_sensor_name(name):
+def _reformat_sensor_name(name: str) -> str:
     new_name = name
     for s in ['Fan', 'Temperature', '#', '@']:
         new_name = new_name.replace(s, '')
     return f'Sensor {new_name.strip()}'
 
 
-def parse_entity_sensors(string_table):
-    section: Dict[str, Any] = {}
+def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
+    section: EntitySensorSection = {}
     sensor_names = {i[0]: i[1] for i in string_table[0]}
     for oid_end, sensor_type_nr, scaling_nr, reading, status_nr in string_table[1]:
         # Some devices such as Palo Alto Network series 3000 support
@@ -106,12 +125,13 @@ def parse_entity_sensors(string_table):
         # this MIB, thus we use OID as item instead
         sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
         sensor_type, unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
-        section.setdefault(sensor_type, {})[sensor_name] = {
-            'unit': unit,
-            'reading': float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
-            'status_descr': _sensor_status_descr(status_nr),
-            'state': _sensor_state(status_nr),
-        }
+        section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
+            name=sensor_name,
+            reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
+            unit=unit,
+            state=_sensor_state(status_nr),
+            status_descr=_sensor_status_descr(status_nr),
+        )
     return section
 
 
@@ -141,21 +161,25 @@ register.snmp_section(
 )
 
 
-def discover_entity_sensors_temp(section):
-    yield from ((item, {}) for item in section.get('temp', {}))
+def discover_entity_sensors_temp(section: EntitySensorSection) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section.get('temp', {}))
 
 
-def check_entity_sensors_temp(item, params, section):
+def check_entity_sensors_temp(
+    item: str,
+    params: TempParamType,
+    section: EntitySensorSection,
+) -> CheckResult:
     if not (sensor_reading := section.get('temp', {}).get(item)):
         return
 
     yield from check_temperature(
-        sensor_reading['reading'],
+        sensor_reading.reading,
         params,
         unique_name="temp",
-        dev_unit=sensor_reading['unit'],
-        dev_status=sensor_reading['state'],
-        dev_status_name=sensor_reading['status_descr'],
+        dev_unit=sensor_reading.unit,
+        dev_status=int(sensor_reading.state),
+        dev_status_name=sensor_reading.status_descr,
     )
 
 
@@ -170,22 +194,27 @@ register.check_plugin(
 )
 
 
-def discover_entity_sensors_fan(section):
-    yield from ((item, {}) for item in section.get('fan', {}))
+def discover_entity_sensors_fan(section: EntitySensorSection) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section.get('fan', {}))
 
 
-def check_entity_sensors_fan(item, params, section):
+def check_entity_sensors_fan(
+    item: str,
+    params: Mapping[str, Any],
+    section: EntitySensorSection,
+) -> CheckResult:
     if not (sensor_reading := section.get('fan', {}).get(item)):
         return
 
-    yield sensor_reading['state'], f"Operational status: {sensor_reading['status_descr']}"
+    yield Result(state=sensor_reading.state,
+                 summary=f"Operational status: {sensor_reading.status_descr}")
 
     yield from check_levels(
-        value=sensor_reading['reading'],
+        value=sensor_reading.reading,
         metric_name="fan" if params.get('output_metrics') else None,
         levels_upper=params.get("upper"),
         levels_lower=params["lower"],
-        render_func=lambda r: f"{int(r)} {sensor_reading['unit']}",
+        render_func=lambda r: f'{int(r)} {sensor_reading.unit}',
         label="Speed",
         boundaries=(0, None),
     )

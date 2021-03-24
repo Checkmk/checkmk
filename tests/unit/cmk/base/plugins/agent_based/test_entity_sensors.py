@@ -6,15 +6,17 @@
 
 import pytest
 from cmk.base.plugins.agent_based.entity_sensors import (
-    parse_entity_sensors,
-    discover_entity_sensors_temp,
+    check_entity_sensors_fan,
     check_entity_sensors_temp,
     discover_entity_sensors_fan,
-    check_entity_sensors_fan,
+    discover_entity_sensors_temp,
+    EntitySensor,
+    parse_entity_sensors,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Metric,
     Result,
+    Service,
     State,
 )
 
@@ -38,32 +40,36 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
         ],
         {
             'fan': {
-                'Sensor 1 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor 2 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                }
+                'Sensor 1 Operational': EntitySensor(
+                    name='Sensor 1 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor 2 Operational': EntitySensor(
+                    name='Sensor 2 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
             'temp': {
-                'Sensor at MP [U6]': {
-                    'unit': 'c',
-                    'reading': 37.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor at DP [U7]': {
-                    'unit': 'c',
-                    'reading': 40.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
+                'Sensor at MP [U6]': EntitySensor(
+                    name='Sensor at MP [U6]',
+                    unit='c',
+                    reading=37.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor at DP [U7]': EntitySensor(
+                    name='Sensor at DP [U7]',
+                    unit='c',
+                    reading=40.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
         },
     ),
@@ -90,8 +96,8 @@ def test_parse_entity_sensors(string_table, expected_section):
             ],
         ],
         [
-            ('Sensor at MP [U6]', {}),
-            ('Sensor at DP [U7]', {}),
+            Service(item='Sensor at MP [U6]'),
+            Service(item='Sensor at DP [U7]'),
         ],
     ),
 ])
@@ -118,8 +124,8 @@ def test_discover_entity_sensors_temp(string_table, expected_discovery):
             ],
         ],
         [
-            ('Sensor 1 Operational', {}),
-            ('Sensor 2 Operational', {}),
+            Service(item='Sensor 1 Operational'),
+            Service(item='Sensor 2 Operational'),
         ],
     ),
 ])
@@ -136,32 +142,36 @@ def test_discover_entity_sensors_fan(string_table, expected_discovery):
         },
         {
             'fan': {
-                'Sensor 1 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor 2 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                }
+                'Sensor 1 Operational': EntitySensor(
+                    name='Sensor 1 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor 2 Operational': EntitySensor(
+                    name='Sensor 2 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
             'temp': {
-                'Sensor at MP [U6]': {
-                    'unit': 'c',
-                    'reading': 37.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor at DP [U7]': {
-                    'unit': 'c',
-                    'reading': 40.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
+                'Sensor at MP [U6]': EntitySensor(
+                    name='Sensor at MP [U6]',
+                    unit='c',
+                    reading=37.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor at DP [U7]': EntitySensor(
+                    name='Sensor at DP [U7]',
+                    unit='c',
+                    reading=40.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
         },
         [
@@ -184,36 +194,40 @@ def test_check_entity_sensors_temp(item, params, section, expected_result):
         },
         {
             'fan': {
-                'Sensor 1 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor 2 Operational': {
-                    'unit': 'RPM',
-                    'reading': 1.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                }
+                'Sensor 1 Operational': EntitySensor(
+                    name='Sensor 1 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor 2 Operational': EntitySensor(
+                    name='Sensor 2 Operational',
+                    unit='RPM',
+                    reading=1.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
             'temp': {
-                'Sensor at MP [U6]': {
-                    'unit': 'c',
-                    'reading': 37.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
-                'Sensor at DP [U7]': {
-                    'unit': 'c',
-                    'reading': 40.0,
-                    'status_descr': 'OK',
-                    'state': 0
-                },
+                'Sensor at MP [U6]': EntitySensor(
+                    name='Sensor at MP [U6]',
+                    unit='c',
+                    reading=37.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
+                'Sensor at DP [U7]': EntitySensor(
+                    name='Sensor at DP [U7]',
+                    unit='c',
+                    reading=40.0,
+                    status_descr='OK',
+                    state=State.OK,
+                ),
             },
         },
         [
-            (0, 'Operational status: OK'),
+            Result(state=State.OK, summary='Operational status: OK'),
             Result(state=State.CRIT, summary='Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)'),
         ],
     ),

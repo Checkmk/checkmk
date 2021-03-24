@@ -4,12 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables from the check-context which are necessary for
-# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
-# it might also remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 # .1.3.6.1.2.1.47.1.1.1.1.7.1 PA-500
 # .1.3.6.1.2.1.47.1.1.1.1.7.2 Fan #1 Operational
 # .1.3.6.1.2.1.47.1.1.1.1.7.3 Fan #2 Operational
@@ -32,6 +26,16 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.2.1.99.1.1.1.5.3 1
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
+
+from typing import Any, Dict
+from .agent_based_api.v1 import (
+    check_levels,
+    register,
+    OIDEnd,
+    startswith,
+    SNMPTree,
+)
+from .utils.temperature import check_temperature
 
 ENTITY_SENSOR_TYPES = {
     "1": ("other", "other"),
@@ -92,105 +96,107 @@ def _reformat_sensor_name(name):
     return f'Sensor {new_name.strip()}'
 
 
-def parse_entity_sensors(info):
-    parsed = {}
-    sensor_names = {i[0]: i[1] for i in info[0]}
-    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr in info[1]:
+def parse_entity_sensors(string_table):
+    section: Dict[str, Any] = {}
+    sensor_names = {i[0]: i[1] for i in string_table[0]}
+    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr in string_table[1]:
         # Some devices such as Palo Alto Network series 3000 support
         # the ENTITY-MIB including sensor/entity names.
         # Others (e.g. Palo Alto Networks Series 200) do not support
         # this MIB, thus we use OID as item instead
         sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
         sensor_type, unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
-        parsed.setdefault(sensor_type, {})[sensor_name] = {
+        section.setdefault(sensor_type, {})[sensor_name] = {
             'unit': unit,
             'reading': float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
             'status_descr': _sensor_status_descr(status_nr),
             'state': _sensor_state(status_nr),
         }
-    return parsed
+    return section
 
 
-def discover_entity_sensors_temp(parsed):
-    yield from ((item, {}) for item in parsed.get('temp', {}))
-
-
-def discover_entity_sensors_fan(parsed):
-    yield from ((item, {}) for item in parsed.get('fan', {}))
-
-
-# Customer request
-factory_settings['entity_sensors_temp_default_variables'] = {
-    'levels': (35, 40),
-}
-
-
-def check_entity_sensors_temp(item, params, parsed):
-    if not (sensor_reading := parsed.get('temp', {}).get(item)):
-        return
-
-    yield check_temperature(sensor_reading['reading'],
-                            params,
-                            "temp",
-                            dev_unit=sensor_reading['unit'],
-                            dev_status=sensor_reading['state'],
-                            dev_status_name=sensor_reading['status_descr'])
-
-
-check_info['entity_sensors'] = {
-    'parse_function': parse_entity_sensors,
-    'inventory_function': discover_entity_sensors_temp,
-    'check_function': check_entity_sensors_temp,
-    'service_description': 'Temperature %s',
-    'has_perfdata': True,
-    'snmp_info': [
-        (
-            ".1.3.6.1.2.1.47.1.1.1.1",
-            [
-                OID_END,
-                CACHED_OID(7),  # ENTITY-MIB::entPhysicalName
+register.snmp_section(
+    name='entity_sensors',
+    detect=startswith(".1.3.6.1.2.1.1.1.0", "palo alto networks"),
+    parse_function=parse_entity_sensors,
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.2.1.47.1.1.1.1",
+            oids=[
+                OIDEnd(),
+                "7",  # ENTITY-MIB::entPhysicalName
             ],
         ),
-        (
-            ".1.3.6.1.2.1.99.1.1.1",
-            [
-                OID_END,
+        SNMPTree(
+            base=".1.3.6.1.2.1.99.1.1.1",
+            oids=[
+                OIDEnd(),
                 "1",  # entPhySensorType
                 "2",  # entPhySensorScale
                 "4",  # entPhySensorValue
                 "5",  # entPhySensorOperStatus
             ],
-        )
+        ),
     ],
-    'snmp_scan_function': lambda oid: "palo alto networks" in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'default_levels_variable': 'entity_sensors_temp_default_variables',
-    'group': 'temperature',
-}
-
-# Customer request
-factory_settings['entity_sensors_fan_default_variables'] = {
-    'lower': (2000, 1000),
-}
+)
 
 
-def check_entity_sensors_fan(item, params, parsed):
-    if not (sensor_reading := parsed.get('fan', {}).get(item)):
+def discover_entity_sensors_temp(section):
+    yield from ((item, {}) for item in section.get('temp', {}))
+
+
+def check_entity_sensors_temp(item, params, section):
+    if not (sensor_reading := section.get('temp', {}).get(item)):
+        return
+
+    yield from check_temperature(
+        sensor_reading['reading'],
+        params,
+        unique_name="temp",
+        dev_unit=sensor_reading['unit'],
+        dev_status=sensor_reading['state'],
+        dev_status_name=sensor_reading['status_descr'],
+    )
+
+
+register.check_plugin(
+    name='entity_sensors_temp',
+    sections=['entity_sensors'],
+    service_name='Temperature %s',
+    discovery_function=discover_entity_sensors_temp,
+    check_function=check_entity_sensors_temp,
+    check_ruleset_name='temperature',
+    check_default_parameters={'levels': (35, 40)},
+)
+
+
+def discover_entity_sensors_fan(section):
+    yield from ((item, {}) for item in section.get('fan', {}))
+
+
+def check_entity_sensors_fan(item, params, section):
+    if not (sensor_reading := section.get('fan', {}).get(item)):
         return
 
     yield sensor_reading['state'], f"Operational status: {sensor_reading['status_descr']}"
-    yield check_levels(sensor_reading['reading'],
-                       "fan" if params.get("output_metrics") else None,
-                       params.get("upper", (None, None)) + params["lower"],
-                       unit=sensor_reading['unit'],
-                       human_readable_func=int,
-                       infoname="Speed")
+
+    yield from check_levels(
+        value=sensor_reading['reading'],
+        metric_name="fan" if params.get('output_metrics') else None,
+        levels_upper=params.get("upper"),
+        levels_lower=params["lower"],
+        render_func=lambda r: f"{int(r)} {sensor_reading['unit']}",
+        label="Speed",
+        boundaries=(0, None),
+    )
 
 
-check_info['entity_sensors.fan'] = {
-    'inventory_function': discover_entity_sensors_fan,
-    'check_function': check_entity_sensors_fan,
-    'service_description': 'Fan %s',
-    'has_perfdata': True,
-    'default_levels_variable': 'entity_sensors_fan_default_variables',
-    'group': 'hw_fans',
-}
+register.check_plugin(
+    name='entity_sensors_fan',
+    sections=['entity_sensors'],
+    service_name='Fan %s',
+    discovery_function=discover_entity_sensors_fan,
+    check_function=check_entity_sensors_fan,
+    check_ruleset_name='hw_fans',
+    check_default_parameters={'lower': (2000, 1000)},  # customer request
+)

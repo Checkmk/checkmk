@@ -1,16 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 import pytest
-from checktestlib import (
-    CheckResult,
-    DiscoveryResult,
-    assertDiscoveryResultsEqual,
-    assertCheckResultsEqual,
+from cmk.base.plugins.agent_based.entity_sensors import (
+    parse_entity_sensors,
+    discover_entity_sensors_temp,
+    check_entity_sensors_temp,
+    discover_entity_sensors_fan,
+    check_entity_sensors_fan,
 )
-from testlib import Check  # type: ignore[import]
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    State,
+)
 
-pytestmark = pytest.mark.checks
 
-
-@pytest.mark.parametrize("info, expected_parsed", [
+@pytest.mark.parametrize("string_table, expected_section", [
     (
         [
             [
@@ -59,12 +68,11 @@ pytestmark = pytest.mark.checks
         },
     ),
 ])
-def test_parse_entity_sensors(info, expected_parsed):
-    check = Check("entity_sensors")
-    assert check.run_parse(info) == expected_parsed
+def test_parse_entity_sensors(string_table, expected_section):
+    assert parse_entity_sensors(string_table) == expected_section
 
 
-@pytest.mark.parametrize('info, expected_discovery_temp, expected_discovery_fan', [
+@pytest.mark.parametrize('string_table, expected_discovery', [
     (
         [
             [
@@ -85,30 +93,42 @@ def test_parse_entity_sensors(info, expected_parsed):
             ('Sensor at MP [U6]', {}),
             ('Sensor at DP [U7]', {}),
         ],
+    ),
+])
+def test_discover_entity_sensors_temp(string_table, expected_discovery):
+    assert list(discover_entity_sensors_temp(
+        parse_entity_sensors(string_table))) == expected_discovery
+
+
+@pytest.mark.parametrize('string_table, expected_discovery', [
+    (
+        [
+            [
+                ['1', 'PA-500'],
+                ['2', 'Fan #1 Operational'],
+                ['3', 'Fan #2 Operational'],
+                ['4', 'Temperature at MP [U6]'],
+                ['5', 'Temperature at DP [U7]'],
+            ],
+            [
+                ['2', '10', '9', '1', '1'],
+                ['3', '10', '9', '1', '1'],
+                ['4', '8', '9', '37', '1'],
+                ['5', '8', '9', '40', '1'],
+            ],
+        ],
         [
             ('Sensor 1 Operational', {}),
             ('Sensor 2 Operational', {}),
         ],
     ),
 ])
-def test_discover_entity_sensors(info, expected_discovery_temp, expected_discovery_fan):
-    check = Check('entity_sensors')
-    parsed = check.run_parse(info)
-    assertDiscoveryResultsEqual(
-        check,
-        DiscoveryResult(check.run_discovery(parsed)),
-        DiscoveryResult(expected_discovery_temp),
-    )
-
-    check = Check('entity_sensors.fan')
-    assertDiscoveryResultsEqual(
-        check,
-        DiscoveryResult(check.run_discovery(parsed)),
-        DiscoveryResult(expected_discovery_fan),
-    )
+def test_discover_entity_sensors_fan(string_table, expected_discovery):
+    assert list(discover_entity_sensors_fan(
+        parse_entity_sensors(string_table))) == expected_discovery
 
 
-@pytest.mark.parametrize('item, params, parsed, expected_result', [
+@pytest.mark.parametrize('item, params, section, expected_result', [
     (
         'Sensor at DP [U7]',
         {
@@ -145,19 +165,18 @@ def test_discover_entity_sensors(info, expected_discovery_temp, expected_discove
             },
         },
         [
-            (0, '40.0 °C', [('temp', 40.0, None, None, None)]),
+            Metric('temp', 40.0),
+            Result(state=State.OK, summary='Temperature: 40.0°C'),
+            Result(state=State.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
         ],
     ),
 ])
-def test_check_entity_sensors_temp(item, params, parsed, expected_result):
-    check = Check('entity_sensors')
-    assertCheckResultsEqual(
-        CheckResult(check.run_check(item, params, parsed)),
-        CheckResult(expected_result),
-    )
+def test_check_entity_sensors_temp(item, params, section, expected_result):
+    assert list(check_entity_sensors_temp(item, params, section)) == expected_result
 
 
-@pytest.mark.parametrize('item, params, parsed, expected_result', [
+@pytest.mark.parametrize('item, params, section, expected_result', [
     (
         'Sensor 1 Operational',
         {
@@ -195,13 +214,9 @@ def test_check_entity_sensors_temp(item, params, parsed, expected_result):
         },
         [
             (0, 'Operational status: OK'),
-            (2, 'Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)'),
+            Result(state=State.CRIT, summary='Speed: 1 RPM (warn/crit below 2000 RPM/1000 RPM)'),
         ],
     ),
 ])
-def test_check_entity_sensors_fan(item, params, parsed, expected_result):
-    check = Check('entity_sensors.fan')
-    assertCheckResultsEqual(
-        CheckResult(check.run_check(item, params, parsed)),
-        CheckResult(expected_result),
-    )
+def test_check_entity_sensors_fan(item, params, section, expected_result):
+    assert list(check_entity_sensors_fan(item, params, section)) == expected_result

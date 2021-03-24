@@ -370,7 +370,8 @@ class Endpoint:
 
         ENDPOINT_REGISTRY.add_endpoint(self, params)
 
-        if not self.output_empty and self.response_schema is None:
+        if (self.content_type == 'application/json' and not self.output_empty and
+                self.response_schema is None):
             raise ValueError(
                 f"{self.operation_id}: 'response_schema' required when output will be sent.")
 

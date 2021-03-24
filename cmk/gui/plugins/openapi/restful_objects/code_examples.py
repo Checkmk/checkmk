@@ -74,6 +74,9 @@ CODE_TEMPLATE_MACROS = """
 CODE_TEMPLATE_URLLIB = """
 #!/usr/bin/env python3
 import json
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- if downloadable %}
+import shutil{% endif %}
 {%- if query_params %}
 import urllib.parse{% endif %}
 import urllib.request
@@ -115,6 +118,11 @@ response = urllib.request.urlopen(request)
 if response.status == 200:
     pprint.pprint(json.loads(response.read()))
 elif response.status == 204:
+    {%- if downloadable %}
+    file_name = response.headers["content-disposition"].split("filename=")[1].strip("\"")
+    with open(file_name, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+    {%- endif %}
     print("Done")
 else:
     raise RuntimeError(response.read())
@@ -211,6 +219,9 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
     {{ key }}='{{ field | field_value }}' \\
  {%- endfor %}
 {%- endif %}
+{%- if endpoint.content_type == 'application/octet-stream' %}
+    --download \\
+{%- endif %}
 
 """
 
@@ -219,6 +230,9 @@ CODE_TEMPLATE_REQUESTS = """
 #!/usr/bin/env python3
 import pprint
 import requests
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- if downloadable %}
+import shutil {%- endif %}
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
@@ -253,6 +267,12 @@ resp = session.{{ method }}(
 if resp.status_code == 200:
     pprint.pprint(resp.json())
 elif resp.status_code == 204:
+    {%- if downloadable %}
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip("\"")
+    with open(file_name, 'wb') as out_file:
+        resp.raw.decode_content = True
+        shutil.copyfileobj(resp.raw, out_file)
+    {%- endif %}
     print("Done")
 else:
     raise RuntimeError(pprint.pformat(resp.json()))
@@ -375,7 +395,12 @@ def _transform_params(param_list):
     }
 
 
-def code_samples(endpoint, header_params, path_params, query_params) -> List[CodeSample]:
+def code_samples(
+    endpoint,
+    header_params,
+    path_params,
+    query_params,
+) -> List[CodeSample]:
     """Create a list of rendered code sample Objects
 
     These are not specified by OpenAPI but are specific to ReDoc."""

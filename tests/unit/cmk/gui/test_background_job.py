@@ -45,6 +45,7 @@ def test_registered_background_jobs():
         'CheckmkAutomationBackgroundJob',
         'DiagnosticsDumpBackgroundJob',
         'SearchIndexBackgroundJob',
+        'DiscoveredHostLabelSyncJob',
     ]
 
     if not cmk_version.is_raw_edition():

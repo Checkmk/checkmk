@@ -63,6 +63,7 @@ def test_registered_automation_commands():
         'service-discovery-job',
         'checkmk-remote-automation-start',
         'checkmk-remote-automation-get-status',
+        'discovered-host-label-sync',
     ]
 
     if not cmk_version.is_raw_edition():

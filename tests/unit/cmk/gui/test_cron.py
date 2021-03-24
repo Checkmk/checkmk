@@ -23,7 +23,8 @@ def test_registered_jobs():
         expected += [
             'cmk.gui.cee.reporting.cleanup_stored_reports',
             'cmk.gui.cee.reporting.do_scheduled_reports',
-            'cmk.gui.cee.ntop.connector.ntop_instance_check'
+            'cmk.gui.cee.ntop.connector.ntop_instance_check',
+            'cmk.gui.watolib.host_label_sync.execute_host_label_sync_job',
         ]
 
     found_jobs = sorted(["%s.%s" % (f.__module__, f.__name__) for f in cron.multisite_cronjobs])

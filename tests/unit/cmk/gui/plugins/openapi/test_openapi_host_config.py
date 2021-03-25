@@ -188,8 +188,7 @@ def test_openapi_bulk_hosts(
                 "host_name": "foobar",
                 "attributes": {
                     "ipaddress": "192.168.1.1",
-                    "networking": "wan",
-                    "criticality": "prod",
+                    "tag_address_family": "ip-v4-only",
                 },
             }],
         }),

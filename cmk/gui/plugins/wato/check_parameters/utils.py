@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
-    Optional,
     Percentage,
     TextAscii,
     Transform,

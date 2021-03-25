@@ -1012,6 +1012,12 @@ def _dump_precompiled_hostcheck(config_cache: ConfigCache,
     (needed_legacy_check_plugin_names, needed_agent_based_check_plugin_names,
      needed_agent_based_inventory_plugin_names) = _get_needed_plugin_names(host_config)
 
+    needed_legacy_check_plugin_names.update(
+        _get_required_legacy_check_sections(
+            needed_agent_based_check_plugin_names,
+            needed_agent_based_inventory_plugin_names,
+        ))
+
     if not any((
             needed_legacy_check_plugin_names,
             needed_agent_based_check_plugin_names,
@@ -1302,3 +1308,20 @@ def _get_needed_agent_based_modules(
     ).values() if section.module is not None))
 
     return sorted(modules)
+
+
+def _get_required_legacy_check_sections(
+    check_plugin_names: Set[CheckPluginName],
+    inventory_plugin_names: Set[InventoryPluginName],
+) -> Set[str]:
+    """
+    new style plugin may have a dependency to a legacy check
+    """
+    required_legacy_check_sections = set()
+    for section in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=check_plugin_names,
+            inventory_plugin_names=inventory_plugin_names,
+    ).values():
+        if section.module is None:
+            required_legacy_check_sections.add(str(section.name))
+    return required_legacy_check_sections

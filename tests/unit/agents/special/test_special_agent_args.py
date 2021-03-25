@@ -82,6 +82,12 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     ],
     'agent_netapp': ["address", "user", "password"],
     'agent_activemq': ["server", "1234"],
+    'agent_datadog': [
+        'HOSTNAME',
+        'API_KEY',
+        'APP_KEY',
+        'ADDRESS',
+    ],
 }
 
 

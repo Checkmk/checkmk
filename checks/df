@@ -43,20 +43,9 @@ def _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints, iter
                 yield df_block
 
 
-def _format_with_description(description, mountpoint):
-    """
-    TODO: maybe do this only if description != mountpoint
-    """
-    return "%s %s" % (description, mountpoint)
-
-
 def _get_item_list_from_blocks(df_blocks):
     """return the mountpoint"""  # TODO: fix this. Should include optional description
     return [df_block[0] for df_block in df_blocks]
-
-
-def _is_grouped_item(params):
-    return "patterns" in params
 
 
 def inventory_df(parsed):
@@ -84,9 +73,9 @@ def inventory_df(parsed):
     filtered_blocks = _filter_by_type(volume_info, ignore_fs_types, never_ignore_mountpoints,
                                       filtered_blocks)
 
-    #Always exclude filesystems below dockers local storage area
-    #and also exclude docker mounts in containers which are reported
-    #by the agent when the agent is executed in the container context
+    # Always exclude filesystems below dockers local storage area
+    # and also exclude docker mounts in containers which are reported
+    # by the agent when the agent is executed in the container context
     filtered_blocks = (mp for mp in filtered_blocks if not mp[0].startswith("/var/lib/docker/"))
 
     mplist = _get_item_list_from_blocks(filtered_blocks)

@@ -1,0 +1,15 @@
+Title: Improved support for IE11
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616659052
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The support for Internet Explorer 11 is improved:
+
+- The host overview dashboard element is now working correctly
+- Hexagons in the host and service statistics are now rendered correctly
+- Graphs no longer have a black area

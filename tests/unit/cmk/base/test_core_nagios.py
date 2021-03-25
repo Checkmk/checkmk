@@ -253,7 +253,7 @@ def test_dump_precompiled_hostcheck(monkeypatch, serial):
     monkeypatch.setattr(
         core_nagios,
         "_get_needed_plugin_names",
-        lambda c: ([], [CheckPluginName("uptime")], []),
+        lambda c: (set(), {CheckPluginName("uptime")}, set()),
     )
 
     host_check = core_nagios._dump_precompiled_hostcheck(config_cache, serial, "localhost")
@@ -284,7 +284,7 @@ def test_compile_delayed_host_check(monkeypatch, serial):
     monkeypatch.setattr(
         core_nagios,
         "_get_needed_plugin_names",
-        lambda c: ([], [CheckPluginName("uptime")], []),
+        lambda c: (set(), {CheckPluginName("uptime")}, set()),
     )
 
     source_file = core_nagios.HostCheckStore.host_check_source_file_path(serial, hostname)

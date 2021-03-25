@@ -110,21 +110,6 @@ def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     return fetch_specific_groups(groups, group_type)
 
 
-def _verify_groups_exist(group_type: str, entries: List[Dict[str, Any]]):
-    specific_existing_groups = load_group_information()[group_type]
-    missing_groups = []
-    for details in entries:
-        name = details['name']
-        if name not in specific_existing_groups:
-            missing_groups.append(name)
-
-    if missing_groups:
-        raise ProblemException(
-            status=400,
-            title=f"Some {group_type} groups do not exist",
-            detail=f"The following {group_type} groups do not exist: {', '.join(missing_groups)}")
-
-
 def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
     specific_existing_groups = load_group_information()[group_type]
     groups: Dict[str, Dict[str, Any]] = {}

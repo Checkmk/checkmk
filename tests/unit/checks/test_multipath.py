@@ -7,6 +7,7 @@
 import pytest  # type: ignore[import]
 from testlib import Check  # type: ignore[import]
 import typing as t
+import re
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -52,7 +53,7 @@ TEST_DATA = [
         output={
             '360a980004334644d654a364469555a76': {
                 'paths': ['sdc', 'sdl'],
-                'broken_paths': ['1:0:2:13(sdc)'],
+                'broken_paths': [],
                 'luns': ['1:0:2:13(sdc)', '3:0:2:13(sdl)'],
                 'uuid': '360a980004334644d654a364469555a76',
                 'state': None,
@@ -71,9 +72,9 @@ TEST_DATA = [
         ],
         output={
             'SFUJITSU_MAW3073NC_DBL2P62003VT': {
-                'paths': [''],
-                'broken_paths': ['0:0:3:0()'],
-                'luns': ['0:0:3:0()'],
+                'paths': ['sdb'],
+                'broken_paths': [],
+                'luns': ['0:0:3:0(sdb)'],
                 'uuid': 'SFUJITSU_MAW3073NC_DBL2P62003VT',
                 'state': None,
                 'numpaths': 1,
@@ -95,7 +96,7 @@ TEST_DATA = [
         output={
             '360a980004334644d654a316e65306e51': {
                 'paths': ['sdg', 'sdl'],
-                'broken_paths': ['1:0:2:50(sdg)'],
+                'broken_paths': [],
                 'luns': ['1:0:2:50(sdg)', '4:0:1:50(sdl)'],
                 'uuid': '360a980004334644d654a316e65306e51',
                 'state': '[prio=0][enabled]',
@@ -117,7 +118,7 @@ TEST_DATA = [
         output={
             '1494554000000000052303250303700000000000000000000': {
                 'paths': ['sdb', 'sdc'],
-                'broken_paths': ['3:0:0:0(sdb)', '4:0:0:0(sdc)'],
+                'broken_paths': [],
                 'luns': ['3:0:0:0(sdb)', '4:0:0:0(sdc)'],
                 'uuid': '1494554000000000052303250303700000000000000000000',
                 'state': '[prio=-1][enabled]',
@@ -149,33 +150,31 @@ TEST_DATA = [
             r' \_ 3:0:3:0  sdb  8:16   [active][undef]',
         ],
         output={
-            '36005076306ffc648000000000000510a': {
-                'paths': ['', '', '', '', '', ''],
-                'broken_paths': [
-                    '4:0:5:1()', '4:0:4:1()', '4:0:3:1()', '3:0:5:1()', '3:0:4:1()', '3:0:3:1()'
-                ],
-                'luns': [
-                    '4:0:5:1()', '4:0:4:1()', '4:0:3:1()', '3:0:5:1()', '3:0:4:1()', '3:0:3:1()'
-                ],
-                'uuid': '36005076306ffc648000000000000510a',
-                'state': '[prio=-6][active]',
-                'numpaths': 6,
-                'device': 'dm-15',
-                'alias': 'anzvol2'
-            },
             '36005076306ffc6480000000000005005': {
-                'paths': ['', '', '', '', '', ''],
-                'broken_paths': [
-                    '4:0:5:0()', '4:0:4:0()', '4:0:3:0()', '3:0:5:0()', '3:0:4:0()', '3:0:3:0()'
-                ],
+                'paths': ['sdbe', 'sdat', 'sdai', 'sdx', 'sdm', 'sdb'],
+                'broken_paths': [],
                 'luns': [
-                    '4:0:5:0()', '4:0:4:0()', '4:0:3:0()', '3:0:5:0()', '3:0:4:0()', '3:0:3:0()'
+                    '4:0:5:0(sdbe)', '4:0:4:0(sdat)', '4:0:3:0(sdai)', '3:0:5:0(sdx)',
+                    '3:0:4:0(sdm)', '3:0:3:0(sdb)'
                 ],
                 'uuid': '36005076306ffc6480000000000005005',
                 'state': '[prio=-6][active]',
                 'numpaths': 6,
                 'device': 'dm-16',
                 'alias': 'anzvol1'
+            },
+            '36005076306ffc648000000000000510a': {
+                'paths': ['sdbf', 'sdau', 'sdaj', 'sdy', 'sdn', 'sdc'],
+                'broken_paths': [],
+                'luns': [
+                    '4:0:5:1(sdbf)', '4:0:4:1(sdau)', '4:0:3:1(sdaj)', '3:0:5:1(sdy)',
+                    '3:0:4:1(sdn)', '3:0:3:1(sdc)'
+                ],
+                'uuid': '36005076306ffc648000000000000510a',
+                'state': '[prio=-6][active]',
+                'numpaths': 6,
+                'device': 'dm-15',
+                'alias': 'anzvol2'
             }
         },
     ),
@@ -190,7 +189,7 @@ TEST_DATA = [
         output={
             'SIBM_____SwapA__________DA02BF71': {
                 'paths': ['sdd'],
-                'broken_paths': ['1:0:1:0(sdd)'],
+                'broken_paths': [],
                 'luns': ['1:0:1:0(sdd)'],
                 'uuid': 'SIBM_____SwapA__________DA02BF71',
                 'state': None,
@@ -212,7 +211,7 @@ TEST_DATA = [
         output={
             '360080e500017bd72000002eb4c1b1ae8': {
                 'paths': ['sdd', 'sdp'],
-                'broken_paths': ['7:0:2:81(sdd)', '8:0:2:81(sdp)'],
+                'broken_paths': [],
                 'luns': ['7:0:2:81(sdd)', '8:0:2:81(sdp)'],
                 'uuid': '360080e500017bd72000002eb4c1b1ae8',
                 'state': 'prio=-1status=active',
@@ -236,7 +235,7 @@ TEST_DATA = [
         output={
             '3600508b40006d7da0001a00004740000': {
                 'paths': ['sda', 'sdo', 'sdv', 'sdh'],
-                'broken_paths': ['2:0:0:1(sda)', '3:0:0:1(sdo)', '3:0:1:1(sdv)', '2:0:1:1(sdh)'],
+                'broken_paths': [],
                 'luns': ['2:0:0:1(sda)', '3:0:0:1(sdo)', '3:0:1:1(sdv)', '2:0:1:1(sdh)'],
                 'uuid': '3600508b40006d7da0001a00004740000',
                 'state': 'prio=-1status=enabled',
@@ -263,10 +262,7 @@ TEST_DATA = [
         output={
             'SDDN_S2A_9900_1308xxxxxxxx': {
                 'paths': ['sdaj', 'sdbh', 'sddd', 'sdeb', 'sdcf', 'sdl'],
-                'broken_paths': [
-                    '3:0:1:11(sdaj)', '4:0:0:11(sdbh)', '4:0:2:11(sddd)', '3:0:2:11(sdeb)',
-                    '4:0:1:11(sdcf)', '3:0:0:11(sdl)'
-                ],
+                'broken_paths': ['3:0:1:11(sdaj)', '4:0:0:11(sdbh)'],
                 'luns': [
                     '3:0:1:11(sdaj)', '4:0:0:11(sdbh)', '4:0:2:11(sddd)', '3:0:2:11(sdeb)',
                     '4:0:1:11(sdcf)', '3:0:0:11(sdl)'
@@ -291,7 +287,7 @@ TEST_DATA = [
         output={
             'SDataCoreSANsymphony_DAT05-fscl': {
                 'paths': ['sdae', 'sdt'],
-                'broken_paths': ['4:0:0:11(sdt)'],
+                'broken_paths': [],
                 'luns': ['3:0:0:11(sdae)', '4:0:0:11(sdt)'],
                 'uuid': 'SDataCoreSANsymphony_DAT05-fscl',
                 'state': '[prio=-1][enabled]',
@@ -315,11 +311,11 @@ TEST_DATA = [
             "  `- 20:0:0:1   sdi  8:128   active undef running",
         ],
         output={
-            '1IET     00010001': {
-                'paths': ['', '', '', ''],
-                'broken_paths': ['23:0:0:1()', '21:0:0:1()', '22:0:0:1()', '20:0:0:1()'],
-                'luns': ['23:0:0:1()', '21:0:0:1()', '22:0:0:1()', '20:0:0:1()'],
-                'uuid': '1IET     00010001',
+            '1IET 00010001': {
+                'paths': ['sdk', 'sdj', 'sdg', 'sdi'],
+                'broken_paths': [],
+                'luns': ['23:0:0:1(sdk)', '21:0:0:1(sdj)', '22:0:0:1(sdg)', '20:0:0:1(sdi)'],
+                'uuid': '1IET 00010001',
                 'state': 'prio=0status=enabled',
                 'numpaths': 4,
                 'device': 'dm-4'
@@ -354,9 +350,9 @@ TEST_DATA = [
         ],
         output={
             'iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101': {
-                'paths': ['', '', 'sdi', 'sdj'],
-                'broken_paths': ['8:0:0:1()', '9:0:0:1()', '10:0:0:1(sdi)', '11:0:0:1(sdj)'],
-                'luns': ['8:0:0:1()', '9:0:0:1()', '10:0:0:1(sdi)', '11:0:0:1(sdj)'],
+                'paths': ['sdg', 'sdh', 'sdi', 'sdj'],
+                'broken_paths': [],
+                'luns': ['8:0:0:1(sdg)', '9:0:0:1(sdh)', '10:0:0:1(sdi)', '11:0:0:1(sdj)'],
                 'uuid': 'iqn.2015-05.com.oracle:QD_DG_VOTE101_EXAO2ADM1VM101',
                 'state': 'prio=0status=enabled',
                 'numpaths': 4,
@@ -370,7 +366,7 @@ TEST_DATA = [
 @pytest.mark.parametrize("test_data", TEST_DATA, ids=[tt.input[0] for tt in TEST_DATA])
 def test_parse_multipath(test_data: TupleTestData) -> None:
     check = Check("multipath")
-    result = check.run_parse([line.strip().split(' ') for line in test_data.input])
+    result = check.run_parse([re.split(' +', line.strip()) for line in test_data.input])
     assert test_data.output == result
 
 

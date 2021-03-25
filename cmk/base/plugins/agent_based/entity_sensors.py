@@ -29,6 +29,7 @@
 
 from typing import Any, Dict, List, Mapping, NamedTuple
 from .agent_based_api.v1 import (
+    any_of,
     check_levels,
     register,
     OIDEnd,
@@ -45,6 +46,8 @@ from .agent_based_api.v1.type_defs import (
 )
 from .utils.temperature import check_temperature, TempParamType
 
+OIDSysDescr = ".1.3.6.1.2.1.1.1.0"
+
 ENTITY_SENSOR_TYPES = {
     "1": ("other", "other"),
     "2": ("unknown", "unknown"),
@@ -57,7 +60,7 @@ ENTITY_SENSOR_TYPES = {
     "9": ("percent", "%"),
     "10": ("fan", "RPM"),
     "11": ("volume", "cmm"),  # cubic decimetre dm^3
-    "12": ("binary", ""),
+    "12": ("power_presence", "boolean"),
 }
 
 ENTITY_SENSOR_SCALING = {
@@ -110,8 +113,10 @@ def _sensor_state(status_nr: str) -> State:
 
 def _reformat_sensor_name(name: str) -> str:
     new_name = name
-    for s in ['Fan', 'Temperature', '#', '@']:
+    for s in ['Fan', 'Temperature', '#', '@', 'Sensor']:
         new_name = new_name.replace(s, '')
+    while '  ' in new_name:
+        new_name = new_name.replace('  ', ' ')
     return f'Sensor {new_name.strip()}'
 
 
@@ -137,7 +142,10 @@ def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection
 
 register.snmp_section(
     name='entity_sensors',
-    detect=startswith(".1.3.6.1.2.1.1.1.0", "palo alto networks"),
+    detect=any_of(
+        startswith(OIDSysDescr, "palo alto networks"),
+        startswith(OIDSysDescr, "cisco adaptive security appliance"),
+    ),
     parse_function=parse_entity_sensors,
     fetch=[
         SNMPTree(
@@ -228,4 +236,34 @@ register.check_plugin(
     check_function=check_entity_sensors_fan,
     check_ruleset_name='hw_fans',
     check_default_parameters={'lower': (2000, 1000)},  # customer request
+)
+
+
+def discover_entity_sensors_power_presence(section: EntitySensorSection) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section.get('power_presence', {}))
+
+
+def check_entity_sensors_power_presence(
+    item: str,
+    params: Mapping[str, Any],
+    section: EntitySensorSection,
+) -> CheckResult:
+    if not (sensor_reading := section.get('power_presence', {}).get(item)):
+        return
+
+    if sensor_reading.reading == 1:
+        yield Result(state=State.OK, summary='Powered on')
+        return
+
+    yield Result(state=State(params['power_off_criticality']), summary='Powered off')
+
+
+register.check_plugin(
+    name='entity_sensors_power_presence',
+    sections=['entity_sensors'],
+    service_name='Power %s',
+    discovery_function=discover_entity_sensors_power_presence,
+    check_function=check_entity_sensors_power_presence,
+    check_ruleset_name='power_presence',
+    check_default_parameters={'power_off_criticality': 1},  # customer request
 )

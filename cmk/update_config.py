@@ -74,6 +74,7 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("datapower_tcp"): CheckPluginName("tcp_conn_stats"),
     CheckPluginName("docker_container_mem"): CheckPluginName("mem_used"),
     CheckPluginName("emc_vplex_if"): CheckPluginName("interfaces"),
+    CheckPluginName("entity_sensors"): CheckPluginName("entity_sensors_temp"),
     CheckPluginName("hp_msa_if"): CheckPluginName("interfaces"),
     CheckPluginName("hr_mem"): CheckPluginName("mem_used"),
     CheckPluginName("if64adm"): CheckPluginName("if64"),

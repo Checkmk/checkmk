@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cstdint>   // wchar_t when compiler options set weird
 #include <iostream>  // test commands
+#include <numeric>
 
 #include "cap.h"
 #include "cfg.h"
@@ -599,26 +600,35 @@ void ReportNoPluginDir(const std::filesystem::path& dir) {
         XLOG::Colors::white);
 }
 
+namespace {
+std::wstring JoinParams(const std::vector<std::wstring>& params) {
+    return std::accumulate(std::begin(params), std::end(params), std::wstring(),
+                           [](const std::wstring& ss, const std::wstring& s) {
+                               return ss.empty() ? s : ss + L" " + s;
+                           });
+}
+}  // namespace
+
 void ReportNoUpdaterFile(const std::filesystem::path& f,
-                         std::wstring_view param) {
+                         const std::vector<std::wstring>& params) {
     XLOG::l.w("Agent Updater File '{}' not found", f);
     XLOG::SendStringToStdio(
         fmt::format(
-            "\n\tYou must install Agent Updater Python plugin to use the command '{}'.\n"
+            "\n\tYou must install Agent Updater Python plugin to use the updater with parameters '{}'.\n"
             "\tTo install the plugin you may use the Bakery.\n"
             "\tAnother possibility is copy Agent Updater file manually into the plugins directory\n",
-            wtools::ToUtf8(param)),
+            wtools::ToUtf8(JoinParams(params))),
         XLOG::Colors::white);
 }
 
-void ReportNoPythonModule(std::wstring_view param) {
+void ReportNoPythonModule(const std::vector<std::wstring>& params) {
     XLOG::l.e("Python Module is not installed");
 
     XLOG::SendStringToStdio(
         fmt::format(
-            "\n\tYou must install Python Module to use the command '{}'.\n"
+            "\n\tYou must install Python Module to use the updater with parameters '{}'.\n"
             "\tTo install Python Module you should use Bakery.\n",
-            wtools::ToUtf8(param)),
+            wtools::ToUtf8(JoinParams(params))),
         XLOG::Colors::white);
 }
 
@@ -639,15 +649,17 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring>& params) {
 
     auto updater_file = plugins_dir / cma::cfg::files::kAgentUpdaterPython;
     if (!fs::exists(updater_file)) {
-        ReportNoUpdaterFile(updater_file, params[0]);
+        ReportNoUpdaterFile(updater_file, params);
         return 1;
     }
+
+    XLOG::d.i("'{}' will be used for updater", updater_file);
 
     cma::cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
     auto command_to_run = mc.buildCommandLine(updater_file.u8string());
     if (command_to_run.empty()) {
-        ReportNoPythonModule(params[0]);
+        ReportNoPythonModule(params);
         return 1;
     }
 

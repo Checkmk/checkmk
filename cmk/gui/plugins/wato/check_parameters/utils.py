@@ -19,7 +19,6 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
-    Optional,
     Percentage,
     TextAscii,
     Transform,
@@ -268,14 +267,20 @@ fs_magic_elements = [
            ]))
 ]
 
+TREND_RANGE_DEFAULT = 24
+
+
+def _transform_trend_range_not_none(params):
+    return TREND_RANGE_DEFAULT if params is None else params
+
+
 size_trend_elements = [
     ("trend_range",
-     Optional(Integer(title=_("Time Range for trend computation"),
-                      default_value=24,
-                      minvalue=1,
-                      unit=_("hours")),
-              title=_("Trend computation"),
-              label=_("Enable trend computation"))),
+     Transform(Integer(title=_("Time Range for trend computation"),
+                       default_value=TREND_RANGE_DEFAULT,
+                       minvalue=1,
+                       unit=_("hours")),
+               forth=_transform_trend_range_not_none)),
     ("trend_mb",
      Tuple(title=_("Levels on trends in MB per time range"),
            elements=[

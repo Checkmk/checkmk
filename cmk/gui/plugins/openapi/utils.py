@@ -21,7 +21,7 @@ from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.watolib.tags import load_tag_config
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, sample_tag_config
+from cmk.utils.tags import BuiltinTagConfig, TagGroup
 from livestatus import SiteId
 
 
@@ -231,28 +231,22 @@ def collect_attributes(
     Examples:
 
         >>> attrs = collect_attributes('host', 'create')
-        >>> len(attrs)
-        16
+        >>> assert len(attrs) > 10
 
         >>> attrs = collect_attributes('host', 'update')
-        >>> len(attrs)
-        19
+        >>> assert len(attrs) > 10
 
         >>> attrs = collect_attributes('cluster', 'create')
-        >>> len(attrs)
-        15
+        >>> assert len(attrs) > 10
 
         >>> attrs = collect_attributes('cluster', 'update')
-        >>> len(attrs)
-        18
+        >>> assert len(attrs) > 10
 
         >>> attrs = collect_attributes('folder', 'create')
-        >>> len(attrs)
-        12
+        >>> assert len(attrs) > 10
 
         >>> attrs = collect_attributes('folder', 'update')
-        >>> len(attrs)
-        13
+        >>> assert len(attrs) > 10
 
     To check the content of the list, uncomment this one.
 
@@ -285,7 +279,6 @@ def collect_attributes(
 
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
-    tag_config.parse_config(sample_tag_config())
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
@@ -300,7 +293,7 @@ def collect_attributes(
 
         result.append(
             Attr(
-                name=_ensure(tag_group.id),
+                name=_ensure(f"tag_{tag_group.id}"),
                 section=tag_group.topic or "No topic",
                 mandatory=False,
                 description="\n\n".join(description),
@@ -323,18 +316,18 @@ def attr_openapi_schema(
 
             >>> schema_class = attr_openapi_schema("host", "create")
             >>> schema_obj = schema_class()
-            >>> schema_obj.load({'criticality': 'prod'})
-            {'criticality': 'prod'}
+            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
+            {'tag_address_family': 'ip-v4-only'}
 
             >>> schema_class = attr_openapi_schema("folder", "update")
             >>> schema_obj = schema_class()
-            >>> schema_obj.load({'criticality': 'prod'})
-            {'criticality': 'prod'}
+            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
+            {'tag_address_family': 'ip-v4-only'}
 
             >>> schema_class = attr_openapi_schema("cluster", "create")
             >>> schema_obj = schema_class()
-            >>> schema_obj.load({'criticality': 'prod', 'networking': 'wan'})
-            {'criticality': 'prod', 'networking': 'wan'}
+            >>> schema_obj.load({'tag_address_family': 'ip-v4-only'})
+            {'tag_address_family': 'ip-v4-only'}
 
         Unknown attributes lead to an error:
 
@@ -342,11 +335,20 @@ def attr_openapi_schema(
             >>> with pytest.raises(ValidationError):
             ...     schema_obj.load({'foo': 'bar'})
 
+        Wrong values on tag groups also lead to an error:
+
+            >>> with pytest.raises(ValidationError):
+            ...     schema_obj.load({'tag_address_family': 'ip-v5-only'})
+
     Args:
         object_type:
+            Either "host", "folder" or "cluster".
+
         context:
+            Either "create" or "update"
 
     Returns:
+        A marshmallow schema with the attributes as fields.
 
     """
     def site_exists(site_name: SiteId) -> None:

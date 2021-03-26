@@ -1226,6 +1226,8 @@ class Overridable(Base):
 
                 # TODO FIXME: Looks like a hack
                 cls.remove_instance((owner_user_id, page_name))  # will be added later again
+
+                page_dict = page.internal_representation()
             else:  # clone
                 title = cls.phrase("clone")
                 load_user = html.request.get_unicode_input(
@@ -1236,7 +1238,9 @@ class Overridable(Base):
                 except KeyError:
                     raise MKUserError(None,
                                       _("The requested %s does not exist") % cls.phrase("title"))
-            page_dict = page.internal_representation()
+
+                page_dict = page.internal_representation().copy()
+                page_dict["name"] += "_clone"
 
         breadcrumb = cls.breadcrumb(title, mode)
         page_menu = make_edit_form_page_menu(
@@ -1286,7 +1290,7 @@ class Overridable(Base):
 
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
-            if mode in ("edit", "clone"):
+            if mode == "edit":
                 page_dict.update(new_page_dict)
             else:
                 page_dict = new_page_dict

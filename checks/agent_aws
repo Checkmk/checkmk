@@ -85,11 +85,9 @@ def _agent_aws_stdin(
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
-    args = []
 
-    if "proxy_details" in params:
-        proxy_args, proxy_secrets = _get_proxy_args_and_secrets(params["proxy_details"])
-        args += proxy_args
+    args, proxy_secrets = (_get_proxy_args_and_secrets(params["proxy_details"])
+                           if "proxy_details" in params else ([], {}))
 
     if params.get("assume_role"):
         args += ["--assume-role"]

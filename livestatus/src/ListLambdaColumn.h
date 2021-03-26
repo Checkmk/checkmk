@@ -9,7 +9,9 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "Column.h"
@@ -52,22 +54,33 @@ struct ListColumn : Column {
 // Currently it is hardwired to the empty vector.
 template <class T>
 class ListColumn::Callback : public ListColumn {
+    using f0_t = std::function<column_type(const T&)>;
+    using f1_t = std::function<column_type(const T&, const contact*)>;
+    using function_type = std::variant<f0_t, f1_t>;
+
 public:
     Callback(const std::string& name, const std::string& description,
-             const ColumnOffsets& offsets,
-             std::function<column_type(const T&)> f)
+             const ColumnOffsets& offsets, function_type f)
         : ListColumn{name, description, offsets}, f_{std::move(f)} {}
     ~Callback() override = default;
 
     column_type getValue(
-        Row row, const contact* /*auth_user*/,
+        Row row, const contact* auth_user,
         std::chrono::seconds /*timezone_offset*/) const override {
         const T* data = columnData<T>(row);
-        return data == nullptr ? column_type{} : f_(*data);
+        if (std::holds_alternative<f0_t>(f_)) {
+            return data == nullptr ? Default : std::get<f0_t>(f_)(*data);
+        } else if (std::holds_alternative<f1_t>(f_)) {
+            return data == nullptr ? Default
+                                   : std::get<f1_t>(f_)(*data, auth_user);
+        } else {
+            throw std::runtime_error("unreachable");
+        }
     }
 
 private:
-    std::function<column_type(const T&)> f_;
+    const column_type Default{};
+    function_type f_;
 };
 
 class ListColumn::Constant : public ListColumn {

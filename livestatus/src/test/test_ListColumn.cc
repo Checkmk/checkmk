@@ -4,7 +4,6 @@
 // source code package.
 
 #include <chrono>
-#include <functional>
 #include <string>
 #include <vector>
 

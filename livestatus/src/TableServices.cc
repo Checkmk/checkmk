@@ -40,7 +40,6 @@
 #include "NagiosGlobals.h"
 #include "Query.h"
 #include "RRDColumn.h"
-#include "ServiceGroupsColumn.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
@@ -601,11 +600,21 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         prefix + "label_sources", "A dictionary of the label sources",
         offsets_custom_variables, table->core(), AttributeKind::label_sources));
 
-    table->addColumn(std::make_unique<ServiceGroupsColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "groups", "A list of all service groups the service is in",
-        offsets.add(
-            [](Row r) { return &r.rawData<service>()->servicegroups_ptr; }),
-        table->core()));
+        offsets, [mc](const service &svc, const contact *auth_user) {
+            std::vector<std::string> group_names;
+            for (objectlist *list = svc.servicegroups_ptr; list != nullptr;
+                 list = list->next) {
+                auto *sg = static_cast<servicegroup *>(list->object_ptr);
+                if (is_authorized_for_service_group(mc->groupAuthorization(),
+                                                    mc->serviceAuthorization(),
+                                                    sg, auth_user)) {
+                    group_names.emplace_back(sg->group_name);
+                }
+            }
+            return group_names;
+        }));
     table->addColumn(std::make_unique<ListColumn::Callback<service>>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in", offsets,

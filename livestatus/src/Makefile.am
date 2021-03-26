@@ -157,7 +157,6 @@ liblivestatus_a_SOURCES = \
         RendererPython3.cc \
         RRDColumn.cc \
         ServiceGroupMembersColumn.cc \
-        ServiceGroupsColumn.cc \
         ServiceListColumn.cc \
         ServiceListState.cc \
         StatsColumn.cc \

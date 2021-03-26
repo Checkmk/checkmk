@@ -1,7 +1,32 @@
 import pytest  # type: ignore[import]
 from checktestlib import CheckResult, assertCheckResultsEqual
+from cmk.utils.exceptions import MKGeneralException
 
 pytestmark = pytest.mark.checks
+
+
+@pytest.mark.parametrize('info,exception_reason', [
+    (
+        [['node_1', 'cached(1556005301,300)', 'foo']],
+        ("Invalid line in agent section <<<local>>>. "
+         "Reason: Received wrong format of local check output. "
+         "Please read the documentation regarding the correct format: "
+         "https://docs.checkmk.com/1.6.0/de/localchecks.html  "
+         "Received output: \"foo\""),
+    ),
+    (
+        [['node_1', 'cached(1556005301,300)']],
+        ("Invalid line in agent section <<<local>>>. Reason: Received empty line. "
+         "Did any of your local checks returned a superfluous newline character? "
+         "Received output: \"\""),
+    ),
+])
+def test_local_format_error(check_manager, info, exception_reason):
+    check = check_manager.get_check('local')
+
+    with pytest.raises(MKGeneralException) as e:
+        check.run_discovery(check.run_parse(info))
+    assert str(e.value) == exception_reason
 
 
 @pytest.mark.parametrize('item,info', [

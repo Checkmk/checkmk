@@ -23,6 +23,7 @@ definition on GitHub.
 """
 from cmk.gui import sites
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.livestatus_helpers.expressions import And
 from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from cmk.gui.plugins.openapi.livestatus_helpers.tables import Services
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -31,6 +32,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
+from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
+from cmk.gui.plugins.openapi.utils import problem
 
 PARAMETERS = [{
     'sites': fields.List(
@@ -51,6 +54,52 @@ PARAMETERS = [{
         ],
     )
 }]
+
+
+@Endpoint(object_action_href('host', '{host_name}', 'show_service'),
+          'cmk/show',
+          method='get',
+          path_params=[HOST_NAME],
+          query_params=[{
+              "service_description": fields.String(
+                  description="The service description of the selected host",
+                  example="Filesystem %boot",
+              ),
+          }],
+          tag_group='Monitoring',
+          response_schema=response_schemas.DomainObject)
+def show_service(params):
+    """Show the monitored service of a host"""
+    service_description = params["service_description"]
+    host_name = params["host_name"]
+    live = sites.live()
+    q = Query(
+        [
+            Services.description,
+            Services.host_name,
+            Services.state_type,
+            Services.state,
+            Services.last_check,
+        ],
+        filter_expr=And(Services.host_name.op("=", params["host_name"]),
+                        Services.description.op("=", service_description)),
+    )
+    try:
+        service = q.fetchone(live)
+    except ValueError:
+        return problem(
+            status=404,
+            title="The requested service was not found",
+            detail=f"The service description {service_description} did not match any service",
+        )
+    return constructors.serve_json(
+        constructors.domain_object(domain_type='service',
+                                   identifier=f"{host_name}-{service_description}",
+                                   title=f"Service {service_description}",
+                                   extensions=service,
+                                   links=[],
+                                   editable=False,
+                                   deletable=False))
 
 
 @Endpoint(constructors.domain_object_collection_href('host', '{host_name}', 'services'),
@@ -105,10 +154,21 @@ def _list_services(param):
                 constructors.domain_object(
                     domain_type='service',
                     title=f"{entry['description']} on {entry['host_name']}",
-                    identifier=entry['description'],
+                    identifier=f"{entry['host_name']}:{entry['description']}",
                     editable=False,
                     deletable=False,
                     extensions=entry,
+                    self_link=constructors.link_rel(
+                        rel='cmk/show',
+                        href=constructors.object_action_href(
+                            'host',
+                            entry['host_name'],
+                            'show_service',
+                            query_params=[('service_description', entry['description'])],
+                        ),
+                        method='get',
+                        title=f"Show the service {entry['description']}",
+                    ),
                 ) for entry in result
             ],
         ))

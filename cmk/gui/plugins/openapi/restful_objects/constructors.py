@@ -8,7 +8,7 @@ import hashlib
 import json
 import re
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
@@ -568,6 +568,7 @@ def object_action_href(
     domain_type: DomainType,
     obj_id: Union[int, str],
     action_name: str,
+    query_params: Optional[List[Tuple[str, str]]] = None,
 ) -> str:
     """Construct a href of a domain-object action.
 
@@ -581,6 +582,9 @@ def object_action_href(
         action_name:
             The action-name to link to.
 
+        query_params:
+            The query parameters to be included with the action
+
     Examples:
 
         Don't try this at home. ;-)
@@ -588,11 +592,20 @@ def object_action_href(
         >>> object_action_href('folder_config', 'root', 'delete')
         '/objects/folder_config/root/actions/delete/invoke'
 
+        >>> object_action_href('folder_config', 'root', 'delete',
+        ... query_params=[('test', 'value one'), ('key', 'result')])
+        '/objects/folder_config/root/actions/delete/invoke?test=value+one&key=result'
+
     Returns:
         The href.
 
     """
-    return f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
+    base_href = f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
+    if query_params:
+        params_part = "&".join(
+            (f"{key}={quote(value, safe=' ').replace(' ', '+')}" for key, value in query_params))
+        return f"{base_href}?{params_part}"
+    return base_href
 
 
 def object_href(
@@ -666,6 +679,7 @@ def domain_object(
     editable: bool = True,
     deletable: bool = True,
     links: Optional[List[LinkType]] = None,
+    self_link: Optional[LinkType] = None,
 ) -> DomainObject:
     """Renders a domain-object dict structure.
 
@@ -698,15 +712,19 @@ def domain_object(
         links:
             (optional) A list of `link_rel` dicts.
 
+        self_link:
+            (optional) The manually provided self link. If not provided, the self link is
+            automatically generated
+
     """
     uri = object_href(domain_type, identifier)
     if extensions is None:
         extensions = {}
     if members is None:
         members = {}
-    _links = [
-        link_rel('self', uri, method='get'),
-    ]
+
+    _links = [self_link if self_link is not None else link_rel('self', uri, method='get')]
+
     if editable:
         _links.append(link_rel('.../update', uri, method='put'))
     if deletable:

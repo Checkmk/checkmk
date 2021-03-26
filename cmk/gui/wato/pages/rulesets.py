@@ -67,6 +67,7 @@ from cmk.gui.watolib.rulespecs import (
     Rulespec,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.plugins.wato import (
@@ -944,6 +945,7 @@ class ModeEditRuleset(WatoMode):
         )
 
     def _match(self, match_state, rule):
+        self._get_host_labels_from_remote_site()
         reasons = [_("This rule is disabled")] if rule.is_disabled() else list(
             rule.get_mismatch_reasons(
                 self._folder, self._hostname, self._item, self._service,
@@ -972,6 +974,24 @@ class ModeEditRuleset(WatoMode):
         return (_("This rule matches for the host '%s'") % self._hostname) + \
             (_(" and the %s '%s'.") % (ruleset.item_name(), self._item) if ruleset.item_type() else "."), \
             'match'
+
+    def _get_host_labels_from_remote_site(self) -> None:
+        """To be able to execute the match simulation we need the discovered host labels to be
+        present in the central site. Fetch and store them."""
+        if not self._hostname:
+            return
+
+        remote_sites = config.wato_slave_sites()
+        if not remote_sites:
+            return
+
+        host = watolib.Host.host(self._hostname)
+        site_id = host.site_id()
+
+        if site_id not in remote_sites:
+            return
+
+        execute_host_label_sync(self._hostname, site_id)
 
     def _action_url(self, action, folder, rule_id):
         vars_ = [

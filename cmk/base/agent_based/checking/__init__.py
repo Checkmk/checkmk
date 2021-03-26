@@ -450,7 +450,8 @@ def get_aggregated_result(
         if plugin.check_default_parameters is not None:
             kwargs["params"] = params_function()
 
-        with plugin_contexts.current_service(service):
+        with plugin_contexts.current_host(
+                host_config.hostname, write_state=False), plugin_contexts.current_service(service):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:

@@ -23,14 +23,15 @@ class Row;
 
 class CommentColumn : public deprecated::ListColumn {
 public:
+    enum class verbosity { none, info, extra_info };
+
     CommentColumn(const std::string &name, const std::string &description,
                   ColumnOffsets offsets, MonitoringCore *mc, bool is_service,
-                  bool with_info, bool with_extra_info)
+                  verbosity v)
         : deprecated::ListColumn(name, description, std::move(offsets))
         , _mc(mc)
         , _is_service(is_service)
-        , _with_info(with_info)
-        , _with_extra_info(with_extra_info) {}
+        , _verbosity(v) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds timezone_offset) const override;
@@ -42,8 +43,7 @@ public:
 private:
     MonitoringCore *_mc;
     bool _is_service;
-    bool _with_info;
-    bool _with_extra_info;
+    verbosity _verbosity;
 
     [[nodiscard]] std::vector<CommentData> comments_for_row(Row row) const;
 };

@@ -529,15 +529,15 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, mc, false, DowntimeColumn::info::full));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, mc, false, false, false));
+        offsets, mc, false, CommentColumn::verbosity::none));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, mc, false, true, false));
+        offsets, mc, false, CommentColumn::verbosity::info));
     table->addColumn(std::make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, mc, false, true, true));
+        offsets, mc, false, CommentColumn::verbosity::extra_info));
 
     table->addColumn(std::make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

@@ -16,19 +16,26 @@ def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.Memo
     """
     parsed = docker.parse(string_table).data
 
+    # we could get data from a host with cgroup v2, or cgroup v1.
+    stats = parsed.get('stats', {})
+
     try:
-        host_memory_total = parsed['limit']
-        container_memory_limit = parsed['stats']['hierarchical_memory_limit']
-        container_memory_total_inactive_file = parsed['stats']['total_inactive_file']
+        memory_limit = parsed['limit']
         container_memory_usage = parsed['usage']
+        if 'hierarchical_memory_limit' in stats and 'total_inactive_file' in stats:
+            # cgroup v1
+            container_memory_limit = stats['hierarchical_memory_limit']
+            container_memory_total_inactive_file = stats['total_inactive_file']
+            memory_limit = min(memory_limit, container_memory_limit)
+        else:
+            # we assume cgroup v2
+            container_memory_total_inactive_file = stats["inactive_file"]
     except KeyError:
         # `docker stats <CONTAINER>` will show 0/0 so we are compliant.
         return docker.MemorySection(0, 0, 0)
 
-    mem_total = min(host_memory_total, container_memory_limit)
-
     return docker.MemorySection(
-        mem_total=mem_total,
+        mem_total=memory_limit,
         mem_usage=container_memory_usage,
         mem_cache=container_memory_total_inactive_file,
     )

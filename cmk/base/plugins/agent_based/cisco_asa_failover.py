@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-#
-# License: GNU General Public License v2
-#
-# Author: thl-cmk[at]outlook[dot]com
-# URL   : https://thl-cmk.hopto.org
-# Date  : 2021-03-18
-#
-# rewrite of the original CMK2.0 check
-#
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
 #
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.4  'Failover LAN Interface'
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.6  'Primary unit (this device)'
@@ -24,7 +19,7 @@
 #  ['Primary unit', '9', 'Active unit'],
 #  ['Secondary unit (this device)', '10', 'Standby unit']]
 
-from typing import Dict, List
+from typing import Dict, List, Mapping, Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -43,27 +38,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
 )
 
-#
-# sample failover on
-#
-# [
-#  [
-#   ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
-#   ['Primary unit (this device)', '9', 'Active unit'],
-#   ['Secondary unit', '10', 'Standby unit']
-#  ]
-# ]
-#
-# sample failover off --> _not configured_
-# [
-#  [
-#   ['Failover LAN Interface', '3', 'not Configured'],
-#   ['Primary unit', '3', 'Failover Off'],
-#   ['Secondary unit (this device)', '3', 'Failover Off']
-#  ]
-# ]
-#
-
 cisco_asa_state_names = {
     '1': 'other',
     '2': 'up',
@@ -78,26 +52,18 @@ cisco_asa_state_names = {
 }
 
 
-def get_cmk_status(st: int) -> State:
-    states = {
-        0: State.OK,
-        1: State.WARN,
-        2: State.CRIT
-    }
-    return states.get(st, State.CRIT)
-
-
-def parse_cisco_asa_failover(string_table: List[StringTable]) -> Dict:
+def parse_cisco_asa_failover(string_table: List[StringTable]):
     def parse_line(line):
         role = line[0].split(' ')[0].lower()
         data = [role, line[1], line[2].lower()]
         return data
 
     parsed = {}
+
     for line in string_table[0]:
         if 'this device' in line[0].lower():
             if line[2].lower() == 'failover off':
-                return {}
+                return
             parsed['local'] = parse_line(line)
         elif 'failover' in line[0].lower():
             parsed['failover'] = line
@@ -106,30 +72,12 @@ def parse_cisco_asa_failover(string_table: List[StringTable]) -> Dict:
     return parsed
 
 
-#
-# {'failover': ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
-#  'local': ['primary', '9', 'active unit'],
-#  'remote': ['secondary', '10', 'standby unit']}
-#
 def discovery_cisco_asa_failover(section: Dict) -> DiscoveryResult:
-    if not section == {}:
-        yield Service()
+    yield Service()
 
 
-def _convert_params(params):
-    if isinstance(params, int):
-        # Very old case: primary state was remembered during discovery
-        # and stored as an integer: return [(None, int(info[1][1]))]
-        return {
-            'primary': cisco_asa_state_names['%s' % params],
-            'secondary': 'standby',
-            'failover_state': 1,
-        }
-    return params
-
-
-def check_cisco_asa_failover(params, section: Dict) -> CheckResult:
-    converted_params = _convert_params(params)
+def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Dict) -> CheckResult:
+    converted_params = params
 
     role = section['local'][0]
     status = section['local'][1]
@@ -140,7 +88,7 @@ def check_cisco_asa_failover(params, section: Dict) -> CheckResult:
 
     p_role = converted_params[role]
     if not p_role == status_readable:
-        yield Result(state=get_cmk_status(converted_params['failover_state']),
+        yield Result(state=State(converted_params['failover_state']),
                      summary='(The %s device should be %s)' % (role, p_role))
 
     if not status in ['9', '10']:
@@ -152,7 +100,7 @@ register.snmp_section(
     parse_function=parse_cisco_asa_failover,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',  #
+            base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',
             oids=[
                 '2',  # CISCO-FIREWALL-MIB::cfwHardwareInformation
                 '3',  # CISCO-FIREWALL-MIB::cfwHardwareStatusValue
@@ -162,7 +110,6 @@ register.snmp_section(
     ],
     detect=any_of(
         startswith('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
-        startswith('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco pix security'),
 
     )

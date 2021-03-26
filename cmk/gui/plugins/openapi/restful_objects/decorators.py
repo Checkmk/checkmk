@@ -36,6 +36,7 @@ from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_o
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
+    ContentObject,
     EndpointTarget,
     ETagBehaviour,
     HTTPMethod,
@@ -281,7 +282,13 @@ class Endpoint:
 
         self._expected_status_codes = self.additional_status_codes.copy()
 
-        if self.response_schema is not None:
+        if content_type == 'application/json':
+            if self.response_schema is not None:
+                self._expected_status_codes.append(200)  # ok
+
+        else:
+            if response_schema:
+                raise ValueError("response_schema only allowed for content_type=application/json")
             self._expected_status_codes.append(200)  # ok
 
         if self.output_empty:
@@ -467,11 +474,20 @@ class Endpoint:
             # it on the response instance. This is somewhat problematic because it's not
             # expected behaviour and not a valid interface of Response. Needs refactoring.
             response = self.func(param)
+            response.freeze()
+
+            if self.output_empty and response.status_code < 400 and response.data:
+                return problem(status=500,
+                               title="Unexpected data was sent.",
+                               detail=(f"Endpoint {self.operation_id}\n"
+                                       "This is a bug, please report."),
+                               ext={'data_sent': str(response.data)})
 
             if response.status_code not in self._expected_status_codes:
                 return problem(status=500,
                                title=f"Unexpected status code returned: {response.status_code}",
-                               detail=f"Endpoint {self.operation_id}")
+                               detail=(f"Endpoint {self.operation_id}\n"
+                                       "This is a bug, please report."))
 
             if hasattr(response, 'original_data') and response_schema:
                 try:
@@ -595,12 +611,25 @@ class Endpoint:
         # We don't(!) support any endpoint without an output schema.
         # Just define one!
         if 200 in self._expected_status_codes:
+            if self.response_schema:
+                content: ContentObject
+                content = {self.content_type: {'schema': self.response_schema}}
+            elif (self.content_type == 'application/octet-stream' or
+                  self.content_type.startswith("image/")):
+                content = {
+                    self.content_type: {
+                        'schema': {
+                            'type': 'string',
+                            'format': 'binary',
+                        }
+                    }
+                }
+            else:
+                raise ValueError(f"Unknown content-type: {self.content_type} Please add condition.")
             responses['200'] = self._path_item(
                 200,
                 'The operation was done successfully.',
-                content={self.content_type: {
-                    'schema': self.response_schema
-                }},
+                content=content,
                 headers=response_headers,
             )
 

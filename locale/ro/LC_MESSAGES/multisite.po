@@ -1137,6 +1137,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"<b>Note</b>: On the agent side, this encryption is only supported by the "
+"Linux agent and the Windows agent. However, when setting the Encryption "
+"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
+"matching hosts. Please keep this in mind when configuring this ruleset."
+msgstr ""
+
+msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
 "3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
 "\"requests\" and \"PySocks\" is required on the target hosts."
@@ -1286,6 +1293,10 @@ msgid ""
 "selection you can state explicit names. The overall tags are ignored for "
 "these service."
 msgstr ""
+
+#, fuzzy
+msgid "<i>Generated automatically</i>"
+msgstr "(fără Nivel de serviciu)"
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -10218,7 +10229,7 @@ msgstr ""
 msgid "Continue search"
 msgstr ""
 
-msgid "Control encryption of data sent from agent to host."
+msgid "Control encryption of data sent from agents to Checkmk."
 msgstr ""
 
 #, fuzzy
@@ -16040,6 +16051,9 @@ msgstr ""
 msgid "Encryption"
 msgstr "Acțiune"
 
+msgid "Encryption (Linux, Windows)"
+msgstr ""
+
 msgid "Encryption for Agent"
 msgstr ""
 
@@ -20132,10 +20146,6 @@ msgstr ""
 msgid "Hidden"
 msgstr ""
 
-#, fuzzy, python-format
-msgid "Hide %s"
-msgstr "Arata in masa"
-
 #, fuzzy
 msgid "Hide Checkmk version"
 msgstr " Parametrul este: %r"
@@ -20150,26 +20160,6 @@ msgstr ""
 #, fuzzy
 msgid "Hide bulks"
 msgstr "Arata in masa"
-
-#, fuzzy
-msgid "Hide check parameters"
-msgstr " Parametrul este: %r"
-
-#, fuzzy
-msgid "Hide checkboxes"
-msgstr "Verificări active"
-
-#, fuzzy
-msgid "Hide context"
-msgstr "cu context"
-
-#, fuzzy
-msgid "Hide details"
-msgstr "servicii"
-
-#, fuzzy
-msgid "Hide discovered service labels"
-msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Hide folders without read permissions"
@@ -20200,10 +20190,6 @@ msgstr ""
 
 msgid "Hide names of configuration variables"
 msgstr ""
-
-#, fuzzy
-msgid "Hide plugin names"
-msgstr "Numele Aplicatiei"
 
 msgid "Hide response from socket"
 msgstr ""
@@ -39840,9 +39826,6 @@ msgstr "Activare Configurare"
 msgid "Show number of groups"
 msgstr "Arata regulile de utilizator"
 
-msgid "Show only modified settings"
-msgstr ""
-
 msgid "Show only problems"
 msgstr ""
 
@@ -43932,6 +43915,12 @@ msgstr ""
 msgid ""
 "The age, in seconds, when the last message was retrieved from the queue. "
 "Calculated by subtracting LGETDATE/LGETTIME from current timestamp."
+msgstr ""
+
+msgid ""
+"The agent communication is encrypted using AES. The underlying key is "
+"generated and stored automatically on rule creation. To enforce a new key, "
+"the rule must be deleted and replaced with a new one."
 msgstr ""
 
 msgid ""
@@ -58429,6 +58418,36 @@ msgstr ""
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~| msgid "Show Bulks"
+#~ msgid "Hide %s"
+#~ msgstr "Arata in masa"
+
+#, fuzzy
+#~ msgid "Hide check parameters"
+#~ msgstr " Parametrul este: %r"
+
+#, fuzzy
+#~ msgid "Hide checkboxes"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Hide context"
+#~ msgstr "cu context"
+
+#, fuzzy
+#~| msgid "services"
+#~ msgid "Hide details"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Hide discovered service labels"
+#~ msgstr "spatiu utilizat"
+
+#, fuzzy
+#~ msgid "Hide plugin names"
+#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "End date"

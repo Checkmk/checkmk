@@ -1124,6 +1124,13 @@ msgstr ""
 "nicht die Sortierordnung wieder."
 
 msgid ""
+"<b>Note</b>: On the agent side, this encryption is only supported by the "
+"Linux agent and the Windows agent. However, when setting the Encryption "
+"settings to <i>enforce</i>, Checkmk will expect encrypted data from all "
+"matching hosts. Please keep this in mind when configuring this ruleset."
+msgstr ""
+
+msgid ""
 "<b>Note<sup>3</sup>:</b> In order to deploy this plugin to Solaris, a Python "
 "3.4 installation (or newer) with installed python packages \"pyOpenSSL\", "
 "\"requests\" and \"PySocks\" is required on the target hosts."
@@ -1308,6 +1315,10 @@ msgstr ""
 "<br><i><i>Verwenden Sie explizite Dienstnamen und ignorieren Sie "
 "übergreifende Tags</i>: Mit dieser Auswahl können Sie explizite Namen "
 "angeben. Die ü\\bergreifende Tags werden für diesen Dienst ignoriert."
+
+#, fuzzy
+msgid "<i>Generated automatically</i>"
+msgstr "Ereignis wurde automatisch gelöscht"
 
 #, python-format
 msgid "<li>Cannot delete hosts in folder %s: %s</li>"
@@ -10769,7 +10780,8 @@ msgstr "Setze Zählen fort wenn Ereignis <b>quittiert</b> ist."
 msgid "Continue search"
 msgstr "Suche verfeinern"
 
-msgid "Control encryption of data sent from agent to host."
+#, fuzzy
+msgid "Control encryption of data sent from agents to Checkmk."
 msgstr "Verschlüsselung der Daten vom Agenten"
 
 msgid "Control group:"
@@ -16488,6 +16500,10 @@ msgstr ""
 msgid "Encryption"
 msgstr "Verschlüsselung"
 
+#, fuzzy
+msgid "Encryption (Linux, Windows)"
+msgstr "Text-Logdateien (Linux, Windows)"
+
 msgid "Encryption for Agent"
 msgstr "Verschlüsselung des Agenten"
 
@@ -20869,10 +20885,6 @@ msgstr ""
 msgid "Hidden"
 msgstr "Versteckt"
 
-#, python-format
-msgid "Hide %s"
-msgstr "Blende %s aus"
-
 msgid "Hide Checkmk version"
 msgstr "Die Checkmk-Version verbergen"
 
@@ -20884,21 +20896,6 @@ msgstr "Anmerkung im Bericht ausblenden"
 
 msgid "Hide bulks"
 msgstr "Sammelalarme ausblenden"
-
-msgid "Hide check parameters"
-msgstr "Check-Parameter verstecken"
-
-msgid "Hide checkboxes"
-msgstr "Checkboxen verstecken"
-
-msgid "Hide context"
-msgstr "Kontext ausblenden"
-
-msgid "Hide details"
-msgstr "Details ausblenden"
-
-msgid "Hide discovered service labels"
-msgstr "Erkannte Service-Labels ausblenden"
 
 msgid "Hide folders without read permissions"
 msgstr "Ordner ohne Leseberechtigung ausblenden"
@@ -20926,9 +20923,6 @@ msgstr "Interne Ordnernamen in WATO verstecken"
 
 msgid "Hide names of configuration variables"
 msgstr "Namen der Konfigurationsvariablen verstecken"
-
-msgid "Hide plugin names"
-msgstr "Namen von Plugins ausblenden"
 
 msgid "Hide response from socket"
 msgstr "Antwort von Socket verstecken"
@@ -40758,9 +40752,6 @@ msgstr "Alarm im Dashboard-Element 'Benutzeralarme' anzeigen"
 msgid "Show number of groups"
 msgstr "Anzahl der Gruppen anzeigen"
 
-msgid "Show only modified settings"
-msgstr "Nur geänderte Einstellungen zeigen"
-
 msgid "Show only problems"
 msgstr "Nur Probleme anzeigen"
 
@@ -45189,6 +45180,12 @@ msgstr ""
 "Das Alter in Sekunden, wann die letzte Nachricht aus der Warteschlange "
 "abgerufen wurde. Wird berechnet, indem LGETDATE/LGETTIME vom aktuellen "
 "Zeitstempel subtrahiert wird."
+
+msgid ""
+"The agent communication is encrypted using AES. The underlying key is "
+"generated and stored automatically on rule creation. To enforce a new key, "
+"the rule must be deleted and replaced with a new one."
+msgstr ""
 
 msgid ""
 "The agent plugin <tt>mk_filestats</tt> monitors a configured set of files "
@@ -62443,6 +62440,30 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Hide %s"
+#~ msgstr "Blende %s aus"
+
+#~ msgid "Hide check parameters"
+#~ msgstr "Check-Parameter verstecken"
+
+#~ msgid "Hide checkboxes"
+#~ msgstr "Checkboxen verstecken"
+
+#~ msgid "Hide context"
+#~ msgstr "Kontext ausblenden"
+
+#~ msgid "Hide details"
+#~ msgstr "Details ausblenden"
+
+#~ msgid "Hide discovered service labels"
+#~ msgstr "Erkannte Service-Labels ausblenden"
+
+#~ msgid "Hide plugin names"
+#~ msgstr "Namen von Plugins ausblenden"
+
+#~ msgid "Show only modified settings"
+#~ msgstr "Nur geänderte Einstellungen zeigen"
 
 #~ msgid "Queried host is a host system with Checkmk Agent installed"
 #~ msgstr "Der abgefragte Host ist ein ESX Host mit einem Checkmk Agent"

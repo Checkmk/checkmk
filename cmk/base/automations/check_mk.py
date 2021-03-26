@@ -175,15 +175,20 @@ class AutomationTryDiscovery(Automation):
                 # this dict deduplicates label names!
                 return DiscoveredHostLabels(*{l.name: l for l in labels}.values()).to_dict()
 
-            new_labels = make_discovered_host_labels(host_label_result.new)
+            changed_labels = make_discovered_host_labels([
+                l for l in host_label_result.vanished
+                if l.name in make_discovered_host_labels(host_label_result.new)
+            ])
+
             return {
                 "output": buf.getvalue(),
                 "check_table": check_preview_table,
                 "host_labels": make_discovered_host_labels(host_label_result.present),
-                "new_labels": new_labels,
-                "vanished_labels": make_discovered_host_labels(host_label_result.vanished),
-                "changed_labels": make_discovered_host_labels(
-                    [l for l in host_label_result.vanished if l.name in new_labels.keys()]),
+                "new_labels": make_discovered_host_labels(
+                    [l for l in host_label_result.new if l.name not in changed_labels]),
+                "vanished_labels": make_discovered_host_labels(
+                    [l for l in host_label_result.vanished if l.name not in changed_labels]),
+                "changed_labels": changed_labels,
             }
 
     def _execute_discovery(

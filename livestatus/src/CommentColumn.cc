@@ -56,10 +56,10 @@ std::vector<std::string> CommentColumn::getValue(
 std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {
     if (const auto *const data = columnData<void>(row)) {
         return _is_service
-                   ? _mc->comments_for_service(
+                   ? _mc->comments(
                          reinterpret_cast<const MonitoringCore::Service *>(
                              data))
-                   : _mc->comments_for_host(
+                   : _mc->comments(
                          reinterpret_cast<const MonitoringCore::Host *>(data));
     }
     return {};

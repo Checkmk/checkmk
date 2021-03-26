@@ -285,10 +285,13 @@ class Endpoint:
         if content_type == 'application/json':
             if self.response_schema is not None:
                 self._expected_status_codes.append(200)  # ok
-
         else:
+            if output_empty:
+                raise ValueError(f"output_emtpy=True not allowed on custom content_type "
+                                 f"{self.content_type}. [{self.method} {self.path}]")
             if response_schema:
-                raise ValueError("response_schema only allowed for content_type=application/json")
+                raise ValueError("response_schema not allowed for content_type "
+                                 f"{self.content_type}. [{self.method} {self.path}]")
             self._expected_status_codes.append(200)  # ok
 
         if self.output_empty:

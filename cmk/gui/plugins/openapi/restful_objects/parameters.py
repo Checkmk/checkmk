@@ -4,17 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.fields import HostField, String, List
 
 HOST_NAME = {
-    'host_name': fields.HostField(
+    'host_name': HostField(
         description="A hostname.",
         should_exist=True,
     )
 }
 
 OPTIONAL_HOST_NAME = {
-    'host_name': fields.HostField(
+    'host_name': HostField(
         description="A hostname.",
         should_exist=True,
         required=False,
@@ -22,7 +22,7 @@ OPTIONAL_HOST_NAME = {
 }
 
 IDENT_FIELD = {
-    'ident': fields.String(
+    'ident': String(
         description=("The identifier for this object. "
                      "It's a 128bit uuid represented in hexadecimal (32 characters). "
                      "There are no fixed parts or parts derived from the current hardware "
@@ -33,7 +33,7 @@ IDENT_FIELD = {
 }
 
 NAME_FIELD = {
-    'name': fields.String(
+    'name': String(
         description="A name used as an identifier. Can be of arbitrary (sensible) length.",
         example='pathname',
         pattern="[a-zA-Z0-9][a-zA-Z0-9_-]+",
@@ -41,14 +41,14 @@ NAME_FIELD = {
 }
 
 ACCEPT_HEADER = {
-    'Accept': fields.String(
+    'Accept': String(
         description="Media type(s) that is/are acceptable for the response.",
         example='application/json',
     )
 }
 
 ETAG_IF_MATCH_HEADER = {
-    'If-Match': fields.String(
+    'If-Match': String(
         required=True,
         description=(
             "The value of the, to be modified, object's ETag header. You can get this value "
@@ -60,7 +60,7 @@ ETAG_IF_MATCH_HEADER = {
 }
 
 ETAG_HEADER_PARAM = {
-    'ETag': fields.String(
+    'ETag': String(
         description=('The HTTP ETag header for this resource. It identifies the '
                      'current state of the object and needs to be sent along in '
                      'the "If-Match" request-header for subsequent modifications.'),
@@ -70,7 +70,7 @@ ETAG_HEADER_PARAM = {
 }
 
 CONTENT_TYPE = {
-    'Content-Type': fields.String(
+    'Content-Type': String(
         required=True,
         description=("A header specifying which type of content is in the request/response body. "
                      "This is required when sending encoded data in a POST/PUT body. When the "
@@ -80,14 +80,14 @@ CONTENT_TYPE = {
 }
 
 SERVICE_DESCRIPTION = {
-    'service_description': fields.String(
+    'service_description': String(
         description="The service description.",
         example="Memory",
     )
 }
 
-SITES = fields.List(
-    fields.String(),
+SITES = List(
+    String(),
     description="Restrict the query to this particular site.",
     missing=[],
 )

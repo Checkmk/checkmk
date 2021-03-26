@@ -483,6 +483,9 @@ class Endpoint:
                                        "This is a bug, please report."),
                                ext={'data_sent': str(response.data)})
 
+            if self.output_empty:
+                response.content_type = None
+
             if response.status_code not in self._expected_status_codes:
                 return problem(status=500,
                                title=f"Unexpected status code returned: {response.status_code}",

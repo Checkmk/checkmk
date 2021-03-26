@@ -374,3 +374,6 @@ ParameterKey = Tuple[str, ...]
 
 StatusCodeInt = Literal[200, 204, 301, 302, 400, 404, 405, 409, 412, 415, 422, 428]
 StatusCode = Literal["200", "204", "301", "302", "400", "404", "409", "412", "415", "422", "428"]
+
+ContentType = str
+ContentObject = Dict[ContentType, Dict[str, Any]]

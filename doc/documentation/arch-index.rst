@@ -31,9 +31,7 @@ Topology and interfaces
       [Agent-based host] as agent_host
       agent_host -u- TCP
       agent_host -u- Syslog
-   }
 
-   cloud {
       [SNMP host] as snmp_host
       snmp_host -u- SNMP
       snmp_host -u- trap

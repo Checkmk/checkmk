@@ -28,6 +28,7 @@ import operator
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.http import Response
+from cmk.gui.log import logger
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -419,25 +420,34 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     if 'meta_data' in attributes:
         attributes = attributes.copy()
         del attributes['meta_data']
+
+    links = [
+        constructors.link_rel(
+            rel='cmk/show',
+            href=constructors.object_href('folder_config',
+                                          host.folder().path().rstrip("/").replace("/", "~")),
+            method='get',
+            title='Show the folder config of the host',
+        ),
+    ]
+    try:
+        folder_id = host.folder().id()
+        links.append(
+            constructors.link_rel(
+                rel='cmk/permalink',
+                href=constructors.object_href('folder_config', folder_id),
+                method='get',
+                title='Show the permanent link of folder config of the host. This link will never '
+                'change, even if the folder has been moved or renamed.',
+            ))
+    except ValueError:
+        logger.warning("Folder %r does not have unique identifier.", host.folder().path())
+
     return constructors.domain_object(
         domain_type='host_config',
         identifier=host.id(),
         title=host.alias(),
-        links=[
-            constructors.link_rel(
-                rel='cmk/show',
-                href=constructors.object_href('folder_config',
-                                              host.folder().path().rstrip("/").replace("/", "~")),
-                method='get',
-                title='Show the folder config of the host',
-            ),
-            constructors.link_rel(
-                rel='cmk/permalink',
-                href=constructors.object_href('folder_config', host.id()),
-                method='get',
-                title='Show the folder config of the host',
-            )
-        ],
+        links=links,
         extensions={
             'attributes': attributes,
             'is_cluster': host.is_cluster(),

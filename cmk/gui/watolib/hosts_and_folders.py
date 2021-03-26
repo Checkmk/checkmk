@@ -130,7 +130,7 @@ class WithUniqueIdentifier(metaclass=abc.ABCMeta):
         """
         # TODO: Improve the API + the typing, this is horrible...
         if self._id is None:
-            raise Exception("unique identifier not set")
+            raise ValueError("unique identifier not set")
         return self._id
 
     @classmethod

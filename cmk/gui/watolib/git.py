@@ -13,6 +13,7 @@ import subprocess
 from six import ensure_str
 
 import cmk.utils
+import cmk.utils.paths
 
 import cmk.gui.config as config
 from cmk.gui.globals import g
@@ -114,7 +115,7 @@ def _git_has_pending_changes():
 
 # TODO: Use cmk.store
 def _write_gitignore_files():
-    """Make sure that .gitignore-files are present and uptodate
+    """Make sure that .gitignore-files are present and up to date
 
     Only files below the "wato" directories should be under git control. The files in
     etc/check_mk/*.mk should not be put under control."""

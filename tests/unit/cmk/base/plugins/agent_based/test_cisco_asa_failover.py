@@ -16,13 +16,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
           ['Primary unit (this device)', '9', 'Active unit'], ['Secondary unit', '10', 'Standby unit'], ], ],
         {'failover': ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
          'local': ['primary', '9', 'active unit'], 'remote': ['secondary', '10', 'standby unit'], },
-        id='Primary unit == Active unit'
+        id='Parse: Primary unit == Active unit'
     ),
     pytest.param(
-        [[['Failover LAN Interface', '3', 'not Configured'], ['Primary unit', '3', 'Failover Off'],
-          ['Secondary unit (this device)', '3', 'Failover Off'], ], ],
-        None,
-        id='failover of/not configured'
+        [[['Failover LAN Interface', '3', 'not Configured'], ['Primary unit (this device)', '3', 'Failover Off'],
+          ['Secondary unit', '3', 'Failover Off'], ], ],
+        {'failover': ['Failover LAN Interface', '3', 'not Configured'],
+         'local': ['primary', '3', 'failover off'],
+         'remote': ['secondary', '3', 'failover off'], },
+        id='Parse: failover off/not configured'
     ),
 ])
 def test_cisco_asa_failover_parse(string_table, expected):
@@ -35,8 +37,14 @@ def test_cisco_asa_failover_parse(string_table, expected):
         {'failover': ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
          'local': ['primary', '9', 'active unit'], 'remote': ['secondary', '10', 'standby unit'], },
         [Service()],
-        id='Primary unit == Active unit'
-    )
+        id='Discovery: Primary unit == Active unit'
+    ),
+    pytest.param(
+        {'failover': ['Failover LAN Interface', '3', 'not Configured'],
+         'local': ['primary', '3', 'failover off'], 'remote': ['secondary', '3', 'failover off'], },
+        [],
+        id='Discovery: failover off/not configured'
+    ),
 ])
 def test_cisco_asa_failover_discover(section, expected):
     services = list(cisco_asa_failover.discovery_cisco_asa_failover(section))
@@ -49,7 +57,7 @@ def test_cisco_asa_failover_discover(section, expected):
         {'failover': ['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
          'local': ['primary', '9', 'active unit'], 'remote': ['secondary', '10', 'standby unit']},
         [Result(state=State.OK, summary='Device (primary) is the active unit'), ],
-        id='Primary unit == Active unit'
+        id='Check: local unit == Primary unit == Active unit'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
@@ -57,7 +65,7 @@ def test_cisco_asa_failover_discover(section, expected):
          'local': ['primary', '10', 'standby unit'], 'remote': ['secondary', '9', 'active unit']},
         [Result(state=State.OK, summary='Device (primary) is the standby unit'),
          Result(state=State.WARN, summary='(The primary device should be active)'), ],
-        id='Primary unit == Standby unit'
+        id='Check: local unit == Primary unit == Standby unit'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
@@ -66,7 +74,7 @@ def test_cisco_asa_failover_discover(section, expected):
         [Result(state=State.OK, summary='Device (primary) is the backup unit'),
          Result(state=State.WARN, summary='(The primary device should be active)'),
          Result(state=State.WARN, summary='Unhandled state backup reported')],
-        id='local unit not active/standby'
+        id='Check: local unit not active/standby'
     ),
 ])
 def test_cisco_asa_failover(params, section, expected):

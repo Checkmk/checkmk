@@ -59,11 +59,8 @@ def parse_cisco_asa_failover(string_table: List[StringTable]):
         return data
 
     parsed = {}
-
     for line in string_table[0]:
         if 'this device' in line[0].lower():
-            if line[2].lower() == 'failover off':
-                return
             parsed['local'] = parse_line(line)
         elif 'failover' in line[0].lower():
             parsed['failover'] = line
@@ -73,7 +70,8 @@ def parse_cisco_asa_failover(string_table: List[StringTable]):
 
 
 def discovery_cisco_asa_failover(section: Dict) -> DiscoveryResult:
-    yield Service()
+    if not 'failover off' in section['local'][2]:
+        yield Service()
 
 
 def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Dict) -> CheckResult:

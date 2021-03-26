@@ -111,7 +111,6 @@ def html_escape_context(context):
         'PARAMETER_BULK_SUBJECT',
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
-        'PARAMETER_FROM',
         'PARAMETER_FROM_ADDRESS',
         'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',

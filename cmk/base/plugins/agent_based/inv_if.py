@@ -30,7 +30,7 @@ class Interface:
     speed: int
     oper_status: int
     phys_address: str
-    admin_status: int
+    admin_status: Optional[int]
     last_change: float
 
 
@@ -94,7 +94,7 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
         speed=int(high_speed) * 1000 * 1000 if high_speed else int(speed),
         oper_status=int(oper_status),
         phys_address=render_mac_address(sub_table[-2]),
-        admin_status=int(admin_status),
+        admin_status=int(admin_status) if admin_status else None,
         last_change=_process_last_change(last_change),
     )
 
@@ -184,7 +184,7 @@ def inventory_if(
         except ValueError:
             if_index_nr = ""
 
-        interface_row: Dict[str, Union[str, float]] = {
+        interface_row: Dict[str, Union[str, float, None]] = {
             "description": interface.descr,
             "alias": interface.alias,
             "speed": interface.speed,

@@ -3514,6 +3514,10 @@ msgstr "Adresă"
 msgid "Address family"
 msgstr "Adresă"
 
+#, fuzzy
+msgid "Address matching"
+msgstr "Numele Elementului"
+
 msgid ""
 "Addresses are specified with a dot notation, where number before the dot "
 "specify the byte to fetch and the number after the dot specifies the bit to "
@@ -16881,6 +16885,14 @@ msgstr ""
 msgid "Expect Authoritative DNS Server"
 msgstr ""
 
+#, fuzzy
+msgid "Expect all of the addresses"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Expect at least one of the addresses"
+msgstr "Adresă"
+
 msgid "Expect regular messages"
 msgstr ""
 
@@ -17885,10 +17897,6 @@ msgstr ""
 #, fuzzy
 msgid "Filter group (see help)"
 msgstr "Reguli"
-
-#, fuzzy
-msgid "Filter namespaces"
-msgstr "Nume nou"
 
 msgid "Filter pattern (RegExp)"
 msgstr ""
@@ -25676,8 +25684,7 @@ msgstr "Adaugă model/tipar"
 
 msgid ""
 "List all allowed expected answers here. If query for an IP address then the "
-"answer will be host names, that end with a dot. Multiple IP addresses within "
-"one answer must be separated by comma."
+"answer will be host names, that end with a dot."
 msgstr ""
 
 #, fuzzy
@@ -28696,6 +28703,10 @@ msgstr ""
 
 msgid "Monitor multiple instances on the host"
 msgstr ""
+
+#, fuzzy
+msgid "Monitor namespaces matching"
+msgstr "Nume nou"
 
 #, fuzzy
 msgid "Monitor request metrics"

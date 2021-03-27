@@ -3668,6 +3668,10 @@ msgstr "Adressfamilien"
 msgid "Address family"
 msgstr "Adressfamilie"
 
+#, fuzzy
+msgid "Address matching"
+msgstr "Passende Prozesse"
+
 msgid ""
 "Addresses are specified with a dot notation, where number before the dot "
 "specify the byte to fetch and the number after the dot specifies the bit to "
@@ -17303,6 +17307,14 @@ msgstr "Erwarte den Autoritativen"
 msgid "Expect Authoritative DNS Server"
 msgstr "Erwarte autoritativen DNS-Server"
 
+#, fuzzy
+msgid "Expect all of the addresses"
+msgstr "Explizite E-Mail-Adressen"
+
+#, fuzzy
+msgid "Expect at least one of the addresses"
+msgstr "Explizite Liste von IP-Adressen"
+
 msgid "Expect regular messages"
 msgstr "Erwarte regelmäßig Nachrichten"
 
@@ -18289,9 +18301,6 @@ msgstr ""
 
 msgid "Filter group (see help)"
 msgstr "Filtergruppe (siehe Hilfe)"
-
-msgid "Filter namespaces"
-msgstr "Namensbereiche filtern"
 
 msgid "Filter pattern (RegExp)"
 msgstr "Filter-Ausdruck (Regex)"
@@ -26916,10 +26925,10 @@ msgstr "Linux-Benutzer:"
 msgid "List Grouping Patterns"
 msgstr "Gruppierungsmuster auflisten"
 
+#, fuzzy
 msgid ""
 "List all allowed expected answers here. If query for an IP address then the "
-"answer will be host names, that end with a dot. Multiple IP addresses within "
-"one answer must be separated by comma."
+"answer will be host names, that end with a dot."
 msgstr ""
 "Alle zulässigen erwarteten Antworten hier auflisten. Wenn eine IP-Adresse "
 "abgefragt wird, dann sind die Antworten Hostnamen, die mit einem Punkt "
@@ -29786,6 +29795,10 @@ msgstr "Mehrere JMX-Instanzen auf dem Host überwachen"
 
 msgid "Monitor multiple instances on the host"
 msgstr "Mehrere Instanzen auf dem Host überwachen"
+
+#, fuzzy
+msgid "Monitor namespaces matching"
+msgstr "Matchen der Hostnamen"
 
 msgid "Monitor request metrics"
 msgstr "Überwachung von Anforderungsmetriken"
@@ -62440,6 +62453,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Filter namespaces"
+#~ msgstr "Namensbereiche filtern"
 
 #~ msgid "Hide %s"
 #~ msgstr "Blende %s aus"

@@ -80,17 +80,15 @@ import traceback
 import copy
 import inspect
 from hashlib import sha256
-from typing import TYPE_CHECKING, Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
+from typing import Type, Any, Dict, Optional as _Optional, Tuple as _Tuple, Union
 from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
-import cmk.utils.translations
 import cmk.utils.store as store
 from cmk.utils.regex import regex
 from cmk.utils.defines import short_service_state_name
 import cmk.utils.render as render
-from cmk.utils.type_defs import HostName, HostAddress as TypingHostAddress
 
 import cmk.gui.utils as utils
 import cmk.gui.sites as sites
@@ -349,142 +347,6 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 
 # Import the module to register page handler
 import cmk.gui.wato.page_handler
-
-NetworkScanFoundHosts = List[_Tuple[HostName, TypingHostAddress]]
-NetworkScanResult = Dict[str, Any]
-
-if TYPE_CHECKING:
-    from cmk.gui.watolib.hosts_and_folders import CREFolder
-
-#.
-#   .--Network Scan--------------------------------------------------------.
-#   |   _   _      _                      _      ____                      |
-#   |  | \ | | ___| |___      _____  _ __| | __ / ___|  ___ __ _ _ __      |
-#   |  |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / \___ \ / __/ _` | '_ \     |
-#   |  | |\  |  __/ |_ \ V  V / (_) | |  |   <   ___) | (_| (_| | | | |    |
-#   |  |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |____/ \___\__,_|_| |_|    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | The WATO folders network scan for new hosts.                         |
-#   '----------------------------------------------------------------------'
-
-
-# Executed by the multisite cron job once a minute. Is only executed in the
-# master site. Finds the next folder to scan and starts it via WATO
-# automation. The result is written to the folder in the master site.
-def execute_network_scan_job() -> None:
-    init_wato_datastructures(with_wato_lock=True)
-
-    if watolib.is_wato_slave_site():
-        return  # Don't execute this job on slaves.
-
-    folder = find_folder_to_scan()
-    if not folder:
-        return  # Nothing to do.
-
-    # We need to have the context of the user. The jobs are executed when
-    # config.set_user_by_id() has not been executed yet. So there is no user context
-    # available. Use the run_as attribute from the job config and revert
-    # the previous state after completion.
-    old_user = config.user.id
-    run_as = folder.attribute("network_scan")["run_as"]
-    if not userdb.user_exists(run_as):
-        raise MKGeneralException(
-            _("The user %s used by the network "
-              "scan of the folder %s does not exist.") % (run_as, folder.title()))
-    config.set_user_by_id(folder.attribute("network_scan")["run_as"])
-
-    result: NetworkScanResult = {
-        "start": time.time(),
-        "end": True,  # means currently running
-        "state": None,
-        "output": "The scan is currently running.",
-    }
-
-    # Mark the scan in progress: Is important in case the request takes longer than
-    # the interval of the cron job (1 minute). Otherwise the scan might be started
-    # a second time before the first one finished.
-    save_network_scan_result(folder, result)
-
-    try:
-        if config.site_is_local(folder.site_id()):
-            found = cmk.gui.watolib.network_scan.do_network_scan(folder)
-        else:
-            found = watolib.do_remote_automation(config.site(folder.site_id()), "network-scan",
-                                                 [("folder", folder.path())])
-
-        if not isinstance(found, list):
-            raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
-
-        add_scanned_hosts_to_folder(folder, found)
-
-        result.update({
-            "state": True,
-            "output": _("The network scan found %d new hosts.") % len(found),
-        })
-    except Exception as e:
-        result.update({
-            "state": False,
-            "output": _("An exception occured: %s") % e,
-        })
-        logger.error("Exception in network scan:\n%s", traceback.format_exc())
-
-    result["end"] = time.time()
-
-    save_network_scan_result(folder, result)
-
-    if old_user:
-        config.set_user_by_id(old_user)
-
-
-def find_folder_to_scan() -> '_Optional[CREFolder]':
-    """Find the folder which network scan is longest waiting and return the folder object."""
-    folder_to_scan = None
-    for folder in watolib.Folder.all_folders().values():
-        scheduled_time = folder.next_network_scan_at()
-        if scheduled_time is not None and scheduled_time < time.time():
-            if folder_to_scan is None:
-                folder_to_scan = folder
-            elif folder_to_scan.next_network_scan_at() > folder.next_network_scan_at():
-                folder_to_scan = folder
-    return folder_to_scan
-
-
-def add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHosts) -> None:
-    network_scan_properties = folder.attribute("network_scan")
-
-    translation = network_scan_properties.get("translate_names", {})
-
-    entries = []
-    for host_name, ipaddr in found:
-        host_name = ensure_str(
-            cmk.utils.translations.translate_hostname(translation, ensure_str(host_name)))
-
-        attrs = cmk.gui.watolib.hosts_and_folders.update_metadata({}, created_by=_("Network scan"))
-
-        if "tag_criticality" in network_scan_properties:
-            attrs["tag_criticality"] = network_scan_properties.get("tag_criticality", "offline")
-
-        if network_scan_properties.get("set_ipaddress", True):
-            attrs["ipaddress"] = ipaddr
-
-        if not watolib.Host.host_exists(host_name):
-            entries.append((host_name, attrs, None))
-
-    with store.lock_checkmk_configuration():
-        folder.create_hosts(entries)
-        folder.save()
-
-
-def save_network_scan_result(folder: 'CREFolder', result: NetworkScanResult) -> None:
-    # Reload the folder, lock WATO before to protect against concurrency problems.
-    with store.lock_checkmk_configuration():
-        # A user might have changed the folder somehow since starting the scan. Load the
-        # folder again to get the current state.
-        write_folder = watolib.Folder.folder(folder.path())
-        write_folder.set_attribute("network_scan_result", result)
-        write_folder.save()
-
 
 #.
 #   .--Plugins-------------------------------------------------------------.

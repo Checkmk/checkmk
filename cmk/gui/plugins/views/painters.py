@@ -2890,6 +2890,10 @@ class PainterHostParents(Painter):
     def columns(self) -> List[ColumnName]:
         return ['host_parents']
 
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
+
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_list(row["site"], row["host_parents"])
 
@@ -2909,6 +2913,10 @@ class PainterHostChilds(Painter):
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_childs']
+
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_list(row["site"], row["host_childs"])
@@ -2932,6 +2940,10 @@ class PainterHostGroupMemberlist(Painter):
 
     def group_by(self, row):
         return tuple(row["host_groups"])
+
+    @property
+    def use_painter_link(self) -> bool:
+        return False  # This painter adds individual links for the single hosts
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         links = []

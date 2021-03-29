@@ -933,6 +933,11 @@ class Painter(metaclass=abc.ABCMeta):
         return True
 
     @property
+    def use_painter_link(self) -> bool:
+        """Allow the view spec to define a view / dashboard to link to"""
+        return True
+
+    @property
     def sorter(self) -> Optional[SorterName]:
         """Returns the optional name of the sorter for this painter"""
         return None
@@ -1973,7 +1978,7 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._link_spec is not None:
+        if content and self._link_spec is not None and self._use_painter_link():
             content = render_link_to_view(content, row, self._link_spec)
 
         # Add the optional mouseover tooltip
@@ -1986,6 +1991,9 @@ class Cell:
                 content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
         return tdclass, content
+
+    def _use_painter_link(self) -> bool:
+        return self.painter().use_painter_link
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.

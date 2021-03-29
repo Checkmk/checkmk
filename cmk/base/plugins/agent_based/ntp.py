@@ -68,7 +68,22 @@ def parse_ntp(string_table: StringTable) -> Section:
     """
     section: Section = {}
     for line in string_table:
-        if len(line) != 11:
+        if len(line) != 11 or line == [
+                '%',
+                'remote',
+                'refid',
+                'st',
+                't',
+                'when',
+                'poll',
+                'reach',
+                'delay',
+                'offset',
+                'jitter',
+        ]:
+            #  sometimes we get a header in the agent section:
+            #  %     remote           refid      st t when poll reach   delay   offset  jitter
+            #  = =============================================================================
             continue
         peer = Peer(
             statecode=line[0],

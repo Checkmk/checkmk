@@ -12,29 +12,6 @@ import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state, Metric
 
 
-@pytest.mark.parametrize('string_table,exception_reason', [
-    (
-        [['node_1', 'cached(1556005301,300)', 'foo']],
-        ("Invalid line in agent section <<<local>>>. "
-         "Reason: Received wrong format of local check output. "
-         "Please read the documentation regarding the correct format: "
-         "https://docs.checkmk.com/2.0.0/de/localchecks.html  "
-         "Received output: \"node_1 cached(1556005301,300) foo\""),
-    ),
-    (
-        [[]],
-        ("Invalid line in agent section <<<local>>>. Reason: Received empty line. "
-         "Did any of your local checks returned a superfluous newline character? "
-         "Received output: \"\""),
-    ),
-])
-def test_local_format_error(string_table, exception_reason):
-
-    with pytest.raises(ValueError) as e:
-        list(local.discover_local(local.parse_local(string_table)))
-    assert str(e.value) == exception_reason
-
-
 @pytest.mark.parametrize(
     "string_table_row,expected_parsed_data",
     [

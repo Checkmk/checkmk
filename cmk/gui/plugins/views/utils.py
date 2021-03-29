@@ -710,7 +710,8 @@ data_source_registry = DataSourceRegistry()
 class RowTable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
-              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
+              limit: Optional[int],
+              all_active_filters: 'List[Filter]') -> Union[Rows, Tuple[Rows, int]]:
         raise NotImplementedError()
 
 
@@ -767,7 +768,7 @@ class RowTableLivestatus(RowTable):
         return query
 
     def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
-              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
+              limit: Optional[int], all_active_filters: 'List[Filter]') -> Tuple[Rows, int]:
         """Retrieve data via livestatus, convert into list of dicts,
 
         view: view object
@@ -796,7 +797,7 @@ class RowTableLivestatus(RowTable):
             painter = cell.painter()
             painter.derive(rows, cell, dynamic_columns.get(index))
 
-        return rows
+        return rows, len(data)
 
 
 def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int],

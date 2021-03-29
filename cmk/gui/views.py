@@ -686,8 +686,10 @@ class GUIViewRenderer(ABCViewRenderer):
         if not has_done_actions and not missing_single_infos:
             html.div("", id_="row_info")
             if display_options.enabled(display_options.W):
-                if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
-                                                         self.view.row_limit):
+                if cmk.gui.view_utils.row_limit_exceeded(
+                        unfiltered_amount_of_rows,
+                        self.view.row_limit) or cmk.gui.view_utils.row_limit_exceeded(
+                            len(rows), self.view.row_limit):
                     cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
                     del rows[self.view.row_limit:]
 
@@ -1937,12 +1939,10 @@ def _get_view_filters(view: View) -> List[Filter]:
 def _get_view_rows(view: View,
                    all_active_filters: List[Filter],
                    only_count: bool = False) -> _Tuple[int, Rows]:
-    rows = _fetch_view_rows(view, all_active_filters, only_count)
+    rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
     _sort_data(view, rows, view.sorters)
-
-    unfiltered_amount_of_rows = len(rows)
 
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:
@@ -1951,7 +1951,8 @@ def _get_view_rows(view: View,
     return unfiltered_amount_of_rows, rows
 
 
-def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: bool) -> Rows:
+def _fetch_view_rows(view: View, all_active_filters: List[Filter],
+                     only_count: bool) -> _Tuple[Rows, int]:
     """Fetches the view rows from livestatus
 
     Besides gathering the information from livestatus it also joins the rows with other information.
@@ -1972,8 +1973,17 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
             view,
         )
 
-        rows: Rows = view.datasource.table.query(view, columns, headers, view.only_sites,
-                                                 view.row_limit, all_active_filters)
+        row_data: Union[Rows,
+                        _Tuple[Rows,
+                               int]] = view.datasource.table.query(view, columns, headers,
+                                                                   view.only_sites, view.row_limit,
+                                                                   all_active_filters)
+
+        if isinstance(row_data, tuple):
+            rows, unfiltered_amount_of_rows = row_data
+        else:
+            rows = row_data
+            unfiltered_amount_of_rows = len(row_data)
 
         # Now add join information, if there are join columns
         if view.join_cells:
@@ -1988,8 +1998,8 @@ def _fetch_view_rows(view: View, all_active_filters: List[Filter], only_count: b
         if not cmk_version.is_raw_edition():
             _add_sla_data(view, rows)
 
-        return rows
-    return []
+        return rows, unfiltered_amount_of_rows
+    return [], 0
 
 
 def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, rows: Rows) -> None:
@@ -2237,13 +2247,18 @@ def _do_table_join(view: View, master_rows: Rows, master_filters: str,
 
     join_filters.append("Or: %d" % len(join_filters))
     headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = slave_ds.table.query(view,
-                                columns=list(
-                                    set([join_master_column, join_slave_column] + join_columns)),
-                                headers=headers,
-                                only_sites=view.only_sites,
-                                limit=None,
-                                all_active_filters=[])
+    row_data = slave_ds.table.query(
+        view,
+        columns=list(set([join_master_column, join_slave_column] + join_columns)),
+        headers=headers,
+        only_sites=view.only_sites,
+        limit=None,
+        all_active_filters=[])
+
+    if isinstance(row_data, tuple):
+        rows, _unfiltered_amount_of_rows = row_data
+    else:
+        rows = row_data
 
     per_master_entry: Dict[JoinMasterKey, Dict[JoinSlaveKey, Row]] = {}
     current_key: Optional[JoinMasterKey] = None

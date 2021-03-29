@@ -342,7 +342,7 @@ class ABCRowTable(RowTable):
             for subrow in self._get_rows(hostrow):
                 subrow.update(hostrow)
                 rows.append(subrow)
-        return rows
+        return rows, len(data)
 
     def _get_raw_data(self, only_sites, query):
         sites.live().set_only_sites(only_sites)

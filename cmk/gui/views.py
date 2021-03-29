@@ -443,8 +443,10 @@ class GUIViewRenderer(ViewRenderer):
 
         if not has_done_actions:
             if display_options.enabled(display_options.W):
-                if cmk.gui.view_utils.row_limit_exceeded(unfiltered_amount_of_rows,
-                                                         self.view.row_limit):
+                if cmk.gui.view_utils.row_limit_exceeded(
+                        unfiltered_amount_of_rows,
+                        self.view.row_limit) or cmk.gui.view_utils.row_limit_exceeded(
+                            len(rows), self.view.row_limit):
                     cmk.gui.view_utils.query_limit_exceeded_warn(self.view.row_limit, config.user)
                     del rows[self.view.row_limit:]
             layout.render(rows, view_spec, group_cells, cells, num_columns, show_checkboxes and
@@ -1357,8 +1359,10 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        rows = view.datasource.table.query(view, columns, headers, view.only_sites, view.row_limit,
-                                           all_active_filters)
+        rows, unfiltered_amount_of_rows = view.datasource.table.query(view, columns, headers,
+                                                                      view.only_sites,
+                                                                      view.row_limit,
+                                                                      all_active_filters)
 
         # Now add join information, if there are join columns
         if view.join_cells:
@@ -1401,8 +1405,7 @@ def show_view(view, view_renderer, only_count=False):
         sort_data(rows, sorters)
     else:
         rows = []
-
-    unfiltered_amount_of_rows = len(rows)
+        unfiltered_amount_of_rows = 0
 
     # Apply non-Livestatus filters
     for filter_ in all_active_filters:

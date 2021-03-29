@@ -712,7 +712,7 @@ def inv_multisite_table(infoname, invpath, columns, add_headers, only_sites, lim
         for subrow in subrows:
             subrow.update(hostrow)
             rows.append(subrow)
-    return rows
+    return rows, len(data)
 
 
 def inv_find_subtable_columns(invpath):

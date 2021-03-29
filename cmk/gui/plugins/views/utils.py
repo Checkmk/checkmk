@@ -746,7 +746,7 @@ class RowTableLivestatus(RowTable):
             painter = cell.painter()
             painter.derive(rows, cell, dynamic_columns.get(index))
 
-        return rows
+        return rows, len(data)
 
 
 def query_livestatus(query, only_sites, limit, auth_domain):

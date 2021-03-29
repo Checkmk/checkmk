@@ -1,0 +1,12 @@
+Title: Fix calculation of soft query limit in HW/SW inventory views
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1616421597
+Class: fix
+
+For HW/SW inventory views the limit was calculated for the number of entries
+per row, not the number of rows, resulting in limit warnings even if the limit
+was not exceeded.

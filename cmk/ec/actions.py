@@ -15,6 +15,7 @@ import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 import livestatus
 
+from .host_config import HostConfig
 from .settings import Settings
 
 #.
@@ -32,7 +33,7 @@ from .settings import Settings
 
 
 def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                     event_server: Any, event_columns: Any, rule: Any, event: Any) -> None:
+                     host_config: HostConfig, event_columns: Any, rule: Any, event: Any) -> None:
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -48,7 +49,7 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
                      settings,
                      config,
                      logger,
-                     event_server,
+                     host_config,
                      event_columns,
                      rule.get("actions", []),
                      event,
@@ -58,11 +59,11 @@ def event_has_opened(history: Any, settings: Settings, config: Dict[str, Any], l
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
 def do_event_actions(history: Any, settings: Settings, config: Dict[str, Any], logger: Logger,
-                     event_server: Any, event_columns: Any, actions: Any, event: Any,
+                     host_config: HostConfig, event_columns: Any, actions: Any, event: Any,
                      is_cancelling: bool) -> None:
     for aname in actions:
         if aname == "@NOTIFY":
-            do_notify(event_server, logger, event, is_cancelling=is_cancelling)
+            do_notify(host_config, logger, event, is_cancelling=is_cancelling)
         else:
             action = config["action"].get(aname)
             if not action:
@@ -259,7 +260,7 @@ def _get_event_tags(event_columns: Any, event: Any) -> Dict[Any, Any]:
 
 # This function creates a Checkmk Notification for a locally running Checkmk.
 # We simulate a *service* notification.
-def do_notify(event_server: Any,
+def do_notify(host_config: HostConfig,
               logger: Logger,
               event: Any,
               username: Optional[bool] = None,
@@ -267,7 +268,7 @@ def do_notify(event_server: Any,
     if _core_has_notifications_disabled(event, logger):
         return
 
-    context = _create_notification_context(event_server, event, username, is_cancelling, logger)
+    context = _create_notification_context(host_config, event, username, is_cancelling, logger)
 
     if logger.isEnabledFor(VERBOSE):
         logger.log(VERBOSE, "Sending notification via Check_MK with the following context:")
@@ -299,10 +300,10 @@ def do_notify(event_server: Any,
         logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
-def _create_notification_context(event_server: Any, event: Any, username: Any, is_cancelling: bool,
-                                 logger: Logger) -> Any:
+def _create_notification_context(host_config: HostConfig, event: Any, username: Any,
+                                 is_cancelling: bool, logger: Logger) -> Any:
     context = _base_notification_context(event, username, is_cancelling)
-    _add_infos_from_monitoring_host(event_server, context, event)  # involves Livestatus query
+    _add_infos_from_monitoring_host(host_config, context, event)  # involves Livestatus query
     _add_contacts_from_rule(context, event, logger)
     return context
 
@@ -358,7 +359,7 @@ def _base_notification_context(event: Any, username: Any, is_cancelling: bool) -
 
 # "CONTACTS" is allowed to be missing in the context, cmk --notify will
 # add the fallback contacts then.
-def _add_infos_from_monitoring_host(event_server: Any, context: Any, event: Any) -> None:
+def _add_infos_from_monitoring_host(host_config: HostConfig, context: Any, event: Any) -> None:
     def _add_artificial_context_info() -> None:
         context.update({
             "HOSTNAME": event["host"],
@@ -376,22 +377,22 @@ def _add_infos_from_monitoring_host(event_server: Any, context: Any, event: Any)
         _add_artificial_context_info()
         return
 
-    host_config = event_server.host_config.get_config_for_host(event["core_host"], None)
-    if not host_config:
+    config = host_config.get_config_for_host(event["core_host"], None)
+    if not config:
         _add_artificial_context_info()  # No config found - Host has vanished?
         return
 
     context.update({
-        "HOSTNAME": host_config["name"],
-        "HOSTALIAS": host_config["alias"],
-        "HOSTADDRESS": host_config["address"],
-        "HOSTTAGS": host_config["custom_variables"].get("TAGS", ""),
-        "CONTACTS": ",".join(host_config["contacts"]),
-        "SERVICECONTACTGROUPNAMES": ",".join(host_config["contact_groups"]),
+        "HOSTNAME": config["name"],
+        "HOSTALIAS": config["alias"],
+        "HOSTADDRESS": config["address"],
+        "HOSTTAGS": config["custom_variables"].get("TAGS", ""),
+        "CONTACTS": ",".join(config["contacts"]),
+        "SERVICECONTACTGROUPNAMES": ",".join(config["contact_groups"]),
     })
 
     # Add custom variables to the notification context
-    for key, val in host_config["custom_variables"].items():
+    for key, val in config["custom_variables"].items():
         context["HOST_%s" % key] = val
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"

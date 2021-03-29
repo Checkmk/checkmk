@@ -1651,7 +1651,7 @@ run_liveupdate
 run_remote_plugin
 
 # MK's runas Executor
-run_mrpe
+run_runas_executor
 
 # Local checks
 run_local_checks

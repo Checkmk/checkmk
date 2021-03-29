@@ -1,0 +1,12 @@
+Title: Agent execution as non-root user
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617020870
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The execution of agent plugins, local and mrpe checks with a non-root user was broken.
+This resulted in vanishing services and is fixed now.

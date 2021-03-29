@@ -28,7 +28,7 @@ class TestSection:
 
     @pytest.mark.parametrize('piggytarget, expected_piggytarget_header', [
         (['one'], '<<<<one>>>>'),
-        (['not-valid'], '<<<<not_valid>>>>'),
+        (['piggy-back'], '<<<<piggy-back>>>>'),
     ])
     def test_piggytarget_header(
         self,

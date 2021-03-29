@@ -1,0 +1,10 @@
+Title: Fix url escaping while cloning views of users with special characters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1617031064
+Class: fix
+
+

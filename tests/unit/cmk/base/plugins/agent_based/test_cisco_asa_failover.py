@@ -19,14 +19,16 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
     pytest.param(
         [[['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
           ['Primary unit (this device)', '9', 'Active unit'], ['Secondary unit', '10', 'Standby unit'], ], ],
-        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='9', local_status_detail='Active unit',
+                failver_link_status='2',
                 remote_status='10'),
         id='Parse: Primary unit == Active unit'
     ),
     pytest.param(
         [[['Failover LAN Interface', '3', 'not Configured'], ['Primary unit (this device)', '3', 'Failover Off'],
           ['Secondary unit', '3', 'Failover Off'], ], ],
-        None,
+        Section(failover=False, local_role='primary', local_status='3', local_status_detail='Failover Off',
+                failver_link_status='3', remote_status='3'),
         id='Parse: failover off/not configured'
     ),
 ])
@@ -37,10 +39,17 @@ def test_cisco_asa_failover_parse(string_table, expected):
 
 @pytest.mark.parametrize('section, expected', [
     pytest.param(
-        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='9', local_status_detail='Active unit',
+                failver_link_status='2',
                 remote_status='10'),
         [Service()],
         id='Discovery: Primary unit == Active unit',
+    ),
+    pytest.param(
+        Section(failover=False, local_role='primary', local_status='3', local_status_detail='Failover Off',
+                failver_link_status='3', remote_status='3'),
+        [],
+        id='Discovery: failover off/not configured',
     ),
 ])
 def test_cisco_asa_failover_discover(section, expected):
@@ -51,14 +60,16 @@ def test_cisco_asa_failover_discover(section, expected):
 @pytest.mark.parametrize('params, section, expected', [
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='9', local_status_detail='Active unit',
+                failver_link_status='2',
                 remote_status='10'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'), ],
         id='Check: local unit == Primary unit == Active unit'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(local_role='primary', local_status='10', local_status_detail='Standby unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='10', local_status_detail='Standby unit',
+                failver_link_status='2',
                 remote_status='9'),
         [Result(state=State.OK, summary='Device (primary) is the Standby unit'),
          Result(state=State.WARN, summary='(The primary device should be active)')],
@@ -66,7 +77,8 @@ def test_cisco_asa_failover_discover(section, expected):
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(local_role='primary', local_status='8', local_status_detail='Backup unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='8', local_status_detail='Backup unit',
+                failver_link_status='2',
                 remote_status='10'),
         [Result(state=State.OK, summary='Device (primary) is the Backup unit'),
          Result(state=State.WARN, summary='(The primary device should be active)'),
@@ -75,7 +87,8 @@ def test_cisco_asa_failover_discover(section, expected):
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='3',
+        Section(failover=True, local_role='primary', local_status='9', local_status_detail='Active unit',
+                failver_link_status='3',
                 remote_status='10'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'),
          Result(state=State.CRIT, summary='Failover link state is down'),
@@ -84,11 +97,12 @@ def test_cisco_asa_failover_discover(section, expected):
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+        Section(failover=True, local_role='primary', local_status='9', local_status_detail='Active unit',
+                failver_link_status='2',
                 remote_status='8'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'),
          Result(state=State.WARN, summary='Unhandled state backup for remote device reported'),
-        ],
+         ],
         id='Check: Remote unit == not active/standby'
     ),
 ])

@@ -1354,7 +1354,7 @@ sql_rman () {
                           and a.dest_id in
                           (select b.dest_id
                            from v\$archive_dest b
-                           where b.target = 'PRIMARY'
+                           where b.target IN ('PRIMARY', 'LOCAL')
                              and b.SCHEDULE = 'ACTIVE'
                           )
                     group by d.NAME, i.instance_name

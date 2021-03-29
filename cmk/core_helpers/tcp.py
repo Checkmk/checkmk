@@ -6,16 +6,13 @@
 
 import logging
 import socket
+from typing import Any, Dict, Final, List, Mapping, Optional, TYPE_CHECKING, Tuple
+
 from hashlib import md5, sha256
-from typing import Any, Dict, Final, List, Mapping, Optional, TYPE_CHECKING, Tuple, Callable
-
-from Cryptodome.Cipher import AES
-from Cryptodome.Hash import SHA256
-from Cryptodome.Protocol.KDF import PBKDF2
-
 import cmk.utils.debug
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.encryption import decrypt_aes_256_cbc_legacy, decrypt_aes_256_cbc_pbkdf2, OPENSSL_SALTED_MARKER
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
@@ -146,7 +143,7 @@ class TCPFetcher(AgentFetcher):
 
         try:
             self._logger.debug("Try to decrypt output")
-            output = self._real_decrypt(output)
+            output = self._decrypt_agent_data(output=output)
         except MKFetcherError:
             raise
         except Exception as e:
@@ -165,63 +162,36 @@ class TCPFetcher(AgentFetcher):
             raise MKFetcherError("Too short output from agent: %r" % output)
         return output
 
-    # TODO: Sync with real_type_checks._decrypt_rtc_package
-    def _real_decrypt(self, output: AgentRawData) -> AgentRawData:
-        SALTED_MARKER = b"Salted__"
-        salt_start = len(SALTED_MARKER)
+    def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
+        salt_start = len(OPENSSL_SALTED_MARKER)
 
         try:
             # simply check if the protocol is an actual number
             protocol = int(output[:2])
         except ValueError:
-            raise MKFetcherError("Unsupported protocol version: %r" % output[:2])
+            raise MKFetcherError(f"Unsupported protocol version: {output[:2]!r}")
         encrypted_pkg = output[2:]
-        encryption_key = self.encryption_settings["passphrase"]
+        password = self.encryption_settings["passphrase"]
 
         if protocol == 3:
-            return self._decrypt_aes_256_cbc_pbkdf2(encrypted_pkg[salt_start:], encryption_key)
+            return AgentRawData(
+                decrypt_aes_256_cbc_pbkdf2(
+                    ciphertext=encrypted_pkg[salt_start:],
+                    password=password,
+                ))
         if protocol == 2:
-            return self._decrypt_aes_256_cbc_legacy(encrypted_pkg, encryption_key, sha256)
+            return AgentRawData(
+                decrypt_aes_256_cbc_legacy(
+                    ciphertext=encrypted_pkg,
+                    password=password,
+                    digest=sha256,
+                ))
         if protocol == 0:
-            return self._decrypt_aes_256_cbc_legacy(encrypted_pkg, encryption_key, md5)
+            return AgentRawData(
+                decrypt_aes_256_cbc_legacy(
+                    ciphertext=encrypted_pkg,
+                    password=password,
+                    digest=md5,
+                ))
 
         raise MKFetcherError(f"Unsupported protocol version: {protocol}")
-
-    @staticmethod
-    def _decrypt_aes_256_cbc_pbkdf2(encrypted_pkg: bytes, encryption_key: str) -> AgentRawData:
-        SALT_LENGTH = 8
-        KEY_LENGTH = 32
-        IV_LENGTH = 16
-        PBKDF2_CYCLES = 100_000
-
-        # Adapt OpenSSL handling of salt, key and iv
-        salt = encrypted_pkg[:SALT_LENGTH]
-        raw_key = PBKDF2(encryption_key,
-                         salt,
-                         KEY_LENGTH + IV_LENGTH,
-                         count=PBKDF2_CYCLES,
-                         hmac_hash_module=SHA256)
-        key, iv = raw_key[:KEY_LENGTH], raw_key[KEY_LENGTH:]
-
-        decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-        decrypted_pkg = decryption_suite.decrypt(encrypted_pkg[SALT_LENGTH:])
-        # Strip of fill bytes of openssl
-        return AgentRawData(decrypted_pkg[0:-decrypted_pkg[-1]])
-
-    @staticmethod
-    def _decrypt_aes_256_cbc_legacy(encrypted_pkg: bytes, encryption_key: str,
-                                    encrypt_digest: Callable[..., 'hashlib._Hash']) -> AgentRawData:
-        # Adapt OpenSSL handling of key and iv
-        def derive_key_and_iv(password: bytes, key_length: int,
-                              iv_length: int) -> Tuple[bytes, bytes]:
-            d = d_i = b''
-            while len(d) < key_length + iv_length:
-                d_i = encrypt_digest(d_i + password).digest()
-                d += d_i
-            return d[:key_length], d[key_length:key_length + iv_length]
-
-        key, iv = derive_key_and_iv(encryption_key.encode("utf-8"), 32, AES.block_size)
-        decryption_suite = AES.new(key, AES.MODE_CBC, iv)
-        decrypted_pkg = decryption_suite.decrypt(encrypted_pkg)
-        # Strip of fill bytes of openssl
-        return AgentRawData(decrypted_pkg[0:-decrypted_pkg[-1]])

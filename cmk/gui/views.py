@@ -1359,10 +1359,15 @@ def show_view(view, view_renderer, only_count=False):
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.spec.get("mustsearch")) or
             html.request.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
-        rows, unfiltered_amount_of_rows = view.datasource.table.query(view, columns, headers,
-                                                                      view.only_sites,
-                                                                      view.row_limit,
-                                                                      all_active_filters)
+        row_data = view.datasource.table.query(view, columns, headers, view.only_sites,
+                                               view.row_limit, all_active_filters)
+
+        # HW/SW inventory returns tuple, see a3ce07b75dfca48e372d5ef4ab2d6680c3654fe1
+        if isinstance(row_data, tuple):
+            rows, unfiltered_amount_of_rows = row_data
+        else:
+            rows = row_data
+            unfiltered_amount_of_rows = len(row_data)
 
         # Now add join information, if there are join columns
         if view.join_cells:

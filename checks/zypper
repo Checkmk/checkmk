@@ -53,7 +53,7 @@ def check_zypper(_no_item, _no_params, info):
     patch_types = {}
     updates = 0
     locks = []
-    firstline = " ".join(info[0])
+    firstline = " ".join(info[0]) if info else ""
     if re.match("ERROR:", firstline):
         return 3, firstline
     for line in info:

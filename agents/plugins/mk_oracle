@@ -1291,6 +1291,11 @@ sql_recovery_status () {
 sql_rman () {
     if [ "$NUMERIC_ORACLE_VERSION" -ge 121 ]; then
 
+        local archive_target="'PRIMARY'"
+        if [ "$NUMERIC_ORACLE_VERSION" -ge 122 ]; then
+            archive_target="'PRIMARY', 'LOCAL'"
+        fi
+
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "select /*$HINT_RMAN check_mk rman1 */ upper(name)
                      || '|'|| 'COMPLETED'
@@ -1353,7 +1358,7 @@ sql_rman () {
                           and a.dest_id in
                           (select b.dest_id
                            from v\$archive_dest b
-                           where b.target = 'PRIMARY'
+                           where b.target IN (${archive_target})
                              and b.SCHEDULE = 'ACTIVE'
                           )
                     group by d.NAME, i.instance_name

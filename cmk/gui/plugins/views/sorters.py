@@ -439,7 +439,8 @@ class SorterHostIpv4Address(Sorter):
             try:
                 return tuple(int(part) for part in ip.split('.'))
             except ValueError:
-                return ip
+                # Make hostnames comparable with IPv4 address representations
+                return (255, 255, 255, 255, ip)
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
         return (v1 > v2) - (v1 < v2)

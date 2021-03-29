@@ -46,7 +46,7 @@ def check_mail_arguments(params):
     args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
     if "connect_timeout" in params:
-        args.append("--connect-timeout={params['connect_timeout']}")
+        args.append(f"--connect-timeout={params['connect_timeout']}")
 
     if "forward" in params:
         forward = params["forward"]

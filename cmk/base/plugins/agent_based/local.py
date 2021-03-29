@@ -88,6 +88,15 @@ def _is_valid_line(line):
     return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
 
 
+def _get_violation_reason(line):
+    if len(line) == 0:
+        return "Received empty line. Did any of your local checks returned a superfluous newline character?"
+    if len(line) < 4 and not (len(line) == 3 and line[0] == 'P'):
+        return ("Received wrong format of local check output. "
+                "Please read the documentation regarding the correct format: "
+                "https://docs.checkmk.com/2.0.0/de/localchecks.html ")
+
+
 def _sanitize_state(raw_state):
     try:
         raw_state = int(raw_state)
@@ -174,8 +183,8 @@ def parse_local(string_table: StringTable) -> LocalSection:
 
         cached, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
-            # just pass on the line, to report the offending ouput
-            parsed.setdefault(None, []).append(" ".join(stripped_line))  # type: ignore[union-attr]
+            # just pass on the line and reason, to report the offending ouput
+            parsed.setdefault(None, stripped_line)
             continue
 
         raw_state, state_msg = _sanitize_state(stripped_line[0])
@@ -256,8 +265,11 @@ def _labelify(word: str) -> str:
 
 def discover_local(section: LocalSection) -> DiscoveryResult:
     if None in section:
-        output = section[None][0]
-        raise ValueError("Invalid line in agent section <<<local>>>: %r" % (output,))
+        output = section[None]
+        assert isinstance(output, Sequence)
+        reason = _get_violation_reason(output)
+        raise ValueError(("Invalid line in agent section <<<local>>>. "
+                          "Reason: %s Received output: \"%s\"" % (reason, " ".join(output))))
 
     for key in section:
         yield Service(item=key)

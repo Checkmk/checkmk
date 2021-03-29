@@ -97,7 +97,6 @@ def parse_cisco_asa_failover(string_table: List[StringTable]) -> Section:
 
 
 def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
-    print (section)
     if section.failover:
         yield Service()
 

@@ -1,0 +1,11 @@
+Title: if: Fix crash when admin_status missing
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1617033181
+Class: fix
+
+Inventory if crashed when there was no admin_status data.
+Now, it returns a table with empty Admin field.

@@ -114,7 +114,7 @@ def inv_if(info, params, inventory_tree, status_data_tree):
             "speed": speed,
             "phys_address": if_render_mac_address(if_phys_address),
             "oper_status": int(if_oper_status),
-            "admin_status": int(if_admin_status),  # 1(up) or 2(down)
+            "admin_status": int(if_admin_status) if if_admin_status else None,  # 1(up) or 2(down)
             "port_type": int(if_type),
         })
 

@@ -19,7 +19,8 @@
 #  ['Primary unit', '9', 'Active unit'],
 #  ['Secondary unit (this device)', '10', 'Standby unit']]
 
-from typing import Dict, List, Mapping, Any
+from dataclasses import dataclass
+from typing import List, Mapping, Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -52,45 +53,81 @@ cisco_asa_state_names = {
 }
 
 
-def parse_cisco_asa_failover(string_table: List[StringTable]):
-    def parse_line(line):
-        role = line[0].split(' ')[0].lower()
-        data = [role, line[1], line[2].lower()]
-        return data
+@dataclass
+class CiscoAsaFailover:
+    role: str
+    status: str
+    status_detail: str
+    status_readable: str
 
-    parsed = {}
-    for line in string_table[0]:
-        if 'this device' in line[0].lower():
-            parsed['local'] = parse_line(line)
-        elif 'failover' in line[0].lower():
-            parsed['failover'] = line
+
+@dataclass
+class Section:
+    local: CiscoAsaFailover
+    remote: CiscoAsaFailover
+    failoverlink: CiscoAsaFailover
+
+
+def parse_cisco_asa_failover(string_table: List[StringTable]) -> Section:
+    failover = False
+    for role, status, detail in string_table[0]:
+        status_readable=cisco_asa_state_names.get(status, 'unknown: %s' % status)
+        if 'this device' in role and not 'failover off' in detail.lower():
+            failover = True
+            local = CiscoAsaFailover(
+                role=role.split(' ')[0].lower(),
+                status=status,
+                status_detail=detail,
+                status_readable=status_readable,
+            )
+        elif 'failover' in role.lower():
+            failoverlink = CiscoAsaFailover(
+                role='failoverlink',
+                status=status,
+                status_detail=detail,
+                status_readable=status_readable,
+
+            )
         else:
-            parsed['remote'] = parse_line(line)
-    return parsed
+            remote = CiscoAsaFailover(
+                role=role.split(' ')[0].lower(),
+                status=status,
+                status_detail=detail,
+                status_readable=status_readable,
+            )
+
+    if failover:
+        return Section(
+            local=local,
+            remote=remote,
+            failoverlink=failoverlink
+        )
 
 
-def discovery_cisco_asa_failover(section: Dict) -> DiscoveryResult:
-    if not 'failover off' in section['local'][2]:
-        yield Service()
+def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Dict) -> CheckResult:
-    converted_params = params
+def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> CheckResult:
+    if isinstance(params, int):  # catch old params
+        yield Result(state=State.CRIT, summary='This check is using old parameters. Please rescan (WATO) this device')
+    else:
+        yield Result(state=State.OK,
+                     summary='Device (%s) is the %s' % (section.local.role, section.local.status_detail))
 
-    role = section['local'][0]
-    status = section['local'][1]
-    status_readable = cisco_asa_state_names[status]
-    status_detail = section['local'][2]
+        if not params[section.local.role] == section.local.status_readable:
+            yield Result(state=State(params['failover_state']),
+                         summary='(The %s device should be %s)' % (section.local.role, params[section.local.role]))
 
-    yield Result(state=State.OK, summary='Device (%s) is the %s' % (role, status_detail))
+        if not section.local.status in ['9', '10']:  # active/standby
+            yield Result(state=State.WARN, summary='Unhandled state %s reported' % section.local.status_readable)
 
-    p_role = converted_params[role]
-    if not p_role == status_readable:
-        yield Result(state=State(converted_params['failover_state']),
-                     summary='(The %s device should be %s)' % (role, p_role))
+        if not section.remote.status in ['9', '10']:
+            yield Result(state=State.WARN,
+                         summary='Unhandled state %s for remote device reported' % section.remote.status_readable)
 
-    if not status in ['9', '10']:
-        yield Result(state=State.WARN, summary='Unhandled state %s reported' % status_readable)
+        if not section.failoverlink.status in ['2']:  # up
+            yield Result(state=State.CRIT, summary='Failoverlink state is %s' % section.failoverlink.status_readable)
 
 
 register.snmp_section(
@@ -98,7 +135,7 @@ register.snmp_section(
     parse_function=parse_cisco_asa_failover,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',
+            base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',  # CISCO-FIREWALL-MIB::cfwHardwareStatusEntry
             oids=[
                 '2',  # CISCO-FIREWALL-MIB::cfwHardwareInformation
                 '3',  # CISCO-FIREWALL-MIB::cfwHardwareStatusValue
@@ -109,7 +146,6 @@ register.snmp_section(
     detect=any_of(
         startswith('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco pix security'),
-
     )
 )
 

@@ -1598,13 +1598,20 @@ def _do_table_join(view, master_rows, master_filters, sorters):
 
     join_filters.append("Or: %d" % len(join_filters))
     headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
-    rows = slave_ds.table.query(view,
-                                columns=list(
-                                    set([join_master_column, join_slave_column] + join_columns)),
-                                headers=headers,
-                                only_sites=view.only_sites,
-                                limit=None,
-                                all_active_filters=None)
+
+    row_data = slave_ds.table.query(
+        view,
+        columns=list(set([join_master_column, join_slave_column] + join_columns)),
+        headers=headers,
+        only_sites=view.only_sites,
+        limit=None,
+        all_active_filters=None)
+
+    if isinstance(row_data, tuple):
+        rows, _unfiltered_amount_of_rows = row_data
+    else:
+        rows = row_data
+
     per_master_entry = {}
     current_key = None
     current_entry = None

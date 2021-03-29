@@ -15,7 +15,7 @@ import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
 from cmk.utils.type_defs import HostName, ServiceName, Labels, LabelSources
 
-UpdatedHostLabels = List[Tuple[str, float, str]]
+UpdatedHostLabelsEntry = Tuple[str, float, str]
 
 
 class LabelManager:
@@ -138,7 +138,14 @@ class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
         return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")
 
 
-def get_updated_host_label_files(newer_than: float) -> UpdatedHostLabels:
+def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
+    """Returns the host labels entry of the given host"""
+    path = DiscoveredHostLabelsStore(host_name).file_path
+    with path.open() as f:
+        return (path.name, path.stat().st_mtime, f.read())
+
+
+def get_updated_host_label_files(newer_than: float) -> List[UpdatedHostLabelsEntry]:
     """Returns the host label file content + meta data which are newer than the given timestamp"""
     updated_host_labels = []
     for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
@@ -151,7 +158,7 @@ def get_updated_host_label_files(newer_than: float) -> UpdatedHostLabels:
     return updated_host_labels
 
 
-def save_updated_host_label_files(updated_host_labels: UpdatedHostLabels) -> None:
+def save_updated_host_label_files(updated_host_labels: List[UpdatedHostLabelsEntry]) -> None:
     """Persists the data previously read by get_updated_host_label_files()"""
     for file_name, mtime, content in updated_host_labels:
         file_path = cmk.utils.paths.discovered_host_labels_dir / file_name

@@ -515,6 +515,11 @@ class BackgroundJob:
         This is here so we can mock this away cleanly."""
         os._exit(code)
 
+    def wait_for_completion(self):
+        """Wait for background job to be complete."""
+        while self.is_active():
+            time.sleep(0.5)
+
 
 class JobStatusStates:
     INITIALIZED = "initialized"

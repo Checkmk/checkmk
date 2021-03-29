@@ -10,7 +10,6 @@ from cmk.base.plugins.agent_based.cisco_asa_failover import (
     parse_cisco_asa_failover,
     discovery_cisco_asa_failover,
     check_cisco_asa_failover,
-    CiscoAsaFailover,
     Section,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service
@@ -20,12 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Servi
     pytest.param(
         [[['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
           ['Primary unit (this device)', '9', 'Active unit'], ['Secondary unit', '10', 'Standby unit'], ], ],
-        Section(
-            local=CiscoAsaFailover(role='primary', status='9', status_detail='Active unit', status_readable='active'),
-            remote=CiscoAsaFailover(role='secondary', status='10', status_detail='Standby unit',
-                                    status_readable='standby'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink Port-channel4 (system)', status_readable='up')),
+        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+                remote_status='10'),
         id='Parse: Primary unit == Active unit'
     ),
     pytest.param(
@@ -42,12 +37,8 @@ def test_cisco_asa_failover_parse(string_table, expected):
 
 @pytest.mark.parametrize('section, expected', [
     pytest.param(
-        Section(
-            local=CiscoAsaFailover(role='primary', status='9', status_detail='Active unit', status_readable='active'),
-            remote=CiscoAsaFailover(role='secondary', status='10', status_detail='Standby unit',
-                                    status_readable='standby'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='up')),
+        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+                remote_status='10'),
         [Service()],
         id='Discovery: Primary unit == Active unit',
     ),
@@ -60,64 +51,44 @@ def test_cisco_asa_failover_discover(section, expected):
 @pytest.mark.parametrize('params, section, expected', [
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(
-            local=CiscoAsaFailover(role='primary', status='9', status_detail='Active unit', status_readable='active'),
-            remote=CiscoAsaFailover(role='secondary', status='10', status_detail='Standby unit',
-                                    status_readable='standby'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='up')),
+        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+                remote_status='10'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'), ],
         id='Check: local unit == Primary unit == Active unit'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(
-            local=CiscoAsaFailover(role='primary', status='10', status_detail='Standby unit', status_readable='stanby'),
-            remote=CiscoAsaFailover(role='secondary', status='9', status_detail='Active unit',
-                                    status_readable='active'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='up')),
+        Section(local_role='primary', local_status='10', local_status_detail='Standby unit', failver_link_status='2',
+                remote_status='9'),
         [Result(state=State.OK, summary='Device (primary) is the Standby unit'),
          Result(state=State.WARN, summary='(The primary device should be active)')],
         id='Check: local unit == Primary unit == Standby unit'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(
-            local=CiscoAsaFailover(role='primary', status='8', status_detail='backup unit', status_readable='backup'),
-            remote=CiscoAsaFailover(role='secondary', status='10', status_detail='Standby unit',
-                                    status_readable='standby'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='up')),
-        [Result(state=State.OK, summary='Device (primary) is the backup unit'),
+        Section(local_role='primary', local_status='8', local_status_detail='Backup unit', failver_link_status='2',
+                remote_status='10'),
+        [Result(state=State.OK, summary='Device (primary) is the Backup unit'),
          Result(state=State.WARN, summary='(The primary device should be active)'),
          Result(state=State.WARN, summary='Unhandled state backup reported')],
         id='Check: local unit not active/standby'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(
-            local=CiscoAsaFailover(role='primary', status='9', status_detail='Active unit', status_readable='active'),
-            remote=CiscoAsaFailover(role='secondary', status='10', status_detail='Standby unit',
-                                    status_readable='standby'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='3',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='down')),
+        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='3',
+                remote_status='10'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'),
-         Result(state=State.CRIT, summary='Failoverlink state is down'),
+         Result(state=State.CRIT, summary='Failover link state is down'),
          ],
         id='Check: Failover link not up'
     ),
     pytest.param(
         {'failover_state': 1, 'primary': 'active', 'secondary': 'standby'},
-        Section(
-            local=CiscoAsaFailover(role='primary', status='9', status_detail='Active unit', status_readable='active'),
-            remote=CiscoAsaFailover(role='secondary', status='8', status_detail='Backup unit',
-                                    status_readable='backup'),
-            failoverlink=CiscoAsaFailover(role='failoverlink', status='2',
-                                          status_detail='ClusterLink GigabitEthernet0/5', status_readable='up')),
+        Section(local_role='primary', local_status='9', local_status_detail='Active unit', failver_link_status='2',
+                remote_status='8'),
         [Result(state=State.OK, summary='Device (primary) is the Active unit'),
          Result(state=State.WARN, summary='Unhandled state backup for remote device reported'),
-         ],
+        ],
         id='Check: Remote unit == not active/standby'
     ),
 ])

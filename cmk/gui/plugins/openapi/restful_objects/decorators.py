@@ -59,6 +59,8 @@ _SEEN_ENDPOINTS: Set[FunctionType] = set()
 
 T = TypeVar("T")
 
+Version = str
+
 
 def to_named_schema(fields_: Dict[str, fields.Field]) -> Type[Schema]:
     attrs: Dict[str, Any] = fields_.copy()
@@ -256,6 +258,8 @@ class Endpoint:
         tag_group: Literal['Monitoring', 'Setup'] = 'Setup',
         blacklist_in: Optional[Sequence[EndpointTarget]] = None,
         additional_status_codes: Optional[Sequence[StatusCodeInt]] = None,
+        valid_from: Optional[Version] = None,
+        valid_until: Optional[Version] = None,
         func: Optional[FunctionType] = None,
         operation_id: Optional[str] = None,
         wrapped: Optional[Any] = None,
@@ -276,6 +280,8 @@ class Endpoint:
         self.tag_group = tag_group
         self.blacklist_in: List[EndpointTarget] = self._list(blacklist_in)
         self.additional_status_codes = self._list(additional_status_codes)
+        self.valid_from = valid_from
+        self.valid_until = valid_until
         self.func = func
         self.operation_id = operation_id
         self.wrapped = wrapped

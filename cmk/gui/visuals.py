@@ -563,8 +563,15 @@ def page_list(what,
                 # Clone / Customize
                 buttontext = _("Create a customized copy of this")
                 backurl = html.urlencode(makeuri(global_request, []))
-                clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
-                            % (what_s, owner, visual_name, backurl)
+                clone_url = makeuri_contextless(
+                    global_request,
+                    [
+                        ("load_user", owner),
+                        ("load_name", visual_name),
+                        ("back", backurl),
+                    ],
+                    filename="edit_%s.py" % what_s,
+                )
                 html.icon_button(clone_url, buttontext, "clone")
 
                 # Delete

@@ -275,6 +275,8 @@ class TagGroup:
         return
 
     def get_tag_ids(self):
+        if self.is_checkbox_tag_group:
+            return {None, self.tags[0].id}
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):

@@ -40,7 +40,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(fix_register):
 
     You should really have an exceptionally good reason to add something here.
 
-    The known exeptions cannot easily be fixed, because introducing a too strict
+    The known exceptions cannot easily be fixed, because introducing a too strict
     criterion is an incompatible change.
     In most of the cases I was unable to spot the identifying feature of the system
     description.

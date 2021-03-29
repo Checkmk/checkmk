@@ -18,7 +18,7 @@ info = [[
     [u'5', u'1', u'01-05', u'999', u'ATTENTION', u'1'],
     [u'10', u'2', u'01-10', u'0', u'KAPUTT', u'1'],
 ], [
-    [u'serial1'], [u'serial2'], [u'serial3'], [u'serial4'], [u'serial5'], [u'serial10']
+    [u'1', u'serial1'], [u'2', u'serial2'], [u'3', u'serial3'], [u'4', u'serial4'], [u'5', u'serial5'], [u'10', u'serial10']
 ]]
 
 discovery = {

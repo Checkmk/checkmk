@@ -134,7 +134,9 @@ Once done, you are ready for the next chapter.
 
 1. Create your feature branch
 
-    The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
+    The number one rule is to *put each piece of work on its own branch*. Please note that in
+    general, we only accept changes which are based on the *master* branch. There is one (rare)
+    exception, namely bugfixes which *only* affect older branches. So lets start like this:
 
     ```console
     $ git checkout master

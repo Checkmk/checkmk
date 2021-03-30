@@ -192,6 +192,11 @@ div.dashlet > div.title span {
   padding-left: 0; /* left align with titles of contained views */
 }
 
+/* Inside a dashlet, we need a different color here in order to see a difference w.r.t. the title*/
+div.dashlet div.success {
+  background-color: $base-color;
+}
+
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
 table.dashlet_overview h2 {
   margin: 8px 0;

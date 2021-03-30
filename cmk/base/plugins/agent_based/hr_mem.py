@@ -13,16 +13,6 @@ PreParsed = Dict[str, List[Tuple[str, int, int]]]
 
 
 def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
-    """
-    >>> for item, values in pre_parse_hr_mem([[
-    ...     ['.1.3.6.1.2.1.25.2.1.2', 'Physical memory', '4096', '11956593', '11597830'],
-    ...     ['.1.3.6.1.2.1.25.2.1.2', 'Real memory', '4096', '181626', '381'],
-    ...     ['.1.3.6.1.2.1.25.2.1.3', 'Virtual memory', '4096', '807034', '1604'],
-    ... ]]).items():
-    ...   print(item, values)
-    RAM [('physical memory', 48974204928, 47504711680), ('real memory', 743940096, 1560576)]
-    virtual memory [('virtual memory', 3305611264, 6569984)]
-    """
     info = string_table[0]
 
     map_types = {

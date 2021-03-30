@@ -28,13 +28,10 @@ def inventory_cisco_ucs_hdd(info):
 def check_cisco_ucs_hdd(item, _no_params, info):
     for status, ident, model, vendor, size, serial in info:
         if ident == item:
-            state, state_readable = map_operability.get(
-                status,
-                (3, "Unknown, status code %s" % status),
-            )
-            # size is returned in MB
-            # on migration: check whether to use render.size (MB) or render.bytes (MiB)
-            size_readable = get_bytes_human_readable(int(size or '0') * 1024 * 1024)
+            state, state_readable = map_operability.get(status,
+                                                        (3, "Unknown, status code %s" % status))
+            size_readable = get_bytes_human_readable(int(size) * 1024 *
+                                                     1024)  # size is returned in MB
             return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
                 (state_readable, size_readable, model, vendor, serial)
 

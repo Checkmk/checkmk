@@ -53,12 +53,6 @@ def pre_parse_hr_mem(string_table: List[StringTable]) -> PreParsed:
 
     parsed: PreParsed = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
-        # in case @hrtype is an empty string the actual type might still be taken from @hrdescr,
-        # however by now we don't know a case when important data is provided without a valid
-        # @hrdescr so we just ignore this case.
-        if not hrtype:
-            continue
-
         # should crash when the hrtype is not defined in the mapping table:
         # it may mean there was an important change in the way the OIDs are
         # mapped that we should know about

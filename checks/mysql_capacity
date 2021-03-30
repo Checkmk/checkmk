@@ -52,7 +52,7 @@ def check_mysql_size(item, params, parsed):
         # support items discovered before 1.2.7
         instance, dbname = "mysql", item
     else:
-        instance, dbname = item.split(':', 1)
+        instance, dbname = item.split(':')
 
     size, _avail = parsed.get(instance, {}).get(dbname, (None, None))
     if not isinstance(size, int):

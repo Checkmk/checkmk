@@ -32,12 +32,10 @@ from .utils.mssql_counters import Section
 
 
 def to_timestamp(values: Sequence[str]) -> float:
-    """Translate time stamps given in formats known to be used for @utc_time to Unix time
+    """
     >>> to_timestamp(('31.08.2017', '16:13:43'))
     1504196023.0
     >>> to_timestamp(('08/31/2017', '04:13:43', 'PM'))
-    1504196023.0
-    >>> to_timestamp(('2017/08/31', '04:13:43', 'PM'))
     1504196023.0
     >>> to_timestamp(('31/08/2017', '16:13:43'))
     1504196023.0
@@ -52,14 +50,12 @@ def to_timestamp(values: Sequence[str]) -> float:
         with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%Y/%m/%d %I:%M:%S %p')
-        with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
         with suppress(ValueError):
             return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
         with suppress(ValueError):
             return datetime.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S")
-        raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
+        raise ValueError('Time string %r does not match any known pattern' % ' '.join(values))
 
     return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()
 

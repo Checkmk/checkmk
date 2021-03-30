@@ -403,7 +403,7 @@ MERGED_SECTION_RAWEDITION = {
         '1.6.0-2020.08.18.cee': {
             'demo': False,
             'edition': 'cee',
-            'num_sites': 2,
+            'num_sites': 1,
             'number': '1.6.0-2020.08.18'
         },
         '1.6.0p12.cee': {
@@ -415,7 +415,7 @@ MERGED_SECTION_RAWEDITION = {
         '1.6.0p13.cee': {
             'demo': False,
             'edition': 'cee',
-            'num_sites': 2,
+            'num_sites': 1,
             'number': '1.6.0p13'
         },
         '2020.08.13.cee': {
@@ -427,7 +427,7 @@ MERGED_SECTION_RAWEDITION = {
         '2020.08.20.cee': {
             'demo': False,
             'edition': 'cee',
-            'num_sites': 2,
+            'num_sites': 1,
             'number': '2020.08.20'
         }
     },

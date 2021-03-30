@@ -1,0 +1,12 @@
+Title: Cleanup routine for hosts no longer needlessly loads the complete config
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1617095624
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 1.6.0p23
+
+The internally used clean-up command <tt>cmk --automation delete-hosts {hostname}</tt> always loaded
+the complete host configuration and all checks. This information was never actually needed.

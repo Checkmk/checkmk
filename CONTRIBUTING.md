@@ -1035,7 +1035,14 @@ one name for one thing and use it consistently in all translations.
 ## Copyright and Licensing
 
 The open source part of Checkmk is licensed under the terms of the [GNU GPLv2
-License](COPYING). Any code brought in must be compatible with those terms.
+License](COPYING). Any new code must be compatible with those terms.
 
-You need to make sure that the code you send us in your pull request is GPLv2
-compatible.
+To ensure that, please always add our current licensing information to any new
+files you want to contribute. The licensing information can be found at the beginning
+of already existing files and looks something like
+
+```python
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+```

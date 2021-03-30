@@ -198,7 +198,8 @@ register.check_plugin(
     discovery_function=discover_entity_sensors_temp,
     check_function=check_entity_sensors_temp,
     check_ruleset_name='temperature',
-    check_default_parameters={'levels': (35, 40)},
+    check_default_parameters={},  # The check processes ambient and CPU temp sensors,
+    # which would each require totally different defaults. So it is better not to define any.
 )
 
 

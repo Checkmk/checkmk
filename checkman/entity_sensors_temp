@@ -7,7 +7,6 @@ description:
  This check monitors the temperature of devices
  that support the ENTITY-SENSORS MIB.
 
- The upper default levels are set to 35, 40 degree celsius.
  The upper and lower levels are configurable.
 
 item:

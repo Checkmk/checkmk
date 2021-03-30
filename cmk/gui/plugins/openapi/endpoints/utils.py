@@ -13,6 +13,7 @@ from cmk.gui.http import Response
 from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.watolib import CREFolder
 from cmk.gui.watolib.groups import edit_group, GroupType
 from cmk.utils import version
 
@@ -259,3 +260,17 @@ def updated_group_details(name, group_type, changed_details):
     changed_details = group_edit_details(changed_details)
     group.update(changed_details)
     return group
+
+
+def folder_slug(folder: CREFolder) -> str:
+    """Create a tilde separated path identifier to be used in URLs
+
+    Args:
+        folder:
+            The folder instance for which to generate the URL.
+
+    Returns:
+        A path looking like this: `~folder~subfolder~leaf_folder`
+
+    """
+    return '~' + folder.path().rstrip("/").replace("/", "~")

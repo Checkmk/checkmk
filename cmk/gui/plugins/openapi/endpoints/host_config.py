@@ -30,6 +30,7 @@ from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.http import Response
 from cmk.gui.log import logger
 from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -424,8 +425,7 @@ def serialize_host(host: watolib.CREHost, effective_attributes: bool):
     links = [
         constructors.link_rel(
             rel='cmk/show',
-            href=constructors.object_href('folder_config',
-                                          host.folder().path().rstrip("/").replace("/", "~")),
+            href=constructors.object_href('folder_config', folder_slug(host.folder())),
             method='get',
             title='Show the folder config of the host',
         ),

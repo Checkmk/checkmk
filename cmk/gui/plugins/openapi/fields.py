@@ -484,10 +484,12 @@ class FolderField(String):
 
     @classmethod
     def _normalize_folder(cls, folder_id):
-        r"""
+        r"""Normalizes a folder representation
 
         Args:
             folder_id:
+                A representation of a folder.
+
         Examples:
 
             >>> FolderField._normalize_folder("\\")
@@ -506,6 +508,7 @@ class FolderField(String):
             '/foo/bar'
 
         Returns:
+            The normalized representation.
 
         """
         prev = folder_id

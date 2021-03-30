@@ -1,0 +1,12 @@
+Title: mssql_counters: ValueError() raised on unknown timestamp format
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617004252
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+'YYYY/mm/dd HH:MM:SS [AM|PM]' could not yet be recognized by the timestamp parser. This change
+just adds this format.

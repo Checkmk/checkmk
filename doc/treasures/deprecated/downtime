@@ -221,6 +221,7 @@ if not arg_services:
 
 # Downtime on specific services (handles 2 & 5)
 else:
+    variables.append(("_do_confirm_service_downtime", "yes"))
     for service in arg_services:
         set_downtime(variables, [("view_name", "service"), ("service", service)])
 

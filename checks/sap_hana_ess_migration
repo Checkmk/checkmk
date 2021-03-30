@@ -29,6 +29,10 @@ def parse_sap_hana_ess_migration(info):
     parsed = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
 
+        if not lines:
+            parsed[sid_instance] = {"log": "", "timestamp": "not available"}
+            continue
+
         parsed.setdefault(sid_instance, {"log": " ".join(lines[0]), "timestamp": "not available"})
 
         for idx, elem in enumerate(lines[0]):

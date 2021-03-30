@@ -377,8 +377,8 @@ def _add_infos_from_monitoring_host(host_config: HostConfig, context: Any, event
         _add_artificial_context_info()
         return
 
-    config = host_config.get_config_for_host(event["core_host"], None)
-    if not config:
+    config = host_config.get_config_for_host(event["core_host"])
+    if config is None:
         _add_artificial_context_info()  # No config found - Host has vanished?
         return
 

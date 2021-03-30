@@ -26,7 +26,7 @@
 #  ['Secondary unit (this device)', '3', 'Failover Off']]
 
 from dataclasses import dataclass
-from typing import List, Mapping, Any
+from typing import List, Mapping, Any, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
@@ -64,7 +64,6 @@ def get_cisco_asa_state_name(st: str) -> str:
 
 @dataclass
 class Section:
-    failover: bool
     local_role: str
     local_status: str
     local_status_detail: str
@@ -72,58 +71,53 @@ class Section:
     remote_status: str
 
 
-def parse_cisco_asa_failover(string_table: List[StringTable]) -> Section:
-    failover = False
+def parse_cisco_asa_failover(string_table: List[StringTable]) -> Optional[Section]:
+    failover = {}
     for role, status, detail in string_table[0]:
-        if 'this device' in role:
-            if not 'failover off' in detail.lower():
-                failover = True
-            local_role = role.split(' ')[0].lower()
-            local_status = status
-            local_status_detail = detail
+        if 'this device' in role and not detail.lower() == 'failover off':
+            failover['local_role'] = role.split(' ')[0].lower()
+            failover['local_status'] = status
+            failover['local_status_detail'] = detail
         elif 'failover' in role.lower():
-            failver_link_status = status
+            failover['failver_link_status'] = status
         else:
-            remote_status = status
+            failover['remote_status'] = status
 
-    return Section(
-        failover=failover,
-        local_role=local_role,
-        local_status=local_status,
-        local_status_detail=local_status_detail,
-        failver_link_status=failver_link_status,
-        remote_status=remote_status
-    )
+    if len(failover) == 5:
+        return Section(
+            local_role=failover['local_role'],
+            local_status=failover['local_status'],
+            local_status_detail=failover['local_status_detail'],
+            failver_link_status=failover['failver_link_status'],
+            remote_status=failover['remote_status']
+        )
+    return None
 
 
 def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
-    if section.failover:
-        yield Service()
+    yield Service()
 
 
 def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> CheckResult:
-    if isinstance(params, int):  # catch old params
-        yield Result(state=State.CRIT, summary='This check is using old parameters. Please rescan (WATO) this device')
-    else:
-        yield Result(state=State.OK,
-                     summary='Device (%s) is the %s' % (section.local_role, section.local_status_detail))
+    yield Result(state=State.OK,
+                 summary='Device (%s) is the %s' % (section.local_role, section.local_status_detail))
 
-        if not params[section.local_role] == get_cisco_asa_state_name(section.local_status):
-            yield Result(state=State(params['failover_state']),
-                         summary='(The %s device should be %s)' % (section.local_role, params[section.local_role]))
+    if not params[section.local_role] == get_cisco_asa_state_name(section.local_status):
+        yield Result(state=State(params['failover_state']),
+                     summary='(The %s device should be %s)' % (section.local_role, params[section.local_role]))
 
-        if not section.local_status in ['9', '10']:  # local not active/standby
-            yield Result(state=State.WARN,
-                         summary='Unhandled state %s reported' % get_cisco_asa_state_name(section.local_status))
+    if not section.local_status in ['9', '10']:  # local not active/standby
+        yield Result(state=State.WARN,
+                     summary='Unhandled state %s reported' % get_cisco_asa_state_name(section.local_status))
 
-        if not section.remote_status in ['9', '10']:  # remote not active/standby
-            yield Result(state=State.WARN,
-                         summary='Unhandled state %s for remote device reported' % get_cisco_asa_state_name(
-                             section.remote_status))
+    if not section.remote_status in ['9', '10']:  # remote not active/standby
+        yield Result(state=State.WARN,
+                     summary='Unhandled state %s for remote device reported' % get_cisco_asa_state_name(
+                         section.remote_status))
 
-        if not section.failver_link_status in ['2']:  # up
-            yield Result(state=State.CRIT,
-                         summary='Failover link state is %s' % get_cisco_asa_state_name(section.failver_link_status))
+    if not section.failver_link_status in ['2']:  # up
+        yield Result(state=State.CRIT,
+                     summary='Failover link state is %s' % get_cisco_asa_state_name(section.failver_link_status))
 
 
 register.snmp_section(

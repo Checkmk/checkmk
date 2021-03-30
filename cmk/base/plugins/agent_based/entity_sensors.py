@@ -27,7 +27,7 @@
 # .1.3.6.1.2.1.99.1.1.1.5.4 1
 # .1.3.6.1.2.1.99.1.1.1.5.5 1
 
-from typing import Any, Dict, List, Mapping, NamedTuple
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional
 from .agent_based_api.v1 import (
     any_of,
     check_levels,
@@ -120,20 +120,29 @@ def _reformat_sensor_name(name: str) -> str:
     return f'Sensor {new_name.strip()}'
 
 
+def _unit_from_device_unit(unit: str) -> Optional[str]:
+    '''Converts device units to units known by Check_mk'''
+    return {
+        'celsius': 'c',
+        'fahrenheit': 'f',
+        'kelvin': 'k',
+    }.get(unit)
+
+
 def parse_entity_sensors(string_table: List[StringTable]) -> EntitySensorSection:
     section: EntitySensorSection = {}
     sensor_names = {i[0]: i[1] for i in string_table[0]}
-    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr in string_table[1]:
+    for oid_end, sensor_type_nr, scaling_nr, reading, status_nr, device_unit in string_table[1]:
         # Some devices such as Palo Alto Network series 3000 support
         # the ENTITY-MIB including sensor/entity names.
         # Others (e.g. Palo Alto Networks Series 200) do not support
         # this MIB, thus we use OID as item instead
         sensor_name = _reformat_sensor_name(sensor_names.get(oid_end, oid_end))
-        sensor_type, unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
+        sensor_type, default_unit = ENTITY_SENSOR_TYPES[sensor_type_nr]
         section.setdefault(sensor_type, {})[sensor_name] = EntitySensor(
             name=sensor_name,
             reading=float(reading) * ENTITY_SENSOR_SCALING[scaling_nr],
-            unit=unit,
+            unit=_unit_from_device_unit(device_unit.lower()) or default_unit,
             state=_sensor_state(status_nr),
             status_descr=_sensor_status_descr(status_nr),
         )
@@ -163,6 +172,7 @@ register.snmp_section(
                 "2",  # entPhySensorScale
                 "4",  # entPhySensorValue
                 "5",  # entPhySensorOperStatus
+                "6",  # entPhySensorUnitsDisplay
             ],
         ),
     ],

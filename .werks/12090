@@ -1,0 +1,12 @@
+Title: zypper: crash with "IndexError (list index out of range)"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617010413
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+In case the zypper section is empty the check would crash due to an dedicated access to line 1.
+This change makes the check not access line 1 if not present.

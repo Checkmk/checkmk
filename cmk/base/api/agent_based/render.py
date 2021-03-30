@@ -42,10 +42,11 @@ def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date
 
     Example:
-        >>> date(1606721022)
-        'Nov 30 2020'
         >>> date(None)
         'never'
+        >>> _ = date(1606721022)
+
+        The latter will return something like 'Nov 30 2020', depending on the time zone.
 
     """
     if epoch is None:
@@ -57,13 +58,12 @@ def datetime(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date and time
 
     Example:
-        >>> import time
-        >>> # fix test environment timing issues:
-        >>> offset = (time.localtime().tm_hour - time.gmtime().tm_hour) * 3600
-        >>> datetime(1606721022 - offset)
-        'Nov 30 2020 07:23:42'
         >>> datetime(None)
         'never'
+        >>> _ = datetime(1606721022)
+
+        The latter will return something like 'Nov 30 2020 07:23:42',
+        depending on the time zone.
 
     """
     if epoch is None:

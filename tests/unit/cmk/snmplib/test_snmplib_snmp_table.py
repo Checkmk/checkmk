@@ -117,3 +117,37 @@ def test_is_bulkwalk_host(monkeypatch):
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config("abc").snmp_config("").is_bulkwalk_host is False
     assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True
+
+
+def test_is_classic_at_snmp_v1_host(monkeypatch):
+    ts = Scenario()
+    ts.set_ruleset("bulkwalk_hosts", [
+        ([], ["bulkwalk_h"], {}),
+    ])
+    ts.set_ruleset("snmpv2c_hosts", [
+        ([], ["v2c_h"], {}),
+    ])
+    ts.add_host("bulkwalk_h")
+    ts.add_host("v2c_h")
+    ts.add_host("not_included")
+    monkeypatch.setattr(config.HostConfig, "_is_inline_backend_supported", lambda _: True)
+
+    config_cache = ts.apply(monkeypatch)
+
+    # not bulkwalk and not v2c
+    assert config_cache.get_host_config("not_included").snmp_config(
+        "").snmp_backend == SNMPBackendEnum.CLASSIC
+
+    assert config_cache.get_host_config("bulkwalk_h").snmp_config(
+        "").snmp_backend == SNMPBackendEnum.INLINE
+
+    assert config_cache.get_host_config("v2c_h").snmp_config(
+        "").snmp_backend == SNMPBackendEnum.INLINE
+
+    # credentials is v3 -> INLINE
+    monkeypatch.setattr(config.HostConfig, "_snmp_credentials", lambda _: (
+        "a",
+        "p",
+    ))
+    assert config_cache.get_host_config("not_included").snmp_config(
+        "").snmp_backend == SNMPBackendEnum.INLINE

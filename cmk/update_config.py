@@ -427,21 +427,25 @@ class UpdateConfig:
         all_rulesets.set(snmp_exclude_sections_ruleset.name, snmp_exclude_sections_ruleset)
 
     def _transform_replaced_wato_rulesets(self, all_rulesets):
-        replacements: Dict[str, cmk.gui.watolib.rulesets.Ruleset] = {}
-        for ruleset_name in all_rulesets.get_rulesets():
+        deprecated_ruleset_names: Set[str] = set()
+        for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
             if ruleset_name not in REMOVED_WATO_RULESETS_MAP:
                 continue
-            new_ruleset = all_rulesets.get(ruleset_name).clone()
-            new_ruleset.set_name(REMOVED_WATO_RULESETS_MAP[ruleset_name])
+
+            new_ruleset = all_rulesets.get(REMOVED_WATO_RULESETS_MAP[ruleset_name])
+
             if not new_ruleset.is_empty():
                 self._logger.log(VERBOSE, "Found deprecated ruleset: %s" % ruleset_name)
-                replacements.setdefault(ruleset_name, new_ruleset)
 
-        for old_ruleset_name, ruleset in replacements.items():
             self._logger.log(VERBOSE,
-                             "Replacing ruleset %s with %s" % (old_ruleset_name, ruleset.name))
-            all_rulesets.set(ruleset.name, ruleset)
-            all_rulesets.delete(old_ruleset_name)
+                             "Replacing ruleset %s with %s" % (ruleset_name, new_ruleset.name))
+            for folder, _folder_index, rule in ruleset.get_rules():
+                new_ruleset.append_rule(folder, rule)
+
+            deprecated_ruleset_names.add(ruleset_name)
+
+        for deprecated_ruleset_name in deprecated_ruleset_names:
+            all_rulesets.delete(deprecated_ruleset_name)
 
     def _transform_wato_rulesets_params(self, all_rulesets):
         num_errors = 0

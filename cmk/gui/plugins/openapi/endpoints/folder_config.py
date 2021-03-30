@@ -11,6 +11,9 @@ If you build the tree cleverly you can use it to pass on attributes in a meaning
 
 You can find an introduction to hosts including folders in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/wato_hosts.html).
+
+Due to HTTP escaping folders are represented with the tilde character (`~`) as the path separator.
+
 """
 from typing import List
 
@@ -19,6 +22,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.host_config import host_collection
+from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -330,15 +334,14 @@ def _serve_folder(
 
 
 def _serialize_folder(folder: CREFolder, show_hosts):
-    uri = constructors.object_href('folder_config', folder.id())
     rv = constructors.domain_object(
         domain_type='folder_config',
-        identifier=folder.id(),
+        identifier=folder_slug(folder),
         title=folder.title(),
         members={
             'move': constructors.object_action(
                 name='move',
-                base=uri,
+                base=constructors.object_href('folder_config', folder_slug(folder)),
                 parameters=dict([
                     constructors.action_parameter(
                         action='move',
@@ -357,16 +360,13 @@ def _serialize_folder(folder: CREFolder, show_hosts):
     if show_hosts:
         rv['members']['hosts'] = constructors.collection_property(
             name='hosts',
-            base=constructors.object_href(
-                'folder_config',
-                "~" + folder.path().replace("/", "~"),
-            ),
+            base=constructors.object_href('folder_config', folder_slug(folder)),
             value=[
                 constructors.collection_item(
                     domain_type='host_config',
                     obj={
+                        'id': host.id(),
                         'title': host.name(),
-                        'id': host.id()
                     },
                 ) for host in folder.hosts().values()
             ],

@@ -730,8 +730,8 @@ automations.register(AutomationAnalyseHost())
 
 class AutomationDeleteHosts(Automation):
     cmd = "delete-hosts"
-    needs_config = True
-    needs_checks = True  # TODO: Can we change this?
+    needs_config = False
+    needs_checks = False
 
     def execute(self, args: List[str]) -> None:
         for hostname in args:

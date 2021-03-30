@@ -69,15 +69,6 @@ def parse_cisco_mem_asa(string_table: List[StringTable]) -> Section:
     ...     print(item, values)
     System memory ['319075344', '754665920', '731194056']
     MEMPOOL_DMA ['41493248', '11754752', '11743928']
-    """
-    return {
-        string_table[0][0][0]: string_table[0][0][1:],
-        string_table[1][0][0]: string_table[1][0][1:]
-    }
-
-
-def parse_cisco_mem_asa64(string_table: List[StringTable]) -> Section:
-    """
     >>> for item, values in parse_cisco_mem_asa64([[
     ...         ['System memory', '1251166290', '3043801006'],
     ...         ['MEMPOOL_DMA', '0', '0'],
@@ -87,7 +78,7 @@ def parse_cisco_mem_asa64(string_table: List[StringTable]) -> Section:
     MEMPOOL_DMA ['0', '0']
     MEMPOOL_GLOBAL_SHARED ['0', '0']
     """
-    return {line[0]: line[1:] for line in string_table[0]}
+    return {item: values for row in string_table if row for item, *values in row}
 
 
 register.snmp_section(
@@ -115,7 +106,7 @@ register.snmp_section(
     parsed_section_name="cisco_mem_asa",
     detect=all_of(startswith(OID_SysDesc, "cisco adaptive security"),
                   not_matches(OID_SysDesc, VERSION_PRE_V9_PATTERN)),
-    parse_function=parse_cisco_mem_asa64,
+    parse_function=parse_cisco_mem_asa,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.221.1.1.1.1",

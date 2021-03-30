@@ -122,8 +122,16 @@ def parse_brocade_fcport(info):
     if_info, link_info, speed_info, if64_info = info
     isl_ports = dict(link_info)
 
+    if len(if_info) == 0:
+        return
+
+    try:
+        offset = int(if_info[0][0])
+    except ValueError:
+        return
+
     # if-table and brocade-if-table do NOT have same length
-    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, int(if_info[0][0])):]]
+    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset):]]
 
     if len(if_info) == len(speed_info):
         # extract the speed from IF-MIB::ifHighSpeed.

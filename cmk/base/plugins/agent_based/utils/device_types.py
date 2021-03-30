@@ -6,7 +6,21 @@
 from typing import Final
 import enum
 
+from ..agent_based_api.v1 import HostLabel
+from ..agent_based_api.v1.type_defs import HostLabelGenerator
 
+
+def get_device_type_label(description: str) -> HostLabelGenerator:
+    for device_type in SNMPDeviceType:
+        if device_type.name in description.upper():
+            if device_type is SNMPDeviceType.SWITCH and _is_fibrechannel_switch(description):
+                yield HostLabel("cmk/device_type", "fcswitch")
+            else:
+                yield HostLabel("cmk/device_type", device_type.name.lower())
+            return
+
+
+# TODO: replace this by HostLabel instances.
 class SNMPDeviceType(enum.Enum):
     APPLIANCE = enum.auto()
     FIREWALL = enum.auto()
@@ -21,5 +35,5 @@ class SNMPDeviceType(enum.Enum):
 _FIBRECHANEL_MARKER: Final = {"fc", "fibrechannel", "fibre channel"}
 
 
-def is_fibrechannel_switch(description: str) -> bool:
+def _is_fibrechannel_switch(description: str) -> bool:
     return any(m in description.lower() for m in _FIBRECHANEL_MARKER)

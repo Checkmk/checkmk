@@ -1504,7 +1504,8 @@ class EventServer(ECServerThread):
             })
 
     def add_core_host_to_event(self, event):
-        event["core_host"] = self.host_config.get_canonical_name(event["host"])
+        name = self.host_config.get_canonical_name(event["host"])
+        event["core_host"] = "" if name is None else name
 
     def _add_core_host_to_new_event(self, event):
         self.add_core_host_to_event(event)
@@ -1788,8 +1789,9 @@ class EventServer(ECServerThread):
 
     def _get_host_event_limit(self, core_host):
         """Prefer the host individual limit for by_host limit (in case there is some)"""
-        host_config = self.host_config.get_config_for_host(core_host, {})
-        host_limit = host_config.get("custom_variables", {}).get("EC_EVENT_LIMIT")
+        host_config = self.host_config.get_config_for_host(core_host)
+        host_limit = (None if host_config is None else host_config.get("custom_variables",
+                                                                       {}).get("EC_EVENT_LIMIT"))
         if host_limit:
             limit, action = host_limit.split(":", 1)
             return int(limit), action

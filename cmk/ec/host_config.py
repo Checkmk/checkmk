@@ -6,9 +6,10 @@
 
 from logging import Logger
 from threading import Lock
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
-from livestatus import LivestatusColumn, LocalConnection
+from cmk.utils.type_defs import HostName, Timestamp
+from livestatus import LocalConnection
 
 #.
 #   .--Host config---------------------------------------------------------.
@@ -23,28 +24,27 @@ from livestatus import LivestatusColumn, LocalConnection
 #   | It fetches and caches the information during runtine of the EC.      |
 #   '----------------------------------------------------------------------'
 
+# TODO: Improve this vague type, using e.g. a NamedTuple.
+HostInfo = Dict[str, Any]
+
 
 class HostConfig:
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
         self._lock = Lock()
-        self._hosts_by_name: Dict[str, Dict[str, Any]] = {}
-        self._hosts_by_designation: Dict[str, str] = {}
-        self._cache_timestamp = -1  # sentinel, always less than a real timestamp
+        self._hosts_by_name: Dict[HostName, HostInfo] = {}
+        self._hosts_by_designation: Dict[str, HostName] = {}
+        self._cache_timestamp: Optional[Timestamp] = None
 
-    def get_config_for_host(self, host_name, deflt):
+    def get_config_for_host(self, host_name: HostName) -> Optional[HostInfo]:
         with self._lock:
-            if not self._update_cache_after_core_restart():
-                return deflt
+            return (self._hosts_by_name.get(host_name)
+                    if self._update_cache_after_core_restart() else None)
 
-            return self._hosts_by_name.get(host_name, deflt)
-
-    def get_canonical_name(self, event_host_name: str) -> str:
+    def get_canonical_name(self, event_host_name: str) -> Optional[HostName]:
         with self._lock:
-            if not self._update_cache_after_core_restart():
-                return ""
-
-            return self._hosts_by_designation.get(event_host_name.lower(), "")
+            return (self._hosts_by_designation.get(event_host_name.lower())
+                    if self._update_cache_after_core_restart() else None)
 
     def _update_cache_after_core_restart(self) -> bool:
         """Once the core reports a restart update the cache
@@ -54,7 +54,7 @@ class HostConfig:
         """
         try:
             timestamp = self._get_config_timestamp()
-            if timestamp > self._cache_timestamp:
+            if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
         except Exception:
@@ -78,11 +78,11 @@ class HostConfig:
             self._hosts_by_designation[host_name.lower()] = host_name
         self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
 
-    def _get_host_configs(self) -> List[Dict[str, Any]]:
+    def _get_host_configs(self) -> List[HostInfo]:
         return LocalConnection().query_table_assoc(
             "GET hosts\n"
             "Columns: name alias address custom_variables contacts contact_groups")
 
-    def _get_config_timestamp(self) -> LivestatusColumn:
+    def _get_config_timestamp(self) -> Timestamp:
         return LocalConnection().query_value("GET status\n"  #
                                              "Columns: program_start")

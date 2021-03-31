@@ -17,8 +17,12 @@ def get_informations(credentials, name, xml_id, org_name):
     server, address, user, password = credentials
     data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
     address = "http://%s%s%s" % (server, data_url, xml_id)
+    data = _get_element(get_url(address, user, password))
+    if data is None:
+        return
+
     c = None
-    for line in etree.parse(get_url(address, user, password)).getroot():
+    for line in data:
         for child in line:
             if child.get('c'):
                 c = child.get('c')
@@ -31,11 +35,10 @@ def get_pri_channel(credentials, channel_name):
     server, address, user, password = credentials
     data_url = "/%s/mod_cmd.xml" % channel_name
     address = "http://%s%s" % (server, data_url)
-    raw_data = get_url(address, user, password).read()
-    if not raw_data:  # no such channel
+    data = _get_element(get_url(address, user, password))
+    if data is None:  # no such channel
         return
 
-    data = etree.parse(raw_data).getroot()
     link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
@@ -55,13 +58,15 @@ def get_licenses(credentials):
     server, address, user, password = credentials
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
     try:
-        raw_data = get_url(address, user, password).read()
+        data = _get_element(get_url(address, user, password))
     except HTTPError as exc:
         if exc.reason == "Unauthorized":
             return
         raise
 
-    data = etree.parse(raw_data).getroot()
+    if data is None:
+        return
+
     print("<<<innovaphone_licenses>>>")
     for child in data.findall('lic'):
         if child.get('name') == "Port":
@@ -76,6 +81,14 @@ def get_url(address, user, password):
     base64string = base64.encodebytes(ensure_binary('%s:%s' % (user, password))).replace(b'\n', b'')
     request.add_header("Authorization", "Basic %s" % ensure_str(base64string))
     return urlopen(request)
+
+
+def _get_element(stream):
+    try:
+        return etree.parse(stream).getroot()
+    except etree.ParseError as err:
+        sys.stderr.write("ERROR: %s\n" % err)
+    return None
 
 
 def main(sys_argv=None):

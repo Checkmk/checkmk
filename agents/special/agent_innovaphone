@@ -45,11 +45,23 @@ def get_url(address):
     return urllib2.urlopen(request)
 
 
+def _get_element(address):
+    try:
+        return etree.parse(get_url(address)).getroot()
+    except etree.ParseError as err:
+        sys.stderr.write("ERROR: %s\n" % err)
+    return None
+
+
 def get_informations(name, xml_id, org_name):
     data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
     address = "http://%s%s%s" % (server, data_url, xml_id)
+    data = _get_element(address)
+    if data is None:
+        return
+
     c = False
-    for line in etree.parse(get_url(address)).getroot():
+    for line in data:
         for child in line:
             if child.get('c'):
                 c = child.get('c')
@@ -61,11 +73,10 @@ def get_informations(name, xml_id, org_name):
 def get_pri_channel(channel_name):
     data_url = "/%s/mod_cmd.xml" % channel_name
     address = "http://%s%s" % (server, data_url)
-    raw_data = get_url(address).read()
-    if not raw_data:  # no such channel.
+    data = _get_element(address)
+    if data is None:  # no such channel.
         return
 
-    data = etree.parse(raw_data).getroot()
     link = data.get('link')
     physical = data.get('physical')
     if link != "Up" or physical != "Up":
@@ -74,8 +85,8 @@ def get_pri_channel(channel_name):
 
     idle = 0
     total = 0
-    for channel_info in data.findall('ch'):
-        if channel_info.get('state') == 'Idle':
+    for channel in data.findall('ch'):
+        if channel.get('state') == 'Idle':
             idle += 1
         total += 1
     total -= 1
@@ -85,8 +96,11 @@ def get_pri_channel(channel_name):
 def get_licenses():
     address = "http://%s/PBX0/ADMIN/mod_cmd_login.xml" % server
     try:
-        data = etree.parse(get_url(address)).getroot()
+        data = _get_element(address)
     except urllib2.HTTPError:  # 401 Unauthorized
+        return
+
+    if data is None:  # other parsing exception (see stderr)
         return
 
     print "<<<innovaphone_licenses>>>"
@@ -100,8 +114,9 @@ def get_licenses():
 
 base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
 counter_address = "http://%s%s" % (server, base_url)
-p = etree.parse(get_url(counter_address))
-root_data = p.getroot()
+root_data = _get_element(counter_address)
+if root_data is None:
+    sys.exit(1)
 
 informations = {}
 for entry in root_data:
@@ -116,7 +131,7 @@ for what in ["CPU", "MEM", "TEMP"]:
         get_informations(section_name, informations[what], what)
 
 print "<<<%schannels>>>" % s_prefix
-for channel in ('PRI1', 'PRI2', 'PRI3', 'PRI4'):
-    get_pri_channel(channel)
+for loop_channel in ('PRI1', 'PRI2', 'PRI3', 'PRI4'):
+    get_pri_channel(loop_channel)
 
 get_licenses()

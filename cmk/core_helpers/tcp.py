@@ -193,5 +193,16 @@ class TCPFetcher(AgentFetcher):
                     password=password,
                     digest=md5,
                 ))
+        # Support encrypted agent data with "99" header.
+        # This was not intended, but the Windows agent accidentally sent this header
+        # instead of "00" up to 2.0.0p1, so we keep this for a while.
+        # Caution: "99" for real-time check data means "unencrypted"!
+        if protocol == 99:
+            return AgentRawData(
+                decrypt_aes_256_cbc_legacy(
+                    ciphertext=encrypted_pkg,
+                    password=password,
+                    digest=md5,
+                ))
 
         raise MKFetcherError(f"Unsupported protocol version: {protocol}")

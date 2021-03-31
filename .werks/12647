@@ -1,0 +1,16 @@
+Title: ups_cps_battery: fix crash "ValueError (invalid literal for int() with base 10:'NULL')"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617179249
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+The check ups_cps_battery crashed with the error "ValueError (invalid literal for int() with base 10:'NULL')"
+if the value for the OID "upsAdvanceBatteryTemperature" is equal to 'NULL'.
+This is a violation of the SNMP specification.
+In future these values will simply be ignored.
+

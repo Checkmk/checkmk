@@ -17,6 +17,8 @@ export MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
 # is being sent only once to each remote host.
 if [ "$REMOTE_HOST" ]; then
     export REMOTE=$REMOTE_HOST
+elif [ "$REMOTE_ADDR" ]; then
+    export REMOTE=$REMOTE_ADDR
 elif [ "$SSH_CLIENT" ]; then
     export REMOTE=${SSH_CLIENT%% *}
 fi

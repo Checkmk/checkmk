@@ -12,7 +12,6 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
-import threading
 from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 import jinja2
@@ -29,9 +28,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     OpenAPIParameter,
 )
 
-CODE_TEMPLATES_LOCK = threading.Lock()
-
-# This is
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
 {%- set cf = comment_format %}
@@ -102,7 +98,7 @@ request = urllib.request.Request(
     method="{{ request_method | upper }}",
     headers={
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
-        "Accept": "application/json",
+        "Accept": "{{ endpoint.content_type }}",
         {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
@@ -150,7 +146,7 @@ out=$(
     --request {{ request_method | upper }} \\
     --write-out "\\nxxx-status_code=%{http_code}\\n" \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
-    --header "Accept: application/json" \\
+    --header "Accept: {{ endpoint.content_type }}" \\
 {%- for header in header_params %}
     --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
@@ -203,7 +199,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
     --all \\
     {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
-    "Accept: application/json" \\
+    "Accept: {{ endpoint.content_type }}" \\
 {%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
 {%- endfor %}
@@ -243,7 +239,7 @@ PASSWORD = "{{ password }}"
 
 session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
-session.headers['Accept'] = 'application/json'
+session.headers['Accept'] = '{{ endpoint.content_type }}'
 {%- set method = request_method | lower %}
 
 {%- from '_macros' import show_params, comments %}
@@ -403,7 +399,26 @@ def code_samples(
 ) -> List[CodeSample]:
     """Create a list of rendered code sample Objects
 
-    These are not specified by OpenAPI but are specific to ReDoc."""
+    These are not specified by OpenAPI but are specific to ReDoc.
+
+    Examples:
+
+        >>> class Endpoint:
+        ...     path = 'foo'
+        ...     method = 'get'
+        ...     content_type = 'application/json'
+        ...     request_schema = _get_schema('CreateHost')
+        ...     does_redirects = False
+
+        >>> _endpoint = Endpoint()
+        >>> import os
+        >>> from unittest import mock
+        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "heute"}):
+        ...     samples = code_samples(_endpoint, [], [], [])
+
+        >>> assert len(samples)
+
+    """
     env = _jinja_environment()
 
     return [{
@@ -498,6 +513,14 @@ def _jinja_environment() -> jinja2.Environment:
     We don't want to build all this stuff at the module-level as it is only needed when
     re-generating the SPEC file.
 
+    >>> class Endpoint:
+    ...     path = 'foo'
+    ...     method = 'get'
+    ...     content_type = 'application/json'
+    ...     request_schema = _get_schema('CreateHost')
+
+    >>> endpoint = Endpoint()
+
     >>> env = _jinja_environment()
     >>> result = env.get_template('curl').render(
     ...     hostname='localhost',
@@ -507,9 +530,10 @@ def _jinja_environment() -> jinja2.Environment:
     ...     path_params=[],
     ...     query_params=[],
     ...     header_params=[],
-    ...     request_endpoint='foo',
-    ...     request_method='get',
-    ...     request_schema=_get_schema('CreateHost'),
+    ...     endpoint=endpoint,
+    ...     request_endpoint=endpoint.path,
+    ...     request_method=endpoint.method,
+    ...     request_schema=_get_schema(endpoint.request_schema),
     ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
     ... )
     >>> assert '&' not in result, result

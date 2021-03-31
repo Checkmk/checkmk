@@ -245,8 +245,8 @@ class Endpoint:
         method: HTTPMethod = 'get',
         content_type: str = 'application/json',
         output_empty: bool = False,
-        response_schema: Optional[Type[Schema]] = None,
-        request_schema: Optional[Type[Schema]] = None,
+        response_schema: Optional[RawParameter] = None,
+        request_schema: Optional[RawParameter] = None,
         path_params: Optional[Sequence[RawParameter]] = None,
         query_params: Optional[Sequence[RawParameter]] = None,
         header_params: Optional[Sequence[RawParameter]] = None,
@@ -339,12 +339,14 @@ class Endpoint:
 
         path_schema = to_schema(self.path_params)
         query_schema = to_schema(self.query_params)
+        response_schema = to_schema(self.response_schema)
+        request_schema = to_schema(self.request_schema)
 
         self.func = func
 
         wrapped = self.wrap_with_validation(
-            self.request_schema,
-            self.response_schema,
+            request_schema,
+            response_schema,
             header_schema,
             path_schema,
             query_schema,

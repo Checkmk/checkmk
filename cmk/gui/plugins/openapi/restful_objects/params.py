@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import warnings
+from collections import abc
 from typing import Dict, ItemsView, List, Optional, Sequence, Type, Union
 
 from marshmallow import fields, Schema
-from marshmallow.schema import SchemaMeta
 
 from cmk.gui.plugins.openapi.restful_objects.datastructures import denilled
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -142,7 +143,8 @@ def to_openapi(
     return result
 
 
-def to_schema(params: Optional[Sequence[RawParameter]]) -> Optional[Union[Type[Schema], type]]:
+def to_schema(
+        params: Optional[Union[Sequence[RawParameter], RawParameter]]) -> Optional[Type[Schema]]:
     """
     Examples:
 
@@ -155,6 +157,11 @@ def to_schema(params: Optional[Sequence[RawParameter]]) -> Optional[Union[Type[S
 
         >>> dict(to_schema([Foo])().declared_fields)  # doctest: +ELLIPSIS
         {'field': <fields.String(...)>}
+
+        >>> to_schema({
+        ...     'foo': fields.String(description="Foo")
+        ... })().declared_fields['foo'] # doctest: +ELLIPSIS
+        <fields.String(...)>
 
         >>> to_schema(to_openapi([{'name': fields.String(description="Foo")}], 'path'))
         <class 'marshmallow.schema.GeneratedSchema'>
@@ -175,17 +182,25 @@ def to_schema(params: Optional[Sequence[RawParameter]]) -> Optional[Union[Type[S
 
     Args:
         params:
+            The following types are supported:
+                * dicts with a "name" to "fields.Field" mapping.
+                * marshmallow schemas
+
+            Additonally a heterogenous sequence of one or more of those types is also supported
 
     Returns:
+        A marshmallow schema with all the fields unified
 
     """
-    if not params:
-        return None
-
-    def _validate_fields(dict_):
+    def _validate_fields(name, dict_):
         for key, field in dict_.items():
             if 'description' not in field.metadata:
-                raise ValueError(f"Field {key} has no description. {dict_!r}")
+                if name.startswith("BI"):
+                    warnings.warn(f"{name}: field {key} has no description.")
+                else:
+                    raise ValueError(f"{name}: field {key} has no description."
+                                     f"\n\n{field.metadata!r}"
+                                     f"\n\n{dict_!r}")
 
     def _from_dict(dict_):
         needs_validating = False
@@ -194,26 +209,29 @@ def to_schema(params: Optional[Sequence[RawParameter]]) -> Optional[Union[Type[S
                 needs_validating = True
 
         if needs_validating:
-            _validate_fields(dict_)
-        return BaseSchema.from_dict(dict_)
+            _validate_fields('dict', dict_)
+        schema_class = BaseSchema.from_dict(dict_)
+        assert issubclass(schema_class, BaseSchema)
+        return schema_class
 
-    if isinstance(params, SchemaMeta):
-        _validate_fields(params().declared_fields)
-        return params
+    if not params:
+        return None
 
-    if isinstance(params, list):
-        p = {}
+    if isinstance(params, abc.Sequence):
+        p: Dict[str, fields.Field] = {}
         for entry in params:
-            if isinstance(entry, SchemaMeta):
-                p.update(entry().declared_fields)
-            else:
+            if isinstance(entry, abc.Mapping):
                 p.update(entry)
+            else:
+                p.update(entry().declared_fields)
         return _from_dict(p)
 
-    if isinstance(params, dict):
+    if isinstance(params, abc.Mapping):
         return _from_dict(params)
 
-    raise ValueError(f"Unknown type {type(params)!r}: {params!r}")
+    schema = params()
+    _validate_fields(schema.__class__.__name__, schema.declared_fields)
+    return params
 
 
 def fill_out_path_template(

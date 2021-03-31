@@ -2023,6 +2023,13 @@ def _extract_check_plugins(
         if check_info_dict.get("service_description") is None:
             continue
         try:
+            if agent_based_register.is_registered_check_plugin(
+                    CheckPluginName(maincheckify(check_plugin_name))):
+                # implemented here instead of the agent based register so that new API code does not
+                # need to include any handling of legacy cases
+                raise ValueError(
+                    f'Legacy check plugin still exists for check plugin {check_plugin_name}. '
+                    'Please remove legacy plugin.')
             agent_based_register.add_check_plugin(
                 create_check_plugin_from_legacy(
                     check_plugin_name,

@@ -13,6 +13,7 @@ from six import ensure_str
 from testlib.base import Scenario  # type: ignore[import]
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
@@ -29,6 +30,9 @@ from cmk.base.caching import config_cache as _config_cache
 import cmk.base.config as config
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
+import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import ParsedSectionName, SNMPSectionPlugin
 
 
 def test_duplicate_hosts(monkeypatch):
@@ -2121,3 +2125,85 @@ class TestPackedConfigStore:
 ])
 def test_has_timespecific_params(params, expected_result):
     assert config.has_timespecific_params(params) is expected_result
+
+
+def test__extract_check_plugins(monkeypatch):
+    duplicate_plugin = {
+        "duplicate_plugin": {
+            "service_description": "blah",
+        },
+    }
+    registered_plugin = CheckPlugin(
+        CheckPluginName("duplicate_plugin"),
+        [],
+        "Duplicate Plugin",
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+    )
+
+    monkeypatch.setattr(
+        agent_based_register._config,
+        "registered_check_plugins",
+        {registered_plugin.name: registered_plugin},
+    )
+    monkeypatch.setattr(
+        config,
+        "check_info",
+        duplicate_plugin,
+    )
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: True,
+    )
+
+    assert agent_based_register.is_registered_check_plugin(CheckPluginName("duplicate_plugin"))
+    with pytest.raises(MKGeneralException):
+        config._extract_check_plugins(validate_creation_kwargs=False)
+
+
+def test__extract_agent_and_snmp_sections(monkeypatch):
+    duplicate_plugin = {  # type: ignore
+        "duplicate_plugin": {},
+    }
+    registered_section = SNMPSectionPlugin(
+        SectionName("duplicate_plugin"),
+        ParsedSectionName("duplicate_plugin"),
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+        None,  # type: ignore  # irrelevant for test
+    )
+
+    monkeypatch.setattr(
+        agent_based_register._config,
+        "registered_snmp_sections",
+        {registered_section.name: registered_section},
+    )
+    monkeypatch.setattr(
+        config,
+        "check_info",
+        duplicate_plugin,
+    )
+    monkeypatch.setattr(
+        cmk.utils.debug,
+        "enabled",
+        lambda: True,
+    )
+
+    assert agent_based_register.is_registered_section_plugin(SectionName("duplicate_plugin"))
+    config._extract_agent_and_snmp_sections(validate_creation_kwargs=False)
+    assert agent_based_register.get_section_plugin(
+        SectionName("duplicate_plugin")) == registered_section

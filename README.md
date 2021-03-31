@@ -29,6 +29,7 @@ which is not a pure bugfix will be closed. Instead of creating a PR, please cons
 check plugins, agent plugins, special agents or notification plugins via the
 [Checkmk Exchange](https://exchange.checkmk.com/).**
 
+For pure bugfixes, have a look at our [contribution guidelines](CONTRIBUTING.md).
 <!-- Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md). -->
 
 ## Building on your own packages

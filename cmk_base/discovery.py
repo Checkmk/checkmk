@@ -280,6 +280,7 @@ def discover_on_host(config_cache,
         "clustered_new": 0,
         "clustered_old": 0,
         "clustered_vanished": 0,
+        "clustered_ignored": 0,
     }
 
     if hostname not in config_cache.all_active_hosts():

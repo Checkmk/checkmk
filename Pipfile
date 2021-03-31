@@ -47,7 +47,7 @@ setuptools_scm = "==4.1.2"  # needed by various setup.py
 setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.15.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.1"  # direct dependency
-PyYAML = "==5.3.1"  # needed by vcrpy
+PyYAML = "==5.4.1"  # needed by vcrpy
 wrapt = "==1.12.1"  # needed by vcrpy
 yarl = "==1.6.0"  # needed by vcrpy
 multidict = "==4.7.6"  # needed by yarl

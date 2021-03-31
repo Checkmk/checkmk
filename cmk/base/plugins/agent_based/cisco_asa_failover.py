@@ -40,6 +40,7 @@ class Section:
     local_status: str
     local_status_detail: str
     failover_link_status: str
+    failover_link_name: str
     remote_status: str
 
 
@@ -52,18 +53,21 @@ def parse_cisco_asa_failover(string_table: StringTable) -> Optional[Section]:
             failover['local_status_detail'] = detail
         elif 'failover' in role.lower():
             failover['failover_link_status'] = status
+            failover['failover_link_name'] = detail
         else:
             failover['remote_status'] = status
 
-    if len(failover) == 5:
+    try:
         return Section(
             local_role=failover['local_role'],
             local_status=failover['local_status'],
             local_status_detail=failover['local_status_detail'],
             failover_link_status=failover['failover_link_status'],
+            failover_link_name=failover['failover_link_name'],
             remote_status=failover['remote_status'],
         )
-    return None
+    except KeyError:
+        return None
 
 
 def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
@@ -105,22 +109,22 @@ def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> C
 
     if section.local_status not in ['9', '10']:  # local not active/standby
         yield Result(
-            state=State.WARN,
+            state=State(params['not_active_standby_state']),
             summary=f'Unhandled state {_get_cisco_asa_state_name(section.local_status)} reported',
         )
 
     if section.remote_status not in ['9', '10']:  # remote not active/standby
         yield Result(
-            state=State.WARN,
-            summary=
-            f'Unhandled state {_get_cisco_asa_state_name(section.remote_status)} for remote device reported',
+            state=State(params['not_active_standby_state']),
+            summary=(f'Unhandled state {_get_cisco_asa_state_name(section.remote_status)} for '
+                     'remote device reported'),
         )
 
-    if section.failover_link_status != '2':  # up
+    if section.failover_link_status != '2':  # not up
         yield Result(
-            state=State.CRIT,
-            summary=
-            f'Failover link state is {_get_cisco_asa_state_name(section.failover_link_status)}',
+            state=State(params['failover_link_state']),
+            summary=(f'Failover link {section.failover_link_name} state is '
+                     f'{_get_cisco_asa_state_name(section.failover_link_status)}'),
         )
 
 
@@ -138,18 +142,21 @@ register.snmp_section(
     detect=any_of(
         startswith('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco pix security'),
+        startswith('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
     ),
 )
 
 register.check_plugin(
     name='cisco_asa_failover',
-    service_name='Cluster Status',
+    service_name='Failover state',
     discovery_function=discovery_cisco_asa_failover,
     check_function=check_cisco_asa_failover,
     check_default_parameters={
         'primary': 'active',
         'secondary': 'standby',
         'failover_state': 1,
+        'failover_link_state': 2,
+        'not_active_standby_state': 1,
     },
     check_ruleset_name='cisco_asa_failover',
 )

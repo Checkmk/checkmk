@@ -937,6 +937,7 @@ _old_service_descriptions = {
     "barracuda_mailqueues": lambda item: (False, "Mail Queue"),
     "brocade_sys_mem": "Memory used",
     "casa_cpu_temp": "Temperature %s",
+    "cisco_asa_failover": "Cluster Status",
     "cisco_mem": "Mem used %s",
     "cisco_mem_asa": "Mem used %s",
     "cisco_mem_asa64": "Mem used %s",

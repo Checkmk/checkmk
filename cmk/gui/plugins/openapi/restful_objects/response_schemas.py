@@ -177,10 +177,13 @@ class ObjectCollectionMember(ObjectMemberBase):
 
 
 class ObjectProperty(Linkable):
-    id = fields.String()
+    id = fields.String(description="The unique name of this property, local to this domain type.")
     # FIXME: This is the only use-case right now. Needs to be expanded when this is used more.
-    value = fields.List(fields.String())
-    extensions = fields.Dict()
+    value = fields.List(
+        fields.String(),
+        description="The value of the property. In this case a list.",
+    )
+    extensions = fields.Dict(description="Additional attributes alongside the property.",)
 
 
 class ObjectPropertyMember(ObjectMemberBase):
@@ -208,12 +211,17 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType: fields.Field = fields.String()
-    extensions = fields.Dict(example={'some': 'values'})
+    resultType: fields.Field = fields.String(
+        enum=['object', 'scalar'],
+        description="The type of the result.",
+    )
+    extensions = fields.Dict(
+        example={'some': 'values'},
+        description="Some attributes alongside the result.",
+    )
 
 
 class ActionResultObject(ActionResultBase):
-    resultType = fields.Constant('object')
     result = fields.Nested(
         Schema.from_dict(
             {
@@ -227,11 +235,12 @@ class ActionResultObject(ActionResultBase):
                 )
             },
             name='ActionResultObjectValue',
-        ))
+        ),
+        description="The result of the action. In this case, an object.",
+    )
 
 
 class ActionResultScalar(ActionResultBase):
-    resultType = fields.Constant('scalar')
     result = fields.Nested(
         Schema.from_dict(
             {
@@ -245,7 +254,9 @@ class ActionResultScalar(ActionResultBase):
                 )
             },
             name='ActionResultScalarValue',
-        ))
+        ),
+        description="The scalar result of the action.",
+    )
 
 
 class ActionResult(OneOfSchema):
@@ -256,17 +267,20 @@ class ActionResult(OneOfSchema):
     }
 
 
-class AttributeDict(plugins.ValueTypedDictSchema):
-    value_type = fields.String()
-
-
 class DomainObject(Linkable):
-    domainType: fields.Field = fields.String(required=True)
+    domainType: fields.Field = fields.String(
+        required=True,
+        description="The \"domain-type\" of the object.",
+    )
     # Generic things to ease development. Should be changed for more concrete schemas.
-    id = fields.String()
-    title = fields.String()
-    members = fields.Nested(ObjectMemberDict())
-    extensions = fields.Dict()
+    id = fields.String(description="The unique identifier for this domain-object type.",)
+    title = fields.String(description="A human readable title of this object. Can be used for "
+                          "user interfaces.",)
+    members = fields.Nested(
+        ObjectMemberDict(),
+        description="The container for external resources, like linked foreign objects or actions.",
+    )
+    extensions = fields.Dict(description="All the attributes of the domain object.")
 
 
 class FolderMembers(BaseSchema):
@@ -308,24 +322,21 @@ class MoveFolder(BaseSchema):
 
 
 class HostGroup(DomainObject):
-    domainType = fields.Constant(
-        "host_group",
-        required=True,
-    )
+    domainType = fields.Constant("host_group",
+                                 required=True,
+                                 description="The domain type of the object.")
 
 
 class ServiceGroup(DomainObject):
-    domainType = fields.Constant(
-        "service_group",
-        required=True,
-    )
+    domainType = fields.Constant("service_group",
+                                 required=True,
+                                 description="The domain type of the object.")
 
 
 class ContactGroup(DomainObject):
-    domainType = fields.Constant(
-        "contact_group",
-        required=True,
-    )
+    domainType = fields.Constant("contact_group",
+                                 required=True,
+                                 description="The domain type of the object.")
 
 
 class Configuration(DomainObject):
@@ -379,31 +390,48 @@ class ConcreteHostTagGroup(DomainObject):
     domainType = fields.Constant(
         "host_tag_group",
         required=True,
+        description="The domain type of the object.",
     )
 
 
 class DomainObjectCollection(Linkable):
-    id = fields.String()
-    domainType: fields.Field = fields.String()
-    value: fields.Field = fields.Nested(CollectionItem, many=True)
-    extensions = fields.Dict()
+    id = fields.String(
+        description="The name of this collection.",
+        missing='all',
+    )
+    domainType: fields.Field = fields.String(
+        description="The domain type of the objects in the collection.")
+    title = fields.String(description="A human readable title of this object. Can be used for "
+                          "user interfaces.",)
+    value: fields.Field = fields.Nested(
+        CollectionItem,
+        description="The collection itself. Each entry in here is part of the collection.",
+        many=True,
+    )
+    extensions = fields.Dict(description="Additional attributes alongside the collection.")
 
 
 class FolderCollection(DomainObjectCollection):
-    domainType = fields.Constant("folder_config")
-    value = fields.List(fields.Nested(ConcreteFolder))
+    domainType = fields.Constant(
+        "folder_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(ConcreteFolder),
+        description="A list of folder objects.",
+    )
 
 
 class User(Linkable):
-    userName = fields.Str(description="a unique user name")
+    userName = fields.Str(description="A unique user name.")
     friendlyName = fields.Str(
         required=True,
-        description="(optional) the user's name in a form suitable to be rendered in a UI.",
+        description="The user's name in a form suitable to be rendered in a UI.",
     )
-    email = fields.Str(description="(optional) the user's email address, if known")
+    email = fields.Str(description="(optional) the user's email address, if known.")
     roles = fields.List(
         fields.Str(),
-        description="list of unique role names that apply to this user (can be empty).",
+        description="List of unique role names that apply to this user (can be empty).",
     )
 
 

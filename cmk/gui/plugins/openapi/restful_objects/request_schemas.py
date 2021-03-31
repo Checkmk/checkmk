@@ -109,6 +109,7 @@ class BulkCreateHost(BaseSchema):
             "attributes": {},
         }],
         uniqueItems=True,
+        description="A list of host entries.",
     )
 
 
@@ -169,6 +170,7 @@ class BulkUpdateHost(BaseSchema):
             "host_name": "example.com",
             "attributes": {}
         }],
+        description="A list of host entries.",
     )
 
 
@@ -220,8 +222,8 @@ class InputHostGroup(InputGroup):
         group_type='host',
         example='windows',
         required=True,
-        description="A name used as identifier",
         should_exist=False,
+        description="A name used as identifier",
     )
     alias = fields.String(
         description="The name used for displaying in the GUI.",
@@ -238,6 +240,7 @@ class BulkInputHostGroup(BaseSchema):
             'alias': 'Windows Servers',
         }],
         uniqueItems=True,
+        description="A list of host group entries.",
     )
 
 
@@ -262,18 +265,25 @@ class UpdateHostGroup(BaseSchema):
 
 class BulkUpdateHostGroup(BaseSchema):
     """Bulk update host groups"""
-    entries = fields.List(fields.Nested(UpdateHostGroup),
-                          example=[{
-                              'name': 'windows',
-                              'attributes': {
-                                  'alias': 'Windows Servers',
-                              },
-                          }])
+    entries = fields.List(
+        fields.Nested(UpdateHostGroup),
+        example=[{
+            'name': 'windows',
+            'attributes': {
+                'alias': 'Windows Servers',
+            },
+        }],
+        description="A list of host group entries.",
+    )
 
 
 class InputContactGroup(InputGroup):
     """Creating a contact group"""
-    name = fields.String(required=True, example="OnCall")
+    name = fields.String(
+        required=True,
+        example="OnCall",
+        description="The name of the contact group.",
+    )
     alias = fields.String(description="The name used for displaying in the GUI.",
                           example="Not on Sundays.")
 
@@ -288,6 +298,7 @@ class BulkInputContactGroup(BaseSchema):
             "alias": "Not on Sundays",
         }],
         uniqueItems=True,
+        description="A collection of contact group entries.",
     )
 
 
@@ -305,13 +316,16 @@ class UpdateContactGroup(BaseSchema):
 
 class BulkUpdateContactGroup(BaseSchema):
     """Bulk update contact groups"""
-    entries = fields.List(fields.Nested(UpdateContactGroup),
-                          example=[{
-                              'name': 'OnCall',
-                              'attributes': {
-                                  'alias': 'Not on Sundays',
-                              },
-                          }])
+    entries = fields.List(
+        fields.Nested(UpdateContactGroup),
+        example=[{
+            'name': 'OnCall',
+            'attributes': {
+                'alias': 'Not on Sundays',
+            },
+        }],
+        description="A list of contact group entries.",
+    )
 
 
 class InputServiceGroup(InputGroup):
@@ -336,6 +350,7 @@ class BulkInputServiceGroup(BaseSchema):
             "alias": "Environment Sensors",
         }],
         uniqueItems=True,
+        description="A list of service group entries.",
     )
 
 
@@ -347,13 +362,16 @@ class UpdateServiceGroup(BaseSchema):
 
 class BulkUpdateServiceGroup(BaseSchema):
     """Bulk update service groups"""
-    entries = fields.List(fields.Nested(UpdateServiceGroup),
-                          example=[{
-                              'name': 'windows',
-                              'attributes': {
-                                  'alias': 'Windows Servers',
-                              },
-                          }])
+    entries = fields.List(
+        fields.Nested(UpdateServiceGroup),
+        example=[{
+            'name': 'windows',
+            'attributes': {
+                'alias': 'Windows Servers',
+            },
+        }],
+        description="A list of service group entries.",
+    )
 
 
 class CreateFolder(BaseSchema):
@@ -417,10 +435,9 @@ class BulkCreateFolder(BaseSchema):
 
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
-    title = fields.String(
-        example="Virtual Servers.",
-        required=False,
-    )
+    title = fields.String(example="Virtual Servers.",
+                          required=False,
+                          description="The title of the folder. Used in the GUI.")
     attributes = fields.attributes_field(
         'folder',
         'update',
@@ -453,11 +470,14 @@ class UpdateFolderEntry(UpdateFolder):
 
 
 class BulkUpdateFolder(BaseSchema):
-    entries = fields.Nested(UpdateFolderEntry,
-                            many=True,
-                            example=[{
-                                'remove_attributes': ['tag_foobar'],
-                            }])
+    entries = fields.Nested(
+        UpdateFolderEntry,
+        many=True,
+        example=[{
+            'remove_attributes': ['tag_foobar'],
+        }],
+        description="A list of folder entries.",
+    )
 
 
 class MoveFolder(BaseSchema):
@@ -662,6 +682,7 @@ class InputTimePeriod(BaseSchema):
                 'end': '18:00'
             }]
         }],
+        description="A list of additional time ranges to be added.",
     )
 
     exclude = fields.List(  # type: ignore[assignment]
@@ -672,7 +693,7 @@ class InputTimePeriod(BaseSchema):
             should_exist=True,
         ),
         example=["alias"],
-        description="The collection of time period aliases whose periods are excluded",
+        description="A list of time period aliases whose periods are excluded.",
         required=False,
     )
 
@@ -706,6 +727,7 @@ class UpdateTimePeriod(BaseSchema):
                 'end': '18:00'
             }]
         }],
+        description="A list of additional time ranges to be added.",
     )
 
 
@@ -1245,6 +1267,7 @@ class CreateUser(BaseSchema):
         required=False,
         missing=dict,
         example={"disable": False},
+        description="",
     )
     # default language is not setting a key in dict
     language = fields.String(
@@ -1335,6 +1358,7 @@ class UpdateUser(BaseSchema):
         DisabledNotifications,
         required=False,
         example={"disabled": False},
+        description="",
     )
     # default language is not setting a key in dict
     language = fields.String(
@@ -1741,6 +1765,7 @@ class BulkDeleteDowntime(BaseSchema):
         ),
         required=True,
         example=[1120, 1121],
+        description="A list of downtime ids.",
     )
 
 
@@ -1749,6 +1774,7 @@ class BulkDeleteHost(BaseSchema):
         EXISTING_HOST_NAME,
         required=True,
         example=["example", "sample"],
+        description="A list of host names.",
     )
 
 
@@ -1770,6 +1796,7 @@ class BulkDeleteHostGroup(BaseSchema):
         ),
         required=True,
         example=["windows", "panels"],
+        description="A list of host group names.",
     )
 
 
@@ -1782,6 +1809,7 @@ class BulkDeleteServiceGroup(BaseSchema):
         ),
         required=True,
         example=["windows", "panels"],
+        description="A list of service group names.",
     )
 
 
@@ -1794,6 +1822,7 @@ class BulkDeleteContactGroup(BaseSchema):
         ),
         required=True,
         example=["windows", "panels"],
+        description="A list of contract group names.",
     )
 
 

@@ -14109,6 +14109,10 @@ msgstr "Erkenne einzelne Interfaces"
 msgid "Discovered by plugin"
 msgstr "Erkannt durch Plugin"
 
+#, fuzzy
+msgid "Discovered host label synchronization"
+msgstr "Entdeckte Host-Labels"
+
 msgid "Discovered host labels"
 msgstr "Entdeckte Host-Labels"
 
@@ -48038,6 +48042,10 @@ msgstr ""
 "Download von <a href=\"https://checkmk.de/download\">Checkmk<a> verwendet "
 "werden."
 
+#, fuzzy
+msgid "The synchronization finished."
+msgstr "Die Synchronisation ist fehlgeschlagen."
+
 msgid "The syslog facility does not match"
 msgstr "Das Syslog-Modul passt nicht"
 
@@ -60615,8 +60623,16 @@ msgstr "[%s] Ausnahme: %s"
 msgid "[%s] Finished sync for connection"
 msgstr "[%s] Synchronisation für Verbindung abgeschlossen"
 
+#, fuzzy, python-format
+msgid "[%s] Finished sync for site"
+msgstr "[%s] Synchronisation für Verbindung abgeschlossen"
+
 #, python-format
 msgid "[%s] Starting sync for connection"
+msgstr "[%s] Synchronisation für Verbindung gestartet"
+
+#, fuzzy, python-format
+msgid "[%s] Starting sync for site"
 msgstr "[%s] Synchronisation für Verbindung gestartet"
 
 msgid "_customer_switch has an invalid format"

@@ -13658,6 +13658,10 @@ msgstr "servicii"
 msgid "Discovered by plugin"
 msgstr "Nici o schimbare"
 
+#, fuzzy
+msgid "Discovered host label synchronization"
+msgstr "Nici o schimbare"
+
 msgid "Discovered host labels"
 msgstr ""
 
@@ -46126,6 +46130,10 @@ msgid ""
 "checkmk.de/download\">Checkmk<a>."
 msgstr ""
 
+#, fuzzy
+msgid "The synchronization finished."
+msgstr "foloseste descrierea"
+
 msgid "The syslog facility does not match"
 msgstr ""
 
@@ -56501,7 +56509,15 @@ msgid "[%s] Finished sync for connection"
 msgstr ""
 
 #, fuzzy, python-format
+msgid "[%s] Finished sync for site"
+msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy, python-format
 msgid "[%s] Starting sync for connection"
+msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy, python-format
+msgid "[%s] Starting sync for site"
 msgstr "Portul TCP pentru conexiune"
 
 msgid "_customer_switch has an invalid format"

@@ -35,24 +35,56 @@ visualization for direct interaction with the API's resources).
 As specified by the `Content-Type` of `application/json`, the response payload is serialized with
 JSON and encoded in UTF-8.
 
-## JSON envelope attributes
+## JSON envelope attributes for objects
 
 All objects are wrapped in a JSON structure called an "Domain Object" which take the following
 form:
 
-    {"domainType": "domain type identifier",
-     "instanceId": "string to uniquely identify domain object",
-     "title": "Human readable header for domain object",
-     "members": {},
-     "links": [],
-     "extensions": {}}
+    {
+        "domainType": <domain type>,
+        "instanceId": <string to uniquely identify domain object>,
+        "title": <human readable header>,
+        "links": [<relation link>, ...],
+        "extensions": {
+            <attribute name>: <attribute value>,
+            ...
+        },
+        "members": {
+            <member name>: <member definition>,
+            ...
+        }
+     }
 
 The collections `members`, `extensions` and `links` are defined as such:
 
- * members - this contains all relationships to other objects or collections which are present on
-   this domain object
- * extensions - this contains all key-values pairs which are direct attributes of the domain object
- * links - holds a collection of links to other resources or actions
+ * domainType - The type of object this refers to, e.g. `host`, and `service`.
+ * instanceId - The globally unique identifier for this particular object.
+ * title - A human readable string which is only relevant for user interfaces.
+ * links - A collection of links to other resources or actions.
+ * extensions - The data container for all direct attributes of the object.
+ * members - The container for external resources, like linked foreign objects or actions.
+
+### Note
+
+Previously, an attribute called `members` has been used in these objects, but it will no longer be
+used. All relations to other objects will be listed in the `links` attribute.
+
+## JSON envelope for collections
+
+    {
+        "domainType": <domain type>,
+        "instanceId": <string to uniquely identify domain object>,
+        "title": <human readable header>,
+        "links": [<relation link>, ...],
+        "extensions": {
+            <attribute name>: <attribute value>,
+            ...
+        },
+        "members": {
+            <member name>: <member definition>,
+            ...
+        }
+    }
 
 ## Link relations
 

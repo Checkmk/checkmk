@@ -6,10 +6,10 @@
 """This is small and primitive script to test usage of the memory by bin/fetcher.
 Configure host heute with desirable datasource.
 Copy this file to the $OMD_ROOT/bin and run the script with redirecting stdout to null.
-If no memory leaks found it is expected to find 0 in the last column at the end of tests.
-Second column shows virtual machine size.
-Third column - difference in RAM usage in current tick.
-You can also roughly estimate performance of the chosen datasource
+If no memory leaks found it is expected to find 0 in the last column at the end of testing.
+Second column shows size in memory of the Python VM.
+Third column shows the difference in RAM usage after every tick.
+You can also roughly estimate performance of the chosen datasource.
 """
 
 import argparse
@@ -50,11 +50,11 @@ def parse_arguments() -> argparse.Namespace:
                             description=textwrap.dedent("""\
     To use 
     \t1. copy fetcher_test to the $OMD_ROOT/bin 
-    \t2. cd bin
-    \t3. fetcher_arm_usage_test > /dev/null.
+    \t2. cd $OMD_ROOT/bin
+    \t3. fetcher_ram_usage_test > /dev/null.
     NOTES:
-    - Based on the fetcher code.
-    - Expected that site heute exists. 
+    - Based on the bin/fetcher code.
+    - It is expected that host heute exists. 
     - Last column shows average memory diff per 100 calls of fetcher. Normally you should have 0 here.
     """))
 

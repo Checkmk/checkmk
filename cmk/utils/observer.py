@@ -10,8 +10,11 @@ from typing import Optional, Final, Dict
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import HostName
-from cmk.utils.caching import config_cache
-from cmk.utils.caching import runtime_cache
+
+# TODO(ml): move caching to utils too
+from cmk.base.caching import config_cache  # pylint: disable=cmk-module-layer-violation
+from cmk.base.caching import runtime_cache  # pylint: disable=cmk-module-layer-violation
+
 import cmk.utils.render as render
 import cmk.utils.misc
 

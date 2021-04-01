@@ -27,8 +27,8 @@ from cmk.utils.exceptions import MKTerminate
 from cmk.utils.fetcher_crash_reporting import create_fetcher_crash_dump
 from cmk.utils.type_defs import ConfigSerial
 
-import cmk.core_helpers.controller as controller  # pylint: disable=cmk-module-layer-violation
-from cmk.core_helpers.protocol import CMCMessage  # pylint: disable=cmk-module-layer-violation
+import cmk.fetchers.controller as controller  # pylint: disable=cmk-module-layer-violation
+from cmk.fetchers.protocol import CMCMessage  # pylint: disable=cmk-module-layer-violation
 
 import cmk.base.utils  # pylint: disable=cmk-module-layer-violation
 

@@ -1,0 +1,12 @@
+Title: f5_bigip_fans: could not detect speed when speed is equal to 0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617278416
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The f5_bigip_fan check returned the status message "could not detect speed" in
+the event that speed was 0 RPM. This has been fixed.

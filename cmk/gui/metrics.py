@@ -23,7 +23,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
 import cmk.utils
 import cmk.utils.plugin_registry
 import cmk.utils.render
-import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
 import cmk.gui.pages
@@ -45,7 +44,6 @@ from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unus
     render_color_icon, replace_expressions, scalar_colors, scale_symbols, T, TB, translate_metrics,
     translated_metrics_from_row, TranslatedMetrics, unit_info,
 )
-from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = Union[str, int, float]
@@ -645,45 +643,3 @@ def page_graph_dashlet() -> None:
     custom_graph_render_options = json.loads(html.request.get_str_input_mandatory("render"))
 
     host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
-
-
-#.
-#   .--Metrics Table-------------------------------------------------------.
-#   |      __  __      _        _            _____     _     _             |
-#   |     |  \/  | ___| |_ _ __(_) ___ ___  |_   _|_ _| |__ | | ___        |
-#   |     | |\/| |/ _ \ __| '__| |/ __/ __|   | |/ _` | '_ \| |/ _ \       |
-#   |     | |  | |  __/ |_| |  | | (__\__ \   | | (_| | |_) | |  __/       |
-#   |     |_|  |_|\___|\__|_|  |_|\___|___/   |_|\__,_|_.__/|_|\___|       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Renders a simple table with all metrics of a host or service        |
-#   '----------------------------------------------------------------------'
-
-
-def render_metrics_table(translated_metrics: TranslatedMetrics, host_name: str,
-                         service_description: str) -> str:
-    # TODO: Don't paste together strings by hand, use our HTML utilities.
-    output = "<table class=metricstable>"
-    for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
-        output += "<tr>"
-        output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
-        output += "<td>%s:</td>" % metric["title"]
-        output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
-        if not cmk_version.is_raw_edition():
-            output += "<td>"
-            output += str(
-                html.render_popup_trigger(
-                    html.render_icon("menu",
-                                     title=_("Add this metric to dedicated graph"),
-                                     cssclass="iconbutton"),
-                    ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                    method=MethodAjax(endpoint="add_metric_to_graph",
-                                      url_vars=[
-                                          ("host", host_name),
-                                          ("service", service_description),
-                                          ("metric", metric_name),
-                                      ])))
-            output += "</td>"
-        output += "</tr>"
-    output += "</table>"
-    return output

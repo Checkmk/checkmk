@@ -16,6 +16,7 @@ from cmk.utils.render import approx_age
 import cmk.utils.man_pages as man_pages
 from cmk.utils.defines import short_service_state_name, short_host_state_name
 from cmk.utils.type_defs import Timestamp
+import cmk.utils.version as cmk_version
 
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
@@ -76,6 +77,8 @@ from cmk.gui.plugins.views.graphs import (
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -569,8 +572,36 @@ class PainterSvcMetrics(Painter):
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
-        return "", metrics.render_metrics_table(translated_metrics, row["host_name"],
-                                                row["service_description"])
+        return "", self._render_metrics_table(translated_metrics, row["host_name"],
+                                              row["service_description"])
+
+    def _render_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
+                              service_description: str) -> str:
+        # TODO: Don't paste together strings by hand, use our HTML utilities.
+        output = "<table class=metricstable>"
+        for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
+            output += "<tr>"
+            output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
+            output += "<td>%s:</td>" % metric["title"]
+            output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
+            if not cmk_version.is_raw_edition():
+                output += "<td>"
+                output += str(
+                    html.render_popup_trigger(
+                        html.render_icon("menu",
+                                         title=_("Add this metric to dedicated graph"),
+                                         cssclass="iconbutton"),
+                        ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
+                        method=MethodAjax(endpoint="add_metric_to_graph",
+                                          url_vars=[
+                                              ("host", host_name),
+                                              ("service", service_description),
+                                              ("metric", metric_name),
+                                          ])))
+                output += "</td>"
+            output += "</tr>"
+        output += "</table>"
+        return output
 
 
 # TODO: Use a parameterized painter for this instead of 10 painter classes

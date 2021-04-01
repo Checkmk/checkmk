@@ -52,7 +52,6 @@ def parse_f5_bigip_fans(info):
 
 
 def inventory_f5_bigip_fans(parsed):
-    inventory = []
     for item in parsed.keys():
         yield item, "f5_bigip_fans_default_levels"
 

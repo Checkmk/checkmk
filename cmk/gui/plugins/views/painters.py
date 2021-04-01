@@ -342,7 +342,7 @@ class PainterSiteIcon(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row.get("site") and config.use_siteicons:
-            return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
+            return None, html.render_img("icons/site-%s-24.png" % row["site"], class_="siteicon")
         return None, ""
 
 
@@ -520,9 +520,12 @@ class PainterSvcLongPluginOutput(Painter):
         if 0 < max_len < len(long_output):
             long_output = long_output[:max_len] + "..."
 
-        return paint_stalified(
-            row,
-            format_plugin_output(long_output, row).replace('\\n', '<br>').replace('\n', '<br>'))
+        content = format_plugin_output(long_output, row)
+
+        # In long output we get newlines which should also be displayed in the GUI
+        content.value = content.value.replace('\\n', '<br>').replace('\n', '<br>')
+
+        return paint_stalified(row, content)
 
 
 @painter_registry.register
@@ -572,21 +575,21 @@ class PainterSvcMetrics(Painter):
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
-        return "", self._render_metrics_table(translated_metrics, row["host_name"],
-                                              row["service_description"])
+        with html.plugged():
+            self._show_metrics_table(translated_metrics, row["host_name"],
+                                     row["service_description"])
+            return "", HTML(html.drain())
 
-    def _render_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
-                              service_description: str) -> str:
-        # TODO: Don't paste together strings by hand, use our HTML utilities.
-        output = "<table class=metricstable>"
+    def _show_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
+                            service_description: str) -> None:
+        html.open_table(class_="metricstable")
         for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
-            output += "<tr>"
-            output += "<td class=color>%s</td>" % render_color_icon(metric["color"])
-            output += "<td>%s:</td>" % metric["title"]
-            output += "<td class=value>%s</td>" % metric["unit"]["render"](metric["value"])
+            html.open_tr()
+            html.td(render_color_icon(metric["color"]), class_="color")
+            html.td("%s:" % metric["title"])
+            html.td(metric["unit"]["render"](metric["value"]), class_="value")
             if not cmk_version.is_raw_edition():
-                output += "<td>"
-                output += str(
+                html.td(
                     html.render_popup_trigger(
                         html.render_icon("menu",
                                          title=_("Add this metric to dedicated graph"),
@@ -598,10 +601,8 @@ class PainterSvcMetrics(Painter):
                                               ("service", service_description),
                                               ("metric", metric_name),
                                           ])))
-                output += "</td>"
-            output += "</tr>"
-        output += "</table>"
-        return output
+            html.close_tr()
+        html.close_table()
 
 
 # TODO: Use a parameterized painter for this instead of 10 painter classes
@@ -1427,18 +1428,17 @@ class PainterCheckManpage(Painter):
         if page is None:
             return "", _("Man page %s not found.") % checktype
 
-        description = page["header"]["description"]
-        return "", description.replace("<", "&lt;") \
-                              .replace(">", "&gt;") \
-                              .replace("{", "<b>") \
-                              .replace("}", "</b>") \
-                              .replace("&lt;br&gt;", "<br>")
+        description = escaping.escape_attribute(page["header"]["description"]) \
+            .replace("{", "<b>")  \
+            .replace("}", "</b>")  \
+            .replace("&lt;br&gt;", "<br>")
+        return "", HTML(description)
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
-    text = ", ".join(
-        ["<i>%s</i>: %s" % (a, escaping.escape_attribute(c)) for _id, a, c in comments])
+    text = HTML(", ").join(
+        [html.render_i(a) + ": %s" % escaping.escape_attribute(c) for _id, a, c in comments])
     return "", text
 
 
@@ -1631,7 +1631,7 @@ def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) ->
     for varname, value in items:
         if varname not in blacklist:
             rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
-    return '', "%s" % html.render_table(HTML().join(rows))
+    return '', html.render_table(HTML().join(rows))
 
 
 @painter_registry.register
@@ -2350,7 +2350,7 @@ class PainterHostBlack(Painter):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["host_state"]
         if state != 0:
-            return "nobr", "<div class=hostdown>%s</div>" % row["host_name"]
+            return "nobr", html.render_div(row["host_name"], class_="hostdown")
         return "nobr", row["host_name"]
 
 
@@ -4858,7 +4858,7 @@ class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
-        return "", "<br>".join(["%s: %s" % e for e in sorted(entries)])
+        return "", html.render_br().join(["%s: %s" % e for e in sorted(entries)])
 
     def _get_entries(self, row):
         entries = []

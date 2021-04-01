@@ -34,9 +34,9 @@ if TYPE_CHECKING:
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(output: CellContent,
+def format_plugin_output(output: str,
                          row: 'Optional[Row]' = None,
-                         shall_escape: bool = True) -> str:
+                         shall_escape: bool = True) -> HTML:
     assert not isinstance(output, dict)
     ok_marker = '<b class="stmark state0">OK</b>'
     warn_marker = '<b class="stmark state1">WARN</b>'
@@ -84,7 +84,7 @@ def format_plugin_output(output: CellContent,
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]
 
-    return output
+    return HTML(output)
 
 
 def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:

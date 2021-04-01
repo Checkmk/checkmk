@@ -1100,7 +1100,7 @@ def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
         cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
 
 
-def format_plugin_output(output: CellContent, row: Row) -> str:
+def format_plugin_output(output: str, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(output,
                                                    row,
                                                    shall_escape=config.escape_plugin_output)

@@ -270,7 +270,7 @@ class PainterServiceIcons(Painter):
     def printable(self) -> bool:
         return False
 
-    def group_by(self, row: Row) -> Tuple[str]:
+    def group_by(self, row: Row, cell: Cell) -> Tuple[str]:
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -297,7 +297,7 @@ class PainterHostIcons(Painter):
     def printable(self) -> bool:
         return False
 
-    def group_by(self, row: Row) -> Tuple[str]:
+    def group_by(self, row: Row, cell: Cell) -> Tuple[str]:
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1616,7 +1616,7 @@ class PainterServiceCustomVariables(Painter):
     def columns(self) -> List[ColumnName]:
         return ['service_custom_variables']
 
-    def group_by(self, row: Row) -> Tuple:
+    def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
         return tuple(row["service_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -1708,6 +1708,19 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
     @property
     def columns(self) -> List[ColumnName]:
         return ['host_custom_variable_names', 'host_custom_variable_values']
+
+    def group_by(self, row: Row, cell: Cell) -> Union[str, Tuple[str, ...]]:
+        parameters: Optional[Dict[str, str]] = cell.painter_parameters()
+        if parameters is None:
+            return ''
+        custom_variable_name = parameters['ident']
+        try:
+            index = row['host_custom_variable_names'].index(custom_variable_name.upper())
+        except ValueError:
+            # group all hosts without this custom variable into a single group.
+            # this group does not have a headline.
+            return ''
+        return row['host_custom_variable_values'][index]
 
     @property
     def _default_title(self) -> str:
@@ -2938,7 +2951,7 @@ class PainterHostGroupMemberlist(Painter):
     def columns(self) -> List[ColumnName]:
         return ['host_groups']
 
-    def group_by(self, row):
+    def group_by(self, row: Row, cell: Cell) -> Tuple[str, ...]:
         return tuple(row["host_groups"])
 
     @property
@@ -3157,7 +3170,7 @@ class PainterHostCustomVariables(Painter):
     def columns(self) -> List[ColumnName]:
         return ['host_custom_variables']
 
-    def group_by(self, row):
+    def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
@@ -4632,8 +4645,8 @@ class PainterLogDate(Painter):
     def columns(self) -> List[ColumnName]:
         return ['log_time']
 
-    def group_by(self, row):
-        return _paint_day(row["log_time"])[1]
+    def group_by(self, row: Row, cell: Cell) -> str:
+        return str(_paint_day(row["log_time"])[1])
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_day(row["log_time"])

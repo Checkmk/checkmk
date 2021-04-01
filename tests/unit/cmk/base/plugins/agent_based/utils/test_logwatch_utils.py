@@ -13,8 +13,9 @@ from typing import Counter
 def test_logwatch_reclassify(monkeypatch):
     patterns = {
         "reclassify_patterns": [
-            ("3", r"\Error", ""),
+            ("3", r"\\Error", ""),
             ("2", r"foobar", ""),
+            ("2", r"bla.blup.bob.exe\)", ""),
         ],
     }
     counter: Counter[int] = Counter()
@@ -23,3 +24,4 @@ def test_logwatch_reclassify(monkeypatch):
     assert reclassify(counter, patterns, "foobar", "0") == "2"
     assert reclassify(counter, patterns, "\Error", "0") == "3"  # pylint: disable=anomalous-backslash-in-string
     assert reclassify(counter, patterns, "\Error1337", "0") == "3"  # pylint: disable=anomalous-backslash-in-string
+    assert reclassify(counter, patterns, "bla.blup.bob.exe)", "0") == "2"

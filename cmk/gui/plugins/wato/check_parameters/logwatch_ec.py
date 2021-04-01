@@ -78,6 +78,10 @@ def _valuespec_logwatch_rules():
                        'be used for reclassifying a message. You can use the '
                        '<a href="wato.py?mode=pattern_editor">Logfile Pattern Analyzer</a> '
                        'to test the rules you defined here.</p>'
+                       '<p>Note that to match a special regex character in your patterns, you need to use a '
+                       'backslash to escape its special meaning. This is especially relevant for Windows file paths. '
+                       'For example, to match the Windows path "C:\\Users\\amdin\\Desktop", enter '
+                       '"C:\\\\Users\\\\admin\\\\Desktop".</p>'
                        '<p>Select "Ignore" as state to get the matching logs deleted. Other states will keep the '
                        'log entries but reclassify the state of them.</p>'),
                      add_label=_("Add pattern"),

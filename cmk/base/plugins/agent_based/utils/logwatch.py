@@ -82,12 +82,6 @@ def select_forwarded(
     }
 
 
-def escape_win_backslash(text: str) -> str:
-    if "\\" in text:
-        return text.replace("\\", "\\\\")
-    return text
-
-
 def reclassify(
     counts: Counter[int],
     patterns: Dict[str, Any],  # all I know right now :-(
@@ -98,7 +92,8 @@ def reclassify(
     # Reclassify state if a given regex pattern matches
     # A match overrules the previous state->state reclassification
     for level, pattern, _ in patterns.get("reclassify_patterns", []):
-        reg = regex(escape_win_backslash(pattern), re.UNICODE)
+        # not necessary to validate regex: already done by GUI
+        reg = regex(pattern, re.UNICODE)
         if reg.search(text):
             # If the level is not fixed like 'C' or 'W' but a pair like (10, 20),
             # then we count how many times this pattern has already matched and

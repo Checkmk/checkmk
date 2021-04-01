@@ -10,6 +10,7 @@ import socket
 import time
 from enum import Enum
 from typing import (
+    Callable,
     Container,
     Counter,
     Dict,
@@ -907,6 +908,7 @@ def _get_host_services(
         ipaddress,
         parsed_sections_broker,
         discovery_parameters,
+        config.get_config_cache().host_of_clustered_service,
     )
 
     # Now add manual and active service and handle ignored services
@@ -919,6 +921,7 @@ def _get_node_services(
     ipaddress: Optional[HostAddress],
     parsed_sections_broker: ParsedSectionsBroker,
     discovery_parameters: DiscoveryParameters,
+    host_of_clustered_service: Callable[[HostName, str], str],
 ) -> ServicesTable:
 
     service_result = analyse_discovered_services(
@@ -930,14 +933,12 @@ def _get_node_services(
         only_new=True,
     )
 
-    config_cache = config.get_config_cache()
-
     return {
         service.id(): (
             _node_service_source(
                 check_source=check_source,
                 host_name=host_name,
-                cluster_name=config_cache.host_of_clustered_service(host_name, service.description),
+                cluster_name=host_of_clustered_service(host_name, service.description),
                 service=service,
             ),
             service,

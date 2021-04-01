@@ -303,7 +303,7 @@ def group_value(row: Row, group_cells: 'List[Cell]') -> Hashable:
     for cell in group_cells:
         painter = cell.painter()
 
-        group_by_val = painter.group_by(row)
+        group_by_val = painter.group_by(row, cell)
         if group_by_val is not None:
             group.append(group_by_val)
 
@@ -922,7 +922,11 @@ class Painter(metaclass=abc.ABCMeta):
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
-    def group_by(self, row: Row) -> Union[None, str, Tuple]:
+    def group_by(
+        self,
+        row: Row,
+        cell: 'Cell',
+    ) -> Union[None, str, Tuple[str, ...], Tuple[Tuple[str, str], ...]]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 
@@ -982,7 +986,7 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: spec["paint"](row),
-            "group_by": lambda self, row: self._spec.get("groupby"),
+            "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
             "printable": property(lambda s: s._spec.get("printable", True)),

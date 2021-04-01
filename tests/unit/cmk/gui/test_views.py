@@ -706,7 +706,7 @@ def test_legacy_register_painter(monkeypatch):
     assert painter.painter_options == ["opt1"]
     assert painter.printable is False
     assert painter.render(row={}, cell=dummy_cell) == ("abc", "xyz")
-    assert painter.group_by(row={}) == "xyz"
+    assert painter.group_by(row={}, cell=dummy_cell) == "xyz"
 
 
 # These tests make adding new elements needlessly painful.

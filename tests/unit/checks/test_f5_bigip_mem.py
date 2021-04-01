@@ -11,9 +11,9 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize("info, result", [
-    ([["", "", "", ""]], (None, None, None)),
-    ([["", 0, "", ""]], (None, None, None)),
-    ([[0, "", "", ""]], (None, None, None)),
+    ([["", "", "", ""]], (None, None, [])),
+    ([["", 0, "", ""]], (None, None, [])),
+    ([[0, "", "", ""]], (None, None, [])),
     ([[0, 0, "", ""]], (0.0, 0.0, [("total", {})])),
     ([[1, 0, "", ""]], (1.0, 0.0, [("total", {})])),
 ])
@@ -22,7 +22,7 @@ def test_f5_bigip_mem_discovery(info, result):
     check = Check("f5_bigip_mem")
     parsed = check.run_parse(info)
 
-    assert check.run_discovery(parsed) == items
+    assert list(check.run_discovery(parsed)) == items
 
     if items:
         assert parsed["total"] == (mem_total, mem_used)

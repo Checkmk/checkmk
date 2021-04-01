@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
 import abc
 import logging
 from typing import Optional, Final, Dict
@@ -21,6 +22,7 @@ import cmk.utils.misc
 __all__ = [
     "ABCResourceObserver",
     "AbstractMemoryObserver",
+    "FetcherMemoryObserver",
 ]
 
 
@@ -114,3 +116,15 @@ class AbstractMemoryObserver(ABCResourceObserver):
         self._warning("=== %s ====" % header)
         for varname, size_bytes in sorted(sizes.items(), key=lambda x: x[1], reverse=True)[:limit]:
             self._warning("%10s %s" % (render.fmt_bytes(size_bytes), varname))
+
+
+class FetcherMemoryObserver(AbstractMemoryObserver):
+    """Controls usage of the memory by the Fetcher.
+    Call sys.exit(14) if during call of check_resources() memory is overloaded.
+    The microcore is responsible for restart of Fetcher.
+    """
+    def check_resources(self, hostname: Optional[HostName]) -> None:
+        self._register_check(hostname)
+
+        if not self._validate_size():
+            sys.exit(14)

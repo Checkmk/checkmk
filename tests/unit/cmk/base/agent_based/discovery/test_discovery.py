@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name,protected-access
-from typing import Dict, Sequence, Set, NamedTuple, Tuple
+# pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+from typing import Dict, NamedTuple, Sequence, Set, Tuple
 
-# No stub files
-from testlib.base import Scenario  # type: ignore[import]
-from testlib.debug_utils import cmk_debug_enabled  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
+from testlib.base import Scenario
+from testlib.debug_utils import cmk_debug_enabled
+
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
@@ -21,24 +23,19 @@ from cmk.utils.type_defs import (
     SectionName,
     SourceType,
 )
-from cmk.utils.labels import DiscoveredHostLabelsStore
 
-from cmk.core_helpers.type_defs import NO_SELECTION
-
+import cmk.base.agent_based.discovery as discovery
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.autochecks as autochecks
+import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.discovery import _discovered_services
+from cmk.base.check_utils import Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.discovered_labels import (
-    ServiceLabel,
-    DiscoveredServiceLabels,
-    HostLabel,
-)
-
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
-import cmk.base.agent_based.discovery as discovery
-import cmk.base.autochecks as autochecks
+from cmk.core_helpers.type_defs import NO_SELECTION
 
 
 def test_discovered_service_init():
@@ -1314,3 +1311,54 @@ def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_te
 
     assert (DiscoveredHostLabelsStore(scenario.node2_hostname).load() ==
             discovery_test_case.on_cluster.expected_stored_labels_node2)
+
+
+def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
+
+    services = {
+        discovery_status: Service(
+            CheckPluginName(f"plugin_{discovery_status}"),
+            None,
+            "description",
+            {},
+        ) for discovery_status in (
+            "old",
+            "vanished",
+            "new",
+        )
+    }
+
+    monkeypatch.setattr(
+        _discovered_services,
+        "_load_existing_services",
+        lambda *args, **kwargs: [
+            services["old"],
+            services["vanished"],
+        ],
+    )
+
+    monkeypatch.setattr(
+        _discovered_services,
+        "_discover_services",
+        lambda *args, **kwargs: [
+            services["old"],
+            services["new"],
+        ],
+    )
+
+    assert discovery._get_node_services(
+        "horst",
+        None,
+        ParsedSectionsBroker({}),
+        discovery.DiscoveryParameters(
+            on_error="raise",
+            load_labels=True,
+            save_labels=True,
+            only_host_labels=False,
+        ),
+        lambda hn, _svcdescr: hn,
+    ) == {(service.check_plugin_name, None): (
+        discovery_status,
+        service,
+        ["horst"],
+    ) for discovery_status, service in services.items()}

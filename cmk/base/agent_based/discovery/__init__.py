@@ -930,7 +930,7 @@ def _get_node_services(
         parsed_sections_broker=parsed_sections_broker,
         discovery_parameters=discovery_parameters,
         run_plugin_names=EVERYTHING,
-        only_new=True,
+        only_new=False,
     )
 
     return {

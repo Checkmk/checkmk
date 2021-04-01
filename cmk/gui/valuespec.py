@@ -3763,7 +3763,8 @@ class AbsoluteDate(ValueSpec):
                 _("The type of the timestamp must be int or float, but is %s") % _type_name(value))
 
     def _validate_value(self, value, varprefix):
-        if (not self._allow_empty and value is None) or value < 0 or int(value) > (2**31 - 1):
+        if (not self._allow_empty and value is None) or (value is not None and
+                                                         (value < 0 or int(value) > (2**31 - 1))):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
 
 

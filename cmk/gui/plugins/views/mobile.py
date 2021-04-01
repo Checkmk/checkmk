@@ -731,11 +731,13 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
             if n > 0 and n % num_columns == 0:
                 html.close_tr()
                 html.open_tr(class_="%s0" % odd)
+
             if n == len(cells) - 1 and n % num_columns != (num_columns - 1):
-                tdattrs = 'colspan="%d"' % (num_columns - (n % num_columns))
+                colspan = num_columns - (n % num_columns)
             else:
-                tdattrs = ""
-            cell.paint(row, tdattrs=tdattrs)
+                colspan = None
+
+            cell.paint(row, colspan=colspan)
         html.close_row()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')

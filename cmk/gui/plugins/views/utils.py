@@ -1894,7 +1894,7 @@ class Cell:
         # - Link to _self (Always link to the current frame)
         classes: List[str] = []
         onclick = ''
-        title = u''
+        title = ''
         if display_options.enabled(display_options.L) \
            and self._view.spec.get('user_sortable', False) \
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
@@ -1912,7 +1912,7 @@ class Cell:
         classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
-        html.write(self.title())
+        html.write_text(self.title())
         html.close_th()
 
     def _sort_url(self) -> str:
@@ -1991,12 +1991,13 @@ class Cell:
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
+            assert not isinstance(content, dict)
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, dict)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
-                content = '<span title="%s">%s</span>' % (tooltip_text, content)
+                content = html.render_span(content, title=tooltip_text)
 
         return tdclass, content
 
@@ -2082,21 +2083,11 @@ class Cell:
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 
-    def paint(self, row: Row, tdattrs: str = "") -> bool:
+    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)
-        has_content = content != ""
         assert not isinstance(content, dict)
-
-        if tdclass:
-            html.write("<td %s class=\"%s\">" % (tdattrs, tdclass))
-            html.write(content)
-            html.close_td()
-        else:
-            html.write("<td %s>" % (tdattrs))
-            html.write(content)
-            html.close_td()
-
-        return has_content
+        html.td(content, class_=tdclass, colspan=colspan)
+        return content != ""
 
 
 SorterSpec = NamedTuple("SorterSpec", [
@@ -2179,10 +2170,10 @@ class JoinCell(Cell):
 
 
 class EmptyCell(Cell):
-    def render(self, row):
+    def render(self, row: Row) -> CellSpec:
         return "", ""
 
-    def paint(self, row, tdattrs=""):
+    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         return False
 
 

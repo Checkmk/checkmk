@@ -1,0 +1,16 @@
+Title: <tt>check_mail</tt>: Fix <tt>error: argument --connect-timeout: invalid int value</tt>
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617258769
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p2
+
+There was bug in the active check <tt>check_mail</tt>, which checks if the login into
+a given mailbox is working. In case a connection timeout was configured, the check
+crashed with
+<tt>error: argument --connect-timeout: invalid int value</tt>
+This has been fixed.

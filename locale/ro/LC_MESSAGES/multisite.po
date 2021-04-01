@@ -6607,6 +6607,9 @@ msgstr ""
 msgid "Bugle"
 msgstr ""
 
+msgid "Build Cache"
+msgstr ""
+
 #, fuzzy
 msgid "Build duration"
 msgstr "Optiuni tabel"
@@ -23777,6 +23780,10 @@ msgid "Invalid subscription %s date"
 msgstr "foloseste descrierea"
 
 #, fuzzy
+msgid "Invalid subscription period. Must be at least one year"
+msgstr "foloseste descrierea"
+
+#, fuzzy
 msgid "Invalid subscription sizing"
 msgstr "foloseste descrierea"
 
@@ -25945,6 +25952,10 @@ msgstr ""
 
 msgid "Local Variables"
 msgstr ""
+
+#, fuzzy
+msgid "Local Volumes"
+msgstr "sesiuni"
 
 msgid "Local checks in Checkmk clusters"
 msgstr ""

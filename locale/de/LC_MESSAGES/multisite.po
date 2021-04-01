@@ -6836,6 +6836,10 @@ msgstr "Bugfix"
 msgid "Bugle"
 msgstr "Signalhorn"
 
+#, fuzzy
+msgid "Build Cache"
+msgstr "Keine Information über Cache"
+
 msgid "Build duration"
 msgstr "Bauzeit"
 
@@ -25105,6 +25109,10 @@ msgstr "Ungülitge Startzeit"
 msgid "Invalid subscription %s date"
 msgstr "Ungültiges %s-Datum in Subskription"
 
+#, fuzzy
+msgid "Invalid subscription period. Must be at least one year"
+msgstr "Ungültiges %s-Datum in Subskription"
+
 msgid "Invalid subscription sizing"
 msgstr "Ungültige Größe der Subskription"
 
@@ -27203,6 +27211,10 @@ msgstr "Lokaler Server - Entfernter Client"
 
 msgid "Local Variables"
 msgstr "Lokale Variablen"
+
+#, fuzzy
+msgid "Local Volumes"
+msgstr "Logical Volume Pool"
 
 msgid "Local checks in Checkmk clusters"
 msgstr "Lokale Checks in Checkmk-Clustern"

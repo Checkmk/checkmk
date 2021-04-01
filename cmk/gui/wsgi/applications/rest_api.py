@@ -205,7 +205,7 @@ def get_url(environ: WSGIEnvironment) -> str:
     ...     'SERVER_NAME': 'localhost',
     ...     'wsgi.url_scheme': 'http',
     ... })
-    'http://localhorst'
+    '//localhorst'
 
     >>> get_url({
     ...     'SERVER_PORT': '443',
@@ -213,7 +213,7 @@ def get_url(environ: WSGIEnvironment) -> str:
     ...     'wsgi.url_scheme': 'https',
     ...     'PATH_INFO': '/NO_SITE/check_mk/view.py'
     ... })
-    'https://localhost/NO_SITE/check_mk/view.py'
+    '//localhost/NO_SITE/check_mk/view.py'
 
     Args:
         environ:
@@ -223,23 +223,15 @@ def get_url(environ: WSGIEnvironment) -> str:
         A HTTP URL.
 
     """
-    url = environ['wsgi.url_scheme'] + '://'
-
+    # We construct a protocol relative URL so we don't need to know if we are on HTTP or HTTPs.
+    # This is important if we are behind a SSL terminating HTTP application proxy, which doesn't
+    # forward the protocol used. This solution is more robust in those circumstances.
     if environ.get('HTTP_HOST'):
-        url += environ['HTTP_HOST']
+        host_name = environ['HTTP_HOST']
     else:
-        url += environ['SERVER_NAME']
+        host_name = environ['SERVER_NAME']
 
-        if environ['wsgi.url_scheme'] == 'https':
-            if environ['SERVER_PORT'] != '443':
-                url += ':' + environ['SERVER_PORT']
-        else:
-            if environ['SERVER_PORT'] != '80':
-                url += ':' + environ['SERVER_PORT']
-
-    url += urllib.parse.quote(environ.get('PATH_INFO', ''))
-
-    return url
+    return f"//{host_name}{urllib.parse.quote(environ.get('PATH_INFO', ''))}"
 
 
 @functools.lru_cache(maxsize=512)

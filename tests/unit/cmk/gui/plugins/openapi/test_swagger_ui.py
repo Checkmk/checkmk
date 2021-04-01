@@ -8,8 +8,7 @@
 def test_swagger_ui_http(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
     assert resp.headers['content-type'] == 'text/html'
-    assert b"https://" not in resp.body
-    assert b"http://" in resp.body
+    assert b"//" in resp.body
     assert b'petstore' not in resp.body
     assert b'check_mk/api' in resp.body
     assert b'openapi-swagger-ui.yaml' in resp.body
@@ -18,8 +17,7 @@ def test_swagger_ui_http(wsgi_app):
 def test_swagger_ui_https(wsgi_app):
     wsgi_app.extra_environ = {"wsgi.url_scheme": "https"}
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
-    assert b"http://" not in resp.body
-    assert b"https://" in resp.body
+    assert b"//" in resp.body
     assert b'petstore' not in resp.body
     assert b'check_mk/api' in resp.body
     assert b'openapi-swagger-ui.yaml' in resp.body

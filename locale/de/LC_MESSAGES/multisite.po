@@ -8422,6 +8422,10 @@ msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 "Das Standardthema der Benutzeroberfläche der Checkmk-Installation ändern"
 
+#, fuzzy
+msgid "Changed"
+msgstr "Änderung"
+
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr "Konfigurationsvariable %s nach %s geändert."
@@ -8583,6 +8587,10 @@ msgstr "CheckMK-Status der Piggyback-Hosts innerhalb dieses Zeitraums prüfen"
 
 msgid "Check Parameter"
 msgstr "Check-Parameter"
+
+#, fuzzy
+msgid "Check Plugin"
+msgstr "Checkplugins"
 
 msgid "Check SFTP Service"
 msgstr "Prüfe SFTP-Dienst"
@@ -11662,9 +11670,6 @@ msgstr "Kritisch, wenn die Zeit bis zum erzwungenen Reboot kürzer ist als"
 
 msgid "Critical if under"
 msgstr "Kritsch wenn unter"
-
-msgid "Critical if younger than"
-msgstr "Kritsch wenn jünger als"
 
 msgid "Critical level for remaining"
 msgstr "Kritischer Schwellwert Rest "
@@ -57069,9 +57074,6 @@ msgstr "Warnung, wenn die Zeit bis zum nächsten Zwangsreboot kürzer ist als"
 msgid "Warning if under"
 msgstr "Warnung wenn unter"
 
-msgid "Warning if younger than"
-msgstr "Warnung wenn jünger als"
-
 msgid "Warning level for remaining"
 msgstr "Warnschwellwert für Verbleibende"
 
@@ -62482,6 +62484,12 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid "Critical if younger than"
+#~ msgstr "Kritsch wenn jünger als"
+
+#~ msgid "Warning if younger than"
+#~ msgstr "Warnung wenn jünger als"
+
 #~ msgid "Filter namespaces"
 #~ msgstr "Namensbereiche filtern"
 
@@ -64129,9 +64137,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Check Manuals"
 #~ msgstr "Check-Handbuch"
-
-#~ msgid "Check Plugins"
-#~ msgstr "Checkplugins"
 
 #~ msgid "Check access to LDAP service"
 #~ msgstr "Prüfe Zugriff auf LDAP Service"

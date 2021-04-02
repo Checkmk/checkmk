@@ -7967,6 +7967,10 @@ msgstr ""
 msgid "Change the default user interface theme of your Checkmk installation"
 msgstr ""
 
+#, fuzzy
+msgid "Changed"
+msgstr "%d schimbări"
+
 #, python-format
 msgid "Changed Configuration variable %s to %s."
 msgstr ""
@@ -8131,6 +8135,10 @@ msgstr ""
 #, fuzzy
 msgid "Check Parameter"
 msgstr " Parametrul este: %r"
+
+#, fuzzy
+msgid "Check Plugin"
+msgstr "Acces la Agenți"
 
 msgid "Check SFTP Service"
 msgstr ""
@@ -11141,9 +11149,6 @@ msgid "Critical if time time until forced reboot is less then"
 msgstr ""
 
 msgid "Critical if under"
-msgstr ""
-
-msgid "Critical if younger than"
 msgstr ""
 
 msgid "Critical level for remaining"
@@ -53864,9 +53869,6 @@ msgstr ""
 msgid "Warning if under"
 msgstr ""
 
-msgid "Warning if younger than"
-msgstr ""
-
 msgid "Warning level for remaining"
 msgstr ""
 
@@ -61046,10 +61048,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Check Origin and Parameters"
 #~ msgstr " Parametrul este: %r"
-
-#, fuzzy
-#~ msgid "Check Plugin"
-#~ msgstr "Acces la Agenți"
 
 # TODO
 #, fuzzy

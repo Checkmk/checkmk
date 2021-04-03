@@ -192,7 +192,7 @@ def _paint_custom_var(what: str,
         custom_val = custom_vars[key]
         if choices:
             custom_val = dict(choices).get(int(custom_val), custom_val)
-        return key, escaping.escape_attribute(custom_val)
+        return key, custom_val
 
     return key, ""
 
@@ -384,7 +384,7 @@ class PainterSitealias(Painter):
         return ['site']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(config.site(row["site"])["alias"]))
+        return (None, config.site(row["site"])["alias"])
 
 
 #.
@@ -694,7 +694,7 @@ class PainterSvcCheckCommand(Painter):
         return ['service_check_command']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["service_check_command"]))
+        return (None, row["service_check_command"])
 
 
 @painter_registry.register
@@ -714,7 +714,7 @@ class PainterSvcCheckCommandExpanded(Painter):
         return ['service_check_command_expanded']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["service_check_command_expanded"]))
+        return (None, row["service_check_command_expanded"])
 
 
 @painter_registry.register
@@ -2468,7 +2468,7 @@ class PainterAlias(Painter):
         return ['host_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["host_alias"]))
+        return ("", row["host_alias"])
 
 
 @painter_registry.register
@@ -3586,7 +3586,7 @@ class PainterHgAlias(Painter):
         return ['hostgroup_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["hostgroup_alias"]))
+        return (None, row["hostgroup_alias"])
 
 
 #    ____                  _
@@ -3774,7 +3774,7 @@ class PainterSgAlias(Painter):
         return ['servicegroup_alias']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, escaping.escape_attribute(row["servicegroup_alias"]))
+        return (None, row["servicegroup_alias"])
 
 
 #     ____                                     _
@@ -4252,7 +4252,7 @@ class PainterLogMessage(Painter):
         return ['log_message']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["log_message"]))
+        return ("", row["log_message"])
 
 
 @painter_registry.register
@@ -4277,7 +4277,7 @@ class PainterLogPluginOutput(Painter):
         if output:
             return "", format_plugin_output(output, row)
         if comment:
-            return "", escaping.escape_attribute(comment)
+            return "", comment
         log_type = row["log_type"]
         lst = row["log_state_type"]
         if "FLAPPING" in log_type:
@@ -4378,7 +4378,7 @@ class PainterLogStateInfo(Painter):
         if not info:
             info = row["log_state_type"]
 
-        return ("", escaping.escape_attribute(info))
+        return ("", info)
 
 
 @painter_registry.register
@@ -4575,7 +4575,7 @@ class PainterLogOptions(Painter):
         return ['log_options']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", escaping.escape_attribute(row["log_options"]))
+        return ("", row["log_options"])
 
 
 @painter_registry.register
@@ -4599,7 +4599,7 @@ class PainterLogComment(Painter):
         if ';' in msg:
             parts = msg.split(';')
             if len(parts) > 6:
-                return ("", escaping.escape_attribute(parts[-1]))
+                return ("", parts[-1])
         return ("", "")
 
 

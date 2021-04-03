@@ -310,7 +310,7 @@ class PainterEventText(Painter):
         return ['event_text']
 
     def render(self, row, cell):
-        return "", escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>")
+        return "", HTML(escaping.escape_attribute(row["event_text"]).replace("\x01", "<br>"))
 
 
 @painter_registry.register
@@ -404,7 +404,7 @@ class PainterEventComment(Painter):
         return ['event_comment']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_comment"]))
+        return ("", row["event_comment"])
 
 
 @painter_registry.register
@@ -425,7 +425,7 @@ class PainterEventSl(Painter):
 
     def render(self, row, cell):
         sl_txt = dict(config.mkeventd_service_levels).get(row["event_sl"], str(row["event_sl"]))
-        return "", escaping.escape_attribute(sl_txt)
+        return "", sl_txt
 
 
 @painter_registry.register
@@ -446,8 +446,8 @@ class PainterEventHost(Painter):
 
     def render(self, row, cell):
         if row["host_name"]:
-            return "", escaping.escape_attribute(row["host_name"])
-        return "", escaping.escape_attribute(row["event_host"])
+            return "", row["host_name"]
+        return "", row["event_host"]
 
 
 @painter_registry.register
@@ -467,7 +467,7 @@ class PainterEventIpaddress(Painter):
         return ['event_ipaddress']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_ipaddress"]))
+        return ("", row["event_ipaddress"])
 
 
 @painter_registry.register
@@ -507,7 +507,7 @@ class PainterEventOwner(Painter):
         return ['event_owner']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_owner"]))
+        return ("", row["event_owner"])
 
 
 @painter_registry.register
@@ -527,7 +527,7 @@ class PainterEventContact(Painter):
         return ['event_contact']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_contact"]))
+        return ("", row["event_contact"])
 
 
 @painter_registry.register
@@ -547,7 +547,7 @@ class PainterEventApplication(Painter):
         return ['event_application']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["event_application"]))
+        return ("", row["event_application"])
 
 
 @painter_registry.register
@@ -639,7 +639,7 @@ class PainterEventRuleId(Painter):
         if config.user.may("mkeventd.edit"):
             urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", html.render_a(rule_id, "wato.py?%s" % urlvars)
-        return "", escaping.escape_attribute(rule_id)
+        return "", rule_id
 
 
 @painter_registry.register
@@ -819,7 +819,7 @@ class PainterEventContactGroups(Painter):
         if cgs is None:
             return "", ""
         if cgs:
-            return "", escaping.escape_attribute(", ".join(cgs))
+            return "", ", ".join(cgs)
         return "", "<i>" + _("none") + "</i>"
 
 
@@ -852,8 +852,8 @@ class PainterEventEffectiveContactGroups(Painter):
         if cgs is None:
             return "", ""
         if cgs:
-            return "", escaping.escape_attribute(", ".join(sorted(cgs)))
-        return "", "<i>" + _("none") + "</i>"
+            return "", ", ".join(sorted(cgs))
+        return "", html.render_i(_("none"))
 
 
 # Event History
@@ -958,7 +958,7 @@ class PainterHistoryWho(Painter):
         return ['history_who']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["history_who"]))
+        return ("", row["history_who"])
 
 
 @painter_registry.register
@@ -978,7 +978,7 @@ class PainterHistoryAddinfo(Painter):
         return ['history_addinfo']
 
     def render(self, row, cell):
-        return ("", escaping.escape_attribute(row["history_addinfo"]))
+        return ("", row["history_addinfo"])
 
 
 #.

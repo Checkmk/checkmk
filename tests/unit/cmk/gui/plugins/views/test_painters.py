@@ -772,6 +772,10 @@ def _test_painter(painter_ident, live):
         _tdclass, content = cell.render(row)
         assert isinstance(content, (str, HTML))
 
+        if isinstance(content, str) and "<" in content:
+            raise ValueError(f"Painter: {painter_ident} Found HTML tag in "
+                             f"str content (will be escaped!): {content}")
+
 
 # TODO: Better move to livestatus mock?
 def _service_row():

@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import time
 import abc
 from typing import Dict, List, Tuple, Union, Callable, Any
@@ -60,15 +62,23 @@ from cmk.gui.plugins.views import (
     declare_1to1_sorter,
     cmp_simple_number,
     render_labels,
+    Cell,
 )
 
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.type_defs import Row
+from cmk.gui.view_utils import CellSpec
 
 PaintResult = Tuple[str, Union[str, HTML]]
+InventoryPath = str
+ParsedPath = List[Union[str, int]]
 
 
-def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
+def paint_host_inventory_tree(row: Row,
+                              invpath: InventoryPath = ".",
+                              column: str = "host_inventory") -> CellSpec:
     hostname = row.get("host_name")
+    assert isinstance(hostname, str)
     sites_with_same_named_hosts = _get_sites_with_same_named_hosts(hostname)
 
     if len(sites_with_same_named_hosts) > 1:
@@ -80,6 +90,7 @@ def paint_host_inventory_tree(row, invpath=".", column="host_inventory"):
     struct_tree = row.get(column)
     if struct_tree is None:
         return "", ""
+    assert isinstance(struct_tree, StructuredDataTree)
 
     if column == "host_inventory":
         painter_options = PainterOptions.get_instance()
@@ -106,7 +117,8 @@ def _get_sites_with_same_named_hosts(hostname: HostName) -> List[SiteId]:
         return [SiteId(r[0]) for r in sites.live().query(query_str)]
 
 
-def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer):
+def _paint_host_inventory_tree_children(struct_tree: StructuredDataTree, parsed_path: ParsedPath,
+                                        tree_renderer: NodeRenderer) -> CellSpec:
     if parsed_path:
         children = struct_tree.get_sub_children(parsed_path)
     else:
@@ -120,8 +132,9 @@ def _paint_host_inventory_tree_children(struct_tree, parsed_path, tree_renderer)
     return "invtree", code
 
 
-def _paint_host_inventory_tree_value(struct_tree, parsed_path, tree_renderer, invpath,
-                                     attribute_keys):
+def _paint_host_inventory_tree_value(struct_tree: StructuredDataTree, parsed_path: ParsedPath,
+                                     tree_renderer: NodeRenderer, invpath: InventoryPath,
+                                     attribute_keys: List[str]) -> CellSpec:
     if attribute_keys == []:
         child = struct_tree.get_sub_numeration(parsed_path)
     else:
@@ -301,7 +314,7 @@ class PainterInventoryTree(Painter):
     def load_inv(self):
         return True
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_inventory_tree(row)
 
 
@@ -1504,7 +1517,7 @@ class PainterInvhistTime(Painter):
     def painter_options(self):
         return ['ts_format', 'ts_date']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["invhist_time"], True, 60 * 10)
 
 
@@ -1521,7 +1534,7 @@ class PainterInvhistDelta(Painter):
     def columns(self):
         return ['invhist_deltainvhist_time']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_inventory_tree(row, column="invhist_delta")
 
 
@@ -1548,7 +1561,7 @@ class PainterInvhistRemoved(Painter):
     def columns(self):
         return ['invhist_removed']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "removed")
 
 
@@ -1568,7 +1581,7 @@ class PainterInvhistNew(Painter):
     def columns(self):
         return ['invhist_new']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "new")
 
 
@@ -1588,7 +1601,7 @@ class PainterInvhistChanged(Painter):
     def columns(self):
         return ['invhist_changed']
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_invhist_count(row, "changed")
 
 

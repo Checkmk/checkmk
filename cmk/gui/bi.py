@@ -379,10 +379,10 @@ class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
     def css_class(self):
         raise NotImplementedError()
 
-    def render(self):
+    def render(self) -> HTML:
         with html.plugged():
             self._show_tree()
-            return html.drain()
+            return HTML(html.drain())
 
     def _show_tree(self):
         tree = self._get_tree()

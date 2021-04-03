@@ -6,9 +6,44 @@
 
 import pytest
 
-import cmk.utils.version as cmk_version
+from testlib import on_time
 
+import cmk.utils.version as cmk_version
+from cmk.gui.globals import html
+from cmk.gui.utils.html import HTML
+
+from cmk.utils.structured_data import StructuredDataTree
+from cmk.gui import sites
+from cmk.gui.views import View, painters_of_datasource
+from cmk.gui.type_defs import PainterSpec
 from cmk.gui.plugins.views.utils import painter_registry
+
+
+@pytest.fixture(name="live")
+def fixture_livestatus_test_config(mock_livestatus):
+    live = mock_livestatus
+    live.set_sites(['NO_SITE'])
+    live.add_table('hosts', [{
+        'name': 'abc',
+        'alias': 'abc',
+        'address': 'server.example.com',
+        'custom_variables': {
+            "FILENAME": "/wato/hosts.mk",
+            "ADDRESS_FAMILY": "4",
+            "ADDRESS_4": "127.0.0.1",
+            "ADDRESS_6": "",
+            "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:abc tcp",
+        },
+        'contacts': [],
+        'contact_groups': ['all'],
+        'filename': "/wato/hosts.mk",
+    }])
+
+    # Initiate status query here to make it not trigger in the tests
+    with live(expect_status_query=True):
+        sites.live()
+
+    return live
 
 
 @pytest.mark.usefixtures("load_plugins", "load_config")
@@ -700,3 +735,840 @@ def test_registered_painters():
         ]
 
     assert sorted(painters) == sorted(expected_painters)
+
+
+# We only get all painters after the plugins and config have been loaded. Since there currently no
+# way to create test parameters while depending on a fixture we can not use pytests parametrization
+@pytest.mark.usefixtures("load_plugins", "load_config")
+@pytest.fixture(name="service_painter_idents")
+def fixture_service_painter_names():
+    return sorted(list(painters_of_datasource("services").keys()))
+
+
+def test_service_painters(register_builtin_html, service_painter_idents, live):
+    with live(expect_status_query=False), html.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
+        html.request.del_vars()
+
+        for painter_ident in service_painter_idents:
+            _test_painter(painter_ident, live)
+
+
+def _test_painter(painter_ident, live):
+    _set_expected_queries(painter_ident, live)
+
+    view = View(
+        view_name="",
+        view_spec={
+            "group_painters": [],
+            "painters": [PainterSpec(_painter_name_spec(painter_ident), None, None, None)],
+            "sorters": [],
+            "datasource": "services",
+        },
+        context={},
+    )
+
+    row = _service_row()
+    for cell in view.row_cells:
+        _tdclass, content = cell.render(row)
+        assert isinstance(content, (str, HTML))
+
+
+# TODO: Better move to livestatus mock?
+def _service_row():
+    return {
+        'host_accept_passive_checks': 0,
+        'host_acknowledged': 0,
+        'host_action_url_expanded': '',
+        'host_active_checks_enabled': 1,
+        'host_address': '127.0.0.1',
+        'host_alias': 'abc',
+        'host_check_command': 'check-mk-host-smart',
+        'host_check_command_expanded': 'check-mk-host-smart!',
+        'host_check_interval': 0.1,
+        'host_check_type': 0,
+        'host_childs': [],
+        'host_comments_with_extra_info': [],
+        'host_comments_with_info': [],
+        'host_contact_groups': ['all'],
+        'host_contacts': [],
+        'host_current_attempt': 1,
+        'host_current_notification_number': 0,
+        'host_custom_variable_names': [
+            'FILENAME', 'ADDRESS_FAMILY', 'ADDRESS_4', 'ADDRESS_6', 'TAGS'
+        ],
+        'host_custom_variable_values': [
+            '/wato/hosts.mk', '4', '127.0.0.1', '', '/wato/ auto-piggyback cmk-agent ip-v4 '
+            'ip-v4-only lan no-snmp prod site:stable tcp'
+        ],
+        'host_custom_variables': {
+            'ADDRESS_4': '127.0.0.1',
+            'ADDRESS_6': '',
+            'ADDRESS_FAMILY': '4',
+            'FILENAME': '/wato/hosts.mk',
+            'TAGS': '/wato/ auto-piggyback cmk-agent ip-v4 '
+                    'ip-v4-only lan no-snmp prod site:stable '
+                    'tcp'
+        },
+        'host_downtimes_with_extra_info': [],
+        'host_execution_time': 1.8e-07,
+        'host_filename': '/wato/hosts.mk',
+        'host_groups': ['check_mk'],
+        'host_has_been_checked': 1,
+        'host_icon_image': '',
+        'host_in_check_period': 1,
+        'host_in_notification_period': 1,
+        'host_in_service_period': 1,
+        'host_inventory': StructuredDataTree().create_tree_from_raw_tree({
+            'hardware': {
+                'memory': {
+                    'total_ram_usable': 33283784704,
+                    'total_swap': 1023406080,
+                    'total_vmalloc': 35184372087808
+                }
+            },
+            'networking': {
+                'addresses': [{
+                    'address': '127.0.0.1',
+                    'device': 'lo',
+                    'type': 'ipv4'
+                }, {
+                    'address': '::1',
+                    'device': 'lo',
+                    'type': 'ipv6'
+                }, {
+                    'address': '10.1.1.100',
+                    'device': 'wlp59s0',
+                    'type': 'ipv4'
+                }, {
+                    'address': 'fe80::522e:4d07:26aa:5ac5',
+                    'device': 'wlp59s0',
+                    'type': 'ipv6'
+                }, {
+                    'address': '172.17.0.1',
+                    'device': 'docker0',
+                    'type': 'ipv4'
+                }, {
+                    'address': 'fe80::42:9aff:fef7:8238',
+                    'device': 'docker0',
+                    'type': 'ipv6'
+                }, {
+                    'address': 'fe80::d465:a5ff:fe86:4139',
+                    'device': 'vethb457925',
+                    'type': 'ipv6'
+                }, {
+                    'address': 'fe80::60c9:43ff:fe93:4be',
+                    'device': 'veth0be86fc',
+                    'type': 'ipv6'
+                }],
+                'available_ethernet_ports': 1,
+                'hostname': 'klappspaten',
+                'interfaces': [{
+                    'alias': 'lo',
+                    'available': None,
+                    'description': 'lo',
+                    'index': 1,
+                    'oper_status': 1,
+                    'phys_address': '00:00:00:00:00:00',
+                    'port_type': 24,
+                    'speed': 0
+                }, {
+                    'alias': 'docker0',
+                    'available': False,
+                    'description': 'docker0',
+                    'index': 2,
+                    'oper_status': 1,
+                    'phys_address': '02:42:9A:F7:82:38',
+                    'port_type': 6,
+                    'speed': 0
+                }, {
+                    'alias': 'vboxnet0',
+                    'available': True,
+                    'description': 'vboxnet0',
+                    'index': 3,
+                    'oper_status': 2,
+                    'phys_address': '0A:00:27:00:00:00',
+                    'port_type': 6,
+                    'speed': 10000000
+                }, {
+                    'alias': 'wlp59s0',
+                    'available': False,
+                    'description': 'wlp59s0',
+                    'index': 6,
+                    'oper_status': 1,
+                    'phys_address': '3C:58:C2:FF:34:8F',
+                    'port_type': 6,
+                    'speed': 0
+                }],
+                'total_ethernet_ports': 3,
+                'total_interfaces': 6
+            },
+            'software': {
+                'applications': {
+                    'check_mk': {
+                        'agent_version': '2.0.0b5',
+                        'cluster': {
+                            'is_cluster': False
+                        },
+                        'num_sites': 11,
+                        'num_versions': 22,
+                        'sites': [{
+                            'apache': 'stopped',
+                            'autostart': False,
+                            'check_helper_usage': 1.48e-321,
+                            'check_mk_helper_usage': 0.0,
+                            'checker_helper_usage': 2.25692e-30,
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'fetcher_helper_usage': 0.0207974,
+                            'liveproxyd': 'stopped',
+                            'livestatus_usage': 1.48e-321,
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'num_hosts': '3',
+                            'num_services': '79',
+                            'rrdcached': 'stopped',
+                            'site': 'heute',
+                            'stunnel': 'not '
+                                       'existent',
+                            'used_version': '2021.03.18.cee',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'apache': 'stopped',
+                            'autostart': False,
+                            'check_helper_usage': 1.48e-321,
+                            'check_mk_helper_usage': 0.014576800000000001,
+                            'checker_helper_usage': 0.0,
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'fetcher_helper_usage': 0.0,
+                            'liveproxyd': 'stopped',
+                            'livestatus_usage': 4.94e-322,
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'num_hosts': '1',
+                            'num_services': '74',
+                            'rrdcached': 'stopped',
+                            'site': 'old',
+                            'stunnel': 'not '
+                                       'existent',
+                            'used_version': '1.6.0-2021.03.19.cee',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'apache': 'running',
+                            'autostart': False,
+                            'check_helper_usage': 1.1957599999999999e-11,
+                            'check_mk_helper_usage': 0.0,
+                            'checker_helper_usage': 2.55739e-36,
+                            'cmc': 'running',
+                            'crontab': 'running',
+                            'dcd': 'running',
+                            'fetcher_helper_usage': 0.529738,
+                            'liveproxyd': 'running',
+                            'livestatus_usage': 9.345909999999999e-06,
+                            'mkeventd': 'running',
+                            'mknotifyd': 'running',
+                            'num_hosts': '1',
+                            'num_services': '69',
+                            'rrdcached': 'running',
+                            'site': 'abc',
+                            'stunnel': 'not '
+                                       'existent',
+                            'used_version': '2.0.0-2021.03.31.cee',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'apache': 'stopped',
+                            'autostart': False,
+                            'check_helper_usage': 0.0,
+                            'check_mk_helper_usage': 0.0,
+                            'checker_helper_usage': 1.3319e-41,
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'fetcher_helper_usage': 0.0208051,
+                            'liveproxyd': 'stopped',
+                            'livestatus_usage': 25.0,
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'num_hosts': '1',
+                            'num_services': '53',
+                            'rrdcached': 'stopped',
+                            'site': 'stable_slave_1',
+                            'stunnel': 'stopped',
+                            'used_version': '2.0.0-2021.03.31.cee',
+                            'xinetd': 'stopped'
+                        }, {
+                            'apache': 'running',
+                            'cmc': 'running',
+                            'crontab': 'running',
+                            'dcd': 'running',
+                            'liveproxyd': 'running',
+                            'mkeventd': 'running',
+                            'mknotifyd': 'running',
+                            'rrdcached': 'running',
+                            'site': 'beta',
+                            'stunnel': 'not '
+                                       'existent',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'apache': 'running',
+                            'cmc': 'running',
+                            'crontab': 'running',
+                            'dcd': 'running',
+                            'liveproxyd': 'running',
+                            'mkeventd': 'running',
+                            'mknotifyd': 'running',
+                            'rrdcached': 'running',
+                            'site': 'beta_slave_1',
+                            'stunnel': 'not '
+                                       'existent',
+                            'xinetd': 'running'
+                        }, {
+                            'apache': 'stopped',
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'liveproxyd': 'stopped',
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'rrdcached': 'stopped',
+                            'site': 'beta_slave_2',
+                            'stunnel': 'stopped',
+                            'xinetd': 'stopped'
+                        }, {
+                            'apache': 'running',
+                            'cmc': 'running',
+                            'crontab': 'running',
+                            'dcd': 'running',
+                            'liveproxyd': 'running',
+                            'mkeventd': 'running',
+                            'mknotifyd': 'running',
+                            'rrdcached': 'running',
+                            'site': 'crawl_central',
+                            'stunnel': 'not '
+                                       'existent',
+                            'xinetd': 'running'
+                        }, {
+                            'apache': 'stopped',
+                            'autostart': False,
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'liveproxyd': 'stopped',
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'rrdcached': 'stopped',
+                            'site': 'heute_slave_1',
+                            'stunnel': 'stopped',
+                            'used_version': '2021.03.12.cee',
+                            'xinetd': 'stopped'
+                        }, {
+                            'apache': 'running',
+                            'cmc': 'running',
+                            'crontab': 'running',
+                            'dcd': 'running',
+                            'liveproxyd': 'running',
+                            'mkeventd': 'running',
+                            'mknotifyd': 'running',
+                            'rrdcached': 'running',
+                            'site': 'lmtest',
+                            'stunnel': 'not '
+                                       'existent',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'apache': 'stopped',
+                            'cmc': 'stopped',
+                            'crontab': 'stopped',
+                            'dcd': 'stopped',
+                            'liveproxyd': 'stopped',
+                            'mkeventd': 'stopped',
+                            'mknotifyd': 'stopped',
+                            'rrdcached': 'stopped',
+                            'site': 'stable2',
+                            'stunnel': 'not '
+                                       'existent',
+                            'xinetd': 'not '
+                                      'existent'
+                        }, {
+                            'autostart': False,
+                            'site': 'cmk',
+                            'used_version': ''
+                        }],
+                        'versions': [{
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '1.6.0-2021.01.11',
+                            'version': '1.6.0-2021.01.11.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '1.6.0-2021.03.03',
+                            'version': '1.6.0-2021.03.03.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '1.6.0-2021.03.11',
+                            'version': '1.6.0-2021.03.11.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 1,
+                            'number': '1.6.0-2021.03.19',
+                            'version': '1.6.0-2021.03.19.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cme',
+                            'num_sites': 0,
+                            'number': '1.6.0p19',
+                            'version': '1.6.0p19.cme'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.02.03',
+                            'version': '2.0.0-2021.02.03.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.02',
+                            'version': '2.0.0-2021.03.02.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.08',
+                            'version': '2.0.0-2021.03.08.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.09',
+                            'version': '2.0.0-2021.03.09.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.10',
+                            'version': '2.0.0-2021.03.10.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.11',
+                            'version': '2.0.0-2021.03.11.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.17',
+                            'version': '2.0.0-2021.03.17.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.18',
+                            'version': '2.0.0-2021.03.18.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0-2021.03.29',
+                            'version': '2.0.0-2021.03.29.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 2,
+                            'number': '2.0.0-2021.03.31',
+                            'version': '2.0.0-2021.03.31.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2.0.0',
+                            'version': '2.0.0.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cre',
+                            'num_sites': 0,
+                            'number': '2.0.0',
+                            'version': '2.0.0.cre'
+                        }, {
+                            'demo': False,
+                            'edition': 'cme',
+                            'num_sites': 0,
+                            'number': '2.0.0i1',
+                            'version': '2.0.0i1.cme'
+                        }, {
+                            'demo': False,
+                            'edition': 'cme',
+                            'num_sites': 0,
+                            'number': '2.0.0p1',
+                            'version': '2.0.0p1.cme'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 0,
+                            'number': '2021.03.05',
+                            'version': '2021.03.05.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 1,
+                            'number': '2021.03.12',
+                            'version': '2021.03.12.cee'
+                        }, {
+                            'demo': False,
+                            'edition': 'cee',
+                            'num_sites': 1,
+                            'number': '2021.03.18',
+                            'version': '2021.03.18.cee'
+                        }]
+                    }
+                }
+            }
+        }),
+        'host_is_flapping': 0,
+        'host_label_sources': {
+            'cmk/check_mk_server': 'discovered',
+            'cmk/os_family': 'discovered'
+        },
+        'host_labels': {
+            'cmk/check_mk_server': 'yes',
+            'cmk/os_family': 'linux'
+        },
+        'host_last_check': 1617468248,
+        'host_last_notification': 0,
+        'host_last_state_change': 1617452715,
+        'host_latency': 0,
+        'host_max_check_attempts': 1,
+        'host_metrics': [],
+        'host_modified_attributes_list': [],
+        'host_name': 'abc',
+        'host_next_check': 1617468259,
+        'host_next_notification': 1617452715,
+        'host_notes_url_expanded': '',
+        'host_notification_period': '24X7',
+        'host_notification_postponement_reason': '',
+        'host_notifications_enabled': 1,
+        'host_num_services': 69,
+        'host_num_services_crit': 5,
+        'host_num_services_ok': 62,
+        'host_num_services_pending': 0,
+        'host_num_services_unknown': 1,
+        'host_num_services_warn': 1,
+        'host_parents': [],
+        'host_perf_data': '',
+        'host_plugin_output': 'Packet received via smart PING',
+        'host_pnpgraph_present': 0,
+        'host_retry_interval': 0.1,
+        'host_scheduled_downtime_depth': 0,
+        'host_services_with_state': [['Uptime', 0, 1], ['Systemd Timesyncd Time', 0, 1],
+                                     ['TCP Connections', 0, 1], ['Systemd Service Summary', 0, 1],
+                                     ['OMD stable2 status', 2, 1],
+                                     ['OMD crawl_central status', 0, 1], ['Interface 7', 3, 1],
+                                     ['Interface 2', 0, 1], ['OMD beta_slave_1 status', 0, 1],
+                                     ['Temperature Zone 13', 0, 1], ['Temperature Zone 8', 0, 1],
+                                     ['OMD heute_slave_1 apache', 0, 1],
+                                     ['OMD stable_slave_1 performance', 0, 1],
+                                     ['OMD old performance', 0, 1], ['Kernel Performance', 0, 1],
+                                     ['Filesystem /opt/omd/sites/stable/tmp', 0, 1],
+                                     ['OMD stable_slave_1 apache', 0, 1],
+                                     ['Temperature Zone 2', 0, 1], ['Temperature Zone 9', 0, 1],
+                                     ['Filesystem /opt/omd/sites/heute/tmp', 0, 1],
+                                     ['Mount options of /', 0, 1], ['Nullmailer Queue', 2, 1],
+                                     ['Filesystem /',
+                                      0, 1], ['Site stable_slave_1 statistics', 0, 1],
+                                     ['Memory', 0, 1], ['Mount options of /boot/efi', 0, 1],
+                                     ['Interface 3', 2, 1], ['Number of threads', 1, 1],
+                                     ['Temperature Zone 10', 0, 1], ['Temperature Zone 5', 0, 1],
+                                     ['Check_MK HW/SW Inventory', 0,
+                                      1], ['OMD stable apache', 0, 1], ['CPU load', 0, 1],
+                                     ['Temperature Zone 11', 0, 1], ['Check_MK Discovery', 0, 1],
+                                     ['Temperature Zone 6', 0, 1], ['Temperature Zone 0', 0, 1],
+                                     ['Disk IO SUMMARY', 0, 1], ['Filesystem /boot', 0, 1],
+                                     ['OMD stable performance', 2, 1], ['Temperature Zone 3', 0, 1],
+                                     ['Filesystem /boot/efi', 0, 1], ['Temperature Zone 1', 0, 1],
+                                     ['Temperature Zone 4', 0, 1], ['Site heute statistics', 0, 1],
+                                     ['Temperature Zone 12', 0, 1], ['Temperature Zone 7', 0, 1],
+                                     ['OMD heute apache', 0, 1],
+                                     ['Filesystem /opt/omd/sites/stable_slave_1/tmp', 0, 1],
+                                     ['mysärvice', 0, 1], ['OMD heute Notification Spooler', 0, 1],
+                                     ['CPU utilization', 0, 1], ['OMD heute Event Console', 0, 1],
+                                     ['OMD old Event Console', 0, 1], ['OMD lmtest status', 0, 1],
+                                     ['OMD stable Event Console', 0, 1],
+                                     ['Filesystem /opt/omd/sites/old/tmp', 0, 1],
+                                     ['OMD stable_slave_1 Event Console', 0, 1],
+                                     ['OMD old Notification Spooler', 0, 1],
+                                     ['OMD stable Notification Spooler', 0, 1],
+                                     ['OMD heute performance', 0, 1],
+                                     ['OMD stable_slave_1 Notification Spooler', 0, 1],
+                                     ['Mount options of /boot', 0, 1], ['Check_MK', 0, 1],
+                                     ['Site old statistics', 0, 1], ['OMD old apache', 0, 1],
+                                     ['Site stable statistics', 0, 1], ['OMD beta status', 0, 1],
+                                     ['OMD beta_slave_2 status', 2, 1]],
+        'host_services_with_state_filtered': [['Uptime', 0, 1], ['Systemd Timesyncd Time', 0, 1],
+                                              ['TCP Connections', 0, 1],
+                                              ['Systemd Service Summary', 0, 1],
+                                              ['OMD stable2 status', 2, 1],
+                                              ['OMD crawl_central status', 0, 1],
+                                              ['Interface 7', 3, 1], ['Interface 2', 0, 1],
+                                              ['OMD beta_slave_1 status', 0, 1],
+                                              ['Temperature Zone 13', 0, 1],
+                                              ['Temperature Zone 8', 0, 1],
+                                              ['OMD heute_slave_1 apache', 0, 1],
+                                              ['OMD stable_slave_1 performance', 0, 1],
+                                              ['OMD old performance', 0, 1],
+                                              ['Kernel Performance', 0, 1],
+                                              ['Filesystem /opt/omd/sites/stable/tmp', 0, 1],
+                                              ['OMD stable_slave_1 apache', 0, 1],
+                                              ['Temperature Zone 2', 0, 1],
+                                              ['Temperature Zone 9', 0, 1],
+                                              ['Filesystem /opt/omd/sites/heute/tmp', 0, 1],
+                                              ['Mount options of /', 0, 1],
+                                              ['Nullmailer Queue', 2, 1], ['Filesystem /', 0, 1],
+                                              ['Site stable_slave_1 statistics', 0, 1],
+                                              ['Memory', 0, 1],
+                                              ['Mount options of /boot/efi', 0, 1],
+                                              ['Interface 3', 2, 1], ['Number of threads', 1, 1],
+                                              ['Temperature Zone 10', 0, 1],
+                                              ['Temperature Zone 5', 0, 1],
+                                              ['Check_MK HW/SW Inventory', 0, 1],
+                                              ['OMD stable apache', 0, 1], ['CPU load', 0, 1],
+                                              ['Temperature Zone 11', 0, 1],
+                                              ['Check_MK Discovery', 0, 1],
+                                              ['Temperature Zone 6', 0, 1],
+                                              ['Temperature Zone 0', 0,
+                                               1], ['Disk IO SUMMARY', 0, 1],
+                                              ['Filesystem /boot', 0, 1],
+                                              ['OMD stable performance', 2, 1],
+                                              ['Temperature Zone 3', 0, 1],
+                                              ['Filesystem /boot/efi', 0, 1],
+                                              ['Temperature Zone 1', 0, 1],
+                                              ['Temperature Zone 4', 0, 1],
+                                              ['Site heute statistics', 0, 1],
+                                              ['Temperature Zone 12', 0, 1],
+                                              ['Temperature Zone 7', 0, 1],
+                                              ['OMD heute apache', 0, 1],
+                                              [
+                                                  'Filesystem '
+                                                  '/opt/omd/sites/stable_slave_1/tmp', 0, 1
+                                              ], ['mysärvice', 0, 1],
+                                              ['OMD heute Notification Spooler', 0, 1],
+                                              ['CPU utilization', 0, 1],
+                                              ['OMD heute Event Console', 0, 1],
+                                              ['OMD old Event Console', 0, 1],
+                                              ['OMD lmtest status', 0, 1],
+                                              ['OMD stable Event Console', 0, 1],
+                                              ['Filesystem /opt/omd/sites/old/tmp', 0, 1],
+                                              ['OMD stable_slave_1 Event Console', 0, 1],
+                                              ['OMD old Notification Spooler', 0, 1],
+                                              ['OMD stable Notification Spooler', 0, 1],
+                                              ['OMD heute performance', 0, 1],
+                                              ['OMD stable_slave_1 Notification '
+                                               'Spooler', 0, 1], ['Mount options of /boot', 0, 1],
+                                              ['Check_MK', 0, 1], ['Site old statistics', 0, 1],
+                                              ['OMD old apache', 0, 1],
+                                              ['Site stable statistics', 0, 1],
+                                              ['OMD beta status', 0, 1],
+                                              ['OMD beta_slave_2 status', 2, 1]],
+        'host_staleness': 0.666667,
+        'host_state': 0,
+        'host_structured_status': b"{'software': {'applications': {'check_mk': {'sit"
+                                  b"es': [{'site': 'heute', 'num_hosts': '3', 'num_s"
+                                  b"ervices': '79', 'check_helper_usage': 1.48e-321,"
+                                  b" 'check_mk_helper_usage': 0.0, 'fetcher_helper_u"
+                                  b"sage': 0.0207974, 'checker_helper_usage': 2.2569"
+                                  b"2e-30, 'livestatus_usage': 1.48e-321, 'cmc': 'st"
+                                  b"opped', 'dcd': 'stopped', 'liveproxyd': 'stopped"
+                                  b"', 'mknotifyd': 'stopped', 'apache': 'stopped', "
+                                  b"'crontab': 'stopped', 'mkeventd': 'stopped', 'rr"
+                                  b"dcached': 'stopped', 'stunnel': 'not existent', "
+                                  b"'xinetd': 'not existent'}, {'site': 'old', 'num_"
+                                  b"hosts': '1', 'num_services': '74', 'check_helper"
+                                  b"_usage': 1.48e-321, 'check_mk_helper_usage': 0.0"
+                                  b"14576800000000001, 'fetcher_helper_usage': 0.0, "
+                                  b"'checker_helper_usage': 0.0, 'livestatus_usage':"
+                                  b" 4.94e-322, 'cmc': 'stopped', 'dcd': 'stopped', "
+                                  b"'liveproxyd': 'stopped', 'mknotifyd': 'stopped',"
+                                  b" 'apache': 'stopped', 'crontab': 'stopped', 'mke"
+                                  b"ventd': 'stopped', 'rrdcached': 'stopped', 'stun"
+                                  b"nel': 'not existent', 'xinetd': 'not existent'},"
+                                  b" {'site': 'abc', 'num_hosts': '1', 'num_servi"
+                                  b"ces': '69', 'check_helper_usage': 1.195759999999"
+                                  b"9999e-11, 'check_mk_helper_usage': 0.0, 'fetcher"
+                                  b"_helper_usage': 0.529738, 'checker_helper_usage'"
+                                  b": 2.55739e-36, 'livestatus_usage': 9.34590999999"
+                                  b"9999e-06, 'cmc': 'running', 'dcd': 'running', 'l"
+                                  b"iveproxyd': 'running', 'mknotifyd': 'running', '"
+                                  b"apache': 'running', 'crontab': 'running', 'mkeve"
+                                  b"ntd': 'running', 'rrdcached': 'running', 'stunne"
+                                  b"l': 'not existent', 'xinetd': 'not existent'}, {"
+                                  b"'site': 'stable_slave_1', 'num_hosts': '1', 'num"
+                                  b"_services': '53', 'check_helper_usage': 0.0, 'ch"
+                                  b"eck_mk_helper_usage': 0.0, 'fetcher_helper_usage"
+                                  b"': 0.0208051, 'checker_helper_usage': 1.3319e-41"
+                                  b", 'livestatus_usage': 25.0, 'cmc': 'stopped', 'd"
+                                  b"cd': 'stopped', 'liveproxyd': 'stopped', 'mknoti"
+                                  b"fyd': 'stopped', 'apache': 'stopped', 'crontab':"
+                                  b" 'stopped', 'mkeventd': 'stopped', 'rrdcached': "
+                                  b"'stopped', 'stunnel': 'stopped', 'xinetd': 'stop"
+                                  b"ped'}, {'site': 'beta', 'cmc': 'running', 'dcd':"
+                                  b" 'running', 'liveproxyd': 'running', 'mknotifyd'"
+                                  b": 'running', 'apache': 'running', 'crontab': 'ru"
+                                  b"nning', 'mkeventd': 'running', 'rrdcached': 'run"
+                                  b"ning', 'stunnel': 'not existent', 'xinetd': 'not"
+                                  b" existent'}, {'site': 'beta_slave_1', 'cmc': 'ru"
+                                  b"nning', 'dcd': 'running', 'liveproxyd': 'running"
+                                  b"', 'mknotifyd': 'running', 'apache': 'running', "
+                                  b"'crontab': 'running', 'mkeventd': 'running', 'rr"
+                                  b"dcached': 'running', 'stunnel': 'not existent', "
+                                  b"'xinetd': 'running'}, {'site': 'beta_slave_2', '"
+                                  b"cmc': 'stopped', 'dcd': 'stopped', 'liveproxyd':"
+                                  b" 'stopped', 'mknotifyd': 'stopped', 'apache': 's"
+                                  b"topped', 'crontab': 'stopped', 'mkeventd': 'stop"
+                                  b"ped', 'rrdcached': 'stopped', 'stunnel': 'stoppe"
+                                  b"d', 'xinetd': 'stopped'}, {'site': 'crawl_centra"
+                                  b"l', 'cmc': 'running', 'dcd': 'running', 'livepro"
+                                  b"xyd': 'running', 'mknotifyd': 'running', 'apache"
+                                  b"': 'running', 'crontab': 'running', 'mkeventd': "
+                                  b"'running', 'rrdcached': 'running', 'stunnel': 'n"
+                                  b"ot existent', 'xinetd': 'running'}, {'site': 'he"
+                                  b"ute_slave_1', 'cmc': 'stopped', 'dcd': 'stopped'"
+                                  b", 'liveproxyd': 'stopped', 'mknotifyd': 'stopped"
+                                  b"', 'apache': 'stopped', 'crontab': 'stopped', 'm"
+                                  b"keventd': 'stopped', 'rrdcached': 'stopped', 'st"
+                                  b"unnel': 'stopped', 'xinetd': 'stopped'}, {'site'"
+                                  b": 'lmtest', 'cmc': 'running', 'dcd': 'running', "
+                                  b"'liveproxyd': 'running', 'mknotifyd': 'running',"
+                                  b" 'apache': 'running', 'crontab': 'running', 'mke"
+                                  b"ventd': 'running', 'rrdcached': 'running', 'stun"
+                                  b"nel': 'not existent', 'xinetd': 'not existent'},"
+                                  b" {'site': 'stable2', 'cmc': 'stopped', 'dcd': 's"
+                                  b"topped', 'liveproxyd': 'stopped', 'mknotifyd': '"
+                                  b"stopped', 'apache': 'stopped', 'crontab': 'stopp"
+                                  b"ed', 'mkeventd': 'stopped', 'rrdcached': 'stoppe"
+                                  b"d', 'stunnel': 'not existent', 'xinetd': 'not ex"
+                                  b"istent'}]}}}}\n",
+        'host_tags': {
+            'address_family': 'ip-v4-only',
+            'agent': 'cmk-agent',
+            'criticality': 'prod',
+            'ip-v4': 'ip-v4',
+            'networking': 'lan',
+            'piggyback': 'auto-piggyback',
+            'site': 'abc',
+            'snmp_ds': 'no-snmp',
+            'tcp': 'tcp'
+        },
+        'rrddata:sys:sys.average:1614553200:1617228000:60': [0, 0, 0],
+        'rrddata:sys:sys.average:1616367600:1616968800:60': [0, 0, 0],
+        'rrddata:system:system.average:1614553200:1617228000:60': [0, 0, 0],
+        'rrddata:system:system.average:1616367600:1616968800:60': [0, 0, 0],
+        'service_accept_passive_checks': 1,
+        'service_acknowledged': 0,
+        'service_action_url_expanded': '',
+        'service_active_checks_enabled': 0,
+        'service_cache_interval': 0,
+        'service_cached_at': 0,
+        'service_check_command': 'check_mk-lnx_if',
+        'service_check_command_expanded': '',
+        'service_check_interval': 1,
+        'service_check_period': '24X7',
+        'service_check_type': 1,
+        'service_comments_with_extra_info': [],
+        'service_comments_with_info': [],
+        'service_contact_groups': ['all'],
+        'service_contacts': [],
+        'service_current_attempt': 1,
+        'service_current_notification_number': 0,
+        'service_custom_variable_names': ["DING"],
+        'service_custom_variable_values': ["DONG"],
+        'service_custom_variables': {
+            "DING": "DONG"
+        },
+        'service_description': 'Interface 3',
+        'service_display_name': 'Interface 3',
+        'service_downtimes': [],
+        'service_downtimes_with_extra_info': [],
+        'service_execution_time': 2.6e-08,
+        'service_groups': [],
+        'service_has_been_checked': 1,
+        'service_host_name': 'abc',
+        'service_icon_image': '',
+        'service_in_check_period': 1,
+        'service_in_notification_period': 1,
+        'service_in_passive_check_period': 1,
+        'service_in_service_period': 1,
+        'service_is_flapping': 0,
+        'service_label_sources': {},
+        'service_labels': {},
+        'service_last_check': 1617468196,
+        'service_last_notification': 0,
+        'service_last_state_change': 1617309051,
+        'service_last_time_ok': 1617302582,
+        'service_latency': 0,
+        'service_long_plugin_output': '[vboxnet0]\\nOperational state: '
+                                      'down(!!)\\nMAC: 0A:00:27:00:00:00\\nSpeed: 10 '
+                                      'MBit/s (expected: 0 Bit/s)(!)',
+        'service_max_check_attempts': 1,
+        'service_metrics': [
+            'outdisc', 'outnucast', 'outqlen', 'in', 'out', 'inmcast', 'inbcast', 'inerr', 'indisc',
+            'inucast', 'innucast', 'outmcast', 'outbcast', 'outerr', 'outucast'
+        ],
+        'service_modified_attributes_list': [],
+        'service_next_check': 0,
+        'service_next_notification': 1617309051,
+        'service_notes_url_expanded': '',
+        'service_notification_period': '24X7',
+        'service_notification_postponement_reason': '',
+        'service_notifications_enabled': 1,
+        'service_perf_data': '',
+        'service_plugin_output': '[vboxnet0], (down)(!!), MAC: 0A:00:27:00:00:00, '
+                                 'Speed: 10 MBit/s (expected: 0 Bit/s)(!)',
+        'service_pnpgraph_present': 1,
+        'service_retry_interval': 1,
+        'service_scheduled_downtime_depth': 0,
+        'service_service_description': 'Interface 3',
+        'service_staleness': 0.933333,
+        'service_state': 2,
+        'service_tags': {},
+        'site': 'NO_SITE',
+        'forecast_aggr_3c659189-29f3-411a-8456-6a07fdae4d51': None,
+        'forecast_aggr_3c659189-29f3-411a-8456-6a07fdae4d51_max': None,
+        'hist_aggr_e13957f5-1b0b-43a7-a452-3bff7187542e': None,
+        'hist_aggr_e13957f5-1b0b-43a7-a452-3bff7187542e_max': None,
+    }
+
+
+def _painter_name_spec(painter_ident):
+    if painter_ident == "service_custom_variable":
+        return painter_ident, {"ident": "DING"}
+    if painter_ident == "host_custom_variable":
+        return painter_ident, {"ident": "FILENAME"}
+    if painter_ident == "svc_metrics_hist":
+        return painter_ident, {"uuid": "e13957f5-1b0b-43a7-a452-3bff7187542e"}
+    if painter_ident == "svc_metrics_forecast":
+        return painter_ident, {"uuid": "3c659189-29f3-411a-8456-6a07fdae4d51"}
+    return painter_ident
+
+
+def _set_expected_queries(painter_ident, live):
+    if painter_ident == "inv":
+        # TODO: Why is it querying twice?
+        live.expect_query(
+            "GET hosts\nColumns: host_name\nFilter: host_name = abc\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+        )
+        live.expect_query(
+            "GET hosts\nColumns: host_name\nFilter: host_name = abc\nLocaltime: 1523811000\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+        )
+        return

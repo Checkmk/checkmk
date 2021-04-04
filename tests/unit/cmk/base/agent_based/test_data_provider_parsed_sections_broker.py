@@ -6,61 +6,72 @@
 
 # pylint: disable=protected-access
 
-import collections
+from typing import Callable, Iterable
 
 import pytest  # type: ignore[import]
 
 from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
 
 import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker, SectionsParser
 
-_TestSection = collections.namedtuple(
-    "_TestSection",
-    "name, parsed_section_name, parse_function, supersedes",
-)
 
-SECTION_ONE = _TestSection(
-    SectionName("one"),
-    ParsedSectionName("parsed"),
-    lambda x: {
+def _test_section(
+    *,
+    section_name: str,
+    parsed_section_name: str,
+    parse_function: Callable,
+    supersedes: Iterable[str],
+) -> section_plugins.AgentSectionPlugin:
+    return section_plugins.trivial_section_factory(SectionName(section_name))._replace(
+        parsed_section_name=ParsedSectionName(parsed_section_name),
+        parse_function=parse_function,
+        supersedes={SectionName(n) for n in supersedes},
+    )
+
+
+SECTION_ONE = _test_section(
+    section_name="one",
+    parsed_section_name="parsed",
+    parse_function=lambda x: {
         "parsed_by": "one",
         "node": x[0][0]
     },
-    set(),
+    supersedes=(),
 )
 
-SECTION_TWO = _TestSection(
-    SectionName("two"),
-    ParsedSectionName("parsed"),
-    lambda x: {
+SECTION_TWO = _test_section(
+    section_name="two",
+    parsed_section_name="parsed",
+    parse_function=lambda x: {
         "parsed_by": "two",
         "node": x[0][0]
     },
-    {SectionName("one")},
+    supersedes={"one"},
 )
 
-SECTION_THREE = _TestSection(
-    SectionName("three"),
-    ParsedSectionName("parsed2"),
-    lambda x: {
+SECTION_THREE = _test_section(
+    section_name="three",
+    parsed_section_name="parsed2",
+    parse_function=lambda x: {
         "parsed_by": "three",
         "node": x[0][0]
     },
-    set(),
+    supersedes=(),
 )
 
-SECTION_FOUR = _TestSection(
-    SectionName("four"),
-    ParsedSectionName("parsed_four"),
-    lambda x: {
+SECTION_FOUR = _test_section(
+    section_name="four",
+    parsed_section_name="parsed_four",
+    parse_function=lambda x: {
         "parsed_by": "four",
         "node": x[0][0]
     },
-    {SectionName("one")},
+    supersedes={"one"},
 )
 
 MOCK_SECTIONS = {

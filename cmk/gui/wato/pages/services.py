@@ -916,11 +916,13 @@ class DiscoveryPageRenderer:
         if self._is_active(discovery_result):
             css_classes.append("disabled")
 
-        table.cell(
-            "<input type=button class=checkgroup name=_toggle_group"
-            " onclick=\"cmk.selection.toggle_group_rows(this);\" value=\"X\" />",
-            sortable=False,
-            css="checkbox")
+        table.cell(html.render_input("_toggle_group",
+                                     type_="button",
+                                     class_="checkgroup",
+                                     onclick="cmk.selection.toggle_group_rows(this);",
+                                     value='X'),
+                   sortable=False,
+                   css="checkbox")
         name = checkbox_id(check_type, item)
         checked = self._options.action == DiscoveryAction.BULK_UPDATE \
             and name in request["update_services"]

@@ -16,7 +16,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
 from cmk.base.sources.agent import AgentHostSections
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker, SectionsParser
 
 _TestSection = collections.namedtuple(
     "_TestSection",
@@ -107,8 +107,9 @@ def _fixture_patch_register(monkeypatch):
 ])
 def test_get_parsed_section(patch_register, node_sections, expected_result):
 
-    parsed_sections_broker = ParsedSectionsBroker(
-        {HostKey("node1", "127.0.0.1", SourceType.HOST): node_sections})
+    parsed_sections_broker = ParsedSectionsBroker({
+        HostKey("node1", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node_sections)
+    })
 
     content = parsed_sections_broker.get_parsed_section(
         HostKey("node1", "127.0.0.1", SourceType.HOST),
@@ -154,7 +155,9 @@ def test_get_section_kwargs(patch_register, required_sections, expected_result):
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    parsed_sections_broker = ParsedSectionsBroker({host_key: node_sections})
+    parsed_sections_broker = ParsedSectionsBroker({
+        host_key: SectionsParser(host_sections=node_sections),
+    })
 
     kwargs = parsed_sections_broker.get_section_kwargs(
         host_key,
@@ -231,8 +234,10 @@ def test_get_section_cluster_kwargs(patch_register, required_sections, expected_
     })
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): node1_sections,
-        HostKey("node2", "127.0.0.1", SourceType.HOST): node2_sections,
+        HostKey("node1", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node1_sections
+                                                                      ),
+        HostKey("node2", "127.0.0.1", SourceType.HOST): SectionsParser(host_sections=node2_sections
+                                                                      ),
     })
 
     kwargs = parsed_sections_broker.get_section_cluster_kwargs(
@@ -255,7 +260,7 @@ def _get_host_section_for_parse_sections_test():
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    broker = ParsedSectionsBroker({host_key: node_sections})
+    broker = ParsedSectionsBroker({host_key: SectionsParser(host_sections=node_sections)})
 
     return host_key, broker
 
@@ -326,8 +331,9 @@ def test_parse_sections_superseded(monkeypatch):
 def test_get_section_content(hostname, host_entries, cluster_node_keys, expected_result):
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey(nodename, "127.0.0.1", SourceType.HOST):
-        AgentHostSections(sections={SectionName("section_plugin_name"): node_section_content})
+        HostKey(nodename, "127.0.0.1",
+                SourceType.HOST): SectionsParser(host_sections=AgentHostSections(
+                    sections={SectionName("section_plugin_name"): node_section_content}))
         for nodename, node_section_content in host_entries
     })
 

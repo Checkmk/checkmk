@@ -7,6 +7,7 @@
 from typing import (
     Any,
     Dict,
+    Final,
     Iterable,
     Iterator,
     List,
@@ -114,14 +115,11 @@ class ParsedSectionsBroker(Mapping[HostKey, SectionsParser]):
     """
     def __init__(
         self,
-        data: Mapping[HostKey, HostSections],
+        data: Mapping[HostKey, SectionsParser],
     ) -> None:
         super().__init__()
-        # TODO: rename _data
-        self._data = {
-            host_key: SectionsParser(host_sections=host_sections)
-            for host_key, host_sections in data.items()
-        }
+        # TODO: rename _data (coming soon!)
+        self._data: Final = data
 
         # This holds the result of the superseding section along with the
         # cache info of the raw section that was used (by parsed section name!)
@@ -387,4 +385,7 @@ def make_broker(
         fetcher_messages=fetcher_messages,
         selected_sections=selected_sections,
     )
-    return ParsedSectionsBroker(collected_host_sections), results
+    return ParsedSectionsBroker({
+        host_key: SectionsParser(host_sections=host_sections)
+        for host_key, host_sections in collected_host_sections.items()
+    }), results

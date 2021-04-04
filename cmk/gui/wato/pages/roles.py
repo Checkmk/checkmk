@@ -213,10 +213,10 @@ class ModeRoles(RoleManagement, WatoMode):
                     html.icon_button(delete_url, _("Delete this role"), "delete")
 
                 # ID
-                table.text_cell(_("Name"), rid)
+                table.cell(_("Name"), rid)
 
                 # Alias
-                table.text_cell(_("Alias"), role["alias"])
+                table.cell(_("Alias"), role["alias"])
 
                 # Type
                 table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))

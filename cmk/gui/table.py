@@ -184,23 +184,6 @@ class Table:
         self._finish_previous()
         self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
-    # TODO: Is now same as "cell". Remove all call sites, then remove this function
-    def text_cell(
-        self,
-        title: 'HTMLContent' = "",
-        text: 'HTMLContent' = "",
-        css: 'CSSSpec' = None,
-        help_txt: Optional[str] = None,
-        colspan: Optional[int] = None,
-        sortable: bool = True,
-    ):
-        self.cell(title=title,
-                  text=text,
-                  css=css,
-                  help_txt=help_txt,
-                  colspan=colspan,
-                  sortable=sortable)
-
     def cell(
         self,
         title: 'HTMLContent' = "",

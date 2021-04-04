@@ -499,14 +499,13 @@ class ModeBIPacks(ABCBIMode):
                 html.icon_button(rules_url,
                                  _("View and edit the rules and aggregations in this BI pack"),
                                  "rules")
-                table.text_cell(_("ID"), pack.id)
-                table.text_cell(_("Title"), pack.title)
-                table.text_cell(_("Public"), pack.public and _("Yes") or _("No"))
-                table.text_cell(_("Aggregations"), str(len(pack.aggregations)), css="number")
-                table.text_cell(_("Rules"), str(len(pack.rules)), css="number")
-                table.text_cell(
-                    _("Contact groups"),
-                    HTML(", ").join(map(self._render_contact_group, pack.contact_groups)))
+                table.cell(_("ID"), pack.id)
+                table.cell(_("Title"), pack.title)
+                table.cell(_("Public"), pack.public and _("Yes") or _("No"))
+                table.cell(_("Aggregations"), str(len(pack.aggregations)), css="number")
+                table.cell(_("Rules"), str(len(pack.rules)), css="number")
+                table.cell(_("Contact groups"),
+                           HTML(", ").join(map(self._render_contact_group, pack.contact_groups)))
 
     def _render_contact_group(self, c):
         display_name = self._contact_group_names.get(c, {'alias': c})['alias']
@@ -866,24 +865,24 @@ class ModeBIRules(ABCBIMode):
                     else:
                         html.empty_icon_button()
 
-                    table.text_cell(_("Level"), level or "", css="number")
-                    table.text_cell(_("ID"), html.render_a(rule_id, edit_url))
-                    table.text_cell(_("Parameters"), " ".join(bi_rule.params.arguments))
+                    table.cell(_("Level"), level or "", css="number")
+                    table.cell(_("ID"), html.render_a(rule_id, edit_url))
+                    table.cell(_("Parameters"), " ".join(bi_rule.params.arguments))
 
                     if bi_rule.properties.icon:
                         title = html.render_icon(
                             bi_rule.properties.icon) + "&nbsp;" + bi_rule.properties.title
                     else:
                         title = bi_rule.properties.title
-                    table.text_cell(_("Title"), title)
+                    table.cell(_("Title"), title)
 
                     aggr_func_data = BIAggregationFunctionSchema().dump(
                         bi_rule.aggregation_function)
                     aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
                         bi_rule.aggregation_function.type()]
 
-                    table.text_cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
-                    table.text_cell(_("Nodes"), str(bi_rule.num_nodes()), css="number")
+                    table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
+                    table.cell(_("Nodes"), str(bi_rule.num_nodes()), css="number")
                     table.cell(_("Used by"))
                     have_this = set([])
                     for (pack_id, aggr_id,
@@ -898,8 +897,8 @@ class ModeBIRules(ABCBIMode):
                             html.br()
                             have_this.add(aggr_id)
 
-                    table.text_cell(_("Comment"), bi_rule.properties.comment or "")
-                    table.text_cell(_("Documentation URL"), bi_rule.properties.docu_url or "")
+                    table.cell(_("Comment"), bi_rule.properties.comment or "")
+                    table.cell(_("Documentation URL"), bi_rule.properties.docu_url or "")
 
     def _aggregation_title(self, bi_aggregation):
         rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
@@ -1922,14 +1921,14 @@ class BIModeAggregations(ABCBIMode):
                     )
                     html.icon_button(delete_url, _("Delete this aggregation"), "delete")
 
-                table.text_cell(_("ID"), aggregation_id)
+                table.cell(_("ID"), aggregation_id)
 
                 if cmk_version.is_managed_edition():
-                    table.text_cell(_("Customer"))
+                    table.cell(_("Customer"))
                     if bi_aggregation.customer:
                         html.write_text(managed.get_customer_name_by_id(bi_aggregation.customer))
 
-                table.text_cell(_("Options"), css="buttons")
+                table.cell(_("Options"), css="buttons")
 
                 if bi_aggregation.computation_options.disabled:
                     html.icon("disabled", _("This aggregation is currently disabled."))
@@ -1946,9 +1945,9 @@ class BIModeAggregations(ABCBIMode):
                 else:
                     html.icon("critical", _("Escalate downtimes based on aggregated CRIT state"))
 
-                table.text_cell(_("Groups"), ", ".join(bi_aggregation.groups.names))
-                table.text_cell(_("Paths"),
-                                ", ".join(["/".join(x) for x in bi_aggregation.groups.paths]))
+                table.cell(_("Groups"), ", ".join(bi_aggregation.groups.names))
+                table.cell(_("Paths"),
+                           ", ".join(["/".join(x) for x in bi_aggregation.groups.paths]))
 
                 action = bi_aggregation.node.action
                 assert isinstance(action, BICallARuleAction)

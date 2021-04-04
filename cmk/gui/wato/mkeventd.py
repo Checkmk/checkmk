@@ -2707,12 +2707,10 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                         filename)
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-                table.text_cell(_("Filename"), filename)
-                table.text_cell(_("MIB"), mib.get("name", ""))
-                table.text_cell(_("Organization"), mib.get("organization", ""))
-                table.text_cell(_("Size"),
-                                cmk.utils.render.fmt_bytes(mib.get("size", 0)),
-                                css="number")
+                table.cell(_("Filename"), filename)
+                table.cell(_("MIB"), mib.get("name", ""))
+                table.cell(_("Organization"), mib.get("organization", ""))
+                table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.get("size", 0)), css="number")
 
         if is_custom_dir:
             html.hidden_fields()

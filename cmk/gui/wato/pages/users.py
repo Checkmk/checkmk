@@ -423,10 +423,10 @@ class ModeUsers(WatoMode):
                     html.icon('notif_disabled', _('Notifications are disabled'))
 
                 # Full name / Alias
-                table.text_cell(_("Alias"), user.get("alias", ""))
+                table.cell(_("Alias"), user.get("alias", ""))
 
                 # Email
-                table.text_cell(_("Email"), user.get("email", ""))
+                table.cell(_("Email"), user.get("email", ""))
 
                 # Roles
                 table.cell(_("Roles"))

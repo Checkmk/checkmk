@@ -722,8 +722,8 @@ class ModeDistributedMonitoring(WatoMode):
             html.icon_button(globals_url, title, icon)
 
     def _show_basic_settings(self, table, site_id, site):
-        table.text_cell(_("ID"), site_id)
-        table.text_cell(_("Alias"), site.get("alias", ""))
+        table.cell(_("ID"), site_id)
+        table.cell(_("Alias"), site.get("alias", ""))
 
     def _show_status_connection_config(self, table, site_id, site):
         table.cell(_("Status connection"))
@@ -731,7 +731,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.write(vs_connection.value_to_text(site["socket"]))
 
     def _show_status_connection_status(self, table, site_id, site):
-        table.text_cell("")
+        table.cell("")
 
         encrypted_url = watolib.folder_preserving_link([("mode", "site_livestatus_encryption"),
                                                         ("site", site_id)])
@@ -745,7 +745,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
     def _show_config_connection_config(self, table, site_id, site):
-        table.text_cell(_("Configuration connection"))
+        table.cell(_("Configuration connection"))
         if not site["replication"]:
             html.write_text(_("Not enabled"))
             return
@@ -760,7 +760,7 @@ class ModeDistributedMonitoring(WatoMode):
             html.write_text(" (%s)" % ", ".join(parts))
 
     def _show_config_connection_status(self, table, site_id, site):
-        table.text_cell("")
+        table.cell("")
 
         if site["replication"]:
             if site.get("secret"):
@@ -1264,14 +1264,14 @@ class ModeSiteLivestatusEncryption(WatoMode):
                         ("_digest", cert_detail.digest_sha256),
                     ])
                     html.icon_button(url=url, title=_("Add to trusted CAs"), icon="trust")
-                table.text_cell(_("Issued to"), cert_detail.issued_to)
-                table.text_cell(_("Issued by"), cert_detail.issued_by)
-                table.text_cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
-                table.text_cell(_("Fingerprint"), cert_detail.digest_sha256)
-                table.text_cell(_("Valid till"), cert_detail.valid_till)
-                table.text_cell(_("Trusted"),
-                                self._render_cert_trusted(cert_detail),
-                                css=self._cert_trusted_css_class(cert_detail))
+                table.cell(_("Issued to"), cert_detail.issued_to)
+                table.cell(_("Issued by"), cert_detail.issued_by)
+                table.cell(_("Is CA"), _("Yes") if cert_detail.is_ca else _("No"))
+                table.cell(_("Fingerprint"), cert_detail.digest_sha256)
+                table.cell(_("Valid till"), cert_detail.valid_till)
+                table.cell(_("Trusted"),
+                           self._render_cert_trusted(cert_detail),
+                           css=self._cert_trusted_css_class(cert_detail))
 
     def _render_cert_trusted(self, cert):
         if cert.verify_result.is_valid:

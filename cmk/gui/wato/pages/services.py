@@ -557,7 +557,7 @@ class DiscoveryPageRenderer:
             return 0
 
         table.row()
-        table.text_cell(_("Status"), text, css="labelstate")
+        table.cell(_("Status"), text, css="labelstate")
 
         if not self._options.show_plugin_names:
             labels_html = render_labels(

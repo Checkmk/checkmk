@@ -336,9 +336,9 @@ class ModeTags(ABCTagMode):
                 table.cell(_("Actions"), css="buttons")
                 self._show_tag_icons(tag_group, nr)
 
-                table.text_cell(_("ID"), tag_group.id)
-                table.text_cell(_("Title"), tag_group.title)
-                table.text_cell(_("Topic"), tag_group.topic or _("Tags"))
+                table.cell(_("ID"), tag_group.id)
+                table.cell(_("Title"), tag_group.title)
+                table.cell(_("Topic"), tag_group.topic or _("Tags"))
                 table.cell(_("Demonstration"), sortable=False)
                 if tag_group.help:
                     html.help(tag_group.help)
@@ -383,11 +383,11 @@ class ModeTags(ABCTagMode):
                 table.cell(_("Actions"), css="buttons")
                 self._show_aux_tag_icons(aux_tag)
 
-                table.text_cell(_("ID"), aux_tag.id)
+                table.cell(_("ID"), aux_tag.id)
 
-                table.text_cell(_("Title"), _u(aux_tag.title))
-                table.text_cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
-                table.text_cell(
+                table.cell(_("Title"), _u(aux_tag.title))
+                table.cell(_("Topic"), _u(aux_tag.topic) or _("Tags"))
+                table.cell(
                     _("Tags using this auxiliary tag"), ", ".join(
                         sorted(tag.id
                                for tag in self._get_tags_using_aux_tag(aux_tag)
@@ -497,11 +497,11 @@ class ModeTagUsage(ABCTagMode):
         table.cell(_("Actions"), css="buttons")
         self._show_tag_group_icons(tag_group)
 
-        table.text_cell(_("Tag group"), _u(tag_group.choice_title))
+        table.cell(_("Tag group"), _u(tag_group.choice_title))
         # TODO: This check shouldn't be necessary if we get our types right.
         if tag.title is None or tag.id is None or tag_group.id is None:
             raise Exception("uninitialized tag/tag group")
-        table.text_cell(_("Tag"), _u(tag.title))
+        table.cell(_("Tag"), _u(tag.title))
 
         operation = OperationReplaceGroupedTags(tag_group.id,
                                                 remove_tag_ids=[tag.id],
@@ -545,8 +545,8 @@ class ModeTagUsage(ABCTagMode):
         table.cell(_("Actions"), css="buttons")
         self._show_aux_tag_icons(aux_tag)
 
-        table.text_cell(_("Tag"), _u(aux_tag.choice_title))
-        table.text_cell(_("Used by tags"))
+        table.cell(_("Tag"), _u(aux_tag.choice_title))
+        table.cell(_("Used by tags"))
         _show_aux_tag_used_by_tags(self._get_tags_using_aux_tag(aux_tag))
 
         # TODO: This check shouldn't be necessary if we get our types right.

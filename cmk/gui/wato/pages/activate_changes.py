@@ -417,7 +417,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                                      "url",
                                      target="_blank")
 
-                table.text_cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
+                table.cell(_("Site"), site.get("alias", site_id), css="narrow nobr")
 
                 # Livestatus
                 table.cell(_("Status"), css="narrow nobr")

@@ -59,13 +59,28 @@ def test_basic(register_builtin_html):
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
 
 
-def test_cell_escaping(register_builtin_html):
+def test_cell_content_escaping(register_builtin_html):
     with html.plugged():
         with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "<script>alert('A')</script>")
             table.cell("B", HTML("<script>alert('B')</script>"))
             table.cell("C", "<b>C</b>")
+
+        written_text = html.drain()
+
+    assert "&lt;script&gt;alert(&#x27;A&#x27;)&lt;/script&gt;" in written_text
+    assert "<script>alert('B')</script>" in written_text
+    assert "<b>C</b>" in written_text
+
+
+def test_cell_title_escaping(register_builtin_html):
+    with html.plugged():
+        with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
+            table.row()
+            table.cell("<script>alert('A')</script>")
+            table.cell(HTML("<script>alert('B')</script>"))
+            table.cell("<b>C</b>")
 
         written_text = html.drain()
 

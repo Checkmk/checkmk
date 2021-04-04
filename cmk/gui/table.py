@@ -36,14 +36,12 @@ if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
     from cmk.gui.type_defs import CSSSpec
 
-TableHeader = NamedTuple(
-    "TableHeader",
-    [
-        ("title", Union[int, HTML, str]),  # basically HTMLContent without None
-        ("css", 'CSSSpec'),
-        ("help_txt", Optional[str]),
-        ("sortable", bool),
-    ])
+TableHeader = NamedTuple("TableHeader", [
+    ("title", HTML),
+    ("css", 'CSSSpec'),
+    ("help_txt", Optional[str]),
+    ("sortable", bool),
+])
 
 CellSpec = NamedTuple("CellSpec", [
     ("content", HTML),
@@ -258,12 +256,16 @@ class Table:
         if isinstance(text, HTML):
             content = text
         else:
-            content = HTML(escaping.escape_text(str(text) if not isinstance(text, str) else text))
+            content = html.render_text(str(text) if not isinstance(text, str) else text)
 
         htmlcode: HTML = content + HTML(html.drain())
 
-        if title is None:
-            title = ""
+        if isinstance(title, HTML):
+            header_title = title
+        else:
+            if title is None:
+                title = ""
+            header_title = html.render_text(str(title) if not isinstance(title, str) else title)
 
         if self.options["collect_headers"] is True:
             # small helper to make sorting introducion easier. Cells which contain
@@ -271,7 +273,7 @@ class Table:
             if css and 'buttons' in css and sortable:
                 sortable = False
             self.headers.append(
-                TableHeader(title=title, css=css, help_txt=help_txt, sortable=sortable))
+                TableHeader(title=header_title, css=css, help_txt=help_txt, sortable=sortable))
 
         current_row = self.rows[-1]
         assert isinstance(current_row, TableRow)
@@ -551,8 +553,7 @@ class Table:
                 continue
 
             if header.help_txt:
-                header_title: Union[int, HTML, str] = html.render_span(header.title,
-                                                                       title=header.help_txt)
+                header_title: HTML = html.render_span(header.title, title=header.help_txt)
             else:
                 header_title = header.title
 
@@ -585,7 +586,7 @@ class Table:
                 first_col = False
                 if actions_enabled:
                     if not header_title:
-                        header_title = "&nbsp;"  # Fixes layout problem with white triangle
+                        header_title = HTML("&nbsp;")  # Fixes layout problem with white triangle
 
                     if actions_visible:
                         state = '0'

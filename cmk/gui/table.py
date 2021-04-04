@@ -46,7 +46,7 @@ TableHeader = NamedTuple(
     ])
 
 CellSpec = NamedTuple("CellSpec", [
-    ("content", str),
+    ("content", HTML),
     ("css", 'CSSSpec'),
     ("colspan", Optional[int]),
 ])
@@ -186,6 +186,7 @@ class Table:
         self._finish_previous()
         self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
+    # TODO: Is now same as "cell". Remove all call sites, then remove this function
     def text_cell(
         self,
         title: 'HTMLContent' = "",
@@ -200,7 +201,7 @@ class Table:
                   css=css,
                   help_txt=help_txt,
                   colspan=colspan,
-                  escape_text=True)
+                  sortable=sortable)
 
     def cell(
         self,
@@ -210,16 +211,16 @@ class Table:
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
-        escape_text: bool = False,
     ):
         self._finish_previous()
-        self.next_func = lambda: self._add_cell(title=title,
-                                                text=text,
-                                                css=css,
-                                                help_txt=help_txt,
-                                                colspan=colspan,
-                                                sortable=sortable,
-                                                escape_text=escape_text)
+        self.next_func = lambda: self._add_cell(
+            title=title,
+            text=text,
+            css=css,
+            help_txt=help_txt,
+            colspan=colspan,
+            sortable=sortable,
+        )
 
     def _finish_previous(self) -> None:
         self.next_func()
@@ -253,19 +254,13 @@ class Table:
         help_txt: Optional[str] = None,
         colspan: Optional[int] = None,
         sortable: bool = True,
-        escape_text: bool = False,
     ):
-        if escape_text:
-            cell_text = escaping.escape_text(text)
+        if isinstance(text, HTML):
+            content = text
         else:
-            if isinstance(text, HTML):
-                cell_text = "%s" % text
-            elif not isinstance(text, str):
-                cell_text = str(text)
-            else:
-                cell_text = text
+            content = HTML(escaping.escape_text(str(text) if not isinstance(text, str) else text))
 
-        htmlcode: str = cell_text + html.drain()
+        htmlcode: HTML = content + HTML(html.drain())
 
         if title is None:
             title = ""
@@ -632,7 +627,7 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             # Filter out buttons
             if cell.css is not None and "buttons" in cell.css:
                 continue
-            if match_regex.search(cell.content):
+            if match_regex.search(str(cell.content)):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
     return filtered_rows

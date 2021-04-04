@@ -10,37 +10,13 @@ import collections
 
 import pytest  # type: ignore[import]
 
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
-
-import cmk.utils.piggyback
-from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import AgentRawData, HostKey, ParsedSectionName, result, SectionName, SourceType
-
-from cmk.core_helpers import (
-    FetcherType,
-    IPMIFetcher,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    TCPFetcher,
-)
-from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
+from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 from cmk.base.check_utils import HOST_PRECEDENCE, HOST_ONLY, MGMT_ONLY
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
-from cmk.core_helpers.host_sections import HostSections
-from cmk.base.sources import make_nodes, make_sources, Source
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 
 _TestSection = collections.namedtuple(
     "_TestSection",
@@ -111,42 +87,35 @@ def _fixture_patch_register(monkeypatch):
                         MOCK_SECTIONS.__getitem__)
 
 
-@pytest.mark.parametrize("node_section_content,expected_result", [
-    ({}, None),
-    ({
-        SectionName("one"): NODE_1
-    }, {
-        "parsed_by": "one",
-        "node": "node1"
-    }),
-    ({
-        SectionName("two"): NODE_1
-    }, {
-        "parsed_by": "two",
-        "node": "node1"
-    }),
-    ({
+@pytest.mark.parametrize("node_sections,expected_result", [
+    (AgentHostSections(sections={}), None),
+    (AgentHostSections(sections={SectionName("one"): NODE_1}), {
+                                     "parsed_by": "one",
+                                     "node": "node1"
+                                 }),
+    (AgentHostSections(sections={SectionName("two"): NODE_1}), {
+                                     "parsed_by": "two",
+                                     "node": "node1"
+                                 }),
+    (AgentHostSections(sections={
         SectionName("one"): NODE_1,
         SectionName("two"): NODE_1,
-    }, {
+    }), {
         "parsed_by": "two",
         "node": "node1",
     }),
 ])
-def test_get_parsed_section(patch_register, node_section_content, expected_result):
+def test_get_parsed_section(patch_register, node_sections, expected_result):
 
-    parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST):
-            AgentHostSections(sections=node_section_content)
-    })
+    parsed_sections_broker = ParsedSectionsBroker(
+        {HostKey("node1", "127.0.0.1", SourceType.HOST): node_sections})
 
     content = parsed_sections_broker.get_parsed_section(
         HostKey("node1", "127.0.0.1", SourceType.HOST),
         ParsedSectionName("parsed"),
     )
 
-    assert expected_result == content,\
-           "Section content: Expected '%s' but got '%s'" % (expected_result, content)
+    assert expected_result == content
 
 
 @pytest.mark.parametrize("required_sections,expected_result", [
@@ -177,24 +146,22 @@ def test_get_parsed_section(patch_register, node_section_content, expected_resul
 ])
 def test_get_section_kwargs(patch_register, required_sections, expected_result):
 
-    node_section_content = {
+    node_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
         SectionName("two"): NODE_1,
         SectionName("three"): NODE_1
-    }
+    })
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    parsed_sections_broker = ParsedSectionsBroker(
-        {host_key: AgentHostSections(sections=node_section_content)})
+    parsed_sections_broker = ParsedSectionsBroker({host_key: node_sections})
 
     kwargs = parsed_sections_broker.get_section_kwargs(
         host_key,
         [ParsedSectionName(n) for n in required_sections],
     )
 
-    assert expected_result == kwargs,\
-           "Section content: Expected '%s' but got '%s'" % (expected_result, kwargs)
+    assert expected_result == kwargs
 
 
 @pytest.mark.parametrize("required_sections,expected_result", [
@@ -252,22 +219,20 @@ def test_get_section_kwargs(patch_register, required_sections, expected_result):
 ])
 def test_get_section_cluster_kwargs(patch_register, required_sections, expected_result):
 
-    node1_section_content = {
+    node1_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
         SectionName("two"): NODE_1,
         SectionName("three"): NODE_1
-    }
+    })
 
-    node2_section_content = {
+    node2_sections = AgentHostSections(sections={
         SectionName("two"): NODE_2,
         SectionName("three"): NODE_2,
-    }
+    })
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST):
-            AgentHostSections(sections=node1_section_content),
-        HostKey("node2", "127.0.0.1", SourceType.HOST):
-            AgentHostSections(sections=node2_section_content),
+        HostKey("node1", "127.0.0.1", SourceType.HOST): node1_sections,
+        HostKey("node2", "127.0.0.1", SourceType.HOST): node2_sections,
     })
 
     kwargs = parsed_sections_broker.get_section_cluster_kwargs(
@@ -283,14 +248,14 @@ def test_get_section_cluster_kwargs(patch_register, required_sections, expected_
 
 
 def _get_host_section_for_parse_sections_test():
-    node_section_content = {
+    node_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
         SectionName("four"): NODE_1,
-    }
+    })
 
     host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
 
-    broker = ParsedSectionsBroker({host_key: AgentHostSections(sections=node_section_content)})
+    broker = ParsedSectionsBroker({host_key: node_sections})
 
     return host_key, broker
 

@@ -416,7 +416,7 @@ class ModeBulkImport(WatoMode):
             for row in rows:
                 table.row()
                 for cell in row:
-                    table.cell(None, html.render_text(cell))
+                    table.cell(None, cell)
 
         html.end_form()
 

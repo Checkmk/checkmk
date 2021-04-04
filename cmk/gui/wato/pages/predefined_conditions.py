@@ -132,7 +132,7 @@ class ModePredefinedConditions(SimpleListMode):
         )
 
     def _show_entry_cells(self, table, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
+        table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")

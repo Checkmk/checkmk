@@ -189,10 +189,10 @@ class PageKeyManagement:
                     [("mode", self.download_mode), ("key", key_id)],
                 )
                 html.icon_button(download_url, _("Download this key"), "download")
-                table.cell(_("Description"), html.render_text(key["alias"]))
+                table.cell(_("Description"), key["alias"])
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
-                table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
+                table.cell(_("By"), key["owner"])
+                table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
 
 
 class PageEditKey:

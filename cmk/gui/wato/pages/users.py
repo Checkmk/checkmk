@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type, overload
+from typing import Iterator, Optional, Type, overload, Union
 import base64
 import traceback
 import time
@@ -20,7 +20,6 @@ import cmk.gui.userdb as userdb
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
@@ -403,11 +402,11 @@ class ModeUsers(WatoMode):
 
                 # Authentication
                 if "automation_secret" in user:
-                    auth_method = _("Automation")
+                    auth_method: Union[str, HTML] = _("Automation")
                 elif user.get("password") or 'password' in locked_attributes:
                     auth_method = _("Password")
                 else:
-                    auth_method = "<i>%s</i>" % _("none")
+                    auth_method = html.render_i(_("none"))
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"))
@@ -486,7 +485,7 @@ class ModeUsers(WatoMode):
                 # the visible custom attributes
                 for name, attr in visible_custom_attrs:
                     vs = attr.valuespec()
-                    table.cell(escaping.escape_attribute(_u(vs.title())))
+                    table.cell(_u(vs.title()))
                     html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
         html.hidden_fields()

@@ -91,7 +91,7 @@ class ModePasswords(SimpleListMode):
         super(ModePasswords, self).page()
 
     def _show_entry_cells(self, table, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
+        table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(

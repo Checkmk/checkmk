@@ -223,9 +223,10 @@ class ModeRoles(RoleManagement, WatoMode):
 
                 # Modifications
                 table.cell(
-                    _("Modifications"), "<span title='%s'>%s</span>" %
-                    (_("That many permissions do not use the factory defaults."),
-                     len(role["permissions"])))
+                    _("Modifications"),
+                    html.render_span(
+                        str(len(role["permissions"])),
+                        title=_("That many permissions do not use the factory defaults.")))
 
                 # Users
                 table.cell(

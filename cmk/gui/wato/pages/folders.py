@@ -15,7 +15,6 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.utils as utils
-import cmk.gui.escaping as escaping
 from cmk.gui.table import table_element, init_rowselect
 import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
@@ -847,7 +846,7 @@ class ModeFolder(WatoMode):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                table.cell(attr.title(), escaping.escape_attribute(tdcontent), css=tdclass)
+                table.cell(attr.title(), tdcontent, css=tdclass)
 
         # Am I authorized?
         reason = host.reason_why_may_not("read")

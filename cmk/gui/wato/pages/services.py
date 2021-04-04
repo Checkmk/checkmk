@@ -17,7 +17,6 @@ import cmk.utils.render
 from cmk.utils.defines import short_service_state_name
 
 from cmk.gui.htmllib import HTML
-import cmk.gui.escaping as escaping
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 from cmk.gui.table import table_element
@@ -817,7 +816,7 @@ class DiscoveryPageRenderer:
         self._show_actions(table, discovery_result, check)
 
         table.cell(_("State"), html.render_span(statename), css=stateclass)
-        table.cell(_("Service"), escaping.escape_attribute(descr), css="service")
+        table.cell(_("Service"), descr, css="service")
         table.cell(_("Status detail"), css="expanding")
         self._show_status_detail(table_source, check_type, item, descr, output)
 

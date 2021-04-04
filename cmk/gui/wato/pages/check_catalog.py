@@ -323,10 +323,8 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
                     ("back", makeuri(request, [])),
                 ],
             )
-            table.cell(_("Type of Check"),
-                       "<a href='%s'>%s</a>" % (url, entry["title"]),
-                       css="title")
-            table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
+            table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
+            table.cell(_("Plugin Name"), html.render_tt(entry["name"]), css="name")
             table.cell(_("Agents"),
                        ", ".join(map(translate, sorted(entry["agents"]))),
                        css="agents")

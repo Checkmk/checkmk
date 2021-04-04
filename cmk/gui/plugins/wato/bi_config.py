@@ -502,8 +502,8 @@ class ModeBIPacks(ABCBIMode):
                 table.text_cell(_("ID"), pack.id)
                 table.text_cell(_("Title"), pack.title)
                 table.text_cell(_("Public"), pack.public and _("Yes") or _("No"))
-                table.text_cell(_("Aggregations"), len(pack.aggregations), css="number")
-                table.text_cell(_("Rules"), len(pack.rules), css="number")
+                table.text_cell(_("Aggregations"), str(len(pack.aggregations)), css="number")
+                table.text_cell(_("Rules"), str(len(pack.rules)), css="number")
                 table.text_cell(
                     _("Contact groups"),
                     HTML(", ").join(map(self._render_contact_group, pack.contact_groups)))
@@ -883,7 +883,7 @@ class ModeBIRules(ABCBIMode):
                         bi_rule.aggregation_function.type()]
 
                     table.text_cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))
-                    table.text_cell(_("Nodes"), bi_rule.num_nodes(), css="number")
+                    table.text_cell(_("Nodes"), str(bi_rule.num_nodes()), css="number")
                     table.cell(_("Used by"))
                     have_this = set([])
                     for (pack_id, aggr_id,

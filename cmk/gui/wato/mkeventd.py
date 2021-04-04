@@ -1605,7 +1605,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     html.icon(icon, msg)
 
                 table.cell(_("ID"), id_)
-                table.cell(_("Title"), html.render_text(rule_pack["title"]))
+                table.cell(_("Title"), rule_pack["title"])
 
                 if cmk_version.is_managed_edition():
                     table.cell(_("Customer"))
@@ -1617,7 +1617,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                            css="number")
 
                 hits = rule_pack.get('hits')
-                table.cell(_("Hits"), hits is not None and hits or '', css="number")
+                table.cell(_("Hits"), str(hits) if hits else '', css="number")
 
     def _filter_mkeventd_rule_packs(self, search_expression, rule_packs):
         found_packs: Dict[str, List[ec.ECRuleSpec]] = {}
@@ -1964,7 +1964,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     dict(cmk.gui.mkeventd.service_levels()).get(rule["sl"]["value"],
                                                                 rule["sl"]["value"]))
                 hits = rule.get('hits')
-                table.cell(_("Hits"), hits is not None and hits or '', css="number")
+                table.cell(_("Hits"), str(hits) if hits else '', css="number")
 
                 # Text to match
                 table.cell(_("Text to match"), rule.get("match"))

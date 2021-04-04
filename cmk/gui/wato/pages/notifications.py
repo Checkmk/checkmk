@@ -634,11 +634,11 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Contact"), contact)
                 table.cell(_("Method"), method)
                 table.cell(_("Bulk ID"), bulk_id)
-                table.cell(_("Max. Age (sec)"), "%s" % interval, css="number")
-                table.cell(_("Age (sec)"), "%d" % age, css="number")
+                table.cell(_("Max. Age (sec)"), str(interval), css="number")
+                table.cell(_("Age (sec)"), str(age), css="number")
                 if interval and age >= interval:
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
-                table.cell(_("Timeperiod"), "%s" % timeperiod)
+                table.cell(_("Timeperiod"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css="number")
                 table.cell(_("Count"), str(len(uuids)), css="number")
                 if len(uuids) >= maxcount:
@@ -683,7 +683,7 @@ class ModeNotifications(ABCNotificationsMode):
                         nr == html.request.get_integer_input_mandatory("analyse")):
                     html.icon("rulematch", _("You are analysing this notification"))
 
-                table.cell(_("Nr."), nr + 1, css="number")
+                table.cell(_("Nr."), str(nr + 1), css="number")
                 if "MICROTIME" in context:
                     date: str = time.strftime("%Y-%m-%d %H:%M:%S",
                                               time.localtime(int(context["MICROTIME"]) / 1000000.0))

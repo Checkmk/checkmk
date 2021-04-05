@@ -8,8 +8,8 @@ item:
  The URL of the given CRL
 
 description:
- This check screens the remaining validity of a CRL in minutes. 
+ This check screens the remaining validity of a CRL. 
  The Check can go into warning or critical if the remaining time
  is too short.
- The default tresholds are 2880 minutes (48h) for warning and 
- 1440 minutes (24h) for criticial.
+ The default tresholds are 7 days for warning and 
+ 2 days for criticial.

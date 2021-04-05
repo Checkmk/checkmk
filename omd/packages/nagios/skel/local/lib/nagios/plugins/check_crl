@@ -1,4 +1,5 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 # Copyright (C) 2013 - Remy van Elst
 
 # This program is free software: you can redistribute it and/or modify
@@ -33,6 +34,11 @@
 # Michele Baldessari - Leitner Technologies - 2011
 # 23.08.2011
 
+# Oguzhan Cicek - OpenSource Security GmbH - oguzhan(at)os-s.de - 2021
+# 05.04.2021
+# Changelog: - added argparse parsing
+#            - added handling for DER-Certificates
+
 import time
 import datetime
 import getopt
@@ -41,17 +47,24 @@ import pprint
 import subprocess
 import sys
 import tempfile
+import typing
+import argparse
 import urllib.request, urllib.parse, urllib.error
 
-def check_crl(url, warn, crit):
+def output_check_result(rc, s):
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
+    output = '%s - %s' % (stxt, s)
+    sys.stdout.write('%s\n' % output)
+
+def check_crl(url: str, warn: int, crit: int):
     tmpcrl = tempfile.mktemp(".crl")
     #request = urllib.request.urlretrieve(url, tmpcrl)
     try:
         urllib.request.urlretrieve(url, tmpcrl)
     except:
-        print ("CRITICAL: CRL could not be retrieved: %s" % url)
+        msg = "CRL could not be retrieved: %s" % url
         os.remove(tmpcrl)
-        sys.exit(2)
+        return 2, msg
 
     try:
         inform = 'DER'
@@ -67,9 +80,9 @@ def check_crl(url, warn, crit):
 
         ret = subprocess.check_output(["/usr/bin/openssl", "crl", "-inform", inform, "-noout", "-nextupdate", "-in", tmpcrl], stderr=subprocess.STDOUT)
     except:
-        print ("UNKNOWN: CRL could not be parsed: %s %s" % url)
+        msg = "CRL could not be parsed: %s %s" % url
         os.remove(tmpcrl)
-        sys.exit(3)
+        return 3, msg
 
     nextupdate = ret.strip().decode('utf-8').split("=")
     os.remove(tmpcrl)
@@ -87,55 +100,41 @@ def check_crl(url, warn, crit):
         unit = "days"
     gmtstr = time.asctime(time.localtime(eol))
     if minutes < 0:
-        msg = "CRITICAL CRL expired %d %s ago (on %s GMT)" % (-expires, unit, gmtstr)
+        msg = "CRL expired %d %s ago (on %s GMT)" % (-expires, unit, gmtstr)
         exitcode = 2
     elif minutes <= crit:
-        msg = "CRITICAL CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
+        msg = "CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
         exitcode = 2
     elif minutes <= warn:
-        msg = "WARNING CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
+        msg = "CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
         exitcode = 1
     else:
-        msg = "OK CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
+        msg = "CRL expires in %d %s (on %s GMT)" % (expires, unit, gmtstr)
         exitcode = 0
 
-    print (msg)
-    sys.exit(exitcode)
+    return exitcode, msg
 
 def usage():
-    print ("check_crl.py -h|--help -v|--verbose -u|--url=<url> -w|--warning=<minutes> -c|--critical=<minutes>")
-    print ("")
-    print ("Example, if you want to get a warning if a CRL expires in 8 hours and a critical if it expires in 6 hours:")
-    print ("./check_crl.py -u \"http://domain.tld/url/crl.crl\" -w 480 -c 360")
+    sys.stdout.write("check_crl.py -h|--help -v|--verbose -u|--url=<url> -w|--warning=<minutes> -c|--critical=<minutes>")
+    sys.stdout.write("")
+    sys.stdout.write("Example, if you want to get a warning if a CRL expires in 8 hours and a critical if it expires in 6 hours:")
+    sys.stdout.write("./check_crl.py -u \"http://domain.tld/url/crl.crl\" -w 480 -c 360")
 
 def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hu:w:c:", ["help", "url=", "warning=", "critical="])
-    except getopt.GetoptError as err:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--url", "-u", required=True)
+    parser.add_argument("--warning", "-w", required=True, type=int)
+    parser.add_argument("--critical", "-c", required=True, type=int)
+    args = parser.parse_args()
+    if args.url== "":
         usage()
-        sys.exit(2)
-    url = None
-    warning = None
-    critical = None
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            usage()
-            sys.exit()
-        elif o in ("-u", "--url"):
-            url = a
-        elif o in ("-w", "--warning"):
-            warning = a
-        elif o in ("-c", "--critical"):
-            critical = a
-        else:
-            assert False, "unhandled option"
-
-    if url != None and warning != None and critical != None:
-        check_crl(url, int(warning), int(critical))
-    else:
-        usage()
-        sys.exit(2)
-
+        return 3, "invalid parameter"
+    url = args.url
+    warning = int(args.warning / 60)
+    critical = int(args.critical / 60)
+    return check_crl(url, int(warning), int(critical))
 
 if __name__ == "__main__":
-    main()
+    exitcode, info = main()
+    output_check_result(exitcode, info)
+    sys.exit(exitcode)

@@ -715,7 +715,8 @@ textarea {
 }
 
 select,
-textarea {
+textarea,
+input[type="file"] {
   // textareas like e.g. comment fields should not have a fixed height
   height: auto;
 }

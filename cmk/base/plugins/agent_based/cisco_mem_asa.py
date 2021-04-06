@@ -25,7 +25,7 @@ True
 False
 """
 
-from typing import Any, Dict, List, Mapping, MutableMapping, Sequence
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 from contextlib import suppress
 
 from .utils.size_trend import size_trend
@@ -61,7 +61,7 @@ CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {
 }
 
 
-def parse_cisco_mem_asa(string_table: List[StringTable]) -> Section:
+def parse_cisco_mem_asa(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> for item, values in parse_cisco_mem_asa([
     ...         [['System memory', '319075344', '754665920', '731194056']],
@@ -73,7 +73,7 @@ def parse_cisco_mem_asa(string_table: List[StringTable]) -> Section:
     return {
         string_table[0][0][0]: string_table[0][0][1:],
         string_table[1][0][0]: string_table[1][0][1:]
-    }
+    } if all(string_table) else None
 
 
 def parse_cisco_mem_asa64(string_table: List[StringTable]) -> Section:

@@ -36,12 +36,12 @@ STATE_NAMES = {
 }
 
 
-def parse_f5_bigip_cluster_status(string_table: List[StringTable]) -> NodeState:
+def parse_f5_bigip_cluster_status(string_table: List[StringTable]) -> Optional[NodeState]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_cluster_status([[['4']]])
     4
     """
-    return int(string_table[0][0][0])
+    return int(string_table[0][0][0]) if string_table[0] else None
 
 
 def discover_f5_bigip_cluster_status(section: NodeState) -> DiscoveryResult:
@@ -197,6 +197,8 @@ def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[Nod
     """
     # .1.3.6.1.4.1.3375.2.1.13.1.1.0 0 # sysVcmpNumber
     # .1.3.6.1.4.1.3375.2.1.14.1.1.0 3 # sysCmFailoverStatusId
+    if not string_table[0]:
+        return None
     count, status = string_table[0][0]
     if int(count) == 0:
         return NodeState(status)

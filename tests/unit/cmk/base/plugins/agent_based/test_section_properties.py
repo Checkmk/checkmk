@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import defaultdict
-
 import pytest  # type: ignore[import]
 
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
@@ -119,14 +117,12 @@ def test_section_parse_function_does_something(fix_register):
 
     legacy_exceptions_for_easier_migration = {
         # snmp sections
-        'checkpoint_inv_tunnels',
         'dell_hw_info',
         'hp_proliant_systeminfo',
         'infoblox_osinfo',
         'infoblox_systeminfo',
         'inv_cisco_vlans',
         'juniper_info',
-        'snmp_os',
         # agent sections
         '3ware_disks',
         '3ware_info',
@@ -282,3 +278,9 @@ def test_section_parse_function_does_something(fix_register):
     for name, agent_section in fix_register.agent_sections.items():
         assert (str(name) not in legacy_exceptions_for_easier_migration) is (
             agent_section.parse_function.__code__.co_code != noop_code)
+
+
+def test_snmp_section_parse_function_deals_with_empty_input(fix_register):
+    """We make sure that all parse functions can handle empty table data"""
+    for section in fix_register.snmp_sections.values():
+        _ = section.parse_function(len(section.trees) * [[]])  # type: ignore[arg-type]

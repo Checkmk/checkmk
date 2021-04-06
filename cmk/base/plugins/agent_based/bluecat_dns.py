@@ -23,14 +23,12 @@ from .utils.bluecat import (
 register.snmp_section(
     name='bluecat_dns',
     parse_function=parse_bluecat,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.13315.3.1.2.2.1",
-            oids=[
-                "1",  # DnsSerOperState
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.13315.3.1.2.2.1",
+        oids=[
+            "1",  # DnsSerOperState
+        ],
+    ),
     detect=DETECT_BLUECAT,
 )
 

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Mapping, Optional
 from .agent_based_api.v1 import (
     Attributes,
     register,
@@ -35,7 +35,9 @@ _LBSCHED_MODES = {
 }
 
 
-def parse_fortigate_ha(string_table: StringTable) -> Section:
+def parse_fortigate_ha(string_table: StringTable) -> Optional[Section]:
+    if not string_table:
+        return None
     table_data = string_table[0]
     parsed = {
         'mode': _SYSTEM_MODES.get(table_data[0], 'unknown'),

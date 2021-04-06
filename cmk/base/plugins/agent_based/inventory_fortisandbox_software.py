@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import (
+    Optional,
     Sequence,
     Tuple,
 )
@@ -22,7 +23,7 @@ from .utils.fortinet import DETECT_FORTISANDBOX
 Section = Sequence[Tuple[str, str]]
 
 
-def parse_fortisandbox_software(string_table: StringTable) -> Section:
+def parse_fortisandbox_software(string_table: StringTable) -> Optional[Section]:
     return list(
         zip(
             [
@@ -35,7 +36,7 @@ def parse_fortisandbox_software(string_table: StringTable) -> Section:
                 "Android rating engine",
             ],
             string_table[0],
-        ))
+        )) if string_table else None
 
 
 register.snmp_section(

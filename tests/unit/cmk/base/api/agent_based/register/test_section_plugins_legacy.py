@@ -15,7 +15,6 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.check_api import Service
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 
 
 def old_school_scan_function(oid):
@@ -65,7 +64,10 @@ def test_create_agent_parse_function():
 
 def test_create_snmp_parse_function():
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
-        old_school_parse_function, lambda x: x)
+        original_parse_function=old_school_parse_function,
+        recover_layout_function=lambda x: x,
+        handle_empty_info=False,
+    )
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
@@ -79,7 +81,20 @@ def test_create_snmp_parse_function():
         expected_annotation=(str, "str"),  # irrel. in test, SNMP parse function is not annotated
     )
 
-    assert old_school_parse_function([]) == compliant_parse_function([])
+    arbitrary_non_empty_input = [[['moo']]]
+    assert compliant_parse_function([[]]) is None
+    assert compliant_parse_function(arbitrary_non_empty_input  # type: ignore[arg-type]
+                                   ) == old_school_parse_function(arbitrary_non_empty_input)
+
+
+def test_create_snmp_parse_function_handle_empty():
+    compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
+        original_parse_function=old_school_parse_function,
+        recover_layout_function=lambda x: x,
+        handle_empty_info=True,
+    )
+
+    assert compliant_parse_function([[]]) == old_school_parse_function([[]])
 
 
 def test_create_snmp_section_plugin_from_legacy():

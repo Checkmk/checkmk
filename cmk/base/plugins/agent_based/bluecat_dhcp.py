@@ -23,15 +23,13 @@ from .utils.bluecat import (
 register.snmp_section(
     name='bluecat_dhcp',
     parse_function=parse_bluecat,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.13315.3.1.1.2.1",
-            oids=[
-                "1",  # dhcpOperState
-                "3",  # dhcpLeaseStatsSuccess
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.13315.3.1.1.2.1",
+        oids=[
+            "1",  # dhcpOperState
+            "3",  # dhcpLeaseStatsSuccess
+        ],
+    ),
     detect=DETECT_BLUECAT,
 )
 

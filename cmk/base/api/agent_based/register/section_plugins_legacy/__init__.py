@@ -160,6 +160,7 @@ def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
 def _create_snmp_parse_function(
     original_parse_function: Optional[Callable],
     recover_layout_function: Callable,
+    handle_empty_info: bool,
 ) -> SNMPParseFunction:
     """Wrap parse function to comply to new API
 
@@ -176,6 +177,9 @@ def _create_snmp_parse_function(
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table) -> Any:
+
+        if not handle_empty_info and not any(string_table):
+            return None
 
         relayouted_string_table = recover_layout_function(string_table)
 
@@ -230,6 +234,7 @@ def create_snmp_section_plugin_from_legacy(
     parse_function = _create_snmp_parse_function(
         check_info_dict.get('parse_function'),
         recover_layout_function,
+        handle_empty_info=bool(check_info_dict.get("handle_empty_info")),
     )
 
     detect_spec = create_detect_spec(

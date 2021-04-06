@@ -10,8 +10,14 @@ from .agent_based_api.v1 import (
 )
 from .utils import checkpoint
 
+
+def parse_checkpoint_inv_tunnels(string_table):
+    return string_table if string_table[0] else None
+
+
 register.snmp_section(
     name="checkpoint_inv_tunnels",
+    parse_function=parse_checkpoint_inv_tunnels,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.500.9002.1",

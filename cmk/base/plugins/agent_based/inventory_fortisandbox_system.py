@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+from typing import Optional, Sequence
 from .agent_based_api.v1 import (
     Attributes,
     register,
@@ -19,12 +19,12 @@ from .utils.fortinet import DETECT_FORTISANDBOX
 Section = Sequence[str]
 
 
-def parse_fortisandbox_system(string_table: StringTable) -> Section:
+def parse_fortisandbox_system(string_table: StringTable) -> Optional[Section]:
     """
     >>> parse_fortisandbox_system([["v2.52-build0340 (GA)"]])
     ['v2.52-build0340 (GA)']
     """
-    return string_table[0]
+    return string_table[0] if string_table else None
 
 
 register.snmp_section(

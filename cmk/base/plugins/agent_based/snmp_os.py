@@ -10,8 +10,14 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 
+
+def parse_snmp_os(string_table):
+    return string_table if any(string_table) else None
+
+
 register.snmp_section(
     name="snmp_os",
+    parse_function=parse_snmp_os,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1",

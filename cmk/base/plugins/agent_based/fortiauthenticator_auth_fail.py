@@ -7,6 +7,7 @@
 from typing import (
     List,
     Mapping,
+    Optional,
     Tuple,
 )
 from .agent_based_api.v1 import (
@@ -25,12 +26,12 @@ from .utils.fortinet import DETECT_FORTIAUTHENTICATOR
 Section = Mapping[str, int]
 
 
-def parse_fortiauthenticator_auth_fail(string_table: List[StringTable]) -> Section:
+def parse_fortiauthenticator_auth_fail(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_fortiauthenticator_auth_fail([[['3']]])
     {'auth_fails': 3}
     """
-    return {"auth_fails": int(string_table[0][0][0])}
+    return {"auth_fails": int(string_table[0][0][0])} if all(string_table) else None
 
 
 def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:

@@ -42,9 +42,21 @@ def _parameter_valuespec_cisco_asa_failover():
          )),
         ("failover_state",
          MonitoringState(
-             title=_("Failover state"),
+             title=_("Monitoring state if not the correct unit active/standby"),
              help=_("State if conditions above are not satisfied"),
-             default_value=0,
+             default_value=1,
+         )),
+        ("not_active_standby_state",
+         MonitoringState(
+             title=_("Monitoring state if not active/standby"),
+             help=_("State if this or the remote device state is other than active/standby"),
+             default_value=1,
+         )),
+        ("failover_link_state",
+         MonitoringState(
+             title=_("Monitoring state failover link not up"),
+             help=_("State if the failover link state is not up"),
+             default_value=2,
          )),
     ],)
 

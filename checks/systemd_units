@@ -214,6 +214,8 @@ factory_settings["systemd_services_summary_default_levels"] = {
         "failed": 2,
     },
     "states_default": 2,
+    "activating_levels": (30, 60),
+    "reloading_levels": (30, 60),
 }
 
 discovery_systemd_units_services_rules = []

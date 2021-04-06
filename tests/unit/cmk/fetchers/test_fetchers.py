@@ -562,7 +562,7 @@ class TestSNMPFetcherFetch(ABCTestSNMPFetcher):
             "gather_available_raw_section_names",
             lambda *_, **__: {SectionName('pam')},
         )
-        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({})
+        assert fetcher.fetch(Mode.DISCOVERY) == result.OK({SectionName('pam'): [[]]})
 
     @pytest.fixture(name="set_sections")
     def _set_sections(self, monkeypatch):

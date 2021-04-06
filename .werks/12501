@@ -1,0 +1,14 @@
+Title: apc_inrow_system_events,liebert_system_events,printer_alerts: Services were not discovered
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617728691
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The services of the check plugins <tt>apc_inrow_system_events</tt>,
+<tt>liebert_system_events</tt> and <tt>printer_alerts</tt> could not
+be discovered if no events or alerts were present (i.e. almost never).
+This is fixed.

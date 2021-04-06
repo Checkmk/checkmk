@@ -1,0 +1,14 @@
+Title: Show "Metric" in drop down instead of "802.dot11a"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1617691959
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+The Column drop down of "Edit View" showed
+"Services: 802.dot11a" and "Hosts: 802.dot11a"
+instead of
+"Services: Metric" and "Hosts: Metric".

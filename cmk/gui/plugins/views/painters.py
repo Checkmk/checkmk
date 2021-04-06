@@ -5054,6 +5054,9 @@ class AbstractPainterSpecificMetric(Painter):
     def short_title(self, cell: Cell) -> str:
         return self._title_with_parameters(cell.painter_parameters())
 
+    def list_title(self, cell: Cell) -> str:
+        return _("Metric")
+
     def _title_with_parameters(self, parameters):
         try:
             if not parameters:

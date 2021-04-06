@@ -2965,11 +2965,15 @@ def get_plugin_title_for_choices(plugin: Union[Painter, Sorter]) -> str:
     if plugin.columns == ["site"]:
         info_title = _("Site")
 
-    if callable(plugin.title):
-        dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
-        title = plugin.title(dummy_cell)
+    dummy_cell = Cell(View("", {}, {}), PainterSpec(plugin.ident))
+    title: str
+    if isinstance(plugin, Painter):
+        title = plugin.list_title(dummy_cell)
     else:
-        title = plugin.title
+        if callable(plugin.title):
+            title = plugin.title(dummy_cell)
+        else:
+            title = plugin.title
 
     return u"%s: %s" % (info_title, title)
 

@@ -43,3 +43,39 @@ def test_f5_bigip_mem_tmm_discovery(info, result):
 
     if result:
         assert parsed["TMM"] == (1024.0, 0.0)
+
+
+@pytest.mark.parametrize('parsed, expected_result', [
+    (
+        {
+            'total': (50586898432.0, 13228459584.0),
+            'TMM': (20497563648.0, 885875712.0),
+        },
+        (
+            0,
+            'Usage: 26.15% - 12.32 GB of 47.11 GB',
+            [('memory_used', 13228459584.0, None, None, 0, 50586898432.0)],
+        ),
+    ),
+])
+def test_f5_bigip_mem_check(parsed, expected_result):
+    check = Check('f5_bigip_mem')
+    assert check.run_check(None, {}, parsed) == expected_result
+
+
+@pytest.mark.parametrize('parsed, expected_result', [
+    (
+        {
+            'total': (50586898432.0, 13228459584.0),
+            'TMM': (20497563648.0, 885875712.0),
+        },
+        (
+            0,
+            'Usage: 4.32% - 844.84 MB of 19.09 GB',
+            [('memory_used', 885875712.0, None, None, 0, 20497563648.0)],
+        ),
+    ),
+])
+def test_f5_bigip_mem_tmm_check(parsed, expected_result):
+    check = Check('f5_bigip_mem.tmm')
+    assert check.run_check(None, {}, parsed) == expected_result

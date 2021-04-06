@@ -90,7 +90,7 @@ void TryCleanOnExit(cfg::modules::ModuleCommander& mc) {
         "Clean on exit was requested, trying to remove what we have, mode is [{}]",
         static_cast<int>(mode));
     if (mode != details::CleanMode::none) {
-        mc.moveModulesToStore(cfg::GetRootDir(), cfg::GetUserDir());
+        mc.moveModulesToStore(cfg::GetUserDir());
     }
     details::CleanDataFolder(mode);  // normal
 }

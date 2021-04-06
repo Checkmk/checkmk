@@ -119,8 +119,7 @@ public:
                         const std::filesystem::path& user,
                         InstallMode mode) const;
 
-    void moveModulesToStore(const std::filesystem::path& root,
-                            const std::filesystem::path& user) const;
+    static void moveModulesToStore(const std::filesystem::path& user);
 
     std::vector<std::string> getExtensions() const;
 
@@ -134,8 +133,7 @@ public:
         return user / dirs::kUserModules;
     }
 
-    [[nodiscard]] static const std::vector<StringViewPair>
-    GetSystemExtensions();
+    [[nodiscard]] static std::vector<StringViewPair> GetSystemExtensions();
 
     /// \brief Returns path in the %temp% where content of module will be moved
     static std::filesystem::path GetMoveLocation(

@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
+from typing import List, Optional
 from .agent_based_api.v1 import (
     SNMPTree,
     register,
@@ -23,7 +23,7 @@ METRIC_NAMES = {
 }
 
 
-def parse_printer_pages_ricoh(string_table: List[StringTable]) -> Section:
+def parse_printer_pages_ricoh(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_printer_pages_ricoh([[
     ...   ['Counter: Machine Total', '118722'],
@@ -39,7 +39,7 @@ def parse_printer_pages_ricoh(string_table: List[StringTable]) -> Section:
         METRIC_NAMES[name]: int(pages_text)
         for name, pages_text in string_table[0]
         if name in METRIC_NAMES
-    }
+    } or None
 
 
 register.snmp_section(

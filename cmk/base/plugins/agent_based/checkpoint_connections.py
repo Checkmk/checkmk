@@ -12,13 +12,12 @@ from .utils import checkpoint
 
 
 def parse_checkpoint_connections(string_table):
-    raw_value = string_table[0][0][0]
-    return {"count": int(raw_value)}
+    return {"count": int(string_table[0][0])} if string_table else None
 
 
 register.snmp_section(
     name="checkpoint_connections",
     parse_function=parse_checkpoint_connections,
     detect=checkpoint.DETECT,
-    fetch=[SNMPTree(base=".1.3.6.1.4.1.2620.1.1.25", oids=['3'])],
+    fetch=SNMPTree(base=".1.3.6.1.4.1.2620.1.1.25", oids=['3']),
 )

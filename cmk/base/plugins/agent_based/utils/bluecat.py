@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import Any, Dict, List, Mapping, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple
 from ..agent_based_api.v1 import (
     equals,
     Metric,
@@ -36,19 +36,17 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: List[type_defs.StringTable]) -> Section:
+def parse_bluecat(string_table: type_defs.StringTable) -> Optional[Section]:
     """
-    >>> parse_bluecat([[['1', '2']]])
+    >>> parse_bluecat([['1', '2']])
     {'oper_state': 1, 'leases': 2}
-    >>> parse_bluecat([[['3']]])
+    >>> parse_bluecat([['3']])
     {'oper_state': 3}
     """
-    return {
-        key: int(str_val) for key, str_val in zip(
-            ['oper_state', 'leases'],
-            string_table[0][0],
-        )
-    }
+    return {key: int(str_val) for key, str_val in zip(
+        ['oper_state', 'leases'],
+        string_table[0],
+    )} if string_table else None
 
 
 def _get_service_name(section: Section) -> str:

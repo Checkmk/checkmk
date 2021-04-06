@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List, Mapping, Tuple
+from typing import List, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
     SNMPTree,
@@ -20,12 +20,12 @@ from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckRes
 Section = Tuple[int, int]
 
 
-def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Section:
+def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_juniper_trpz_aps([[['1', '0']]])
     (1, 0)
     """
-    return int(string_table[0][0][0]), int(string_table[0][0][1])
+    return (int(string_table[0][0][0]), int(string_table[0][0][1])) if string_table[0] else None
 
 
 def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:

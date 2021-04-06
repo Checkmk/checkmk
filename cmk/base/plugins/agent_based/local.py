@@ -16,7 +16,18 @@
 import shlex
 import time
 
-from typing import Any, Dict, Generator, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    List,
+)
 
 import six
 
@@ -51,7 +62,14 @@ class LocalResult(NamedTuple):
     perfdata: Sequence[Perfdata]
 
 
-LocalSection = Mapping[Optional[str], Union[LocalResult, Sequence[str]]]
+class LocalError(NamedTuple):
+    output: str
+    reason: str
+
+
+class LocalSection(NamedTuple):
+    errors: List[LocalError]
+    data: Mapping[str, LocalResult]
 
 
 def float_ignore_uom(value):
@@ -169,7 +187,8 @@ def _parse_perftxt(string):
 
 def parse_local(string_table: StringTable) -> LocalSection:
     now = time.time()
-    parsed: Dict[Optional[str], Union[LocalResult, Sequence[str]]] = {}
+    errors = []
+    data = {}
     for line in string_table:
         # allows blank characters in service description
         if len(line) == 1:
@@ -183,8 +202,12 @@ def parse_local(string_table: StringTable) -> LocalSection:
 
         cached, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
-            # just pass on the line and reason, to report the offending ouput
-            parsed.setdefault(None, stripped_line)
+            # just pass on the line, to report the offending ouput
+            errors.append(
+                LocalError(
+                    output=" ".join(stripped_line),
+                    reason=_get_violation_reason(stripped_line),
+                ))
             continue
 
         raw_state, state_msg = _sanitize_state(stripped_line[0])
@@ -196,7 +219,7 @@ def parse_local(string_table: StringTable) -> LocalSection:
         if state_msg or perf_msg:
             raw_state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed[item] = LocalResult(
+        data[item] = LocalResult(
             cached=cached,
             item=item,
             state=State(raw_state) if raw_state != 'P' else State.OK,
@@ -205,7 +228,7 @@ def parse_local(string_table: StringTable) -> LocalSection:
             perfdata=perfdata,
         )
 
-    return parsed
+    return LocalSection(errors=errors, data=data)
 
 
 register.agent_section(
@@ -264,14 +287,13 @@ def _labelify(word: str) -> str:
 
 
 def discover_local(section: LocalSection) -> DiscoveryResult:
-    if None in section:
-        output = section[None]
-        assert isinstance(output, Sequence)
-        reason = _get_violation_reason(output)
+    if section.errors:
+        output = section.errors[0].output
+        reason = section.errors[0].reason
         raise ValueError(("Invalid line in agent section <<<local>>>. "
-                          "Reason: %s Received output: \"%s\"" % (reason, " ".join(output))))
+                          "Reason: %s First offending line: \"%s\"" % (reason, output)))
 
-    for key in section:
+    for key in section.data:
         yield Service(item=key)
 
 
@@ -280,8 +302,8 @@ def check_local(
     params: Mapping[str, Any],
     section: LocalSection,
 ) -> SimpleCheckResult:
-    local_result = section.get(item)
-    if not isinstance(local_result, LocalResult):
+    local_result = section.data.get(item)
+    if local_result is None:
         return
 
     try:

@@ -1,0 +1,17 @@
+Title: Customgraphs for down hosts
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.6.0p23
+Date: 1617723712
+Class: fix
+
+Customgraphs relied on the active metrics of a host to determine renderable
+metrics. When a host is down it was assumed that metrics were not
+available, and were not rendered.
+
+This werk uses on the customgraph editor the same processing over the
+graphs that service graphs have, afterall performance data resides on the
+monitoring site not the monitored host. Thus show the metric data of down
+hosts.

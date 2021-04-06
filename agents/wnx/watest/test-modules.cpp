@@ -45,10 +45,6 @@ bool Compare(const T& t, const T& v) {
 
 TEST(ModuleCommander, CheckSystemAuto) {
     namespace fs = std::filesystem;
-    using namespace cma::cfg;
-
-    cma::OnStartTest();
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
 
     auto sys_exts = ModuleCommander::GetSystemExtensions();
     ASSERT_TRUE(sys_exts.size() == 1);
@@ -70,11 +66,13 @@ TEST(ModuleCommander, CheckSystemAuto) {
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 2);
         EXPECT_TRUE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
 
         node["modules"]["python"] = "auto";
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 2);
         EXPECT_TRUE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
     }
 
     {
@@ -84,6 +82,7 @@ TEST(ModuleCommander, CheckSystemAuto) {
         mc.readConfig(node);
         ASSERT_TRUE(mc.getExtensions().size() == 1);
         EXPECT_FALSE(mc.isModuleScript("z.py"));
+        EXPECT_TRUE(mc.isModuleScript("z.checkmk.py"));
     }
 }
 
@@ -694,7 +693,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
                          move_dir / mc.modules_[0].name()));
 
     // Move modules to store, this is part of deinstall process
-    mc.moveModulesToStore(root, user);
+    mc.moveModulesToStore(user);
     ASSERT_TRUE(IsAbsent(backup_file, target_folder));
 
     // Check that files removed from the quick uninstall

@@ -1,11 +1,11 @@
-The file Licenses.ods is the source file for Licences.csv which is
-packed into the Check_MK packages and available to the user under
-the path /omd/versions/default/share/doc/Licenses.csv.
-All license texts can be found in Licence_texts.pdf.
+The file Licenses.csv holds a list of all third party packages and dependencies included in Checkmk
+with reference to their respective licensing.
+- omd/Licenses.csv (Checkmk-Git)
+- /omd/versions/default/share/doc/Licenses.csv (Checkmk installation)
 
-For generating the file License_texts.pdf as well as updating the
-list of licenses, scripts can be found in the license_sources/
-directory.
+The file License_texts.pdf holds all the license texts relevant for Checkmk.
+- omd/License_texts.pdf (Checkmk-Git)
+- /omd/versions/default/share/doc/License_texts.pdf (Checkmk installation)
 
-Please have a look at the file license_sources/README on how these
-files have been created and should be updated in future.
+For updating these files please have a look at the respective scripts update_licenses.py and
+build_license_texts_pdf.py under omd/license_sources/ within the Checkmk-Git.

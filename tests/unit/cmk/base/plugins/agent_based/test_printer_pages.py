@@ -22,7 +22,7 @@ from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], {}),
+    ([[]], None),
     ([[['585']]], {
         'pages_total': 585
     }),
@@ -32,7 +32,7 @@ def test_parse_printer_pages(string_table, expected_parsed_data):
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], {}),
+    ([[]], None),
     ([[['2240', '113'], ['1343', '123'], ['3464', '301'], ['122', '501']]], {
         'pages_color_a3': 501
     }),
@@ -42,7 +42,7 @@ def test_parse_printer_pages_canon(string_table, expected_parsed_data):
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], {}),
+    ([[]], None),
     (
         [[
             ['Counter: Machine Total', '118722'],

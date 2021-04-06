@@ -3,7 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import List
+from typing import List, Optional
 from .agent_based_api.v1 import (
     SNMPTree,
     register,
@@ -29,7 +29,7 @@ PAGE_CODES = {
 }
 
 
-def parse_printer_pages_canon(string_table: List[StringTable]) -> Section:
+def parse_printer_pages_canon(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_printer_pages_canon([[['1343', '123'], ['3464', '301'], ['122', '501']]])
     {'pages_color_a3': 501}
@@ -38,7 +38,7 @@ def parse_printer_pages_canon(string_table: List[StringTable]) -> Section:
         "pages_" + PAGE_CODES[name]: int(pages_text)
         for name, pages_text in string_table[0]
         if name in PAGE_CODES
-    }
+    } or None
 
 
 register.snmp_section(

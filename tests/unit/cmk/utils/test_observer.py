@@ -17,10 +17,11 @@ def test_fetcher_memory_observer():
         observer._allowed_growth = 1  # simulate memory overload
         assert observer.memory_usage() == 0
         for _ in range(observer._steady_cycle_num):
-            observer.check_resources(None)
+            observer.check_resources("13;heute;checking;60")
     except SystemExit:
         pytest.fail("Should not exit at the phase")
 
+    assert observer._context() == '[cycle 5, command "13;heute;checking;60"]'
     assert observer.memory_usage() != 0
 
     # Phase 2. Steady achieved.

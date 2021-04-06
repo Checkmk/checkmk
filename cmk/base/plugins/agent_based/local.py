@@ -48,6 +48,16 @@ LocalResult = NamedTuple("LocalResult", [
 ])
 
 
+class LocalError(NamedTuple):
+    output: str
+    reason: str
+
+
+class LocalSection(NamedTuple):
+    errors: List[LocalError]
+    data: Mapping[str, LocalResult]
+
+
 def float_ignore_uom(value):
     '''16MB -> 16.0'''
     while value:
@@ -163,7 +173,8 @@ def _parse_perftxt(string):
 
 def parse_local(string_table):
     now = time.time()
-    parsed: Dict[Optional[str], Union[LocalResult, List]] = {}
+    errors = []
+    data = {}
     for line in string_table:
         # allows blank characters in service description
         if len(line) == 1:
@@ -178,7 +189,11 @@ def parse_local(string_table):
         cached, stripped_line = _parse_cache(stripped_line, now)
         if not _is_valid_line(stripped_line):
             # just pass on the line and reason, to report the offending ouput
-            parsed.setdefault(None, stripped_line)
+            errors.append(
+                LocalError(
+                    output=" ".join(stripped_line),
+                    reason=_get_violation_reason(stripped_line),
+                ))
             continue
 
         raw_state, state_msg = _sanitize_state(stripped_line[0])
@@ -190,9 +205,15 @@ def parse_local(string_table):
         if state_msg or perf_msg:
             raw_state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        parsed[item] = LocalResult(cached, item, raw_state, text, perfdata)
+        data[item] = LocalResult(
+            cached=cached,
+            item=item,
+            state=raw_state,
+            text=text,
+            perfdata=perfdata,
+        )
 
-    return parsed
+    return LocalSection(errors=errors, data=data)
 
 
 register.agent_section(
@@ -223,18 +244,18 @@ def local_compute_state(perfdata):
 
 
 def discover_local(section):
-    if None in section:
-        output = section[None]
-        reason = _get_violation_reason(output)
+    if section.errors:
+        output = section.errors[0].output
+        reason = section.errors[0].reason
         raise ValueError(("Invalid line in agent section <<<local>>>. "
-                          "Reason: %s Received output: \"%s\"" % (reason, " ".join(output))))
+                          "Reason: %s First offending line: \"%s\"" % (reason, output)))
 
-    for key in section:
+    for key in section.data:
         yield Service(item=key)
 
 
 def check_local(item, params, section):
-    local_result = section.get(item)
+    local_result = section.data.get(item)
     if local_result is None:
         return
 
@@ -275,7 +296,7 @@ def check_local(item, params, section):
 def cluster_check_local(
     item: str,
     params: Mapping[str, Any],
-    section: Dict[str, Dict[str, LocalResult]],
+    section: Dict[str, LocalSection],
 ) -> Generator[Union[Result, Metric], None, None]:
 
     # collect the result instances and yield the rest

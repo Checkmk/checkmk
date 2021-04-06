@@ -1828,7 +1828,9 @@ class Cell:
         return self._painter_name
 
     def export_title(self) -> str:
-        return ensure_str(self.painter_name())
+        if self._custom_title:
+            return re.sub(r"[^\w]", "_", self._custom_title.lower())
+        return self.painter_name()
 
     def painter_options(self) -> List[str]:
         return self.painter().painter_options
@@ -2167,7 +2169,8 @@ class JoinCell(Cell):
         return self._custom_title or self.join_service()
 
     def export_title(self) -> str:
-        return "%s.%s" % (self._painter_name, self.join_service())
+        serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
+        return "%s.%s" % (self._painter_name, serv_painter)
 
 
 class EmptyCell(Cell):

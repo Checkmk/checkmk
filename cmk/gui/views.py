@@ -2000,6 +2000,9 @@ def _get_view_rows(view: View,
     with CPUTracker() as fetch_rows_tracker:
         rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
 
+    # Sorting - use view sorters and URL supplied sorters
+    _sort_data(view, rows, view.sorters)
+
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
         for filter_ in all_active_filters:

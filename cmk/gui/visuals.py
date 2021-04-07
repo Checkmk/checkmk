@@ -1521,7 +1521,10 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
         filter_list_selected_id = filter_list_id + "_selected"
 
-        html.open_div(id_=filter_list_id, class_="popup_filter_list")
+        show_more = config.user.get_tree_state("more_buttons", filter_list_id,
+                                               isopen=False) or config.user.show_more_mode
+        html.open_div(id_=filter_list_id,
+                      class_=["popup_filter_list", ("more" if show_more else "less")])
         html.more_button(filter_list_id, 1)
         for group in self._grouped_choices:
             if not group.choices:
@@ -1594,7 +1597,7 @@ def show_filter_form(info_list: List[InfoName], mandatory_filters: List[Tuple[st
     _show_filter_form_buttons(varprefix, filter_list_id, vs_filters._page_request_vars, page_name,
                               reset_ajax_page)
 
-    html.open_div(id_=filter_list_selected_id, class_="side_popup_content")
+    html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
     try:
         # Configure required single info keys (the ones that are not set by the config)
         if mandatory_filters:

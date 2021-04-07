@@ -143,8 +143,7 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
         try:
             translation = gettext_module.translation("multisite",
                                                      str(locale_base_dir),
-                                                     languages=[lang],
-                                                     codeset='UTF-8')
+                                                     languages=[lang])
 
         except IOError:
             continue

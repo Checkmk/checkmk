@@ -6372,6 +6372,10 @@ msgid "Best state, %d nodes, restrict to %s"
 msgstr ""
 
 #, fuzzy
+msgid "Biggest input buffer"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Biggest input buffer lower level"
 msgstr "Numarul maxim de mesaje"
 
@@ -8055,6 +8059,10 @@ msgid "Changes"
 msgstr ""
 
 #, fuzzy
+msgid "Changes since last dump"
+msgstr " pentru elementul %s"
+
+#, fuzzy
 msgid "Channel"
 msgstr "Nici o schimbare"
 
@@ -9010,6 +9018,10 @@ msgstr ""
 msgid "Client secret"
 msgstr ""
 
+#, fuzzy
+msgid "Clients pending on a blocking call"
+msgstr "Numarul maxim de conexiuni"
+
 msgid "Climb (long)"
 msgstr ""
 
@@ -9928,6 +9940,10 @@ msgstr "Conexiune Noua"
 
 msgid "Connect without proxy"
 msgstr ""
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Numarul maxim de conexiuni"
 
 msgid "Connection"
 msgstr ""
@@ -26366,6 +26382,10 @@ msgstr ""
 
 msgid "Longest"
 msgstr ""
+
+#, fuzzy
+msgid "Longest output list"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Longest output list lower level"

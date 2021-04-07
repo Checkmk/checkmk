@@ -6612,6 +6612,10 @@ msgstr "Bester Status"
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Bester Status, %d Knoten, auf %s begrenzen"
 
+#, fuzzy
+msgid "Biggest input buffer"
+msgstr "Untere Schwellwerte für den größten Eingabepuffer"
+
 msgid "Biggest input buffer lower level"
 msgstr "Untere Schwellwerte für den größten Eingabepuffer"
 
@@ -8510,6 +8514,10 @@ msgstr "Instanzspezifische Konfigurationsvariable %s nach %s geändert."
 msgid "Changes"
 msgstr "Änderung(en)"
 
+#, fuzzy
+msgid "Changes since last dump"
+msgstr "Anzahl der Änderungen seit dem letzten Dump"
+
 msgid "Channel"
 msgstr "Channel"
 
@@ -9512,6 +9520,12 @@ msgstr "Client-Anfrage erhalten"
 msgid "Client secret"
 msgstr "Kundenpasswort"
 
+#, fuzzy
+msgid "Clients pending on a blocking call"
+msgstr ""
+"Untergrenze für die Gesamtzahl der Klienten, die auf einen blockierenden "
+"Aufruf warten"
+
 msgid "Climb (long)"
 msgstr "Ansteigend (lang)"
 
@@ -10499,6 +10513,10 @@ msgstr "Verbinden ohne Passwort"
 
 msgid "Connect without proxy"
 msgstr "Verbinden ohne Proxy"
+
+#, fuzzy
+msgid "Connected clients"
+msgstr "Anzahl der verbundenen Clients"
 
 msgid "Connection"
 msgstr "Verbindung"
@@ -27620,6 +27638,10 @@ msgstr "Check-Plugin: Lange Ausgabe"
 
 msgid "Longest"
 msgstr "Längster"
+
+#, fuzzy
+msgid "Longest output list"
+msgstr "Untergrenze der längsten Ausgabeliste"
 
 msgid "Longest output list lower level"
 msgstr "Untergrenze der längsten Ausgabeliste"

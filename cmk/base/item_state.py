@@ -20,8 +20,9 @@ structures like log files or stuff.
 """
 
 import os
+from pathlib import Path
 import traceback
-from typing import Any, AnyStr, Dict, List, Optional, Tuple, Union
+from typing import Any, AnyStr, Dict, List, NamedTuple, Optional, Tuple, Union
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -45,6 +46,11 @@ ItemStates = Dict[ItemStateKey, Any]
 OnWrap = Union[None, bool, float]
 
 
+class _ItemStateFile(NamedTuple):
+    path: Path
+    mtime: float
+
+
 class MKCounterWrapped(MKException):
     pass
 
@@ -58,8 +64,7 @@ class CachedItemStates:
     def reset(self) -> None:
         self._item_states: ItemStates = {}
         self._item_state_prefix: ItemStateKey = ()
-        # timestamp of last modification
-        self._last_mtime: Optional[float] = None
+        self._loaded_file: Optional[_ItemStateFile] = None
         self._removed_item_state_keys: List[ItemStateKey] = []
         self._updated_item_states: ItemStates = {}
 
@@ -70,19 +75,18 @@ class CachedItemStates:
 
     def load(self, hostname: HostName) -> None:
         self._logger.debug("Loading item states")
-        filename = cmk.utils.paths.counters_dir + "/" + hostname
+        filepath = Path(cmk.utils.paths.counters_dir, hostname)
         try:
-            # TODO: refactoring. put these two values into a named tuple
             self._item_states = store.load_object_from_file(
-                filename,
+                filepath,
                 default={},
                 lock=True,
             )
-            self._last_mtime = os.stat(filename).st_mtime
+            self._loaded_file = _ItemStateFile(filepath, filepath.stat().st_mtime)
         finally:
-            store.release_lock(filename)
+            store.release_lock(filepath)
 
-    # TODO: self._last_mtime needs be updated accordingly after the save_object_to_file operation
+    # TODO: self._loaded_file.mtime needs be updated accordingly after the save_object_to_file operation
     #       right now, the current mechanism is sufficient enough, since the save() function is only
     #       called as the final operation, just before the lifecycle of the CachedItemState ends
     def save(self, hostname: HostName) -> None:
@@ -102,8 +106,9 @@ class CachedItemStates:
                 os.makedirs(cmk.utils.paths.counters_dir)
 
             store.aquire_lock(filename)
-            last_mtime = os.stat(filename).st_mtime
-            if last_mtime != self._last_mtime:
+            file_mtime = os.stat(filename).st_mtime
+            # TODO: we're assuming it is the same file we loaded, I think.
+            if self._loaded_file is None or file_mtime != self._loaded_file.mtime:
                 self._item_states = store.load_object_from_file(filename, default={})
 
                 # Remove obsolete keys

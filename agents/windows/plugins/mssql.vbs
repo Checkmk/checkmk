@@ -31,7 +31,7 @@
 Option Explicit
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
-Dim sources, instances, instance, instance_id, instance_name
+Dim sources, instances, instance, instance_id, instance_name, service_name
 Dim cfg_dir, cfg_file, hostname, tcpport
 
 Const HKLM = &H80000002
@@ -179,13 +179,22 @@ For Each rk In regkeys
                 End If
             End If
 
-            addOutput(sections("instance"))
-            addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
+            ' The default instance is named "MSSQLSERVER" and corresponds to its service name
+            ' All other instances's service names have the "MSSQL$" prefix
+            If instance_id = "MSSQLSERVER" Then
+                service_name = instance_id
+            Else
+                service_name = "MSSQL$" & instance_id
+            End If
 
             ' Only collect results for instances which services are currently running
             Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
-                                  "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running' OR Name = 'MSSQLSERVER' AND State = 'Running'")
+                                  "WHERE Name = '" & service_name & "'" & _
+                                  "AND State = 'Running'")
+
             If service.count > 0 Then
+                addOutput(sections("instance"))
+                addOutput("MSSQL_" & instance_id & "|config|" & version & "|" & edition & "|" & cluster_name)
                 instances.add instance_id, cluster_name
             End If
         Next

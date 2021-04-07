@@ -36,7 +36,6 @@ else:
     from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
     from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
     import urllib
-    import shutil
     urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
 
 PY2 = sys.version_info[0] == 2
@@ -112,9 +111,10 @@ def try_detect_servers():
         elif ss:
             if len(parts) < 6 or '),(' not in parts[5]:
                 continue
-            parentproc = re.split ('^users:.\((.*?),(.*?),(.*?)\),(\((.*?),(.*?),(.*?)\))+', parts[5])
-            proc = re.sub('"','',parentproc[5])
-            pid = re.sub('pid=','',parentproc[6])
+            parentproc = re.split(r'^users:.\((.*?),(.*?),(.*?)\),(\((.*?),(.*?),(.*?)\))+',
+                                  parts[5])
+            proc = re.sub('"', '', parentproc[5])
+            pid = re.sub('pid=', '', parentproc[6])
 
         procs = ['nginx', 'nginx:', 'nginx.conf']
         # the pid/proc field length is limited to 19 chars. Thus in case of

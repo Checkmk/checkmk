@@ -356,7 +356,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     raise LookupError(section_name)
             except LookupError:
                 self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
-                section = [
+
+                fetched_data[section_name] = [
                     snmp_table.get_snmp_table(
                         section_name=section_name,
                         tree=tree,
@@ -364,9 +365,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         backend=self._backend,
                     ) for tree in self.plugin_store[section_name].trees
                 ]
-
-                if any(section):
-                    fetched_data[section_name] = section
 
         walk_cache.save()
 

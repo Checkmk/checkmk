@@ -6,8 +6,6 @@
 
 from typing import Generator, Sequence, Tuple
 
-import pytest  # type: ignore[import]
-
 from cmk.utils.type_defs import ParsedSectionName
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin

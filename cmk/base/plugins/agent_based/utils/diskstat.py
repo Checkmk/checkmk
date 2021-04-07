@@ -19,9 +19,12 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
+    Dict,
+    Iterator,
 )
 from ..agent_based_api.v1 import (
     check_levels,
+    check_levels_predictive,
     get_average,
     IgnoreResultsError,
     Metric,
@@ -138,6 +141,27 @@ def summarize_disks(disks: Iterable[Tuple[str, Disk]]) -> Disk:
     # multiple times (cluster mode)
     # skip LVM devices for summary
     return combine_disks(disk for device, disk in disks if not device.startswith("LVM "))
+
+
+def _scale_levels_predictive(
+    levels: Dict[str, Any],
+    factor: Union[int, float],
+) -> Dict[str, Any]:
+    def generator() -> Iterator[Tuple[str, Any]]:
+        for key, value in levels.items():
+            if key in ("levels_upper", "levels_lower"):
+                mode, prediction_levels = value
+                if mode == "absolute":
+                    yield key, (mode, (prediction_levels[0] * factor,
+                                       prediction_levels[1] * factor))
+                else:
+                    yield key, value
+            elif key == "levels_upper_min":
+                yield key, (value[0] * factor, value[1] * factor)
+            else:
+                yield key, value
+
+    return dict(generator())
 
 
 def _scale_levels(
@@ -316,17 +340,31 @@ def check_diskstat_dict(
     for key, specs in _METRICS:
         metric_val = disk.get(key)
         if metric_val is not None:
-            yield from check_levels(
-                metric_val,
-                levels_upper=_scale_levels(
-                    params.get(specs.get('levels_key') or key),
-                    specs.get('levels_scale', 1),
-                ),
-                metric_name="disk_" + key,
-                render_func=specs.get('render_func'),
-                label=specs.get('label') or key.replace("_", " ").capitalize(),
-                notice_only=not specs.get('in_service_output'),
-            )
+
+            levels = params.get(specs.get('levels_key') or key)
+            metric_name = "disk_" + key
+            render_func = specs.get('render_func')
+            label = specs.get('label') or key.replace("_", " ").capitalize()
+            notice_only = not specs.get('in_service_output')
+            levels_scale = specs.get('levels_scale', 1)
+
+            if isinstance(levels, dict):
+                yield from check_levels_predictive(
+                    metric_val,
+                    levels=_scale_levels_predictive(levels, levels_scale),
+                    metric_name=metric_name,
+                    render_func=render_func,
+                    label=label,
+                )
+            else:
+                yield from check_levels(
+                    metric_val,
+                    levels_upper=_scale_levels(levels, levels_scale),
+                    metric_name=metric_name,
+                    render_func=render_func,
+                    label=label,
+                    notice_only=notice_only,
+                )
 
     # make sure we have a latency.
     if 'latency' not in disk and 'average_write_wait' in disk and 'average_read_wait' in disk:

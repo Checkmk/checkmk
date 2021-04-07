@@ -5,6 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from pytest_mock import MockerFixture
+from typing import MutableMapping, Any
 from testlib import get_value_store_fixture
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
@@ -22,6 +24,94 @@ def test_parse_diskstat_minimum():
     assert diskstat.parse_diskstat([
         ['12341241243'],
     ]) == {}
+
+
+def test_parse_diskstat_predictive(value_store: MutableMapping[str, Any], mocker: MockerFixture):
+    # SUP-5924
+    DATA = [
+        ['1617784511'],
+        [
+            '259', '0', 'nvme0n1', '131855', '42275', '8019303', '34515', '386089', '166344',
+            '13331634', '138121', '0', '185784', '177210', '0', '0', '0', '0', '41445', '4574'
+        ],
+        [
+            '53', '0', 'dm-0', '172574', '0', '7980626', '74812', '548159', '0', '12443656',
+            '706944', '0', '189576', '781756', '0', '0', '0', '0', '0', '0'
+        ],
+        [
+            '53', '1', 'dm-1', '171320', '0', '7710074', '74172', '546564', '0', '12514416',
+            '674352', '0', '186452', '748524', '0', '0', '0', '0', '0', '0'
+        ],
+        [
+            '53', '2', 'dm-2', '194', '0', '8616', '68', '0', '0', '0', '0', '0', '72', '68', '0',
+            '0', '0', '0', '0', '0'
+        ],
+        ['[dmsetup_info]'],
+        ['vme0n1p3_crypt', '253:0'],
+        ['buntu--vg-swap_1', '253:2', 'ubuntu-vg', 'swap_1'],
+        ['buntu--vg-root', '253:1', 'ubuntu-vg', 'root'],
+    ]
+
+    PARAMS = {
+        'average': 300,
+        'latency': (80.0, 160.0),
+        'read': {
+            'horizon': 90,
+            'levels_lower': ('absolute', (2.0, 4.0)),
+            'levels_upper': ('relative', (10.0, 20.0)),
+            'levels_upper_min': (10.0, 15.0),
+            'period': 'wday'
+        },
+        'read_ios': (400.0, 600.0),
+        'read_latency': (80.0, 160.0),
+        'read_wait': (30.0, 50.0),
+        'utilization': (80.0, 90.0),
+        'write': (50.0, 100.0),
+        'write_ios': (300.0, 400.0),
+        'write_latency': (80.0, 160.0),
+        'write_wait': (30.0, 50.0)
+    }
+
+    prediction = mocker.patch("cmk.base.check_api._prediction.get_levels",
+                              return_value=(None, (2.1, 4.1, None, None)))
+    # 2.1.0 TODO: don't mock this. Use the context managers.
+    mocker.patch("cmk.base.check_api_utils.host_name", return_value="unittest-hn")
+    mocker.patch("cmk.base.check_api_utils.service_description", return_value="unittest-sd")
+
+    with pytest.raises(IgnoreResultsError):
+        list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
+    DATA[0][0] = '1617784512'
+    assert list(diskstat.check_diskstat(
+        "nvme0n1",
+        PARAMS,
+        diskstat.parse_diskstat(DATA),
+        None,
+    )) == [
+        Result(state=state.OK, notice='All values averaged over 5 minutes 0 seconds'),
+        Result(state=state.OK, notice='Utilization: 0%'),
+        Metric('disk_utilization', 0.0, levels=(0.8, 0.9)),
+        Result(state=state.OK, summary='Read: 0.00 B/s (no reference for prediction yet)'),
+        Metric('disk_read_throughput', 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
+        Result(state=state.OK, summary='Write: 0.00 B/s'),
+        Metric('disk_write_throughput', 0.0, levels=(50000000.0, 100000000.0)),
+        Result(state=state.OK, notice='Average wait: 0 seconds'),
+        Metric('disk_average_wait', 0.0),
+        Result(state=state.OK, notice='Average read wait: 0 seconds'),
+        Metric('disk_average_read_wait', 0.0, levels=(0.03, 0.05)),
+        Result(state=state.OK, notice='Average write wait: 0 seconds'),
+        Metric('disk_average_write_wait', 0.0, levels=(0.03, 0.05)),
+        Result(state=state.OK, notice='Average queue length: 0.00'),
+        Metric('disk_queue_length', 0.0),
+        Result(state=state.OK, notice='Read operations: 0.00/s'),
+        Metric('disk_read_ios', 0.0, levels=(400.0, 600.0)),
+        Result(state=state.OK, notice='Write operations: 0.00/s'),
+        Metric('disk_write_ios', 0.0, levels=(300.0, 400.0)),
+        Result(state=state.OK, summary='Latency: 0 seconds'),
+        Metric('disk_latency', 0.0, levels=(0.08, 0.16)),
+        Metric('disk_average_read_request_size', 0.0),
+        Metric('disk_average_request_size', 0.0),
+        Metric('disk_average_write_request_size', 0.0),
+    ]
 
 
 def test_parse_diskstat_simple():

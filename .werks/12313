@@ -1,0 +1,12 @@
+Title: checks: diskstat: Fix predictive values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1617796465
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p2
+
+Disk IO should now be able to display predictive values. Before this fix checkmk
+crashed with a KeyError.

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.4  'Failover LAN Interface'
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.6  'Primary unit (this device)'
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.2.7  'Secondary unit'
@@ -15,15 +14,6 @@
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.6  'Active unit'
 # .1.3.6.1.4.1.9.9.147.1.2.1.1.1.4.7  'Standby unit'
 
-
-# [['Failover LAN Interface', '2', 'LAN_FO GigabitEthernet0/0.777'],
-#  ['Primary unit', '9', 'Active unit'],
-#  ['Secondary unit (this device)', '10', 'Standby unit']]
-
-# failover off/ not configured
-# [['Failover LAN Interface', '3', 'not Configured'],
-#  ['Primary unit', '3', 'Failover Off'],
-#  ['Secondary unit (this device)', '3', 'Failover Off']]
 
 from dataclasses import dataclass
 from typing import List, Mapping, Any, Optional
@@ -46,20 +36,25 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def get_cisco_asa_state_name(st: str) -> str:
-    names = {
-        '1': 'other',
-        '2': 'up',
-        '3': 'down',
-        '4': 'error',
-        '5': 'overTemp',
-        '6': 'busy',
-        '7': 'noMedia',
-        '8': 'backup',
-        '9': 'active',
-        '10': 'standby',
-    }
-    return names.get(st, 'unknown %s' % st)
+_STATE_NAMES = {
+    '1': 'other',
+    '2': 'up',
+    '3': 'down',
+    '4': 'error',
+    '5': 'overTemp',
+    '6': 'busy',
+    '7': 'noMedia',
+    '8': 'backup',
+    '9': 'active',
+    '10': 'standby',
+}
+
+
+def _get_cisco_asa_state_name(st: str) -> str:
+    return _STATE_NAMES.get(
+        st,
+        f'unknown {st}',
+    )
 
 
 @dataclass
@@ -106,23 +101,23 @@ def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> C
     yield Result(state=State.OK,
                  summary='Device (%s) is the %s' % (section.local_role, section.local_status_detail))
 
-    if not params[section.local_role] == get_cisco_asa_state_name(section.local_status):  # wrong device active/standby
+    if not params[section.local_role] == _get_cisco_asa_state_name(section.local_status):  # wrong device active/standby
         yield Result(state=State(params['failover_state']),
                      summary='(The %s device should be %s)' % (section.local_role, params[section.local_role]))
 
     if section.local_status not in ['9', '10']:  # local not active/standby
         yield Result(state=State(params['not_active_standby_state']),
-                     summary='Unhandled state %s reported' % get_cisco_asa_state_name(section.local_status))
+                     summary='Unhandled state %s reported' % _get_cisco_asa_state_name(section.local_status))
 
     if section.remote_status not in ['9', '10']:  # remote not active/standby
         yield Result(state=State(params['not_active_standby_state']),
-                     summary='Unhandled state %s for remote device reported' % get_cisco_asa_state_name(
+                     summary='Unhandled state %s for remote device reported' % _get_cisco_asa_state_name(
                          section.remote_status))
 
     if section.failover_link_status not in ['2']:  # not up
         yield Result(state=State(params['failover_link_state']),
                      summary='Failover link %s state is %s' % (
-                     section.failover_link_name, get_cisco_asa_state_name(section.failover_link_status)))
+                     section.failover_link_name, _get_cisco_asa_state_name(section.failover_link_status)))
 
 
 register.snmp_section(

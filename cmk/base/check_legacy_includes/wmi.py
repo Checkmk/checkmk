@@ -84,9 +84,7 @@ class WMITable:
                 if index == self.__key_index:
                     key_field = header
 
-        headers = [
-            name for name, index in sorted(iter(self.__headers.items()), lambda x, y: x[1] - y[1])
-        ]
+        headers = [name for name, index in sorted(iter(self.__headers.items()), key=lambda x: x[1])]
 
         return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers,
                                                key_field, self.__timestamp, self.__frequency,

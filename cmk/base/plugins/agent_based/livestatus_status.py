@@ -10,6 +10,8 @@ from .agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
     Metric,
     register,
     render,
@@ -156,12 +158,17 @@ def _generate_livestatus_results(
         ("requests", "Livestatus requests"),
         ("log_messages", "Log messages"),
     ]:
-        value = get_rate(
-            value_store=value_store,
-            key=key,
-            time=this_time,
-            value=float(status[key]),
-        )
+        try:
+            value = get_rate(
+                value_store=value_store,
+                key=key,
+                time=this_time,
+                value=float(status[key]),
+            )
+        except GetRateError as error:
+            yield IgnoreResults(str(error))
+            continue
+
         if key in ("host_checks", "service_checks"):
             yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
         else:

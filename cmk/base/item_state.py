@@ -48,7 +48,7 @@ OnWrap = Union[None, bool, float]
 
 class _ItemStateFile(NamedTuple):
     path: Path
-    mtime: float
+    mtime: Optional[float]
 
 
 class MKCounterWrapped(MKException):
@@ -75,14 +75,27 @@ class CachedItemStates:
 
     def load(self, hostname: HostName) -> None:
         self._logger.debug("Loading item states")
+
         filepath = Path(cmk.utils.paths.counters_dir, hostname)
         try:
+            file_to_load = _ItemStateFile(filepath, filepath.stat().st_mtime)
+        except FileNotFoundError:
+            file_to_load = _ItemStateFile(filepath, None)
+
+        if file_to_load == self._loaded_file:
+            self._logger.debug("already loaded")
+            return
+
+        if self._loaded_file is None or file_to_load.path != self._loaded_file.path:
+            self.reset()
+
+        try:
             self._item_states = store.load_object_from_file(
-                filepath,
+                file_to_load.path,
                 default={},
                 lock=True,
             )
-            self._loaded_file = _ItemStateFile(filepath, filepath.stat().st_mtime)
+            self._loaded_file = file_to_load
         finally:
             store.release_lock(filepath)
 
@@ -168,7 +181,6 @@ _cached_item_states = CachedItemStates()
 
 
 def load(hostname: HostName) -> None:
-    _cached_item_states.reset()
     _cached_item_states.load(hostname)
 
 

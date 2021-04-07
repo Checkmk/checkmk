@@ -1290,7 +1290,7 @@ class Overridable(Base):
 
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
-            if mode == "edit":
+            if mode in ("edit", "clone"):
                 page_dict.update(new_page_dict)
             else:
                 page_dict = new_page_dict

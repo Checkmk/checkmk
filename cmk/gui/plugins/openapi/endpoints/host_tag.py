@@ -58,7 +58,7 @@ class HostTagGroupName(fields.String):
         super()._validate(value)
         group_exists = tag_group_exists(value)
         if not group_exists:
-            self.fail("should_exist", name=value)
+            raise self.make_error("should_exist", name=value)
 
 
 HOST_TAG_GROUP_NAME = {

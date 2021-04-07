@@ -8,7 +8,7 @@ import collections.abc
 import json
 import re
 import typing
-from typing import Any, Optional, Tuple, Callable
+from typing import Any, Optional, Protocol, Tuple
 
 from marshmallow import fields as _fields, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -112,27 +112,27 @@ The maximum length is 3.
         value = super()._deserialize(value, attr, data)
         enum = self.metadata.get('enum')
         if enum and value not in enum:
-            self.fail("enum", value=value, enum=enum)
+            raise self.make_error("enum", value=value, enum=enum)
 
         pattern = self.metadata.get('pattern')
         if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
-            self.fail("pattern", value=value, pattern=pattern)
+            raise self.make_error("pattern", value=value, pattern=pattern)
 
         max_length = self.metadata.get('maxLength')
         if max_length is not None and len(value) > max_length:
-            self.fail("maxLength", value=value, maxLength=max_length)
+            raise self.make_error("maxLength", value=value, maxLength=max_length)
 
         min_length = self.metadata.get('minLength')
         if min_length is not None and len(value) < min_length:
-            self.fail("minLength", value=value, minLength=min_length)
+            raise self.make_error("minLength", value=value, minLength=min_length)
 
         maximum = self.metadata.get('maximum')
         if maximum is not None and value > maximum:
-            self.fail("maximum", value=value, maximum=maximum)
+            raise self.make_error("maximum", value=value, maximum=maximum)
 
         minimum = self.metadata.get('minimum')
         if minimum is not None and value < minimum:
-            self.fail("minimum", value=value, minimum=minimum)
+            raise self.make_error("minimum", value=value, minimum=minimum)
 
         return value
 
@@ -201,27 +201,31 @@ class Integer(_fields.Integer):
 
         enum = self.metadata.get('enum')
         if enum and value not in enum:
-            self.fail("enum", value=value, enum=enum)
+            raise self.make_error("enum", value=value, enum=enum)
 
         maximum = self.metadata.get('maximum')
         if maximum is not None and value > maximum:
-            self.fail("maximum", value=value, maximum=maximum)
+            raise self.make_error("maximum", value=value, maximum=maximum)
 
         minimum = self.metadata.get('minimum')
         if minimum is not None and value < minimum:
-            self.fail("minimum", value=value, minimum=minimum)
+            raise self.make_error("minimum", value=value, minimum=minimum)
 
         exclusive_maximum = self.metadata.get('exclusiveMaximum')
         if exclusive_maximum is not None and value >= exclusive_maximum:
-            self.fail("exclusiveMaximum", value=value, exclusiveMaximum=exclusive_maximum)
+            raise self.make_error("exclusiveMaximum",
+                                  value=value,
+                                  exclusiveMaximum=exclusive_maximum)
 
         exclusive_minimum = self.metadata.get('exclusiveMinimum')
         if exclusive_minimum is not None and value <= exclusive_minimum:
-            self.fail("exclusiveMinimum", value=value, exclusiveMinimum=exclusive_minimum)
+            raise self.make_error("exclusiveMinimum",
+                                  value=value,
+                                  exclusiveMinimum=exclusive_minimum)
 
         multiple_of = self.metadata.get('multipleOf')
         if multiple_of is not None and value % multiple_of != 0:
-            self.fail("multipleOf", value=value, multipleOf=multiple_of)
+            raise self.make_error("multipleOf", value=value, multipleOf=multiple_of)
 
         return value
 
@@ -257,21 +261,24 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
     return obj
 
 
+class HasMakeError(Protocol):
+    def make_error(self, key: str, **kwargs: Any) -> ValidationError:
+        ...
+
+
 class UniqueFields:
     """Mixin for collection fields to ensure uniqueness of containing elements
 
     Currently supported Fields are `List` and `Nested(..., many=True, ...)`
 
     """
-    fail: Callable[..., None]
-
     default_error_messages = {
         'duplicate': "Duplicate entry found at entry #{idx}: {entry!r}",
         'duplicate_vary': ("Duplicate entry found at entry #{idx}: {entry!r} "
                            "(optional fields {optional!r})"),
     }
 
-    def _verify_unique_schema_entries(self, value, fields):
+    def _verify_unique_schema_entries(self: HasMakeError, value, fields):
         required_fields = tuple(name for name, field in fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
@@ -292,22 +299,21 @@ class UniqueFields:
                         else:
                             optional_values[key] = _value
 
-                    self.fail("duplicate_vary",
-                              idx=idx,
-                              optional=optional_values,
-                              entry=required_values)
-                else:
-                    self.fail("duplicate", idx=idx, entry=dict(sorted(entry.items())))
+                    raise self.make_error("duplicate_vary",
+                                          idx=idx,
+                                          optional=optional_values,
+                                          entry=required_values)
+                raise self.make_error("duplicate", idx=idx, entry=dict(sorted(entry.items())))
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self, value):
+    def _verify_unique_scalar_entries(self: HasMakeError, value):
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()
         for idx, entry in enumerate(value, start=1):
             if entry in seen:
-                self.fail("duplicate", idx=idx, entry=entry)
+                raise self.make_error("duplicate", idx=idx, entry=entry)
 
             seen.add(entry)
 
@@ -525,7 +531,7 @@ class FolderField(String):
             return self.load_folder(value)
         except MKException:
             if self.required:
-                self.fail("not_found", folder_id=value)
+                raise self.make_error("not_found", folder_id=value)
 
 
 class BinaryExprSchema(BaseSchema):
@@ -715,11 +721,9 @@ class LiveStatusColumn(String):
     def _deserialize(self, value, attr, data, **kwargs):
         table = self.metadata['table']
         if value not in table.__columns__():
-            self.fail(
-                "unknown_column",
-                table_name=table.__tablename__,
-                column_name=value,
-            )
+            raise self.make_error("unknown_column",
+                                  table_name=table.__tablename__,
+                                  column_name=value)
         for column in self.metadata.get('mandatory', []):
             if column not in value:
                 value.append(column)
@@ -767,17 +771,17 @@ class HostField(String):
         try:
             valuespec.Hostname().validate_value(value, self.name)
         except MKUserError as e:
-            self.fail("invalid_name", host_name=value, invalid_reason=str(e))
+            raise self.make_error("invalid_name", host_name=value, invalid_reason=str(e))
 
         host = watolib.Host.host(value)
         if self._should_exist and not host:
-            self.fail("should_exist", host_name=value)
+            raise self.make_error("should_exist", host_name=value)
 
         if not self._should_exist and host:
-            self.fail("should_not_exist", host_name=value)
+            raise self.make_error("should_not_exist", host_name=value)
 
         if self._should_be_monitored is not None and not host_is_monitored(value):
-            self.fail("should_be_monitored", host_name=value)
+            raise self.make_error("should_be_monitored", host_name=value)
 
 
 def host_is_monitored(host_name: str) -> bool:
@@ -797,7 +801,7 @@ class AttributesField(_fields.Dict):
         try:
             validate_host_attributes(value, new=True)
             if 'meta_data' in value:
-                self.fail("attribute_forbidden", attribute='meta_data', value=value)
+                raise self.make_error("attribute_forbidden", attribute='meta_data', value=value)
         except MKUserError as exc:
             raise ValidationError(str(exc))
 
@@ -807,7 +811,7 @@ class SiteField(_fields.String):
 
     def _validate(self, value):
         if value not in config.allsites().keys():
-            self.fail("unknown_site", site=value)
+            raise self.make_error("unknown_site", site=value)
 
 
 Boolean = _fields.Boolean

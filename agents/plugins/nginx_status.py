@@ -36,6 +36,7 @@ else:
     from urllib.request import Request, urlopen  # pylint: disable=import-error,no-name-in-module
     from urllib.error import URLError, HTTPError  # pylint: disable=import-error,no-name-in-module
     import urllib
+    import shutil
     urllib.getproxies = lambda: {}  # type: ignore[attr-defined]
 
 PY2 = sys.version_info[0] == 2
@@ -85,17 +86,35 @@ if os.path.exists(config_file):
 
 
 def try_detect_servers():
+    netstat = os.popen('which netstat').readlines()
+    ss = os.popen('which ss').readlines()
+    if netstat:
+        socket_cmd = 'netstat -tlnp 2>/dev/null'
+    elif ss:
+        socket_cmd = 'ss -tlnp 2>/dev/null'
+    else:
+        sys.stdout.write(
+            "<<<nginx_status>>>\n"
+            "Error: Need on the monitored system command 'ss' or (deprecated) 'netstat' installed.\n"
+        )
+        sys.exit(1)
+
     pids = []
     results = []
-    for netstat_line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+
+    for netstat_line in os.popen(socket_cmd).readlines():
         parts = netstat_line.split()
         # Skip lines with wrong format
-        if len(parts) < 7 or '/' not in parts[6]:
-            continue
-
-        pid, proc = parts[6].split('/', 1)
-        to_replace = re.compile('^.*/')
-        proc = to_replace.sub('', proc)
+        if netstat:
+            if len(parts) < 7 or '/' not in parts[6]:
+                continue
+            pid, proc = parts[6].split('/', 1)
+        elif ss:
+            if len(parts) < 6 or '),(' not in parts[5]:
+                continue
+            parentproc = re.split ('^users:.\((.*?),(.*?),(.*?)\),(\((.*?),(.*?),(.*?)\))+', parts[5])
+            proc = re.sub('"','',parentproc[5])
+            pid = re.sub('pid=','',parentproc[6])
 
         procs = ['nginx', 'nginx:', 'nginx.conf']
         # the pid/proc field length is limited to 19 chars. Thus in case of
@@ -164,7 +183,8 @@ for server in servers:
             else:
                 raise
 
-        for line in fd.read().split('\n'):
+        fddata = ensure_str(fd.read())
+        for line in fddata.split('\n'):
             if not line.strip():
                 continue
             if line.lstrip()[0] == '<':

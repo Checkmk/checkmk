@@ -38,7 +38,7 @@ def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
         >>> from pprint import pprint
         >>> pprint(parse_mssql_datafiles([
         ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-        ...      'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
+        ...      'Z:\\\\mypath\\\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
         ... ]))
         {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
                                                                      'max_size': 2199023255552.0,

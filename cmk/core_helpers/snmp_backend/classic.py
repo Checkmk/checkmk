@@ -171,7 +171,7 @@ class ClassicSNMPBackend(SNMPBackend):
                                 (value[-1] != '"')):  # to be continued
                 while True:  # scan for end of this dataset
                     nextline = next(line_iter).strip()
-                    value += " " + nextline
+                    value += "\n" + nextline
                     if value[-1] == '"':
                         break
             rowinfo.append((oid, strip_snmp_value(value)))

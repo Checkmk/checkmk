@@ -191,7 +191,7 @@ def mac_address_from_hexstring(hexstr: str) -> str:
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
 def cleanup_if_strings(s: str) -> str:
     if s and s != '':
-        return "".join([c for c in s if c != chr(0)]).strip()
+        return s.replace('\0', '').replace('\n', ' ').strip()
     return s
 
 

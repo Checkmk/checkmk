@@ -164,7 +164,7 @@ for server in servers:
             else:
                 raise
 
-        for line in fd.read().split('\n'):
+        for line in ensure_str(fd.read()).split('\n'):
             if not line.strip():
                 continue
             if line.lstrip()[0] == '<':

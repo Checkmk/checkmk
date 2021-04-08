@@ -42,6 +42,7 @@ def test_parse_site_object_counts():
         ['[[[stable]]]'],
         ['Tags', 'snmp prod', '2;2'],
         ['Service check commands', 'omd_apache hr_cpu', '2;1'],
+        ['[[[old]]]'],
     ]) == SECTION
 
 

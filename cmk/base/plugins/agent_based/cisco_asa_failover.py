@@ -46,9 +46,9 @@ class Section:
     remote_status: str
 
 
-def parse_cisco_asa_failover(string_table: List[StringTable]) -> Optional[Section]:
+def parse_cisco_asa_failover(string_table: StringTable) -> Optional[Section]:
     failover = {}
-    for role, status, detail in string_table[0]:
+    for role, status, detail in string_table:
         if 'this device' in role and not detail.lower() == 'failover off':
             failover['local_role'] = role.split(' ')[0].lower()
             failover['local_status'] = status
@@ -123,16 +123,14 @@ def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> C
 register.snmp_section(
     name='cisco_asa_failover',
     parse_function=parse_cisco_asa_failover,
-    fetch=[
-        SNMPTree(
-            base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',  # CISCO-FIREWALL-MIB::cfwHardwareStatusEntry
-            oids=[
-                '2',  # CISCO-FIREWALL-MIB::cfwHardwareInformation
-                '3',  # CISCO-FIREWALL-MIB::cfwHardwareStatusValue
-                '4',  # CISCO-FIREWALL-MIB::cfwHardwareStatusDetail
-            ]
-        ),
-    ],
+    fetch=SNMPTree(
+        base='.1.3.6.1.4.1.9.9.147.1.2.1.1.1',  # CISCO-FIREWALL-MIB::cfwHardwareStatusEntry
+        oids=[
+            '2',  # CISCO-FIREWALL-MIB::cfwHardwareInformation
+            '3',  # CISCO-FIREWALL-MIB::cfwHardwareStatusValue
+            '4',  # CISCO-FIREWALL-MIB::cfwHardwareStatusDetail
+        ]
+    ),
     detect=any_of(
         startswith('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco pix security'),

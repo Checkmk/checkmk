@@ -25,15 +25,15 @@ cisco_asa_failover_params = {
 
 @pytest.mark.parametrize('string_table, expected', [
     pytest.param(
-        [[['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
-          ['Primary unit (this device)', '9', 'Active unit'], ['Secondary unit', '10', 'Standby unit'], ], ],
+        [['Failover LAN Interface', '2', 'ClusterLink Port-channel4 (system)'],
+         ['Primary unit (this device)', '9', 'Active unit'], ['Secondary unit', '10', 'Standby unit'], ],
         Section(local_role='primary', local_status='9', local_status_detail='Active unit',
                 failover_link_status='2', failover_link_name='ClusterLink Port-channel4 (system)', remote_status='10'),
         id='Parse: Primary unit == Active unit'
     ),
     pytest.param(
-        [[['Failover LAN Interface', '3', 'not Configured'], ['Primary unit (this device)', '3', 'Failover Off'],
-          ['Secondary unit', '3', 'Failover Off'], ], ],
+        [['Failover LAN Interface', '3', 'not Configured'], ['Primary unit (this device)', '3', 'Failover Off'],
+         ['Secondary unit', '3', 'Failover Off'], ],
         None,
         id='Parse: failover off/not configured'
     ),

@@ -16,7 +16,7 @@
 
 
 from dataclasses import dataclass
-from typing import List, Mapping, Any, Optional
+from typing import Mapping, Any, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,

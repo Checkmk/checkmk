@@ -1,0 +1,15 @@
+Title: Fix "invalid byte in UTF-8 sequence" error in EC
+Knowledge: doc
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p23
+Date: 1617874169
+
+An error in the agent protocol could, in some cases, send an
+invalid payload to the core.  The core would then spam the event
+console with "invalid byte XXX in UTF-8 sequence" messages
+making the event console unusable.

@@ -36,27 +36,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-_STATE_NAMES = {
-    '1': 'other',
-    '2': 'up',
-    '3': 'down',
-    '4': 'error',
-    '5': 'overTemp',
-    '6': 'busy',
-    '7': 'noMedia',
-    '8': 'backup',
-    '9': 'active',
-    '10': 'standby',
-}
-
-
-def _get_cisco_asa_state_name(st: str) -> str:
-    return _STATE_NAMES.get(
-        st,
-        f'unknown {st}',
-    )
-
-
 @dataclass
 class Section:
     local_role: str
@@ -97,9 +76,30 @@ def discovery_cisco_asa_failover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
+_STATE_NAMES = {
+    '1': 'other',
+    '2': 'up',
+    '3': 'down',
+    '4': 'error',
+    '5': 'overTemp',
+    '6': 'busy',
+    '7': 'noMedia',
+    '8': 'backup',
+    '9': 'active',
+    '10': 'standby',
+}
+
+
+def _get_cisco_asa_state_name(st: str) -> str:
+    return _STATE_NAMES.get(
+        st,
+        f'unknown {st}',
+    )
+
+
 def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> CheckResult:
     yield Result(state=State.OK,
-                 summary='Device (%s) is the %s' % (section.local_role, section.local_status_detail))
+                 summary=f'Device ({section.local_role}) is the {section.local_status_detail}')
 
     if not params[section.local_role] == _get_cisco_asa_state_name(section.local_status):  # wrong device active/standby
         yield Result(state=State(params['failover_state']),
@@ -107,7 +107,7 @@ def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> C
 
     if section.local_status not in ['9', '10']:  # local not active/standby
         yield Result(state=State(params['not_active_standby_state']),
-                     summary='Unhandled state %s reported' % _get_cisco_asa_state_name(section.local_status))
+                     summary=f'Unhandled state {_get_cisco_asa_state_name(section.local_status)} reported', )
 
     if section.remote_status not in ['9', '10']:  # remote not active/standby
         yield Result(state=State(params['not_active_standby_state']),
@@ -116,8 +116,8 @@ def check_cisco_asa_failover(params: (Mapping[str, Any]), section: Section) -> C
 
     if section.failover_link_status not in ['2']:  # not up
         yield Result(state=State(params['failover_link_state']),
-                     summary='Failover link %s state is %s' % (
-                     section.failover_link_name, _get_cisco_asa_state_name(section.failover_link_status)))
+                     summary=f'Failover link {section.failover_link_name} state is'
+                             f' {_get_cisco_asa_state_name(section.failover_link_status)}', )
 
 
 register.snmp_section(
@@ -152,5 +152,5 @@ register.check_plugin(
         'failover_link_state': 2,
         'not_active_standby_state': 1,
     },
-    check_ruleset_name='cisco_asa_failover'
+    check_ruleset_name='cisco_asa_failover',
 )

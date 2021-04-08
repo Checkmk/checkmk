@@ -29,7 +29,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metri
     ),
 ])
 def test_local_format_error(string_table, exception_reason):
-
     with pytest.raises(ValueError) as e:
         list(local.discover_local(local.parse_local(string_table)))
     assert str(e.value) == exception_reason
@@ -52,8 +51,9 @@ def test_local_format_error(string_table, exception_reason):
                                            local.Perfdata(
                                                name="V",
                                                value=1.0,
-                                               levels=(None, None, None, None),
-                                               as_tuple=("V", 1.0, None, None, None, None),
+                                               levels_upper=None,
+                                               levels_lower=None,
+                                               boundaries=(None, None),
                                            )
                                        ],
                                    )
@@ -73,8 +73,9 @@ def test_local_format_error(string_table, exception_reason):
                                            local.Perfdata(
                                                name="V",
                                                value=1.0,
-                                               levels=(None, None, None, None),
-                                               as_tuple=("V", 1.0, None, None, None, None),
+                                               levels_upper=None,
+                                               levels_lower=None,
+                                               boundaries=(None, None),
                                            )
                                        ],
                                    )
@@ -108,8 +109,9 @@ def test_local_format_error(string_table, exception_reason):
                                            local.Perfdata(
                                                name="V",
                                                value=120,
-                                               levels=(50, 100, None, None),
-                                               as_tuple=("V", 120, 50, 100, 0, 1000),
+                                               levels_upper=(50, 100),
+                                               levels_lower=None,
+                                               boundaries=(0, 1000),
                                            )
                                        ],
                                    )
@@ -132,14 +134,16 @@ def test_local_format_error(string_table, exception_reason):
                                            local.Perfdata(
                                                name="value1",
                                                value=10,
-                                               levels=(30, 50, None, None),
-                                               as_tuple=("value1", 10, 30, 50, None, None),
+                                               levels_upper=(30, 50),
+                                               levels_lower=None,
+                                               boundaries=(None, None),
                                            ),
                                            local.Perfdata(
                                                name="value2",
                                                value=20,
-                                               levels=(20, 50, 10, 0),
-                                               as_tuple=("value2", 20, 20, 50, 0, 100),
+                                               levels_upper=(20, 50),
+                                               levels_lower=(10, 0),
+                                               boundaries=(0, 100),
                                            )
                                        ],
                                    )
@@ -159,8 +163,9 @@ def test_local_format_error(string_table, exception_reason):
                                            local.Perfdata(
                                                name="hirn",
                                                value=-8,
-                                               levels=(-20, float('inf'), None, None),
-                                               as_tuple=("hirn", -8, -20, None, None, None),
+                                               levels_upper=(-20, float('inf')),
+                                               levels_lower=None,
+                                               boundaries=(None, None),
                                            )
                                        ],
                                    )
@@ -182,8 +187,9 @@ def test_local_format_error(string_table, exception_reason):
                             local.Perfdata(
                                 name="isotopes",
                                 value=0,
-                                levels=(None, None, None, None),
-                                as_tuple=("isotopes", 0, None, None, None, None),
+                                levels_upper=None,
+                                levels_lower=None,
+                                boundaries=(None, None),
                             )
                         ],
                     )
@@ -191,7 +197,12 @@ def test_local_format_error(string_table, exception_reason):
         ),
     ])
 def test_parse(string_table_row, expected_parsed_data):
-    assert local.parse_local([string_table_row]) == expected_parsed_data
+    result = local.parse_local([string_table_row])
+    print()
+    print(string_table_row)
+    print(expected_parsed_data)
+    print(result)
+    assert result == expected_parsed_data
 
 
 def test_fix_state():
@@ -205,8 +216,9 @@ def test_fix_state():
             local.Perfdata(
                 name="V",
                 value=120,
-                levels=(50, 100, None, None),
-                as_tuple=("V", 120, 50, 100, 0, 1000),
+                levels_upper=(50, 100),
+                levels_lower=None,
+                boundaries=(0, 1000),
             )
         ],
     )
@@ -253,14 +265,16 @@ def test_compute_state():
             local.Perfdata(
                 name="value1",
                 value=10,
-                levels=(30, 50, None, None),
-                as_tuple=("value1", 10, 30, 50, None, None),
+                levels_upper=(30, 50),
+                levels_lower=None,
+                boundaries=(None, None),
             ),
             local.Perfdata(
                 name="value2",
                 value=20,
-                levels=(20, 50, 10, 0),
-                as_tuple=("value2", 20, 20, 50, 0, 100),
+                levels_upper=(20, 50),
+                levels_lower=(10, 0),
+                boundaries=(0, 100),
             )
         ],
     )

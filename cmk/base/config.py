@@ -2567,11 +2567,25 @@ class HostConfig:
             return None
         return entries[0]
 
+    def _is_host_snmp_v1(self) -> bool:
+        """Determines is host snmp-v1 using a bit Heuristic algorithm"""
+        if isinstance(self._snmp_credentials(), tuple):
+            return False  # v3
+
+        if self._config_cache.in_binary_hostlist(self.hostname, bulkwalk_hosts):
+            return False
+
+        return not self._config_cache.in_binary_hostlist(self.hostname, snmpv2c_hosts)
+
+    def _is_inline_backend_supported(self) -> bool:
+        return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
+
+    def _is_pysnmp_backend_supported(self) -> bool:
+        return "pysnmp" in sys.modules and not cmk_version.is_raw_edition()
+
     def _get_snmp_backend(self) -> SNMPBackend:
-        has_netsnmp = "netsnmp" in sys.modules
-        has_pysnmp = "pysnmp" in sys.modules
-        with_inline_snmp = has_netsnmp and not cmk_version.is_raw_edition()
-        with_pysnmp = has_pysnmp and not cmk_version.is_raw_edition()
+        with_inline_snmp = self._is_inline_backend_supported()
+        with_pysnmp = self._is_pysnmp_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
@@ -2585,6 +2599,11 @@ class HostConfig:
             if host_backend == "classic":
                 return SNMPBackend.classic
             raise MKGeneralException("Bad Host SNMP Backend configuration: %s" % host_backend)
+
+        # TODO(sk): remove this when netsnmp is fixed
+        # NOTE: Force usage of CLASSIC with SNMP-v1 to prevent memory leak in the netsnmp
+        if self._is_host_snmp_v1():
+            return SNMPBackend.classic
 
         if with_pysnmp and snmp_backend_default == "pysnmp":
             return SNMPBackend.pysnmp

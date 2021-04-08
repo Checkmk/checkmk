@@ -1,0 +1,11 @@
+Title: Fix ValueError on reloading of distributed monitoring page
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cme
+Version: 1.6.0p23
+Date: 1617886342
+Class: fix
+
+If a site connection was edited and saved, a reload of the distributed
+monitoring page caused a ValueError "(to many values to unpack)".

@@ -39321,7 +39321,7 @@ msgid "The MBean's object name, for example java.lang:type=Memory"
 msgstr "Der Object Name der MBean, zum Beispiel java.lang:type=Memory"
 
 msgid "The Multisite URL must end with /check_mk/"
-msgstr "Multisite URL muss mit <tt>/check_mk</tt> enden"
+msgstr "Multisite URL muss mit <tt>/check_mk/</tt> enden"
 
 msgid ""
 "The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."

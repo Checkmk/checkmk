@@ -1,0 +1,12 @@
+Title: Fix translated error if multisite url of site connection is invalid
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p23
+Date: 1617882905
+Class: fix
+
+If you used german language and tried to enter an invalid multisite url for a
+site connection, it was stated, that the url has to end with "/check_mk". The
+message now shows the correct expected input "/check_mk/".

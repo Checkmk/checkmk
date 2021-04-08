@@ -16,7 +16,7 @@ from cmk.base.check_legacy_includes import dell_compellent
 
 def inventory_dell_compellent_folder(info):
     for line in info:
-        if float(line[1]) != 0:
+        if line[1] and float(line[1]) != 0:
             yield (line[0], {})
 
 

@@ -307,7 +307,7 @@ class Table:
                                               title=html.render_h3(self.title,
                                                                    class_=["treeangle", "title"]))
             else:
-                html.open_h3()
+                html.open_h3(class_="table")
                 html.write(self.title)
                 html.close_h3()
 

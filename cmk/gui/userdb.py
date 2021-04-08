@@ -350,8 +350,10 @@ def on_end_of_request(user_id: UserId) -> None:
 
     assert user_id == session.user_id
     session_infos = _load_session_infos(user_id, lock=True)
-    _refresh_session(user_id, session.session_info)
-    session_infos[session.session_info.session_id] = session.session_info
+    if session_infos:
+        _refresh_session(user_id, session.session_info)
+        session_infos[session.session_info.session_id] = session.session_info
+
     _save_session_infos(user_id, session_infos)
 
 

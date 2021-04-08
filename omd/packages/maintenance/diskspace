@@ -188,7 +188,7 @@ def cleanup_aged():
     max_age = time.time() - max_file_age
 
     for plugin in plugins.values():
-        for path, (_size, mtime) in plugin.get('file_infos', {}).items():
+        for path, (_size, mtime) in list(plugin.get('file_infos', {}).items()):
             if mtime < max_age:
                 if delete_file(path, 'too old'):
                     del plugin['file_infos'][path]

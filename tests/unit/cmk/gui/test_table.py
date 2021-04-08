@@ -115,12 +115,12 @@ def test_nesting(register_builtin_html):
 
         written_text = "".join(html.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
+        written_text, '''<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             <tr class="data even0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
+                                <h3 class="table"> TEST 2</h3>
                                 <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
@@ -148,12 +148,12 @@ def test_nesting_context(register_builtin_html):
 
         written_text = "".join(html.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
+        written_text, '''<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
                             <tr class="data even0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
+                                <h3 class="table"> TEST 2</h3>
                                 <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>

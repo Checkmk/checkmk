@@ -25,7 +25,7 @@ h4 {
   color: $font-color;
 }
 
-h3 {
+h3:not(.table) {
   font-size: $font-size-large;
   font-weight: normal;
 }

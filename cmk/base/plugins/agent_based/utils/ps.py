@@ -670,6 +670,7 @@ def uptime_check(
     else:
         yield from check_levels(
             min_elapsed,
+            metric_name="age_youngest",
             levels_lower=params.get("min_age"),
             render_func=render.timespan,
             label="Youngest running for",
@@ -677,6 +678,7 @@ def uptime_check(
         )
         yield from check_levels(
             max_elapsed,
+            metric_name="age_oldest",
             levels_upper=params.get("max_age"),
             render_func=render.timespan,
             label="Oldest running for",

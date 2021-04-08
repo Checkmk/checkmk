@@ -388,7 +388,9 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, notice="Youngest running for: 2 hours 37 minutes"),
+        Metric("age_youngest", 9459.0),
         Result(state=state.OK, notice="Oldest running for: 3 hours 54 minutes"),
+        Metric('age_oldest', 14050.0),
         Result(
             state=state.OK,
             notice=(
@@ -468,6 +470,7 @@ check_results = [
         ),
         Metric("process_handles", 1204, levels=(1000, 2000)),
         Result(state=state.OK, notice="Youngest running for: 12 seconds"),
+        Metric("age_youngest", 12.0),
         Result(
             state=state.WARN,
             notice=(
@@ -475,6 +478,7 @@ check_results = [
                 " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"
             ),
         ),
+        Metric("age_oldest", 4300.0, levels=(3600.0, 7200.0)),
     ],
     [
         Result(state=state.OK, summary="Processes: 1"),
@@ -754,7 +758,9 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Result(state=state.OK, notice='firefox with PID 25758 CPU: 0%'),
         Result(state=state.OK, notice='firefox with PID 25898 CPU: 40.00%'),
         Result(state=state.OK, notice='Youngest running for: 6 minutes 57 seconds'),
+        Metric("age_youngest", 417.0),
         Result(state=state.OK, notice='Oldest running for: 26 minutes 58 seconds'),
+        Metric("age_oldest", 1618.0),
         Result(state=state.OK, notice="\r\n".join([
             'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
             ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',

@@ -63,15 +63,10 @@ class CachedItemStates:
 
     def reset(self) -> None:
         self._item_states: ItemStates = {}
-        self._item_state_prefix: ItemStateKey = ()
+        self._item_state_prefix: Optional[ItemStateKey] = None
         self._loaded_file: Optional[_ItemStateFile] = None
         self._removed_item_state_keys: List[ItemStateKey] = []
         self._updated_item_states: ItemStates = {}
-
-    def clear_all_item_states(self) -> None:
-        removed_item_state_keys = list(self._item_states.keys())
-        self.reset()
-        self._removed_item_state_keys = removed_item_state_keys
 
     def load(self, hostname: HostName) -> None:
         self._logger.debug("Loading item states")
@@ -136,7 +131,7 @@ class CachedItemStates:
 
             store.save_object_to_file(filename, self._item_states, pretty=False)
         except Exception:
-            raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
+            raise MKGeneralException(f"Cannot write to {filename}: {traceback.format_exc()}")
         finally:
             store.release_lock(filename)
 
@@ -167,13 +162,16 @@ class CachedItemStates:
     def get_all_item_states(self) -> ItemStates:
         return self._item_states
 
-    def get_item_state_prefix(self) -> ItemStateKey:
+    def get_item_state_prefix(self) -> Optional[ItemStateKey]:
         return self._item_state_prefix
 
-    def set_item_state_prefix(self, args: ItemStateKey) -> None:
+    def set_item_state_prefix(self, args: Optional[ItemStateKey]) -> None:
         self._item_state_prefix = args
 
     def get_unique_item_state_key(self, user_key: str) -> ItemStateKey:
+        if self._item_state_prefix is None:
+            # TODO: consolidate this with the exception thrown in value_store.py
+            raise MKGeneralException("accessing item state outside check function")
         return self._item_state_prefix + (user_key,)
 
 
@@ -230,14 +228,14 @@ def clear_item_states_by_full_keys(full_keys: List[ItemStateKey]) -> None:
 
 def cleanup_item_states() -> None:
     """Clears all stored items of the host that is currently being checked."""
-    _cached_item_states.clear_all_item_states()
+    _cached_item_states.reset()
 
 
-def set_item_state_prefix(args: ItemStateKey) -> None:
+def set_item_state_prefix(args: Optional[ItemStateKey]) -> None:
     _cached_item_states.set_item_state_prefix(args)
 
 
-def get_item_state_prefix() -> ItemStateKey:
+def get_item_state_prefix() -> Optional[ItemStateKey]:
     return _cached_item_states.get_item_state_prefix()
 
 

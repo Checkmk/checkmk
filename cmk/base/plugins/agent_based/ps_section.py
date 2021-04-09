@@ -192,13 +192,15 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
         >>> print(lines[0][1])
         ['/sbin/init', '--ladida']
     """
-    if not string_table:
-        return None
-
     data = []
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
     attrs = tuple(word.lower() for word in string_table[0][1:-1])
+
+    # busybox' ps seems to not provide the columns we need so we abort
+    if not all(att in attrs for att in {'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'}):
+        return None
+
     cmd_idx = len(attrs)
 
     for line in string_table[1:]:

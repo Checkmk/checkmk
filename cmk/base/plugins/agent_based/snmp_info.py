@@ -34,8 +34,15 @@ class SNMPInfo(NamedTuple):
     location: str
 
 
+def _parse_string(val):
+    return val.strip().replace("\r\n", " ").replace("\n", " ")
+
+
 def parse_snmp_info(string_table: StringTable) -> Optional[SNMPInfo]:
-    return SNMPInfo(*string_table[0]) if string_table else None
+    if not string_table:
+        return None
+    snmp_info = [_parse_string(s) for s in string_table[0]]
+    return SNMPInfo(*snmp_info)
 
 
 def host_label_snmp_info(section: SNMPInfo) -> HostLabelGenerator:

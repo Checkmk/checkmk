@@ -16,6 +16,7 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_isclienttype_defaultlevels'] = {
+    # attention! those three dictionaries are tuples when returned by wato!
     'store_latency': {
         'upper': (40.0, 50.0)
     },
@@ -41,7 +42,7 @@ def check_msexch_isclienttype(item, params, parsed):
         yield check_levels(
             average,
             "average_latency",
-            params['clienttype_latency'].get('upper'),
+            get_levels_quadruple(params['clienttype_latency']),
             infoname="Average latency",
             unit="ms",
         )
@@ -51,7 +52,7 @@ def check_msexch_isclienttype(item, params, parsed):
                                "RPCRequests",
                                infoname="RPC Requests/sec",
                                perfvar="requests_per_sec",
-                               levels=params['clienttype_requests'])
+                               levels=get_levels_quadruple(params['clienttype_requests']))
 
 
 check_info['msexch_isclienttype'] = {

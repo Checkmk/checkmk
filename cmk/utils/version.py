@@ -98,6 +98,22 @@ def _get_expired_status() -> TrialState:
         return TrialState.NO_LIVESTATUS
 
 
+def _get_timestamp_trial() -> int:
+    try:
+        query = "GET status\nColumns: state_file_created\n"
+        response = livestatus.LocalConnection().query(query)
+        return int(response[0][0])
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        # NOTE: If livestatus is absent we assume that trial is expired.
+        # Livestatus may be absent only when the cmc missing and this case for free version means
+        # just expiration(impossibility to check)
+        return 0
+
+
+def get_age_trial() -> int:
+    return int(time.time()) - _get_timestamp_trial()
+
+
 def is_expired_trial() -> bool:
     return is_free_edition() and _get_expired_status() == TrialState.EXPIRED
 

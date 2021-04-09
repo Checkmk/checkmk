@@ -128,13 +128,13 @@
     /* NOTE: the actual height of the content has to be used here. Otherwise */
     /* artifacts will appear at the bottom of the menu. height: max-content */
     /* will not suffice, since we set the margin as well. */
-    @mixin small-menu($height) {
+    @mixin small-menu($height, $height_nav_bar) {
       top: inherit;
       bottom: 0;
       height: $height;
 
       div.navigation_bar {
-        height: 30px;
+        height: $height_nav_bar;
       }
 
       div.content.inner {
@@ -144,23 +144,24 @@
     }
 
     &.help_links > div.popup_menu {
-      @include small-menu(340px);
+      @include small-menu(350px, auto);
     }
 
     &.user > div.popup_menu {
-      @include small-menu(265px);
+      @include small-menu(265px, 30px);
     }
 
     #messages_link,
     #werks_link {
       flex-grow: 1;
-      margin: auto 0 auto 48px;
+      margin: auto 0 auto 5px;
 
       #werks_link_to,
       #messages_link_to {
         &:not(:empty) {
           padding: 2px 5px;
           color: $white;
+          white-space: nowrap;
           background-color: $danger;
           border-radius: $theme-border-radius;
         }
@@ -168,8 +169,12 @@
     }
 
     .info_line {
+      width: 100%;
+      padding: $spacing 0;
       margin: auto $spacing auto 0;
+      line-height: 130%;
       color: rgba($font-color, 0.7);
+      text-align: right;
     }
 
     div.popup_menu {

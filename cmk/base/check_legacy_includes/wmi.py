@@ -362,7 +362,7 @@ def get_wmi_time(table, row):
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level
 # specifies the upper limit
-def _get_levels_quadruple(params):
+def get_levels_quadruple(params):
     if params is None:
         return (None, None, None, None)
     if isinstance(params, tuple):
@@ -391,7 +391,7 @@ def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
     return check_levels(
         value_per_sec,
         perfvar,
-        _get_levels_quadruple(levels),
+        get_levels_quadruple(levels),
         infoname=infoname,
     )
 
@@ -408,7 +408,7 @@ def wmi_yield_raw_counter(table, row, column, infoname, perfvar, levels=None, un
     return check_levels(
         value,
         perfvar,
-        _get_levels_quadruple(levels),
+        get_levels_quadruple(levels),
         infoname=infoname,
         unit=unit,
         human_readable_func=str,
@@ -464,7 +464,7 @@ def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, pe
     return check_levels(
         average,
         perfvar,
-        _get_levels_quadruple(levels),
+        get_levels_quadruple(levels),
         infoname=infoname,
         human_readable_func=get_age_human_readable,
     )
@@ -480,7 +480,7 @@ def wmi_yield_raw_average_timer(table, row, column, infoname, perfvar, levels=No
     return check_levels(
         average,
         perfvar,
-        _get_levels_quadruple(levels),
+        get_levels_quadruple(levels),
         infoname=infoname,
     )
 
@@ -494,7 +494,7 @@ def wmi_yield_raw_fraction(table, row, column, infoname, perfvar, levels=None):
     return check_levels(
         average,
         perfvar,
-        _get_levels_quadruple(levels),
+        get_levels_quadruple(levels),
         infoname=infoname,
         human_readable_func=get_percent_human_readable,
         boundaries=(0, 100),

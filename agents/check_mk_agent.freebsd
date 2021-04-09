@@ -49,6 +49,12 @@ else
     exec </dev/null 2>/dev/null
 fi
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 # Runs a command asynchronous by use of a cache file
 function run_cached() {
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
@@ -121,7 +127,7 @@ else
 fi
 
 # Filesystem usage for ZFS
-if type zfs > /dev/null 2>&1 ; then
+if inpath zfs; then
     echo '<<<zfsget>>>'
     zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type || \
        zfs get -Hp name,quota,used,avail,mountpoint,type
@@ -135,7 +141,7 @@ fi
 # Check NFS mounts by accessing them with stat -f (System
 # call statfs()). If this lasts more then 2 seconds we
 # consider it as hanging. We need waitmax.
-#if type waitmax >/dev/null
+#if inpath waitmax
 #then
 #    STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
 #    STAT_BROKE="5.3.0"
@@ -181,7 +187,7 @@ idle_seconds=$(ps axw | grep idle | grep -v grep | awk '{print $4}' | cut -f1 -d
 echo "$up_seconds $idle_seconds"
 
 # Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
-#if which cfggen > /dev/null ; then
+#if inpath cfggen; then
 #   echo '<<<lsi>>>'
 #   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
 #fi
@@ -224,7 +230,7 @@ fi
 
 # IPMI-Data (Fans, CPU, temperature, etc)
 # needs the sysutils/ipmitool and kldload ipmi.ko
-if which ipmitool >/dev/null ; then
+if inpath ipmitool; then
     echo '<<<ipmi>>>'
     ipmitool sensor list \
         | grep -v 'command failed' \
@@ -236,7 +242,7 @@ fi
 
 # State of LSI MegaRAID controller via MegaCli.
 # To install: pkg install megacli
-if which MegaCli >/dev/null ; then
+if inpath MegaCli; then
     echo '<<<megaraid_pdisks>>>'
     MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Predictive Failure Count'
     echo '<<<megaraid_ldisks>>>'
@@ -254,7 +260,7 @@ if [ -e /var/log/openvpn/openvpn-status.log ] ; then
 fi
 
 
-if which ntpq > /dev/null 2>&1 ; then
+if inpath ntpq; then
    echo '<<<ntp>>>'
    # remote heading, make first column space separated
    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
@@ -278,7 +284,7 @@ netstat -na | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 # Only handle the last 6 lines (includes the summary line at the bottom and
 # the last message in the queue. The last message is not used at the moment
 # but it could be used to get the timestamp of the last message.
-if type postconf >/dev/null ; then
+if inpath postconf; then
     echo '<<<postfix_mailq>>>'
     postfix_queue_dir=$(postconf -h queue_directory)
     postfix_count=$(find $postfix_queue_dir/deferred -type f | wc -l)
@@ -295,22 +301,21 @@ elif [ -x /usr/sbin/ssmtp ] ; then
 fi
 
 # Check status of qmail mailqueue
-if type qmail-qstat >/dev/null
-then
+if inpath qmail-qstat; then
    echo "<<<qmail_stats>>>"
    qmail-qstat
 fi
 
 # check zpool status
-if [ -x /sbin/zpool ]; then
+if inpath zpool; then
    echo "<<<zpool_status>>>"
-   /sbin/zpool status -x | grep -v "errors: No known data errors"
+   zpool status -x | grep -v "errors: No known data errors"
 fi
 
 
 # Statgrab
 # To install: pkg install libstatgrab
-if type statgrab >/dev/null 2>&1 ; then
+if inpath statgrab; then
 
     statgrab_vars="const. disk. general. page. proc. user."
     statgrab_vars_mem="mem. swap."

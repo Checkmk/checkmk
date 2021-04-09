@@ -140,7 +140,7 @@ register.snmp_section(
 
 register.check_plugin(
     name='cisco_asa_failover',
-    service_name='Failover state',
+    service_name='Cluster Status',
     discovery_function=discovery_cisco_asa_failover,
     check_function=check_cisco_asa_failover,
     check_default_parameters={

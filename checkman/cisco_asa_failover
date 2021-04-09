@@ -1,11 +1,11 @@
-title: Cisco ASA: Failover state
+title: Cisco ASA: Cluster Failover
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv3
 distribution: check_mk
 description:
  The Cisco Adaptive Security Appliances (ASA) support to run as a failover
- pair. This check monitors whether such a pair is running normally, or
+ cluster. This check monitors whether such a cluster is running normally, or
  if it has failed over to the partner device for any reason.
 
  The check will report {OK} as long as the correct unit has the role "active"

@@ -76,7 +76,7 @@ from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=
 from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
     cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
-    cmp_string_list, Command, command_registry, CommandGroup, data_source_registry,
+    cmp_string_list, Command, command_registry, CommandGroup, compare_ips, data_source_registry,
     declare_1to1_sorter, declare_simple_sorter, DerivedColumnsSorter, exporter_registry,
     format_plugin_output, get_all_views, get_custom_var, get_linked_visual_request_vars,
     get_perfdata_nth_value, get_permitted_views, get_tag_groups, get_view_infos, group_value,

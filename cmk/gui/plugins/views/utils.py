@@ -1289,7 +1289,7 @@ def paint_age(timestamp: Timestamp,
 
     painter_options = PainterOptions.get_instance()
     if mode is None:
-        mode = painter_options.get("ts_format")
+        mode = html.request.var("po_ts_format", painter_options.get("ts_format"))
 
     if mode == "epoch":
         return "", str(int(timestamp))
@@ -1299,9 +1299,10 @@ def paint_age(timestamp: Timestamp,
         css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
         return css, "%s - %s" % (h1, h2)
 
-    dateformat = painter_options.get("ts_date")
     age = time.time() - timestamp
     if mode == "abs" or (mode == "mixed" and abs(age) >= 48 * 3600):
+        dateformat = html.request.var("po_ts_date", painter_options.get("ts_date"))
+        assert dateformat is not None
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     warn_txt = u''

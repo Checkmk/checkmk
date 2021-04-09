@@ -54,11 +54,11 @@ def _parameter_valuespec_cisco_asa_failover():
          )),
         ("failover_link_state",
          MonitoringState(
-             title=_("Monitoring state failover link not up"),
+             title=_("Monitoring state if failover link not up"),
              help=_("State if the failover link state is not up"),
              default_value=2,
          )),
-    ],)
+    ], )
 
 
 rulespec_registry.register(

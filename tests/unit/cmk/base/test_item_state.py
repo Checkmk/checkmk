@@ -12,6 +12,75 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.base import item_state
 
 
+class Test_StaticValueStore:
+    def _mock_load(self, mocker):
+        stored_item_states = {
+            (
+                "check1",
+                None,
+                "stored-user-key-1",
+            ): 23,
+            (
+                "check2",
+                "item",
+                "stored-user-key-2",
+            ): 42,
+        }
+
+        mocker.patch.object(
+            store,
+            "load_object_from_file",
+            side_effect=lambda *a, **kw: stored_item_states,
+        )
+
+    def _mock_store(self, mocker):
+        mocker.patch.object(
+            store,
+            "save_object_to_file",
+            autospec=True,
+        )
+
+    def test_mapping_features(self, mocker):
+
+        svs = item_state._StaticValueStore("test-host", lambda msg: None)
+        assert svs.get(("check_no", None, "moo")) is None
+        with pytest.raises(KeyError):
+            _ = svs[("check_no", None, "moo")]
+        assert list(svs) == []
+        assert len(svs) == 0
+
+        self._mock_load(mocker)
+        svs.load()
+        assert svs.get(("check1", None, "stored-user-key-1")) == 23
+        assert svs[("check2", "item", "stored-user-key-2")] == 42
+        assert list(svs) == [
+            ("check1", None, "stored-user-key-1"),
+            ("check2", "item", "stored-user-key-2"),
+        ]
+        assert len(svs) == 2
+
+    def test_store(self, mocker):
+
+        self._mock_load(mocker)
+        self._mock_store(mocker)
+
+        svs = item_state._StaticValueStore("test-host", lambda msg: None)
+        svs.load()
+
+        svs.store(
+            removed={("check1", None, "stored-user-key-1")},
+            updated={("check3", "el Barto", "Ay caramba"): "ASDF"},
+        )
+
+        expected_values = {
+            ("check2", "item", "stored-user-key-2"): 42,
+            ("check3", "el Barto", "Ay caramba"): "ASDF",
+        }
+        written = store.save_object_to_file.call_args.args[1]  # type: ignore[attr-defined]
+        assert written == expected_values
+        assert list(svs.items()) == list(expected_values.items())
+
+
 def test_item_state_prefix_required():
     cis = item_state.CachedItemStates()
     # we *must* set a prefix:
@@ -84,35 +153,32 @@ def test_item_state_loaded(mocker):
 
     assert cis.get_all_item_states() == stored_item_states
 
-    cis.save("hostname")
+    cis.save()
     assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
             is None)  # not called, nothing changed
 
     cis.clear_item_state("this-key-does-not-exist-anyway")  # no-op, but qualifies as a 'change'
-    cis.save("hostname")
+    cis.save()
     assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
             is not None)
     assert store.save_object_to_file.call_args.args[1] == stored_item_states
 
     # remove key
     cis.clear_item_state("stored-user-key-1")
-    cis.save("hostname")
+    cis.save()
     assert store.save_object_to_file.call_args is not None
     assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}
 
     # bring back key
     cis.set_item_state("stored-user-key-1", 42)
-    cis.save("hostname")
+    cis.save()
     assert store.save_object_to_file.call_args is not None
     assert store.save_object_to_file.call_args.args[1] == {
         test_prefix + ("stored-user-key-1",): 42,
         test_prefix + ("stored-user-key-2",): 42,
     }
 
-    # TODO: now, after we set it, we can't remove the key :-(
     cis.clear_item_state("stored-user-key-1")
-    cis.save("hostname")
+    cis.save()
     assert store.save_object_to_file.call_args is not None
-    assert store.save_object_to_file.call_args.args[1] != {  # FIXME: this should be equal!
-        test_prefix + ("stored-user-key-2",): 42
-    }
+    assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}

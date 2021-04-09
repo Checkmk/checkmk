@@ -41,7 +41,7 @@ def current_host(host_name_: str, *, write_state: bool):
     finally:
         _hostname = previous_host_name
         if write_state:
-            item_state.save(host_name_)
+            item_state.save()
             item_state.cleanup_item_states()
 
 

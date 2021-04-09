@@ -19,10 +19,21 @@ Do not store long-time things here. Also do not store complex
 structures like log files or stuff.
 """
 
-import os
 from pathlib import Path
 import traceback
-from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -46,10 +57,82 @@ ItemStates = Mapping[ItemStateKey, Any]
 MutableItemStates = MutableMapping[ItemStateKey, Any]
 OnWrap = Union[None, bool, float]
 
+# TODO: add _DynamicValueStore (values that have been changed in a session)
 
-class _ItemStateFile(NamedTuple):
-    path: Path
-    mtime: Optional[float]
+
+class _StaticValueStore(ItemStates):
+    """Represents the values stored on disk"""
+
+    STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
+
+    def __init__(self, host_name: HostName, log_debug: Callable) -> None:
+        self._path: Final = self.STORAGE_PATH / host_name
+        self._loaded_mtime: Optional[float] = None
+        self._data: ItemStates = {}
+        self._log_debug = log_debug
+
+    def __getitem__(self, key: ItemStateKey) -> Any:
+        return self._data.__getitem__(key)
+
+    def __iter__(self) -> Iterator[ItemStateKey]:
+        return self._data.__iter__()
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def load(self) -> None:
+        self._log_debug("Loading item states")
+
+        try:
+            store.aquire_lock(self._path)
+            self._load()
+        finally:
+            store.release_lock(self._path)
+
+    def _load(self) -> None:
+        try:
+            current_mtime = self._path.stat().st_mtime
+        except FileNotFoundError:
+            return
+
+        if current_mtime == self._loaded_mtime:
+            self._log_debug("already loaded")
+            return
+
+        self._data = store.load_object_from_file(self._path, default={}, lock=False)
+        self._loaded_mtime = current_mtime
+
+    def store(
+        self,
+        *,
+        removed: Set[ItemStateKey],
+        updated: ItemStates,
+    ) -> None:
+        """Re-load and then store the changes of the item state to disk
+
+        Make sure the object is in sync with the file after writing.
+        """
+        self._log_debug("Storing item states")
+        if not (removed or updated):
+            return
+
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            store.aquire_lock(self._path)
+            self._load()
+
+            data = {
+                **{k: v for k, v in self._data.items() if k not in removed},
+                **{k: v for k, v in updated.items() if k not in removed},
+            }
+            store.save_object_to_file(self._path, data, pretty=False)
+            self._mtime = self._path.stat().st_mtime
+            self._data = data
+        except Exception:
+            raise MKGeneralException(f"Cannot write to {self._path}: {traceback.format_exc()}")
+        finally:
+            store.release_lock(self._path)
 
 
 class MKCounterWrapped(MKException):
@@ -63,77 +146,22 @@ class CachedItemStates:
         self.reset()
 
     def reset(self) -> None:
-        self._loaded_item_states: ItemStates = {}
         self._item_state_prefix: Optional[ItemStateKey] = None
-        self._loaded_file: Optional[_ItemStateFile] = None
+        self._static_values: Optional[_StaticValueStore] = None
         self._removed_item_state_keys: Set[ItemStateKey] = set()
         self._updated_item_states: MutableItemStates = {}
 
     def load(self, hostname: HostName) -> None:
-        self._logger.debug("Loading item states")
+        self._static_values = _StaticValueStore(hostname, logger.debug)
+        self._static_values.load()
 
-        filepath = Path(cmk.utils.paths.counters_dir, hostname)
-        try:
-            file_to_load = _ItemStateFile(filepath, filepath.stat().st_mtime)
-        except FileNotFoundError:
-            file_to_load = _ItemStateFile(filepath, None)
-
-        if file_to_load == self._loaded_file:
-            self._logger.debug("already loaded")
+    def save(self) -> None:
+        if self._static_values is None:
             return
-
-        if self._loaded_file is None or file_to_load.path != self._loaded_file.path:
-            self.reset()
-
-        try:
-            self._loaded_item_states = store.load_object_from_file(
-                file_to_load.path,
-                default={},
-                lock=True,
-            )
-            self._loaded_file = file_to_load
-        finally:
-            store.release_lock(filepath)
-
-    # TODO: self._loaded_file.mtime needs be updated accordingly after the save_object_to_file operation
-    #       right now, the current mechanism is sufficient enough, since the save() function is only
-    #       called as the final operation, just before the lifecycle of the CachedItemState ends
-    def save(self, hostname: HostName) -> None:
-        """ The job of the save function is to update the item state on disk.
-        It simply returns, if it detects that the data wasn't changed at all since the last loading
-        If the data on disk has been changed in the meantime, the cached data is updated from disk.
-        Afterwards only the actual modifications (update/remove) are applied to the updated cached
-        data before it is written back to disk.
-        """
-        self._logger.debug("Saving item states")
-        filename = cmk.utils.paths.counters_dir + "/" + hostname
-        if not self._removed_item_state_keys and not self._updated_item_states:
-            return
-
-        try:
-            if not os.path.exists(cmk.utils.paths.counters_dir):
-                os.makedirs(cmk.utils.paths.counters_dir)
-
-            store.aquire_lock(filename)
-            file_mtime = os.stat(filename).st_mtime
-            # TODO: we're assuming it is the same file we loaded, I think.
-            if self._loaded_file is None or file_mtime != self._loaded_file.mtime:
-                self._loaded_item_states = store.load_object_from_file(filename, default={})
-
-                states_to_write = {
-                    k: v
-                    for k, v in self._loaded_item_states.items()
-                    if k not in self._removed_item_state_keys
-                }
-
-                # Add updated keys
-                states_to_write.update(self._updated_item_states)
-
-            store.save_object_to_file(filename, states_to_write, pretty=False)
-        except Exception:
-            raise MKGeneralException(f"Cannot write to {filename}: {traceback.format_exc()}")
-        finally:
-            store.release_lock(filename)
+        self._static_values.store(
+            removed=self._removed_item_state_keys,
+            updated=self._updated_item_states,
+        )
 
     def clear_item_state(self, user_key: str) -> None:
         key = self.get_unique_item_state_key(user_key)
@@ -159,7 +187,10 @@ class CachedItemStates:
         try:
             return self._updated_item_states[key]
         except KeyError:
-            return self._loaded_item_states[key]
+            if self._static_values is None:
+                # TODO: refactor s.t. this can never happen.
+                raise
+            return self._static_values[key]
 
     def set_item_state(self, user_key: str, state: Any) -> None:
         key = self.get_unique_item_state_key(user_key)
@@ -167,7 +198,14 @@ class CachedItemStates:
         self._updated_item_states[key] = state
 
     def get_all_item_states(self) -> MutableItemStates:
-        keys = (set(self._loaded_item_states) |
+        if self._static_values is None:
+            # TODO: refactor s.t. this can never happen.
+            return {
+                k: v
+                for k, v in self._updated_item_states.items()
+                if k not in self._removed_item_state_keys
+            }
+        keys = (set(self._static_values) |
                 set(self._updated_item_states)) - self._removed_item_state_keys
         return {k: self._lookup(k) for k in keys}
 
@@ -191,8 +229,8 @@ def load(hostname: HostName) -> None:
     _cached_item_states.load(hostname)
 
 
-def save(hostname: HostName) -> None:
-    _cached_item_states.save(hostname)
+def save() -> None:
+    _cached_item_states.save()
 
 
 def set_item_state(user_key: str, state: Any) -> None:

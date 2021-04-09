@@ -23,6 +23,7 @@ def _test_context(mock_state: Mapping[str, object]):
     try:
         yield
     finally:
+        item_state._cached_item_states.reset()
         item_state.set_item_state_prefix(previous_prefix)
 
 

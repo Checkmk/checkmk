@@ -51,6 +51,9 @@ class ABCResourceObserver(abc.ABC):
     def _warning(self, message: str) -> None:
         self._logger.warning('%s %s', self._context(), message)
 
+    def _error(self, message: str) -> None:
+        self._logger.error('%s %s', self._context(), message)
+
     def _costly_checks_enabled(self) -> bool:
         return self._logger.isEnabledFor(VERBOSE)
 
@@ -75,6 +78,9 @@ class AbstractMemoryObserver(ABCResourceObserver):
     def memory_usage(self) -> int:
         return self._memory_usage
 
+    def memory_allowed(self) -> int:
+        return int(self._allowed_growth / 100 * self._memory_usage)
+
     def _validate_size(self) -> bool:
         """ Determines whether RAM limit was exceeded.
         Registers (once) memory status when steady state is achieved.
@@ -92,7 +98,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
             self._memory_usage = new_memory_usage
             return True
 
-        return new_memory_usage <= int(self._allowed_growth / 100 * self._memory_usage)
+        return new_memory_usage <= self.memory_allowed()
 
     @staticmethod
     def _vm_size() -> int:
@@ -130,4 +136,8 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
         self._register_check(hint)
 
         if not self._validate_size():
+            self._error("memory usage increased from %s to %s, exiting" % (
+                render.fmt_bytes(self.memory_usage()),
+                render.fmt_bytes(self._vm_size()),
+            ))
             sys.exit(14)

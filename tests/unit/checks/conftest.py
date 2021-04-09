@@ -8,6 +8,8 @@ import pytest  # type: ignore[import]
 
 from testlib.base import Scenario  # type: ignore[import]
 
+from cmk.base import item_state
+
 
 @pytest.fixture(autouse=True, scope="session")
 def _autouse_fix_register(fix_register):
@@ -35,3 +37,15 @@ def clear_config_caches(monkeypatch):
     ts = Scenario()
     ts.add_host("non-existent-testhost")
     ts.apply(monkeypatch)
+
+
+@pytest.fixture(scope="function")
+def initialised_item_state():
+    previous = item_state.get_item_state_prefix()
+    # TODO: uncomment this and fix test_df_check
+    # item_state._cached_item_states.reset()
+    item_state.set_item_state_prefix(("unitialised-test-env", None))
+    try:
+        yield
+    finally:
+        item_state.set_item_state_prefix(previous)

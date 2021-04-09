@@ -193,6 +193,7 @@ _WATO_DICT = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "test_case",
     [
@@ -262,6 +263,7 @@ def test_check_temperature_trend(test_case):
             assertCheckResultsEqual(CheckResult(result), CheckResult(test_case.expected))
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "test_case",
     [

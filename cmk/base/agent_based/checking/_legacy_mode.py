@@ -385,7 +385,7 @@ class _MultiHostSections:
         # from within the check function, nowhere else.
         orig_item_state_prefix = item_state.get_item_state_prefix()
         try:
-            item_state.set_item_state_prefix(section_name, None)
+            item_state.set_item_state_prefix((section_name, None))
             return parse_function(section_content)
 
         except item_state.MKCounterWrapped:
@@ -397,7 +397,7 @@ class _MultiHostSections:
             raise MKParseFunctionError(*sys.exc_info())
 
         finally:
-            item_state.set_item_state_prefix(*orig_item_state_prefix)
+            item_state.set_item_state_prefix(orig_item_state_prefix)
 
     def legacy_determine_cache_info(self, section_name: SectionName) -> Optional[Tuple[int, int]]:
         """Aggregate information about the age of the data in the agent sections

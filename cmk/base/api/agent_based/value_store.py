@@ -85,9 +85,9 @@ def get_value_store() -> ValueStore:
 def context(plugin_name: CheckPluginName, item: Optional[str]) -> Iterator[None]:
     """Set item state prefix"""
     saved_prefix = get_item_state_prefix()
-    set_item_state_prefix(str(plugin_name), item)
+    set_item_state_prefix((str(plugin_name), item))
 
     try:
         yield
     finally:
-        set_item_state_prefix(*saved_prefix)
+        set_item_state_prefix(saved_prefix)

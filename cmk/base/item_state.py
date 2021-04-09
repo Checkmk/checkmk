@@ -233,7 +233,7 @@ def cleanup_item_states() -> None:
     _cached_item_states.clear_all_item_states()
 
 
-def set_item_state_prefix(*args: ItemStateKeyElement) -> None:
+def set_item_state_prefix(args: ItemStateKey) -> None:
     _cached_item_states.set_item_state_prefix(args)
 
 

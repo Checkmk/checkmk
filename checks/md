@@ -103,8 +103,8 @@
 def parse_md(info):
     parsed = {}
     instance = {}
-    for line in info:
-        if line[0].startswith("md") and line[1] == ':':
+    for line in (l for l in info if l):
+        if len(line) >= 6 and line[0].startswith("md") and line[1] == ':':
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]
                 raid_name = line[4]
@@ -132,7 +132,7 @@ def parse_md(info):
                 instance["%s_state" % k] = v
                 continue
 
-            if line[0].startswith("[") and line[0].endswith("]"):
+            if len(line) >= 2 and line[0].startswith("[") and line[0].endswith("]"):
                 for idx, e in enumerate(line[1:]):
                     if e.startswith("finish=") or e.startswith("speed="):
                         k, v = e.split("=")

@@ -22,7 +22,7 @@ structures like log files or stuff.
 import os
 from pathlib import Path
 import traceback
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Set, Tuple, Union
 
 import cmk.utils.cleanup
 import cmk.utils.paths
@@ -42,7 +42,8 @@ g_suppress_on_wrap = True  # Suppress check on wrap (raise an exception)
 
 ItemStateKeyElement = Optional[str]
 ItemStateKey = Tuple[ItemStateKeyElement, ...]
-ItemStates = Dict[ItemStateKey, Any]
+ItemStates = Mapping[ItemStateKey, Any]
+MutableItemStates = MutableMapping[ItemStateKey, Any]
 OnWrap = Union[None, bool, float]
 
 
@@ -62,11 +63,11 @@ class CachedItemStates:
         self.reset()
 
     def reset(self) -> None:
-        self._item_states: ItemStates = {}
+        self._loaded_item_states: ItemStates = {}
         self._item_state_prefix: Optional[ItemStateKey] = None
         self._loaded_file: Optional[_ItemStateFile] = None
-        self._removed_item_state_keys: List[ItemStateKey] = []
-        self._updated_item_states: ItemStates = {}
+        self._removed_item_state_keys: Set[ItemStateKey] = set()
+        self._updated_item_states: MutableItemStates = {}
 
     def load(self, hostname: HostName) -> None:
         self._logger.debug("Loading item states")
@@ -85,7 +86,7 @@ class CachedItemStates:
             self.reset()
 
         try:
-            self._item_states = store.load_object_from_file(
+            self._loaded_item_states = store.load_object_from_file(
                 file_to_load.path,
                 default={},
                 lock=True,
@@ -117,19 +118,18 @@ class CachedItemStates:
             file_mtime = os.stat(filename).st_mtime
             # TODO: we're assuming it is the same file we loaded, I think.
             if self._loaded_file is None or file_mtime != self._loaded_file.mtime:
-                self._item_states = store.load_object_from_file(filename, default={})
+                self._loaded_item_states = store.load_object_from_file(filename, default={})
 
-                # Remove obsolete keys
-                for key in self._removed_item_state_keys:
-                    try:
-                        del self._item_states[key]
-                    except KeyError:
-                        pass
+                states_to_write = {
+                    k: v
+                    for k, v in self._loaded_item_states.items()
+                    if k not in self._removed_item_state_keys
+                }
 
                 # Add updated keys
-                self._item_states.update(self._updated_item_states)
+                states_to_write.update(self._updated_item_states)
 
-            store.save_object_to_file(filename, self._item_states, pretty=False)
+            store.save_object_to_file(filename, states_to_write, pretty=False)
         except Exception:
             raise MKGeneralException(f"Cannot write to {filename}: {traceback.format_exc()}")
         finally:
@@ -144,23 +144,32 @@ class CachedItemStates:
             self.remove_full_key(key)
 
     def remove_full_key(self, full_key: ItemStateKey) -> None:
-        try:
-            self._removed_item_state_keys.append(full_key)
-            del self._item_states[full_key]
-        except KeyError:
-            pass
+        self._removed_item_state_keys.add(full_key)
 
     def get_item_state(self, user_key: str, default: Any = None) -> Any:
         key = self.get_unique_item_state_key(user_key)
-        return self._item_states.get(key, default)
+        if key in self._removed_item_state_keys:
+            return default
+        try:
+            return self._lookup(key)
+        except KeyError:
+            return default
+
+    def _lookup(self, key: ItemStateKey) -> Any:
+        try:
+            return self._updated_item_states[key]
+        except KeyError:
+            return self._loaded_item_states[key]
 
     def set_item_state(self, user_key: str, state: Any) -> None:
         key = self.get_unique_item_state_key(user_key)
-        self._item_states[key] = state
+        self._removed_item_state_keys.discard(key)
         self._updated_item_states[key] = state
 
-    def get_all_item_states(self) -> ItemStates:
-        return self._item_states
+    def get_all_item_states(self) -> MutableItemStates:
+        keys = (set(self._loaded_item_states) |
+                set(self._updated_item_states)) - self._removed_item_state_keys
+        return {k: self._lookup(k) for k in keys}
 
     def get_item_state_prefix(self) -> Optional[ItemStateKey]:
         return self._item_state_prefix

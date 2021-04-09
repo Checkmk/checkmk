@@ -16,7 +16,7 @@ from cmk.base.api.agent_based.type_defs import ValueStore
 # TODO: this API violiation is due to the fact that this value_store
 # is currently nothing more than a polished version of item state.
 from cmk.base.item_state import (  # pylint: disable=cmk-module-layer-violation
-    set_item_state,  # for __setitem__
+    ItemStateKey, set_item_state,  # for __setitem__
     clear_item_state,  # for __delitem__
     get_all_item_states,  # for __len__, __iter__
     get_item_state_prefix,  # for __repr__, context
@@ -27,13 +27,18 @@ from cmk.base.item_state import (  # pylint: disable=cmk-module-layer-violation
 class _ValueStore(ValueStore):  # pylint: disable=too-many-ancestors
     """_ValueStore objects are used to persist values across check intervals"""
     @staticmethod
-    def _raise_for_scope_violation():
-        if not get_item_state_prefix():
+    def _get_validated_item_state_prefix() -> ItemStateKey:
+        prefix = get_item_state_prefix()
+        if not prefix:
             raise MKGeneralException("accessing value store outside check function")
+        return prefix
+
+    def _raise_for_scope_violation(self) -> None:
+        _ = self._get_validated_item_state_prefix()
 
     def __getitem__(self, key: str) -> Any:
-        self._raise_for_scope_violation()
-        unique_key = get_item_state_prefix() + (key,)
+        prefix = self._get_validated_item_state_prefix()
+        unique_key = prefix + (key,)
         return get_all_item_states()[unique_key]
 
     def __setitem__(self, key: str, value: Any) -> None:
@@ -43,8 +48,8 @@ class _ValueStore(ValueStore):  # pylint: disable=too-many-ancestors
         return set_item_state(key, value)
 
     def __delitem__(self, key: str) -> None:
-        self._raise_for_scope_violation()
-        unique_key = get_item_state_prefix() + (key,)
+        prefix = self._get_validated_item_state_prefix()
+        unique_key = prefix + (key,)
         if unique_key not in get_all_item_states():
             raise KeyError(key)
         clear_item_state(key)

@@ -4,10 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping
+
+from contextlib import contextmanager
 # pylint: disable=protected-access
 import pytest  # type: ignore[import]
 
 from cmk.base import item_state
+
+
+@contextmanager
+def _test_context(mock_state: Mapping[str, object]):
+    previous_prefix = item_state.get_item_state_prefix()
+    item_state._cached_item_states.reset()
+    item_state.set_item_state_prefix(("item_state_unit_tests", None))
+    for k, v in mock_state.items():
+        item_state.set_item_state(k, v)
+    try:
+        yield
+    finally:
+        item_state._cached_item_states.reset()
+        item_state.set_item_state_prefix(previous_prefix)
 
 
 @pytest.mark.parametrize("pre_state,time,value,errmsg", [
@@ -16,9 +33,9 @@ from cmk.base import item_state
     (None, 0, 42, "Counter initialization"),
 ])
 def test_get_rate_raises(pre_state, time, value, errmsg):
-    item_state.set_item_state("foo", pre_state)
-    with pytest.raises(item_state.MKCounterWrapped, match=errmsg):
-        item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
+    with _test_context({"foo": pre_state}):
+        with pytest.raises(item_state.MKCounterWrapped, match=errmsg):
+            item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
 
 
 @pytest.mark.parametrize("pre_state,time,value,onwrap,expected", [
@@ -29,8 +46,8 @@ def test_get_rate_raises(pre_state, time, value, errmsg):
     ((0, 42), 19, 23, item_state.RAISE, -1.0),
 ])
 def test_get_rate(pre_state, time, value, onwrap, expected):
-    item_state.set_item_state("foo", pre_state)
-    result = item_state.get_rate("foo", time, value, onwrap=onwrap, allow_negative=True)
+    with _test_context({"foo": pre_state}):
+        result = item_state.get_rate("foo", time, value, onwrap=onwrap, allow_negative=True)
     assert result == expected
 
 
@@ -58,13 +75,13 @@ def test_get_rate(pre_state, time, value, onwrap, expected):
     ]),
 ])
 def test_get_average(ini_zero, backlog_min, timeseries):
-    item_state._cached_item_states.reset()
-    for idx, (this_time, this_value, expected_average) in enumerate(timeseries):
-        avg = item_state.get_average(
-            "foo",
-            this_time,
-            this_value,
-            backlog_min,
-            initialize_zero=ini_zero,
-        )
-        assert avg == expected_average, "at [%r]: got %r expected %r" % (idx, avg, expected_average)
+    with _test_context({}):
+        for _idx, (this_time, this_value, expected_average) in enumerate(timeseries):
+            avg = item_state.get_average(
+                "foo",
+                this_time,
+                this_value,
+                backlog_min,
+                initialize_zero=ini_zero,
+            )
+            assert avg == expected_average

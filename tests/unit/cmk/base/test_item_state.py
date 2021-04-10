@@ -4,84 +4,115 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
-
-from contextlib import contextmanager
 # pylint: disable=protected-access
 import pytest  # type: ignore[import]
 
+from cmk.utils import store
+from cmk.utils.exceptions import MKGeneralException
 from cmk.base import item_state
 
 
-@contextmanager
-def _test_context(mock_state: Mapping[str, object]):
-    previous_prefix = item_state.get_item_state_prefix()
-    item_state._cached_item_states.reset()
-    item_state.set_item_state_prefix(("item_state_unit_tests", None))
-    for k, v in mock_state.items():
-        item_state.set_item_state(k, v)
-    try:
-        yield
-    finally:
-        item_state._cached_item_states.reset()
-        item_state.set_item_state_prefix(previous_prefix)
+def test_item_state_prefix_required():
+    cis = item_state.CachedItemStates()
+    # we *must* set a prefix:
+    with pytest.raises(MKGeneralException):
+        _ = cis.get_item_state("user-key", None)
 
 
-@pytest.mark.parametrize("pre_state,time,value,errmsg", [
-    ((0, 42), 0, 42, "No time difference"),
-    ((0, 42), 1, 23, "Value overflow"),
-    (None, 0, 42, "Counter initialization"),
-])
-def test_get_rate_raises(pre_state, time, value, errmsg):
-    with _test_context({"foo": pre_state}):
-        with pytest.raises(item_state.MKCounterWrapped, match=errmsg):
-            item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
+def test_set_get_item_state_prefix():
+    cis = item_state.CachedItemStates()
+    test_prefix = ("unit-test", None)
+    cis.set_item_state_prefix(test_prefix)
+    assert cis.get_item_state_prefix() == test_prefix
 
 
-@pytest.mark.parametrize("pre_state,time,value,onwrap,expected", [
-    ((0, 42), 1, 42, item_state.RAISE, 0.0),
-    (None, 1, 42, item_state.ZERO, 0.0),
-    (None, 1, 42, item_state.SKIP, 0.0),
-    ((0, 23), 38, 42, item_state.RAISE, 0.5),
-    ((0, 42), 19, 23, item_state.RAISE, -1.0),
-])
-def test_get_rate(pre_state, time, value, onwrap, expected):
-    with _test_context({"foo": pre_state}):
-        result = item_state.get_rate("foo", time, value, onwrap=onwrap, allow_negative=True)
-    assert result == expected
+def test_no_host_needs_to_be_loaded():
+    cis = item_state.CachedItemStates()
+    cis.set_item_state_prefix(("unit-test", None))
+    # weirdly, this is enough. No need to load any host:
+    assert cis.get_item_state("user-key", None) is None
 
 
-@pytest.mark.parametrize("ini_zero,backlog_min,timeseries", [
-    (True, 3, [
-        (0, 23, 0),
-        (60, 23, 4.744887902365705),
-        (120, 23, 8.510907926208958),
-        (180, 23, 11.5),
-        (240, 23, 13.872443951182852),
-        (300, 23, 15.755453963104479),
-        (360, 23, 17.25),
-        (420, 23, 18.436221975591426),
-        (480, 23, 19.37772698155224),
-        (540, 23, 20.125),
-    ]),
-    (False, 3, [
-        (0, 23, 23),
-        (60, 23, 23.0),
-        (120, 23, 23.0),
-    ]),
-    (False, 3, [
-        (0, 42, 42),
-        (60000, 2, 2.0),
-    ]),
-])
-def test_get_average(ini_zero, backlog_min, timeseries):
-    with _test_context({}):
-        for _idx, (this_time, this_value, expected_average) in enumerate(timeseries):
-            avg = item_state.get_average(
-                "foo",
-                this_time,
-                this_value,
-                backlog_min,
-                initialize_zero=ini_zero,
-            )
-            assert avg == expected_average
+def test_item_state_unloaded():
+    # I am not really sure which (if any) part of the following behaviour
+    # is desired.
+    # This test is only supposed to make the status quo visible.
+
+    test_prefix = ("unit-test", None)
+    cis = item_state.CachedItemStates()
+    cis.set_item_state_prefix(test_prefix)
+
+    # add some keys:
+    cis.set_item_state("one", 1)
+    cis.set_item_state("two", 2)
+    assert cis.get_item_state("one") == 1
+    assert cis.get_all_item_states() == {
+        test_prefix + ("one",): 1,
+        test_prefix + ("two",): 2,
+    }
+
+    cis.clear_item_state("one")
+    assert cis.get_item_state("one", None) is None
+    assert cis.get_all_item_states() == {
+        test_prefix + ("two",): 2,
+    }
+
+
+def test_item_state_loaded(mocker):
+
+    test_prefix = ("unit-test", None)
+    stored_item_states = {
+        test_prefix + ("stored-user-key-1",): 23,
+        test_prefix + ("stored-user-key-2",): 42,
+    }
+
+    mocker.patch.object(
+        store,
+        "load_object_from_file",
+        side_effect=lambda *a, **kw: stored_item_states,
+    )
+
+    mocker.patch.object(
+        store,
+        "save_object_to_file",
+        autospec=True,
+    )
+
+    cis = item_state.CachedItemStates()
+    cis.load("hostname")
+    cis.set_item_state_prefix(test_prefix)
+
+    assert cis.get_all_item_states() == stored_item_states
+
+    cis.save("hostname")
+    assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
+            is None)  # not called, nothing changed
+
+    cis.clear_item_state("this-key-does-not-exist-anyway")  # no-op, but qualifies as a 'change'
+    cis.save("hostname")
+    assert (store.save_object_to_file.call_args  # type: ignore[attr-defined]
+            is not None)
+    assert store.save_object_to_file.call_args.args[1] == stored_item_states
+
+    # remove key
+    cis.clear_item_state("stored-user-key-1")
+    cis.save("hostname")
+    assert store.save_object_to_file.call_args is not None
+    assert store.save_object_to_file.call_args.args[1] == {test_prefix + ("stored-user-key-2",): 42}
+
+    # bring back key
+    cis.set_item_state("stored-user-key-1", 42)
+    cis.save("hostname")
+    assert store.save_object_to_file.call_args is not None
+    assert store.save_object_to_file.call_args.args[1] == {
+        test_prefix + ("stored-user-key-1",): 42,
+        test_prefix + ("stored-user-key-2",): 42,
+    }
+
+    # TODO: now, after we set it, we can't remove the key :-(
+    cis.clear_item_state("stored-user-key-1")
+    cis.save("hostname")
+    assert store.save_object_to_file.call_args is not None
+    assert store.save_object_to_file.call_args.args[1] != {  # FIXME: this should be equal!
+        test_prefix + ("stored-user-key-2",): 42
+    }

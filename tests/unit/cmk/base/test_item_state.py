@@ -11,6 +11,62 @@ from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.base import item_state
 
+_TEST_KEY = ("check", "item", "user-key")
+
+
+class Test_DynamicValueStore:
+    @staticmethod
+    def test_init():
+        dad = item_state._DynamicValueStore()
+        assert not dad
+        assert not dad.removed_keys
+
+    @staticmethod
+    def test_removed_del():
+        dad = item_state._DynamicValueStore()
+        try:
+            del dad[_TEST_KEY]
+        except KeyError:
+            pass
+        assert dad.removed_keys == {_TEST_KEY}
+
+    @staticmethod
+    def test_removed_pop():
+        dad = item_state._DynamicValueStore()
+        dad.pop(_TEST_KEY, None)
+        assert dad.removed_keys == {_TEST_KEY}
+
+    @staticmethod
+    def test_setitem():
+        dad = item_state._DynamicValueStore()
+        value = object()
+        dad[_TEST_KEY] = value
+        assert dad[_TEST_KEY] is value
+        assert not dad.removed_keys
+
+        # remove and re-add (no, this is not trivial!)
+        dad.pop(_TEST_KEY)
+        dad[_TEST_KEY] = value
+        assert not dad.removed_keys
+
+    @staticmethod
+    def test_delitem():
+        dad = item_state._DynamicValueStore()
+        dad[_TEST_KEY] = None
+        assert _TEST_KEY in dad  # setup
+
+        del dad[_TEST_KEY]
+        assert _TEST_KEY not in dad
+
+    @staticmethod
+    def test_popitem():
+        dad = item_state._DynamicValueStore()
+        dad[_TEST_KEY] = None
+        assert _TEST_KEY in dad  # setup
+
+        dad.pop(_TEST_KEY)
+        assert _TEST_KEY not in dad
+
 
 class Test_StaticValueStore:
     def _mock_load(self, mocker):

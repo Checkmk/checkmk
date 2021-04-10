@@ -24,6 +24,7 @@ import traceback
 from typing import (
     Any,
     Callable,
+    Dict,
     Final,
     Iterator,
     List,
@@ -34,7 +35,6 @@ from typing import (
     Tuple,
     Union,
 )
-
 import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -57,7 +57,33 @@ ItemStates = Mapping[ItemStateKey, Any]
 MutableItemStates = MutableMapping[ItemStateKey, Any]
 OnWrap = Union[None, bool, float]
 
-# TODO: add _DynamicValueStore (values that have been changed in a session)
+
+class _DynamicValueStore(Dict[ItemStateKey, Any]):
+    """Represents the values that have been changed in a session
+
+    This is a dict derivat that remembers if a key has been
+    removed (having been removed is not the same as just not
+    being in the dict at the moment!)
+    """
+    def __init__(self):
+        super().__init__()
+        self._removed_keys: Set[ItemStateKey] = set()
+
+    @property
+    def removed_keys(self) -> Set[ItemStateKey]:
+        return self._removed_keys
+
+    def __setitem__(self, key: ItemStateKey, value: Any) -> None:
+        self._removed_keys.discard(key)
+        super().__setitem__(key, value)
+
+    def __delitem__(self, key: ItemStateKey) -> None:
+        self._removed_keys.add(key)
+        super().__delitem__(key)
+
+    def pop(self, key: ItemStateKey, *args: Any) -> Any:
+        self._removed_keys.add(key)
+        return super().pop(key, *args)
 
 
 class _StaticValueStore(ItemStates):
@@ -106,7 +132,7 @@ class _StaticValueStore(ItemStates):
         self,
         *,
         removed: Set[ItemStateKey],
-        updated: ItemStates,
+        updated: Mapping[ItemStateKey, Any],
     ) -> None:
         """Re-load and then store the changes of the item state to disk
 
@@ -124,7 +150,7 @@ class _StaticValueStore(ItemStates):
 
             data = {
                 **{k: v for k, v in self._data.items() if k not in removed},
-                **{k: v for k, v in updated.items() if k not in removed},
+                **updated,
             }
             store.save_object_to_file(self._path, data, pretty=False)
             self._mtime = self._path.stat().st_mtime
@@ -148,8 +174,7 @@ class CachedItemStates:
     def reset(self) -> None:
         self._item_state_prefix: Optional[ItemStateKey] = None
         self._static_values: Optional[_StaticValueStore] = None
-        self._removed_item_state_keys: Set[ItemStateKey] = set()
-        self._updated_item_states: MutableItemStates = {}
+        self._dynamic_values = _DynamicValueStore()
 
     def load(self, hostname: HostName) -> None:
         self._static_values = _StaticValueStore(hostname, logger.debug)
@@ -159,8 +184,8 @@ class CachedItemStates:
         if self._static_values is None:
             return
         self._static_values.store(
-            removed=self._removed_item_state_keys,
-            updated=self._updated_item_states,
+            removed=self._dynamic_values.removed_keys,
+            updated=self._dynamic_values,
         )
 
     def clear_item_state(self, user_key: str) -> None:
@@ -172,11 +197,11 @@ class CachedItemStates:
             self.remove_full_key(key)
 
     def remove_full_key(self, full_key: ItemStateKey) -> None:
-        self._removed_item_state_keys.add(full_key)
+        self._dynamic_values.pop(full_key, None)
 
     def get_item_state(self, user_key: str, default: Any = None) -> Any:
         key = self.get_unique_item_state_key(user_key)
-        if key in self._removed_item_state_keys:
+        if key in self._dynamic_values.removed_keys:
             return default
         try:
             return self._lookup(key)
@@ -185,7 +210,7 @@ class CachedItemStates:
 
     def _lookup(self, key: ItemStateKey) -> Any:
         try:
-            return self._updated_item_states[key]
+            return self._dynamic_values[key]
         except KeyError:
             if self._static_values is None:
                 # TODO: refactor s.t. this can never happen.
@@ -193,21 +218,18 @@ class CachedItemStates:
             return self._static_values[key]
 
     def set_item_state(self, user_key: str, state: Any) -> None:
-        key = self.get_unique_item_state_key(user_key)
-        self._removed_item_state_keys.discard(key)
-        self._updated_item_states[key] = state
+        self._dynamic_values[self.get_unique_item_state_key(user_key)] = state
 
     def get_all_item_states(self) -> MutableItemStates:
         if self._static_values is None:
             # TODO: refactor s.t. this can never happen.
             return {
                 k: v
-                for k, v in self._updated_item_states.items()
-                if k not in self._removed_item_state_keys
+                for k, v in self._dynamic_values.items()
+                if k not in self._dynamic_values.removed_keys
             }
-        keys = (set(self._static_values) |
-                set(self._updated_item_states)) - self._removed_item_state_keys
-        return {k: self._lookup(k) for k in keys}
+        keys = set(self._static_values) | set(self._dynamic_values)
+        return {k: self._lookup(k) for k in keys if k not in self._dynamic_values.removed_keys}
 
     def get_item_state_prefix(self) -> Optional[ItemStateKey]:
         return self._item_state_prefix

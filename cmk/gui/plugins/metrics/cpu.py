@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -50,6 +50,12 @@ metric_info["predict_load15"] = {
     "title": _("Predicted average for 15 minute CPU load"),
     "unit": "",
     "color": "#a0b0c0",
+}
+
+metric_info["load_instant"] = {
+    "title": _("Instantaneous CPU load"),
+    "unit": "",
+    "color": "42/a",
 }
 
 metric_info["context_switches"] = {
@@ -299,23 +305,16 @@ for i in range(MAX_CORES):
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }
+    metric_info["cpu_core_util_average_%d" % i] = {
+        "title": _("Average utilization core %d") % (i + 1),
+        "unit": "%",
+        "color": indexed_color(i, MAX_CORES),
+    }
 
 metric_info["cpu_time_percent"] = {
     "title": _("CPU time"),
     "unit": "%",
     "color": "#94b65a",
-}
-
-metric_info["cpu_ready_percent"] = {
-    "title": _("CPU ready"),
-    "unit": "%",
-    "color": "15/a",
-}
-
-metric_info["cpu_costop_percent"] = {
-    "title": _("Co-Stop"),
-    "unit": "%",
-    "color": "11/a",
 }
 
 metric_info["system_time"] = {
@@ -504,6 +503,7 @@ graph_info["fgpa_utilization"] = {
 #
 
 graph_info["util_average_1"] = {
+    "title": _("CPU utilization"),
     "metrics": [
         ("util", "area"),
         ("util_average", "line"),
@@ -512,7 +512,7 @@ graph_info["util_average_1"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
+    "range": (0, 100),
 }
 
 graph_info["util_average_2"] = {
@@ -580,7 +580,7 @@ graph_info["cpu_utilization_4"] = {
     "range": (0, 100),
 }
 
-# The following 6 graphs come in pairs.
+# The following 8 graphs come in pairs.
 # If possible, we display the "util" metric,
 # otherwise we display the sum of the present metrics.
 
@@ -622,7 +622,7 @@ graph_info["cpu_utilization_5_util"] = {
 }
 
 #TODO which warn,crit?
-graph_info["cpu_utilization_6"] = {
+graph_info["cpu_utilization_6_steal"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -639,7 +639,7 @@ graph_info["cpu_utilization_6"] = {
     "range": (0, 100),
 }
 
-graph_info["cpu_utilization_6_util"] = {
+graph_info["cpu_utilization_6_steal_util"] = {
     "title": _("CPU utilization"),
     "metrics": [
         ("user", "area"),
@@ -653,6 +653,41 @@ graph_info["cpu_utilization_6_util"] = {
         "util:crit",
     ],
     "conflicting_metrics": ["cpu_util_guest",],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+#TODO which warn,crit?
+graph_info["cpu_utilization_6_guest"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("user,system,io_wait,cpu_util_steal,+,+,+#004080", "line", _("Total")),
+    ],
+    "conflicting_metrics": [
+        "util",
+        "cpu_util_steal",
+    ],
+    "omit_zero_metrics": True,
+    "range": (0, 100),
+}
+
+graph_info["cpu_utilization_6_guest_util"] = {
+    "title": _("CPU utilization"),
+    "metrics": [
+        ("user", "area"),
+        ("system", "stack"),
+        ("io_wait", "stack"),
+        ("cpu_util_guest", "stack"),
+        ("util#004080", "line", _("Total")),
+    ],
+    "scalars": [
+        "util:warn",
+        "util:crit",
+    ],
+    "conflicting_metrics": ["cpu_util_steal",],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
@@ -691,7 +726,7 @@ graph_info["cpu_utilization_7_util"] = {
     "range": (0, 100),
 }
 
-# ^-- last six graphs go pairwise together (see above)
+# ^-- last eight graphs go pairwise together (see above)
 
 #TODO which warn,crit?
 graph_info["cpu_utilization_8"] = {
@@ -705,16 +740,17 @@ graph_info["cpu_utilization_8"] = {
 }
 
 graph_info["util_fallback"] = {
+    "title": _("CPU utilization"),
     "metrics": [("util", "area"),],
     "scalars": [
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
     "conflicting_metrics": [
         "util_average",
         "system",
     ],
+    "range": (0, 100),
 }
 
 graph_info["cpu_entitlement"] = {
@@ -727,6 +763,13 @@ graph_info["per_core_utilization"] = {
     "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
     "range": (0, 100),
     "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)]
+}
+
+graph_info["per_core_utilization_average"] = {
+    "title": _("Average utilization per core"),
+    "metrics": [("cpu_core_util_average_%d" % num, "line") for num in range(MAX_CORES)],
+    "range": (0, 100),
+    "optional_metrics": ["cpu_core_util_average_%d" % num for num in range(2, MAX_CORES)],
 }
 
 graph_info["context_switches"] = {
@@ -747,6 +790,7 @@ graph_info["threads"] = {
 }
 
 graph_info["thread_usage"] = {
+    "title": _("Thread usage"),
     "metrics": [("thread_usage", "area"),],
     "scalars": ["thread_usage:warn", "thread_usage:crit"],
     "range": (0, 100),

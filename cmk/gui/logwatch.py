@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,18 +6,33 @@
 
 import time
 import datetime
-from typing import Any, Dict, List, Optional  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, Iterator
 
 import livestatus
+
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.config as config
 from cmk.gui.table import table_element
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
-from cmk.gui.type_defs import HTTPVariables  # pylint: disable=unused-import
+from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
+from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, Breadcrumb, BreadcrumbItem
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuTopic,
+    PageMenuEntry,
+    make_simple_link,
+    make_display_options_dropdown,
+)
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |
@@ -44,15 +59,6 @@ def page_show():
     except livestatus.MKLivestatusNotFoundError:
         pass  # host_name log dir does not exist
 
-    # Acknowledging logs is supported on
-    # a) all logs on all hosts
-    # b) all logs on one host_name
-    # c) one log on one host_name
-    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
-        sites.live().set_auth_domain('action')
-        do_log_ack(site, host_name, file_name)
-        return
-
     if not host_name:
         show_log_list()
         return
@@ -63,42 +69,85 @@ def page_show():
         show_host_log_list(site, host_name)
 
 
-def button_all_logfiles():
-    html.context_button(_("All Logfiles"), html.makeuri([('site', ''), ('host', ''), ('file', '')]))
-
-
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
-    html.header(_("All Problematic Logfiles"))
+    title = _("All problematic logfiles")
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb, _log_list_page_menu(breadcrumb))
 
-    html.begin_context_buttons()
-    html.context_button(_("Analyze Patterns"),
-                        "%swato.py?mode=pattern_editor" % html.request.var('master_url', ''),
-                        'analyze')
-    ack_button()
-    html.end_context_buttons()
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site=None, host_name=None, file_name=None)
+        return
 
     for site, host_name, logs in all_logs():
         if not logs:
             continue
 
-        all_logs_empty = not any([parse_file(site, host_name, file_name) for file_name in logs])
+        all_logs_empty = not any(parse_file(site, host_name, file_name) for file_name in logs)
 
         if all_logs_empty:
             continue  # Logfile vanished
 
-        html.h2(html.render_a(host_name, href=html.makeuri([('site', site), ('host', host_name)])))
+        html.h3(html.render_a(host_name,
+                              href=makeuri(
+                                  request,
+                                  [('site', site), ('host', host_name)],
+                              )),
+                class_="table")
         list_logs(site, host_name, logs)
     html.footer()
 
 
+def _log_list_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="logs",
+                title=_("Logs"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Acknowledge"),
+                        entries=list(_page_menu_entry_acknowledge()),
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Analyze patterns"),
+                                icon_name="analyze",
+                                item=make_simple_link(
+                                    makeuri_contextless(
+                                        request,
+                                        [("mode", "pattern_editor")],
+                                        filename="wato.py",
+                                    )),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+
+
 def services_url(site, host_name):
-    return html.makeuri_contextless([("view_name", "host"), ("site", site), ("host", host_name)],
-                                    filename="view.py")
+    return makeuri_contextless(
+        request,
+        [("view_name", "host"), ("site", site), ("host", host_name)],
+        filename="view.py",
+    )
 
 
 def analyse_url(site, host_name, file_name='', match=''):
-    return html.makeuri_contextless(
+    return makeuri_contextless(
+        request,
         [
             ("mode", "pattern_editor"),
             ("site", site),
@@ -112,20 +161,84 @@ def analyse_url(site, host_name, file_name='', match=''):
 
 # Shows all problematic logfiles of a host
 def show_host_log_list(site, host_name):
-    html.header(_("Logfiles of host %s") % host_name)
+    title = _("Logfiles of host %s") % host_name
+    breadcrumb = _host_log_list_breadcrumb(host_name, title)
+    html.header(title, breadcrumb, _host_log_list_page_menu(breadcrumb, site, host_name))
 
-    html.begin_context_buttons()
-    html.context_button(_("Services"), services_url(site, host_name), 'services')
-    button_all_logfiles()
-    html.context_button(_("Analyze host patterns"), analyse_url(site, host_name), 'analyze')
-    ack_button(site, host_name)
-    html.end_context_buttons()
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site, host_name, file_name=None)
+        return
 
     html.open_table(class_=["data"])
     list_logs(site, host_name, logfiles_of_host(site, host_name))
     html.close_table()
 
     html.footer()
+
+
+def _host_log_list_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
+    breadcrumb = make_host_breadcrumb(host_name)
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
+    return breadcrumb
+
+
+def _host_log_list_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId,
+                             host_name: HostName) -> PageMenu:
+    return PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="logs",
+                title=_("Logs"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Current log files"),
+                        entries=list(_page_menu_entry_acknowledge(site_id, host_name)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Log files"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("All log files"),
+                                icon_name="logwatch",
+                                item=make_simple_link(
+                                    makeuri(
+                                        request,
+                                        [('site', ''), ('host', ''), ('file', '')],
+                                    )),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Monitoring"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Services of host"),
+                                icon_name="services",
+                                item=make_simple_link(services_url(site_id, host_name)),
+                            ),
+                        ],
+                    ),
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Analyze host patterns"),
+                                icon_name="analyze",
+                                item=make_simple_link(analyse_url(site_id, host_name)),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
 
 
 # Displays a table of logfiles
@@ -135,7 +248,7 @@ def list_logs(site, host_name, logfile_names):
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)
-            uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
+            uri = makeuri(request, [('site', site), ('host', host_name), ('file', file_display)])
             logfile_link = html.render_a(file_display, href=uri)
 
             try:
@@ -165,70 +278,155 @@ def list_logs(site, host_name, logfile_names):
 def show_file(site, host_name, file_name):
     int_filename = form_file_to_int(file_name)
 
-    html.header(_("Logfiles of Host %s: %s") % (host_name, file_name))
-    html.begin_context_buttons()
-    html.context_button(_("Services"), services_url(site, host_name), 'services')
-    html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    button_all_logfiles()
-    html.context_button(_("Analyze patterns"), analyse_url(site, host_name, file_name), 'analyze')
+    title = _("Logfiles of Host %s: %s") % (host_name, int_filename)
+    breadcrumb = _show_file_breadcrumb(host_name, title)
+    html.header(title, breadcrumb, _show_file_page_menu(breadcrumb, site, host_name, int_filename))
 
-    if html.request.var('_hidecontext', 'no') == 'yes':
-        hide_context_label = _('Show Context')
-        hide_context_param = 'no'
-        hide = True
-    else:
-        hide_context_label = _('Hide Context')
-        hide_context_param = 'yes'
-        hide = False
+    if html.request.has_var('_ack') and not html.request.var("_do_actions") == _("No"):
+        do_log_ack(site, host_name, file_name)
+        return
 
     try:
-        log_chunks = parse_file(site, host_name, int_filename, hide)
+        log_chunks = parse_file(site,
+                                host_name,
+                                int_filename,
+                                hidecontext=html.request.var('_hidecontext', 'no') == 'yes')
     except Exception as e:
         if config.debug:
             raise
-        html.end_context_buttons()
         html.show_error(_("Unable to show logfile: <b>%s</b>") % e)
         html.footer()
         return
 
     if log_chunks is None:
-        html.end_context_buttons()
-        html.show_error(_("The logfile does not exist."))
+        html.show_error(_("The logfile does not exist on site."))
         html.footer()
         return
 
     if log_chunks == []:
-        html.end_context_buttons()
         html.show_message(_("This logfile contains no unacknowledged messages."))
         html.footer()
         return
 
-    ack_button(site, host_name, int_filename)
-    html.context_button(hide_context_label, html.makeuri([('_hidecontext', hide_context_param)]))
-
-    html.end_context_buttons()
-
     html.open_div(id_="logwatch")
     for log in log_chunks:
-        html.open_div(class_=["chunk"])
-        html.open_table(class_=["section"])
+        html.open_table(class_="groupheader")
         html.open_tr()
         html.td(form_level(log['level']), class_=form_level(log['level']))
         html.td(form_datetime(log['datetime']), class_="date")
         html.close_tr()
         html.close_table()
 
+        html.open_table(class_=["section"])
         for line in log['lines']:
-            html.open_p(class_=line['class'])
-            html.icon_button(analyse_url(site, host_name, file_name, line['line']),
+            html.open_tr(class_=line['class'])
+            html.open_td(class_='lines')
+            html.icon_button(analyse_url(site, host_name, int_filename, line['line']),
                              _("Analyze this line"), "analyze")
             html.write_text(line['line'].replace(" ", "&nbsp;").replace("\1", "<br>"))
-            html.close_p()
+            html.close_td()
+            html.close_tr()
 
-        html.close_div()
+        html.close_table()
 
     html.close_div()
     html.footer()
+
+
+def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
+    breadcrumb = make_host_breadcrumb(host_name)
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=_("Log files of host %s") % host_name,
+            url=makeuri(request, [('file', '')]),
+        ))
+    breadcrumb.append(make_current_page_breadcrumb_item(title))
+    return breadcrumb
+
+
+def _show_file_page_menu(breadcrumb: Breadcrumb, site_id: config.SiteId, host_name: HostName,
+                         int_filename: str) -> PageMenu:
+
+    menu = PageMenu(
+        dropdowns=[
+            PageMenuDropdown(
+                name="logs",
+                title=_("Logs"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("This log file"),
+                        entries=list(_page_menu_entry_acknowledge(site_id, host_name,
+                                                                  int_filename)),
+                    ),
+                    PageMenuTopic(
+                        title=_("Log files"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Log files of host %s" % host_name),
+                                icon_name="logwatch",
+                                item=make_simple_link(makeuri(request, [('file', '')])),
+                            ),
+                            PageMenuEntry(
+                                title=_("All log files"),
+                                icon_name="logwatch",
+                                item=make_simple_link(
+                                    makeuri(request, [('site', ''), ('host', ''), ('file', '')])),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+            PageMenuDropdown(
+                name="related",
+                title=_("Related"),
+                topics=[
+                    PageMenuTopic(
+                        title=_("Monitoring"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Services of host"),
+                                icon_name="services",
+                                item=make_simple_link(services_url(site_id, host_name)),
+                            ),
+                        ],
+                    ),
+                    PageMenuTopic(
+                        title=_("Setup"),
+                        entries=[
+                            PageMenuEntry(
+                                title=_("Analyze host patterns"),
+                                icon_name="analyze",
+                                item=make_simple_link(analyse_url(site_id, host_name)),
+                            ),
+                        ],
+                    ),
+                ],
+            ),
+        ],
+        breadcrumb=breadcrumb,
+    )
+    _extend_display_dropdown(menu)
+    return menu
+
+
+def _extend_display_dropdown(menu: PageMenu) -> None:
+    display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+    context_hidden = html.request.var('_hidecontext', 'no') == 'yes'
+    display_dropdown.topics.insert(
+        0,
+        PageMenuTopic(
+            title=_("Context"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Show context"),
+                    icon_name="checkbox" if context_hidden else "checked_checkbox",
+                    item=make_simple_link(
+                        html.makeactionuri([
+                            ("_show_backlog", "no") if context_hidden else ("_hidecontext", "yes"),
+                        ])),
+                ),
+            ],
+        ))
 
 
 #.
@@ -244,64 +442,64 @@ def show_file(site, host_name, file_name):
 #   '----------------------------------------------------------------------'
 
 
-def ack_button(site=None, host_name=None, int_filename=None):
+def _page_menu_entry_acknowledge(site: Optional[config.SiteId] = None,
+                                 host_name: Optional[HostName] = None,
+                                 int_filename: Optional[str] = None) -> Iterator[PageMenuEntry]:
     if not config.user.may("general.act") or (host_name and not may_see(site, host_name)):
         return
 
     if int_filename:
-        label = _("Clear Log")
+        label = _("Clear log")
     else:
-        label = _("Clear Logs")
+        label = _("Clear logs")
 
-    urivars = [('_ack', '1')]  # type: HTTPVariables
+    urivars: HTTPVariables = [('_ack', '1')]
     if int_filename:
-        urivars.append(("file", int_filename))
-    html.context_button(label, html.makeactionuri(urivars), 'delete')
+        urivars.append(("file", form_file_to_ext(int_filename)))
+
+    ack_msg = _get_ack_msg(host_name, form_file_to_ext(int_filename) if int_filename else None)
+
+    yield PageMenuEntry(
+        title=label,
+        icon_name="delete",
+        item=make_simple_link(
+            make_confirm_link(
+                url=html.makeactionuri(urivars),
+                message=_("Do you really want to acknowledge %s "
+                          "by <b>deleting</b> all stored messages?") % ack_msg,
+            )),
+        is_shortcut=True,
+        is_suggested=True,
+    )
 
 
 def do_log_ack(site, host_name, file_name):
+    sites.live().set_auth_domain('action')
+
     logs_to_ack = []
     if not host_name and not file_name:  # all logs on all hosts
         for this_site, this_host, logs in all_logs():
             for int_filename in logs:
                 file_display = form_file_to_ext(int_filename)
                 logs_to_ack.append((this_site, this_host, int_filename, file_display))
-        ack_msg = _('all logfiles on all hosts')
 
     elif host_name and not file_name:  # all logs on one host
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
             logs_to_ack.append((site, host_name, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % host_name
 
     elif host_name and file_name:  # one log on one host
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [(site, host_name, int_filename, form_file_to_ext(int_filename))]
-        ack_msg = _('the log file %s on host %s') % (file_name, host_name)
 
     else:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
-        ack_msg = _('log file %s on all hosts') % file_name
 
-    html.header(_("Acknowledge %s") % html.render_text(ack_msg))
-
-    html.begin_context_buttons()
-    button_all_logfiles()
-    if host_name:
-        html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    if host_name and file_name:
-        html.context_button(_("Back to Logfile"), html.makeuri([]))
-    html.end_context_buttons()
-
+    ack_msg = _get_ack_msg(host_name, file_name)
     ack = html.request.var('_ack')
-    if not html.confirm(
-            _("Do you really want to acknowledge %s by <b>deleting</b> all stored messages?") %
-            ack_msg):
-        html.footer()
-        return
 
     if not config.user.may("general.act"):
         html.h1(_('Permission denied'), class_=["error"])
@@ -329,6 +527,19 @@ def do_log_ack(site, host_name, file_name):
     html.footer()
 
 
+def _get_ack_msg(host_name, file_name) -> str:
+    if not host_name and not file_name:  # all logs on all hosts
+        return _('all logfiles on all hosts')
+
+    if host_name and not file_name:  # all logs on one host
+        return _('all logfiles of host %s') % host_name
+
+    if host_name and file_name:  # one log on one host
+        return _('the log file %s on host %s') % (file_name, host_name)
+
+    return _('log file %s on all hosts') % file_name
+
+
 def acknowledge_logfile(site, host_name, int_filename, display_name):
     if not may_see(site, host_name):
         raise MKAuthException(_('Permission denied.'))
@@ -351,9 +562,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):
-    log_chunks = []  # type: List[Dict[str, Any]]
+    log_chunks: List[Dict[str, Any]] = []
     try:
-        chunk = None  # type: Optional[Dict[str, Any]]
+        chunk: Optional[Dict[str, Any]] = None
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -367,7 +578,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):
                 continue
 
             if line[:3] == '<<<':  # new chunk begins
-                log_lines = []  # type: List[Dict[str, Any]]
+                log_lines: List[Dict[str, Any]] = []
                 chunk = {'lines': log_lines}
                 log_chunks.append(chunk)
 
@@ -555,14 +766,14 @@ def get_logfile_lines(site, host_name, file_name):
         sites.live().set_only_sites([site])
     query = \
         "GET hosts\n" \
-        "Columns: mk_logwatch_file:file:%s\n" \
-        "Filter: name = %s\n" % (livestatus.lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), livestatus.lqencode(host_name))
+        "Columns: mk_logwatch_file:file:%s/%s\n" \
+        "Filter: name = %s\n" % (livestatus.lqencode(host_name), livestatus.lqencode(file_name.replace('\\', '\\\\').replace(' ', '\\s')), livestatus.lqencode(host_name))
     file_content = sites.live().query_value(query)
     if site:  # Honor site hint if available
         sites.live().set_only_sites(None)
     if file_content is None:
         return None
-    return file_content.splitlines()
+    return [line.decode("utf-8") for line in file_content.splitlines()]
 
 
 def all_logs():

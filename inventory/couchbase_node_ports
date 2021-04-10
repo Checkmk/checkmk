@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # "ports":{
 #      "proxy": 11213,
 #      "direct": 11212
@@ -21,6 +22,5 @@ def inv_couchbase_nodes_ports(info, inventory_tree, status_data_tree):
 
 
 inv_info["couchbase_nodes_ports"] = {  # pylint: disable=undefined-variable
-    "includes": ['couchbase.include'],
     "inv_function": inv_couchbase_nodes_ports,
 }

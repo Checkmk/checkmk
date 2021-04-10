@@ -4,6 +4,7 @@
 // source code package.
 
 #include "mk_inventory.h"
+
 #include <sys/stat.h>
 
 time_t mk_inventory_last(const std::string &path) {

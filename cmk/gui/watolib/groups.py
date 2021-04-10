@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 
 import re
 import copy
-from typing import Any, Dict, List, Text, Tuple, Union  # pylint: disable=unused-import
+from typing import Any, Dict, List, Tuple, Union, Literal
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -15,16 +15,14 @@ from cmk.utils.type_defs import timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-# TODO: Cleanup call sites
-from cmk.gui.groups import (  # noqa: F401  # pylint: disable=unused-import
-    load_group_information, load_host_group_information, load_service_group_information,
-    load_contact_group_information,
-)
+import cmk.gui.plugins.userdb.utils as userdb_utils
+from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g
+from cmk.gui.globals import html, g, request
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.utils.html import HTML  # pylint: disable=unused-import
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri_contextless
 
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 from cmk.gui.watolib.changes import add_change
@@ -56,7 +54,10 @@ def _clear_group_information_request_cache():
     g.pop("group_information", None)
 
 
-def add_group(name, group_type, extra_info):
+GroupType = Literal['service', 'host', 'contact']
+
+
+def add_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -78,7 +79,7 @@ def add_group(name, group_type, extra_info):
                       _("Create new %s group %s") % (group_type, name))
 
 
-def edit_group(name, group_type, extra_info):
+def edit_group(name, group_type: GroupType, extra_info):
     _check_modify_group_permissions(group_type)
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
@@ -109,7 +110,7 @@ def edit_group(name, group_type, extra_info):
                           _("Updated properties of %s group %s") % (group_type, name))
 
 
-def delete_group(name, group_type):
+def delete_group(name, group_type: GroupType):
     _check_modify_group_permissions(group_type)
 
     # Check if group exists
@@ -141,12 +142,12 @@ def _add_group_change(group, action_name, text):
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
                 raise Exception("cannot happen: no customer ID")
-            group_sites = managed.get_sites_of_customer(cid)
+            group_sites = list(managed.get_sites_of_customer(cid).keys())
 
     add_change(action_name, text, sites=group_sites)
 
 
-def _check_modify_group_permissions(group_type):
+def _check_modify_group_permissions(group_type: GroupType) -> None:
     required_permissions = {
         "contact": ["wato.users"],
         "host": ["wato.groups"],
@@ -161,7 +162,7 @@ def _check_modify_group_permissions(group_type):
         config.user.need_permission(permission)
 
 
-def _set_group(all_groups, group_type, name, extra_info):
+def _set_group(all_groups, group_type: GroupType, name, extra_info):
     # Check if this alias is used elsewhere
     alias = extra_info.get("alias")
     if not alias:
@@ -181,9 +182,9 @@ def _set_group(all_groups, group_type, name, extra_info):
 
 
 def save_group_information(all_groups, custom_default_config_dir=None):
-    # Split groups data into Check_MK/Multisite parts
-    check_mk_groups = {}  # type: Dict[str, Dict[Any, Any]]
-    multisite_groups = {}  # type: Dict[str, Dict[Any, Any]]
+    # Split groups data into Checkmk/Multisite parts
+    check_mk_groups: Dict[str, Dict[Any, Any]] = {}
+    multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
     if custom_default_config_dir:
         check_mk_config_dir = "%s/conf.d/wato" % custom_default_config_dir
@@ -203,7 +204,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
                     multisite_groups[what].setdefault(gid, {})
                     multisite_groups[what][gid][attr] = value
 
-    # Save Check_MK world related parts
+    # Save Checkmk world related parts
     store.makedirs(check_mk_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:
@@ -225,7 +226,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
     _clear_group_information_request_cache()
 
 
-def find_usages_of_group(name, group_type):
+def find_usages_of_group(name, group_type: GroupType):
     usages = []
     if group_type == 'contact':
         usages = find_usages_of_contact_group(name)
@@ -256,8 +257,7 @@ def _find_usages_of_contact_group_in_users(name):
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
-    entries = users.items()
-    for userid, user in sorted(entries, key=lambda x: x[1].get("alias", x[0])):
+    for userid, user in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
         cgs = user.get("contactgroups", [])
         if name in cgs:
             used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
@@ -313,9 +313,8 @@ def _find_usages_of_contact_group_in_hosts_and_folders(name, folder):
     return used_in
 
 
-def _find_usages_of_contact_group_in_notification_rules(name):
-    # type: (Text) -> List[Tuple[Text, Text]]
-    used_in = []  # type: List[Tuple[Text, Text]]
+def _find_usages_of_contact_group_in_notification_rules(name: str) -> List[Tuple[str, str]]:
+    used_in: List[Tuple[str, str]] = []
     for rule in load_notification_rules():
         if _used_in_notification_rule(name, rule):
             title = "%s: %s" % (_("Notification rule"), rule.get("description", ""))
@@ -331,8 +330,7 @@ def _find_usages_of_contact_group_in_notification_rules(name):
     return used_in
 
 
-def _used_in_notification_rule(name, rule):
-    # type: (Text, Dict) -> bool
+def _used_in_notification_rule(name: str, rule: Dict) -> bool:
     return name in rule.get('contact_groups', []) or name in rule.get("match_contactgroups", [])
 
 
@@ -374,7 +372,7 @@ def is_alias_used(my_what, my_name, my_alias):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
-    roles = userdb.load_roles()
+    roles = userdb_utils.load_roles()
     for key, value in roles.items():
         if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key
@@ -403,13 +401,20 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def sort_index(cls):
         return 25
 
+    def is_show_more(self):
+        return True
+
     def help(self):
-        url = "wato.py?mode=rulesets&group=grouping"
+        url = makeuri_contextless(
+            request,
+            [("mode", "edit_ruleset"), ("varname", "host_contactgroups")],
+            filename="wato.py",
+        )
         return _("Only members of the contact groups listed here have WATO permission "
                  "to the host / folder. If you want, you can make those contact groups "
                  "automatically also <b>monitoring contacts</b>. This is completely "
-                 "optional. Assignment of host and services to contact groups "
-                 "can be done by <a href='%s'>rules</a> as well.") % url
+                 "optional. Assignment of host to contact groups can be done by "
+                 "<a href='%s'>rules</a> as well.") % url
 
     def show_in_table(self):
         return False
@@ -422,7 +427,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts = []  # type: List[Text]
+        texts: List[str] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -432,7 +437,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
                 display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
                              (name, display_name))
-        result = ", ".join(texts)  # type: Union[Text, HTML]
+        result: Union[str, HTML] = ", ".join(texts)
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),
@@ -468,11 +473,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
-                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
+                label=_("Add these groups as <b>contacts</b> to all hosts <b>in this folder</b>"))
             html.br()
-            html.checkbox(varprefix + self.name() + "_recurse_use",
-                          value["recurse_use"],
-                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(
+                varprefix + self.name() + "_recurse_use",
+                value["recurse_use"],
+                label=
+                _("Add these groups as <b>contacts</b> to all hosts <b>in all subfolders of this folder</b>"
+                 ))
 
         html.hr()
         html.help(
@@ -481,9 +489,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(varprefix + self.name() + "_use_for_services",
-                      value.get("use_for_services", False),
-                      label=_("Always add host contact groups also to its services"))
+        html.checkbox(
+            varprefix + self.name() + "_use_for_services",
+            value.get("use_for_services", False),
+            label=_("Always add host contact groups also to its services") if is_host else
+            _("Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+             ))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

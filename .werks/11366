@@ -1,0 +1,32 @@
+Title: brocade_optical: Adjust to new discovery ruleset for network interfaces
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1599468364
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The discovery of the services corresponding to the check <tt>brocade_optical</tt>,
+which monitors the signal quality of the optical ports of Brocade switches, is
+configurable via the rule "Network Interface and Switch Port Discovery". As announced
+in werk #11361, this rule has been reworked.
+
+With this werk, we adjust <tt>brocade_optical</tt> to the new version of the discovery
+ruleset for network interfaces. This check now uses the discovery ruleset for network
+interfaces the same way as all other interface checks and is thus consistent with werk
+#11361, which was not the case before. However, note that, as before,
+<tt>brocade_optical</tt> does not implement all of the options offered by this
+discovery rule. The grouping of interfaces is not supported and the items are always
+given by the port numbers, independently of the option chosen under "Appearance of
+network interface". Furthermore, out of the six matching conditions offered by the rule,
+this check supports only the following three: the matching of the port type, the matching
+of the port state and the matching of the interface description.
+
+This werk is incompatible. Currently discovered services will continue to work, however,
+upon re-discovery, some services might vanish or new services might be discovered. This
+depends on the user-defined rules from the ruleset "Network Interface and Switch Port
+Discovery". In such cases, users have to adjust their rules. Note that the default
+behavior of the check has not changed. Hence, this werk is compatible for users with no
+corresponding user-defined rules.

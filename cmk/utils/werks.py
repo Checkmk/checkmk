@@ -1,24 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Code for processing Check_MK werks. This is needed by several components,
+"""Code for processing Checkmk werks. This is needed by several components,
 so it's best place is in the central library."""
 
-import sys
 import itertools
 import json
+from pathlib import Path
 import re
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
-
-import six
+from six import ensure_str
 
 import cmk.utils.paths
 
@@ -28,7 +22,7 @@ from cmk.utils.i18n import _
 
 # This class is used to avoid repeated construction of dictionaries, including
 # *all* translation values.
-class WerkTranslator(object):
+class WerkTranslator:
     def __init__(self):
         super(WerkTranslator, self).__init__()
         self._classes = {
@@ -41,7 +35,7 @@ class WerkTranslator(object):
             "core": _("Core & setup"),
             "checks": _("Checks & agents"),
             "multisite": _("User interface"),
-            "wato": _("WATO"),
+            "wato": _("Setup"),
             "notifications": _("Notifications"),
             "bi": _("BI"),
             "reporting": _("Reporting & availability"),
@@ -51,13 +45,15 @@ class WerkTranslator(object):
             "inv": _("HW/SW inventory"),
 
             # CEE
-            "cmc": _("The Check_MK Micro Core"),
+            "cmc": _("The Checkmk Micro Core"),
             "setup": _("Setup, site management"),
             "config": _("Configuration generation"),
             "inline-snmp": _("Inline SNMP"),
             "agents": _("Agent bakery"),
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
+            "dcd": _("Dynamic host configuration"),
+            "ntopng_integration": _("Ntopng integration"),
 
             # CMK-OMD
             "omd": _("Site management"),
@@ -79,26 +75,26 @@ class WerkTranslator(object):
         }
 
     def classes(self):
-        return self._classes.items()
+        return list(self._classes.items())
 
     def class_of(self, werk):
         return self._classes[werk["class"]]
 
     def components(self):
-        return self._components.items()
+        return list(self._components.items())
 
     def component_of(self, werk):
         c = werk["component"]
         return self._components.get(c, c)
 
     def levels(self):
-        return self._levels.items()
+        return list(self._levels.items())
 
     def level_of(self, werk):
         return self._levels[werk["level"]]
 
     def compatibilities(self):
-        return self._compatibilities.items()
+        return list(self._compatibilities.items())
 
     def compatibility_of(self, werk):
         return self._compatibilities[werk["compatible"]]
@@ -109,7 +105,7 @@ def _compiled_werks_dir():
 
 
 def load():
-    werks = {}  # type: Dict[int, Dict[str, Any]]
+    werks: Dict[int, Dict[str, Any]] = {}
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(_compiled_werks_dir().glob("werks"),
                                      _compiled_werks_dir().glob("werks-*")):
@@ -159,11 +155,11 @@ _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 
 def _load_werk(path):
-    werk = {
+    werk: Dict[str, Any] = {
         "body": [],
         "compatible": "compat",
         "edition": "cre",
-    }  # type: Dict[str, Any]
+    }
     in_header = True
     with path.open(encoding="utf-8") as fp:
         for line in fp:
@@ -192,7 +188,7 @@ def _load_werk(path):
 
 def write_precompiled_werks(path, werks):
     with path.open("w", encoding="utf-8") as fp:
-        fp.write(six.ensure_text(json.dumps(werks, check_circular=False)))
+        fp.write(ensure_str(json.dumps(werks, check_circular=False)))
 
 
 def write_as_text(werks, f, write_version=True):
@@ -205,10 +201,10 @@ def write_as_text(werks, f, write_version=True):
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
         # write_version=False is used by the announcement mails
         if write_version:
-            f.write("%s:\n" % six.ensure_str(version))
+            f.write("%s:\n" % ensure_str(version))
         for component, component_group in itertools.groupby(version_group,
                                                             key=translator.component_of):
-            f.write("    %s:\n" % six.ensure_str(component))
+            f.write("    %s:\n" % ensure_str(component))
             for werk in component_group:
                 write_werk_as_text(f, werk)
             f.write("\n")
@@ -227,7 +223,7 @@ def write_werk_as_text(f, werk):
     else:
         omit = ""
 
-    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, six.ensure_str(werk["title"]), omit))
+    f.write("    * %04d%s %s%s\n" % (werk["id"], prefix, ensure_str(werk["title"]), omit))
 
     if werk["compatible"] == "incomp":
         f.write("            NOTE: Please refer to the migration notes!\n")
@@ -262,11 +258,11 @@ def sort_by_date(werks):
 VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
 
 
-# Parses versions of Check_MK and converts them into comparable integers.
-def parse_check_mk_version(v):
+# Parses versions of Checkmk and converts them into comparable integers.
+def parse_check_mk_version(v: str) -> int:
     """Figure out how to compare versions semantically.
 
-    Parses versions of Check_MK and converts them into comparable integers.
+    Parses versions of Checkmk and converts them into comparable integers.
 
     >>> p = parse_check_mk_version
 
@@ -337,6 +333,9 @@ def parse_check_mk_version(v):
 
     major, minor, rest = parts
     _, sub, rest = _extract_rest(rest)
+
+    if rest.startswith("-sandbox"):
+        return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, 0))
 
     # Only add the base once, else we could do it in the loop.
     var_type, num, rest = _extract_rest(rest)

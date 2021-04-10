@@ -1,0 +1,27 @@
+Title: Fix piggyback path traversal
+Class: security
+Compatible: incomp
+Component: core
+Date: 1597405643
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.0.0i1
+
+In previous versions it was possible to create files in the querying Checkmk
+site by modifying or extending an agent on a monitored system.
+
+So an attacker who gained rights on a monitored system to extend the agent
+could create and modify files in the monitoring Checkmk site with certain
+modifications of the agent. The creation or modification of files in the
+Checkmk site was done with rights of the Checkmk site user.
+
+This problem is now solved by a better validation of hostnames of piggybacked
+hosts. With this change only these characters are allowed in Piggybacked
+hostnames: <tt>0-9a-zA-Z_.-</tt>. These are exactly the same characters that
+Checkmk normally allows when creating hostnames. A special feature of Piggyback
+hostnames is that all illegal hostnames are replaced by "_".
+
+This change means that Piggyback hosts created with now invalid characters will
+have to be created differently after this change so that they can continue to
+be monitored.

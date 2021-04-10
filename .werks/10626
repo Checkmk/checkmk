@@ -6,6 +6,6 @@ Date: 1575368550
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 You can now get the total amount of AD Connect users. Also you can now monitor the sync from Azure AD Connect to your on-premise resources, if the AD Connect sync is enabled.

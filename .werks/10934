@@ -6,7 +6,7 @@ Date: 1587632799
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The agent plugin mk_sap_hana already delivers data per SID.
 Now also the check sap_hana_status will generate a service for the status and version per SID.

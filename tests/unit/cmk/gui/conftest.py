@@ -1,49 +1,56 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-import sys
 import ast
 import contextlib
 import json
-import threading
-if sys.version_info[0] >= 3:
-    from http.cookiejar import CookieJar  # pylint: disable=import-error
-else:
-    from cookielib import CookieJar  # pylint: disable=import-error
 import shutil
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import webtest  # type: ignore[import]
+import threading
+import urllib.parse
+from http.cookiejar import CookieJar
+from pathlib import Path
+from typing import Any, NamedTuple, Literal
+from functools import lru_cache
 
 import pytest  # type: ignore[import]
-import six
-from six.moves.urllib.parse import urlencode  # pylint: disable=relative-import
+import webtest  # type: ignore[import]
+from mock import MagicMock
 from werkzeug.test import create_environ
+
+from testlib.utils import DummyApplication
 
 import cmk.utils.log
 import cmk.utils.paths as paths
+
 import cmk.gui.config as config
 import cmk.gui.htmllib as htmllib
 import cmk.gui.login as login
-from cmk.gui.http import Request
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
-from cmk.gui.plugins.userdb import htpasswd
+from cmk.gui.http import Request
 from cmk.gui.utils import get_random_string
-from cmk.gui.watolib.users import edit_users, delete_users
+from cmk.gui.watolib import search, hosts_and_folders
+from cmk.gui.watolib.users import delete_users, edit_users
 from cmk.gui.wsgi import make_app
-from cmk.utils import store
-from testlib.utils import DummyApplication
+import cmk.gui.watolib.activate_changes as activate_changes
 
 SPEC_LOCK = threading.Lock()
+
+Automation = NamedTuple("Automation", [
+    ("automation", MagicMock),
+    ("local_automation", MagicMock),
+    ("remote_automation", MagicMock),
+    ("responses", Any),
+])
+
+HTTPMethod = Literal[
+    "get", "put", "post", "delete",
+    "GET", "PUT", "POST", "DELETE",
+]  # yapf: disable
 
 
 @pytest.fixture(scope='function')
@@ -51,7 +58,7 @@ def register_builtin_html():
     """This fixture registers a global htmllib.html() instance just like the regular GUI"""
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 
@@ -62,7 +69,7 @@ def module_wide_request_context():
     # course wrong. These other fixtures have to be fixed.
     environ = create_environ()
     with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+            RequestContext(htmllib.html(Request(environ)), display_options=DisplayOptions()):
         yield
 
 
@@ -84,26 +91,34 @@ def load_plugins(register_builtin_html, monkeypatch, tmp_path):
 
 
 def _mk_user_obj(username, password, automation=False):
+    # This dramatically improves the performance of the unit tests using this in fixtures
+    precomputed_hashes = {
+        "Ischbinwischtisch": '$5$rounds=535000$mn3ra3ny1cbHVGsW$5kiJmJcgQ6Iwd1R.i4.kGAQcMF.7zbCt0BOdRG8Mn.9',
+    }
+
+    if password not in precomputed_hashes:
+        raise ValueError("Add your hash to precomputed_hashes")
+
     user = {
         username: {
             'attributes': {
                 'alias': username,
                 'email': 'admin@example.com',
-                'password': htpasswd.hash_password(password),
+                'password': precomputed_hashes[password],
                 'notification_method': 'email',
                 'roles': ['admin'],
                 'serial': 0
             },
             'is_new_user': True,
         }
-    }
+    }  # type: dict
     if automation:
         user[username]['attributes'].update(automation_secret=password,)
     return user
 
 
 @contextlib.contextmanager
-def _create_and_destroy_user(automation=False):
+def _create_and_destroy_user(automation=False, role="user"):
     username = u'test123-' + get_random_string(size=5, from_ascii=ord('a'), to_ascii=ord('z'))
     password = u'Ischbinwischtisch'
     edit_users(_mk_user_obj(username, password, automation=automation))
@@ -111,7 +126,7 @@ def _create_and_destroy_user(automation=False):
 
     profile_path = Path(paths.omd_root, "var", "check_mk", "web", username)
     profile_path.joinpath('cached_profile.mk').write_text(
-        six.text_type(
+        str(
             repr({
                 'alias': u'Test user',
                 'contactgroups': ['all'],
@@ -122,7 +137,7 @@ def _create_and_destroy_user(automation=False):
                 'locked': False,
                 'language': 'de',
                 'pager': '',
-                'roles': ['user'],
+                'roles': [role],
                 'start_url': None,
                 'ui_theme': 'modern-dark',
             })))
@@ -144,26 +159,21 @@ def with_user(register_builtin_html, load_config):
 @pytest.fixture(scope='function')
 def with_user_login(with_user):
     user_id = with_user[0]
-    login.login(user_id)
-    yield user_id
-    config.clear_user_login()
+    with login.UserSessionContext(user_id):
+        yield user_id
 
 
-# noinspection PyDefaultArgument
 @pytest.fixture(scope='function')
-def recreate_openapi_spec(mocker, _cache=[]):  # pylint: disable=dangerous-default-value
-    from cmk.gui.openapi import generate
-    spec_path = paths.omd_root + "/share/checkmk/web/htdocs/openapi"
-    openapi_spec_dir = mocker.patch('cmk.gui.wsgi.applications.rest_api')
-    openapi_spec_dir.return_value = spec_path
+def with_admin(register_builtin_html, load_config):
+    with _create_and_destroy_user(automation=False, role="admin") as user:
+        yield user
 
-    if not _cache:
-        with SPEC_LOCK:
-            if not _cache:
-                _cache.append(generate())
 
-    spec_data = six.ensure_text(_cache[0])
-    store.save_text_to_file(spec_path + "/checkmk.yaml", spec_data)
+@pytest.fixture(scope='function')
+def with_admin_login(with_admin):
+    user_id = with_admin[0]
+    with login.UserSessionContext(user_id):
+        yield user_id
 
 
 @pytest.fixture()
@@ -178,7 +188,13 @@ def suppress_automation_calls(mocker):
     local_automation = mocker.patch("cmk.gui.watolib.automations.check_mk_local_automation")
     mocker.patch("cmk.gui.watolib.check_mk_local_automation", new=local_automation)
 
-    yield automation, local_automation
+    remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
+    mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
+
+    yield Automation(automation=automation,
+                     local_automation=local_automation,
+                     remote_automation=remote_automation,
+                     responses=None)
 
 
 @pytest.fixture()
@@ -193,6 +209,15 @@ def inline_local_automation_calls(mocker):
 
 
 @pytest.fixture()
+def make_html_object_explode(mocker):
+    class HtmlExploder:
+        def __init__(self, *args, **kw):
+            raise NotImplementedError("Tried to instantiate html")
+
+    mocker.patch("cmk.gui.htmllib.html", new=HtmlExploder)
+
+
+@pytest.fixture()
 def inline_background_jobs(mocker):
     """Prevent multiprocess.Process to spin off a new process
 
@@ -203,11 +228,13 @@ def inline_background_jobs(mocker):
     # We stub out everything preventing smooth execution.
     mocker.patch("multiprocessing.Process.join")
     mocker.patch("sys.exit")
-    mocker.patch("os.setsid")
-    mocker.patch("os._exit")
-    mocker.patch("sys.stdout.close")
-    mocker.patch("sys.stdin.close")
-    mocker.patch("sys.stderr.close")
+    mocker.patch("cmk.gui.watolib.ActivateChangesSite._detach_from_parent")
+    mocker.patch("cmk.gui.watolib.ActivateChangesSite._close_apache_fds")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._detach_from_parent")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._open_stdout_and_stderr")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
+    mocker.patch("cmk.gui.background_job.BackgroundProcess._register_signal_handlers")
+    mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
     mocker.patch("cmk.utils.daemon.daemonize")
     mocker.patch("cmk.utils.daemon.closefrom")
 
@@ -234,6 +261,14 @@ def get_link(resp, rel):
     raise KeyError("%r not found" % (rel,))
 
 
+def _expand_rel(rel):
+    if rel.startswith(".../"):
+        rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
+    if rel.startswith("cmk/"):
+        rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
+    return rel
+
+
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
     def __init__(self, *args, **kw):
@@ -245,22 +280,30 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username = username
         self.password = password
 
-    def call_method(self, method, url, *args, **kw):
+    def call_method(self, method: HTTPMethod, url, *args, **kw) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def follow_link(self, resp, rel, base='', **kw):
+    def has_link(self, resp: webtest.TestResponse, rel) -> bool:
+        if resp.status_code == 204:
+            return False
+        try:
+            _ = get_link(resp.json, _expand_rel(rel))
+            return True
+        except KeyError:
+            return False
+
+    def follow_link(self, resp: webtest.TestResponse, rel, base='', **kw) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
-        if rel.startswith(".../"):
-            rel = rel.replace(".../", "urn:org.restfulobjects:rels/")
-        if rel.startswith("cmk/"):
-            rel = rel.replace("cmk/", "urn:com.checkmk:rels/")
-        link = get_link(resp.json, rel)
-        return self.call_method(link.get('method', 'GET').lower(), base + link['href'], **kw)
+        rel = _expand_rel(rel)
+        if resp.status.startswith("2") and resp.content_type.endswith("json"):
+            link = get_link(resp.json, rel)
+            resp = self.call_method(link.get('method', 'GET').lower(), link['href'], **kw)
+        return resp
 
     def api_request(self, action, request, output_format='json', **kw):
         if self.username is None or self.password is None:
             raise RuntimeError("Not logged in.")
-        qs = urlencode([
+        qs = urllib.parse.urlencode([
             ('_username', self.username),
             ('_secret', self.password),
             ('request_format', output_format),
@@ -286,14 +329,62 @@ class WebTestAppForCMK(webtest.TestApp):
 
         if output_format == 'python':
             return ast.literal_eval(_resp.body)
-        elif output_format == 'json':
+        if output_format == 'json':
             return json.loads(_resp.body)
-        else:
-            raise NotImplementedError("Format %s not implemented" % output_format)
+        raise NotImplementedError("Format %s not implemented" % output_format)
+
+
+@lru_cache
+def _session_wsgi_callable(debug):
+    return make_app(debug=debug)
+
+
+def _make_webtest(debug):
+    cookies = CookieJar()
+    return WebTestAppForCMK(_session_wsgi_callable(debug), cookiejar=cookies)
 
 
 @pytest.fixture(scope='function')
-def wsgi_app(monkeypatch, recreate_openapi_spec):
-    wsgi_callable = make_app()
-    cookies = CookieJar()
-    return WebTestAppForCMK(wsgi_callable, cookiejar=cookies)
+def wsgi_app(monkeypatch):
+    return _make_webtest(debug=True)
+
+
+@pytest.fixture(scope='function')
+def wsgi_app_debug_off(monkeypatch):
+    return _make_webtest(debug=False)
+
+
+@pytest.fixture(scope='function', autouse=True)
+def avoid_search_index_update_background(monkeypatch):
+    monkeypatch.setattr(
+        search,
+        'update_index_background',
+        lambda _change_action_name:...,
+    )
+
+
+@pytest.fixture(scope='function')
+def logged_in_wsgi_app(wsgi_app, with_user):
+    username, password = with_user
+    wsgi_app.username = username
+    login = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    login.form['_username'] = username
+    login.form['_password'] = password
+    resp = login.form.submit('_login', index=1)
+    assert "Invalid credentials." not in resp.text
+    return wsgi_app
+
+
+@pytest.fixture(scope='function')
+def with_host(module_wide_request_context, with_user_login, suppress_automation_calls):
+    hostnames = ["heute", "example.com"]
+    hosts_and_folders.CREFolder.root_folder().create_hosts([
+        (hostname, {}, []) for hostname in hostnames
+    ])
+    yield hostnames
+    hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
+
+
+@pytest.fixture(autouse=True)
+def mock__add_extensions_for_license_usage(monkeypatch):
+    monkeypatch.setattr(activate_changes, "_add_extensions_for_license_usage", lambda: None)

@@ -7,6 +7,7 @@
 #define Store_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstddef>
 #include <list>
 #include <map>
@@ -48,13 +49,12 @@ class OutputBuffer;
 
 #ifdef CMC
 #include <cstdint>
+
 #include "TableCachedStatehist.h"
 class Core;
 class Object;
 #else
 #include <mutex>
-#include "DowntimesOrComments.h"
-#include "nagios.h"
 #endif
 
 class Store {
@@ -69,18 +69,15 @@ public:
     void buildStatehistCache();
     void flushStatehistCache();
     void tryFinishStatehistCache();
-    bool addObjectHistcache(Object *object);
-    void addAlertToStatehistCache(Object *object, int state,
+    void addObjectHistcache(Object *object);
+    void addAlertToStatehistCache(const Object &object, int state,
                                   const std::string &output,
                                   const std::string &long_output);
-    void addDowntimeToStatehistCache(Object *object, bool started);
-    void addFlappingToStatehistCache(Object *object, bool started);
+    void addDowntimeToStatehistCache(const Object &object, bool started);
+    void addFlappingToStatehistCache(const Object &object, bool started);
 #else
     explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
-
-    void registerDowntime(nebstruct_downtime_data *data);
-    void registerComment(nebstruct_comment_data *data);
 #endif
     [[nodiscard]] Logger *logger() const;
     size_t numCachedLogMessages();
@@ -98,14 +95,6 @@ private:
     MonitoringCore *_mc;
 #ifdef CMC
     Core *_core;
-#endif
-#ifndef CMC
-    // TODO(sp) These fields should better be somewhere else, e.g. module.cc
-public:
-    DowntimesOrComments _downtimes;
-    DowntimesOrComments _comments;
-
-private:
 #endif
     LogCache _log_cache;
 
@@ -151,7 +140,7 @@ private:
     uint32_t horizon() const;
 #else
     void logRequest(const std::string &line,
-                    const std::list<std::string> &lines);
+                    const std::list<std::string> &lines) const;
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -17,11 +17,11 @@ class About(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("About Check_MK")
+        return _("About Checkmk")
 
     @classmethod
     def description(cls):
-        return _("Links to webpage, documentation and download of Check_MK")
+        return _("Links to webpage, documentation and download of Checkmk")
 
     def show(self):
         html.open_ul()

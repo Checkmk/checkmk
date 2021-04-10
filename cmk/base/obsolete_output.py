@@ -5,32 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from contextlib import contextmanager
+from contextlib import suppress
 from typing import Any, IO
-
-if sys.version_info > (3, 4):
-    from contextlib import suppress  # pylint: disable=ungrouped-imports
-else:
-    from typing import Tuple, Type  # pylint: disable=ungrouped-imports
-
-    @contextmanager
-    def suppress(*exceptions):
-        # type: (Tuple[Type[BaseException]]) -> Generator[None, None, None]
-        try:
-            yield
-        except exceptions:
-            pass
 
 
 # TODO: This should be obsoleted:
 #   - either pick a log level
 #   - or write to sys.stdout|err
-def output(text, *args, **kwargs):
-    # type: (str, *Any, **Any) -> None
+def output(text: str, *args: Any, **kwargs: Any) -> None:
     if args:
         text = text % args
     # TODO: Replace kwargs with keyword only arg in Python 3.
-    stream = kwargs.pop("stream", sys.stdout)  # type: IO[str]
+    stream: IO[str] = kwargs.pop("stream", sys.stdout)
     assert not kwargs
 
     with suppress(IOError):

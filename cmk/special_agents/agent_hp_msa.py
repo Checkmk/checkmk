@@ -15,7 +15,6 @@ import xml.etree.ElementTree as ET
 
 import requests
 from requests.structures import CaseInsensitiveDict
-import six
 import urllib3  # type: ignore[import]
 
 LOGGER = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ def parse_arguments(argv):
 
     args = parser.parse_args(argv)
 
-    if args.verbose >= 2:
+    if args.verbose and args.verbose >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
     elif args.verbose:
@@ -51,7 +50,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections = {}  # type: Dict
+sections: Dict = {}
 
 # Which objects to get
 api_get_objects = [
@@ -153,7 +152,7 @@ class HPMSAConnection:
         if response_element is None:
             raise Exception("no response element")
         session_key = response_element.text
-        if not isinstance(session_key, six.string_types):
+        if not isinstance(session_key, str):
             raise Exception("invalid response element")
         if session_key.lower() == "authentication unsuccessful":
             raise AuthError("Connecting to %s failed. Please verify host address & login details" %

@@ -6,7 +6,7 @@ Date: 1588593011
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check makes sure every VM has a recent backup. The information is taken from log entries
 collected by the agent via API since Proxmox does not provide us with backup status (yet?).

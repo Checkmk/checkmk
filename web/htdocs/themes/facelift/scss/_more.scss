@@ -1,0 +1,116 @@
+@charset "UTF-8";
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+// conditions defined in the file COPYING, which is part of this source code package.
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.show_more_mode {
+  display: none;
+  opacity: 0;
+}
+
+.more {
+  .show_more_mode {
+    display: block;
+    animation: fadein 0s both;
+  }
+
+  td.show_more_mode {
+    display: table-cell;
+  }
+
+  tr.show_more_mode {
+    display: table-row;
+  }
+}
+
+.more.withanimation .show_more_mode {
+  animation: fadein 1s both;
+}
+
+a.more {
+  display: inline-block;
+  width: 26px;
+
+  img {
+    position: absolute;
+    top: 5px;
+    width: auto;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+a.more {
+  text-decoration: none;
+
+  div.show_less {
+    display: none;
+  }
+
+  div.show_more {
+    display: flex;
+
+    &:after {
+      content: url("images/icon_show_more.svg");
+    }
+  }
+
+  .more & {
+    div.show_more {
+      display: none;
+    }
+
+    div.show_less {
+      display: flex;
+
+      &:after {
+        content: url("images/icon_show_less.svg");
+      }
+    }
+  }
+
+  &.hidden {
+    display: none;
+  }
+
+  &.has_text {
+    width: auto;
+    font-size: $font-size-small;
+
+    &:hover {
+      color: $success;
+
+      div.show_more::after {
+        content: url("images/icon_show_more_green.svg");
+      }
+
+      div.show_less::after {
+        content: url("images/icon_show_less_green.svg");
+      }
+    }
+
+    div.show_more,
+    div.show_less {
+      align-items: center;
+
+      &:after {
+        margin-left: 6px;
+      }
+    }
+  }
+}
+
+td .show_more,
+td .show_less {
+  margin: -3px 0;
+}

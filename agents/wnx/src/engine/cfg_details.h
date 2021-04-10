@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 // registry access
@@ -11,6 +12,7 @@
 #include <filesystem>
 #include <stack>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "cfg.h"
@@ -25,12 +27,18 @@
 namespace cma::cfg::details {
 
 // tool to get ImagePath value from Registry
-std::wstring FindServiceImagePath(std::wstring_view service_name) noexcept;
+std::wstring FindServiceImagePath(std::wstring_view service_name);
 
 std::filesystem::path ExtractPathFromServiceName(
-    std::wstring_view service_name) noexcept;
+    std::wstring_view service_name);
+
+std::filesystem::path FindRootByExePath(const std::wstring& cmd_line);
 
 enum class CleanMode { none, smart, all };
+
+// The flag is based on AW report - only on positive report true
+// TODO(sk): Update comment and build till 5.03.2021
+constexpr bool g_remove_dirs_on_clean = true;
 
 CleanMode GetCleanDataFolderMode();
 bool CleanDataFolder(CleanMode mode);
@@ -46,8 +54,9 @@ public:
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
     enum class CreateMode { with_path, direct };
-    void createDataFolderStructure(const std::wstring& AgentDataFolder,
-                                   CreateMode mode);
+    enum class Protection { no, yes };
+    void createDataFolderStructure(const std::wstring& proposed_folder,
+                                   CreateMode mode, Protection protection);
 
     // for testing and reloading
     void cleanAll();
@@ -118,7 +127,8 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder, CreateMode mode);
+        std::wstring_view AgentDataFolder, CreateMode mode,
+        Protection protection);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -137,25 +147,26 @@ private:
 std::vector<std::wstring_view> AllDirTable();
 std::vector<std::wstring_view> RemovableDirTable();
 
-int CreateTree(const std::filesystem::path& base_path) noexcept;
+int CreateTree(const std::filesystem::path& base_path);
 
 }  // namespace cma::cfg::details
 
 namespace cma::cfg {
 namespace details {
-constexpr size_t kMaxFoldersStackSize = 10;
+constexpr size_t kMaxFoldersStackSize = 32;
 // low level API to combine sequences
 enum class Combine { overwrite, merge, merge_value };
 constexpr Combine GetCombineMode(std::string_view name);
 void CombineSequence(std::string_view name, YAML::Node target_value,
-                     const YAML::Node source_value, Combine combine);
+                     const YAML::Node& source_value, Combine combine);
 
 // critical and invisible global variables
 // YAML config and PAThs are here
 class ConfigInfo {
+public:
     struct YamlData {
         YamlData(const std::filesystem::path& Path,
-                 std::filesystem::file_time_type Timestamp)
+                 std::filesystem::file_time_type Timestamp) noexcept
             : path_(Path) {}
 
         void loadFile() {
@@ -163,7 +174,7 @@ class ConfigInfo {
             data_.clear();
             bad_ = false;
             if (!exists()) {
-                XLOG::d.t("{} is absent, return", path_.u8string());
+                XLOG::d.t("{} is absent, return", path_);
                 return;
             }
 
@@ -201,12 +212,12 @@ class ConfigInfo {
             try {
                 auto yaml = YAML::Load(data_);
                 if (!yaml.IsDefined()) {
-                    XLOG::l("Cannot load cfg '{}'", path_.u8string());
+                    XLOG::l("Cannot load cfg '{}'", path_);
                     data_.clear();
                 }
             } catch (const std::exception& e) {
                 XLOG::l.crit("Can't load yaml file '{}', exception: '{}'",
-                             path_.u8string(), e.what());
+                             path_, e.what());
                 bad_ = true;
             } catch (...) {
                 XLOG::l(XLOG::kBp)(XLOG_FLINE + " exception bad");
@@ -220,21 +231,30 @@ class ConfigInfo {
         std::filesystem::file_time_type timestamp_;
     };
 
-public:
     using sptr = std::shared_ptr<ConfigInfo>;
     ConfigInfo() {}
     ConfigInfo(const ConfigInfo&) = delete;
     ConfigInfo& operator=(const ConfigInfo&) = delete;
-    void initFolders(const std::wstring& ServiceValidName,  // look in registry
-                     const std::wstring& RootFolder,        // look in disk
-                     const std::wstring& AgentDataFolder);  // look in disk
+    void initFolders(
+        const std::wstring& service_valid_name,  // look in registry
+        const std::wstring& root_folder,         // look in disk
+        const std::wstring& data_folder);        // look in disk
 
     void cleanFolders();
     void cleanConfig();
 
+    // TODO (sk): move to tests
+    /// \brief Used in tests only( to prevent the tree from changing )
     bool pushFolders(const std::filesystem::path& root,
                      const std::filesystem::path& data);
 
+    // TODO (sk): move to tests
+    /// \brief Used in tests only( to prevent the tree from changing )
+    bool pushFoldersNoIo(const std::filesystem::path& root,
+                         const std::filesystem::path& data);
+
+    // TODO (sk): move to tests only( to prevent the tree from changing )
+    /// \brief Used in tests only to prevent context
     bool popFolders();
 
     // not so heavy operation, use free
@@ -243,6 +263,13 @@ public:
         if (ok_) return yaml_;
 
         return {};
+    }
+
+    void setConfig(YAML::Node yaml) {
+        std::lock_guard lk(lock_);
+        if (yaml_.IsDefined()) {
+            yaml_ = yaml;
+        }
     }
 
     std::wstring getRootYamlPath() const noexcept {
@@ -380,20 +407,22 @@ public:
     LoadCfgStatus loadAggregated(const std::wstring& config_filename,
                                  YamlCacheOp cache_op);
 
-    static bool smartMerge(YAML::Node Target, YAML::Node Src, Combine combine);
+    static bool smartMerge(YAML::Node& target, const YAML::Node& source,
+                           Combine combine);
 
     // THIS IS ONLY FOR TESTING
     bool loadDirect(const std::filesystem::path& file);
+    bool loadDirect(std::string_view text);
 
-    uint64_t uniqId() const noexcept { return uniq_id_; }
+    uint64_t uniqId() const noexcept { return g_uniq_id; }
 
 private:
-    void fillExePaths(std::filesystem::path root);
+    void fillExePaths(const std::filesystem::path& root);
     void fillConfigDirs();
     std::vector<YamlData> buildYamlData(
-        const std::wstring& ConfigFileName) const noexcept;
-    void loadYamlDataWithMerge(YAML::Node Config,
-                               const std::vector<YamlData>& Yd);
+        const std::wstring& config_file_name) const;
+    void mergeYamlData(YAML::Node& config_node,
+                       const std::vector<YamlData>& yaml_data);
     // LOOOONG operation
     // when failed old config retained
     void initEnvironment();
@@ -431,7 +460,7 @@ private:
     std::atomic<int> backup_log_max_count_ = kBackupLogMaxCount;
     std::atomic<size_t> backup_log_max_size_ = kBackupLogMaxSize;
 
-    static std::atomic<uint64_t> uniq_id_;
+    static std::atomic<uint64_t> g_uniq_id;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class StartTest;
@@ -445,8 +474,8 @@ private:
 
 std::filesystem::path ConvertLocationToLogPath(std::string_view location);
 std::filesystem::path GetDefaultLogPath();
-std::wstring FindMsiExec() noexcept;
-std::string FindHostName() noexcept;
+std::wstring FindMsiExec();
+std::string FindHostName();
 }  // namespace details
 details::ConfigInfo& GetCfg();
 }  // namespace cma::cfg

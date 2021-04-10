@@ -6,11 +6,20 @@
 Plugin API
 ##########
 
-.. toctree::
-   :maxdepth: 1
-   :glob:
+This is the plugin API reference from Checkmk. This can help you to get exact
+information about the API. If you want to know how to use the API, please have
+a look at the articles about extending Checkmk in our `official guide <https://checkmk.com/cms.html>`_.
 
-   apidoc/*/*_api
+.. toctree::
+   :caption: Base
+
+   cmk.base.plugins.agent_based.agent_based_api/index
+   cmk.base.cee.plugins.bakery.bakery_api/index
+
+.. toctree::
+   :caption: Dynamic configuration
+
+   cmk.cee.dcd.plugins.connectors.connectors_api/index
 
 Indices and tables
 ==================

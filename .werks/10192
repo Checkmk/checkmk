@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previous version of the Windows Agent re-installed supplied in MSI file
 check_mk.user.yml on every service restart. This behavior denied the editing

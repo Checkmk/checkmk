@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,20 +6,14 @@
 
 # pylint: disable=redefined-outer-name
 
-import sys
-from typing import Dict, List, Union  # pylint: disable=unused-import
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import Dict, List, Union
+from pathlib import Path
 
 import pytest  # type: ignore[import]
 from mockldap import MockLdap, LDAPObject  # type: ignore[import]
-import six
 
 # userdb is needed to make the module register the post-config-load-hooks
-import cmk.gui.userdb  # pylint: disable=unused-import
+import cmk.gui.userdb
 import cmk.gui.plugins.userdb.ldap_connector as ldap
 import cmk.gui.plugins.userdb.utils as userdb_utils
 
@@ -42,16 +36,20 @@ def test_sync_plugins(load_config):
         'groups_to_attributes',
         'groups_to_contactgroups',
         'groups_to_roles',
+        'icons_per_item',
         'disable_notifications',
         'force_authuser',
+        'nav_hide_icons_title',
         'pager',
         'start_url',
         'ui_theme',
+        'ui_sidebar_position',
+        'show_mode',
     ])
 
 
 def _ldap_tree():
-    tree = {
+    tree: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "dc=org": {
             "objectclass": ["domain"],
             "objectcategory": ["domain"],
@@ -76,9 +74,9 @@ def _ldap_tree():
             "dn": ["ou=groups,dc=check-mk,dc=org"],
             "ou": "groups",
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
-    users = {
+    users: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "cn=admin,ou=users,dc=check-mk,dc=org": {
             "objectclass": ["user"],
             "objectcategory": ["person"],
@@ -105,9 +103,9 @@ def _ldap_tree():
             "samaccountname": ["sync-user"],
             "userPassword": ["sync-secret"],
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
-    groups = {
+    groups: Dict[str, Dict[str, Union[str, List[str]]]] = {
         "cn=admins,ou=groups,dc=check-mk,dc=org": {
             "objectclass": ["group"],
             "objectcategory": ["group"],
@@ -210,7 +208,7 @@ def _ldap_tree():
                 "cn=admin,ou=users,dc=check-mk,dc=org",
             ],
         },
-    }  # type: Dict[str, Dict[str, Union[str, List[str]]]]
+    }
 
     tree.update(users)
     tree.update(groups)
@@ -237,7 +235,7 @@ def encode_to_byte_strings(inp):
         return [encode_to_byte_strings(element) for element in inp]
     if isinstance(inp, tuple):
         return tuple([encode_to_byte_strings(element) for element in inp])
-    if isinstance(inp, six.text_type):
+    if isinstance(inp, str):
         return inp.encode("utf-8")
     return inp
 
@@ -309,10 +307,10 @@ def mocked_ldap(monkeypatch):
         # encoding. The latter want's to have byte encoded strings and MockLdap
         # wants unicode strings :-/. Prepare the data we normally send to
         # python-ldap for MockLdap here.
-        if not isinstance(base, six.text_type):
+        if not isinstance(base, str):
             base = base.decode("utf-8")
 
-        if not isinstance(filterstr, six.text_type):
+        if not isinstance(filterstr, str):
             filterstr = filterstr.decode("utf-8")
 
         return self.search(base, scope, filterstr, attrlist, attrsonly)
@@ -334,11 +332,11 @@ def _check_restored_bind_user(mocked_ldap):
 
 def test_check_credentials_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
 
     result = mocked_ldap.check_credentials(u"admin", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 
@@ -355,7 +353,7 @@ def test_check_credentials_not_existing(mocked_ldap):
 
 def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
     result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
-    assert isinstance(result, six.text_type)
+    assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 

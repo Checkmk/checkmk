@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -55,6 +55,7 @@ def test_registered_api_call_collections():
         'get_bi_aggregations',
         'get_combined_graph_identifications',
         'get_folder',
+        'get_graph',
         'get_graph_annotations',
         'get_graph_recipes',
         'get_host',
@@ -77,7 +78,6 @@ def test_registered_api_call_collections():
     if not cmk_version.is_raw_edition():
         expected_api_actions += [
             'bake_agents',
-            'get_graph',
             'get_sla',
         ]
 

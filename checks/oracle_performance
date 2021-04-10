@@ -287,7 +287,6 @@ check_info['oracle_performance.memory'] = {
 
 def _check_oracle_performance_iostat_file(item, params, data, unit, io_fields):
     now = time.time()
-    perfdata = []
     totals = [0] * len(io_fields)
     error_results = []
 
@@ -385,7 +384,6 @@ def check_oracle_performance_waitclasses(item, params, parsed):
     params = _get_subcheck_params(params, 'waitclasses')
     data = _get_item_data(item, parsed)
     now = time.time()
-    perfdata = []
     error_results = []
 
     total_waited_sum = 0

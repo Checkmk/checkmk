@@ -7,23 +7,27 @@
 #define TimeFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
+
 #include "ColumnFilter.h"
 #include "Filter.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Row;
-class TimeColumn;
 
 class TimeFilter : public ColumnFilter {
 public:
-    TimeFilter(Kind kind, const TimeColumn &column, RelationalOperator relOp,
-               const std::string &value);
+    TimeFilter(Kind kind, std::string columnName,
+               std::function<std::chrono::system_clock::time_point(
+                   Row, std::chrono::seconds)>,
+               RelationalOperator relOp, const std::string &value);
 
     bool accepts(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) const override;
@@ -44,7 +48,9 @@ public:
     [[nodiscard]] std::unique_ptr<Filter> negate() const override;
 
 private:
-    const TimeColumn &_column;
+    const std::function<std::chrono::system_clock::time_point(
+        Row, std::chrono::seconds)>
+        _getValue;
     const int32_t _ref_value;
 };
 

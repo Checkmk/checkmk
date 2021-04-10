@@ -1,0 +1,32 @@
+Title: cisco_vpn_sessions: extensions and refactoring
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1590425068
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Building on werk #11150, this werk extends the monitoring of Cisco VPN
+sessions.
+
+<ul>
+<li>The services corresponding to this check are renamed from "[session type]
+Sessions" to "VPN Sessions [session type]". This places them next to each other
+in the Checkmk GUI.</li>
+<li>In addition to the number of active sessions, the check now also reports peak
+values and cumulative values as well as the global system limit on the number of
+concurrent sessions.</li>
+<li>Besides the number of client, clientless and remote access sessions, the check
+now also monitors the number of LAN-to-LAN sessions, discovered as "IPsec L2L". For
+clarity, the service monitoring the number of remote access sessions is renamed from
+"IPsec" to "IPsec RA".</li>
+<li>The check now additionally produces a service which reports the overall number of
+active sessions (computed by summing over the individual session types).</li>
+<li>In addition to Cisco PIX and ASA appliances, the check now also discovers Cisco
+Firepower appliances.</li>
+</ul>
+
+This werk is incompatible. Users have to re-discover the services of affected
+hosts.

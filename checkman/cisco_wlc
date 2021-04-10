@@ -11,8 +11,12 @@ description:
  This check automatically detects all online accesspoints and checks for the current status.
  If an accesspoint is not longer reachable, the checks also triggers a critical state.
  The checks directly connects to a Cisco Wireless LAN Controller. Currently its tested
- with the model 5508.
+ with the model 5508. This check is also cluster-aware.
 
 inventory:
  One service is created for each online accesspoint.
+
+cluster:
+  On a cluster the check will be evaluated on the first node found to have the
+  information about a given accesspoint.
 

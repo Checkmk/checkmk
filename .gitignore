@@ -4,6 +4,8 @@
 *.py.*.py
 *kate-swp
 *~
+*.cookie
+*.timer
 .*.swo
 .*.swp
 .DS_Store
@@ -17,7 +19,7 @@
 .mypy_cache
 .ropeproject
 .venv-2.7
-.venv-3.7
+.venv-3.8
 GPATH
 GRTAGS
 GTAGS
@@ -47,8 +49,6 @@ doc/plugin-api/source/apidoc/
 install-sh
 missing
 mk-livestatus-*.tar.gz
-Pipfile
-Pipfile.lock
 stamp-h1
 tags
 tests/web/data/*
@@ -57,7 +57,8 @@ tests/web/data/*
 /*.wpu
 /.tmp*
 *.iml
-.venv
+.venv/
+.venv.lock
 *.gcov
 htmlcov/
 artefacts/
@@ -65,3 +66,5 @@ node_modules/
 web/htdocs/js/*_min.js.map
 .mypy_cache/
 .vscode/
+.testmondata
+*.code-workspace

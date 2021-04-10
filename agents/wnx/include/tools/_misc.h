@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // Assorted routines
 #pragma once
@@ -15,6 +16,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <tuple>
 #include <type_traits>
 #include <vector>
@@ -166,18 +168,6 @@ inline bool IsValidRegularFile(const std::filesystem::path& filepath) {
     if (!fs::is_regular_file(filepath)) return false;
 
     return true;
-}
-
-inline void AddDirSymbol(std::string& Dir) {
-    std::filesystem::path p = Dir;
-    p /= "";
-    Dir = p.u8string();
-}
-
-inline void AddDirSymbol(std::wstring& Dir) {
-    std::filesystem::path p = Dir;
-    p /= "";
-    Dir = p.wstring();
 }
 
 // to combine to buffers

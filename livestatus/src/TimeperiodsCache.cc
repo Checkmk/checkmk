@@ -4,13 +4,11 @@
 // source code package.
 
 #include "TimeperiodsCache.h"
-#include <ostream>
-#include <string>
-#include <type_traits>
-#include <utility>
-#include "Logger.h"
 
-extern timeperiod *timeperiod_list;
+#include <utility>
+
+#include "Logger.h"
+#include "NagiosGlobals.h"
 
 using namespace std::chrono_literals;
 

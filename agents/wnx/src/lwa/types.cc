@@ -1,10 +1,13 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #include "stdafx.h"
 
 #include "types.h"
+
+#include <WinSock2.h>
 
 #include <algorithm>
 #include <cstring>
@@ -230,7 +233,7 @@ void normalizeCommand(std::string &cmd) {
         auto quoteType = getQuoteType(cmd);
         removeQuotes(cmd, quoteType);
         auto dir = cma::cfg::GetUserDir();
-        cmd.insert(0, wtools::ConvertToUTF8(dir) + "\\");
+        cmd.insert(0, wtools::ToUtf8(dir) + "\\");
         wrapInQuotes(cmd, quoteType);
     }
 }
@@ -290,7 +293,7 @@ std::string ToYamlString(const mrpe_entry &Entry, bool) {
 
     std::string out = "- check = ";
     std::string p = Entry.command_line;
-    auto data_path = wtools::ConvertToUTF8(cma::cfg::GetUserDir());
+    auto data_path = wtools::ToUtf8(cma::cfg::GetUserDir());
     auto pos = p.find(data_path);
     if (pos == 0 || pos == 1) {
         cma::cfg::ReplaceInString(p, data_path,

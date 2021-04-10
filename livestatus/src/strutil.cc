@@ -4,6 +4,7 @@
 // source code package.
 
 #include "strutil.h"
+
 #include <cctype>
 
 // *c points to a string containing white space separated columns. This method

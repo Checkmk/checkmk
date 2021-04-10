@@ -6,7 +6,7 @@ Date: 1569934288
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check monitors the cluster traffic of a graylog instance. It outputs the
 input, output and decoded traffic. Graylog only covers that data every hour, so

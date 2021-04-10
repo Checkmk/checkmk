@@ -4,15 +4,17 @@
 // source code package.
 
 #include "ServiceListColumn.h"
+
 #include <algorithm>
 #include <iterator>
+
 #include "Renderer.h"
 #include "Row.h"
 
 #ifdef CMC
-#include <cstdint>
 #include <memory>
 #include <unordered_set>
+
 #include "Host.h"
 #include "LogEntry.h"
 #include "Service.h"
@@ -20,6 +22,7 @@
 #include "Timeperiod.h"
 #else
 #include <unordered_map>
+
 #include "MonitoringCore.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
@@ -66,6 +69,7 @@ std::vector<std::string> ServiceListColumn::getValue(
 }
 
 #ifndef CMC
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern TimeperiodsCache *g_timeperiods_cache;
 
 namespace {
@@ -86,8 +90,8 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
     std::vector<Entry> entries;
 #ifdef CMC
     (void)_mc;  // HACK
-    if (auto mem = columnData<Host::services_t>(row)) {
-        for (auto &svc : *mem) {
+    if (const auto *mem = columnData<Host::services_t>(row)) {
+        for (const auto &svc : *mem) {
             if (auth_user == nullptr || svc->hasContact(auth_user)) {
                 entries.emplace_back(
                     svc->name(),
@@ -97,17 +101,17 @@ std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
                     static_cast<ServiceState>(svc->state()->_last_hard_state),
                     svc->state()->_current_attempt, svc->_max_check_attempts,
                     svc->state()->_scheduled_downtime_depth,
-                    svc->state()->_acknowledged,
-                    svc->_service_period->isActive());
+                    svc->acknowledged(), svc->_service_period->isActive());
             }
         }
     }
 #else
-    if (auto p = columnData<servicesmember *>(row)) {
+    if (const auto *const p = columnData<servicesmember *>(row)) {
         for (servicesmember *mem = *p; mem != nullptr; mem = mem->next) {
             service *svc = mem->service_ptr;
             if (auth_user == nullptr ||
-                is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
+                is_authorized_for(_mc->serviceAuthorization(), auth_user,
+                                  svc->host_ptr, svc)) {
                 entries.emplace_back(
                     svc->description,
                     static_cast<ServiceState>(svc->current_state),

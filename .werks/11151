@@ -1,0 +1,15 @@
+Title: Correct handling of unsorted time periods for availability timelines
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1589986006
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Checkmk now handles unsorted time periods correctly when displaying
+availability timelines. For example, before, the time period
+10:10 - 10:15, 10:00 - 10:05
+would end up as 10:10 - 10:15, so checkmk dropped the second, earlier
+range.

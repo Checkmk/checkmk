@@ -1,0 +1,11 @@
+Title: agent_innovaphone: fixed non-working agent caused by invalid argument parsing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614080513
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

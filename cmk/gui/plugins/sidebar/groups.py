@@ -1,11 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import six
 
 import cmk.gui.sites as sites
 from cmk.gui.plugins.sidebar import (
@@ -17,7 +16,7 @@ from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
 
-class GroupSnapin(six.with_metaclass(abc.ABCMeta, SidebarSnapin)):
+class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()
@@ -46,7 +45,7 @@ class HostGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Host Groups")
+        return _("Host groups")
 
     @classmethod
     def description(cls):
@@ -64,7 +63,7 @@ class ServiceGroups(GroupSnapin):
 
     @classmethod
     def title(cls):
-        return _("Service Groups")
+        return _("Service groups")
 
     @classmethod
     def description(cls):

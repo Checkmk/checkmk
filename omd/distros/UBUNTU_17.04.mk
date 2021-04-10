@@ -1,12 +1,12 @@
 DISTRO_CODE     = zesty
 #
-# Check_MK build specific packages below
+# Checkmk build specific packages below
 #
 OS_PACKAGES     =
 OS_PACKAGES    += libcap2-bin # needed for setting special file permissions
 OS_PACKAGES    += cron # needed for sites cron jobs
 OS_PACKAGES    += time # needed for mk-job
-OS_PACKAGES    += traceroute # needed for Check_MK parent scan
+OS_PACKAGES    += traceroute # needed for Checkmk parent scan
 OS_PACKAGES    += curl
 OS_PACKAGES    += dialog
 OS_PACKAGES    += dnsutils
@@ -34,7 +34,7 @@ OS_PACKAGES    += unzip
 OS_PACKAGES    += xinetd
 OS_PACKAGES    += freeradius-utils
 #
-# Check_MK build specific packages below
+# Checkmk build specific packages below
 #
 OS_PACKAGES    += libpcap0.8 # needed for cmc
 OS_PACKAGES    += rpm # needed by msitools/Agent Bakery

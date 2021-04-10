@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,11 +6,11 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List, Optional as _Optional, Text, Tuple as _Tuple  # pylint: disable=unused-import
+from typing import Any, Dict, List, Optional as _Optional, Tuple as _Tuple, Type
 
 import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
-from cmk.utils.type_defs import EventRule, UserId, timeperiod_spec_alias  # pylint: disable=unused-import
+from cmk.utils.type_defs import EventRule, UserId, timeperiod_spec_alias
 
 import cmk.gui.config as config
 import cmk.gui.watolib as watolib
@@ -19,24 +19,48 @@ from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.wato.mkeventd
+from cmk.gui.utils import unique_default_name_suggestion
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import (  # pylint: disable=unused-import
-    ValueSpec, FixedValue, Dictionary, Optional, Integer, FileUpload, TextAscii, TextUnicode,
-    ListOf, Tuple, ListChoice, CascadingDropdown, ListOfTimeRanges,
+from cmk.gui.valuespec import (
+    ValueSpec,
+    FixedValue,
+    Dictionary,
+    Optional,
+    Integer,
+    FileUpload,
+    TextAscii,
+    TextUnicode,
+    ListOf,
+    Tuple,
+    ListChoice,
+    CascadingDropdown,
+    ListOfTimeRanges,
+)
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+    make_simple_link,
+    make_simple_form_page_menu,
 )
 
 from cmk.gui.plugins.wato import (
     WatoMode,
-    wato_confirm,
-    global_buttons,
+    ActionResult,
     mode_registry,
     make_action_link,
+    make_confirm_link,
+    mode_url,
+    redirect,
 )
 
-TimeperiodUsage = _Tuple[Text, str]
+TimeperiodUsage = _Tuple[str, str]
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling
@@ -59,41 +83,69 @@ class ModeTimeperiods(WatoMode):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
 
     def title(self):
-        return _("Timeperiods")
+        return _("Time periods")
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(_("New Timeperiod"),
-                            watolib.folder_preserving_link([("mode", "edit_timeperiod")]), "new")
-        html.context_button(_("Import iCalendar"),
-                            watolib.folder_preserving_link([("mode", "import_ical")]), "ical")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name="timeperiods",
+                    title=_("Time periods"),
+                    topics=[
+                        PageMenuTopic(
+                            title=_("Add time period"),
+                            entries=[
+                                PageMenuEntry(
+                                    title=_("Add time period"),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "edit_timeperiod")
+                                                                       ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                                PageMenuEntry(
+                                    title=_("Import iCalendar"),
+                                    icon_name="ical",
+                                    item=make_simple_link(
+                                        watolib.folder_preserving_link([("mode", "import_ical")])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
 
-    def action(self):
+    def action(self) -> ActionResult:
         delname = html.request.var("_delete")
-        if delname and html.transaction_valid():
-            if delname in watolib.timeperiods.builtin_timeperiods():
-                raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+        if not delname:
+            return redirect(mode_url("timeperiods"))
 
-            usages = self._find_usages_of_timeperiod(delname)
-            if usages:
-                message = "<b>%s</b><br>%s:<ul>" % \
-                            (_("You cannot delete this timeperiod."),
-                             _("It is still in use by"))
-                for title, link in usages:
-                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-                message += "</ul>"
-                raise MKUserError(None, message)
+        if not html.check_transaction():
+            return redirect(mode_url("timeperiods"))
 
-            c = wato_confirm(
-                _("Confirm deletion of time period %s") % delname,
-                _("Do you really want to delete the time period '%s'? I've checked it: "
-                  "it is not being used by any rule or user profile right now.") % delname)
-            if c:
-                del self._timeperiods[delname]
-                watolib.timeperiods.save_timeperiods(self._timeperiods)
-                watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
-            elif c is False:
-                return ""
+        if delname in watolib.timeperiods.builtin_timeperiods():
+            raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+
+        usages = self._find_usages_of_timeperiod(delname)
+        if usages:
+            message = "<b>%s</b><br>%s:<ul>" % \
+                        (_("You cannot delete this timeperiod."),
+                         _("It is still in use by"))
+            for title, link in usages:
+                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            message += "</ul>"
+            raise MKUserError(None, message)
+
+        del self._timeperiods[delname]
+        watolib.timeperiods.save_timeperiods(self._timeperiods)
+        watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
+        return redirect(mode_url("timeperiods"))
 
     # Check if a timeperiod is currently in use and cannot be deleted
     # Returns a list of two element tuples (title, url) that refer to the single occurrances.
@@ -106,9 +158,8 @@ class ModeTimeperiods(WatoMode):
     # - 5. bulk operation in notification rules
     # - 6. timeperiod condition in EC rules
     # - 7. rules: time specific parameters
-    def _find_usages_of_timeperiod(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_of_timeperiod(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         used_in += self._find_usages_in_host_and_service_rules(tpname)
         used_in += self._find_usages_in_users(tpname)
         used_in += self._find_usages_in_other_timeperiods(tpname)
@@ -118,9 +169,8 @@ class ModeTimeperiods(WatoMode):
         used_in += self._find_usages_in_time_specific_parameters(tpname)
         return used_in
 
-    def _find_usages_in_host_and_service_rules(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_host_and_service_rules(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         rulesets = watolib.AllRulesets()
         rulesets.load()
         for varname, ruleset in rulesets.get_rulesets().items():
@@ -135,9 +185,8 @@ class ModeTimeperiods(WatoMode):
                     break
         return used_in
 
-    def _find_usages_in_users(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_users(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         for userid, user in userdb.load_users().items():
             tp = user.get("notification_period")
             if tp == tpname:
@@ -152,9 +201,8 @@ class ModeTimeperiods(WatoMode):
                                                                   user_id=userid)
         return used_in
 
-    def _find_usages_in_other_timeperiods(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_other_timeperiods(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         for tpn, tp in watolib.timeperiods.load_timeperiods().items():
             if tpname in tp.get("exclude", []):
                 used_in.append(("%s: %s (%s)" %
@@ -163,16 +211,19 @@ class ModeTimeperiods(WatoMode):
                                                                 ("edit", tpn)])))
         return used_in
 
-    def _find_usages_in_notification_rules(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_notification_rules(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         for index, rule in enumerate(load_notification_rules()):
             used_in += self._find_usages_in_notification_rule(tpname, index, rule)
         return used_in
 
-    def _find_usages_in_notification_rule(self, tpname, index, rule, user_id=None):
-        # type: (str, int, EventRule, _Optional[UserId]) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_notification_rule(self,
+                                          tpname: str,
+                                          index: int,
+                                          rule: EventRule,
+                                          user_id: _Optional[UserId] = None
+                                         ) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         if self._used_in_tp_condition(rule, tpname) or self._used_in_bulking(rule, tpname):
             url = watolib.folder_preserving_link([
                 ("mode", "notification_rule"),
@@ -197,9 +248,8 @@ class ModeTimeperiods(WatoMode):
             return method == "timeperiod" and params["timeperiod"] == tpname
         return False
 
-    def _find_usages_in_alert_handler_rules(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_alert_handler_rules(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         if cmk_version.is_raw_edition():
             return used_in
         for index, rule in enumerate(alert_handling.load_alert_handler_rules()):
@@ -211,9 +261,8 @@ class ModeTimeperiods(WatoMode):
                 used_in.append((_("Alert handler rule"), url))
         return used_in
 
-    def _find_usages_in_ec_rules(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_ec_rules(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         rule_packs = cmk.gui.wato.mkeventd.load_mkeventd_rules()
         for rule_pack in rule_packs:
             for rule_index, rule in enumerate(rule_pack["rules"]):
@@ -224,9 +273,8 @@ class ModeTimeperiods(WatoMode):
                     used_in.append((_("Event console rule"), url))
         return used_in
 
-    def _find_usages_in_time_specific_parameters(self, tpname):
-        # type: (str) -> List[TimeperiodUsage]
-        used_in = []  # type: List[TimeperiodUsage]
+    def _find_usages_in_time_specific_parameters(self, tpname: str) -> List[TimeperiodUsage]:
+        used_in: List[TimeperiodUsage] = []
         rulesets = watolib.AllRulesets()
         rulesets.load()
         for ruleset in rulesets.get_rulesets().values():
@@ -273,10 +321,12 @@ class ModeTimeperiods(WatoMode):
             ("mode", "edit_timeperiod"),
             ("clone", name),
         ])
-        delete_url = make_action_link([
-            ("mode", "timeperiods"),
-            ("_delete", name),
-        ])
+        delete_url = make_confirm_link(
+            url=make_action_link([
+                ("mode", "timeperiods"),
+                ("_delete", name),
+            ]),
+            message=_("Do you really want to delete the time period '%s'?" % name))
 
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy"), "clone")
@@ -297,12 +347,19 @@ class ModeTimeperiodImportICal(WatoMode):
     def permissions(cls):
         return ["timeperiods"]
 
-    def title(self):
-        return _("Import iCalendar File to create a Timeperiod")
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeTimeperiods
 
-    def buttons(self):
-        html.context_button(_("All Timeperiods"),
-                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+    def title(self):
+        return _("Import iCalendar File to create a time period")
+
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(_("iCalendar"),
+                                          breadcrumb,
+                                          form_name="import_ical",
+                                          button_name="upload",
+                                          save_title=_("Import"))
 
     def _vs_ical(self):
         return Dictionary(
@@ -314,7 +371,6 @@ class ModeTimeperiodImportICal(WatoMode):
                  FileUpload(
                      title=_('iCalendar File'),
                      help=_("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
-                     allow_empty=False,
                      custom_validate=self._validate_ical_file,
                  )),
                 ('horizon',
@@ -355,9 +411,9 @@ class ModeTimeperiodImportICal(WatoMode):
         if not content.startswith('END:VCALENDAR'):
             raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
         vs_ical = self._vs_ical()
         ical = vs_ical.from_html_vars("ical")
@@ -366,45 +422,42 @@ class ModeTimeperiodImportICal(WatoMode):
         filename, _ty, content = ical['file']
 
         try:
-            data = self._parse_ical(content, ical['horizon'])
+            # TODO(ml): If we could open the file in text mode, we would not
+            #           need to `decode()` here.
+            data = self._parse_ical(content.decode("utf-8"), ical['horizon'])
         except Exception as e:
             if config.debug:
                 raise
             raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
 
-        # TODO: This is kind of a hack that we "fake" a HTTP request structure here.
-        # Find a better way to hand over the whole data structure directly to the
-        # edit_timeperiod code
-
-        html.request.set_var('timeperiod_p_alias', data.get('descr', data.get('name', filename)))
+        get_vars = {
+            'timeperiod_p_alias': data.get('descr', data.get('name', filename)),
+        }
 
         for day in defines.weekday_ids():
-            html.request.set_var('%s_0_from' % day, '')
-            html.request.set_var('%s_0_until' % day, '')
+            get_vars['%s_0_from' % day] = ''
+            get_vars['%s_0_until' % day] = ''
 
         # Default to whole day
         if not ical["times"]:
             ical["times"] = [((0, 0), (24, 0))]
 
-        html.request.set_var('timeperiod_p_exceptions_count', "%d" % len(data['events']))
+        get_vars['timeperiod_p_exceptions_count'] = "%d" % len(data['events'])
         for index, event in enumerate(data['events']):
             index += 1
-            html.request.set_var('timeperiod_p_exceptions_%d_0' % index, event['date'])
-            html.request.set_var('timeperiod_p_exceptions_indexof_%d' % index, "%d" % index)
+            get_vars['timeperiod_p_exceptions_%d_0' % index] = event['date']
+            get_vars['timeperiod_p_exceptions_indexof_%d' % index] = "%d" % index
 
-            html.request.set_var('timeperiod_p_exceptions_%d_1_count' % index,
-                                 "%d" % len(ical["times"]))
+            get_vars['timeperiod_p_exceptions_%d_1_count' % index] = "%d" % len(ical["times"])
             for n, time_spec in enumerate(ical["times"]):
                 n += 1
                 start_time = ":".join("%02d" % x for x in time_spec[0])
                 end_time = ":".join("%02d" % x for x in time_spec[1])
-                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_from' % (index, n),
-                                     start_time)
-                html.request.set_var('timeperiod_p_exceptions_%d_1_%d_until' % (index, n), end_time)
-                html.request.set_var('timeperiod_p_exceptions_%d_1_indexof_%d' % (index, n),
-                                     "%d" % index)
+                get_vars['timeperiod_p_exceptions_%d_1_%d_from' % (index, n)] = start_time
+                get_vars['timeperiod_p_exceptions_%d_1_%d_until' % (index, n)] = end_time
+                get_vars['timeperiod_p_exceptions_%d_1_indexof_%d' % (index, n)] = "%d" % index
 
-        return "edit_timeperiod"
+        return redirect(mode_url("edit_timeperiod", **get_vars))
 
     # Returns a dictionary in the format:
     # {
@@ -423,11 +476,10 @@ class ModeTimeperiodImportICal(WatoMode):
     #   http://tools.ietf.org/html/rfc5545
     # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
     # times instead of only full day events.
-    def _parse_ical(self, ical_blob, horizon=10):
-        ical = {'raw_events': []}  # type: Dict[str, Any]
+    def _parse_ical(self, ical_blob: str, horizon=10):
+        ical: Dict[str, Any] = {'raw_events': []}
 
-        def get_params(key):
-            # type: (str) -> Dict[str, str]
+        def get_params(key: str) -> Dict[str, str]:
             return {k: v for p in key.split(';')[1:] for k, v in [p.split('=', 1)]}
 
         def parse_date(params, val):
@@ -439,7 +491,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         # First extract the relevant information from the file
         in_event = False
-        event = {}  # type: Dict[str, Any]
+        event: Dict[str, Any] = {}
         for l in ical_blob.split('\n'):
             line = l.strip()
             if not line:
@@ -480,7 +532,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 elif key == 'SUMMARY':
                     event['name'] = val
 
-        def next_occurrence(start, now, freq):
+        def next_occurrence(start, now, freq) -> time.struct_time:
             # convert struct_time to list to be able to modify it,
             # then set it to the next occurence
             t = start[:]
@@ -496,11 +548,12 @@ class ModeTimeperiodImportICal(WatoMode):
                     t[1] = now[1] + 1
             else:
                 raise Exception('The frequency "%s" is currently not supported' % freq)
-            return t
+            return time.struct_time(t)
 
-        def resolve_multiple_days(event, cur_start_time):
+        def resolve_multiple_days(event, cur_start_time: time.struct_time):
+            end = time.struct_time(event["end"])
             if time.strftime('%Y-%m-%d', cur_start_time) \
-                == time.strftime('%Y-%m-%d', event["end"]):
+                == time.strftime('%Y-%m-%d', end):
                 # Simple case: a single day event
                 return [{
                     'name': event['name'],
@@ -509,7 +562,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
             # Resolve multiple days
             resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
-            while cur_timestamp < time.mktime(event["end"]):
+            while cur_timestamp < time.mktime(end):
                 resolved.append({
                     "name": "%s %s" % (event["name"], _(" (day %d)") % day),
                     "date": time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
@@ -519,12 +572,13 @@ class ModeTimeperiodImportICal(WatoMode):
 
             return resolved
 
+        # TODO(ml): We should just use datetime to manipulate the time instead
+        #           of messing around with lists and tuples.
         # Now resolve recurring events starting from 01.01 of current year
         # Non-recurring events are simply copied
         resolved = []
-        now = list(time.strptime(str(time.localtime().tm_year - 1), "%Y"))
-        last = now[:]
-        last[0] += horizon + 1  # update year to horizon
+        now = time.strptime(str(time.localtime().tm_year - 1), "%Y")
+        last = time.struct_time((horizon + 1, *now[1:]))
         for event in ical['raw_events']:
             if 'recurrence' in event and event['start'] < now:
                 rule = event['recurrence']
@@ -534,9 +588,9 @@ class ModeTimeperiodImportICal(WatoMode):
                     cur = next_occurrence(event['start'], cur, freq)
                     resolved += resolve_multiple_days(event, cur)
             else:
-                resolved += resolve_multiple_days(event, event["start"])
+                resolved += resolve_multiple_days(event, time.struct_time(event["start"]))
 
-        ical['events'] = sorted(resolved)
+        ical['events'] = sorted(resolved, key=lambda x: x["date"])
 
         return ical
 
@@ -550,7 +604,6 @@ class ModeTimeperiodImportICal(WatoMode):
         html.begin_form("import_ical", method="POST")
         self._vs_ical().render_input("ical", {})
         forms.end()
-        html.button("upload", _("Import"))
         html.hidden_fields()
         html.end_form()
 
@@ -565,6 +618,10 @@ class ModeEditTimeperiod(WatoMode):
     def permissions(cls):
         return ["timeperiods"]
 
+    @classmethod
+    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+        return ModeTimeperiods
+
     def _from_vars(self):
         self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._name = html.request.var("edit")  # missing -> new group
@@ -576,7 +633,9 @@ class ModeEditTimeperiod(WatoMode):
 
         if self._new:
             clone_name = html.request.var("clone")
-            if clone_name:
+            if html.request.var("mode") == "import_ical":
+                self._timeperiod = {}
+            elif clone_name:
                 self._name = clone_name
 
                 self._timeperiod = self._get_timeperiod(self._name)
@@ -594,18 +653,20 @@ class ModeEditTimeperiod(WatoMode):
 
     def title(self):
         if self._new:
-            return _("Create new time period")
+            return _("Add time period")
         return _("Edit time period")
 
-    def buttons(self):
-        html.context_button(_("All Timeperiods"),
-                            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(_("Time period"),
+                                          breadcrumb,
+                                          form_name="timeperiod",
+                                          button_name="save")
 
     def _valuespec(self):
         if self._new:
             # Cannot use ID() here because old versions of the GUI allowed time periods to start
             # with numbers and so on. The ID() valuespec does not allow it.
-            name_element = TextAscii(
+            name_element: ValueSpec = TextAscii(
                 title=_("Internal ID"),
                 regex=r"^[-a-z0-9A-Z_]*$",
                 regex_error=_("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
@@ -613,12 +674,12 @@ class ModeEditTimeperiod(WatoMode):
                 allow_empty=False,
                 size=80,
                 validate=self._validate_id,
-            )  # type: ValueSpec
+            )
         else:
             name_element = FixedValue(self._name,)
 
         return Dictionary(
-            title=_("Timeperiod"),
+            title=_("Time period"),
             elements=[
                 ("name", name_element),
                 ("alias",
@@ -746,34 +807,34 @@ class ModeEditTimeperiod(WatoMode):
 
         return False
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.check_transaction():
-            return
+            return None
 
-        vs = self._valuespec()
+        vs = self._valuespec()  # returns a Dictionary object
         vs_spec = vs.from_html_vars("timeperiod")
         vs.validate_value(vs_spec, "timeperiod")
         self._timeperiod = self._from_valuespec(vs_spec)
 
-        if self._name is None:
+        if self._new:
             self._name = vs_spec["name"]
             watolib.add_change("edit-timeperiods", _("Created new time period %s") % self._name)
         else:
             watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
 
+        assert self._name is not None
         self._timeperiods[self._name] = self._timeperiod
         watolib.timeperiods.save_timeperiods(self._timeperiods)
-        return "timeperiods"
+        return redirect(mode_url("timeperiods"))
 
     def page(self):
         html.begin_form("timeperiod", method="POST")
         self._valuespec().render_input("timeperiod", self._to_valuespec(self._timeperiod))
         forms.end()
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()
 
-    # The timeperiod data structure for the Check_MK config looks like follows.
+    # The timeperiod data structure for the Checkmk config looks like follows.
     # { 'alias': u'eeee',
     #   'monday': [('00:00', '22:00')],
     #   'tuesday': [('00:00', '24:00')],
@@ -798,7 +859,8 @@ class ModeEditTimeperiod(WatoMode):
                 exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
-            "name": self._name,
+            "name": unique_default_name_suggestion(self._name or "time_period",
+                                                   list(self._timeperiods.keys())),
             "alias": timeperiod_spec_alias(tp_spec),
             "weekdays": self._weekdays_to_valuespec(tp_spec),
             "exclude": tp_spec.get("exclude", []),
@@ -844,8 +906,7 @@ class ModeEditTimeperiod(WatoMode):
             tp_spec["exclude"] = vs_spec["exclude"]
 
         tp_spec.update(self._exceptions_from_valuespec(vs_spec))
-        tp_spec.update(self._weekdays_from_valuespec(vs_spec))
-
+        tp_spec.update(self._time_exceptions_from_valuespec(vs_spec))
         return tp_spec
 
     def _exceptions_from_valuespec(self, vs_spec):
@@ -855,19 +916,22 @@ class ModeEditTimeperiod(WatoMode):
                 tp_spec[exception_name] = self._time_ranges_from_valuespec(time_ranges)
         return tp_spec
 
-    def _weekdays_from_valuespec(self, vs_spec):
-        weekday_ty, weekday_values = vs_spec["weekdays"]
+    def _time_exceptions_from_valuespec(self, vs_spec):
+        # TODO: time exceptions is either a list of tuples or a dictionary for
+        period_type, exceptions_details = vs_spec["weekdays"]
 
-        if weekday_ty not in ["whole_week", "day_specific"]:
+        if period_type not in ["whole_week", "day_specific"]:
             raise NotImplementedError()
 
         # produce a data structure equal to the "day_specific" structure
-        if weekday_ty == "whole_week":
-            weekday_values = {day: weekday_values for day in defines.weekday_ids()}
+        if period_type == "whole_week":
+            time_exceptions = {day: exceptions_details for day in defines.weekday_ids()}
+        else:  # specific days
+            time_exceptions = exceptions_details
 
         return {
-            day: self._time_ranges_from_valuespec(weekday_values[day])
-            for day, time_ranges in weekday_values.items()
+            day: self._time_ranges_from_valuespec(time_exceptions[day])
+            for day, time_ranges in time_exceptions.items()
             if time_ranges
         }
 
@@ -876,8 +940,8 @@ class ModeEditTimeperiod(WatoMode):
 
     def _time_range_from_valuespec(self, value):
         """Convert a time range specification from valuespec format"""
-        return tuple(map(self._time_from_valuespec, value))
+        return tuple(map(self._format_valuespec_time, value))
 
-    def _time_from_valuespec(self, value):
+    def _format_valuespec_time(self, value):
         """Convert a time specification from valuespec format"""
         return "%02d:%02d" % value

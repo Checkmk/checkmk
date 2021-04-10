@@ -6,33 +6,31 @@ export class ToolbarPluginBase extends Object {
     static id() {}
 
     constructor(description, main_instance) {
-        super()
-        this.main_instance = main_instance
-        this.description = description
-        this.active = false
-        this.content_selection = null
+        super();
+        this.main_instance = main_instance;
+        this.description = description;
+        this.active = false;
+        this.content_selection = null;
     }
 
     setup_selections(content_selection) {
-        this.content_selection = content_selection
+        this.content_selection = content_selection;
     }
 
-
     has_toggle_button() {
-        return true
+        return true;
     }
 
     render_togglebutton() {}
 
-
     description() {
-        return this.description
+        return this.description;
     }
 
     enable() {
-        this.active = true
-        this.enable_actions()
-        this.render_content()
+        this.active = true;
+        this.enable_actions();
+        this.render_content();
     }
 
     enable_actions() {}
@@ -40,16 +38,14 @@ export class ToolbarPluginBase extends Object {
     render_content() {}
 
     disable() {
-        this.active = false
-        this.disable_actions()
-        this.remove_content()
+        this.active = false;
+        this.disable_actions();
+        this.remove_content();
     }
 
     disable_actions() {}
 
     remove_content() {
-        if (this.content_selection)
-            this.content_selection.selectAll("*").remove()
+        if (this.content_selection) this.content_selection.selectAll("*").remove();
     }
 }
-

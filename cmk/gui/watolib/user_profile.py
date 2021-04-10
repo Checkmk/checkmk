@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -48,7 +48,7 @@ from cmk.gui.watolib.utils import (
 # TODO: Should we move this to watolib?
 
 
-class SynchronizationResult(object):
+class SynchronizationResult:
     def __init__(self, site_id, error_text=None, disabled=False, succeeded=False, failed=False):
         self.site_id = site_id
         self.error_text = error_text
@@ -197,8 +197,15 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
 
 
 def push_user_profiles_to_site(site, user_profiles):
+    def _serialize(user_profiles):
+        """Do not synchronize user session information"""
+        return {
+            user_id: {k: v for k, v in profile.items() if k != "session_info"
+                     } for user_id, profile in user_profiles.items()
+        }
+
     return do_remote_automation(site,
-                                "push-profiles", [("profiles", repr(user_profiles))],
+                                "push-profiles", [("profiles", repr(_serialize(user_profiles)))],
                                 timeout=60)
 
 

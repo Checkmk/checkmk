@@ -12,3 +12,7 @@ description:
 
 inventory:
  One service is created.
+
+cluster:
+  On a cluster the number of users on all nodes both displayed and checked
+  against the configured levels individually, as well as in total on the cluster.

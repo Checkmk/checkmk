@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,7 @@ automation functions on slaves,"""
 
 import traceback
 
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.store as store
@@ -39,7 +39,7 @@ class ModeAutomationLogin(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         if not config.user.may("wato.automation"):
@@ -57,6 +57,7 @@ class ModeAutomationLogin(AjaxPage):
                 "edition_short": cmk_version.edition_short(),
                 "login_secret": _get_login_secret(create_on_demand=True),
             }
+
         html.write(repr(response))
 
 
@@ -78,7 +79,7 @@ class ModeAutomation(AjaxPage):
 
     def _from_vars(self):
         self._authenticate()
-        self._command = html.request.var("command")
+        self._command = html.request.get_str_input_mandatory("command")
 
     def _authenticate(self):
         secret = html.request.var("secret")
@@ -92,7 +93,7 @@ class ModeAutomation(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         # To prevent mixups in written files we use the same lock here as for
@@ -127,7 +128,7 @@ class ModeAutomation(AjaxPage):
     def _execute_push_profile(self):
         try:
             # Don't use write_text() here (not needed, because no HTML document is rendered)
-            html.write(six.ensure_str(watolib.mk_repr(self._automation_push_profile())))
+            html.write(ensure_str(watolib.mk_repr(self._automation_push_profile())))
         except Exception as e:
             logger.exception("error pushing profile")
             if config.debug:

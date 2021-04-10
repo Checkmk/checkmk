@@ -3,17 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Remove locale settings to eliminate localized outputs where possible
-# The locale logic here is used to make the Python encoding detection
-# work (see CMK-2778).
-unset LANG
-INSTALLED_LOCALES=$(locale -a)
-for i in "C.UTF-8" "C.utf8" "C"; do
-    if echo "$INSTALLED_LOCALES" | grep -q -w -F "$i"; then
-        export LC_ALL="$i"
-        break
-    fi
-done
+# Make sure that locally installed binaries are found
+PATH=$PATH:/usr/local/bin
 
 export MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
 export MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
@@ -33,9 +24,6 @@ fi
 # The package name gets patched for baked agents to either
 # "check-mk-agent" or the name set by the "name of agent packages" rule
 XINETD_SERVICE_NAME=check_mk
-
-# Make sure, locally installed binaries are found
-PATH=$PATH:/usr/local/bin
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -62,6 +50,53 @@ elif [ -z "$MK_FROM_NODE" ]; then
     exec </dev/null 2>/dev/null
 fi
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
+# Remove locale settings to eliminate localized outputs where possible
+# The locale logic here is used to make the Python encoding detection work (see CMK-2778).
+unset -v LANG
+if inpath locale && inpath paste; then
+    case "$(locale -a | paste -sd ' ' -)" in
+        *'C.UTF-8'*) LC_ALL="C.UTF-8" ;;
+        *'C.utf8'*) LC_ALL="C.utf8" ;;
+    esac
+    LC_ALL="${LC_ALL:-C}"
+    export LC_ALL
+fi
+
+read_python_version() {
+    if inpath "$1" && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge "$2" ]; then
+        echo "$1"
+        return 0
+    fi
+    return 1
+}
+PYTHON3=$(read_python_version python3 4)
+PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+    # shellcheck source=/dev/null
+    . "$MK_CONFDIR/python_path.cfg"
+fi
+export PYTHON2 PYTHON3
+
+if [ -z "$PYTHON2" ] && [ -z "$PYTHON3" ]; then
+    NO_PYTHON=true
+elif [ -n "$PYTHON3" ] && [ "$(
+    $PYTHON3 -c 'pass' >/dev/null 2>&1
+    echo $?
+)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+elif [ -z "$PYTHON3" ] && [ "$(
+    $PYTHON2 -c 'pass' >/dev/null 2>&1
+    echo $?
+)" -eq 127 ]; then
+    WRONG_PYTHON_COMMAND=true
+fi
+
 # Detect whether or not the agent is being executed in a container
 # environment.
 if [ -f /.dockerenv ]; then
@@ -81,7 +116,7 @@ fi
 # date +%s is not portable, so we provide this function
 # To do this in pure shell is... fun... however 'perl' is assumed
 # elsewhere in this agent, so we may as well depend on that for our failover option
-if date +%s 2>/dev/null | grepq '%s'; then
+if date +%s 2>/dev/null | grep -E '%s|usage|invalid' >/dev/null 2>&1; then
     get_epoch() { perl -e 'print time."\n";'; }
 else
     get_epoch() { date +%s; }
@@ -98,6 +133,16 @@ get_file_mtime() {
 inpath() {
     command -v "${1:?No command to test}" >/dev/null 2>&1
 }
+
+if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+    if [ "$(stat -fc'%t' /sys/fs/cgroup)" = "63677270" ]; then
+        IS_CGROUP_V2=1
+        CGROUP_SECTION_SUFFIX="_cgroupv2"
+    else
+        unset IS_CGROUP_V2
+        unset CGROUP_SECTION_SUFFIX
+    fi
+fi
 
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
@@ -121,7 +166,12 @@ fi
 
 if [ "$ENCRYPTED" == "yes" ]; then
     OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-    if [ $OPENSSL_VERSION -ge 10000 ]; then
+    if [ "$OPENSSL_VERSION" -ge 10101 ]; then
+        echo -n "03"
+        # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
+        # always use key derivation here, as this is suitable for passwords of all lengths.
+        exec > >(openssl enc -aes-256-cbc -md sha256 -iter 100000 -k "$PASSPHRASE")
+    elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
         echo -n "02"
         exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
     else
@@ -138,7 +188,7 @@ fi
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 1.7.0i1"
+    echo "Version: 2.1.0i1"
     echo "AgentOS: linux"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -146,27 +196,66 @@ section_checkmk() {
     echo "SpoolDirectory: $SPOOLDIR"
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
+
+    # If we are called via xinetd, try to find only_from configuration
+    if [ -n "$REMOTE_HOST" ]; then
+        echo -n 'OnlyFrom: '
+        sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
+        echo
+    # If we are called via systemd, try to find only_from configuration aswell
+    elif inpath systemctl; then
+        echo -n 'OnlyFrom: '
+        sed -n '/^# systemd socket definition file/,/^IPAddressAllow/s/IPAddressAllow=//p' /etc/systemd/system/check-mk-agent*
+        echo
+    fi
 }
 
 #
 # CHECK SECTIONS
 #
 
+section_labels() {
+    LABELS=""
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        DEVICE_TYPE="container"
+    elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
+        DEVICE_TYPE="vm"
+    fi
+
+    if [ -n "$DEVICE_TYPE" ]; then
+        LABELS+="{\"cmk/device_type\":\"$DEVICE_TYPE\"}\n"
+    fi
+
+    if [ -n "$LABELS" ]; then
+        echo '<<<labels:sep(0)>>>'
+        echo -e "$LABELS"
+    fi
+}
+
 section_mem() {
-    if [ -z "$IS_DOCKERIZED" ]; then
+    if [ -n "$IS_DOCKERIZED" ]; then
+        echo "<<<docker_container_mem$CGROUP_SECTION_SUFFIX>>>"
+        if [ -n "$IS_CGROUP_V2" ]; then
+            cat /sys/fs/cgroup/memory.stat
+            echo "memory.current $(cat /sys/fs/cgroup/memory.current)"
+            echo "memory.max $(cat /sys/fs/cgroup/memory.max)"
+        else
+            cat /sys/fs/cgroup/memory/memory.stat
+            echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
+            echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
+        fi
+        grep -F 'MemTotal:' /proc/meminfo
+    elif [ -n "$IS_LXC_CONTAINER" ]; then
+        echo '<<<mem>>>'
+        grep -E -v '^Swap:|^Mem:|total:|^Vmalloc|^Committed' </proc/meminfo
+    else
         echo '<<<mem>>>'
         grep -E -v '^Swap:|^Mem:|total:' </proc/meminfo
-    else
-        echo '<<<docker_container_mem>>>'
-        cat /sys/fs/cgroup/memory/memory.stat
-        echo "usage_in_bytes $(cat /sys/fs/cgroup/memory/memory.usage_in_bytes)"
-        echo "limit_in_bytes $(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)"
-        grep -F 'MemTotal:' /proc/meminfo
     fi
 }
 
 section_cpu() {
-    if [ "$(uname -m)" = "armv7l" ]; then
+    if [ "$(uname -m)" = "armv7l" ] || [ "$(uname -m)" = "armv6l" ]; then
         CPU_REGEX='^processor'
     else
         CPU_REGEX='^CPU|^processor'
@@ -181,13 +270,19 @@ section_cpu() {
         fi
     else
         if [ -n "$IS_DOCKERIZED" ]; then
-            echo '<<<docker_container_cpu>>>'
+            echo "<<<docker_container_cpu$CGROUP_SECTION_SUFFIX>>>"
         else
-            echo '<<<lxc_container_cpu>>>'
+            echo "<<<lxc_container_cpu$CGROUP_SECTION_SUFFIX>>>"
         fi
-        grep "^cpu " /proc/stat
-        echo "num_cpus $NUM_CPUS"
-        cat /sys/fs/cgroup/cpuacct/cpuacct.stat
+        if [ -n "$IS_CGROUP_V2" ]; then
+            echo "uptime $(cat /proc/uptime)"
+            echo "num_cpus $NUM_CPUS"
+            cat /sys/fs/cgroup/cpu.stat
+        else
+            grep "^cpu " /proc/stat
+            echo "num_cpus $NUM_CPUS"
+            cat /sys/fs/cgroup/cpuacct/cpuacct.stat
+        fi
     fi
 }
 
@@ -237,9 +332,9 @@ sections_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
         echo "[list-unit-files]"
-        systemctl list-unit-files --no-pager
+        systemctl list-unit-files --no-pager | tr -s ' '
         echo "[all]"
-        systemctl --all --no-pager | sed '/^$/q'
+        systemctl --all --no-pager | sed '/^$/q' | tr -s ' '
     fi
 }
 
@@ -296,14 +391,12 @@ section_mounts() {
 section_ps() {
     if inpath ps; then
         # processes including username, without kernel processes
-        echo '<<<ps>>>'
-        echo 'dummy section -- refer to section ps_lnx'
         echo '<<<ps_lnx>>>'
         CGROUP=""
         if [ -e /sys/fs/cgroup ]; then
             CGROUP="cgroup:512,"
         fi
-        echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000)"
+        echo "[header] $(ps ax -o "$CGROUP"user:32,vsz,rss,cputime,etime,pid,command --columns 10000 | tr -s ' ')"
     fi
 }
 
@@ -333,12 +426,11 @@ section_lnx_if() {
 }
 
 section_bonding_interfaces() {
-    if [ -e /proc/net/bonding ]; then
+    (
+        cd /proc/net/bonding 2>/dev/null || return
         echo '<<<lnx_bonding:sep(58)>>>'
-        pushd /proc/net/bonding >/dev/null
         head -v -n 1000 ./*
-        popd >/dev/null
-    fi
+    )
 }
 
 section_vswitch_bonding() {
@@ -389,13 +481,18 @@ section_diskstat() {
             stat -c "%t %T %n" /dev/vx/dsk/*/*
         fi
     else
-        echo '<<<docker_container_diskstat>>>'
+        echo "<<<docker_container_diskstat$CGROUP_SECTION_SUFFIX>>>"
         echo "[time]"
         date +%s
-        for F in io_service_bytes io_serviced; do
-            echo "[$F]"
-            cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
-        done
+        if [ -n "$IS_CGROUP_V2" ]; then
+            echo "[io.stat]"
+            cat "/sys/fs/cgroup/io.stat"
+        else
+            for F in io_service_bytes io_serviced; do
+                echo "[$F]"
+                cat "/sys/fs/cgroup/blkio/blkio.throttle.$F"
+            done
+        fi
         echo "[names]"
         for F in /sys/block/*; do
             echo "${F##*/} $(cat "$F/dev")"
@@ -567,11 +664,12 @@ section_drbd() {
     if [ -z "$IS_DOCKERIZED" ] && [ -z "$IS_LXC_CONTAINER" ] && [ -e /proc/drbd ]; then
         echo '<<<drbd>>>'
         cat /proc/drbd
+        cat /sys/kernel/debug/drbd/resources/*/connections/*/0/proc_drbd 2>/dev/null
     fi
 }
 
 section_heartbeat() {
-    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd >/dev/null 2>&1 || pgrep -f pacemaker-controld >/dev/null 2>&1; then
+    if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
@@ -639,6 +737,27 @@ section_mailqueue() {
         mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
     fi
 
+    # Postfix status monitoring. Can handle multiple instances.
+    if inpath postfix; then
+        echo "<<<postfix_mailq_status:sep(58)>>>"
+        for i in /var/spool/postfix*/; do
+            if [ -e "$i/pid/master.pid" ]; then
+                if [ -r "$i/pid/master.pid" ]; then
+                    postfix_pid=$(sed 's/ //g' <"$i/pid/master.pid") # handle possible spaces in output
+                    if readlink -- "/proc/${postfix_pid}/exe" | grep -q ".*postfix/\(s\?bin/\)\?master.*"; then
+                        echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
+                    else
+                        echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'
+                    fi
+                else
+                    echo "$i:PID file exists but is not readable"
+                fi
+            else
+                echo "$i:the Postfix mail system is not running" | sed 's/\/var\/spool\///g'
+            fi
+        done
+    fi
+
     # Check status of qmail mailqueue
     if inpath qmail-qstat; then
         echo "<<<qmail_stats>>>"
@@ -646,19 +765,23 @@ section_mailqueue() {
     fi
 
     # Nullmailer queue monitoring
-    if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
+    if inpath nullmailer-send; then
         echo '<<<nullmailer_mailq>>>'
-        COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
-        SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
-        echo "$SIZE $COUNT"
+        if [ -d /var/spool/nullmailer/queue ]; then
+            COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
+            SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
+            echo "$SIZE $COUNT deferred"
+        fi
+        if [ -d /var/spool/nullmailer/failed ]; then
+            COUNT=$(find /var/spool/nullmailer/failed -type f | wc -l)
+            SIZE=$(du -s /var/spool/nullmailer/failed | awk '{print $1 }')
+            echo "$SIZE $COUNT failed"
+        fi
     fi
 }
 
 section_omd() {
     if inpath omd; then
-        echo '<<<labels:sep(0)>>>'
-        echo '{"cmk/check_mk_server": "yes"}'
-
         run_cached -s omd_status 60 "omd status --bare || true"
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
@@ -772,6 +895,62 @@ section_omd_core() {
                     waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
             fi
         done
+
+        echo '<<<cmk_site_statistics:sep(59)>>>'
+        for site in *; do
+            if [ -S "/omd/sites/$site/tmp/run/live" ]; then
+                echo "[$site]"
+                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+GET hosts
+Stats: state = 0
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: state = 1
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: state = 2
+Stats: scheduled_downtime_depth = 0
+StatsAnd: 2
+Stats: scheduled_downtime_depth > 0
+Filter: custom_variable_names < _REALNAME
+LimitString
+                waitmax 5 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live" <<LimitString
+GET services
+Stats: state = 0
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: scheduled_downtime_depth > 0
+Stats: host_scheduled_downtime_depth > 0
+StatsOr: 2
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state != 0
+StatsAnd: 3
+Stats: state = 1
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: state = 3
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Stats: state = 2
+Stats: scheduled_downtime_depth = 0
+Stats: host_scheduled_downtime_depth = 0
+Stats: host_state = 0
+Stats: host_has_been_checked = 1
+StatsAnd: 5
+Filter: host_custom_variable_names < _REALNAME
+LimitString
+            fi
+        done
     fi
 }
 
@@ -810,20 +989,21 @@ section_mkbackup() {
 }
 
 section_job() {
-    if pushd "$MK_VARDIR/job" >/dev/null; then
+    (
+        cd "$MK_VARDIR/job" 2>/dev/null || return
         echo '<<<job>>>'
         for username in *; do
-            if [ -d "$username" ] && cd "$username"; then
+            (
+                # the return below only terminates the subshell, not the entire function
+                cd "$username" 2>/dev/null || return
                 if [ $EUID -eq 0 ]; then
                     su -s "$SHELL" "$username" -c "head -n -0 -v *"
                 else
                     head -n -0 -v ./*
                 fi
-                cd ..
-            fi
+            )
         done
-        popd >/dev/null
-    fi
+    )
 }
 
 section_thermal() {
@@ -1021,13 +1201,13 @@ run_runas_executor() {
     fi
 }
 
+# This function ensures that a file is executable and does not have certain
+# extensions (remnants from distro upgrades).
 is_valid_plugin() {
-    # NOTE: Due to an escaping-related bug in some old bash versions
-    # (3.2.x), we have to use an intermediate variable for the pattern.
-    pattern='\.dpkg-(new|old|temp)$'
-    #TODO Maybe we should change this mechanism
-    # shellcheck disable=SC2015
-    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) test -f "$1" -a -x "$1" ;;
+    esac
 }
 
 run_local_checks() {
@@ -1052,13 +1232,13 @@ run_plugins() {
     if cd "$PLUGINSDIR"; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                ./"$skript"
+                run_agent_plugin "$skript"
             fi
         done
         # Call some plugins only every Xth second
         for skript in [1-9]*/*; do
             if is_valid_plugin "$skript"; then
-                run_cached "plugins_${skript//\//\\}" "${skript%/*}" "$skript"
+                run_cached "plugins_${skript//\//\\}" "${skript%/*}" run_agent_plugin "$skript"
             fi
         done
     fi
@@ -1079,6 +1259,48 @@ run_mrpe() {
 }
 
 export -f run_mrpe
+
+run_agent_plugin() {
+    if [ "${1:(0):(2)}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        ./"$agent_plugin"
+        return
+    fi
+
+    if [ "${filename:(-2):(2)}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+                FAILED_PYTHON_PLUGINS=("$agent_plugin")
+            else
+                FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$agent_plugin")
+            fi
+            return
+        fi
+        if [ -n "$PYTHON3" ]; then
+            $PYTHON3 "$agent_plugin"
+            return
+        fi
+        return
+    fi
+
+    if [ -x "${filename::-2}.py" ] && [ -n "$PYTHON3" ]; then
+        return
+    fi
+
+    if [ -n "$PYTHON2" ]; then
+        $PYTHON2 "$agent_plugin"
+    fi
+}
+
+export -f run_agent_plugin
 
 # Runs a command asynchronous by use of a cache file. Usage:
 # run_cached [-s] NAME MAXAGE
@@ -1176,7 +1398,7 @@ run_cached() {
 # Make run_cached available for subshells (plugins, local checks, etc.)
 export -f run_cached
 
-# Implements Real-Time Check feature of the Check_MK agent which can send
+# Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks() {
@@ -1233,9 +1455,9 @@ run_real_time_checks() {
                     date +%s | tr -d '\n'
                     if [ "$ENCRYPTED_RT" != "no" ]; then
                         export RTC_SECRET=$RTC_SECRET
-                        ./$PLUGIN | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                        run_agent_plugin "$PLUGIN" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                     else
-                        ./"$PLUGIN"
+                        run_agent_plugin "$PLUGIN"
                     fi
                 } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
             done
@@ -1254,6 +1476,9 @@ get_ntpq() {
 }
 
 section_timesyncd() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
     inpath systemctl || return 1
     inpath timedatectl || return 1
     timedatectl timesync-status >/dev/null 2>&1 || return 1
@@ -1264,6 +1489,9 @@ section_timesyncd() {
 }
 
 section_ntp() {
+    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
+        return 0
+    fi
     # First we try to identify if we're beholden to systemd
     if inpath systemctl; then
         # shellcheck disable=SC2016
@@ -1327,14 +1555,22 @@ section_spooldir() {
     )
 }
 
+section_checkmk_failed_plugins() {
+    failed=("$@")
+    if [ -n "$failed" ]; then
+        echo "<<<check_mk>>>"
+        echo "FailedPythonPlugins: ${failed[*]}"
+        if [ -n "$NO_PYTHON" ]; then
+            echo "FailedPythonReason: No suitable python installation found."
+        elif [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            echo "FailedPythonReason: Configured python command not found."
+        fi
+    fi
+}
+
 section_checkmk
 
-# If we are called via xinetd, try to find only_from configuration
-if [ -n "$REMOTE_HOST" ]; then
-    echo -n 'OnlyFrom: '
-    sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
-    echo
-fi
+[ -z "$MK_SKIP_LABELS" ] && section_labels
 
 [ -z "$MK_SKIP_DF" ] && section_df
 
@@ -1438,7 +1674,7 @@ fi
 
 [ -z "$MK_SKIP_MAILQUEUE" ] && section_mailqueue
 
-## Check status of OMD sites and Check_MK Notification spooler
+## Check status of OMD sites and Checkmk Notification spooler
 [ -z "$MK_SKIP_OMD" ] && section_omd
 
 # Welcome the ZFS check on Linux
@@ -1459,7 +1695,7 @@ fi
 # on non-OMD machines.
 [ -z "$MK_SKIP_OMD_CORES" ] && section_omd_core
 
-# Collect states of configured Check_MK site backup jobs
+# Collect states of configured Checkmk site backup jobs
 section_mkbackup
 
 # Get statistics about monitored jobs. Below the job directory there
@@ -1492,13 +1728,15 @@ run_liveupdate
 run_remote_plugin
 
 # MK's runas Executor
-run_mrpe
+run_runas_executor
 
 # Local checks
 run_local_checks
 
 # Plugins
 run_plugins
+
+section_checkmk_failed_plugins "${FAILED_PYTHON_PLUGINS[@]}"
 
 # Agent output snippets created by cronjobs, etc.
 [ -z "${MK_SKIP_SPOOLDIR+x}" ] && section_spooldir

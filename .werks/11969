@@ -1,0 +1,12 @@
+Title: API: addition of user management endpoints
+Class: feature
+Compatible: compat
+Component: core
+Date: 1611656304
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This werk introduces the endpoints for user management. One can now create, edit, show
+and delete users through the REST API. The details are included in the API documentation.

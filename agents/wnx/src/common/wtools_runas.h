@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // wtools_runas.h
 //
@@ -10,9 +11,11 @@
 
 #ifndef wtools_runas_h__
 #define wtools_runas_h__
-#include <windef.h>
 
-#include <string>
+#include <minwindef.h>  // for DWORD, BOOL, FALSE
+#include <winnt.h>      // for HANDLE
+
+#include <tuple>  // for tuple
 
 namespace wtools::runas {
 // windows like API
@@ -24,7 +27,7 @@ std::tuple<DWORD, HANDLE, HANDLE> RunAsJob(
     HANDLE stdio_handle = 0,       // when we want to catch output
     HANDLE stderr_handle = 0,      // same
     DWORD creation_flags = 0,      // never checked this
-    DWORD start_flags = 0) noexcept;
+    DWORD start_flags = 0);
 
 }  // namespace wtools::runas
 #endif  // wtools_runas_h__

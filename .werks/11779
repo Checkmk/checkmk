@@ -1,0 +1,14 @@
+Title: Rename Proxmox Checks and Agent to Proxmox VE in order to prevent naming conflicts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607588984
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Names of agent and checks for Proxmox VE have been prefixed with 'proxmox' only. In order to
+prevent future problems names of checks, agent, rules etc have been renamed to 'proxmox_ve' or
+'Proxmox VE' respectively.

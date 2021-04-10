@@ -6,7 +6,7 @@ Date: 1576490948
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When the kind of a host check command was changed, e.g. from an active check
 to smart ping, there was a small time window for scheduling to go wrong.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -28,7 +28,7 @@ from cmk.gui.plugins.wato import (
 
 def _valuespec_inventory_solaris_services_rules():
     return Dictionary(
-        title=_("Solaris Service Discovery"),
+        title=_("Solaris service discovery"),
         elements=[
             ('descriptions', ListOfStrings(title=_("Descriptions"))),
             ('categories', ListOfStrings(title=_("Categories"))),
@@ -47,7 +47,6 @@ def _valuespec_inventory_solaris_services_rules():
             ('outcome',
              Alternative(
                  title=_("Service name"),
-                 style="dropdown",
                  elements=[
                      FixedValue("full_descr", title=_("Full Description"), totext=""),
                      FixedValue("descr_without_prefix",

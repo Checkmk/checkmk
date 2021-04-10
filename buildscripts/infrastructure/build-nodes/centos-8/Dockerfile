@@ -3,9 +3,9 @@ FROM centos:centos8
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
 
-RUN yum -y --enablerepo=PowerTools --allowerasing install \
+RUN yum -y --enablerepo=powertools --allowerasing install \
     epel-release \
-    && yum -y --enablerepo=PowerTools --allowerasing install \
+    && yum -y --enablerepo=powertools --allowerasing install \
     curl \
     enchant \
     gcc \
@@ -26,7 +26,7 @@ RUN yum -y --enablerepo=PowerTools --allowerasing install \
     && yum clean all
 
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools install \
     bind-utils \
     curl \
     curl-devel \
@@ -38,6 +38,7 @@ RUN yum -y makecache \
     gcc-c++ \
     gd-devel \
     gettext \
+    gtk-doc \
     httpd-devel \
     isl-devel \
     kernel-headers \
@@ -51,10 +52,12 @@ RUN yum -y makecache \
     libpcap-devel \
     libstdc++-devel \
     libstdc++-static \
+    libtool \
     libtool-ltdl \
     libtool-ltdl-devel \
     libuuid-devel \
     libxml2-devel \
+    xmlsec1-devel \
     mariadb-devel \
     mpfr-devel \
     ncurses-devel \
@@ -81,10 +84,12 @@ RUN yum -y makecache \
     tk-devel \
     wget \
     which \
+    xmlsec1-devel \
+    xmlsec1-openssl-devel \
     && yum clean all
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools reinstall \
+    && yum -y --enablerepo=powertools reinstall \
     kernel-headers \
     --nogpgcheck \
     && yum clean all
@@ -101,11 +106,12 @@ RUN yum -y makecache \
 # We avoid rebuild of the whole previous steps this way
 # --nogpgcheck: Workaround for failing installation, not locally reproducable
 RUN yum -y makecache \
-    && yum -y --enablerepo=PowerTools install \
+    && yum -y --enablerepo=powertools install \
     chrpath \
     joe \
     iputils \
     vim \
+    valgrind \
     --nogpgcheck \
     && yum clean all
 
@@ -130,6 +136,7 @@ RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # The /etc/fstab does not exist in the base image we use. A missing fstab prevents OMD from
 # using a tmpfs for /omd/sites/[site]/tmp, which we want to have during our tests. We can

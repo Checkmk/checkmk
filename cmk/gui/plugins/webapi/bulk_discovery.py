@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 import cmk.gui.config as config
 from cmk.gui.log import logger
@@ -51,12 +51,11 @@ class APICallBulkDiscovery(APICallCollection):
                 _("A bulk discovery job is already running. Please use the "
                   "\"bulk_discovery_status\" call to get the curent status."))
 
-        mode, use_cache, do_scan, bulk_size, error_handling = self._get_parameters_from_request(
-            request)
+        mode, do_scan, bulk_size, error_handling = self._get_parameters_from_request(request)
         tasks = get_tasks(self._get_hosts_from_request(request), bulk_size)
 
         try:
-            job.set_function(job.do_execute, mode, use_cache, do_scan, error_handling, tasks)
+            job.set_function(job.do_execute, mode, do_scan, error_handling, tasks)
             job.start()
             return {
                 "started": True,
@@ -72,14 +71,13 @@ class APICallBulkDiscovery(APICallCollection):
         because the API call currently only operates on a list of given hostnames where
         a lot of the GUI options are not relevant for. For a consistent parameter handling
         we use the valuespec here."""
-        params = copy.deepcopy(config.bulk_discovery_default_settings)  # type: Dict[str, Any]
+        params: Dict[str, Any] = copy.deepcopy(config.bulk_discovery_default_settings)
 
         params["mode"] = request.get("mode", params["mode"])
 
         params["performance"] = (
-            request.get("use_cache", params["performance"][0]),
-            request.get("do_scan", params["performance"][1]),
-            request.get("bulk_size", params["performance"][2]),
+            request.get("do_scan", params["performance"][0]),
+            int(request.get("bulk_size", params["performance"][1])),
         )
 
         params["error_handling"] = request.get("ignore_single_check_errors",
@@ -90,12 +88,10 @@ class APICallBulkDiscovery(APICallCollection):
             params["mode"],
             params["performance"][0],
             params["performance"][1],
-            params["performance"][2],
             params["error_handling"],
         )
 
-    def _get_hosts_from_request(self, request):
-        # type: (Dict) -> List[DiscoveryHost]
+    def _get_hosts_from_request(self, request: Dict) -> List[DiscoveryHost]:
         if not request["hostnames"]:
             raise MKUserError(None, _("You have to specify some hosts"))
 

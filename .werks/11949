@@ -1,0 +1,12 @@
+Title: agent_siemens_plc: improved agent error handling
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612521967
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+Improved error messages resulting from failed connections and failed data
+collection attempts on Siemens PLC devices.

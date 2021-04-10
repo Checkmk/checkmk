@@ -4,16 +4,25 @@ agents: snmp
 license: GPL
 distribution: check_mk
 description:
- This checks monitors the signal quality of optical ports on Brocade switches.
+ This checks monitors the signal quality of the optical ports of Brocade switches.
  It takes into account RX and TX power levels as well as the temperature at the port
  and, optionally, the same readings for all individual lanes.
- Currently the {OK}, {WARN}, {CRIT} levels are not configurable in check_mk, instead
- the status as reported by the device itself is reported.
+ Currently, no user-defined levels are configurable, instead, Checkmk outputs the status
+ reported by the device itself.
 
 item:
- Portnumber of the interface. Depending on the length of the portnumber it will be filled with {{0}}s.
+ Port number of the interface. Depending on the length of the port number, it will be
+ padded with {{0}}s.
 
 inventory:
- One service is created for each port that fulfills the conditions configured
- for network and switch port discovery and reports optical signal quality readings.
+ One service is created for each port that fulfills the conditions configured in the rule
+ "Network interface and switch port discovery". By default, these are interfaces which are
+ currently found {up} and are of type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205 or
+ 229.
 
+ Note that this check does not support all of the options offered by this rule. The grouping
+ of interfaces is not supported and the items are always given by the port numbers, independently
+ of the option chosen under "Appearance of network interface". Furthermore, out of the six
+ matching conditions offered by the rule, this check supports only the following three: the
+ matching of the port type, the matching of the port state and the matching of the interface
+ description.

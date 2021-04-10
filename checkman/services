@@ -4,8 +4,8 @@ catalog: os/ps
 license: GPL
 distribution: check_mk
 description:
- Check the current state of a Windows service.  Each service is either {running} or {stopped}
- or in a transitional state like {starting} or {stopping}.  This check becomes critical if the
+ Checks the current state of a Windows service.  Each service is either {running} or {stopped}
+ or in a transitional state like {starting} or {stopping}. This check becomes critical if the
  service in question is not in the state {running}. It is getting UNKNOWN if the service is missing
  on the system at all.
 
@@ -35,3 +35,6 @@ inventory:
  The option {inventory_services_rules} holds a list of rules where each rule
  contains one entry matching a list of service matching strings (regexes)
  state/start mode.
+
+cluster:
+ On a cluster, the check will search all instance of item on the assigned nodes and return the best result including the node (in case the service is running), on which the service can be found.

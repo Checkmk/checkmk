@@ -6,6 +6,6 @@ Date: 1584349501
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check_ping Check was fixed by setting the path to ping correctly during build.

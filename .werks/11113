@@ -1,0 +1,12 @@
+Title: casa_cpu_mem: render bytes in IEC (base 1024) units
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1596459344
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The memory information of the casa_cpu_mem check plugin is now rendered
+in IEC units, i.e. with base 1024, as is common for memory.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,19 +7,20 @@
 # pylint: disable=redefined-outer-name
 
 import json
-import six
-import pytest  # type: ignore[import]
+from pathlib import Path
 
-import cmk.utils.version as cmk_version
+import pytest  # type: ignore[import]
+from flask_babel.speaklater import LazyString  # type: ignore[import]
+
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.config as config
-from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import html
-from cmk.gui.permissions import (
-    permission_section_registry,
-    permission_registry,
-)
+from cmk.gui.permissions import Permission, permission_registry, permission_section_registry
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
@@ -55,12 +56,12 @@ def test_sorted_sites(mocker):
 def test_registered_permission_sections():
     expected_sections = [
         ('bookmark_list', (50, u'Bookmark lists', True)),
-        ('custom_snapin', (50, u'Custom snapins', True)),
-        ('sidesnap', (50, u'Sidebar snapins', True)),
+        ('custom_snapin', (50, u'Custom sidebar elements', True)),
+        ('sidesnap', (50, u'Sidebar elements', True)),
         ('notification_plugin', (50, u'Notification plugins', True)),
-        ('wato', (50, u"WATO - Check_MK's Web Administration Tool", False)),
+        ('wato', (50, u"WATO - Checkmk's Web Administration Tool", False)),
         ('background_jobs', (50, u'Background jobs', False)),
-        ('bi', (50, u'BI - Check_MK Business Intelligence', False)),
+        ('bi', (50, u'BI - Checkmk Business Intelligence', False)),
         ('general', (10, u'General Permissions', False)),
         ('mkeventd', (50, u'Event Console', False)),
         ('action', (50, u'Commands on host and services', True)),
@@ -68,13 +69,14 @@ def test_registered_permission_sections():
         ('nagvis', (50, u'NagVis', False)),
         ('view', (50, u'Views', True)),
         ('icons_and_actions', (50, u'Icons', True)),
+        ('pagetype_topic', (50, u'Topics', True)),
     ]
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
-            ('custom_graph', (50, u'Custom Graphs', True)),
-            ('forecast_graph', (50, u'Forecast Graphs', True)),
-            ('graph_collection', (50, u'Graph Collections', True)),
+            ('custom_graph', (50, u'Custom graphs', True)),
+            ('forecast_graph', (50, u'Forecast graphs', True)),
+            ('graph_collection', (50, u'Graph collections', True)),
             ('graph_tuning', (50, u'Graph tunings', True)),
             ('sla_configuration', (50, u'Service Level Agreements', True)),
             ('report', (50, u'Reports', True)),
@@ -113,12 +115,20 @@ def test_registered_permissions():
         'bi.see_all',
         'dashboard.main',
         'dashboard.simple_problems',
-        'dashboard.topology',
+        'dashboard.checkmk',
+        'dashboard.checkmk_host',
         'general.acknowledge_werks',
         'general.act',
         'general.change_password',
         'general.configure_sidebar',
         'general.csv_export',
+        'general.delete_foreign_pagetype_topic',
+        'general.edit_pagetype_topic',
+        'general.edit_foreign_pagetype_topic',
+        'general.force_pagetype_topic',
+        'general.publish_pagetype_topic',
+        'general.publish_to_foreign_groups_pagetype_topic',
+        'general.see_user_pagetype_topic',
         'general.delete_foreign_bookmark_list',
         'general.delete_foreign_custom_snapin',
         'general.delete_foreign_dashboards',
@@ -144,6 +154,7 @@ def test_registered_permissions():
         'general.logout',
         'general.notify',
         'general.painter_options',
+        'general.parent_child_topology',
         'general.publish_bookmark_list',
         'general.publish_to_foreign_groups_bookmark_list',
         'general.publish_custom_snapin',
@@ -228,6 +239,8 @@ def test_registered_permissions():
         'notification_plugin.pagerduty',
         'notification_plugin.pushover',
         'notification_plugin.servicenow',
+        'notification_plugin.signl4',
+        'notification_plugin.ilert',
         'notification_plugin.slack',
         'notification_plugin.sms',
         'notification_plugin.spectrum',
@@ -245,7 +258,6 @@ def test_registered_permissions():
         'sidesnap.hosts',
         'sidesnap.master_control',
         'sidesnap.mkeventd_performance',
-        'sidesnap.nagios_legacy',
         'sidesnap.nagvis_maps',
         'sidesnap.performance',
         'sidesnap.problem_hosts',
@@ -259,7 +271,6 @@ def test_registered_permissions():
         'sidesnap.views',
         'sidesnap.wato_folders',
         'sidesnap.wato_foldertree',
-        'sidesnap.wiki',
         'view.aggr_all',
         'view.aggr_all_api',
         'view.aggr_group',
@@ -277,10 +288,9 @@ def test_registered_permissions():
         'view.alerthandlers',
         'view.alertstats',
         'view.allhosts',
-        'view.allhosts_mini',
+        'view.allservices',
         'view.bi_map_hover_host',
         'view.bi_map_hover_service',
-        'view.allservices',
         'view.api_downtimes',
         'view.comments',
         'view.comments_of_host',
@@ -322,7 +332,6 @@ def test_registered_permissions():
         'view.hostgroup_down',
         'view.hostgroup_unreach',
         'view.hostgroup_pend',
-        'view.hostgroupgrid',
         'view.hostgroups',
         'view.hostgroupservices',
         'view.hostgroupservices_ok',
@@ -335,11 +344,9 @@ def test_registered_permissions():
         'view.hostproblems',
         'view.hostproblems_dash',
         'view.hosts',
-        'view.hostsbygroup',
         'view.hoststatus',
         'view.hostsvcevents',
         'view.hostsvcnotifications',
-        'view.hosttiles',
         'view.inv_host',
         'view.inv_host_history',
         'view.inv_hosts_cpu',
@@ -368,6 +375,8 @@ def test_registered_permissions():
         'view.invibmmqqueues_search',
         'view.invinterface_of_host',
         'view.invinterface_search',
+        'view.invkernelconfig_of_host',
+        'view.invkernelconfig_search',
         'view.invmodule_of_host',
         'view.invmodule_search',
         'view.invoradataguardstats_of_host',
@@ -440,14 +449,9 @@ def test_registered_permissions():
         'view.sitesvcs_unknwn',
         'view.sitesvcs_warn',
         'view.stale_hosts',
-        'view.starred_hosts',
-        'view.starred_services',
         'view.svc_dt_hist',
-        'view.svcbygroups',
-        'view.svcbyhgroups',
         'view.svcevents',
         'view.svcgroups',
-        'view.svcgroups_grid',
         'view.svcnotifications',
         'view.svcproblems',
         'view.svcproblems_dash',
@@ -466,6 +470,7 @@ def test_registered_permissions():
         'wato.backups',
         'wato.bi_admin',
         'wato.bi_rules',
+        'wato.check_plugins',
         'wato.clear_auditlog',
         'wato.clone_hosts',
         'wato.custom_attributes',
@@ -507,17 +512,21 @@ def test_registered_permissions():
         'wato.update_dns_cache',
         'wato.use',
         'wato.users',
+        'wato.show_last_user_activity',
         'view.cmk_servers',
         'view.cmk_sites',
         'view.cmk_sites_of_host',
-        'dashboard.cmk_overview',
-        'dashboard.cmk_host',
         'view.host_graphs',
         'view.service_graphs',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_permissions += [
+            'dashboard.problems',
+            'dashboard.site',
+            'dashboard.ntop_alerts',
+            'dashboard.ntop_flows',
+            'dashboard.ntop_top_talkers',
             'general.edit_reports',
             'icons_and_actions.agent_deployment',
             'icons_and_actions.status_shadow',
@@ -529,9 +538,11 @@ def test_registered_permissions():
             'report.instant_graph_collection',
             'report.instant_view',
             'report.service_availability',
+            'report.host_performance_graphs',
             'sidesnap.cmc_stats',
             'sidesnap.reports',
             'view.allhosts_deploy',
+            'view.ntop_interfaces',
             'wato.agent_deploy_custom_files',
             'wato.agent_deployment',
             'wato.agents',
@@ -539,6 +550,8 @@ def test_registered_permissions():
             'wato.bake_agents',
             'wato.dcd_connections',
             'wato.download_all_agents',
+            'wato.license_usage',
+            'wato.submit_license_usage',
             'wato.manage_mkps',
             'wato.mkps',
             'wato.sign_agents',
@@ -592,6 +605,7 @@ def test_registered_permissions():
             'general.publish_custom_graph',
             'general.publish_to_foreign_groups_custom_graph',
             'icons_and_actions.deployment_status',
+            'icons_and_actions.ntop_host',
         ]
 
     if cmk_version.is_managed_edition():
@@ -608,10 +622,9 @@ def test_registered_permissions():
 
     assert sorted(expected_permissions) == sorted(permission_registry.keys())
 
-    for perm_class in permission_registry.values():
-        perm = perm_class()
-        assert isinstance(perm.description, six.string_types)
-        assert isinstance(perm.title, six.string_types)
+    for perm in permission_registry.values():
+        assert isinstance(perm.description, (str, LazyString))
+        assert isinstance(perm.title, (str, LazyString))
         assert isinstance(perm.defaults, list)
 
 
@@ -640,7 +653,7 @@ def test_declare_permission(monkeypatch):
     config.declare_permission("bla.blub", u"bla perm", u"descrrrrr", ["admin"])
     assert "bla.blub" in permissions.permission_registry
 
-    permission = permissions.permission_registry["bla.blub"]()
+    permission = permissions.permission_registry["bla.blub"]
     assert permission.section == permissions.permission_section_registry["bla"]
     assert permission.name == "bla.blub"
     assert permission.title == u"bla perm"
@@ -670,18 +683,15 @@ def test_permission_sorting(do_sort, result):
         def do_sort(self):
             return do_sort
 
-    section_name = "sec1"
     for permission_name in ["Z", "z", "A", "b", "a", "1", "g"]:
-        cls = type(
-            "TestPermission%s%s" % (section_name.title(), permission_name.title()),
-            (permissions.Permission,), {
-                "section": Sec1,
-                "permission_name": permission_name,
-                "title": permission_name.title(),
-                "description": "bla",
-                "defaults": ["admin"],
-            })
-        perms.register(cls)
+        perms.register(
+            Permission(
+                section=Sec1,
+                name=permission_name,
+                title=permission_name.title(),
+                description="bla",
+                defaults=["admin"],
+            ))
 
     sorted_perms = [p.name for p in perms.get_sorted_permissions(Sec1())]
     assert sorted_perms == result
@@ -857,7 +867,7 @@ def my_theme(theme_dirs):
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Määh Theme :-)"})))
+        str(json.dumps({"title": "Määh Theme :-)"})))
     return my_dir
 
 
@@ -875,7 +885,7 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Määh Bettr Theme :-D"})))
+        str(json.dumps({"title": "Määh Bettr Theme :-D"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Määh Theme :-)"),
@@ -888,8 +898,8 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type(json.dumps({"title": "Fixed theme"})))
+    (my_dir / "theme.json").open(mode="w",
+                                 encoding="utf-8").write(str(json.dumps({"title": "Fixed theme"})))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"Fixed theme"),
@@ -897,8 +907,8 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
 
 def test_theme_broken_meta(my_theme):
-    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
-        six.text_type("{\"titlewrong\": xyz\"bla\"}"))
+    (my_theme / "theme.json").open(mode="w",
+                                   encoding="utf-8").write(str("{\"titlewrong\": xyz\"bla\"}"))
 
     assert config.theme_choices() == sorted([
         ("my_theme", u"my_theme"),
@@ -992,7 +1002,6 @@ def test_unauthenticated_users(user, alias, email, role_ids, baserole_id):
     assert user.get_attribute('foo') is None
 
     assert user.customer_id is None
-    assert user.button_counts == {}
     assert user.contact_groups == []
     assert user.stars == set()
     assert user.is_site_disabled('any_site') is False
@@ -1116,19 +1125,19 @@ MONITORING_USER_BUTTONCOUNTS = {
 MONITORING_USER_FAVORITES = ['heute;CPU load']
 
 
-@pytest.fixture
-def monitoring_user(tmp_path, mocker):
+@pytest.fixture(name="monitoring_user")
+def fixture_monitoring_user(tmp_path, mocker):
     """Returns a "Normal monitoring user" object."""
     config_dir = tmp_path / 'config_dir'
     user_dir = config_dir / 'test'
     user_dir.mkdir(parents=True)
-    user_dir.joinpath('cached_profile.mk').write_text(six.text_type(MONITORING_USER_CACHED_PROFILE))
+    user_dir.joinpath('cached_profile.mk').write_text(str(MONITORING_USER_CACHED_PROFILE))
     # SITE STATUS snapin settings:
-    user_dir.joinpath('siteconfig.mk').write_text(six.text_type(MONITORING_USER_SITECONFIG))
+    user_dir.joinpath('siteconfig.mk').write_text(str(MONITORING_USER_SITECONFIG))
     # Ordering of the buttons:
-    user_dir.joinpath('buttoncounts.mk').write_text(six.text_type(MONITORING_USER_BUTTONCOUNTS))
+    user_dir.joinpath('buttoncounts.mk').write_text(str(MONITORING_USER_BUTTONCOUNTS))
     # Favorites set in the commands menu:
-    user_dir.joinpath('favorites.mk').write_text(six.text_type(MONITORING_USER_FAVORITES))
+    user_dir.joinpath('favorites.mk').write_text(str(MONITORING_USER_FAVORITES))
 
     mocker.patch.object(config, 'config_dir', str(config_dir))
     mocker.patch.object(config, 'roles_of_user', lambda user_id: ['user'])
@@ -1153,7 +1162,6 @@ def test_monitoring_user(monitoring_user):
 
     assert monitoring_user.language == 'de'
     assert monitoring_user.customer_id is None
-    assert monitoring_user.button_counts == MONITORING_USER_BUTTONCOUNTS
     assert monitoring_user.contact_groups == ['all']
 
     assert monitoring_user.stars == set(MONITORING_USER_FAVORITES)
@@ -1184,6 +1192,13 @@ def test_monitoring_user(monitoring_user):
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
+def test_monitoring_user_read_broken_file(monitoring_user, tmp_path):
+    with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
+        f.write("%#%#%")
+
+    assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
+
+
 def test_monitoring_user_permissions(mocker, monitoring_user):
     mocker.patch.object(
         config,
@@ -1208,3 +1223,86 @@ def test_monitoring_user_permissions(mocker, monitoring_user):
     monitoring_user.need_permission('general.edit_views')
     with pytest.raises(MKAuthException):
         monitoring_user.need_permission('unknown_permission')
+
+
+@pytest.mark.parametrize("varname", [
+    "custom_checks",
+    "datasource_programs",
+    "agent_config:mrpe",
+    "agent_config:agent_paths",
+    "agent_config:runas",
+    "agent_config:only_from",
+])
+def test_ruleset_permissions_with_commandline_access(monitoring_user, varname):
+    assert may_edit_ruleset(varname) is False
+
+
+def test_is_ntop_available():
+    is_ntop_available = config.is_ntop_available()
+
+    if cmk_version.is_raw_edition():
+        assert not is_ntop_available
+    if not cmk_version.is_raw_edition():
+        assert is_ntop_available
+
+
+@pytest.mark.parametrize("ntop_connection, custom_user, answer, reason", [
+    (
+        {
+            'is_activated': False
+        },
+        "",
+        False,
+        "ntopng integration is not activated under global settings.",
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': False
+        },
+        "",
+        True,
+        "",
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "",
+        False,
+        ("The ntopng username should be derived from \'ntopng Username\' "
+         "under the current's user settings (identity) but this is not "
+         "set for the current user."),
+    ),
+    (
+        {
+            'is_activated': True,
+            'use_custom_attribute_as_ntop_username': 'ntop_alias'
+        },
+        "a_ntop_user",
+        True,
+        "",
+    ),
+])
+def test_is_ntop_configured_and_reason(
+    mocker,
+    ntop_connection,
+    custom_user,
+    answer,
+    reason,
+):
+    if cmk_version.is_raw_edition():
+        assert not config.is_ntop_configured()
+        assert config.get_ntop_misconfiguration_reason(
+        ) == "ntopng integration is only available in CEE"
+    if not cmk_version.is_raw_edition():
+        mocker.patch.object(
+            config,
+            'ntop_connection',
+            ntop_connection,
+        )
+        if custom_user:
+            config.user._set_attribute("ntop_alias", custom_user)
+        assert config.is_ntop_configured() == answer
+        assert config.get_ntop_misconfiguration_reason() == reason

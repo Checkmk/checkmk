@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,7 @@ import copy
 
 import cmk.gui.config as config
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import (
     DropdownChoice,
     Transform,
@@ -28,6 +28,8 @@ from cmk.gui.plugins.views import (
     multisite_builtin_views,
     get_graph_timerange_from_painter_options,
 )
+
+from cmk.gui.utils.urls import makeuri_contextless
 
 multisite_builtin_views.update({
     'service_graphs': {
@@ -54,9 +56,9 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
-        'icon': 'pnp',
+        'icon': 'service_graph',
         'title': _('Service Graphs'),
+        "topic": "history",
     },
     'host_graphs': {
         'browser_reload': 30,
@@ -81,9 +83,9 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
-        'icon': 'pnp',
-        'title': _('Host Graphs'),
+        'icon': 'graph',
+        'title': _('Host graphs'),
+        "topic": "history",
     },
 })
 
@@ -303,4 +305,4 @@ def cmk_graph_url(row, what):
     else:
         urivars.append(("view_name", "host_graphs"))
 
-    return html.makeuri_contextless(urivars, filename="view.py")
+    return makeuri_contextless(request, urivars, filename="view.py")

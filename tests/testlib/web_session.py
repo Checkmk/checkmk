@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -10,9 +10,8 @@ import json
 import ast
 import re
 import logging
+import urllib.parse
 
-import six
-from six.moves.urllib.parse import urlparse
 from bs4 import BeautifulSoup  # type: ignore[import]
 
 import requests
@@ -25,7 +24,17 @@ class APIError(Exception):
 logger = logging.getLogger()
 
 
-class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
+def _get_automation_secret(site):
+    secret_path = "var/check_mk/web/automation/automation.secret"
+    secret = site.read_file(secret_path)
+
+    if secret == "":
+        raise Exception("Failed to read secret from %s" % secret_path)
+
+    return secret
+
+
+class CMKWebSession:
     def __init__(self, site):
         super(CMKWebSession, self).__init__()
         self.transids = []
@@ -122,12 +131,12 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         assert not matches, "Found error message: %s" % matches.groups()
 
     def _check_html_page_resources(self, url, soup):
-        base_url = urlparse(url).path
+        base_url = urllib.parse.urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 
         # There might be other resources like iframe, audio, ... but we don't care about them
-        self._check_resources(soup, base_url, "img", "src", ["image/png"])
+        self._check_resources(soup, base_url, "img", "src", ["image/png", "image/svg+xml"])
         self._check_resources(soup, base_url, "script", "src",
                               ["application/javascript", "text/javascript"])
         self._check_resources(soup,
@@ -192,30 +201,14 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         assert "sidebar" in r.text
         assert "dashboard.py" in r.text
 
-    def set_language(self, lang):
-        lang = "" if lang == "en" else lang
+    def enforce_non_localized_gui(self):
+        all_users = self.get_all_users()
+        all_users["cmkadmin"]["language"] = "en"
+        self.edit_htpasswd_users(all_users)
 
-        profile_page = self.get("user_profile.py").text
-        assert "name=\"language\"" in profile_page
-
-        if lang:
-            assert "value=\"" + lang + "\"" in profile_page
-
-        r = self.post("user_profile.py",
-                      data={
-                          "filled_in": "profile",
-                          "_set_lang": "on",
-                          "ua_start_url_use": "0",
-                          "ua_ui_theme_use": "0",
-                          "language": lang,
-                          "_save": "Save",
-                      },
-                      add_transid=True)
-
-        if lang == "":
-            assert "Successfully updated" in r.text, "Body: %s" % r.text
-        else:
-            assert "Benutzerprofil erfolgreich aktualisiert" in r.text, "Body: %s" % r.text
+        # Verify the language is as expected now
+        r = self.get("user_profile.py")
+        assert "Edit profile" in r.text, "Body: %s" % r.text
 
     def logout(self):
         r = self.get("logout.py", allow_redirect_to_login=True)
@@ -226,11 +219,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
     #
 
     def _automation_credentials(self):
-        secret_path = "var/check_mk/web/automation/automation.secret"
-        secret = self.site.read_file(secret_path)
-
-        if secret == "":
-            raise Exception("Failed to read secret from %s" % secret_path)
+        secret = _get_automation_secret(self.site)
 
         return {
             "_username": "automation",
@@ -669,7 +658,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
             "request": json.dumps(request),
         })
 
-        assert isinstance(result, six.text_type)
+        assert isinstance(result, str)
         assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
     def bulk_discovery_start(self, request, expect_error=False):
@@ -755,6 +744,15 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         for site in relevant_sites:
             old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
 
+        logger.debug("Read replication changes of sites")
+        import glob
+        base_dir = self.site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
+            if os.path.exists(site_changes_path):
+                logger.debug(
+                    self.site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
+
         logger.debug("Start activate changes: %r", request)
         time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
@@ -763,7 +761,7 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
 
         logger.debug("Result: %r", result)
         assert isinstance(result, dict)
-        assert len(result["sites"]) > 0
+        assert len(result["sites"]) > 0, repr(result)
         involved_sites = list(result["sites"].keys())
 
         for site_id, status in result["sites"].items():
@@ -833,3 +831,119 @@ class CMKWebSession(object):  # pylint: disable=useless-object-inheritance
         for host in hosts:
             assert isinstance(result[host], dict)
         return result
+
+
+class CMKOpenAPISession:
+    VERSION = "v0"
+
+    def __init__(self, site):
+        self.site = site
+        self.session = self._get_session()
+        self.base_url = f"{site.url}api/{self.VERSION}"
+
+    def _get_session(self):
+        session = requests.session()
+        session.headers['Authorization'] = self._get_authentication_header()
+        session.headers['Accept'] = 'application/json'
+
+        return session
+
+    def _get_authentication_header(self):
+        secret = _get_automation_secret(self.site).strip()
+        return f"Bearer automation {secret}"
+
+    def request(self,
+                method,
+                endpoint,
+                header_params=None,
+                query_params=None,
+                request_params=None,
+                assertion=True):
+        url = f"{self.base_url}/{endpoint}"
+        try:
+            resp = self.session.request(method,
+                                        url,
+                                        headers=header_params,
+                                        data=query_params,
+                                        json=request_params)
+            resp.raise_for_status()
+            return resp
+        except Exception:
+            if assertion:
+                assert False, f"REST API call failed: {resp.json()}"
+            raise
+
+    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=True):
+        request_params = {
+            "folder": folder,
+            "host_name": host_name,
+        }
+        if nodes:
+            request_params["nodes"] = nodes
+        if attributes:
+            request_params["attributes"] = attributes
+
+        resp = self.request(
+            "post",
+            "domain-types/host_config/collections/all",
+            request_params=request_params,
+            assertion=assertion,
+        )
+
+        return resp.json()
+
+    def activate_changes_async(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
+        return resp.json()
+
+    def activate_changes_sync(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
+        activation_id = resp.json()["id"]
+        self.request(
+            "get",
+            f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
+            assertion=assertion,
+        )
+
+    def get_baking_status(self, assertion=True):
+        return self.request(
+            "get",
+            "domain-types/agent/actions/baking_status",
+            assertion=assertion,
+        ).json()
+
+    def bake_agents(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake",
+            assertion=assertion,
+        )
+        return resp
+
+    def bake_and_sign_agents(self, key_id, passphrase, assertion=True):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake_and_sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
+        return resp
+
+    def sign_agents(self, key_id, passphrase, assertion=True):
+        request_params = {"key_id": key_id, "passphrase": passphrase}
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
+        return resp

@@ -1,0 +1,30 @@
+Title: oracle_performance: Optionally split services
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1603355723
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The services created by the check plugin oracle_performance included
+several groups of performance data. To be able to create more detailed views,
+the information provided by this check plugin can now be splitted in up to
+three different services:
+
+LI:oracle_performance: Statistics for the buffer pool and library cache are still in the main service and cannot be moved into a separate service.
+LI:oracle_performance.dbtime: Statistics for the used DB times (CPU and Non-Idle Wait) may be isolated as a separate service.
+LI:oracle_performance.memory: Memory information may also be isolated. If so, additionally statistics for PGA will be computed and displayed.
+
+To use this new feature, the ruleset "Oracle performance discovery" has
+been implemented. The isolation of DB times or memory statistics can be
+configured independently to represent your specific requirements. If this
+ruleset is not used, all behaviour will stay the same as before - there is
+no need for interaction in this case.
+
+<b>Important</b>: Please be aware, that there is no automatic conversion of
+rrd data in case, you split up the services. This means, that you need to
+convert them manually, if you are using the single rrd format. Otherwise the
+historic metric data will still be available through the main service only
+while the new metric data will be stored in the newly created services.

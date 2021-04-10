@@ -1,0 +1,15 @@
+Title: Do not remove acknowledgements for retries.
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1594970316
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+When a non-sticky acknowledgement has been set for a host/service in a soft
+non-OK state, it has been removed when it stayed in a soft non-OK state in
+the next check cycle (i.e. after a retry).  This behavior was unexpected
+for the user and inconsistent with the way Nagios behaves, so this has been
+fixed.

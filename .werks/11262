@@ -1,0 +1,17 @@
+Title: Activate changes: Asking for activation comment can now be configured
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1597322528
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The comment that can be added before activating the pending changes is now
+configurable using the global setting "Ask for a comment for activation of changes".
+
+You can either choose to enforce your users to provide a comment, ask for an
+optional comment or completely skip the question for a comment.
+
+The default has been set to: "Do not ask for a comment".

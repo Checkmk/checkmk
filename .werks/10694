@@ -1,0 +1,15 @@
+Title: Windows Agent is able to install plugins.cap with empty files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1590396797
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Previously the installation of the plugins.cap file with zero size files
+was not possible.
+
+Now the problem has been fully solved. See the ticket CMK-4519.

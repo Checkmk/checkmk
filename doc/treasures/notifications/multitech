@@ -36,7 +36,7 @@
 # * Under
 #     Administration > Admin Access > Allowed Networks
 #   you can restrict access to the device. Make sure, the IPs of the sending
-#   Check_MK machines are included there.
+#   Checkmk machines are included there.
 #
 # * Under
 #     SMS Services > Send API
@@ -48,7 +48,7 @@
 #
 # * Under
 #     SMS Services > Send SMS Users
-#   create a user for Check_MK. This one needs to be entered below.
+#   create a user for Checkmk. This one needs to be entered below.
 #   Make sure you choose a password, which is not longer than 8 characters.
 #   On the device it is possible to set a longer password, but authentication
 #   with it is impossible!! :-(

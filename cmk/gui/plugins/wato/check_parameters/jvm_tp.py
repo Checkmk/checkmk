@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -20,8 +20,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _item_spec_jvm_tp():
-    # type: () -> TextAscii
+def _item_spec_jvm_tp() -> TextAscii:
     return TextAscii(
         title=_("Name of the virtual machine and/or<br>threadpool"),
         help=_("The name of the application server"),
@@ -29,8 +28,7 @@ def _item_spec_jvm_tp():
     )
 
 
-def _parameter_valuespec_jvm_tp():
-    # type: () -> Dictionary
+def _parameter_valuespec_jvm_tp() -> Dictionary:
     return Dictionary(
         help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements=[

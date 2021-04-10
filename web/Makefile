@@ -3,5 +3,5 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 setup:
-	curl -sL https://deb.nodesource.com/setup_11.x | sudo -E bash -
+	curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
 	sudo apt-get install -y nodejs

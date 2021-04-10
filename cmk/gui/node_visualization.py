@@ -1,43 +1,54 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import json
 import time
-from typing import (  # pylint: disable=unused-import
-    List, Optional, Text, Tuple, Dict, Any, Union, Set,
-)
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from typing import List, Optional, Tuple, Dict, Any, Set, Type
 
 import livestatus
-import cmk.utils.store as store
+from cmk.gui.node_vis_lib import BILayoutManagement
+from cmk.gui.plugins.wato import bi_valuespecs
+from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
+from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
+from cmk.utils.type_defs import HostName
+
 from cmk.gui import sites
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
-import cmk.gui.watolib as watolib
 import cmk.gui.bi as bi
+
 import cmk.gui.config as config
-from cmk.gui.pages import (  # pylint: disable=unused-import
-    page_registry, Page, PageResult, AjaxPage, AjaxPageResult,
+from cmk.gui.pages import (
+    page_registry,
+    Page,
+    PageResult,
+    AjaxPage,
+    AjaxPageResult,
 )
 
 from cmk.gui.plugins.views.utils import (
     get_permitted_views,)
-from cmk.gui.views import View
+from cmk.gui.views import ABCAjaxInitialFilters, View
 
 import cmk.gui.visuals
 from cmk.gui.exceptions import MKGeneralException
 
-from cmk.gui.plugins.visuals.utils import Filter  # pylint: disable=unused-import
-from cmk.gui.type_defs import FilterHeaders  # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName  # pylint: disable=unused-import
+from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.type_defs import FilterHeaders
+from cmk.gui.breadcrumb import (
+    make_current_page_breadcrumb_item,
+    make_simple_page_breadcrumb,
+    make_topic_breadcrumb,
+)
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
+                               PageMenuSidePopup, PageMenuTopic)
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.utils.bi.bi_computer import BIAggregationFilter
+from cmk.utils.bi.bi_lib import NodeResultBundle
 
 TopologyConfig = Dict[str, Any]
 Mesh = Set[str]
@@ -54,9 +65,26 @@ class MKGrowthInterruption(MKGeneralException):
 
 @page_registry.register_page("parent_child_topology")
 class ParentChildTopologyPage(Page):
-    def page(self):
-        # type: () -> PageResult
+    @classmethod
+    def visual_spec(cls):
+        return {
+            "topic": "overview",
+            "title": _("Network topology"),
+            "name": "parent_child_topology",
+            "sort_index": 50,
+            "is_show_more": False,
+            "icon": "network_topology",
+            "hidden": False,
+            "single_infos": [],
+            "context": {},
+            "link_from": {},
+            "add_context_to_title": True,
+        }
+
+    def page(self) -> PageResult:
         """ Determines the hosts to be shown """
+        config.user.need_permission("general.parent_child_topology")
+
         growth_auto_max_nodes = None
 
         # Jump this number of hops from the root node(s)
@@ -86,8 +114,7 @@ class ParentChildTopologyPage(Page):
                            mesh_depth=mesh_depth,
                            max_nodes=max_nodes)
 
-    def _get_default_view_hostnames(self, growth_auto_max_nodes):
-        # type: (int) -> List[HostName]
+    def _get_default_view_hostnames(self, growth_auto_max_nodes: int) -> List[HostName]:
         """ Returns all hosts without any parents """
         query = "GET hosts\nColumns: name\nFilter: parents ="
         sites.live().set_prepend_site(True)
@@ -107,8 +134,7 @@ class ParentChildTopologyPage(Page):
 
         return hostnames
 
-    def _get_hostnames_from_filters(self):
-        # type: () -> List[str]
+    def _get_hostnames_from_filters(self) -> List[str]:
         # Determine hosts from filters
         filter_headers = self._get_filter_headers()
         query = "GET hosts\nColumns: name"
@@ -123,13 +149,18 @@ class ParentChildTopologyPage(Page):
             sites.live().set_only_sites(None)
 
     def show_topology(self,
-                      hostnames,
-                      mode,
-                      growth_auto_max_nodes=None,
-                      mesh_depth=0,
-                      max_nodes=400):
-        # type: (List[HostName], str, Optional[int], int, int) -> None
-        html.header("")
+                      hostnames: List[HostName],
+                      mode: str,
+                      growth_auto_max_nodes: Optional[int] = None,
+                      mesh_depth: int = 0,
+                      max_nodes: int = 400) -> None:
+        visual_spec = ParentChildTopologyPage.visual_spec()
+        breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
+                                           PagetypeTopics.get_topic(visual_spec["topic"]))
+        breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
+        page_menu = PageMenu(breadcrumb=breadcrumb)
+        self._extend_display_dropdown(page_menu, visual_spec["name"])
+        html.header(visual_spec["title"], breadcrumb, page_menu)
         self.show_topology_content(hostnames,
                                    mode,
                                    growth_auto_max_nodes=growth_auto_max_nodes,
@@ -137,23 +168,13 @@ class ParentChildTopologyPage(Page):
                                    max_nodes=max_nodes)
 
     def show_topology_content(self,
-                              hostnames,
-                              mode,
-                              growth_auto_max_nodes=None,
-                              max_nodes=400,
-                              mesh_depth=0):
-        # type: (List[HostName], str, Optional[int], int, int) -> None
+                              hostnames: List[HostName],
+                              mode: str,
+                              growth_auto_max_nodes: Optional[int] = None,
+                              max_nodes: int = 400,
+                              mesh_depth: int = 0) -> None:
         div_id = "node_visualization"
-        html.div("", id=div_id)
-
-        # Filters
-        html.open_div(id="topology_filters")
-        _view, filters = self._get_topology_view_and_filters()
-        html.request.set_var("topology_mesh_depth", str(mesh_depth))
-        html.request.set_var("topology_max_nodes", str(max_nodes))
-        cmk.gui.views.show_filter_form(is_open=True, filters=filters)
-        html.close_div()
-
+        html.div("", id_=div_id)
         html.javascript(
             "topology_instance = new cmk.node_visualization.TopologyVisualization(%s, %s);" %
             (json.dumps(div_id), json.dumps(mode)))
@@ -163,7 +184,6 @@ class ParentChildTopologyPage(Page):
                             growth_auto_max_nodes)
         html.javascript("topology_instance.set_max_nodes(%d)" % max_nodes)
         html.javascript("topology_instance.set_mesh_depth(%d)" % mesh_depth)
-        html.javascript("topology_instance.set_theme(%s)" % json.dumps(html.get_theme()))
         overlay_config = self._get_overlay_config()
         if overlay_config:
             html.javascript("topology_instance.set_initial_overlays_config(%s)" %
@@ -171,48 +191,74 @@ class ParentChildTopologyPage(Page):
 
         html.javascript("topology_instance.show_topology(%s)" % json.dumps(hostnames))
 
-    def _get_overlay_config(self):
-        # type: () -> List
+    def _get_overlay_config(self) -> List:
         return []
 
-    def _get_filter_headers(self):
-        # type: () -> FilterHeaders
-        view, filters = self._get_topology_view_and_filters()
+    def _get_filter_headers(self) -> FilterHeaders:
+        view, filters = get_topology_view_and_filters()
         return cmk.gui.views.get_livestatus_filter_headers(view, filters)
 
-    def _get_topology_view_and_filters(self):
-        # type: () -> Tuple[View, List[Filter]]
-        view_spec = get_permitted_views()["topology_filters"]
-        view_name = "topology_filters"
-        view = View(view_name, view_spec, view_spec.get("context", {}))
-        filters = cmk.gui.visuals.filters_of_visual(view.spec,
-                                                    view.datasource.infos,
-                                                    link_filters=view.datasource.link_filters)
+    def _extend_display_dropdown(self, menu: PageMenu, page_name: str) -> None:
+        _view, show_filters = get_topology_view_and_filters()
+        display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
+        display_dropdown.topics.insert(
+            0,
+            PageMenuTopic(
+                title=_("Filter"),
+                entries=[
+                    PageMenuEntry(
+                        title=_("Filter"),
+                        icon_name="filters",
+                        item=PageMenuSidePopup(
+                            cmk.gui.visuals.render_filter_form(
+                                info_list=["host", "service"],
+                                mandatory_filters=[],
+                                context={f.ident: {} for f in show_filters if f.available()},
+                                page_name=page_name,
+                                reset_ajax_page="ajax_initial_topology_filters")),
+                        name="filters",
+                        is_shortcut=True,
+                    ),
+                ]))
 
-        show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
-        return view, show_filters
+
+def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
+    view_name = "topology_filters"
+    view_spec = get_permitted_views()[view_name]
+    view = View(view_name, view_spec, view_spec.get("context", {}))
+    filters = cmk.gui.visuals.filters_of_visual(view.spec,
+                                                view.datasource.infos,
+                                                link_filters=view.datasource.link_filters)
+    show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
+    return view, show_filters
+
+
+@page_registry.register_page("ajax_initial_topology_filters")
+class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
+    def _get_context(self, page_name: str) -> Dict:
+        _view, show_filters = get_topology_view_and_filters()
+        return {f.ident: {} for f in show_filters if f.available()}
 
 
 @cmk.gui.pages.register("bi_map")
-def _bi_map():
-    # type: () -> None
+def _bi_map() -> None:
     aggr_name = html.request.var("aggr_name")
     layout_id = html.request.var("layout_id")
-    html.header("BI visualization")
+    title = _("BI visualization")
+    breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(), title)
+    html.header(title, breadcrumb)
     div_id = "node_visualization"
     html.div("", id=div_id)
     html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %
                     json.dumps(div_id))
 
-    html.javascript("node_instance.set_theme(%s)" % json.dumps(html.get_theme()))
     html.javascript("node_instance.show_aggregations(%s, %s)" %
                     (json.dumps([aggr_name]), json.dumps(layout_id)))
 
 
 @page_registry.register_page("ajax_fetch_aggregation_data")
 class AjaxFetchAggregationData(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         aggregations_var = html.request.get_str_input_mandatory("aggregations", "[]")
         filter_names = json.loads(aggregations_var)
 
@@ -220,67 +266,68 @@ class AjaxFetchAggregationData(AjaxPage):
         if forced_layout_id not in BILayoutManagement.get_all_bi_template_layouts():
             forced_layout_id = None
 
-        state_data = bi.api_get_aggregation_state(filter_names=filter_names)
+        bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names, [], [])
+        results = bi.get_cached_bi_manager().computer.compute_result_for_filter(
+            bi_aggregation_filter)
 
-        aggregation_info = {"aggregations": {}}  # type: Dict[str, Any]
+        aggregation_info: Dict[str, Any] = {"aggregations": {}}
 
         aggregation_layouts = BILayoutManagement.get_all_bi_aggregation_layouts()
 
-        for row in state_data["rows"]:
-            aggr_name = row["tree"]["aggr_name"]
-            if filter_names and aggr_name not in filter_names:
-                continue
-            visual_mapper = NodeVisualizationBIDataMapper()
-            aggr_treestate = row["tree"]["aggr_treestate"]
-            hierarchy = visual_mapper.consume(aggr_treestate)
+        for bi_compiled_aggregation, node_result_bundles in results:
+            for node_result_bundle in node_result_bundles:
+                branch = node_result_bundle.instance
+                aggr_name = branch.properties.title
+                visual_mapper = NodeVisualizationBIDataMapper(
+                    is_single_host_aggregation=len(branch.get_required_hosts()) == 1)
+                hierarchy = visual_mapper.consume(node_result_bundle)
 
-            data = {}  # type: Dict[str, Any]
-            data["hierarchy"] = hierarchy
-            data["aggr_type"] = row["tree"]["aggr_tree"]["aggr_type"]
-            data["groups"] = row["groups"]
-            data["data_timestamp"] = int(time.time())
+                data: Dict[str, Any] = {}
+                data["type"] = "bi"
+                data["hierarchy"] = hierarchy
+                data["groups"] = bi_compiled_aggregation.groups.names
+                data["data_timestamp"] = int(time.time())
 
-            aggr_settings = row["tree"]["aggr_tree"]["node_visualization"]
-            layout = {"config": {}}  # type: Dict[str, Any]
-            if forced_layout_id:
-                layout["enforced_id"] = aggr_name
-                layout["origin_type"] = "globally_enforced"
-                layout["origin_info"] = _("Globally enforced")
-                layout["use_layout"] = BILayoutManagement.load_bi_template_layout(forced_layout_id)
-            else:
-                if aggr_name in aggregation_layouts:
-                    layout["origin_type"] = "explicit"
-                    layout["origin_info"] = _("Explicit set")
-                    layout["explicit_id"] = aggr_name
-                    layout["config"] = aggregation_layouts[aggr_name]
-                    layout["config"]["ignore_rule_styles"] = True
+                aggr_settings = bi_compiled_aggregation.aggregation_visualization
+                layout: Dict[str, Any] = {"config": {}}
+                if forced_layout_id:
+                    layout["enforced_id"] = aggr_name
+                    layout["origin_type"] = "globally_enforced"
+                    layout["origin_info"] = _("Globally enforced")
+                    layout["use_layout"] = BILayoutManagement.load_bi_template_layout(
+                        forced_layout_id)
                 else:
-                    layout.update(self._get_template_based_layout_settings(aggr_settings))
+                    if aggr_name in aggregation_layouts:
+                        layout["origin_type"] = "explicit"
+                        layout["origin_info"] = _("Explicit set")
+                        layout["explicit_id"] = aggr_name
+                        layout["config"] = aggregation_layouts[aggr_name]
+                        layout["config"]["ignore_rule_styles"] = True
+                    else:
+                        layout.update(self._get_template_based_layout_settings(aggr_settings))
 
-            if "ignore_rule_styles" not in layout["config"]:
-                layout["config"]["ignore_rule_styles"] = aggr_settings.get(
-                    "ignore_rule_styles", False)
-            if "line_config" not in layout["config"]:
-                layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
+                if "ignore_rule_styles" not in layout["config"]:
+                    layout["config"]["ignore_rule_styles"] = aggr_settings.get(
+                        "ignore_rule_styles", False)
+                if "line_config" not in layout["config"]:
+                    layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
 
-            data["layout"] = layout
-            aggregation_info["aggregations"][row["tree"]["aggr_name"]] = data
+                data["layout"] = layout
+                aggregation_info["aggregations"][aggr_name] = data
 
         html.set_output_format("json")
         return aggregation_info
 
-    def _get_line_style_config(self, aggr_settings):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
+    def _get_line_style_config(self, aggr_settings: Dict[str, Any]) -> Dict[str, Any]:
         line_style = aggr_settings.get("line_style", config.default_bi_layout["line_style"])
         if line_style == "default":
             line_style = config.default_bi_layout["line_style"]
         return {"style": line_style}
 
-    def _get_template_based_layout_settings(self, aggr_settings):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
+    def _get_template_based_layout_settings(self, aggr_settings: Dict[str, Any]) -> Dict[str, Any]:
         template_layout_id = aggr_settings.get("layout_id", "builtin_default")
 
-        layout_settings = {}  # type: Dict[str, Any]
+        layout_settings: Dict[str, Any] = {}
         if template_layout_id in BILayoutManagement.get_all_bi_template_layouts():
             # FIXME: This feature is currently inactive
             layout_settings["origin_type"] = "template"
@@ -320,98 +367,68 @@ BILeafTreeState = Tuple[Dict[str, Any], Any, Dict[str, Any]]
 
 
 # Creates are hierarchical dictionary which can be read by the NodeVisualization framework
-class NodeVisualizationBIDataMapper(object):
-    def consume(self, treestate, depth=1):
-        # type: (Union[BIAggrTreeState, BILeafTreeState], int) -> Dict[str, Any]
-        state_info, node, subtrees = self._normalize_treestate(treestate)
-        if subtrees:
-            node_data = self._get_node_data_of_bi_aggregator(node)
+class NodeVisualizationBIDataMapper:
+    def __init__(self, is_single_host_aggregation=False):
+        super().__init__()
+        self._is_single_host_aggregation = is_single_host_aggregation
+
+    def consume(self, node_result_bundle: NodeResultBundle, depth: int = 1) -> Dict[str, Any]:
+        instance = node_result_bundle.instance
+        if isinstance(instance, BICompiledRule):
+            node_data = self._get_node_data_for_rule(instance)
         else:
-            node_data = self._get_node_data_of_bi_leaf(node)
+            node_data = self._get_node_data_for_leaf(instance)
 
-        node_data["icon"] = node.get("icon")
-        node_data["state"] = state_info["state"]
-        node_data["name"] = node.get("title")
+        actual_result = node_result_bundle.actual_result
+        if isinstance(instance, BICompiledRule) and instance.properties.icon:
+            node_data["icon"] = html.detect_icon_path(instance.properties.icon, prefix="icon")
 
-        # TODO: BI cleanup: in_downtime has two states 0, False
-        node_data["in_downtime"] = not state_info.get("in_downtime", False) in [0, False]
-        node_data["acknowledged"] = state_info.get("acknowledged", False)
+        node_data["state"] = actual_result.state
+
+        node_data["in_downtime"] = actual_result.downtime_state > 0
+        node_data["acknowledged"] = actual_result.acknowledged
         node_data["children"] = []
-        for subtree in subtrees:
-            node_data["children"].append(self.consume(subtree, depth=depth + 1))
+        for nested_bundle in node_result_bundle.nested_results:
+            node_data["children"].append(self.consume(nested_bundle, depth=depth + 1))
         return node_data
 
-    def _normalize_treestate(self, treestate):
-        if isinstance(treestate, tuple):
-            if len(treestate) == 4:
-                return treestate[0], treestate[2], treestate[3]
-            if len(treestate) == 3:
-                return treestate[0], treestate[2], []
-            raise ValueError("Invalid treestate tuple length")
-        raise ValueError("Invalid treestate")
-
-    def _get_node_data_of_bi_aggregator(self, node):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
-        node_data = {}  # type: Dict[str, Any]
-        node_data["node_type"] = "bi_aggregator"
-        node_data["rule_id"] = {
-            "pack": node["rule_id"][0],
-            "rule": node["rule_id"][1],
-            "function": node["rule_id"][2]
+    def _get_node_data_for_rule(self, bi_compiled_rule: BICompiledRule) -> Dict[str, Any]:
+        node_data: Dict[str, Any] = {
+            "node_type": "bi_aggregator",
+            "name": bi_compiled_rule.properties.title,
         }
-        if "rule_layout_style" in node:
-            node_data["rule_layout_style"] = node["rule_layout_style"]
-        if "aggregation_id" in node:
-            node_data["aggregation_id"] = node["aggregation_id"]
+
+        aggregation_function = bi_compiled_rule.aggregation_function
+        function_data = BIAggregationFunctionSchema().dump(aggregation_function)
+        aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
+            aggregation_function.type()]
+
+        node_data["rule_id"] = {
+            "pack": bi_compiled_rule.pack_id,
+            "rule": bi_compiled_rule.id,
+            "aggregation_function_description": str(aggr_func_gui(function_data))
+        }
+        node_data["rule_layout_style"] = bi_compiled_rule.node_visualization
         return node_data
 
-    def _get_node_data_of_bi_leaf(self, node):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
-        node_data = {}  # type: Dict[str, Any]
-        node_data["node_type"] = "bi_leaf"
-        node_data["hostname"] = node.get("host", ["", ""])[1]
-        if "service" in node:
-            node_data["service"] = node["service"]
+    def _get_node_data_for_leaf(self, bi_compiled_leaf: BICompiledLeaf) -> Dict[str, Any]:
+        node_data: Dict[str, Any] = {"node_type": "bi_leaf", "hostname": bi_compiled_leaf.host_name}
+        if not bi_compiled_leaf.service_description:
+            node_data["name"] = bi_compiled_leaf.host_name
+        else:
+            node_data["service"] = bi_compiled_leaf.service_description
+            if self._is_single_host_aggregation:
+                node_data["name"] = bi_compiled_leaf.service_description
+            else:
+                node_data["name"] = " ".join(
+                    [bi_compiled_leaf.host_name, bi_compiled_leaf.service_description])
         return node_data
-
-
-class BILayoutManagement(object):
-    _config_file = Path(watolib.multisite_dir()) / "bi_layouts.mk"
-
-    @classmethod
-    def save_layouts(cls):
-        # type: () -> None
-        store.save_to_mk_file(str(BILayoutManagement._config_file),
-                              "bi_layouts",
-                              config.bi_layouts,
-                              pprint_value=True)
-
-    @classmethod
-    def load_bi_template_layout(cls, template_id):
-        # type: (Optional[str]) -> Any
-        return config.bi_layouts["templates"].get(template_id)
-
-    @classmethod
-    def load_bi_aggregation_layout(cls, aggregation_name):
-        # type: (Optional[str]) -> Any
-        return config.bi_layouts["aggregations"].get(aggregation_name)
-
-    @classmethod
-    def get_all_bi_template_layouts(cls):
-        # type: () -> Any
-        return config.bi_layouts["templates"]
-
-    @classmethod
-    def get_all_bi_aggregation_layouts(cls):
-        # type: () -> Any
-        return config.bi_layouts["aggregations"]
 
 
 # Explicit Aggregations
 @page_registry.register_page("ajax_save_bi_aggregation_layout")
 class AjaxSaveBIAggregationLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         layout_var = html.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["aggregations"].update(layout_config)
@@ -421,8 +438,7 @@ class AjaxSaveBIAggregationLayout(AjaxPage):
 
 @page_registry.register_page("ajax_delete_bi_aggregation_layout")
 class AjaxDeleteBIAggregationLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         for_aggregation = html.request.var("aggregation_name")
         config.bi_layouts["aggregations"].pop(for_aggregation)
         BILayoutManagement.save_layouts()
@@ -431,8 +447,7 @@ class AjaxDeleteBIAggregationLayout(AjaxPage):
 
 @page_registry.register_page("ajax_load_bi_aggregation_layout")
 class AjaxLoadBIAggregationLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         aggregation_name = html.request.var("aggregation_name")
         return BILayoutManagement.load_bi_aggregation_layout(aggregation_name)
 
@@ -440,8 +455,7 @@ class AjaxLoadBIAggregationLayout(AjaxPage):
 # Templates
 @page_registry.register_page("ajax_save_bi_template_layout")
 class AjaxSaveBITemplateLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         layout_var = html.request.get_str_input_mandatory("layout", "{}")
         layout_config = json.loads(layout_var)
         config.bi_layouts["templates"].update(layout_config)
@@ -451,8 +465,7 @@ class AjaxSaveBITemplateLayout(AjaxPage):
 
 @page_registry.register_page("ajax_delete_bi_template_layout")
 class AjaxDeleteBITemplateLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         layout_id = html.request.var("layout_id")
         config.bi_layouts["templates"].pop(layout_id)
         BILayoutManagement.save_layouts()
@@ -461,23 +474,20 @@ class AjaxDeleteBITemplateLayout(AjaxPage):
 
 @page_registry.register_page("ajax_load_bi_template_layout")
 class AjaxLoadBITemplateLayout(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         layout_id = html.request.var("layout_id")
         return BILayoutManagement.load_bi_template_layout(layout_id)
 
 
 @page_registry.register_page("ajax_get_all_bi_template_layouts")
 class AjaxGetAllBITemplateLayouts(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         return BILayoutManagement.get_all_bi_template_layouts()
 
 
 @page_registry.register_page("ajax_fetch_topology")
 class AjaxFetchTopology(AjaxPage):
-    def page(self):
-        # type: () -> AjaxPageResult
+    def page(self) -> AjaxPageResult:
         # growth_root_nodes: a list of mandatory hostnames
         # mesh_depth: number of hops from growth root
         # growth_forbidden: block further traversal at the given nodes
@@ -491,16 +501,14 @@ class AjaxFetchTopology(AjaxPage):
 
         topology = self._get_topology_instance(topology_config)
         meshes = topology.compute()
-
-        topology_info = {"topology_meshes": {}}  # type: Dict[str, Any]
-        topology_info = {
+        topology_info: Dict[str, Any] = {
+            "topology_meshes": {},
             "topology_chunks": {},
+            "headline": topology.title(),
+            "errors": topology.errors(),
+            "max_nodes": topology.max_nodes,
+            "mesh_depth": topology.mesh_depth,
         }
-
-        topology_info["headline"] = topology.title()
-        topology_info["errors"] = topology.errors()
-        topology_info["max_nodes"] = topology.max_nodes
-        topology_info["mesh_depth"] = topology.mesh_depth
 
         for mesh in meshes:
             if not mesh:
@@ -544,51 +552,48 @@ class AjaxFetchTopology(AjaxPage):
                         }
                     }
                 },
+                "type": "topology",
                 "hierarchy": mesh_info,
                 "links": list(mesh_links)
             }
 
         return topology_info
 
-    def _get_topology_instance(self, topology_config):
-        # type: (TopologyConfig) -> Topology
+    def _get_topology_instance(self, topology_config: TopologyConfig) -> 'Topology':
         topology_class = topology_registry.get(topology_config["mode"])
         if topology_class is None:
             raise Exception("unknown topology")
         return topology_class(topology_config)
 
 
-class Topology(object):
-    def __init__(self, topology_config):
-        # type: (TopologyConfig) -> None
+class Topology:
+    def __init__(self, topology_config: TopologyConfig) -> None:
         super(Topology, self).__init__()
         self._config = topology_config
 
         # Hosts with complete data
-        self._known_hosts = {}  # type: Dict[str, Any]
+        self._known_hosts: Dict[str, Any] = {}
 
         # Child/parent hosts at the depth boundary
-        self._border_hosts = set()  # type: Set[HostName]
+        self._border_hosts: Set[HostName] = set()
 
         # Nodes without a parent
-        self._actual_root_nodes = set()  # type: Set[HostName]
+        self._actual_root_nodes: Set[HostName] = set()
 
         # Nodes without child or parent
-        self._single_hosts = set()  # type: Set[HostName]
-        self._errors = []  # type: List[str]
-        self._meshes = []  # type: Meshes
+        self._single_hosts: Set[HostName] = set()
+        self._errors: List[str] = []
+        self._meshes: Meshes = []
 
         # Node depth to next growth root
-        self._depth_info = {}  # type: Dict[str, int]
+        self._depth_info: Dict[str, int] = {}
 
         self._current_iteration = 0
 
-    def title(self):
-        # type: () -> Text
+    def title(self) -> str:
         raise NotImplementedError()
 
-    def get_info_for_host(self, hostname, mesh):
-        # type: (HostName, Mesh) -> Dict[str, Any]
+    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> Dict[str, Any]:
         return {
             "name": hostname,  # Used as node text in GUI
             "hostname": hostname,
@@ -599,34 +604,28 @@ class Topology(object):
             "growth_continue": self.is_growth_continue(hostname),
         }
 
-    def get_host_icon_image(self, hostname):
-        # type: (HostName) -> Optional[str]
+    def get_host_icon_image(self, hostname: HostName) -> Optional[str]:
         if hostname not in self._known_hosts:
             return None
         return self._known_hosts[hostname].get("icon_image")
 
-    def get_host_incoming(self, hostname):
-        # type: (HostName) -> List[str]
+    def get_host_incoming(self, hostname: HostName) -> List[str]:
         if hostname not in self._known_hosts:
             return []
         return self._known_hosts[hostname]["incoming"]
 
-    def get_host_outgoing(self, hostname):
-        # type: (HostName) -> List[str]
+    def get_host_outgoing(self, hostname: HostName) -> List[str]:
         if hostname not in self._known_hosts:
             return []
         return self._known_hosts[hostname]["outgoing"]
 
-    def is_growth_root(self, hostname):
-        # type: (HostName) -> bool
+    def is_growth_root(self, hostname: HostName) -> bool:
         return hostname in self._config["growth_root_nodes"]
 
-    def is_growth_continue(self, hostname):
-        # type: (HostName) -> bool
+    def is_growth_continue(self, hostname: HostName) -> bool:
         return hostname in self._config.get("growth_continue_nodes", [])
 
-    def may_grow(self, hostname, mesh_hosts):
-        # type: (HostName, Mesh) -> bool
+    def may_grow(self, hostname: HostName, mesh_hosts: Mesh) -> bool:
         known_host = self._known_hosts.get(hostname)
         if not known_host:
             return True
@@ -634,20 +633,16 @@ class Topology(object):
         unknown_hosts = set(known_host["incoming"] + known_host["outgoing"]) - set(mesh_hosts)
         return len(unknown_hosts) > 0
 
-    def growth_forbidden(self, hostname):
-        # type: (HostName) -> bool
+    def growth_forbidden(self, hostname: HostName) -> bool:
         return hostname in self._config.get("growth_forbidden_nodes", set())
 
-    def add_error(self, error):
-        # type: (str) -> None
+    def add_error(self, error: str) -> None:
         self._errors.append(error)
 
-    def errors(self):
-        # type: () -> List[str]
+    def errors(self) -> List[str]:
         return self._errors
 
-    def compute(self):
-        # type: () -> Meshes
+    def compute(self) -> Meshes:
         if not self._config["growth_root_nodes"]:
             return []
         self._border_hosts = set(self._config["growth_root_nodes"])
@@ -669,14 +664,12 @@ class Topology(object):
         meshes = self._postprocess_meshes(self._meshes)
         return meshes
 
-    def _grow(self):
-        # type: () -> None
+    def _grow(self) -> None:
         self._growth_to_depth()
         self._growth_to_parents()
         self._growth_to_continue_nodes()
 
-    def _check_mesh_size(self, meshes):
-        # type: (Meshes) -> None
+    def _check_mesh_size(self, meshes: Meshes) -> None:
         total_nodes = sum(map(len, meshes))
         if total_nodes > self.max_nodes:
             raise MKGrowthExceeded(
@@ -686,31 +679,26 @@ class Topology(object):
                 _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes))
 
     @property
-    def max_nodes(self):
-        # type: () -> int
+    def max_nodes(self) -> int:
         return int(self._config.get("max_nodes", 500))
 
     @property
-    def growth_auto_max_nodes(self):
-        # type: () -> int
+    def growth_auto_max_nodes(self) -> int:
         return self._config.get("growth_auto_max_nodes") or 100000
 
     @property
-    def mesh_depth(self):
-        # type: () -> int
+    def mesh_depth(self) -> int:
         return int(self._config.get("mesh_depth", 0))
 
-    def _growth_to_depth(self):
-        # type: () -> None
+    def _growth_to_depth(self) -> None:
         while self._current_iteration <= self.mesh_depth:
             self._current_iteration += 1
             new_meshes = self._compute_meshes(self._border_hosts)
             self._check_mesh_size(new_meshes)
             self._meshes = new_meshes
 
-    def _growth_to_parents(self):
-        # type: () -> None
-        all_parents = set()  # type: Set[str]
+    def _growth_to_parents(self) -> None:
+        all_parents: Set[str] = set()
         while True:
             combined_mesh = set()
             for mesh in self._meshes:
@@ -729,8 +717,7 @@ class Topology(object):
             self._check_mesh_size(new_meshes)
             self._meshes = new_meshes
 
-    def _growth_to_continue_nodes(self):
-        # type: () -> None
+    def _growth_to_continue_nodes(self) -> None:
         growth_continue_nodes = set(self._config.get("growth_continue_nodes", []))
         while growth_continue_nodes:
             growth_nodes = growth_continue_nodes.intersection(set(self._known_hosts.keys()))
@@ -747,9 +734,9 @@ class Topology(object):
             self._meshes = new_meshes
             growth_continue_nodes -= growth_nodes
 
-    def _compute_meshes(self, hostnames):
-        # type: (Set[HostName]) -> Meshes
-        hostnames.update(self._known_hosts.keys())
+    def _compute_meshes(self, hostnames: Set[HostName]) -> Meshes:
+        hostnames.update(self._known_hosts.keys())  # pylint: disable=dict-keys-not-iterating
+
         new_hosts = []
         mandatory_keys = {"name", "outgoing", "incoming"}
         for host_data in self._fetch_data_for_hosts(hostnames):
@@ -764,24 +751,19 @@ class Topology(object):
         self._update_depth_information(meshes)
         return meshes
 
-    def _postprocess_meshes(self, meshes):
-        # type: (Meshes) -> Meshes
+    def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         return meshes
 
-    def _fetch_data_for_hosts(self, hostnames):
-        # type: (Set[HostName]) -> List[Dict]
+    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[Dict]:
         raise NotImplementedError()
 
-    def is_root_node(self, hostname):
-        # type: (HostName) -> bool
+    def is_root_node(self, hostname: HostName) -> bool:
         return hostname in self._actual_root_nodes
 
-    def is_border_host(self, hostname):
-        # type: (HostName) -> bool
+    def is_border_host(self, hostname: HostName) -> bool:
         return hostname in self._border_hosts
 
-    def _generate_meshes(self, new_hosts):
-        # type: (List[Dict[str, Any]]) -> Meshes
+    def _generate_meshes(self, new_hosts: List[Dict[str, Any]]) -> Meshes:
         # Data flow is child->parent
         # Incoming data comes from child
         # Outgoing data goes to parent
@@ -820,8 +802,7 @@ class Topology(object):
 
         return meshes
 
-    def _combine_meshes_inplace(self, meshes):
-        # type: (Meshes) -> None
+    def _combine_meshes_inplace(self, meshes: Meshes) -> None:
         """ Combines meshes with identical items """
         while True:
             changed_meshes = False
@@ -840,25 +821,20 @@ class Topology(object):
             if not changed_meshes:
                 break
 
-    def _update_depth_information(self, meshes):
-        # type: (Meshes) -> None
+    def _update_depth_information(self, meshes: Meshes) -> None:
         for mesh_hosts in meshes:
             self._update_depth_of_mesh(mesh_hosts)
 
-    def _update_depth_of_mesh(self, mesh_hosts):
-        # type: (Mesh) -> None
+    def _update_depth_of_mesh(self, mesh_hosts: Mesh) -> None:
         for hostname in list(mesh_hosts):
             if hostname in self._depth_info:
                 continue
             self._depth_info[hostname] = self._current_iteration
 
 
-class TopologyRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return Topology
-
-    def plugin_name(self, plugin_class):
-        return plugin_class.ident()
+class TopologyRegistry(cmk.utils.plugin_registry.Registry[Type[Topology]]):
+    def plugin_name(self, instance):
+        return instance.ident()
 
 
 topology_registry = TopologyRegistry()
@@ -867,16 +843,13 @@ topology_registry = TopologyRegistry()
 class ParentChildNetworkTopology(Topology):
     """ Generates parent/child topology view """
     @classmethod
-    def ident(cls):
-        # type: () -> str
+    def ident(cls) -> str:
         return "parent_child"
 
-    def title(self):
-        # type: () -> Text
+    def title(self) -> str:
         return _("Parent / Child topology")
 
-    def _fetch_data_for_hosts(self, hostnames):
-        # type: (Set[HostName]) -> List[Dict]
+    def _fetch_data_for_hosts(self, hostnames: Set[HostName]) -> List[Dict]:
         hostname_filters = []
         if hostnames:
             for hostname in hostnames:
@@ -903,8 +876,7 @@ class ParentChildNetworkTopology(Topology):
 
         return response
 
-    def _postprocess_meshes(self, meshes):
-        # type: (Meshes) -> Meshes
+    def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
         """ Create a central node and add all monitoring sites as childs """
 
         central_node = {
@@ -915,7 +887,7 @@ class ParentChildNetworkTopology(Topology):
             "node_type": "topology_center",
         }
 
-        site_nodes = {}  # type: Dict[str, Any]
+        site_nodes: Dict[str, Any] = {}
         for mesh in meshes:
             for node_name in mesh:
                 site = self._known_hosts[node_name]["site"]
@@ -944,11 +916,15 @@ class ParentChildNetworkTopology(Topology):
 
         return meshes
 
-    def get_info_for_host(self, hostname, mesh):
-        # type: (HostName, Mesh) -> Dict[str, Any]
+    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> Dict[str, Any]:
         info = super(ParentChildNetworkTopology, self).get_info_for_host(hostname, mesh)
         host_info = self._known_hosts[hostname]
         info.update(host_info)
+        for key in ["childs", "parents"]:
+            try:
+                del info[key]
+            except KeyError:
+                pass
 
         if "node_type" not in info:
             info["node_type"] = "topology"
@@ -962,8 +938,8 @@ class ParentChildNetworkTopology(Topology):
 
         return info
 
-    def _map_host_state_to_service_state(self, info, host_info):
-        # type: (Dict[str, Any], Dict[str, Any]) -> int
+    def _map_host_state_to_service_state(self, info: Dict[str, Any], host_info: Dict[str,
+                                                                                     Any]) -> int:
         if info["node_type"] in ["topology_center", "topology_site"]:
             return 0
         if not host_info["has_been_checked"]:

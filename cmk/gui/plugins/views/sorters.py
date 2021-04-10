@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,6 @@
 
 import abc
 import time
-import six
 
 import cmk.gui.config as config
 import cmk.gui.utils as utils
@@ -142,7 +141,7 @@ class SorterSitealias(Sorter):
             r1["site"])["alias"] < config.site(r2["site"])["alias"])
 
 
-class ABCTagSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -191,7 +190,7 @@ class SorterServiceTags(ABCTagSorter):
         return ["service_tags"]
 
 
-class ABCLabelSorter(six.with_metaclass(abc.ABCMeta, Sorter)):
+class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
     @abc.abstractproperty
     def object_type(self):
         raise NotImplementedError()
@@ -277,6 +276,12 @@ declare_simple_sorter("stateage", _("Service state age"), "service_last_state_ch
                       cmp_simple_number)
 declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
 declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
+
+# Alerts
+declare_1to1_sorter("alert_stats_crit", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_unknown", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_warn", cmp_simple_number, reverse=True)
+declare_1to1_sorter("alert_stats_problem", cmp_simple_number, reverse=True)
 
 # Service
 declare_1to1_sorter("svc_check_command", cmp_simple_string)
@@ -434,7 +439,8 @@ class SorterHostIpv4Address(Sorter):
             try:
                 return tuple(int(part) for part in ip.split('.'))
             except ValueError:
-                return ip
+                # Make hostnames comparable with IPv4 address representations
+                return (255, 255, 255, 255, ip)
 
         v1, v2 = split_ip(get_address(r1)), split_ip(get_address(r2))
         return (v1 > v2) - (v1 < v2)

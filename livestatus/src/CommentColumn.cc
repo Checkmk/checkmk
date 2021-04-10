@@ -4,10 +4,10 @@
 // source code package.
 
 #include "CommentColumn.h"
+
 #include <algorithm>
-#include <chrono>
-#include <cstdint>
 #include <iterator>
+
 #include "MonitoringCore.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -18,17 +18,26 @@ void CommentColumn::output(Row row, RowRenderer &r,
                            std::chrono::seconds /*timezone_offset*/) const {
     ListRenderer l(r);
     for (const auto &comment : comments_for_row(row)) {
-        if (_with_info) {
-            SublistRenderer s(l);
-            s.output(comment._id);
-            s.output(comment._author);
-            s.output(comment._comment);
-            if (_with_extra_info) {
+        switch (_verbosity) {
+            case verbosity::none:
+                l.output(comment._id);
+                break;
+            case verbosity::info: {
+                SublistRenderer s(l);
+                s.output(comment._id);
+                s.output(comment._author);
+                s.output(comment._comment);
+                break;
+            }
+            case verbosity::extra_info: {
+                SublistRenderer s(l);
+                s.output(comment._id);
+                s.output(comment._author);
+                s.output(comment._comment);
                 s.output(comment._entry_type);
                 s.output(comment._entry_time);
+                break;
             }
-        } else {
-            l.output(comment._id);
         }
     }
 }
@@ -45,12 +54,12 @@ std::vector<std::string> CommentColumn::getValue(
 }
 
 std::vector<CommentData> CommentColumn::comments_for_row(Row row) const {
-    if (auto data = columnData<void>(row)) {
+    if (const auto *const data = columnData<void>(row)) {
         return _is_service
-                   ? _mc->comments_for_service(
+                   ? _mc->comments(
                          reinterpret_cast<const MonitoringCore::Service *>(
                              data))
-                   : _mc->comments_for_host(
+                   : _mc->comments(
                          reinterpret_cast<const MonitoringCore::Host *>(data));
     }
     return {};

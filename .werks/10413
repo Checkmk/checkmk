@@ -6,7 +6,7 @@ Date: 1574758570
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Users can be assigned to configured customers and the provider or to a
 global scope to have access to all sites. The same option generators is

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -21,5 +21,5 @@ rulespec_registry.register(
         item_spec=lambda: TextAscii(title=_("CPG member name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=vs_filesystem,
-        title=lambda: _("3Par CPG (used space and growth)"),
+        title=lambda: _("3PAR CPG (used space and growth)"),
     ))

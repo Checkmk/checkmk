@@ -1,0 +1,65 @@
+Title: Reworking of discovery rulesets for network interfaces and switch ports
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1596798161
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+Up to now, the discovery of network interfaces and switch ports was controlled by
+two main rules: "Network Interface and Switch Port Discovery" (discovery of single
+interfaces) and "Network interface groups" (grouping of interfaces). With this werk,
+we integrate "Network interface groups" into "Network Interface and Switch Port
+Discovery" and rework the latter. The rule "Network interface groups" is now deprecated
+and not applied any more.
+
+The reworked discovery ruleset is split into three parts: the configuration of the
+discovery of single interfaces, the configuration of interfaces groups and conditions
+which determine to which interfaces this rule applies. In the following, we explain the
+changes in more detail.
+<ul>
+<li>In the first part, you can activate or deactivate the discovery of single interfaces.
+You can also configure the way monitored interfaces are represented, i.e., by index, by
+description or by alias.</li>
+<li>The second part offers the option to group interfaces. Here, you can specify the names
+of the groups and they way the corresponding services display their members in the service
+output (again, by index, by description or by alias). Contrary to before, there is no separate
+option any more to define interface groups on clusters, since this option was anyway redundant.
+</li>
+<li>The third part of the rule determines to which interfaces this rule applies. You can choose
+to apply this rule to all interfaces or you can set conditions such as a regular expression
+matching the interface description or a set of port types. Each interface will first determine
+the set of rules which actually applies to this interface and then merge these rules together,
+whereby rules higher up in the hierarchy (e.g. rules in subfolders) overwrite rules further
+below.</li>
+<li>Note that due to the point above, this rule is a somewhat special case compared to other
+rulesets in checkmk. Usually, the conditions for a rule to apply are exclusively configured in
+the section "Conditions". However, here, you can set additional, interface-specific conditions,
+which offer a finer control over the discovery process.</li>
+</ul>
+
+This change is incompatible. It affects the following checks:
+<tt>aix_if</tt>, <tt>brocade_optical</tt>, <tt>emc_vplex_if</tt>, <tt>esx_vsphere_counters</tt>,
+<tt>fritz</tt>, <tt>hitachi_hnas_fc_if</tt>, <tt>hp_msa_if</tt>, <tt>hpux_if</tt>, <tt>if</tt>,
+<tt>if64</tt>, <tt>if64adm</tt>, <tt>if64_tplink</tt>, <tt>if_brocade</tt>, <tt>if_fortigate</tt>,
+<tt>if_lancom</tt>, <tt>lnx_if</tt>, <tt>mcdata_fcport</tt>, <tt>netapp_api_if</tt>,
+<tt>statgrab_net</tt>, <tt>ucs_bladecenter_if</tt>, <tt>vms_if</tt>, <tt>winperf_if</tt>.
+
+For users monitoring interface groups, this change is definitely incompatible. They have to migrate
+their current rules for grouping interfaces from the now deprecated ruleset "Network interface
+groups" to the new discovery ruleset. Note that there is no option any more to discover interface
+groups <i>instead of</i> the corresponding single interfaces. To reproduce this behavior, configure
+your interfaces groups and switch off the discovery of single interfaces for the group members.
+After migrating the grouping rules, these users have to re-discover the services of affected hosts.
+
+For all others users monitoring network interfaces, this change might be incompatible. Generally,
+any already discovered interface services will continue to work. However, depending on the user-
+defined rules from the (now reworked) ruleset "Network Interface and Switch Port Discovery", some
+interface services might vanish upon re-discovery or new interface services might appear. In such
+cases, users have to adapt the new, reworked versions of their user-defined rules.
+
+Finally, it is worth noting that the new ruleset offers the option to match all interfaces, which
+allows for simplifying some rules. In particular, users might be able to simplify rules where all
+interface port types and states are selected.

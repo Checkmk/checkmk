@@ -1,0 +1,14 @@
+Title: Add option to filter views and dashboards by multiple WATO folders
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1600864998
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+A new filter "Multiple WATO Folders" is implemented to allow the user to
+select a list of WATO Folders.  Using this filter in combination with the
+existing "WATO folder" filter may result in unexpected results, thus make
+sure to only enable one of these filters per view.

@@ -1,0 +1,14 @@
+Title: df check returns separate sub-results in order to provide distinct WARN/CRIT marker
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1591108516
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The df check returned one monolithic check result containing usage, trend and
+inode information but only containing one WARN/CRIT marker for all elements.
+This change breaks the df result into separate sub-results each providing
+WARN/CRIT markers.

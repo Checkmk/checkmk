@@ -10,12 +10,13 @@ Special agent for monitoring Amazon web services (AWS) with Check_MK.
 import abc
 import argparse
 import errno
+import hashlib
 import json
 import logging
 from pathlib import Path
 import sys
-import time
-from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable  # pylint: disable=unused-import
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, NamedTuple, Set, Tuple, Union, Callable, Optional
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -27,6 +28,7 @@ from cmk.utils.exceptions import MKException
 from cmk.special_agents.utils import (
     datetime_serializer,
     DataCache,
+    get_seconds_since_midnight,
 )
 from cmk.utils.aws_constants import (
     AWSRegions,
@@ -35,6 +37,8 @@ from cmk.utils.aws_constants import (
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
 )
+
+NOW = datetime.now()
 
 # NOTE: Quite a few of the type annotations below are just "educated guesses"
 # and may be wrong, but at least they make mypy happy for now. Nevertheless, we
@@ -235,8 +239,8 @@ def _validate_wafv2_scope_and_region(scope, region):
     return region_report
 
 
-def _iterate_through_wafv2_list_operations(list_operation, scope, entry_name, get_response_content):
-    # type: (Callable, str, str, Callable) -> List
+def _iterate_through_wafv2_list_operations(list_operation: Callable, scope: str, entry_name: str,
+                                           get_response_content: Callable) -> List:
     """
     For some reason, the return objects of the list_... functions of the WAFV2-client seem to
     always contain 'NextMarker', indicating that there are more values to retrieve, even if there
@@ -308,6 +312,30 @@ class ResultDistributor:
                 colleague.receive(sender, result)
 
 
+class ResultDistributorS3Limits(ResultDistributor):
+    """
+    Special mediator for distributing results from S3Limits. This mediator stores any received
+    results and distributes both upon receiving and upon adding a new colleague. This is done
+    because we want to run S3Limits only once (does not matter for which region, results are the
+    same for all regions) and later distribute the results to S3Summary objects in other regions.
+    """
+    def __init__(self):
+        super(ResultDistributorS3Limits, self).__init__()
+        self._received_results = {}
+
+    def add(self, colleague):
+        super(ResultDistributorS3Limits, self).add(colleague)
+        for sender, content in self._received_results.values():
+            colleague.receive(sender, content)
+
+    def distribute(self, sender, result):
+        self._received_results.setdefault(sender.name, (sender, result))
+        super(ResultDistributorS3Limits, self).distribute(sender, result)
+
+    def is_empty(self):
+        return len(self._colleagues) == 0
+
+
 #   ---sections/colleagues--------------------------------------------------
 
 AWSSectionResults = NamedTuple("AWSSectionResults", [
@@ -368,21 +396,64 @@ class AWSSection(DataCache):
 
     @property
     @abc.abstractmethod
-    def cache_interval(self):
-        # type: () -> int
+    def cache_interval(self) -> int:
         """
         In general the default resolution of AWS metrics is 5 min (300 sec)
         The default resolution of AWS S3 metrics is 1 day (86400 sec)
         We use interval property for cached section.
         """
+        raise NotImplementedError
 
     @property
     def region(self):
         return self._region
 
     @property
+    def granularity(self) -> int:
+        """
+        The granularity of the returned data in seconds.
+        """
+        raise NotImplementedError
+
+    @property
     def period(self):
-        return 2 * self.cache_interval
+        return self.validate_period(2 * self.granularity)
+
+    @staticmethod
+    def validate_period(period: int, resolution_type: str = "low") -> int:
+        """
+        What this is all about:
+        https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html
+        >>> import pytest
+        >>> with pytest.raises(AssertionError):
+        ...     [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        >>> AWSSection.validate_period(1234, resolution_type="foo bar")
+        Traceback (most recent call last):
+            ...
+        ValueError: Unknown resolution type: 'foo bar'
+        >>> AWSSection.validate_period(120)
+        120
+        >>> AWSSection.validate_period(30, "high")
+        30
+        >>> AWSSection.validate_period(180, "high")
+        180
+        """
+        if not isinstance(period, int):
+            raise AssertionError(f"Period must be an integer, got {type(period)}.")
+
+        allowed_multiples = 60
+        additional_allowed = []
+
+        if resolution_type == "high":
+            additional_allowed.extend([1, 5, 10, 30, 60])
+        elif resolution_type != "low":
+            raise ValueError("Unknown resolution type: '%s'" % resolution_type)
+
+        if not (not period % allowed_multiples or period in additional_allowed):
+            raise AssertionError(
+                f"Period must be a multiple of {allowed_multiples} or equal to 1, 5, "
+                f"10, 30, 60 in case of high resolution.")
+        return period
 
     def _send(self, content):
         self._distributor.distribute(self, content)
@@ -400,7 +471,8 @@ class AWSSection(DataCache):
             float), "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
 
         raw_data = self.get_data(colleague_contents, use_cache=use_cache)
-        raw_content = AWSRawContent(raw_data, self.cache_timestamp if use_cache else time.time())
+        raw_content = AWSRawContent(raw_data,
+                                    self.cache_timestamp if use_cache else NOW.timestamp())
         assert isinstance(
             raw_content,
             AWSRawContent), "%s: Raw content must be of type 'AWSRawContent'" % self.name
@@ -441,8 +513,7 @@ class AWSSection(DataCache):
             final_results.append(result)
         return AWSSectionResults(final_results, computed_content.cache_timestamp)
 
-    def get_validity_from_args(self, *args):
-        # type: (Any) -> bool
+    def get_validity_from_args(self, *args: Any) -> bool:
         (colleague_contents,) = args
         my_cache_timestamp = self.cache_timestamp
         if my_cache_timestamp is None:
@@ -453,8 +524,7 @@ class AWSSection(DataCache):
         return True
 
     @abc.abstractmethod
-    def _get_colleague_contents(self):
-        # type: (Any) -> AWSColleagueContents
+    def _get_colleague_contents(self: Any) -> AWSColleagueContents:
         """
         Receive section contents from colleagues. The results are stored in
         self._receive_results: {<KEY>: AWSComputedContent}.
@@ -474,10 +544,11 @@ class AWSSection(DataCache):
         - '<KEY>'
         Return raw_result['<KEY>'].
         """
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def _compute_content(self, raw_content, colleague_contents):
-        # type: (AWSRawContent, Any) -> AWSComputedContent
+    def _compute_content(self, raw_content: AWSRawContent,
+                         colleague_contents: Any) -> AWSComputedContent:
         """
         Compute the final content of this section based on the raw content of
         this section and the content received from the optional colleague
@@ -485,8 +556,7 @@ class AWSSection(DataCache):
         """
 
     @abc.abstractmethod
-    def _create_results(self, computed_content):
-        # type: (Any) -> List[AWSSectionResult]
+    def _create_results(self, computed_content: Any) -> List[AWSSectionResult]:
         pass
 
     def _get_response_content(self, response, key, dflt=None):
@@ -571,7 +641,7 @@ class AWSSectionGeneric(AWSSection):
 class AWSSectionCloudwatch(AWSSection):
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        end_time = time.time()
+        end_time = NOW.timestamp()
         start_time = end_time - self.period
         metric_specs = self._get_metrics(colleague_contents)
         if not metric_specs:
@@ -653,20 +723,30 @@ class CostsAndUsage(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
+        granularity_name, granularity_interval = 'DAILY', self.granularity
         fmt = "%Y-%m-%d"
-        now = time.time()
         response = self._client.get_cost_and_usage(
             TimePeriod={
-                'Start': time.strftime(fmt, time.gmtime(now - self.cache_interval)),
-                'End': time.strftime(fmt, time.gmtime(now)),
+                'Start': datetime.strftime(NOW - timedelta(seconds=granularity_interval), fmt),
+                'End': datetime.strftime(NOW, fmt),
             },
-            Granularity='DAILY',
+            Granularity=granularity_name,
             Metrics=['UnblendedCost'],
             GroupBy=[{
                 'Type': 'DIMENSION',
@@ -703,6 +783,10 @@ class EC2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -748,8 +832,8 @@ class EC2Limits(AWSSectionLimits):
         self._add_instance_limits(instances, res_instances, spot_inst_requests,
                                   EC2InstFamiliesquotas)
         self._add_addresses_limits(addresses)
-        self._add_security_group_limits(instances, security_groups)
-        self._add_interface_limits(instances, interfaces)
+        self._add_security_group_limits(security_groups)
+        self._add_interface_limits(interfaces)
         self._add_spot_inst_limits(spot_inst_requests)
         self._add_spot_fleet_limits(spot_fleet_requests)
         return AWSComputedContent(reservations, raw_content.cache_timestamp)
@@ -760,7 +844,7 @@ class EC2Limits(AWSSectionLimits):
 
         total_ris = 0
         running_ris = 0
-        ondemand_limits = {}  # type: Dict[str, int]
+        ondemand_limits: Dict[str, int] = {}
         # subtract reservations from instance usage
         for inst_az, inst_types in inst_limits.items():
             if inst_az not in res_limits:
@@ -826,7 +910,7 @@ class EC2Limits(AWSSectionLimits):
 
     def _get_inst_limits(self, instances, spot_inst_requests):
         spot_instance_ids = [inst['InstanceId'] for inst in spot_inst_requests]
-        inst_limits = {}  # type: Dict[str, Dict[str, int]]
+        inst_limits: Dict[str, Dict[str, int]] = {}
         for inst_id, inst in instances.items():
             if inst_id in spot_instance_ids:
                 continue
@@ -843,7 +927,7 @@ class EC2Limits(AWSSectionLimits):
         return inst_limits
 
     def _get_res_inst_limits(self, res_instances):
-        res_limits = {}  # type: Dict[str, Dict[str, int]]
+        res_limits: Dict[str, Dict[str, int]] = {}
         for res_inst in res_instances.values():
             if res_inst['State'] != 'active':
                 continue
@@ -882,58 +966,35 @@ class EC2Limits(AWSSectionLimits):
                             std_addresses,
                         ))
 
-    def _add_security_group_limits(self, instances, security_groups):
-        # Security groups for EC2-Classic per instance
-        # Rules per security group for EC2-Classic
-        sgs_per_vpc = {}  # type: Dict[Tuple[Any, Any], int]
+    def _add_security_group_limits(self, security_groups):
+
+        self._add_limit(
+            "", AWSLimit(
+                "vpc_sec_groups",
+                "VPC security groups",
+                2500,
+                len(security_groups),
+            ))
+
         for sec_group in security_groups:
             vpc_id = sec_group['VpcId']
             if not vpc_id:
                 continue
-            inst = self._get_inst_assignment(instances, 'VpcId', vpc_id)
-            if inst is None:
-                continue
-            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
-            if not inst_id:
-                continue
-            key = (inst_id, vpc_id)
-            sgs_per_vpc[key] = sgs_per_vpc.get(key, 0) + 1
             self._add_limit(
-                inst_id,
+                "",
                 AWSLimit(
                     "vpc_sec_group_rules",
                     "Rules of VPC security group %s" % sec_group['GroupName'],
-                    50,
+                    120,
                     len(sec_group['IpPermissions']),
                 ))
 
-        for (inst_id, vpc_id), count in sgs_per_vpc.items():
-            self._add_limit(
-                inst_id,
-                AWSLimit(
-                    "vpc_sec_groups",
-                    "Security Groups of VPC %s" % vpc_id,
-                    500,
-                    count,
-                ))
-
-    def _get_inst_assignment(self, instances, key, assignment):
-        for inst in instances.values():
-            if inst.get(key) == assignment:
-                return inst
-
-    def _add_interface_limits(self, instances, interfaces):
-        # These limits are per security groups and
-        # security groups are per instance
+    def _add_interface_limits(self, interfaces):
+        # since there can also be interfaces which are not attached to an instance, we add these
+        # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
-            inst = self._get_inst_assignment(instances, 'VpcId', iface.get('VpcId'))
-            if inst is None:
-                continue
-            inst_id = _get_ec2_piggyback_hostname(inst, self._region)
-            if not inst_id:
-                continue
             self._add_limit(
-                inst_id,
+                "",
                 AWSLimit(
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s" %
@@ -995,6 +1056,10 @@ class EC2Summary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1076,6 +1141,10 @@ class EC2Labels(AWSSectionLabels):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ec2_summary')
         if colleague and colleague.content:
@@ -1102,7 +1171,7 @@ class EC2Labels(AWSSectionLabels):
             for ec2_instance_id, inst in colleague_contents.content.items()
         }
 
-        computed_content = {}  # type: Dict[str, Dict[str, str]]
+        computed_content: Dict[str, Dict[str, str]] = {}
         for tag in raw_content.content:
             ec2_piggyback_hostname = inst_id_to_ec2_piggyback_hostname_map.get(tag['ResourceId'])
             if not ec2_piggyback_hostname:
@@ -1125,6 +1194,10 @@ class EC2SecurityGroups(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1155,7 +1228,7 @@ class EC2SecurityGroups(AWSSectionGeneric):
         return self._get_response_content(response, 'SecurityGroups')
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for instance_name, instance in colleague_contents.content.items():
             for security_group_from_instance in instance.get('SecurityGroups', []):
                 security_group = raw_content.content.get(security_group_from_instance['GroupId'])
@@ -1178,6 +1251,10 @@ class EC2(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1223,7 +1300,7 @@ class EC2(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -1256,6 +1333,10 @@ class EBSLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -1367,6 +1448,10 @@ class EBSSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ebs_limits')
         volumes = []
@@ -1410,7 +1495,7 @@ class EBSSummary(AWSSectionGeneric):
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
         if col_volumes:
             tags = self._prepare_tags_for_api_response(self._tags)
-            return [v for v in col_volumes for tag in v['Tags'] if tag in tags]
+            return [v for v in col_volumes for tag in v.get('Tags', []) if tag in tags]
 
         volumes = []
         for chunk in _chunks(self._tags, length=200):
@@ -1430,7 +1515,7 @@ class EBSSummary(AWSSectionGeneric):
         _col_volumes, col_instances = colleague_contents.content
         instance_name_mapping = {v['InstanceId']: k for k, v in col_instances.items()}
 
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for vol in raw_content.content.values():
             instance_names = []
             for attachment in vol['Attachments']:
@@ -1464,6 +1549,10 @@ class EBS(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('ebs_summary')
         if colleague and colleague.content:
@@ -1473,7 +1562,7 @@ class EBS(AWSSectionCloudwatch):
         return AWSColleagueContents([], 0.0)
 
     def _get_metrics(self, colleague_contents):
-        muv = [
+        muv: List[Tuple[str, str, List[str]]] = [
             ("VolumeReadOps", "Count", []),
             ("VolumeWriteOps", "Count", []),
             ("VolumeReadBytes", "Bytes", []),
@@ -1487,7 +1576,7 @@ class EBS(AWSSectionCloudwatch):
             # ("VolumeIdleTime", "Seconds", []),
             # ("VolumeStatus", None, []),
             # ("IOPerformance", None, ["io1"]),
-        ]  # type: List[Tuple[str, str, List[str]]]
+        ]
         metrics = []
         for idx, (instance_name, volume_name, volume_type) in enumerate(colleague_contents.content):
             for metric_name, unit, volume_types in muv:
@@ -1515,7 +1604,7 @@ class EBS(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -1554,13 +1643,18 @@ class S3BucketHelper:
             # request additional LocationConstraint information
             try:
                 response = client.get_bucket_location(Bucket=bucket_name)
-            except botocore.exceptions.ClientError as e:
-                # An error occurred (AccessDenied) when calling the GetBucketLocation operation: Access Denied
+            except client.exceptions.ClientError as e:
+                # An error occurred (AccessDenied) when calling the GetBucketLocation operation:
+                # Access Denied
                 logging.info("S3BucketHelper/%s: Access denied, %s", bucket_name, e)
                 continue
 
-            if response and response['LocationConstraint']:
-                bucket['LocationConstraint'] = response['LocationConstraint']
+            if response:
+                if response['LocationConstraint'] is None:
+                    location_constraint = 'us-east-1'  # for this region, LocationConstraint is None
+                else:
+                    location_constraint = response['LocationConstraint']
+                bucket['LocationConstraint'] = location_constraint
         return bucket_list['Buckets'] if bucket_list else []
 
 
@@ -1571,6 +1665,17 @@ class S3Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1585,7 +1690,9 @@ class S3Limits(AWSSectionLimits):
         return bucket_list
 
     def _compute_content(self, raw_content, colleague_contents):
-        self._add_limit("", AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)))
+        self._add_limit("",
+                        AWSLimit('buckets', 'Buckets', 100, len(raw_content.content)),
+                        region='Global')
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
@@ -1601,6 +1708,16 @@ class S3Summary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1615,14 +1732,9 @@ class S3Summary(AWSSectionGeneric):
         for bucket in self._list_buckets(colleague_contents):
             bucket_name = bucket['Name']
 
-            #TODO
-            # Why do we get the following error while calling these methods:
-            #_response = self._client.get_public_access_block(Bucket=bucket_name)
-            #_response = self._client.get_bucket_policy_status(Bucket=bucket_name)
-            # 'S3' object has no attribute 'get_bucket_policy_status'
             try:
                 response = self._client.get_bucket_tagging(Bucket=bucket_name)
-            except botocore.exceptions.ClientError as e:
+            except self._client.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
                 response = {}
@@ -1638,11 +1750,19 @@ class S3Summary(AWSSectionGeneric):
         if colleague_contents.content:
             bucket_list = colleague_contents.content
         else:
+            # filter buckets by region
             bucket_list = S3BucketHelper.list_buckets(self._client)
 
+        # filter buckets by region
+        bucket_list = [
+            bucket for bucket in bucket_list
+            if 'LocationConstraint' in bucket and bucket['LocationConstraint'] == self.region
+        ]
+
         # filter buckets by name if there is a filter
-        if self._tags is None and self._names is not None:
+        if self._names is not None:
             return [bucket for bucket in bucket_list if bucket['Name'] in self._names]
+
         return bucket_list
 
     def _matches_tag_conditions(self, tagging):
@@ -1672,6 +1792,16 @@ class S3(AWSSectionCloudwatch):
     def cache_interval(self):
         # BucketSizeBytes and NumberOfObjects are available per day
         # and must include 00:00h
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1735,6 +1865,10 @@ class S3Requests(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('s3_summary')
         if colleague and colleague.content:
@@ -1752,8 +1886,10 @@ class S3Requests(AWSSectionCloudwatch):
                 ("HeadRequests", "Count", "Sum"),
                 ("PostRequests", "Count", "Sum"),
                 ("SelectRequests", "Count", "Sum"),
-                ("SelectScannedBytes", "Bytes", "Sum"),
-                ("SelectReturnedBytes", "Bytes", "Sum"),
+                    # The following two metrics seem to have the wrong name in the documentation
+                    # https://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html
+                ("SelectBytesScanned", "Bytes", "Sum"),
+                ("SelectBytesReturned", "Bytes", "Sum"),
                 ("ListRequests", "Count", "Sum"),
                 ("BytesDownloaded", "Bytes", "Sum"),
                 ("BytesUploaded", "Bytes", "Sum"),
@@ -1771,7 +1907,10 @@ class S3Requests(AWSSectionCloudwatch):
                             'MetricName': metric_name,
                             'Dimensions': [{
                                 'Name': "BucketName",
-                                'Value': bucket_name,
+                                'Value': bucket_name
+                            }, {
+                                "Name": "FilterId",
+                                "Value": "EntireBucket"
                             }]
                         },
                         'Period': self.period,
@@ -1810,6 +1949,16 @@ class GlacierLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1846,6 +1995,16 @@ class GlacierSummary(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1925,6 +2084,16 @@ class Glacier(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        """Return the upper limit for allowed cache age.
+
+        Data is updated at midnight, so the cache should not be older than the day.
+        """
+        cache_interval = get_seconds_since_midnight(NOW)
+        logging.debug("Maximal allowed age of usage data cache: %s sec", cache_interval)
+        return cache_interval
+
+    @property
+    def granularity(self):
         return 86400
 
     def _get_colleague_contents(self):
@@ -1963,6 +2132,10 @@ class ELBLimits(AWSSectionLimits):
     def cache_interval(self):
         # If you change this, you might have to adjust factory_settings['levels_spillover'] in
         # checks/aws_elb
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2045,6 +2218,10 @@ class ELBSummaryGeneric(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('%s_limits' % self._resource)
         if colleague and colleague.content:
@@ -2101,7 +2278,7 @@ class ELBSummaryGeneric(AWSSectionGeneric):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, str]
+        content_by_piggyback_hosts: Dict[str, str] = {}
         for load_balancer in raw_content.content:
             content_by_piggyback_hosts.setdefault(load_balancer['DNSName'], load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2121,6 +2298,10 @@ class ELBLabelsGeneric(AWSSectionLabels):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2150,6 +2331,10 @@ class ELBHealth(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elb_summary')
         if colleague and colleague.content:
@@ -2158,7 +2343,7 @@ class ELBHealth(AWSSectionGeneric):
 
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        load_balancers = {}  # type: Dict[str, List[str]]
+        load_balancers: Dict[str, List[str]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_name = load_balancer['LoadBalancerName']
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
@@ -2184,6 +2369,10 @@ class ELB(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2231,7 +2420,7 @@ class ELB(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2261,6 +2450,10 @@ class ELBv2Limits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2407,6 +2600,10 @@ class ELBv2TargetGroups(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2415,7 +2612,7 @@ class ELBv2TargetGroups(AWSSectionGeneric):
 
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        load_balancers = {}  # type: Dict[str, List[Tuple[str, List[str]]]]
+        load_balancers: Dict[str, List[Tuple[str, List[str]]]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_type = load_balancer.get('Type')
             if load_balancer_type not in ['application', 'network']:
@@ -2475,6 +2672,10 @@ class ELBv2Application(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2527,7 +2728,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2552,6 +2753,10 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2612,7 +2817,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[Any]]
+        content_by_piggyback_hosts: Dict[str, List[Any]] = {}
         for row in raw_content.content:
             load_bal_dns, target_group_name = row['Label'].split(self._separator)
             row['Label'] = target_group_name
@@ -2668,6 +2873,10 @@ class ELBv2Network(AWSSectionCloudwatch):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('elbv2_summary')
         if colleague and colleague.content:
@@ -2719,7 +2928,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[str]]
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2770,6 +2979,10 @@ class RDSLimits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -2801,7 +3014,7 @@ class RDSSummary(AWSSectionGeneric):
     def __init__(self, client, region, config, distributor=None):
         super(RDSSummary, self).__init__(client, region, config, distributor=distributor)
         self._names = self._config.service_config['rds_names']
-        self._tags = self._config.service_config['rds_tags']
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config['rds_tags'])
 
     @property
     def name(self):
@@ -2811,25 +3024,57 @@ class RDSSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        response = self._describe_db_instances()
-        return self._get_response_content(response, 'DBInstances')
+
+        db_instances = []
+
+        for instance in self._describe_db_instances():
+            tags = self._get_instance_tags(instance)
+            if self._matches_tag_conditions(tags):
+                instance['Region'] = self._region
+                db_instances.append(instance)
+
+        return db_instances
 
     def _describe_db_instances(self):
+        instances = []
+
+        if self._names is None:
+            for page in self._client.get_paginator('describe_db_instances').paginate():
+                instances.extend(self._get_response_content(page, 'DBInstances'))
+            return instances
+
+        for name in self._names:
+            try:
+                for page in self._client.get_paginator('describe_db_instances').paginate(
+                        DBInstanceIdentifier=name):
+                    instances.extend(self._get_response_content(page, 'DBInstances'))
+            except self._client.exceptions.DBInstanceNotFoundFault:
+                pass
+
+        return instances
+
+    def _get_instance_tags(self, instance):
+        # list_tags_for_resource cannot be paginated
+        return self._get_response_content(
+            self._client.list_tags_for_resource(ResourceName=instance['DBInstanceArn']), 'TagList')
+
+    def _matches_tag_conditions(self, tagging):
         if self._names is not None:
-            return [
-                self._client.describe_db_instances(DBInstanceIdentifier=name)
-                for name in self._names
-            ]
-        if self._tags is not None:
-            # TODO: The None-related logic in this method seems to be wrong.
-            if self._names is None:
-                raise Exception("huh? no names...")
-            return [self._client.describe_db_instances(Filters=self._tags) for name in self._names]
-        return self._client.describe_db_instances()
+            return True
+        if self._tags is None:
+            return True
+        for tag in tagging:
+            if tag in self._tags:
+                return True
+        return False
 
     def _compute_content(self, raw_content, colleague_contents):
         return AWSComputedContent(
@@ -2841,12 +3086,20 @@ class RDSSummary(AWSSectionGeneric):
 
 
 class RDS(AWSSectionCloudwatch):
+    def __init__(self, client, region, config, distributor=None):
+        super(RDS, self).__init__(client, region, config, distributor=distributor)
+        self._separator = " "
+
     @property
     def name(self):
         return "rds"
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2856,30 +3109,35 @@ class RDS(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents):
+        # the documentation
+        # https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MonitoringOverview.html
+        # seems to be partially wrong: FailedSQLServerAgentJobsCount has to be queried in Counts
+        # (instead of Count/Minute) and OldestReplicationSlotLag, ReplicationSlotDiskUsage and
+        # TransactionLogsDiskUsage have to be queried in Bytes (instead of Megabytes)
         metrics = []
-        for idx, instance_id in enumerate(colleague_contents.content):
-            for metric_name, unit in [
-                ("BinLogDiskUsage", "Bytes"),
-                ("BurstBalance", "Percent"),
-                ("CPUUtilization", "Percent"),
-                ("CPUCreditUsage", "Count"),
-                ("CPUCreditBalance", "Count"),
-                ("DatabaseConnections", "Count"),
-                ("DiskQueueDepth", "Count"),
-                ("FailedSQLServerAgentJobsCount", "Count/Second"),
-                ("NetworkReceiveThroughput", "Bytes/Second"),
-                ("NetworkTransmitThroughput", "Bytes/Second"),
-                ("OldestReplicationSlotLag", "Megabytes"),
-                ("ReadIOPS", "Count/Second"),
-                ("ReadLatency", "Seconds"),
-                ("ReadThroughput", "Bytes/Second"),
-                ("ReplicaLag", "Seconds"),
-                ("ReplicationSlotDiskUsage", "Megabytes"),
-                ("TransactionLogsDiskUsage", "Megabytes"),
-                ("TransactionLogsGeneration", "Megabytes/Second"),
-                ("WriteIOPS", "Count/Second"),
-                ("WriteLatency", "Seconds"),
-                ("WriteThroughput", "Bytes/Second"),
+        for idx, (instance_id, instance) in enumerate(colleague_contents.content.items()):
+            for metric_name, stat, unit in [
+                ("BinLogDiskUsage", "Average", "Bytes"),
+                ("BurstBalance", "Average", "Percent"),
+                ("CPUUtilization", "Average", "Percent"),
+                ("CPUCreditUsage", "Average", "Count"),
+                ("CPUCreditBalance", "Average", "Count"),
+                ("DatabaseConnections", "Average", "Count"),
+                ("DiskQueueDepth", "Average", "Count"),
+                ("FailedSQLServerAgentJobsCount", "Sum", "Count"),
+                ("NetworkReceiveThroughput", "Average", "Bytes/Second"),
+                ("NetworkTransmitThroughput", "Average", "Bytes/Second"),
+                ("OldestReplicationSlotLag", "Average", "Bytes"),
+                ("ReadIOPS", "Average", "Count/Second"),
+                ("ReadLatency", "Average", "Seconds"),
+                ("ReadThroughput", "Average", "Bytes/Second"),
+                ("ReplicaLag", "Average", "Seconds"),
+                ("ReplicationSlotDiskUsage", "Average", "Bytes"),
+                ("TransactionLogsDiskUsage", "Average", "Bytes"),
+                ("TransactionLogsGeneration", "Average", "Bytes/Second"),
+                ("WriteIOPS", "Average", "Count/Second"),
+                ("WriteLatency", "Average", "Seconds"),
+                ("WriteThroughput", "Average", "Bytes/Second"),
                     #("FreeableMemory", "Bytes"),
                     #("SwapUsage", "Bytes"),
                     #("FreeStorageSpace", "Bytes"),
@@ -2887,7 +3145,7 @@ class RDS(AWSSectionCloudwatch):
             ]:
                 metric = {
                     'Id': self._create_id_for_metric_data_query(idx, metric_name),
-                    'Label': instance_id,
+                    'Label': instance_id + self._separator + instance['Region'],
                     'MetricStat': {
                         'Metric': {
                             'Namespace': 'AWS/RDS',
@@ -2898,17 +3156,17 @@ class RDS(AWSSectionCloudwatch):
                             }]
                         },
                         'Period': self.period,
-                        'Stat': 'Average',
+                        'Stat': stat,
+                        'Unit': unit,
                     },
                 }
-                if unit:
-                    metric['MetricStat']['Unit'] = unit
                 metrics.append(metric)
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
         for row in raw_content.content:
-            row.update(colleague_contents.content.get(row['Label'], {}))
+            instance_id = row['Label'].split(self._separator)[0]
+            row.update(colleague_contents.content.get(instance_id, {}))
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
     def _create_results(self, computed_content):
@@ -2933,6 +3191,10 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -2964,6 +3226,10 @@ class CloudwatchAlarms(AWSSectionGeneric):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3013,6 +3279,10 @@ class DynamoDBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3107,6 +3377,10 @@ class DynamoDBSummary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('dynamodb_limits')
         if colleague and colleague.content:
@@ -3161,7 +3435,7 @@ class DynamoDBSummary(AWSSectionGeneric):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, str]
+        content_by_piggyback_hosts: Dict[str, str] = {}
         for table in raw_content.content:
             content_by_piggyback_hosts.setdefault(
                 _hostname_from_name_and_region(table['TableName'], self._region), table)
@@ -3178,6 +3452,10 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3235,7 +3513,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
 
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[Dict]]
+        content_by_piggyback_hosts: Dict[str, List[Dict]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
 
@@ -3286,6 +3564,10 @@ class WAFV2Limits(AWSSectionLimits):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         return AWSColleagueContents(None, 0.0)
 
@@ -3300,7 +3582,7 @@ class WAFV2Limits(AWSSectionLimits):
         limits on how many rules they can use.
         """
 
-        resources = {}  # type: Dict
+        resources: Dict = {}
 
         for list_operation, key in [(self._client.list_web_acls, 'WebACLs'),
                                     (self._client.list_rule_groups, 'RuleGroups'),
@@ -3363,6 +3645,10 @@ class WAFV2Summary(AWSSectionGeneric):
     def cache_interval(self):
         return 300
 
+    @property
+    def granularity(self):
+        return 300
+
     def _get_colleague_contents(self):
         colleague = self._received_results.get('wafv2_limits')
         if colleague and colleague.content:
@@ -3415,7 +3701,7 @@ class WAFV2Summary(AWSSectionGeneric):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, str]
+        content_by_piggyback_hosts: Dict[str, str] = {}
         for web_acl in raw_content.content:
             content_by_piggyback_hosts.setdefault(
                 _hostname_from_name_and_region(web_acl['Name'], self._region_report), web_acl)
@@ -3433,13 +3719,13 @@ class WAFV2WebACL(AWSSectionCloudwatch):
                                                 "False in combination with the region us-east-1, " \
                                                 "since metrics for CloudFront-WAFs can only be " \
                                                 "accessed from this region"
-        self._metric_dimensions = [{
+        self._metric_dimensions: List[Dict] = [{
             'Name': 'WebACL',
             'Value': None
         }, {
             'Name': 'Rule',
             'Value': 'ALL'
-        }]  # type: List[Dict]
+        }]
         if is_regional:
             self._metric_dimensions.append({'Name': 'Region', 'Value': self._region})
 
@@ -3449,6 +3735,10 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
     @property
     def cache_interval(self):
+        return 300
+
+    @property
+    def granularity(self):
         return 300
 
     def _get_colleague_contents(self):
@@ -3483,7 +3773,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts = {}  # type: Dict[str, List[Dict]]
+        content_by_piggyback_hosts: Dict[str, List[Dict]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row['Label'], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -3507,19 +3797,20 @@ class WAFV2WebACL(AWSSectionCloudwatch):
 
 
 class AWSSections(abc.ABC):
-    def __init__(self, hostname, session, debug=False):
+    def __init__(self, hostname, session, debug=False, config=None):
         self._hostname = hostname
         self._session = session
         self._debug = debug
         self._sections = []
+        self.config = config
 
     @abc.abstractmethod
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
         pass
 
     def _init_client(self, client_key):
         try:
-            return self._session.client(client_key)
+            return self._session.client(client_key, config=self.config)
         except (ValueError, botocore.exceptions.ClientError,
                 botocore.exceptions.UnknownServiceError) as e:
             # If region name is not valid we get a ValueError
@@ -3534,7 +3825,7 @@ class AWSSections(abc.ABC):
 
     def run(self, use_cache=True):
         exceptions = []
-        results = {}  # type: Dict[Tuple[str, float, float], str]
+        results: Dict[Tuple[str, float, float], str] = {}
         for section in self._sections:
             try:
                 section_result = section.run(use_cache=use_cache)
@@ -3581,9 +3872,12 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (int(cache_timestamp), section_interval + 60)
+                cached_suffix = ":cached(%s,%s)" % (
+                    int(cache_timestamp),
+                    int(section_interval + 60),
+                )
 
-            if any([r.content for r in result]):
+            if any(r.content for r in result):
                 self._write_section_result(section_name, cached_suffix, result)
 
     def _write_section_result(self, section_name, cached_suffix, result):
@@ -3608,29 +3902,19 @@ class AWSSectionsUSEast(AWSSections):
     Some clients like CostExplorer only work with US East region:
     https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/ce-api.html
     US East is the AWS Standard region.
-
-    Note that for buckets created in the US Standard region, us-east-1, the value of
-    LocationConstraint will be null.
     """
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
         #---clients---------------------------------------------------------
         ce_client = self._init_client('ce')
 
         cloudwatch_client = self._init_client('cloudwatch')
-        s3_client = self._init_client('s3')
         wafv2_client = self._init_client('wafv2')
 
         #---distributors----------------------------------------------------
-        s3_limits_distributor = ResultDistributor()
-        s3_summary_distributor = ResultDistributor()
-
         wafv2_limits_distributor = ResultDistributor()
         wafv2_summary_distributor = ResultDistributor()
 
         #---sections with distributors--------------------------------------
-        s3_limits = S3Limits(s3_client, region, config, s3_limits_distributor)
-        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
-
         wafv2_limits = WAFV2Limits(wafv2_client,
                                    region,
                                    config,
@@ -3645,30 +3929,15 @@ class AWSSectionsUSEast(AWSSections):
         #---sections--------------------------------------------------------
         ce = CostsAndUsage(ce_client, region, config)
 
-        s3 = S3(cloudwatch_client, region, config)
-        s3_requests = S3Requests(cloudwatch_client, region, config)
-
         wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, False)
 
         #---register sections to distributors-------------------------------
-        s3_limits_distributor.add(s3_summary)
-        s3_summary_distributor.add(s3)
-        s3_summary_distributor.add(s3_requests)
-
         wafv2_limits_distributor.add(wafv2_summary)
         wafv2_summary_distributor.add(wafv2_web_acl)
 
         #---register sections for execution---------------------------------
         if 'ce' in services:
             self._sections.append(ce)
-
-        if 's3' in services:
-            if config.service_config.get('s3_limits'):
-                self._sections.append(s3_limits)
-            self._sections.append(s3_summary)
-            self._sections.append(s3)
-            if config.service_config['s3_requests']:
-                self._sections.append(s3_requests)
 
         if 'wafv2' in services and config.service_config['wafv2_cloudfront']:
             if config.service_config.get('wafv2_limits'):
@@ -3678,9 +3947,16 @@ class AWSSectionsUSEast(AWSSections):
 
 
 class AWSSectionsGeneric(AWSSections):
-    def init_sections(self, services, region, config):
+    def init_sections(self, services, region, config, s3_limits_distributor=None):
+
+        assert s3_limits_distributor is not None, "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
+        assert isinstance(
+            s3_limits_distributor, ResultDistributorS3Limits
+        ), "AWSSectionsGeneric.init_sections: s3_limits_distributor should be an instance of ResultDistributorS3Limits"
+
         #---clients---------------------------------------------------------
         ec2_client = self._init_client('ec2')
+        s3_client = self._init_client('s3')
         elb_client = self._init_client('elb')
         elbv2_client = self._init_client('elbv2')
         service_quotas_client = self._init_client('service-quotas')
@@ -3703,6 +3979,8 @@ class AWSSectionsGeneric(AWSSections):
 
         ebs_limits_distributor = ResultDistributor()
         ebs_summary_distributor = ResultDistributor()
+
+        s3_summary_distributor = ResultDistributor()
 
         glacier_limits_distributor = ResultDistributor()
         glacier_summary_distributor = ResultDistributor()
@@ -3738,6 +4016,19 @@ class AWSSectionsGeneric(AWSSections):
                                           config,
                                           elbv2_summary_distributor,
                                           resource='elbv2')
+
+        # S3 is special because there are no per-region limits, but only a global per-account limit.
+        # The list of buckets can be queried from any region, however, the metrics for the
+        # individual buckets must be queried from the region the bucket resides in. Therefore, we
+        # only want to run S3Limits once, namely for the first region (does not matter which region
+        # that is). The results will then be distributed to the S3Summary objects across all regions
+        # using the special distributor for S3 limits.
+        if s3_limits_distributor.is_empty():
+            s3_limits: Union[None, S3Limits] = S3Limits(s3_client, region, config,
+                                                        s3_limits_distributor)
+        else:
+            s3_limits = None
+        s3_summary = S3Summary(s3_client, region, config, s3_summary_distributor)
 
         glacier_limits = GlacierLimits(glacier_client, region, config, glacier_limits_distributor)
         glacier_summary = GlacierSummary(glacier_client, region, config,
@@ -3787,6 +4078,9 @@ class AWSSectionsGeneric(AWSSections):
         rds_limits = RDSLimits(rds_client, region, config)
         rds = RDS(cloudwatch_client, region, config)
 
+        s3 = S3(cloudwatch_client, region, config)
+        s3_requests = S3Requests(cloudwatch_client, region, config)
+
         glacier = Glacier(cloudwatch_client, region, config)
 
         cloudwatch_alarms = CloudwatchAlarms(cloudwatch_client, region, config)
@@ -3817,6 +4111,10 @@ class AWSSectionsGeneric(AWSSections):
         elbv2_summary_distributor.add(elbv2_application_target_groups_http)
         elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
         elbv2_summary_distributor.add(elbv2_network)
+
+        s3_limits_distributor.add(s3_summary)
+        s3_summary_distributor.add(s3)
+        s3_summary_distributor.add(s3_requests)
 
         glacier_limits_distributor.add(glacier_summary)
         glacier_summary_distributor.add(glacier)
@@ -3864,6 +4162,14 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elbv2_application_target_groups_http)
             self._sections.append(elbv2_application_target_groups_lambda)
             self._sections.append(elbv2_network)
+
+        if 's3' in services:
+            if config.service_config.get('s3_limits') and s3_limits:
+                self._sections.append(s3_limits)
+            self._sections.append(s3_summary)
+            self._sections.append(s3)
+            if config.service_config['s3_requests']:
+                self._sections.append(s3_requests)
 
         if 'glacier' in services:
             if config.service_config.get('glacier_limits'):
@@ -3936,7 +4242,7 @@ AWSServices = [
                          limits=True),
     AWSServiceAttributes(key="s3",
                          title="Simple Storage Service (S3)",
-                         global_service=True,
+                         global_service=False,
                          filter_by_names=True,
                          filter_by_tags=True,
                          limits=True),
@@ -3998,12 +4304,13 @@ def parse_arguments(argv):
         action="store_true",
         help="Execute all sections, do not rely on cached data. Cached data will not be overwritten."
     )
-    parser.add_argument("--access-key-id",
-                        required=True,
-                        help="The access key ID for your AWS account.")
-    parser.add_argument("--secret-access-key",
-                        required=True,
-                        help="The secret access key for your AWS account.")
+    parser.add_argument("--access-key-id", help="The access key ID for your AWS account")
+    parser.add_argument("--secret-access-key", help="The secret access key for your AWS account.")
+    parser.add_argument("--proxy-host", help="The address of the proxy server")
+    parser.add_argument("--proxy-port", help="The port of the proxy server")
+    parser.add_argument("--proxy-user", help="The username for authentication of the proxy server")
+    parser.add_argument("--proxy-password",
+                        help="The password for authentication of the proxy server")
     parser.add_argument("--assume-role",
                         action="store_true",
                         help="Use STS AssumeRole to assume a different IAM role")
@@ -4154,7 +4461,10 @@ class AWSConfig:
         filtered_sys_argv = [
             arg for arg in sys_argv if arg not in ['--debug', '--verbose', '--no-cache']
         ]
-        return hash(tuple(sorted(filtered_sys_argv)))
+        # Be careful to use a hashing mechanism that generates the same hash across
+        # different python processes! Otherwise the config file will always be
+        # out-of-date
+        return hashlib.sha256(''.join(sorted(filtered_sys_argv)).encode()).hexdigest()
 
     def is_up_to_date(self):
         old_config_hash = self._load_config_hash()
@@ -4177,7 +4487,7 @@ class AWSConfig:
     def _load_config_hash(self):
         try:
             with self._config_hash_file.open(mode='r', encoding="utf-8") as f:
-                return int(f.read().strip())
+                return f.read().strip()
         except IOError as e:
             if e.errno != errno.ENOENT:
                 # No such file or directory
@@ -4201,7 +4511,7 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
                                  ones only from us-east-1
     :return: two lists of global and regional services
     """
-    aws_service_keys = set()  # type: Set[str]
+    aws_service_keys: Set[str] = set()
     if g_aws_services is not None:
         aws_service_keys = aws_service_keys.union(g_aws_services)
 
@@ -4224,14 +4534,61 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
     return global_services, regional_services
 
 
+def _proxy_address(
+    server_address: str,
+    port: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
+) -> str:
+    address = server_address
+    authentication = ""
+    if port:
+        address += f":{port}"
+    if username and password:
+        authentication = f"{username}:{password}@"
+    return f"{authentication}{address}"
+
+
 def main(sys_argv=None):
     if sys_argv is None:
         cmk.utils.password_store.replace_passwords()
         sys_argv = sys.argv[1:]
 
     args = parse_arguments(sys_argv)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    access_key_id = stdin_args.get('access_key_id') or args.access_key_id
+    secret_access_key = stdin_args.get('secret_access_key') or args.secret_access_key
+
+    has_exceptions = False
+
+    if not access_key_id:
+        has_exceptions = True
+        sys.stderr.write('access key id is not set\n')
+
+    if not secret_access_key:
+        has_exceptions = True
+        sys.stderr.write('secret access key is not set\n')
+
+    if has_exceptions:
+        return 1
+
     setup_logging(args.debug, args.verbose)
     hostname = args.hostname
+    proxy_config = None
+    if args.proxy_host:
+        proxy_user = stdin_args.get('proxy_user') or args.proxy_user
+        proxy_password = stdin_args.get('proxy_password') or args.proxy_password
+        proxy_config = botocore.config.Config(proxies={
+            'https': _proxy_address(
+                args.proxy_host,
+                args.proxy_port,
+                proxy_user,
+                proxy_password,
+            )
+        })
 
     aws_config = AWSConfig(hostname, sys_argv, (args.overall_tag_key, args.overall_tag_values))
     for service_key, service_names, service_tags, service_limits in [
@@ -4259,8 +4616,11 @@ def main(sys_argv=None):
                                       r_and_g_aws_services=('wafv2',))
 
     use_cache = aws_config.is_up_to_date() and not args.no_cache
-
     has_exceptions = False
+
+    # Special distributor for S3 limits which distributes results across different regions
+    s3_limits_distributor = ResultDistributorS3Limits()
+
     for aws_services, aws_regions, aws_sections in [
         (global_services, ["us-east-1"], AWSSectionsUSEast),
         (regional_services, args.regions, AWSSectionsGeneric),
@@ -4270,13 +4630,16 @@ def main(sys_argv=None):
         for region in aws_regions:
             try:
                 if args.assume_role:
-                    session = sts_assume_role(args.access_key_id, args.secret_access_key,
-                                              args.role_arn, args.external_id, region)
+                    session = sts_assume_role(access_key_id, secret_access_key, args.role_arn,
+                                              args.external_id, region)
                 else:
-                    session = create_session(args.access_key_id, args.secret_access_key, region)
+                    session = create_session(access_key_id, secret_access_key, region)
 
-                sections = aws_sections(hostname, session, debug=args.debug)
-                sections.init_sections(aws_services, region, aws_config)
+                sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
+                sections.init_sections(aws_services,
+                                       region,
+                                       aws_config,
+                                       s3_limits_distributor=s3_limits_distributor)
                 sections.run(use_cache=use_cache)
             except AwsAccessError as ae:
                 # can not access AWS, retreat
@@ -4285,12 +4648,12 @@ def main(sys_argv=None):
                 return 0
             except AssertionError:
                 if args.debug:
-                    return 1
+                    raise
             except Exception as e:
                 logging.info(e)
                 has_exceptions = True
                 if args.debug:
-                    return 1
+                    raise
     if has_exceptions:
         return 1
     return 0

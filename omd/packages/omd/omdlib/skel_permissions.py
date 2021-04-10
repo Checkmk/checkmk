@@ -30,11 +30,10 @@ import omdlib
 
 Permissions = Dict[str, int]
 
-_skel_permissions = {}  # type: Permissions
+_skel_permissions: Permissions = {}
 
 
-def read_skel_permissions():
-    # type: () -> Permissions
+def read_skel_permissions() -> Permissions:
     """Returns a permission map for the skel files
     This runtime cache is important, because the function is called very often while processing
     the skel hierarchy."""
@@ -49,14 +48,12 @@ def read_skel_permissions():
     return _skel_permissions
 
 
-def load_skel_permissions(version):
-    # type: (str) -> Permissions
+def load_skel_permissions(version: str) -> Permissions:
     return load_skel_permissions_from(skel_permissions_file_path(version))
 
 
-def load_skel_permissions_from(path):
-    # type: (str) -> Permissions
-    perms = {}  # type: Permissions
+def load_skel_permissions_from(path: str) -> Permissions:
+    perms: Permissions = {}
     with open(path) as f:
         for line in f:
             line = line.strip()
@@ -68,6 +65,5 @@ def load_skel_permissions_from(path):
         return perms
 
 
-def skel_permissions_file_path(version):
-    # type: (str) -> str
+def skel_permissions_file_path(version: str) -> str:
     return "/omd/versions/%s/share/omd/skel.permissions" % version

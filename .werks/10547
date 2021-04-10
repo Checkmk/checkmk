@@ -6,7 +6,7 @@ Date: 1573208324
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The new dashlet type "Link existing view" has been added. The previous dashlet view
 definitions were always holding their own view definition. When an existing view

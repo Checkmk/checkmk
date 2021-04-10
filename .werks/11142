@@ -1,0 +1,21 @@
+Title: PostgreSQL: Differentiate idle from active connections
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1594651208
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Previously, the agent plugin "mk_postgres" and the check plugin "postgres_connections" were not differentiating between "idle" and "active" connections.
+With this werk, the data to differentiate those states is obtained and evaluated accordingly.
+
+The WATO rule  "Database Connections (PostgreSQL)" (renamed from "Database Connections (PostgreSQL/MongoDB)") has now a dedicated option for setting the levels for "active" and "idle" connections.
+In case the rule was used previously, the default connection type for PostgreSQL will be "active" as the old agent was excluding "idle" connections.
+
+<b>Note:</b> As this WATO rule was applicable as well for MongoDB, this change will be incompatible to previously existing MongoDB rules set with "Database Connections (PostgreSQL/MongoDB)". If this is applicable for your setup, perform the following steps:
+
+<li> If you're monitoring both PostgreSQL <b>and</b> MongoDB: keep the old rule "Database Connections (PostgreSQL/MongoDB)" before updating to this werk.</li>
+<li> If you're monitoring MongoDB <b>only</b>: delete the old rule "Database Connections (PostgreSQL/MongoDB)" before updating to this werk</li>
+<li> Create a new rule with your previous settings for MongoDB with the new rule "Database Connections (MongoDB)" </li>

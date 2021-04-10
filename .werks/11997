@@ -1,0 +1,15 @@
+Title: mk_docker.py: Handle parallel calls of the plugin
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1611569447
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The docker API will not allow parallel calls to its 'df' command.
+Since this command is notoriously long running, the section
+'docker_node_disk_usage' was often missing if the agent has been
+called multiple times in parallel.

@@ -18,7 +18,7 @@ $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
 # which was created in the step before
 $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	$(MKDIR) $(CHECK_MK_BUILD_DIR)
-	$(MAKE) -C $(REPO_PATH)/locale all
+	$(MAKE) -C $(REPO_PATH)/locale mo
 	$(TAR_GZ) $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz -C $(PACKAGE_BUILD_DIR)
 	cd $(CHECK_MK_BUILD_DIR) ; \
 	  $(MKDIR) bin ; \
@@ -32,11 +32,8 @@ $(CHECK_MK_BUILD): $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz
 	  $(MAKE)
 	$(TOUCH) $@
 
-$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CACHE_PKG_PROCESS)
+$(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk
-
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/python
-	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/lib.tar.gz -C $(DESTDIR)$(OMD_ROOT)/lib/python
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
 	$(TAR_GZ) $(CHECK_MK_BUILD_DIR)/werks.tar.gz -C $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
@@ -87,6 +84,11 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CAC
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
 	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/lib/check_mk
+	# ... and ensure the same for the local hierarchy
+	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk
+	$(LN) -s python3/cmk $(DESTDIR)$(OMD_ROOT)/skel/local/lib/check_mk
+	# Create the plugin namespaces
+	$(MKDIR) -p $(DESTDIR)$(OMD_ROOT)/skel/local/lib/python3/cmk/base/plugins/agent_based
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/diskspace
@@ -117,6 +119,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON_CACHE_PKG_PROCESS) $(PYTHON3_CAC
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/cmk.update-pre-hooks $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
 
 	$(TOUCH) $@

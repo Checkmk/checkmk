@@ -57,7 +57,9 @@ def check_iptables(_no_item, params, parsed):
 
     if not item_state:
         set_item_state("iptables.config", {"config": parsed, "hash": iptables_hash(parsed)})
-        return 0, "saved initial configuration"
+        raise MKCounterWrapped(
+            "Initial configuration has been saved. The next check interval will contain a valid state."
+        )
 
     initial_config_hash = params["config_hash"]
     new_config_hash = iptables_hash(parsed)

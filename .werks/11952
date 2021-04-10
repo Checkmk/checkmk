@@ -1,0 +1,13 @@
+Title: cmciii: door sensor always returns CRIT status
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1614692469
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The check that monitors the Rittal CMC III door sensor always returned a CRIT
+status, regardless of whether the door was open or closed. This has been fixed.

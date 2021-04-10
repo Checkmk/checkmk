@@ -8,7 +8,7 @@ components = [
    ( "core",          "Core & setup" ),
    ( "checks",        "Checks & agents" ),
    ( "multisite",     "Multisite" ),
-   ( "wato",          "WATO" ),
+   ( "wato",          "Setup" ),
    ( "notifications", "Notifications" ),
    ( "bi",            "BI" ),
    ( "reporting",     "Reporting & Availability" ),
@@ -16,7 +16,7 @@ components = [
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus Proxy" ),
    ( "inv",           "HW/SW Inventory" ),
-   ( "dcd",           "DCD" ),
+   ( "dcd",           "Dynamic host configuration" ),
 
    ( "omd",           "Site Management" ),
    ( "rpm",           "RPM Packaging" ),
@@ -35,6 +35,7 @@ edition_components = {
         ( "agents",        "Agent bakery" ),
         ( "metrics",       "Metrics system" ),
         ( "alerts",        "Alert handlers" ),
+        ( "ntopng_integration", "Ntopng integration" ),
     ],
 }
 
@@ -61,4 +62,4 @@ knowledge = [
     ( "doc",   "Is reflected in user manual or does not need to" ),
 ]
 
-online_url = "https://checkmk.com/check_mk-werks.php?werk_id=%d"
+online_url = "https://checkmk.com/werk/%d"

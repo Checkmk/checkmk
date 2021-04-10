@@ -1,0 +1,25 @@
+Title: Check_MK Discovery: Revert werks 10534 and 11229
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 2.0.0i1
+Date: 1597762711
+Class: fix
+
+The original werks 10534 (1.6.0p11) and 11229 (1.6.0p16) tried to fix the
+following situation:
+
+The "Check_MK discovery" check was unable to discover entirely new check_types.
+The discovery phase always relies on cached data, if available.  Since the SNMP
+datasource only fetches the data it actually needs, there is no guarantee that
+all services will be discovered.
+
+So the "Check_MK discovery" service failed to discover any interfaces, if the
+snmp host did not have any interfaces beforehand.  Through WATO however, the
+discovery was successfull, since this mechanism may bypass the snmp caching
+entirely.
+
+We have to revert these werk because they did not have the effect to fix above
+situation. In one of the next patch releases we will really fix this behaviour.
+Sorry for that.. :(

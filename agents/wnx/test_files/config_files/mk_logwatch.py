@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -20,27 +20,24 @@ You should find an example configuration file at
 
 from __future__ import with_statement
 
+import sys
+if sys.version_info < (2, 6):
+    sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
+    sys.exit(1)
+
 import glob
 import logging
 import os
 import re
 import shutil
-import sys
 import time
 import socket
 import binascii
 import platform
 import locale
+import ast
 
 import shlex
-
-try:
-    from ast import literal_eval as eval_line
-except ImportError:
-
-    def eval_line(line):
-        return eval(line, {'__builtins__': None})
-
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
@@ -48,7 +45,7 @@ MK_CONFDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_CONFDIR") or "."
 
 LOGGER = logging.getLogger(__name__)
 
-IPV4_REGEX = re.compile(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
+IPV4_REGEX = re.compile(r"^(::ffff:|::ffff:0:|)(?:[0-9]{1,3}\.){3}[0-9]{1,3}$")
 
 IPV6_REGEX = re.compile(r"^(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}$")
 
@@ -68,6 +65,28 @@ TTY_COLORS = {
 
 CONFIG_ERROR_PREFIX = "CANNOT READ CONFIG FILE: "  # detected by check plugin
 
+text_type = str
+binary_type = bytes
+
+
+# Borrowed from six
+def ensure_str(s, encoding='utf-8', errors='strict'):
+    """Coerce *s* to `str`.
+
+    For Python 2:
+      - `unicode` -> encoded to `str`
+      - `str` -> `str`
+
+    For Python 3:
+      - `str` -> `str`
+      - `bytes` -> decoded to `str`
+    """
+    if not isinstance(s, (text_type, binary_type)):
+        raise TypeError("not expecting type '%s'" % type(s))
+    if isinstance(s, binary_type):
+        s = s.decode(encoding, errors)
+    return s
+
 
 def init_logging(verbosity):
     if verbosity == 0:
@@ -79,7 +98,7 @@ def init_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(lineno)s: %(message)s")
 
 
-class ArgsParser(object):  # pylint: disable=too-few-public-methods
+class ArgsParser():  # pylint: disable=too-few-public-methods
     """
     Custom argument parsing.
     (Neither use optparse which is Python 2.3 to 2.7 only.
@@ -89,7 +108,7 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods
         super(ArgsParser, self).__init__()
 
         if "-h" in argv:
-            sys.stderr.write(__doc__)
+            sys.stderr.write(ensure_str(__doc__))
             sys.exit(0)
 
         self.verbosity = argv.count('-v') + 2 * argv.count('-vv')
@@ -110,18 +129,11 @@ class ArgsParser(object):  # pylint: disable=too-few-public-methods
 # may leave temporary directories named "_MEI..." in the temporary path. Clean them
 # up to prevent eating disk space over time.
 
-########################################################################
-############## DUPLICATE CODE WARNING ##################################
-### This code is also used in the cmk-update-agent frozen binary #######
-### Any changes to this class should also be made in cmk-update-agent ##
-### In the bright future we will move this code into a library #########
-########################################################################
 
-
-class MEIFolderCleaner(object):
+class MEIFolderCleaner():
     def pid_running(self, pid):
         import ctypes
-        kernel32 = ctypes.windll.kernel32
+        kernel32 = ctypes.windll.kernel32  # type: ignore[attr-defined]
         SYNCHRONIZE = 0x100000
 
         process = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
@@ -135,7 +147,7 @@ class MEIFolderCleaner(object):
         if not hasattr(sys, "frozen"):
             return
 
-        import win32file  # pylint: disable=import-error
+        import win32file  # type: ignore[import] # pylint: disable=import-error
         import tempfile
         base_path = tempfile.gettempdir()
         for f in os.listdir(base_path):
@@ -154,7 +166,8 @@ class MEIFolderCleaner(object):
                 if invalid_dir:
                     continue
 
-                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower()
+                pyinstaller_tmp_path = win32file.GetLongPathName(
+                    sys._MEIPASS).lower()  # type: ignore[attr-defined]
                 if pyinstaller_tmp_path == path.lower():
                     continue  # Skip our own directory
 
@@ -249,6 +262,9 @@ def parse_filenames(line):
         _processed_line = os.path.normpath(_processed_line)
         _processed_line = _processed_line.replace('\\', '\\\\')
         return shlex.split(_processed_line)
+
+    if sys.version_info[0] < 3:
+        return [x.decode("utf-8") for x in shlex.split(line.encode("utf-8"))]
 
     return shlex.split(line)
 
@@ -365,7 +381,7 @@ def read_config(files, debug=False):
     return logfiles_configs, cluster_configs
 
 
-class State(object):
+class State():
     def __init__(self, filename, data=None):
         super(State, self).__init__()
         self.filename = filename
@@ -374,7 +390,7 @@ class State(object):
     @staticmethod
     def _load_line(line):
         try:
-            return eval_line(line)
+            return ast.literal_eval(line)
         except (NameError, SyntaxError, ValueError):
             # Support status files with the following structure:
             # /var/log/messages|7767698|32455445
@@ -403,15 +419,15 @@ class State(object):
         LOGGER.debug("Writing state: %r", self._data)
         LOGGER.debug("State filename: %r", self.filename)
 
-        with open(self.filename, "w") as stat_fh:
+        with open(self.filename, "wb") as stat_fh:
             for data in self._data.values():
-                stat_fh.write(u"%r\n" % data)
+                stat_fh.write(repr(data).encode("ascii") + b"\n")
 
     def get(self, key):
         return self._data.setdefault(key, {'file': key})
 
 
-class LogLinesIter(object):
+class LogLinesIter():
     # this is supposed to become a proper iterator.
     # for now, we need a persistent buffer to fix things
     BLOCKSIZE = 8192
@@ -419,12 +435,11 @@ class LogLinesIter(object):
     def __init__(self, logfile, encoding):
         super(LogLinesIter, self).__init__()
         self._fd = os.open(logfile, os.O_RDONLY)
-        self._lines = []
-        self._buffer = ''
+        self._lines = []  # List[Text]
+        self._buffer = b''
         self._reached_end = False  # used for optimization only
         self._enc = encoding or self._get_encoding()
-        self._newline = u'\n'.encode(self._enc)
-        self._nl = u'\n'  # common new line for the future code
+        self._nl = u'\n'
         # for Windows we need a bit special processing. It is difficult to fit this processing
         # in current architecture smoothly
         self._utf16 = self._enc == "utf_16"
@@ -454,10 +469,7 @@ class LogLinesIter(object):
         self._buffer = os.read(self._fd, enc_bytes_len)
         for bom, encoding in ENCODINGS:
             if self._buffer.startswith(bom):
-                if sys.version[0] == "3":
-                    self._buffer = self._buffer[len(bom):].decode(encoding)
-                else:
-                    self._buffer = self._buffer[len(bom):]
+                self._buffer = self._buffer[len(bom):]
                 LOGGER.debug("Detected %r encoding by BOM", encoding)
                 return encoding
 
@@ -470,34 +482,22 @@ class LogLinesIter(object):
         """
         Try to read more lines from file.
         """
-        # try to read at least to end of next line
-        if self._utf16:
-            # unicode only processing. In future e have to convert
-            # this file to process data only  as unicode
-            while self._nl not in self._buffer:
-                new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
-                if not new_bytes:
-                    break
-                self._buffer += new_bytes.decode("utf-16")  # unicode
+        binary_nl = self._nl.encode(self._enc)
+        while binary_nl not in self._buffer:
+            new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
+            if not new_bytes:
+                break
+            self._buffer += new_bytes
 
-            raw_lines = self._buffer.split(self._nl)
-            self._buffer = raw_lines.pop()  # unfinished line
-            self._lines.extend(l + self._nl for l in raw_lines)
-        else:
-            while self._newline not in self._buffer:
-                new_bytes = os.read(self._fd, LogLinesIter.BLOCKSIZE)
-                if not new_bytes:
-                    break
-                self._buffer += new_bytes
-
-            raw_lines = self._buffer.split(self._newline)
-            self._buffer = raw_lines.pop()  # unfinished line
-            self._lines.extend(l + self._newline for l in raw_lines)
+        # in case of decoding error, replace with U+FFFD REPLACEMENT CHARACTER
+        raw_lines = self._buffer.decode(self._enc, "replace").split(self._nl)
+        self._buffer = raw_lines.pop().encode(self._enc)  # unfinished line
+        self._lines.extend(l + self._nl for l in raw_lines)
 
     def set_position(self, position):
         if position is None:
             return
-        self._buffer = ''
+        self._buffer = b''
         self._lines = []
         os.lseek(self._fd, position, os.SEEK_SET)
 
@@ -506,23 +506,16 @@ class LogLinesIter(object):
         Return the position where we want to continue next time
         """
         pointer_pos = os.lseek(self._fd, 0, os.SEEK_CUR)
-        bytes_unused = sum((len(l) for l in self._lines), len(self._buffer))
+        bytes_unused = sum((len(l.encode(self._enc)) for l in self._lines), len(self._buffer))
         return pointer_pos - bytes_unused
 
     def skip_remaining(self):
         os.lseek(self._fd, 0, os.SEEK_END)
-        self._buffer = ''
+        self._buffer = b''
         self._lines = []
 
     def push_back_line(self, line):
-        """
-        in Python-3 only bytes as param is expected
-        still current tests may or will deliver unicode
-        """
-        if isinstance(line, bytes):
-            self._lines.insert(0, line)  # in python 3 we expect only bytes
-        else:
-            self._lines.insert(0, line.encode(self._enc))
+        self._lines.insert(0, line)
 
     def next_line(self):
         if self._reached_end:  # optimization only
@@ -532,10 +525,7 @@ class LogLinesIter(object):
             self._update_lines()
 
         if self._lines:
-            # in case of decoding error, replace with U+FFFD REPLACEMENT CHARACTER
-            if self._enc == "utf_16":
-                return self._lines.pop(0)
-            return self._lines.pop(0).decode(self._enc, "replace")
+            return self._lines.pop(0)
 
         self._reached_end = True
         return None
@@ -545,7 +535,7 @@ def is_inode_capable(path):
     system = platform.system()
     if system == "Windows":
         volume_name = "%s:\\\\" % path.split(":", 1)[0]
-        import win32api  # pylint: disable=import-error
+        import win32api  # type: ignore[import] # pylint: disable=import-error
         volume_info = win32api.GetVolumeInformation(volume_name)
         volume_type = volume_info[-1]
         return "ntfs" in volume_type.lower()
@@ -570,137 +560,141 @@ def process_logfile(section, filestate, debug):
             raise
         return u"[[[%s:cannotopen]]]\n" % section.name_write, []
 
-    header = u"[[[%s]]]\n" % section.name_write
+    try:
+        header = u"[[[%s]]]\n" % section.name_write
 
-    stat = os.stat(section.name_fs)
-    inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
-    # If we have never seen this file before, we set the inode to -1
-    prev_inode = filestate.get('inode', -1)
-    filestate['inode'] = inode
+        stat = os.stat(section.name_fs)
+        inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
+        # If we have never seen this file before, we set the inode to -1
+        prev_inode = filestate.get('inode', -1)
+        filestate['inode'] = inode
 
-    # Look at which file offset we have finished scanning the logfile last time.
-    offset = filestate.get('offset')
-    # Set the current pointer to the file end
-    filestate['offset'] = stat.st_size
+        # Look at which file offset we have finished scanning the logfile last time.
+        offset = filestate.get('offset')
+        # Set the current pointer to the file end
+        filestate['offset'] = stat.st_size
 
-    # If we have never seen this file before, we do not want
-    # to make a fuss about ancient log messages... (unless configured to)
-    if offset is None and not (section.options.fromstart or debug):
-        return header, []
+        # If we have never seen this file before, we do not want
+        # to make a fuss about ancient log messages... (unless configured to)
+        if offset is None and not (section.options.fromstart or debug):
+            return header, []
 
-    # If the inode of the logfile has changed it has appearently
-    # been started from new (logfile rotation). At least we must
-    # assume that. In some rare cases (restore of a backup, etc)
-    # we are wrong and resend old log messages
-    if prev_inode >= 0 and inode != prev_inode:
-        offset = None
+        # If the inode of the logfile has changed it has appearently
+        # been started from new (logfile rotation). At least we must
+        # assume that. In some rare cases (restore of a backup, etc)
+        # we are wrong and resend old log messages
+        if prev_inode >= 0 and inode != prev_inode:
+            offset = None
 
-    # Our previously stored offset is the current end ->
-    # no new lines in this file
-    if offset == stat.st_size:
-        return header, []
+        # Our previously stored offset is the current end ->
+        # no new lines in this file
+        if offset == stat.st_size:
+            return header, []
 
-    # If our offset is beyond the current end, the logfile has been
-    # truncated or wrapped while keeping the same inode. We assume
-    # that it contains all new data in that case and restart from
-    # beginning.
-    # Python 3 doesnt like to compare None
-    if offset is not None and offset > stat.st_size:
-        offset = None
+        # If our offset is beyond the current end, the logfile has been
+        # truncated or wrapped while keeping the same inode. We assume
+        # that it contains all new data in that case and restart from
+        # beginning.
+        if offset is not None and offset > stat.st_size:
+            offset = None
 
-    # now seek to offset where interesting data begins
-    log_iter.set_position(offset)
+        # now seek to offset where interesting data begins
+        log_iter.set_position(offset)
 
-    worst = -1
-    warnings_and_errors = []
-    lines_parsed = 0
-    start_time = time.time()
+        worst = -1
+        warnings_and_errors = []
+        lines_parsed = 0
+        start_time = time.time()
 
-    while True:
-        line = log_iter.next_line()
-        if line is None:
-            break  # End of file
+        while True:
+            line = log_iter.next_line()
+            if line is None:
+                break  # End of file
 
-        # Handle option maxlinesize
-        if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
-            line = line[:section.options.maxlinesize] + u"[TRUNCATED]\n"
+            # Handle option maxlinesize
+            if section.options.maxlinesize is not None and len(line) > section.options.maxlinesize:
+                line = line[:section.options.maxlinesize] + u"[TRUNCATED]\n"
 
-        lines_parsed += 1
-        # Check if maximum number of new log messages is exceeded
-        if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
-            warnings_and_errors.append(u"%s Maximum number (%d) of new log messages exceeded.\n" % (
-                section.options.overflow,
-                section.options.maxlines,
-            ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            lines_parsed += 1
+            # Check if maximum number of new log messages is exceeded
+            if section.options.maxlines is not None and lines_parsed > section.options.maxlines:
+                warnings_and_errors.append(
+                    u"%s Maximum number (%d) of new log messages exceeded.\n" % (
+                        section.options.overflow,
+                        section.options.maxlines,
+                    ))
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        # Check if maximum processing time (per file) is exceeded. Check only
-        # every 100'th line in order to save system calls
-        if section.options.maxtime is not None and lines_parsed % 100 == 10 \
-            and time.time() - start_time > section.options.maxtime:
-            warnings_and_errors.append(
-                u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
-                    section.options.overflow,
-                    section.options.maxtime,
-                ))
-            worst = max(worst, section.options.overflow_level)
-            log_iter.skip_remaining()
-            break
+            # Check if maximum processing time (per file) is exceeded. Check only
+            # every 100'th line in order to save system calls
+            if section.options.maxtime is not None and lines_parsed % 100 == 10 \
+                    and time.time() - start_time > section.options.maxtime:
+                warnings_and_errors.append(
+                    u"%s Maximum parsing time (%.1f sec) of this log file exceeded.\n" % (
+                        section.options.overflow,
+                        section.options.maxtime,
+                    ))
+                worst = max(worst, section.options.overflow_level)
+                log_iter.skip_remaining()
+                break
 
-        level = "."
-        for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
-
-            matches = pattern.search(line[:-1])
-            if matches:
-                level = lev
-                levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
-                worst = max(levelint, worst)
-
-                # TODO: the following for block should be a method of the iterator
-                # Check for continuation lines
-                for cont_pattern in cont_patterns:
-                    if isinstance(cont_pattern, int):  # add that many lines
-                        for _unused_x in range(cont_pattern):
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-                            line = line[:-1] + "\1" + cont_line
-
-                    else:  # pattern is regex
-                        while True:
-                            cont_line = log_iter.next_line()
-                            if cont_line is None:  # end of file
-                                break
-                            elif cont_pattern.search(cont_line[:-1]):
-                                line = line[:-1] + "\1" + cont_line
-                            else:
-                                log_iter.push_back_line(cont_line)  # sorry for stealing this line
-                                break
-
-                # Replacement
-                for replace in replacements:
-                    line = replace.replace('\\0', line.rstrip()) + "\n"
-                    for num, group in enumerate(matches.groups()):
-                        if group is not None:
-                            line = line.replace('\\%d' % (num + 1), group)
-
-                break  # matching rule found and executed
-
-        if level == "I":
             level = "."
-        if section.options.nocontext and level == '.':
-            continue
+            for lev, pattern, cont_patterns, replacements in section.compiled_patterns:
 
-        out_line = "%s %s" % (level, line[:-1])
-        if sys.stdout.isatty():
-            out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
-                "\1", "\nCONT:"), TTY_COLORS['normal'])
-        warnings_and_errors.append("%s\n" % out_line)
+                matches = pattern.search(line[:-1])
+                if matches:
+                    level = lev
+                    levelint = {'C': 2, 'W': 1, 'O': 0, 'I': -1, '.': -1}[lev]
+                    worst = max(levelint, worst)
 
-    new_offset = log_iter.get_position()
-    log_iter.close()
+                    # TODO: the following for block should be a method of the iterator
+                    # Check for continuation lines
+                    for cont_pattern in cont_patterns:
+                        if isinstance(cont_pattern, int):  # add that many lines
+                            for _unused_x in range(cont_pattern):
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+                                line = line[:-1] + "\1" + cont_line
+
+                        else:  # pattern is regex
+                            while True:
+                                cont_line = log_iter.next_line()
+                                if cont_line is None:  # end of file
+                                    break
+
+                                if cont_pattern.search(cont_line[:-1]):
+                                    line = line[:-1] + "\1" + cont_line
+                                else:
+                                    log_iter.push_back_line(
+                                        cont_line)  # sorry for stealing this line
+                                    break
+
+                    # Replacement
+                    for replace in replacements:
+                        line = replace.replace('\\0', line.rstrip()) + "\n"
+                        for num, group in enumerate(matches.groups()):
+                            if group is not None:
+                                line = line.replace('\\%d' % (num + 1), group)
+
+                    break  # matching rule found and executed
+
+            if level == "I":
+                level = "."
+            if section.options.nocontext and level == '.':
+                continue
+
+            out_line = "%s %s" % (level, line[:-1])
+            if sys.stdout.isatty():
+                out_line = "%s%s%s" % (TTY_COLORS[level], out_line.replace(
+                    "\1", "\nCONT:"), TTY_COLORS['normal'])
+            warnings_and_errors.append("%s\n" % out_line)
+
+        new_offset = log_iter.get_position()
+    finally:
+        log_iter.close()
 
     filestate['offset'] = new_offset
 
@@ -719,7 +713,7 @@ def process_logfile(section, filestate, debug):
     return header, []
 
 
-class Options(object):
+class Options():
     """Options w.r.t. logfile patterns (not w.r.t. cluster mapping)."""
     MAP_OVERFLOW = {'C': 2, 'W': 1, 'I': 0, 'O': 0}
     MAP_BOOL = {'true': True, 'false': False, '1': True, '0': False, 'yes': True, 'no': False}
@@ -810,7 +804,7 @@ class Options(object):
                 if value not in Options.MAP_OVERFLOW.keys():
                     raise ValueError("Invalid overflow: %r (choose from %r)" % (
                         value,
-                        Options.MAP_OVERFLOW.keys(),
+                        list(Options.MAP_OVERFLOW.keys()),
                     ))
                 self.values['overflow'] = value
             elif key in ('regex', 'iregex'):
@@ -821,7 +815,7 @@ class Options(object):
                     raise ValueError("Invalid %s: %r (choose from %r)" % (
                         key,
                         value,
-                        Options.MAP_BOOL.keys(),
+                        list(Options.MAP_BOOL.keys()),
                     ))
                 self.values[key] = Options.MAP_BOOL[value.lower()]
             elif key == 'maxcontextlines':
@@ -834,14 +828,14 @@ class Options(object):
             raise
 
 
-class PatternConfigBlock(object):
+class PatternConfigBlock():
     def __init__(self, files, patterns):
         super(PatternConfigBlock, self).__init__()
         self.files = files
         self.patterns = patterns
 
 
-class ClusterConfigBlock(object):
+class ClusterConfigBlock():
     def __init__(self, name, ips_or_subnets):
         super(ClusterConfigBlock, self).__init__()
         self.name = name
@@ -849,13 +843,6 @@ class ClusterConfigBlock(object):
 
 
 def _decode_to_unicode(match):
-    # (Union[bytes, unicode, str]) -> unicode
-    # we can't use 'surrogatereplace' because that a) is py3 only b) would fail upon re-encoding
-    # we can't use 'six': this code may be executed using Python 2.5/2.6
-    if sys.version[0] == "2":
-        # Python 2: str @Windows && @Linux
-        return match if isinstance(match, unicode) else match.decode('utf8', 'replace')
-
     # Python 3: bytes @Linux and unicode @Windows
     return match.decode('utf-8', 'replace') if isinstance(match, bytes) else match
 
@@ -887,13 +874,11 @@ def find_matching_logfiles(glob_pattern):
         # we can't use glob on unicode, as it would try to re-decode matches with ascii
         matches = glob.glob(glob_pattern.encode('utf8'))
 
-    # skip dirs and read links
+    # skip dirs
     file_refs = []
     for match in matches:
         if os.path.isdir(match):
             continue
-        if os.path.islink(match):
-            match = os.readlink(match)
 
         # match is bytes in Linux and unicode/str in Windows
         match_readable = _decode_to_unicode(match)
@@ -921,7 +906,7 @@ def _compile_continuation_pattern(raw_pattern):
         return re.compile(_search_optimize_raw_pattern(raw_pattern), re.UNICODE)
 
 
-class LogfileSection(object):
+class LogfileSection():
     def __init__(self, logfile_ref):
         super(LogfileSection, self).__init__()
         self.name_fs = logfile_ref[0]
@@ -952,7 +937,7 @@ def parse_sections(logfiles_config):
     """
     Returns a list of LogfileSections and and a list of non-matching patterns.
     """
-    found_sections = {}
+    found_sections = {}  # type: dict
     non_matching_patterns = []
 
     for cfg in logfiles_config:
@@ -1072,7 +1057,7 @@ def write_output(header, lines, options):
     if options.maxcontextlines:
         lines = _filter_maxcontextlines(lines, *options.maxcontextlines)
 
-    if sys.version[0] == "3":
+    if sys.version_info[0] == 3:
         # in Python 3 we use 100% unicode and hope that this is good idea
         sys.stdout.write(header)
         filtered_enc_lines = _filter_maxoutputsize(lines, options.maxoutputsize)
@@ -1120,7 +1105,8 @@ def main(argv=None):
     found_sections, non_matching_patterns = parse_sections(logfiles_config)
 
     for pattern in non_matching_patterns:
-        if sys.version[0] == "3":
+        # Python 2.5/2.6 compatible solution
+        if sys.version_info[0] == 3:
             sys.stdout.write("[[[%s:missing]]]\n" % pattern)
         else:
             sys.stdout.write((u"[[[%s:missing]]]\n" % pattern).encode('utf-8'))
@@ -1128,18 +1114,22 @@ def main(argv=None):
     state = State(status_filename)
     try:
         state.read()
-    except () if args.debug else Exception as exc:
+    except Exception as exc:
+        if args.debug:
+            raise
         # Simply ignore errors in the status file.  In case of a corrupted status file we simply
         # begin with an empty status. That keeps the monitoring up and running - even if we might
         # lose a message in the extreme case of a corrupted status file.
-        LOGGER.warning("Exception '% reading status file '%s'", status_filename, str(exc))
+        LOGGER.warning("Exception reading status file: %s", str(exc))
 
     for section in found_sections:
         filestate = state.get(section.name_fs)
         try:
             header, output = process_logfile(section, filestate, args.debug)
             write_output(header, output, section.options)
-        except () if args.debug else Exception as exc:
+        except Exception as exc:
+            if args.debug:
+                raise
             LOGGER.debug("Exception when processing %r: %s", section.name_fs, exc)
 
     if args.debug:

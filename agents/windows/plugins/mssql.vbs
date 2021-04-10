@@ -34,6 +34,7 @@
 ' -----------------------------------------------------------------------------
 
 Option Explicit
+Const CMK_VERSION = "2.1.0i1"
 
 Dim WMI, FSO, SHO, items, objItem, prop, instVersion, registry
 Dim sources, instances, instance, instance_id, instance_name, instance_excluded
@@ -104,6 +105,7 @@ sections.add "backup", "<<<mssql_backup:sep(124)>>>"
 sections.add "transactionlogs", "<<<mssql_transactionlogs:sep(124)>>>"
 sections.add "datafiles", "<<<mssql_datafiles:sep(124)>>>"
 sections.add "clusters", "<<<mssql_cluster:sep(124)>>>"
+sections.add "jobs", "<<<mssql_jobs:sep(09)>>>"
 ' Has been deprecated with 1.4.0i1. Keep this for nicer transition for some versions.
 sections.add "versions", "<<<mssql_versions:sep(124)>>>"
 sections.add "connections", "<<<mssql_connections>>>"
@@ -133,6 +135,14 @@ Else
     exclude_list = Array()
 End If
 Set INST = Nothing
+
+' Get connection and command timeouts if configured
+Dim TIMEOUTS
+If CFG.Exists("timeouts") Then
+    Set TIMEOUTS = CFG("timeouts")
+Else
+    Set TIMEOUTS = CreateObject("Scripting.Dictionary")
+End If
 
 '
 ' Gather instances on this host, store instance in instances and output version section for it
@@ -243,9 +253,9 @@ Function checkConnErrors(conn)
     error_msg = ""
     If conn.Errors.Count > 0 Then
         error_msg = "ERROR: "
-        For Each errObj in CONN.Errors
+        For Each errObj in conn.Errors
             error_msg = error_msg & errObj.Description & " (SQLState: " & _
-                        errObj.SQLState & "/NativeError: " & errObj.NativeError & ") "
+                        errObj.SQLState & "/NativeError: " & errObj.NativeError & "). "
         Next
     End If
     Err.Clear
@@ -256,9 +266,12 @@ End Function
 Set CONN      = CreateObject("ADODB.Connection")
 Set RS        = CreateObject("ADODB.Recordset")
 
-CONN.Provider = "sqloledb"
-' It's a local connection. 2 seconds should be enough!
-CONN.ConnectionTimeout = 2
+If TIMEOUTS.Exists("timeout_connection") Then
+    CONN.ConnectionTimeout = CInt(TIMEOUTS("timeout_connection"))
+End If
+If TIMEOUTS.Exists("timeout_command") Then
+    CONN.CommandTimeout = CInt(TIMEOUTS("timeout_command"))
+End If
 
 
 ' Loop all found server instances and connect to them
@@ -289,35 +302,61 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Set AUTH = CFG("auth")
     End If
 
-    ' At this place one could implement to use other authentication mechanism
-    If Not AUTH.Exists("type") or AUTH("type") = "system" Then
-        CONN.Properties("Integrated Security").Value = "SSPI"
-    Else
-        CONN.Properties("User ID").Value = AUTH("username")
-        CONN.Properties("Password").Value = AUTH("password")
-    End If
-
-    CONN.Properties("Data Source").Value = sources(instance_id)
-
     ' Try to connect to the instance and catch the error when not able to connect
     ' Then add the instance to the agent output and skip over to the next instance
     ' in case the connection could not be established.
     On Error Resume Next
-    CONN.Open
 
-    ' Collect eventual error messages of errors occured during connecting. Hopefully
-    ' there is only one error in the list of errors.
-    Dim errMsg
-    errMsg = checkConnErrors(CONN)
+    Dim connProv, errMsg
+    errMsg = ""
+
+    For Each connProv in Array("msoledbsql", "sqloledb", "sqlncli11")
+
+        CONN.Provider = connProv
+
+        ' At this place one could implement other authentication mechanism
+        ' Note that these properties have to be set after setting CONN.Provider
+        If Not AUTH.Exists("type") or AUTH("type") = "system" Then
+            CONN.Properties("Integrated Security").Value = "SSPI"
+        Else
+            CONN.Properties("User ID").Value = AUTH("username")
+            CONN.Properties("Password").Value = AUTH("password")
+        End If
+
+        CONN.Properties("Data Source").Value = sources(instance_id)
+
+        CONN.Open
+
+        ' Note that the user will only see this message in case no connection can be established
+        errMsg = errMsg & "Connecting using provider " & connProv & ". "
+
+        ' If the provider is invalid, errors end up in Err, not in CONN.Errors
+        if Err.Number <> 0 Then
+            errMsg = errMsg & "ERROR: " & Err.Description
+            If Right(errMsg, 1) <> "." Then
+            	errMsg = errMsg & "."
+            End If
+            errMsg = errMsg & " "
+        End If
+
+        ' Collect errors which occurred during connecting. Hopefully there is only one
+        ' error in the list of errors.
+        errMsg = errMsg & checkConnErrors(CONN)
+
+        ' In case the connection is still closed, we try with the next provider
+        ' 0 - closed
+        ' 1 - open
+        ' 2 - connecting
+        ' 4 - executing a command
+        ' 8 - rows are being fetched
+        If CONN.State = 1 Then
+            Exit For
+        End If
+    Next
+
     addOutput(sections("instance"))
-    ' 0 - closed
-    ' 1 - open
-    ' 2 - connecting
-    ' 4 - executing a command
-    ' 8 - rows are being fetched
     addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & errMsg)
 
-    ' adStateClosed = 0
     If CONN.State = 0 Then
         Exit Do
     End If
@@ -574,7 +613,9 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
-        addOutput(instance_id & "|-|" & errMsg & "|-|-|-")
+        For Each dbName in dbNames.Keys
+            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & errMsg & "|-|-|-")
+        Next
     Else
         Do While Not RS.Eof
             ' instance db_name status recovery auto_close auto_shrink
@@ -637,6 +678,42 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
             addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
             RS.MoveNext
+        Loop
+        RS.Close
+    End If
+
+    addOutput(sections("jobs"))
+    RS.Open "USE [msdb];", CONN
+    RS.Open "SELECT  " &_
+            "    sj.job_id " &_
+            "   ,sj.name AS job_name " &_
+            "   ,sj.enabled AS job_enabled " &_
+            "   ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
+            "   ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
+            "   ,sjserver.last_run_outcome " &_
+            "   ,sjserver.last_outcome_message " &_
+            "   ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
+            "   ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
+            "   ,sjserver.last_run_duration " &_
+            "   ,ss.enabled AS schedule_enabled " &_
+            "   ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
+            " FROM dbo.sysjobs sj " &_
+            " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
+            " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
+            " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
+            " ORDER BY sj.name " &_
+            "          ,sjs.next_run_date ASC " &_
+            "          ,sjs.next_run_time ASC " &_
+            "; ", CONN
+
+    errMsg = checkConnErrors(CONN)
+    If Not errMsg = "" Then
+        addOutput(instance_id & " " & errMsg)
+    Else
+        Do While Not RS.Eof
+            'See following documentation for use of parameters and the GetString method:
+            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
+            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
         Loop
         RS.Close
     End If

@@ -7,26 +7,25 @@
 #define DynamicColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <memory>
 #include <string>
+
 #include "Column.h"
-class Logger;
 
 class DynamicColumn {
 public:
     DynamicColumn(std::string name, std::string description,
-                  Column::Offsets offsets);
+                  ColumnOffsets offsets);
     virtual ~DynamicColumn();
     [[nodiscard]] std::string name() const;
     virtual std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) = 0;
-    [[nodiscard]] Logger *logger() const;
 
 protected:
-    Logger *const _logger;
     const std::string _name;
     const std::string _description;  // Note: Currently unused!
-    Column::Offsets _offsets;
+    ColumnOffsets _offsets;
 };
 
 #endif  // DynamicColumn_h

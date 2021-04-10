@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously Windows Agent sent IP Addresses for OnlyFrom in the network form.
 For example, instead of 127.0.0.1 the Agent reported 127.0.0.1/32

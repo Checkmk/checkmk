@@ -6,7 +6,7 @@ Date: 1578991411
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Errors from poll(2) were handled inconsistently and
 could possibly freeze the main loop of the core.

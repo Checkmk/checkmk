@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -11,6 +11,7 @@ from cmk.gui.valuespec import (
     Percentage,
     TextAscii,
     Tuple,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
@@ -20,7 +21,22 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_cpu_utilization_multiitem():
+def _parameter_valuespec():
+    return Transform(
+        _real_parameter_valuespec(),
+        forth=_transform,
+    )
+
+
+def _transform(params):
+    if params is None:
+        return {}
+    if isinstance(params, tuple):
+        return {"levels": params}
+    return params
+
+
+def _real_parameter_valuespec():
     return Dictionary(
         help=_("The CPU utilization sums up the percentages of CPU time that is used "
                "for user processes and kernel routines over all available cores within "
@@ -57,6 +73,6 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_cpu_utilization_multiitem,
+        parameter_valuespec=_parameter_valuespec,
         title=lambda: _("CPU utilization of Devices with Modules"),
     ))

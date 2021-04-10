@@ -2,9 +2,11 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-module.exports = {
+module.exports = ({ env }) => ({
   plugins: [
-      require('autoprefixer'),
-      require('postcss-clean')
-    ]
-}
+    require('autoprefixer'),
+    env == 'production' ? require('cssnano')({
+          preset: 'default',
+    }) : false,
+  ]
+})

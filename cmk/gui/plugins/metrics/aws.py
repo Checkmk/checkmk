@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -170,6 +170,12 @@ metric_info['aws_rds_replication_slot_disk_usage'] = {
     'title': _('Replication Slot Disk Usage'),
     'unit': '%',
     'color': '13/a',
+}
+
+metric_info['aws_rds_replica_lag'] = {
+    'title': _('Replica Lag'),
+    'unit': 's',
+    'color': '14/a',
 }
 
 metric_info['aws_rds_oldest_replication_slot_lag'] = {
@@ -362,25 +368,25 @@ metric_info['aws_tcp_target_rst'] = {
 
 metric_info['aws_s3_downloads'] = {
     'title': _('Download'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '21/a',
 }
 
 metric_info['aws_s3_uploads'] = {
     'title': _('Upload'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '31/a',
 }
 
 metric_info['aws_s3_select_object_scanned'] = {
     'title': _('SELECT Object Scanned'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '31/a',
 }
 
 metric_info['aws_s3_select_object_returned'] = {
     'title': _('SELECT Object Returned'),
-    'unit': 'bytes',
+    'unit': 'bytes/s',
     'color': '41/a',
 }
 

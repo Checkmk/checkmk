@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -20,17 +20,17 @@ from cmk.gui.plugins.wato import (
 
 def _parameter_valuespec_vm_snapshots():
     return Dictionary(elements=[
-        ("age",
+        ("age_oldest",
          Tuple(
-             title=_("Age of the last snapshot"),
+             title=_("Age of the oldest snapshot"),
              elements=[
                  Age(title=_("Warning if older than")),
                  Age(title=_("Critical if older than"))
              ],
          )),
-        ("age_oldest",
+        ("age",
          Tuple(
-             title=_("Age of the oldest snapshot"),
+             title=_("Age of the latest snapshot"),
              elements=[
                  Age(title=_("Warning if older than")),
                  Age(title=_("Critical if older than"))

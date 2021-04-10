@@ -1,0 +1,26 @@
+Title: Bulk Dicovery: Align caching options with discovery page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1598097459
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+On the {{Bulk Discovery}} WATO page you could set the options
+{{Use cached data if present}} and {{Do full SNMP scan for SNMP devices}}.
+The latter one had no effect since Checkmk version 1.5.0. The idea behind the
+option {{Do a full SNMP scan}} was contacting the SNMP device and ignoring
+existing caches. This behaviour is implemented behind the option
+{{Do a full service scan}} on the {{WATO Discovery}} page.
+
+Moreover the {{Bulk Discovery}} page was inconsistent with the {{WATO Discovery}}
+page - independent of above options. Thus we removed both options
+{{Use cached data if present}} and {{Do full SNMP scan for SNMP devices}} and
+add the option {{Do a full service scan}} in order to adapt the behaviour to
+the discovery page. Now both pages work the same way.
+
+Please note: With this new option a service scan of SNMP devices may take more
+time as before because now this device will be contacted for real.
+

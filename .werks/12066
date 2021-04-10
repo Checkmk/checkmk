@@ -1,0 +1,13 @@
+Title: Fix site selection on activate changes page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613128219
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Only sites with needed restart were selected on page visit.
+
+Now all sites which have changes are selected.

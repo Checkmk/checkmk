@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -26,7 +26,7 @@ def _parameter_valuespec_ibm_mq_queues():
     return Dictionary(
         help=_(
             "See 'Queue status attributes' in IBM manual"
-            " (https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.1.0/com.ibm.mq.explorer.doc/e_status_queue.htm)"
+            "(https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html)"
             " for detailed explanations of these parameters."),
         elements=[
             ("curdepth",

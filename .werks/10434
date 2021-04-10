@@ -6,7 +6,7 @@ Date: 1582280252
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 At the agent updater ruleset, you can specify how to cope with proxy configurations that
 exists on the hosts. By default, all proxy configurations should be ignored completely

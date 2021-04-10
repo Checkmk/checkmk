@@ -61,7 +61,7 @@ import warnings
 from xml.dom import minidom  # type: ignore[import]
 
 import requests
-import six
+from six import ensure_str
 import urllib3  # type: ignore[import]
 
 from cmk.special_agents.utils import vcrtrace
@@ -311,7 +311,7 @@ class NetAppConnection:
         return netapp_response
 
     def invoke(self, *args_):
-        invoke_list = [args_[0], map(list, zip(args_[1::2], args_[2::2]))]
+        invoke_list = [args_[0], [list(a) for a in zip(args_[1::2], args_[2::2])]]
         response = self.get_response(invoke_list)
         if response:
             return response.get_results()
@@ -349,7 +349,7 @@ class NetAppNode:
         return None
 
     def children_get(self):
-        return map(NetAppNode, self.node)
+        return [NetAppNode(n) for n in self.node]
 
     def append(self, what):
         self.node.append(what)
@@ -504,6 +504,9 @@ def format_config(instances,
         if node.element["content"]:
             values["%s%s" % (namespace, node.element["name"])] = node.element["content"]
 
+    if instances is None:
+        return ""
+
     for instance in instances.children_get():
         values = {}
         for node in instance.children_get():
@@ -537,7 +540,7 @@ def format_config(instances,
                 if value and (extra_info_report == "all" or key in extra_info_report):
                     line.append("%s %s" % (key, value))
 
-        result.append(("%s" % delimeter).join(six.ensure_str(x) for x in line))
+        result.append(("%s" % delimeter).join(ensure_str(x) for x in line))
     return "\n".join(result)
 
 
@@ -764,8 +767,9 @@ def query_counters(args, server, netapp_mode, what):
                     if idx >= max_instances_per_request:
                         break
                     instances_to_query[1].append(["instance-uuid", uuid])
-                    perfobject_node = ["perf-object-get-instances", [["objectname",
-                                                                      what]]]  # type: List[Any]
+                    perfobject_node: List[Any] = [
+                        "perf-object-get-instances", [["objectname", what]]
+                    ]
                     perfobject_node[1].append(instances_to_query)
                 response = server.get_response(perfobject_node)
 
@@ -841,12 +845,12 @@ def fetch_license_information(args, server):
     # Some sections are not queried when a license is missing
     try:
         server.suppress_errors = True
-        licenses = {
+        licenses: Dict[str, Dict[str, Dict[str, str]]] = {
             "v1": {},
             "v1_disabled": {},
             "v2": {},
             "v2_disabled": {}
-        }  # type: Dict[str, Dict[str, Dict[str, str]]]
+        }
         license_info = query(args, server, "license-list-info")
         if license_info:
             licenses["v1"] = create_dict(license_info, custom_key=["service"], is_counter=False)
@@ -1052,13 +1056,16 @@ def process_clustermode(args, server, netapp_mode, licenses):
     snapmirror_info = query(args, server, "snapmirror-get-iter")
     if snapmirror_info:
         print("<<<netapp_api_snapvault:sep(9)>>>")
+        # NOTE: destination-location is used as the item name for clustermode snapvault services, as the destination
+        # volume may not be unique. For 7mode installations, this has not been implemented, as we do not have a test case
+        # and we do not know whether the issue exists.
         print(
             format_config(snapmirror_info,
                           "snapvault",
                           "destination-volume",
                           config_report=[
                               "destination-volume-node", "policy", "mirror-state", "source-vserver",
-                              "lag-time", "relationship-status"
+                              "lag-time", "relationship-status", "destination-location"
                           ],
                           config_rename={
                               "destination-volume-node": "destination-system",
@@ -1137,7 +1144,7 @@ def process_vserver_status(args, server):
         return
     vserver_dict = create_dict(vservers, custom_key=["vserver-name"], is_counter=False)
     print("<<<netapp_api_vs_status:sep(9)>>>")
-    for vserver, vserver_data in vserver_dict.iteritems():
+    for vserver, vserver_data in vserver_dict.items():
         words = [vserver]
         for key in ("state", "vserver-subtype"):
             if vserver_data.get(key):
@@ -1556,7 +1563,7 @@ def connect(args):
 
 SectionType = List[str]
 
-section_errors = []  # type: SectionType
+section_errors: SectionType = []
 
 
 def main(argv=None):

@@ -1,0 +1,14 @@
+Title: Fix error while creating predefined condition
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612973363
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you created a new predefined condition, the option "Unique ID" was filled
+with an invalid value, resulting in an error message on saving the condition.
+
+The ID will now be created correctly.

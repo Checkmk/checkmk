@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # Example output from agent:
 # [zmucvm99-lds]
 # accessible  True
@@ -45,7 +55,7 @@ def check_esx_vsphere_datastores(item, params, data):
     mib = 1024.0**2
     size_bytes = data.get("capacity")
     avail_bytes = data.get("freeSpace")
-    if size_bytes is None or avail_bytes is None:
+    if size_bytes is None or size_bytes == 0 or avail_bytes is None:
         return
 
     yield df_check_filesystem_single(  # pylint: disable=undefined-variable
@@ -81,7 +91,6 @@ check_info['esx_vsphere_datastores'] = {
     "inventory_function": discover(),
     "check_function": check_esx_vsphere_datastores,
     "service_description": "Filesystem %s",
-    "includes": ['size_trend.include', 'df.include'],
     "has_perfdata": True,
     "group": "esx_vsphere_datastores",
     "default_levels_variable": "filesystem_default_levels",

@@ -4,84 +4,63 @@
 // source code package.
 
 #include "TableStatus.h"
+
 #include <atomic>
+#include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <filesystem>
 #include <memory>
+
 #include "Average.h"
-#include "BoolPointerColumn.h"
+#include "BlobColumn.h"
+#include "BoolColumn.h"
 #include "Column.h"
-#include "DoublePointerColumn.h"
+#include "DoubleColumn.h"
 #include "IntLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "NagiosGlobals.h"
 #include "Query.h"
 #include "Row.h"
-#include "StringPointerColumn.h"
-#include "TimePointerColumn.h"
-#include "global_counters.h"
+#include "StringColumn.h"
+#include "TimeColumn.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 
-extern time_t program_start;
-extern int nagios_pid;
-#ifndef NAGIOS4
-extern time_t last_command_check;
-#endif
-extern time_t last_log_rotation;
-extern int enable_notifications;
-extern int execute_service_checks;
-extern int accept_passive_service_checks;
-extern int execute_host_checks;
-extern int accept_passive_host_checks;
-extern int enable_event_handlers;
-extern int obsess_over_services;
-extern int obsess_over_hosts;
-extern int check_service_freshness;
-extern int check_host_freshness;
-extern int enable_flap_detection;
-extern int process_performance_data;
-extern int check_external_commands;
-extern int interval_length;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern Average g_avg_livestatus_usage;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_livestatus_threads;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern int g_num_queued_connections;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 extern std::atomic_int32_t g_livestatus_active_connections;
 
-#ifndef NAGIOS4
-extern circular_buffer external_command_buffer;
-extern int external_command_buffer_slots;
-#else
-// TODO: check if this data is available in nagios_squeue
-namespace {
-time_t dummy_time = 0;
-}  // namespace
-#endif  // NAGIOS4
-
-namespace {
-// NOTE: We have a FixedDoubleColumn, but this lives somewhere else, and this is
-// only a temporary hack.
-double dummy_double{0};
-}  // namespace
-
 TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
-    addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
-    addCounterColumns("requests", "requests to Livestatus", Counter::requests);
+    ColumnOffsets offsets{};
+    addCounterColumns("neb_callbacks", "NEB callbacks", offsets,
+                      Counter::neb_callbacks);
+    addCounterColumns("requests", "requests to Livestatus", offsets,
+                      Counter::requests);
     addCounterColumns("connections", "client connections to Livestatus",
-                      Counter::connections);
-    addCounterColumns("service_checks", "completed service checks",
+                      offsets, Counter::connections);
+    addCounterColumns("service_checks", "completed service checks", offsets,
                       Counter::service_checks);
-    addCounterColumns("host_checks", "host checks", Counter::host_checks);
-    addCounterColumns("forks", "process creations", Counter::forks);
-    addCounterColumns("log_messages", "new log messages",
+    addCounterColumns("host_checks", "host checks", offsets,
+                      Counter::host_checks);
+    addCounterColumns("forks", "process creations", offsets, Counter::forks);
+    addCounterColumns("log_messages", "new log messages", offsets,
                       Counter::log_messages);
-    addCounterColumns("external_commands", "external commands",
+    addCounterColumns("external_commands", "external commands", offsets,
                       Counter::commands);
-    addCounterColumns("livechecks", "checks executed via livecheck",
+    addCounterColumns("livechecks", "checks executed via livecheck", offsets,
                       Counter::livechecks);
     // NOTE: The NEB queues accepted connections, so we never have overflows
     // here. Nevertheless, we provide these columns for consistency with CMC,
@@ -89,211 +68,266 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns(
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
-        Counter::overflows);
+        offsets, Counter::overflows);
 
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "nagios_pid", "The process ID of the monitoring core", nagios_pid));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "core_pid", "The process ID of the monitoring core", nagios_pid));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "enable_notifications",
         "Whether notifications are enabled in general (0/1)",
         enable_notifications));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "execute_service_checks",
         "Whether active service checks are activated in general (0/1)",
         execute_service_checks));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "accept_passive_service_checks",
         "Whether passive service checks are activated in general (0/1)",
         accept_passive_service_checks));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "execute_host_checks",
         "Whether host checks are executed in general (0/1)",
         execute_host_checks));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "accept_passive_host_checks",
         "Whether passive host checks are accepted in general (0/1)",
         accept_passive_host_checks));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "obsess_over_services",
         "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
         obsess_over_services));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)",
         obsess_over_hosts));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "check_service_freshness",
         "Whether service freshness checking is activated in general (0/1)",
         check_service_freshness));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "check_host_freshness",
         "Whether host freshness checking is activated in general (0/1)",
         check_host_freshness));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "enable_flap_detection",
         "Whether flap detection is activated in general (0/1)",
         enable_flap_detection));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "process_performance_data",
         "Whether processing of performance data is activated in general (0/1)",
         process_performance_data));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "enable_event_handlers",
         "Whether event handlers are activated in general (0/1)",
         enable_event_handlers));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "check_external_commands",
         "Whether Nagios checks for external commands at its command pipe (0/1)",
         check_external_commands));
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "program_start", "The time of the last program start as UNIX timestamp",
-        &program_start, Column::Offsets{}));
+        offsets, [](const TableStatus & /*r*/) {
+            return std::chrono::system_clock::from_time_t(program_start);
+        }));
 #ifndef NAGIOS4
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "last_command_check",
-        "The time of the last check for a command as UNIX timestamp",
-        &last_command_check, Column::Offsets{}));
+        "The time of the last check for a command as UNIX timestamp", offsets,
+        [](const TableStatus & /*r*/) {
+            return std::chrono::system_clock::from_time_t(last_command_check);
+        }));
 #else
-    addColumn(std::make_unique<TimePointerColumn>(
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
-        &dummy_time, Column::Offsets{}));
+        offsets, [](const TableStatus & /*r*/) {
+            // TODO: check if this data is available in nagios_squeue
+            return std::chrono::system_clock::from_time_t(0);
+        }));
 #endif  // NAGIOS4
-    addColumn(std::make_unique<TimePointerColumn>(
-        "last_log_rotation", "Time time of the last log file rotation",
-        &last_log_rotation, Column::Offsets{}));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+        "last_log_rotation", "Time time of the last log file rotation", offsets,
+        [](const TableStatus & /*r*/) {
+            return std::chrono::system_clock::from_time_t(last_log_rotation);
+        }));
+    addColumn(std::make_unique<IntColumn::Reference>(
         "interval_length", "The default interval length from nagios.cfg",
         interval_length));
 
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "num_hosts", "The total number of hosts", g_num_hosts));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "num_services", "The total number of services", g_num_services));
 
-    addColumn(std::make_unique<StringPointerColumn>(
-        "program_version", "The version of the monitoring daemon",
-        Column::Offsets{}, get_program_version()));
+    addColumn(std::make_unique<StringColumn::Callback<TableStatus>>(
+        "program_version", "The version of the monitoring daemon", offsets,
+        [](const TableStatus & /*r*/) { return get_program_version(); }));
 
 // External command buffer
 #ifndef NAGIOS4
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands",
         external_command_buffer_slots));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer",
         external_command_buffer.items));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer",
         external_command_buffer.high));
 #else
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntColumn::Constant>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands (placeholder)", 0));
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntColumn::Constant>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
         0));
-    addColumn(std::make_unique<IntLambdaColumn::Constant>(
+    addColumn(std::make_unique<IntColumn::Constant>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
         0));
 #endif  // NAGIOS4
 
     // Livestatus' own status
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "cached_log_messages",
         "The current number of log messages MK Livestatus keeps in memory",
-        [mc](Row /*row*/) {
+        offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numCachedLogMessages());
         }));
-    addColumn(std::make_unique<StringPointerColumn>(
+    addColumn(std::make_unique<StringColumn::Callback<TableStatus>>(
         "livestatus_version", "The version of the MK Livestatus module",
-        Column::Offsets{}, VERSION));
-    addColumn(std::make_unique<IntLambdaColumn>(
+        offsets, [](const TableStatus & /*r*/) { return VERSION; }));
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "livestatus_active_connections",
-        "The current number of active connections to MK Livestatus",
-        [&](Row /*row*/) { return g_livestatus_active_connections.load(); }));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+        "The current number of active connections to MK Livestatus", offsets,
+        [&](const TableStatus & /*r*/) {
+            return g_livestatus_active_connections.load();
+        }));
+    addColumn(std::make_unique<IntColumn::Reference>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
         g_num_queued_connections));
-    addColumn(std::make_unique<IntLambdaColumn::Reference>(
+    addColumn(std::make_unique<IntColumn::Reference>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
         g_livestatus_threads));
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "livestatus_usage",
         "The average usage of the livestatus connection slots, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{}, &g_avg_livestatus_usage._average));
+        offsets, [](const TableStatus & /*r*/) {
+            return g_avg_livestatus_usage.get();
+        }));
 
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "average_latency_generic",
         "The average latency for executing active checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{}, &g_average_active_latency));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets,
+        [](const TableStatus & /*r*/) { return g_average_active_latency; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "average_latency_cmk",
         "The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{}, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        "average_latency_fetcher",
+        "The average latency for executing Check_MK fetchers (i.e. the time the start of the execution is behind the schedule)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "average_latency_real_time",
         "The average latency for executing real time checks (i.e. the time the start of the execution is behind the schedule)",
-        Column::Offsets{}, &dummy_double));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "helper_usage_generic",
         "The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{}, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "helper_usage_cmk",
         "The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{}, &dummy_double));
-    addColumn(std::make_unique<DoublePointerColumn>(
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         "helper_usage_real_time",
         "The average usage of the real time check helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
-        Column::Offsets{}, &dummy_double));
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        "helper_usage_fetcher",
+        "The average usage of the fetcher helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        "helper_usage_checker",
+        "The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
 
-    addColumn(std::make_unique<BoolPointerColumn>(
+    addColumn(std::make_unique<BoolColumn::Callback<TableStatus>>(
         "has_event_handlers",
-        "Whether or not at alert handler rules are configured (0/1)",
-        &g_any_event_handler_enabled));
+        "Whether or not at alert handler rules are configured (0/1)", offsets,
+        [](const TableStatus & /*r*/) { return g_any_event_handler_enabled; }));
+
+    addColumn(std::make_unique<BoolColumn::Callback<TableStatus>>(
+        "is_trial_expired", "Whether or not expired trial of demo version",
+        offsets, [](const TableStatus & /*r*/) {
+#ifdef DEMOVERSION  // will be patched by version.groovy for DEMO release
+            return true;
+#else
+            return false;
+#endif
+        }));
 
     // Special stuff for Check_MK
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        [mc](Row /*row*/) {
+        offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(
                 mk_inventory_last(mc->mkInventoryPath() / ".last"));
         }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "num_queued_notifications",
         "The number of queued notifications which have not yet been delivered to the notification helper",
-        [mc](Row /*row*/) {
+        offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedNotifications());
         }));
-    addColumn(std::make_unique<IntLambdaColumn>(
+    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "num_queued_alerts",
         "The number of queued alerts which have not yet been delivered to the alert helper",
-        [mc](Row /*row*/) {
+        offsets, [mc](const TableStatus & /*r*/) {
             return static_cast<int32_t>(mc->numQueuedAlerts());
+        }));
+    addColumn(std::make_unique<BlobColumn::Callback<TableStatus>::File>(
+        "license_usage_history", "Historic license usage information", offsets,
+        [mc]() { return mc->licenseUsageHistoryPath(); },
+        [](const TableStatus & /*r*/) { return std::filesystem::path{}; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        "average_runnable_jobs_fetcher",
+        "The average count of scheduled fetcher jobs which have not yet been processed",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        "average_runnable_jobs_checker",
+        "The average count of queued replies which have not yet been delivered to the checker helpers",
+        offsets, [](const TableStatus & /*r*/) { return 0.0; }));
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
+        "state_file_created", "The time when state file had been created",
+        offsets, [](const TableStatus & /*r*/) {
+            return std::chrono::system_clock::from_time_t(0);
         }));
 }
 
 void TableStatus::addCounterColumns(const std::string &name,
                                     const std::string &description,
+                                    const ColumnOffsets &offsets,
                                     Counter which) {
-    addColumn(std::make_unique<DoublePointerColumn>(
-        name, "The number of " + description + " since program start",
-        Column::Offsets{}, counterAddress(which)));
-    addColumn(std::make_unique<DoublePointerColumn>(
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
+        name, "The number of " + description + " since program start", offsets,
+        [which](const TableStatus & /*r*/) { return counterValue(which); }));
+    addColumn(std::make_unique<DoubleColumn::Callback<TableStatus>>(
         name + "_rate", "The averaged number of " + description + " per second",
-        Column::Offsets{}, counterRateAddress(which)));
+        offsets,
+        [which](const TableStatus & /*r*/) { return counterRate(which); }));
 }
 
 std::string TableStatus::name() const { return "status"; }
@@ -301,5 +335,8 @@ std::string TableStatus::name() const { return "status"; }
 std::string TableStatus::namePrefix() const { return "status_"; }
 
 void TableStatus::answerQuery(Query *query) {
-    query->processDataset(Row(this));
+    const TableStatus *r = this;
+    query->processDataset(Row(r));
 }
+
+Row TableStatus::getDefault() const { return Row{this}; }

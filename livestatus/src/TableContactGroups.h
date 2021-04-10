@@ -7,7 +7,9 @@
 #define TableContactGroups_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "Row.h"
 #include "Table.h"
 class MonitoringCore;
@@ -20,7 +22,7 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    [[nodiscard]] Row findObject(const std::string &objectspec) const override;
+    [[nodiscard]] Row get(const std::string &primary_key) const override;
 };
 
 #endif  // TableContactGroups_h

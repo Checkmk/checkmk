@@ -4,33 +4,29 @@ catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:
- This check makes use of the output of a working {ipmitool} on
- a Linux system. If the kernel properly supports IPMI and {ipmitool}
- is installed, then the agent will output the current state of
- power supplies, cooling devices, temperatures and other devices
- avaiable via IPMI. This check makes
- sure that all those devices are working properly.
+ This check monitors the output of {ipmitool} on Linux systems. If the kernel
+ supports IPMI and {ipmitool} is installed, then the agent will output the
+ current state of power supplies, cooling devices, temperature sensors and
+ other devices available via IPMI.
 
- Fortunately, IPMI provides not only the current sensor values but also
- their state, so no levels need to be configured for this checks.
+ The check reports the sensor state and the value measured by the sensor, if
+ available. Furthermore, if the sensor reports upper or lower levels, these
+ are checked against the currently reported value.
 
- This check provides a summarized mode, where all sensors appear as one
- summary check per host and a detailed mode with one check per sensor.
-
- Please note: on some systems IPMI reports sensors in a non-ok state wheras
- actually no problem exists. As of version 1.1.11i1 these sensors can be
- ignored with the configuration variable {ipmi_ignored_sensors}.
+ Using the rule "IPMI sensors", user-defined levels can be configured (per
+ sensor). Furthermore, this rule offers the option to define custom mappings
+ from sensor states to monitoring states. Finally, the rule allows for ignoring
+ sensors by their name or by their state (summary mode only, see below).
 
 item:
- {"Summary"} for summary mode, the name of the IPMI item
- in detailed mode.
+ {"Summary"} for summary mode (see below) or the name of the IPMI item for the
+ detailed mode.
 
 inventory:
- One summary service is created in summary mode if at least one sensor is found.
- One service is created for each sensor in detailed mode.
-
- Note: Some obscure hardware lists sensors in the state
- {nr} which do not produce usable output. If you set
- {impi_ignore_nr} to {True} then these sensors will
- be ignored.
-
+ The check offers two modes for discovering sensors. In summary mode, if at least
+ one sensor is found, a single service is discovered. This service summarizes the
+ states of all IPMI sensors. In the detailed mode, one service is created for
+ each discovered sensor. Users can switch between the modes using the rule "IPMI
+ sensor discovery". Furthermore, in detailed mode, this rule offers the option
+ to ignore sensors either by their name of by their state. Ignored sensors will
+ not be discovered.

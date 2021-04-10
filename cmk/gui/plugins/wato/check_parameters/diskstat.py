@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,44 +8,77 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
-    ListChoice,
+    FixedValue,
     TextAscii,
+    Transform,
 )
 
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     Levels,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
     HostRulespec,
 )
 
 
+def transform_diskstat(params):
+    if isinstance(params, list):
+        return {mode: True for mode in params}
+    return params
+
+
 def _valuespec_diskstat_inventory():
-    return ListChoice(
-        title=_("Discovery mode for Disk IO check"),
-        help=_("This rule controls which and how many checks will be created "
-               "for monitoring individual physical and logical disks. "
-               "Note: the option <i>Create a summary for all read, one for "
-               "write</i> has been removed. Some checks will still support "
-               "this settings, but it will be removed there soon."),
-        choices=[
-            ("summary", _("Create a summary over all physical disks")),
-            # This option is still supported by some checks, but is deprecated and
-            # we fade it out...
-            # ( "legacy",   _("Create a summary for all read, one for write") ),
-            ("physical", _("Create a separate check for each physical disk")),
-            ("lvm", _("Create a separate check for each LVM volume (Linux)")),
-            ("vxvm", _("Creata a separate check for each VxVM volume (Linux)")),
-            ("diskless", _("Creata a separate check for each partition (XEN)")),
-        ],
-        default_value=['summary'],
+    return Transform(
+        Dictionary(
+            title=_("Disk IO discovery"),
+            help=_("This rule controls which and how many checks will be created "
+                   "for monitoring individual physical and logical disks. "
+                   "Note: the option <i>Create a summary for all read, one for "
+                   "write</i> has been removed. Some checks will still support "
+                   "this settings, but it will be removed there soon."),
+            elements=[
+                ('summary',
+                 FixedValue(
+                     True,
+                     title=_("Summary"),
+                     totext="Create a summary over all physical disks",
+                 )),
+                ('physical',
+                 FixedValue(
+                     True,
+                     title=_("Physical disks"),
+                     totext="Create a separate check for each physical disk",
+                 )),
+                ('lvm',
+                 FixedValue(
+                     True,
+                     title=_("LVM volumes (Linux)"),
+                     totext="Create a separate check for each LVM volume (Linux)",
+                 )),
+                ('vxvm',
+                 FixedValue(
+                     True,
+                     title=_("VxVM volumes (Linux)"),
+                     totext="Create a separate check for each VxVM volume (Linux)",
+                 )),
+                ('diskless',
+                 FixedValue(
+                     True,
+                     title=_("Partitions (XEN)"),
+                     totext="Create a separate check for each partition (XEN)",
+                 )),
+            ],
+            default_keys=['summary'],
+        ),
+        forth=transform_diskstat,
     )
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCheckParametersStorage,
+        group=RulespecGroupCheckParametersDiscovery,
         name="diskstat_inventory",
         valuespec=_valuespec_diskstat_inventory,
     ))
@@ -130,5 +163,5 @@ rulespec_registry.register(
         item_spec=_item_spec_diskstat,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_diskstat,
-        title=lambda: _("Levels for disk IO"),
+        title=lambda: _("Disk IO levels"),
     ))

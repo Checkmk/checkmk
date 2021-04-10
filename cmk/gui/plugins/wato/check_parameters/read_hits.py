@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -18,8 +18,7 @@ from cmk.gui.plugins.wato import (
 )
 
 
-def _parameter_valuespec_read_hits():
-    # type: () -> Tuple
+def _parameter_valuespec_read_hits() -> Tuple:
     return Tuple(
         title=_("Prefetch hits"),
         elements=[
@@ -35,5 +34,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         item_spec=lambda: TextAscii(title=_("Port index or 'Total'")),
         parameter_valuespec=_parameter_valuespec_read_hits,
-        title=lambda: _("Read prefetch hits for DDN S2A devices"),
+        title=lambda: _("DDN S2A read prefetch hits"),
     ))

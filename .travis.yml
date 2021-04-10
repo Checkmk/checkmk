@@ -10,38 +10,21 @@ language: python
 matrix:
     include:
         # Execute all these targets in parallel
-        - name: "Python2 PyLint tests"
-          python: "2.7"
-          env: TEST_TARGETS="test-pylint"
-            TEST_PATH=tests
-        - name: "Python2 unit, futurize and bandit tests"
-          python: "2.7"
-          env: TEST_TARGETS="test-unit test-python-futurize test-bandit"
-            TEST_PATH=tests
-        - name: "Python2 formatting"
-          python: "2.7"
+        - name: "Bandit tests"
+          python: "3.8"
+          env: TEST_TARGETS="test-bandit"
+        - name: "Python formatting"
+          python: "3.8"
           env: TEST_TARGETS="test-format-python"
-            TEST_PATH=tests-py3
-        - name: "Python3 PyLint tests"
-          python: "3.7"
+        - name: "Pylint tests"
+          python: "3.8"
           env: TEST_TARGETS="test-pylint"
-            TEST_PATH=tests-py3
-        - name: "Python3 unit tests"
-          python: "3.7"
+        - name: "Python unit tests"
+          python: "3.8"
           env: TEST_TARGETS="test-unit"
-            TEST_PATH=tests-py3
-        - name: "Python3 formatting"
-          python: "3.7"
-          env: TEST_TARGETS="test-format-python3"
-            TEST_PATH=tests-py3
-        - name: "Python3 typing tests"
-          python: "3.7"
+        - name: "mypy tests"
+          python: "3.8"
           env: TEST_TARGETS="test-mypy-raw"
-            TEST_PATH=tests-py3
-        - name: "Shell tests"
-          python: "3.7"
-          env: TEST_TARGETS="test-unit-sh"
-            TEST_PATH=tests
 env:
     global:
         # Optimize builds by caching pip and pipenv things
@@ -64,10 +47,10 @@ addons:
             - librrd-dev
 install:
     - pip install pipenv
-    - make -C virtual-envs/$TRAVIS_PYTHON_VERSION .venv
+    - make .venv
 script:
     # TODO: Some tests could be optimized for better execution time. For
     # example test-format-python optionally checks only the files in set in
     # the environment variable PYTHON_FILES. Without it, it always checks
     # all known python files.
-    - travis_wait 30 make -C $TEST_PATH $TEST_TARGETS;
+    - travis_wait 30 make -C tests $TEST_TARGETS;

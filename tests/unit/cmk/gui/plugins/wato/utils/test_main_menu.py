@@ -1,67 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-import cmk.utils.version as cmk_version
-
+from cmk.gui.watolib.main_menu import ModuleRegistry
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
-def test_registered_modules():
-    expected_modules = [
-        'folder',
-        'tags',
-        'globalvars',
-        'ruleeditor',
-        'static_checks',
-        'check_plugins',
-        'host_groups',
-        'users',
-        'roles',
-        'contact_groups',
-        'notifications',
-        'timeperiods',
-        'mkeventd_rule_packs',
-        'bi_packs',
-        'sites',
-        'backup',
-        'passwords',
-        'analyze_config',
-        'background_jobs_overview',
-        'pattern_editor',
-        'icons',
-        'diagnostics',
-    ]
-
-    if cmk_version.is_raw_edition():
-        expected_modules += [
-            'download_agents',
-        ]
-
-    if not cmk_version.is_raw_edition():
-        expected_modules += [
-            'agents',
-            'alert_handlers',
-            'mkps',
-        ]
-
-    if cmk_version.is_managed_edition():
-        expected_modules += [
-            "customer_management",
-        ]
-
-    module_names = [m.mode_or_url for m in main_menu.get_modules()]
-    assert sorted(module_names) == sorted(expected_modules)
-
-
-def test_register_module(monkeypatch):
-    monkeypatch.setattr(main_menu, "main_module_registry", main_menu.ModuleRegistry())
+def test_register_modules(monkeypatch):
+    monkeypatch.setattr(main_menu, "main_module_registry", ModuleRegistry())
     module = main_menu.WatoModule(
         mode_or_url="dang",
         description='descr',
@@ -75,10 +27,12 @@ def test_register_module(monkeypatch):
     modules = main_menu.get_modules()
     assert len(modules) == 1
     registered = modules[0]
-    assert isinstance(registered, main_menu.MainModule)
+    assert isinstance(registered, main_menu.ABCMainModule)
     assert registered.mode_or_url == "dang"
     assert registered.description == 'descr'
     assert registered.permission == 'icons'
     assert registered.title == 'Custom DING'
     assert registered.sort_index == 100
     assert registered.icon == 'icons'
+    assert registered.is_show_more is False
+    assert registered.topic == main_menu.MainModuleTopicCustom

@@ -24,14 +24,13 @@
 # Boston, MA 02110-1301 USA.
 
 import os
-from typing import Dict  # pylint: disable=unused-import
+from typing import Dict
 import omdlib
 
 
 class VersionInfo:
     """Provides OMD version/platform specific infos"""
-    def __init__(self, version):
-        # type: (str) -> None
+    def __init__(self, version: str) -> None:
         self._version = version
 
         # Register all relevant vars
@@ -46,15 +45,13 @@ class VersionInfo:
         self.APACHE_CONF_DIR = ""
         self.DISTRO_CODE = ""
 
-    def load(self):
-        # type: () -> None
+    def load(self) -> None:
         """Update vars with real values from info file"""
         for k, v in self._read_info().items():
             setattr(self, k, v)
 
-    def _read_info(self):
-        # type: () -> Dict[str, str]
-        info = {}  # type: Dict[str, str]
+    def _read_info(self) -> Dict[str, str]:
+        info: Dict[str, str] = {}
         info_dir = "/omd/versions/" + omdlib.__version__ + "/share/omd"
         for f in os.listdir(info_dir):
             if f.endswith(".info"):

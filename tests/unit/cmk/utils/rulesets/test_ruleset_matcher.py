@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,6 +7,8 @@
 # pylint: disable=redefined-outer-name
 import pytest  # type: ignore[import]
 from testlib.base import Scenario
+
+from cmk.utils.type_defs import CheckPluginName
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
@@ -482,7 +484,7 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host1")
     ts.set_autochecks("host1", [
-        Service("cpu.load",
+        Service(CheckPluginName("cpu_load"),
                 None,
                 "CPU load",
                 "{}",
@@ -495,7 +497,13 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     ts.add_host("host2")
     ts.set_autochecks("host2", [
-        Service("cpu.load", None, "CPU load", "{}", service_labels=DiscoveredServiceLabels()),
+        Service(
+            CheckPluginName("cpu_load"),
+            None,
+            "CPU load",
+            "{}",
+            service_labels=DiscoveredServiceLabels(),
+        ),
     ])
 
     config_cache = ts.apply(monkeypatch)
@@ -506,3 +514,15 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
             hostname, service_description),
                                            ruleset=service_label_ruleset,
                                            is_binary=False)) == expected_result
+
+
+def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
+    config_cache = Scenario().apply(monkeypatch)
+    ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
+    ruleset_optimizer.get_service_ruleset(ruleset, False, False)
+    ruleset_optimizer.get_host_ruleset(ruleset, False, False)
+    assert ruleset_optimizer._host_ruleset_cache
+    assert ruleset_optimizer._service_ruleset_cache
+    ruleset_optimizer.clear_ruleset_caches()
+    assert not ruleset_optimizer._host_ruleset_cache
+    assert not ruleset_optimizer._service_ruleset_cache

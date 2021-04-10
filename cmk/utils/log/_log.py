@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,34 +6,27 @@
 
 import sys
 import logging
-from typing import AnyStr, Text, Union, IO  # pylint: disable=unused-import
+from logging.handlers import WatchedFileHandler
+from pathlib import Path
+from typing import IO, Optional, Union
 
 from ._level import VERBOSE
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path
-
-if sys.version_info[0] >= 3:
-    IOLog = IO[Text]
-else:
-    IOLog = IO[AnyStr]
+IOLog = IO[str]
 
 logger = logging.getLogger("cmk")
 
 
-def get_formatter(format_str="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
-    # type: (str) -> logging.Formatter
+def get_formatter(
+    format_str: str = "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"
+) -> logging.Formatter:
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
     if you like."""
     return logging.Formatter(format_str)
 
 
-def clear_console_logging():
-    # type: () -> None
+def clear_console_logging() -> None:
     logger.handlers[:] = []
     logger.addHandler(logging.NullHandler())
     logger.setLevel(logging.INFO)
@@ -44,8 +37,7 @@ def clear_console_logging():
 clear_console_logging()
 
 
-def setup_console_logging():
-    # type: () -> None
+def setup_console_logging() -> None:
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just
     the log line is written.
@@ -56,8 +48,7 @@ def setup_console_logging():
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-def open_log(log_file_path):
-    # type: (Union[str, Path]) -> IOLog
+def open_log(log_file_path: Union[str, Path]) -> IOLog:
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
@@ -65,10 +56,7 @@ def open_log(log_file_path):
         log_file_path = Path(log_file_path)
 
     try:
-        if sys.version_info[0] >= 3:
-            logfile = log_file_path.open("a", encoding="utf-8")  # type: IOLog
-        else:
-            logfile = log_file_path.open("ab")  # type: IOLog
+        logfile: IOLog = log_file_path.open("a", encoding="utf-8")
         logfile.flush()
     except Exception as e:
         logger.exception("Cannot open log file '%s': %s", log_file_path, e)
@@ -77,14 +65,26 @@ def open_log(log_file_path):
     return logfile
 
 
-def setup_logging_handler(stream, formatter=None):
-    # type: (IOLog, logging.Formatter) -> None
+def setup_watched_file_logging_handler(logfile, formatter=None):
+    """Removes all previous logger handlers and set a logfile handler for the given logfile path
+    This handler automatically reopens the logfile if it detects an inode change, e.g through logrotate
+    """
+    if formatter is None:
+        formatter = get_default_formatter()
+
+    handler = WatchedFileHandler(logfile)
+    handler.setFormatter(formatter)
+    del logger.handlers[:]  # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+
+def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] = None) -> None:
     """This method enables all log messages to be written to the given
-    stream file object. The messages are formated in Check_MK standard
+    stream file object. The messages are formatted in Check_MK standard
     logging format.
     """
     if formatter is None:
-        formatter = get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
+        formatter = get_default_formatter()
 
     handler = logging.StreamHandler(stream=stream)
     handler.setFormatter(formatter)
@@ -93,8 +93,25 @@ def setup_logging_handler(stream, formatter=None):
     logger.addHandler(handler)
 
 
-def verbosity_to_log_level(verbosity):
-    # type: (int) -> int
+def get_default_formatter():
+    return get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s")
+
+
+def modify_logging_handler(
+    handler: logging.StreamHandler,
+    formatter: Optional[logging.Formatter],
+) -> None:
+    """Changes logging behavior. Normally used by fetcher to prevent
+    non-formatted output to stdout"""
+
+    if formatter is not None:
+        handler.setFormatter(formatter)
+
+    del logger.handlers[:]  # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+
+def verbosity_to_log_level(verbosity: int) -> int:
     """Values for "verbosity":
 
       0: enables INFO and above

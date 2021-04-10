@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-import,unused-wildcard-import
 # <<<mysql>>>
 # [[mysql]]
 # Aborted_clients 0
@@ -54,7 +64,6 @@ check_info['mysql'] = {
     "inventory_function": discover(lambda k, values: 'version' in values),
     "check_function": check_mysql_version,
     "service_description": "MySQL Version %s",
-    "includes": ['mysql.include'],
 }
 
 #.
@@ -135,7 +144,6 @@ check_info['mysql.innodb_io'] = {
     "service_description": "MySQL InnoDB IO %s",
     "has_perfdata": True,
     "group": "mysql_innodb_io",
-    "includes": ["diskstat.include"],
 }
 
 #.
@@ -149,49 +157,68 @@ check_info['mysql.innodb_io'] = {
 #   +----------------------------------------------------------------------+
 
 
-# TODO: This check should rather output the current number of connections.
-# The historic maximum can be viewed in the RRD data...
 @get_parsed_item_data
 def check_mysql_connections(_no_item, params, data):
     if 'Max_used_connections' not in data:
-        return 3, 'Connection information are missing'
+        return 3, 'Connection information is missing'
 
     # The maximum number of connections that have been in use simultaneously
     # since the server started.
     conn = float(data['Max_used_connections'])
 
-    # Maximum number of possible parallel connections
+    # The number of currently open connections
+    conn_threads = float(data['Threads_connected'])
+
+    # Maximum number of possible parallel connections, set as a global system variable
     max_conn = float(data['max_connections'])
 
     perc_used = conn / max_conn * 100
+    perc_conn_threads = conn_threads / max_conn * 100
 
-    status = 0
-    status_txt = ''
-    perf_data = [
-        ("connections_max_used", conn),
-        ("connections_max", max_conn),
-        ('connections_perc_used', perc_used),
-    ]
+    status_txt = 'Max. parallel connections since server start'
+    yield check_levels(
+        value=perc_used,
+        dsname='connections_perc_used',
+        params=params.get('perc_used'),
+        human_readable_func=get_percent_human_readable,
+        infoname=status_txt,
+    )
 
-    if 'perc_used' in params:
-        warn, crit = params['perc_used']
-        if perc_used >= crit:
-            status = 2
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % crit
-        elif perc_used >= warn:
-            status = 1
-            status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % warn
+    yield check_levels(
+        value=conn,
+        dsname='connections_max_used',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
 
+    yield check_levels(
+        value=max_conn,
+        dsname='connections_max',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
 
-    return status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' % \
-            (conn, max_conn, perc_used, status_txt), perf_data
+    status_txt = 'Currently open connections'
+    yield check_levels(
+        value=perc_conn_threads,
+        dsname='connections_perc_conn_threads',
+        params=params.get('perc_conn_threads'),
+        human_readable_func=get_percent_human_readable,
+        infoname=status_txt,
+    )
+
+    yield check_levels(
+        value=conn_threads,
+        dsname='connections_conn_threads',
+        params=None,
+        human_readable_func=lambda x: '',
+    )
 
 
 @discover
 def mysql_connections(instance, values):
-    return all(x in values for x in ['Max_used_connections', 'max_connections'])
+    return all(
+        x in values for x in ['Max_used_connections', 'max_connections', 'Threads_connected'])
 
 
 check_info['mysql.connections'] = {
@@ -217,11 +244,16 @@ check_info['mysql.connections'] = {
 #   |                   |____/ \__\__,_|\__|\__,_|___/                     |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+factory_settings["MYSQL_GALERA_DEFAULT_PARAMETERS"] = {}
+
+
+def _has_wsrep_provider(data) -> bool:
+    return data.get('wsrep_provider') not in (None, 'none')
 
 
 def inventory_mysql_galerasync(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_local_state_comment' in data:
+        if _has_wsrep_provider(data) and 'wsrep_local_state_comment' in data:
             yield instance, {}
 
 
@@ -257,7 +289,7 @@ check_info['mysql.galerasync'] = {
 
 def inventory_mysql_galeradonor(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_sst_donor' in data:
+        if _has_wsrep_provider(data) and 'wsrep_sst_donor' in data:
             yield instance, {'wsrep_sst_donor': data['wsrep_sst_donor']}
 
 
@@ -282,6 +314,7 @@ check_info['mysql.galeradonor'] = {
     "inventory_function": inventory_mysql_galeradonor,
     "check_function": check_mysql_galeradonor,
     "service_description": "MySQL Galera Donor %s",
+    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
 #.
@@ -297,7 +330,7 @@ check_info['mysql.galeradonor'] = {
 
 def inventory_mysql_galerastartup(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_address' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_address' in data:
             yield instance, {}
 
 
@@ -337,7 +370,7 @@ check_info['mysql.galerastartup'] = {
 
 def inventory_mysql_galerasize(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_size' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_size' in data:
             yield instance, {'invsize': data['wsrep_cluster_size']}
 
 
@@ -362,6 +395,7 @@ check_info['mysql.galerasize'] = {
     "inventory_function": inventory_mysql_galerasize,
     "check_function": check_mysql_galerasize,
     "service_description": "MySQL Galera Size %s",
+    "default_levels_variable": "MYSQL_GALERA_DEFAULT_PARAMETERS",
 }
 
 #.
@@ -377,7 +411,7 @@ check_info['mysql.galerasize'] = {
 
 def inventory_mysql_galerastatus(parsed):
     for instance, data in parsed.items():
-        if data.get('wsrep_provider') is not None and 'wsrep_cluster_status' in data:
+        if _has_wsrep_provider(data) and 'wsrep_cluster_status' in data:
             yield instance, {}
 
 

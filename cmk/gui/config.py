@@ -1,35 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import sys
 import errno
 import os
 import copy
 import json
-from types import ModuleType  # pylint: disable=unused-import
-from typing import (  # pylint: disable=unused-import
-    Set, Any, AnyStr, Callable, Dict, List, Optional, Text, Tuple, Union,
-)
+from types import ModuleType
+from typing import Set, Any, AnyStr, Callable, Dict, Iterator, List, Optional, Tuple, Union
+from pathlib import Path
 import time
-import six
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from six import ensure_str
 
-from livestatus import (  # type: ignore[import]  # pylint: disable=unused-import
-    SiteId, SiteConfiguration, SiteConfigurations,
-)
+from livestatus import SiteId, SiteConfiguration, SiteConfigurations
 
 import cmk.utils.version as cmk_version
 import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
 from cmk.utils.type_defs import UserId
 
 # TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
@@ -79,9 +72,9 @@ builtin_role_ids = ["user", "admin", "guest"]
 config_dir = cmk.utils.paths.var_dir + "/web"
 
 # Stores the initial configuration values
-default_config = {}  # type: Dict[str, Any]
+default_config: Dict[str, Any] = {}
 # Needed as helper to determine the builtin variables
-_vars_before_plugins = set()  # type: Set[str]
+_legacy_plugin_vars: Dict[str, Any] = {}
 
 # TODO: Clean this up
 permission_declaration_functions = []
@@ -92,39 +85,39 @@ HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
 
 
-class FOREACH_HOST(object):
+class FOREACH_HOST:
     pass
 
 
-class FOREACH_CHILD(object):
+class FOREACH_CHILD:
     pass
 
 
-class FOREACH_CHILD_WITH(object):
+class FOREACH_CHILD_WITH:
     pass
 
 
-class FOREACH_PARENT(object):
+class FOREACH_PARENT:
     pass
 
 
-class FOREACH_SERVICE(object):
+class FOREACH_SERVICE:
     pass
 
 
-class REMAINING(object):
+class REMAINING:
     pass
 
 
-class DISABLED(object):
+class DISABLED:
     pass
 
 
-class HARD_STATES(object):
+class HARD_STATES:
     pass
 
 
-class DT_AGGR_WARN(object):
+class DT_AGGR_WARN:
     pass
 
 
@@ -132,7 +125,7 @@ class DT_AGGR_WARN(object):
 # bi.py and also in multisite.mk. "Double" declarations are no problem
 # here since this is a dict (List objects have problems with duplicate
 # definitions).
-aggregation_functions = {}  # type: Dict[str, Callable]
+aggregation_functions: Dict[str, Callable] = {}
 
 #.
 #   .--Functions-----------------------------------------------------------.
@@ -155,8 +148,7 @@ def initialize():
     cmk.gui.i18n.set_user_localizations(user_localizations)
 
 
-def _load_config_file(path):
-    # type: (str) -> None
+def _load_config_file(path: str) -> None:
     """Load the given GUI configuration file"""
     try:
         # TODO: Can be changed to text IO with Python 3
@@ -175,8 +167,7 @@ def _load_config_file(path):
 # have changed. We could make this being cached for multiple requests just like the
 # plugins of other modules. This may save significant time in case of small requests like
 # the graph ajax page or similar.
-def load_config():
-    # type: () -> None
+def load_config() -> None:
     global sites
 
     # Set default values for all user-changable configuration settings
@@ -211,8 +202,7 @@ def load_config():
     execute_post_config_load_hooks()
 
 
-def _prepare_tag_config():
-    # type: () -> None
+def _prepare_tag_config() -> None:
     global tags
 
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
@@ -224,55 +214,50 @@ def _prepare_tag_config():
     tags = cmk.utils.tags.get_effective_tag_config(tag_config)
 
 
-def execute_post_config_load_hooks():
-    # type: () -> None
+def execute_post_config_load_hooks() -> None:
     for func in _post_config_load_hooks:
         func()
 
 
-_post_config_load_hooks = []  # type: List[Callable[[], None]]
+_post_config_load_hooks: List[Callable[[], None]] = []
 
 
-def register_post_config_load_hook(func):
-    # type: (Callable[[], None]) -> None
+def register_post_config_load_hook(func: Callable[[], None]) -> None:
     _post_config_load_hooks.append(func)
 
 
-def _initialize_with_default_config():
-    # type: () -> None
-    # Since plugin loading changes the global namespace and these changes are kept
-    # for the whole module lifetime, the "vars before plugins" can only be determined
-    # once before the first plugin loading
-    if not _vars_before_plugins:
-        _vars_before_plugins.update(all_nonfunction_vars(globals()))
-
+def _initialize_with_default_config() -> None:
+    vars_before_plugins = all_nonfunction_vars(globals())
     load_plugins(True)
     vars_after_plugins = all_nonfunction_vars(globals())
-    _load_default_config(_vars_before_plugins, vars_after_plugins)
+    new_vars = vars_after_plugins.difference(vars_before_plugins)
+
+    # Keep the known plugin vars during whole module lifetime.
+    # Extend the known plugin vars with each config loading.
+    _legacy_plugin_vars.update({k: globals()[k] for k in new_vars})
+
+    _load_default_config(_legacy_plugin_vars)
 
     _apply_default_config()
 
 
-def _apply_default_config():
-    # type: () -> None
+def _apply_default_config() -> None:
     for k, v in default_config.items():
         if isinstance(v, (dict, list)):
             v = copy.deepcopy(v)
         globals()[k] = v
 
 
-def _load_default_config(vars_before_plugins, vars_after_plugins):
-    # type: (Set[str], Set[str]) -> None
+def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
     default_config.clear()
     _load_default_config_from_module_plugins()
-    _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins)
+    _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults)
 
 
-def _load_default_config_from_module_plugins():
-    # type: () -> None
+def _load_default_config_from_module_plugins() -> None:
     # TODO: Find a better solution for this. Probably refactor declaration of default
     # config option.
-    config_plugin_vars = {}  # type: Dict
+    config_plugin_vars: Dict = {}
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
@@ -286,14 +271,11 @@ def _load_default_config_from_module_plugins():
         default_config[k] = v
 
 
-def _load_default_config_from_legacy_plugins(vars_before_plugins, vars_after_plugins):
-    # type: (Set[str], Set[str]) -> None
-    new_vars = vars_after_plugins.difference(vars_before_plugins)
-    default_config.update({k: copy.deepcopy(globals()[k]) for k in new_vars})
+def _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
+    default_config.update(legacy_plugin_var_defaults)
 
 
-def _config_plugin_modules():
-    # type: () -> List[ModuleType]
+def _config_plugin_modules() -> List[ModuleType]:
     return [
         module for name, module in sys.modules.items()
         if (name.startswith("cmk.gui.plugins.config.") or name.startswith(
@@ -302,33 +284,81 @@ def _config_plugin_modules():
     ]
 
 
-def reporting_available():
-    # type: () -> bool
+def reporting_available() -> bool:
     # Check the existance of one arbitrary config variable from the reporting module
     return 'reporting_filename' in globals()
 
 
-def combined_graphs_available():
-    # type: () -> bool
+def combined_graphs_available() -> bool:
     return 'have_combined_graphs' in globals()
 
 
-def hide_language(lang):
-    # type: (str) -> bool
+def hide_language(lang: str) -> bool:
     return lang in hide_languages
 
 
-def all_nonfunction_vars(var_dict):
-    # type: (Dict[str, Any]) -> Set[str]
+def all_nonfunction_vars(var_dict: Dict[str, Any]) -> Set[str]:
     return {
         name for name, value in var_dict.items()
         if name[0] != '_' and not hasattr(value, '__call__')
     }
 
 
-def get_language():
-    # type: () -> Optional[str]
+def get_language() -> Optional[str]:
     return default_language
+
+
+def get_ntop_connection() -> Optional[Dict]:
+    # Use this function if you *really* want to try accessing the ntop connection settings
+    try:
+        # ntop is currently part of CEE and will *only* be defined if we are a CEE
+        return ntop_connection  # type: ignore[name-defined]
+    except NameError:
+        return None
+
+
+def get_ntop_connection_mandatory() -> Dict:
+    connection = get_ntop_connection()
+    return connection if connection else {}
+
+
+def is_ntop_available() -> bool:
+    # Use this function if you want to know if the ntop intergration is available in general
+    return isinstance(get_ntop_connection(), dict)
+
+
+def is_ntop_configured() -> bool:
+    # Use this function if you want to know if the connection to ntop is fully set-up
+    # e.g. to decide if ntop links should be hidden
+
+    if is_ntop_available():
+        ntop = get_ntop_connection_mandatory()
+        if not ntop.get("is_activated", False):
+            return False
+        custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", False)
+
+        # We currently have two options to get an ntop username
+        # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
+        # 2) Take the checkmk username as ntop username -> always declare ntop as configured
+        return (bool(user.get_attribute(custom_attribute_name, '')) if isinstance(
+            custom_attribute_name, str) else not custom_attribute_name)
+
+    return False
+
+
+def get_ntop_misconfiguration_reason() -> str:
+    if not is_ntop_available():
+        return _("ntopng integration is only available in CEE")
+    ntop = get_ntop_connection()
+    assert isinstance(ntop, dict)
+    if not ntop.get("is_activated", False):
+        return _("ntopng integration is not activated under global settings.")
+    custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
+    if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
+        return _("The ntopng username should be derived from \'ntopng Username\' "
+                 "under the current's user settings (identity) but this is not "
+                 "set for the current user.")
+    return ""
 
 
 #.
@@ -355,27 +385,23 @@ declare_permission_section = permissions.declare_permission_section
 # just call declare_permission(). They are being called in the correct
 # situations.
 # TODO: Clean this up
-def declare_dynamic_permissions(func):
-    # type: (Callable) -> None
+def declare_dynamic_permissions(func: Callable) -> None:
     permission_declaration_functions.append(func)
 
 
 # This function needs to be called by all code that needs access
 # to possible dynamic permissions
 # TODO: Clean this up
-def load_dynamic_permissions():
-    # type: () -> None
+def load_dynamic_permissions() -> None:
     for func in permission_declaration_functions:
         func()
 
 
-def get_role_permissions():
-    # type: () -> Dict[str, List[str]]
+def get_role_permissions() -> Dict[str, List[str]]:
     """Returns the set of permissions for all roles"""
-    role_permissions = {}  # type: Dict[str, List[str]]
-    roleids = roles.keys()
-    for perm_class in permissions.permission_registry.values():
-        perm = perm_class()
+    role_permissions: Dict[str, List[str]] = {}
+    roleids = set(roles.keys())
+    for perm in permissions.permission_registry.values():
         for role_id in roleids:
             if role_id not in role_permissions:
                 role_permissions[role_id] = []
@@ -385,8 +411,11 @@ def get_role_permissions():
     return role_permissions
 
 
-def _may_with_roles(some_role_ids, pname):
-    # type: (List[str], str) -> bool
+def base_roles_with_permission(pname: str) -> List[str]:
+    return [r for r in builtin_role_ids if _may_with_roles([r], pname)]
+
+
+def _may_with_roles(some_role_ids: List[str], pname: str) -> bool:
     # If at least one of the given roles has this permission, it's fine
     for role_id in some_role_ids:
         role = roles[role_id]
@@ -404,7 +433,7 @@ def _may_with_roles(some_role_ids, pname):
                 base_role_id = role_id
             if pname not in permissions.permission_registry:
                 return False  # Permission unknown. Assume False. Functionality might be missing
-            perm = permissions.permission_registry[pname]()
+            perm = permissions.permission_registry[pname]
             he_may = base_role_id in perm.defaults
         if he_may:
             return True
@@ -425,8 +454,7 @@ def _may_with_roles(some_role_ids, pname):
 # TODO: Shouldn't this be moved to e.g. login.py or userdb.py?
 
 
-def _baserole_ids_from_role_ids(role_ids):
-    # type: (List[str]) -> List[str]
+def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
     base_roles = set()
     for r in role_ids:
         if r in builtin_role_ids:
@@ -436,8 +464,7 @@ def _baserole_ids_from_role_ids(role_ids):
     return list(base_roles)
 
 
-def _most_permissive_baserole_id(baserole_ids):
-    # type: (List[str]) -> str
+def _most_permissive_baserole_id(baserole_ids: List[str]) -> str:
     if "admin" in baserole_ids:
         return "admin"
     if "user" in baserole_ids:
@@ -445,11 +472,10 @@ def _most_permissive_baserole_id(baserole_ids):
     return "guest"
 
 
-def _initial_permission_cache(user_id):
-    # type: (Optional[UserId]) -> Dict[str, bool]
+def _initial_permission_cache(user_id: Optional[UserId]) -> Dict[str, bool]:
     # Prepare cache of already computed permissions
     # Make sure, admin can restore permissions in any case!
-    if user_id in [six.ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return {
             "general.use": True,  # use Multisite
             "wato.use": True,  # enter WATO
@@ -459,12 +485,11 @@ def _initial_permission_cache(user_id):
     return {}
 
 
-def _confdir_for_user_id(user_id):
-    # type: (Optional[UserId]) -> Optional[str]
+def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
     if user_id is None:
         return None
 
-    confdir = config_dir + "/" + six.ensure_str(user_id)
+    confdir = config_dir + "/" + ensure_str(user_id)
     store.mkdir(confdir)
     return confdir
 
@@ -472,9 +497,8 @@ def _confdir_for_user_id(user_id):
 # This objects intention is currently only to handle the currently logged in user after authentication.
 # But maybe this can be used for managing all user objects in future.
 # TODO: Cleanup accesses to module global vars and functions
-class LoggedInUser(object):
-    def __init__(self, user_id):
-        # type: (Optional[Text]) -> None
+class LoggedInUser:
+    def __init__(self, user_id: Optional[str]) -> None:
         self.id = UserId(user_id) if user_id else None
 
         self.confdir = _confdir_for_user_id(self.id)
@@ -487,19 +511,31 @@ class LoggedInUser(object):
 
         self._permissions = _initial_permission_cache(self.id)
         self._siteconf = self.load_file("siteconfig", {})
-        self._button_counts = {}  # type: Dict[str, float]
-        self._stars = set()  # type: Set[str]
-        self._tree_states = {}  # type: Dict
-        self._bi_assumptions = {
-        }  # type: Dict[Union[Tuple[six.text_type, six.text_type], Tuple[six.text_type, six.text_type, six.text_type]], int]
-        self._tableoptions = {}  # type: Dict[str, Dict[str, Any]]
+        self._button_counts: Dict[str, float] = {}
+        self._stars: Set[str] = set()
+        self._tree_states: Dict = {}
+        self._bi_assumptions: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int] = {}
+        self._tableoptions: Dict[str, Dict[str, Any]] = {}
 
-    def _gather_roles(self, user_id):
-        # type: (Optional[UserId]) -> List[str]
+    @property
+    def ident(self) -> UserId:
+        """Return the user-id as a string, or crash.
+
+        Returns:
+            The user_id as a string.
+
+        Raises:
+            ValueError: whenever there is no user_id.
+
+        """
+        if self.id is None:
+            raise AttributeError("No user_id on this instance.")
+        return self.id
+
+    def _gather_roles(self, user_id: Optional[UserId]) -> List[str]:
         return roles_of_user(user_id)
 
-    def _load_attributes(self, user_id, role_ids):
-        # type: (Optional[UserId], List[str]) -> Any
+    def _load_attributes(self, user_id: Optional[UserId], role_ids: List[str]) -> Any:
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
             attributes = multisite_users.get(user_id, {
@@ -507,146 +543,146 @@ class LoggedInUser(object):
             })
         return attributes
 
-    def get_attribute(self, key, deflt=None):
-        # type: (str, Any) -> Any
+    def get_attribute(self, key: str, deflt: Any = None) -> Any:
         return self._attributes.get(key, deflt)
 
-    def _set_attribute(self, key, value):
-        # type: (str, Any) -> None
+    def _set_attribute(self, key: str, value: Any) -> None:
         self._attributes[key] = value
 
-    def _unset_attribute(self, key):
-        # type: (str) -> None
+    def _unset_attribute(self, key: str) -> None:
         try:
             del self._attributes[key]
         except KeyError:
             pass
 
     @property
-    def language(self):
-        # type: () -> Optional[str]
+    def language(self) -> Optional[str]:
         return self.get_attribute("language", get_language())
 
     @language.setter
-    def language(self, value):
-        # type: (Optional[str]) -> None
+    def language(self, value: Optional[str]) -> None:
         self._set_attribute("language", value)
 
-    def reset_language(self):
-        # type: () -> None
+    def reset_language(self) -> None:
         self._unset_attribute("language")
 
     @property
-    def customer_id(self):
-        # type: () -> Optional[str]
+    def show_mode(self) -> str:
+        return self.get_attribute("show_mode") or show_mode
+
+    @property
+    def show_more_mode(self) -> bool:
+        return "show_more" in self.show_mode
+
+    @property
+    def customer_id(self) -> Optional[str]:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self):
-        # type: () -> List
+    def contact_groups(self) -> List:
         return self.get_attribute("contactgroups", [])
 
     @property
-    def show_help(self):
-        # type: () -> bool
+    def start_url(self) -> Optional[str]:
+        return self.load_file("start_url", None)
+
+    @property
+    def show_help(self) -> bool:
         return self.load_file("help", False)
 
     @show_help.setter
-    def show_help(self, value):
-        # type: (bool) -> None
+    def show_help(self, value: bool) -> None:
         self.save_file("help", value)
 
     @property
-    def acknowledged_notifications(self):
-        # type: () -> int
+    def acknowledged_notifications(self) -> int:
         return self.load_file("acknowledged_notifications", 0)
 
     @acknowledged_notifications.setter
-    def acknowledged_notifications(self, value):
-        # type: (int) -> None
+    def acknowledged_notifications(self, value: int) -> None:
         self.save_file("acknowledged_notifications", value)
 
     @property
-    def discovery_checkboxes(self):
-        # type: () -> bool
+    def discovery_checkboxes(self) -> bool:
         return self.load_file("discovery_checkboxes", False)
 
     @discovery_checkboxes.setter
-    def discovery_checkboxes(self, value):
-        # type: (bool) -> None
+    def discovery_checkboxes(self, value: bool) -> None:
         self.save_file("discovery_checkboxes", value)
 
     @property
-    def parameter_column(self):
-        # type: () -> bool
+    def parameter_column(self) -> bool:
         return self.load_file("parameter_column", False)
 
     @parameter_column.setter
-    def parameter_column(self, value):
-        # type: (bool) -> None
+    def parameter_column(self, value: bool) -> None:
         self.save_file("parameter_column", value)
 
     @property
-    def discovery_show_discovered_labels(self):
-        # type: () -> bool
+    def discovery_show_discovered_labels(self) -> bool:
         return self.load_file("discovery_show_discovered_labels", False)
 
     @discovery_show_discovered_labels.setter
-    def discovery_show_discovered_labels(self, value):
-        # type: (bool) -> None
+    def discovery_show_discovered_labels(self, value: bool) -> None:
         self.save_file("discovery_show_discovered_labels", value)
 
     @property
-    def discovery_show_plugin_names(self):
-        # type: () -> bool
+    def discovery_show_plugin_names(self) -> bool:
         return self.load_file("discovery_show_plugin_names", False)
 
     @discovery_show_plugin_names.setter
-    def discovery_show_plugin_names(self, value):
-        # type: (bool) -> None
+    def discovery_show_plugin_names(self, value: bool) -> None:
         self.save_file("discovery_show_plugin_names", value)
 
     @property
-    def bi_expansion_level(self):
-        # type: () -> int
+    def wato_folders_show_tags(self) -> bool:
+        return self.load_file("wato_folders_show_tags", False)
+
+    @wato_folders_show_tags.setter
+    def wato_folders_show_tags(self, value: bool) -> None:
+        self.save_file("wato_folders_show_tags", value)
+
+    @property
+    def wato_folders_show_labels(self) -> bool:
+        return self.load_file("wato_folders_show_labels", False)
+
+    @wato_folders_show_labels.setter
+    def wato_folders_show_labels(self, value: bool) -> None:
+        self.save_file("wato_folders_show_labels", value)
+
+    @property
+    def bi_expansion_level(self) -> int:
         return self.load_file("bi_treestate", (None,))[0]
 
     @bi_expansion_level.setter
-    def bi_expansion_level(self, value):
-        # type: (int) -> None
+    def bi_expansion_level(self, value: int) -> None:
         self.save_file("bi_treestate", (value,))
 
     @property
-    def button_counts(self):
-        # type: () -> Dict[str, float]
-        if not self._button_counts:
-            self._button_counts = self.load_file("buttoncounts", {})
-        return self._button_counts
-
-    def save_button_counts(self):
-        # type: () -> None
-        self.save_file("buttoncounts", self._button_counts)
-
-    @property
-    def stars(self):
-        # type: () -> Set[str]
+    def stars(self) -> Set[str]:
         if not self._stars:
             self._stars = set(self.load_file("favorites", []))
         return self._stars
 
-    def save_stars(self):
-        # type: () -> None
+    def save_stars(self) -> None:
         self.save_file("favorites", list(self._stars))
 
     @property
-    def tree_states(self):
-        # type: () -> Dict
+    def tree_states(self) -> Dict:
         if not self._tree_states:
             self._tree_states = self.load_file("treestates", {})
         return self._tree_states
 
     def get_tree_states(self, tree):
         return self.tree_states.get(tree, {})
+
+    def get_tree_state(self, treename: str, id_: str, isopen: bool) -> bool:
+        # try to get persisted state of tree
+        tree_state = self.get_tree_states(treename)
+
+        if id_ in tree_state:
+            isopen = tree_state[id_] == "on"
+        return isopen
 
     def set_tree_state(self, tree, key, val):
         if tree not in self.tree_states:
@@ -657,9 +693,18 @@ class LoggedInUser(object):
     def set_tree_states(self, tree, val):
         self.tree_states[tree] = val
 
-    def save_tree_states(self):
-        # type: () -> None
+    def save_tree_states(self) -> None:
         self.save_file("treestates", self._tree_states)
+
+    def get_show_more_setting(self, more_id: str) -> bool:
+        if self.show_mode == "enforce_show_more":
+            return True
+
+        return self.get_tree_state(
+            treename="more_buttons",
+            id_=more_id,
+            isopen=self.show_mode == "default_show_more",
+        )
 
     @property
     def bi_assumptions(self):
@@ -671,23 +716,20 @@ class LoggedInUser(object):
         self.save_file("bi_assumptions", self._bi_assumptions)
 
     @property
-    def tableoptions(self):
-        # type: () -> Dict[str, Dict[str, Any]]
+    def tableoptions(self) -> Dict[str, Dict[str, Any]]:
         if not self._tableoptions:
             self._tableoptions = self.load_file("tableoptions", {})
         return self._tableoptions
 
-    def save_tableoptions(self):
-        # type: () -> None
+    def save_tableoptions(self) -> None:
         self.save_file("tableoptions", self._tableoptions)
 
-    def get_rowselection(self, selection_id, identifier):
-        # type: (str, str) -> List[str]
+    def get_rowselection(self, selection_id: str, identifier: str) -> List[str]:
         vo = self.load_file("rowselection/%s" % selection_id, {})
         return vo.get(identifier, [])
 
-    def set_rowselection(self, selection_id, identifier, rows, action):
-        # type: (str, str, List[str], str) -> None
+    def set_rowselection(self, selection_id: str, identifier: str, rows: List[str],
+                         action: str) -> None:
         vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
 
         if action == 'set':
@@ -704,8 +746,7 @@ class LoggedInUser(object):
 
         self.save_file("rowselection/%s" % selection_id, vo)
 
-    def cleanup_old_selections(self):
-        # type: () -> None
+    def cleanup_old_selections(self) -> None:
         # Delete all selection files older than the defined livetime.
         if self.confdir is None:
             return
@@ -720,41 +761,34 @@ class LoggedInUser(object):
         except OSError:
             pass  # no directory -> no cleanup
 
-    def get_sidebar_configuration(self, default):
-        # type: (Dict[str, Any]) -> Dict[str, Any]
+    def get_sidebar_configuration(self, default: Dict[str, Any]) -> Dict[str, Any]:
         return self.load_file("sidebar", default)
 
-    def set_sidebar_configuration(self, configuration):
-        # type: (Dict[str, Any]) -> None
+    def set_sidebar_configuration(self, configuration: Dict[str, Any]) -> None:
         self.save_file("sidebar", configuration)
 
-    def is_site_disabled(self, site_id):
-        # type: (SiteId) -> bool
+    def is_site_disabled(self, site_id: SiteId) -> bool:
         return self._siteconf.get(site_id, {}).get("disabled", False)
 
-    def disable_site(self, site_id):
-        # type: (SiteId) -> None
+    def disable_site(self, site_id: SiteId) -> None:
         self._siteconf.setdefault(site_id, {})["disabled"] = True
 
-    def enable_site(self, site_id):
-        # type: (SiteId) -> None
+    def enable_site(self, site_id: SiteId) -> None:
         self._siteconf.setdefault(site_id, {}).pop("disabled", None)
 
-    def save_site_config(self):
-        # type: () -> None
+    def save_site_config(self) -> None:
         self.save_file("siteconfig", self._siteconf)
 
-    def transids(self, lock=False):
-        # type: (bool) -> List[str]
+    def transids(self, lock: bool = False) -> List[str]:
         return self.load_file("transids", [], lock=lock)
 
-    def save_transids(self, transids):
-        # type: (List[str]) -> None
+    def save_transids(self, transids: List[str]) -> None:
         if self.id:
             self.save_file("transids", transids)
 
-    def authorized_sites(self, unfiltered_sites=None):
-        # type: (Optional[SiteConfigurations]) -> SiteConfigurations
+    def authorized_sites(self,
+                         unfiltered_sites: Optional[SiteConfigurations] = None
+                        ) -> SiteConfigurations:
         if unfiltered_sites is None:
             unfiltered_sites = allsites()
 
@@ -768,44 +802,45 @@ class LoggedInUser(object):
             if site_id in authorized_sites
         }
 
-    def authorized_login_sites(self):
-        # type: () -> SiteConfigurations
+    def authorized_login_sites(self) -> SiteConfigurations:
         login_site_ids = get_login_slave_sites()
         return self.authorized_sites(
             {site_id: s for site_id, s in allsites().items() if site_id in login_site_ids})
 
-    def may(self, pname):
-        # type: (str) -> bool
+    def may(self, pname: str) -> bool:
         if pname in self._permissions:
             return self._permissions[pname]
         he_may = _may_with_roles(self.role_ids, pname)
         self._permissions[pname] = he_may
         return he_may
 
-    def need_permission(self, pname):
-        # type: (str) -> None
+    def need_permission(self, pname: str) -> None:
         if not self.may(pname):
-            perm = permissions.permission_registry[pname]()
+            perm = permissions.permission_registry[pname]
             raise MKAuthException(
                 _("We are sorry, but you lack the permission "
                   "for this operation. If you do not like this "
                   "then please ask your administrator to provide you with "
                   "the following permission: '<b>%s</b>'.") % perm.title)
 
-    def load_file(self, name, deflt, lock=False):
-        # type: (str, Any, bool) -> Any
+    def load_file(self, name: str, deflt: Any, lock: bool = False) -> Any:
         if self.confdir is None:
             return deflt
 
         path = self.confdir + "/" + name + ".mk"
-        return store.load_object_from_file(path, default=deflt, lock=lock)
 
-    def save_file(self, name, content):
-        # type: (str, Any) -> None
+        # The user files we load with this function are mostly some kind of persisted states.  In
+        # case a file is corrupted for some reason we rather start over with the default instead of
+        # failing at some random places.
+        try:
+            return store.load_object_from_file(path, default=deflt, lock=lock)
+        except (ValueError, SyntaxError):
+            return deflt
+
+    def save_file(self, name: str, content: Any) -> None:
         save_user_file(name, content, self.id)
 
-    def file_modified(self, name):
-        # type: (str) -> float
+    def file_modified(self, name: str) -> float:
         if self.confdir is None:
             return 0
 
@@ -821,51 +856,55 @@ class LoggedInUser(object):
 # Livestatus queries from unauthentiated page handlers
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(LoggedInSuperUser, self).__init__(None)
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
-    def _gather_roles(self, _user_id):
-        # type: (Optional[UserId]) -> List[str]
+    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
         return ["admin"]
 
 
 class LoggedInNobody(LoggedInUser):
-    def __init__(self):
-        # type: () -> None
+    def __init__(self) -> None:
         super(LoggedInNobody, self).__init__(None)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
-    def _gather_roles(self, _user_id):
-        # type: (Optional[UserId]) -> List[str]
+    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
         return []
 
 
-def clear_user_login():
-    # type: () -> None
+def clear_user_login() -> None:
     _set_user(LoggedInNobody())
 
 
-def set_user_by_id(user_id):
-    # type: (UserId) -> None
+def set_user_by_id(user_id: UserId) -> None:
     _set_user(LoggedInUser(user_id))
 
 
-def set_super_user():
-    # type: () -> None
+def set_super_user() -> None:
     _set_user(LoggedInSuperUser())
 
 
-def _set_user(_user):
-    # type: (LoggedInUser) -> None
+def _set_user(_user: LoggedInUser) -> None:
     """Set the currently logged in user (thread safe).
 
     local.user will set the current RequestContext to _user and it will be accessible via
     cmk.gui.globals.user directly. This is imported here."""
     local.user = _user
+
+
+@contextlib.contextmanager
+def UserContext(user_id: UserId) -> Iterator[None]:
+    """Managing authenticated user context
+
+    After the user has been authenticated, initialize the global user object."""
+    try:
+        set_user_by_id(user_id)
+        yield
+    finally:
+        clear_user_login()
 
 
 #.
@@ -884,20 +923,19 @@ def _set_user(_user):
 #   '----------------------------------------------------------------------'
 
 
-def roles_of_user(user_id):
-    # type: (Optional[UserId]) -> List[str]
+def roles_of_user(user_id: Optional[UserId]) -> List[str]:
     def existing_role_ids(role_ids):
         return [role_id for role_id in role_ids if role_id in roles]
 
     if user_id in multisite_users:
         return existing_role_ids(multisite_users[user_id]["roles"])
-    if user_id in [six.ensure_text(u) for u in admin_users]:
+    if user_id in [ensure_str(u) for u in admin_users]:
         return ["admin"]
-    if user_id in [six.ensure_text(u) for u in guest_users]:
+    if user_id in [ensure_str(u) for u in guest_users]:
         return ["guest"]
-    if users is not None and user_id in [six.ensure_text(u) for u in users]:
+    if users is not None and user_id in [ensure_str(u) for u in users]:
         return ["user"]
-    if user_id is not None and os.path.exists(config_dir + "/" + six.ensure_str(user_id) +
+    if user_id is not None and os.path.exists(config_dir + "/" + ensure_str(user_id) +
                                               "/automation.secret"):
         return ["guest"]  # unknown user with automation account
     if 'roles' in default_user_profile:
@@ -907,31 +945,27 @@ def roles_of_user(user_id):
     return []
 
 
-def alias_of_user(user_id):
-    # type: (Optional[UserId]) -> Optional[UserId]
+def alias_of_user(user_id: Optional[UserId]) -> Optional[UserId]:
     if user_id in multisite_users:
         return multisite_users[user_id].get("alias", user_id)
     return user_id
 
 
-def user_may(user_id, pname):
-    # type: (Optional[UserId], str) -> bool
+def user_may(user_id: Optional[UserId], pname: str) -> bool:
     return _may_with_roles(roles_of_user(user_id), pname)
 
 
 # TODO: Check all calls for arguments (changed optional user to 3rd positional)
-def save_user_file(name, data, user_id):
-    # type: (str, Any, Optional[UserId]) -> None
+def save_user_file(name: str, data: Any, user_id: Optional[UserId]) -> None:
     if user_id is None:
         raise TypeError("The profiles of LoggedInSuperUser and LoggedInNobody cannot be saved")
 
-    path = config_dir + "/" + six.ensure_str(user_id) + "/" + name + ".mk"
+    path = config_dir + "/" + ensure_str(user_id) + "/" + name + ".mk"
     store.mkdir(os.path.dirname(path))
     store.save_object_to_file(path, data)
 
 
-def migrate_old_site_config(site_config):
-    # type: (SiteConfigurations) -> SiteConfigurations
+def migrate_old_site_config(site_config: SiteConfigurations) -> SiteConfigurations:
     if not site_config:
         # Prevent problem when user has deleted all sites from his
         # configuration and sites is {}. We assume a default single site
@@ -970,8 +1004,7 @@ def migrate_old_site_config(site_config):
 #    the final socket connection properties.
 #    This has now been split up. The top level socket settings are now used independent of the proxy.
 #    The proxy options are stored in the separate key "proxy" which is a mandatory key.
-def _migrate_pre_16_socket_config(site_cfg):
-    # type: (Dict[str, Any]) -> None
+def _migrate_pre_16_socket_config(site_cfg: Dict[str, Any]) -> None:
     socket = site_cfg.get("socket")
     if socket is None:
         site_cfg["socket"] = ("local", None)
@@ -1001,13 +1034,12 @@ def _migrate_pre_16_socket_config(site_cfg):
         site_cfg['socket'] = ("local", None)
         return
 
-    if isinstance(socket, six.string_types):
+    if isinstance(socket, str):
         site_cfg["socket"] = _migrate_string_encoded_socket(socket)
 
 
-def _migrate_string_encoded_socket(value):
-    # type: (AnyStr) -> Tuple[str, Union[Dict]]
-    str_value = six.ensure_str(value)
+def _migrate_string_encoded_socket(value: AnyStr) -> Tuple[str, Union[Dict]]:
+    str_value = ensure_str(value)
     family_txt, address = str_value.split(":", 1)
 
     if family_txt == "unix":
@@ -1038,18 +1070,15 @@ def _migrate_string_encoded_socket(value):
 #   '----------------------------------------------------------------------'
 
 
-def omd_site():
-    # type: () -> SiteId
+def omd_site() -> SiteId:
     return SiteId(cmk_version.omd_site())
 
 
-def url_prefix():
-    # type: () -> str
+def url_prefix() -> str:
     return "/%s/" % cmk_version.omd_site()
 
 
-def default_single_site_configuration():
-    # type: () -> SiteConfigurations
+def default_single_site_configuration() -> SiteConfigurations:
     return {
         omd_site(): {
             'alias': _("Local site %s") % omd_site(),
@@ -1069,11 +1098,10 @@ def default_single_site_configuration():
     }
 
 
-sites = {}  # type: SiteConfigurations
+sites: SiteConfigurations = {}
 
 
-def sitenames():
-    # type: () -> List[SiteId]
+def sitenames() -> List[SiteId]:
     return list(sites)
 
 
@@ -1081,8 +1109,7 @@ def sitenames():
 # and only returns the currently enabled sites. Or should we redeclare the "disabled" state
 # to disable the sites at all?
 # TODO: Rename this!
-def allsites():
-    # type: () -> SiteConfigurations
+def allsites() -> SiteConfigurations:
     return {
         name: site(name)  #
         for name in sitenames()
@@ -1090,37 +1117,31 @@ def allsites():
     }
 
 
-def configured_sites():
-    # type: () -> SiteConfigurations
+def configured_sites() -> SiteConfigurations:
     return {site_id: site(site_id) for site_id in sitenames()}
 
 
-def has_wato_slave_sites():
-    # type: () -> bool
+def has_wato_slave_sites() -> bool:
     return bool(wato_slave_sites())
 
 
-def is_wato_slave_site():
-    # type: () -> bool
+def is_wato_slave_site() -> bool:
     return _has_distributed_wato_file() and not has_wato_slave_sites()
 
 
-def _has_distributed_wato_file():
-    # type: () -> bool
+def _has_distributed_wato_file() -> bool:
     return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
         and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
 
 
-def get_login_sites():
-    # type: () -> List[SiteId]
+def get_login_sites() -> List[SiteId]:
     """Returns the WATO slave sites a user may login and the local site"""
     return get_login_slave_sites() + [omd_site()]
 
 
 # TODO: All site listing functions should return the same data structure, e.g. a list of
 #       pairs (site_id, site)
-def get_login_slave_sites():
-    # type: () -> List[SiteId]
+def get_login_slave_sites() -> List[SiteId]:
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
@@ -1129,8 +1150,7 @@ def get_login_slave_sites():
     return login_sites
 
 
-def wato_slave_sites():
-    # type: () -> SiteConfigurations
+def wato_slave_sites() -> SiteConfigurations:
     return {
         site_id: s  #
         for site_id, s in sites.items()
@@ -1138,14 +1158,12 @@ def wato_slave_sites():
     }
 
 
-def sorted_sites():
-    # type: () -> List[Tuple[SiteId, str]]
+def sorted_sites() -> List[Tuple[SiteId, str]]:
     return sorted([(site_id, s['alias']) for site_id, s in user.authorized_sites().items()],
                   key=lambda k: k[1].lower())
 
 
-def site(site_id):
-    # type: (SiteId) -> SiteConfiguration
+def site(site_id: SiteId) -> SiteConfiguration:
     s = dict(sites.get(site_id, {}))
     # Now make sure that all important keys are available.
     # Add missing entries by supplying default values.
@@ -1156,14 +1174,12 @@ def site(site_id):
     return s
 
 
-def site_is_local(site_id):
-    # type: (SiteId) -> bool
+def site_is_local(site_id: SiteId) -> bool:
     family_spec, address_spec = site(site_id)["socket"]
     return _is_local_socket_spec(family_spec, address_spec)
 
 
-def _is_local_socket_spec(family_spec, address_spec):
-    # type: (str, Dict[str, Any]) -> bool
+def _is_local_socket_spec(family_spec: str, address_spec: Dict[str, Any]) -> bool:
     if family_spec == "local":
         return True
 
@@ -1173,16 +1189,7 @@ def _is_local_socket_spec(family_spec, address_spec):
     return False
 
 
-def default_site():
-    # type: () -> Optional[SiteId]
-    for site_name, _site in sites.items():
-        if site_is_local(site_name):
-            return site_name
-    return None
-
-
-def is_single_local_site():
-    # type: () -> bool
+def is_single_local_site() -> bool:
     if len(sites) > 1:
         return False
     if len(sites) == 0:
@@ -1193,28 +1200,26 @@ def is_single_local_site():
     return site_is_local(sitename)
 
 
-def site_attribute_default_value():
-    # type: () -> Optional[SiteId]
-    def_site = default_site()
+def get_configured_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
+
+
+def site_attribute_default_value() -> Optional[SiteId]:
+    site_id = omd_site()
     authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    if def_site and def_site in authorized_site_ids:
-        return def_site
+    if site_id in authorized_site_ids:
+        return site_id
     return None
 
 
-def site_attribute_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
-    authorized_site_ids = user.authorized_sites(unfiltered_sites=configured_sites()).keys()
-    return site_choices(filter_func=lambda site_id, site: site_id in authorized_site_ids)
+def site_attribute_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(user.authorized_sites(unfiltered_sites=configured_sites()))
 
 
-def site_choices(filter_func=None):
-    # type: (Optional[Callable[[SiteId, SiteConfiguration], bool]]) -> List[Tuple[SiteId, Text]]
+def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
+    """Compute the choices to be used e.g. in dropdowns from a SiteConfigurations collection"""
     choices = []
-    for site_id, site_spec in sites.items():
-        if filter_func and not filter_func(site_id, site_spec):
-            continue
-
+    for site_id, site_spec in site_configs.items():
         title = site_id
         if site_spec.get("alias"):
             title += " - " + site_spec["alias"]
@@ -1224,16 +1229,28 @@ def site_choices(filter_func=None):
     return sorted(choices, key=lambda s: s[1])
 
 
-def get_event_console_site_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
-    return site_choices(
-        filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec", False))
+def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices({
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication_ec", False)
+    })
 
 
-def get_wato_site_choices():
-    # type: () -> List[Tuple[SiteId, Text]]
-    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get(
-        "replication") is not None)
+def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
+    return site_choices(activation_sites())
+
+
+def activation_sites() -> SiteConfigurations:
+    """Returns sites that are affected by WATO changes
+
+    These sites are shown on activation page and get change entries
+    added during WATO changes."""
+    return {
+        site_id: site
+        for site_id, site in user.authorized_sites(unfiltered_sites=configured_sites()).items()
+        if site_is_local(site_id) or site.get("replication")
+    }
 
 
 #.
@@ -1250,8 +1267,7 @@ def get_wato_site_choices():
 #   '----------------------------------------------------------------------'
 
 
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     utils.load_web_plugins("config", globals())
 
     # Make sure, builtin roles are present, even if not modified and saved with WATO.
@@ -1259,8 +1275,7 @@ def load_plugins(force):
         roles.setdefault(br, {})
 
 
-def theme_choices():
-    # type: () -> List[Tuple[str, Any]]
+def theme_choices() -> List[Tuple[str, str]]:
     themes = {}
 
     for base_dir in [Path(cmk.utils.paths.web_dir), cmk.utils.paths.local_web_dir]:
@@ -1284,13 +1299,21 @@ def theme_choices():
                     "title": theme_dir.name,
                 }
 
+            assert isinstance(theme_meta["title"], str)
             themes[theme_dir.name] = theme_meta["title"]
 
     return sorted(themes.items())
 
 
-def get_page_heading():
-    # type: () -> Text
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]
+
+
+def get_page_heading() -> str:
     if "%s" in page_heading:
-        return ensure_unicode(page_heading % (site(omd_site()).get('alias', _("GUI"))))
-    return ensure_unicode(page_heading)
+        return ensure_str(page_heading % (site(omd_site()).get('alias', _("GUI"))))
+    return ensure_str(page_heading)

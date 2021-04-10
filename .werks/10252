@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The global setting "Start livestatus proxy" is used to enable the livestatus proxy
 daemon in Checkmk sites. It is a "omd config" setting which can also be set using

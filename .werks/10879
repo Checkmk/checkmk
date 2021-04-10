@@ -6,7 +6,7 @@ Date: 1584902019
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In previous versions, the CSV export completely removed the HTML code of icons
 from the cells, which resulted in some cells containing only icons being

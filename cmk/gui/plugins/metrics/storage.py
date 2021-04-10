@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -32,12 +32,6 @@ metric_info["age"] = {
     "title": _("Age"),
     "unit": "s",
     "color": "#80f000",
-}
-
-metric_info["age_oldest"] = {
-    "title": _("Oldest age"),
-    "unit": "s",
-    "color": "35/a",
 }
 
 metric_info["last_updated"] = {
@@ -1362,11 +1356,13 @@ graph_info["backup_time"] = {
 }
 
 graph_info["total_cache_usage"] = {
+    "title": _("Total cache usage"),
     "metrics": [("total_cache_usage", "area")],
     "range": (0, 100),
 }
 
 graph_info["write_cache_usage"] = {
+    "title": _("Write cache usage"),
     "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
 }
@@ -1402,6 +1398,7 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
 # diskstat checks
 
 graph_info["disk_utilization"] = {
+    "title": _("Disk utilization"),
     "metrics": [("disk_utilization", "area"),],
     "range": (0, 100),
     "scalars": [
@@ -1526,6 +1523,7 @@ graph_info["ram_swap_used"] = {
 }
 
 graph_info["mem_used_percent"] = {
+    "title": _("Used RAM"),
     "metrics": [("mem_used_percent", "area"),],
     "scalars": [
         "mem_used_percent:warn",
@@ -1535,12 +1533,14 @@ graph_info["mem_used_percent"] = {
 }
 
 graph_info["cpu_mem_used_percent"] = {
+    "title": _("Used CPU Memory"),
     "metrics": [("cpu_mem_used_percent", "area"),],
     "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
     "range": (0, 100),
 }
 
 graph_info["mem_trend"] = {
+    "title": _("Trend of memory usage growth"),
     "metrics": [("mem_trend", "line"),],
 }
 
@@ -1755,6 +1755,7 @@ graph_info["harddrive_health_statistic"] = {
 }
 
 graph_info["mem_perm_used"] = {
+    "title": _("Permanent Generation Memory"),
     "metrics": [("mem_perm_used", "area")],
     "scalars": [
         "mem_perm_used:warn",

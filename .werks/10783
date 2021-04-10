@@ -1,0 +1,18 @@
+Title: Resolve composing metrics in Custom Graphs
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1593615993
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+When adding all the metrics from a graph into a Custom Graph, the metrics
+that where combine through a certain operation would remain as such in the
+Custom Graph.
+
+With this werk the composing metrics are resolved, so that the Custom Graph
+can dissolve the operation. This is particularly useful when integrating a
+lot of metrics from a Combined Graph into the Custom Graph, and posterior
+editing is desired.

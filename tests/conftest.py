@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,25 +7,19 @@
 # This file initializes the py.test environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
-from __future__ import print_function
+import collections
+import errno
+import shutil
+from pathlib import Path
 
 import pytest  # type: ignore[import]
+from _pytest.doctest import DoctestItem
+
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
     "testlib",  #
     "unit.checks.checktestlib",  #
     "unit.checks.generictests.run")
-
-import collections
-import errno
-import shutil
-import sys
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 import testlib
 
@@ -51,6 +45,7 @@ test_types = collections.OrderedDict([
     ("pylint", EXECUTE_IN_VENV),
     ("docker", EXECUTE_IN_VENV),
     ("agent-integration", EXECUTE_IN_VENV),
+    ("agent-plugin-unit", EXECUTE_IN_VENV),
     ("integration", EXECUTE_IN_SITE),
     ("gui_crawl", EXECUTE_IN_VENV),
     ("packaging", EXECUTE_IN_VENV),
@@ -90,7 +85,9 @@ def pytest_collection_modifyitems(items):
         repo_rel_path = file_path.relative_to(testlib.repo_path())
         ty = repo_rel_path.parts[1]
         if ty not in test_types:
-            raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
+            if not isinstance(item, DoctestItem):
+                raise Exception("Test in %s not TYPE marked: %r (%r)" % (repo_rel_path, item, ty))
+
         item.add_marker(pytest.mark.type.with_args(ty))
 
 
@@ -133,8 +130,8 @@ def pytest_cmdline_main(config):
     context = test_types[config.getoption("-T")]
     if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
         raise Exception()
-    else:
-        verify_virtualenv()
+
+    verify_virtualenv()
 
 
 def verify_virtualenv():

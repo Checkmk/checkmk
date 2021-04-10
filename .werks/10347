@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If you want to display the field {{last change}} in the interface table you
 have to enable {{Do status data inventory}} in the ruleset

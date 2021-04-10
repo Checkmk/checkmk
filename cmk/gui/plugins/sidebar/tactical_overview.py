@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,12 +13,11 @@ import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 import cmk.gui.notifications as notifications
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextUnicode
-# Things imported here are used by pre legacy (pre 1.6) cron plugins)
-from cmk.gui.plugins.sidebar import (  # noqa: F401 # pylint: disable=unused-import
-    CustomizableSidebarSnapin, snapin_registry, write_snapin_exception, snapin_width, link,
-)
+from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
+from cmk.gui.utils.urls import makeuri_contextless
+from typing import List, Dict, Tuple
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
@@ -36,6 +35,15 @@ def get_context_url_variables(context):
     return list(add_vars.items())
 
 
+def group_by_state(
+    acc: Dict[str, List[str]],
+    id_and_state: Tuple[str, str],
+) -> Dict[str, List[str]]:
+    id_, state = id_and_state
+    acc[state].append(id_)
+    return acc
+
+
 @snapin_registry.register
 class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     @staticmethod
@@ -44,7 +52,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("Tactical Overview")
+        return _("Overview")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):
@@ -132,10 +144,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.center(_("No data from any site"))
             return
 
-        html.open_table(class_=["content_center", "tacticaloverview"],
-                        cellspacing="2",
-                        cellpadding="0",
-                        border="0")
+        html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
 
         show_stales = self.parameters()["show_stale"] and config.user.may(
             "general.see_stales_in_tactical_overview")
@@ -156,8 +165,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
             html.open_tr()
             html.th(row.title)
-            html.th(_("Problems"))
-            html.th(_("Unhandled"))
+            html.th(_("Problems"), class_="show_more_mode")
+            html.th(
+                html.render_span(_("Unhandled"), class_="more") +
+                html.render_span(_("Unhandled p."), class_="less"))
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
             html.close_tr()
@@ -165,22 +176,31 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             td_class = 'col4' if has_stale_objects else 'col3'
 
             html.open_tr()
-            url = html.makeuri_contextless(row.views.total + context_vars, filename="view.py")
+            url = makeuri_contextless(request, row.views.total + context_vars, filename="view.py")
             html.open_td(class_=["total", td_class])
             html.a("%s" % amount, href=url, target="main")
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
-                url = html.makeuri_contextless(getattr(row.views, ty) + context_vars,
-                                               filename="view.py")
-                html.open_td(class_=[td_class, "states prob" if value != 0 else None])
+                url = makeuri_contextless(
+                    request,
+                    getattr(row.views, ty) + context_vars,
+                    filename="view.py",
+                )
+                html.open_td(class_=[
+                    td_class, "states prob" if value != 0 else None, "show_more_mode" if ty ==
+                    "handled" else "basic"
+                ])
                 link(str(value), url)
                 html.close_td()
 
             if show_stales and has_stale_objects:
                 if row.views.stale:
-                    url = html.makeuri_contextless(row.views.stale + context_vars,
-                                                   filename="view.py")
+                    url = makeuri_contextless(
+                        request,
+                        row.views.stale + context_vars,
+                        filename="view.py",
+                    )
                     html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
                     link(str(stales), url)
                     html.close_td()
@@ -303,14 +323,21 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_host_stats_query(self, context_filters):
         return ("GET hosts\n"
+                # Total
                 "Stats: state >= 0\n"
+
+                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
+
+                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "StatsAnd: 3\n"
+
+                # Stale
                 "Stats: host_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "StatsAnd: 2\n"
@@ -318,18 +345,25 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_service_stats_query(self, context_filters):
         return ("GET services\n"
+                # Total
                 "Stats: state >= 0\n"
+
+                # Handled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 4\n"
+
+                # Unhandled problems
                 "Stats: state > 0\n"
                 "Stats: scheduled_downtime_depth = 0\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: acknowledged = 0\n"
                 "Stats: host_state = 0\n"
                 "StatsAnd: 5\n"
+
+                # Stale
                 "Stats: service_staleness >= %s\n"
                 "Stats: host_scheduled_downtime_depth = 0\n"
                 "Stats: service_scheduled_downtime_depth = 0\n"
@@ -363,7 +397,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: event_host_in_downtime != 1\n"
             "StatsAnd: 3\n" + ec_filters + context_filters)
 
-        return event_query
+        # Do not mark the site as dead in case the Event Console is not available.
+        return livestatus.Query(event_query,
+                                suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                     livestatus.MKLivestatusBadGatewayError))
 
     def _execute_stats_query(self, query, auth_domain="read", only_sites=None, deflt=None):
         try:
@@ -389,11 +426,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_div(class_="spacertop")
         html.open_div(class_="tacticalalert")
 
-        confirm_url = html.makeuri_contextless([], filename="clear_failed_notifications.py")
+        confirm_url = makeuri_contextless(request, [], filename="clear_failed_notifications.py")
         html.icon_button(confirm_url, _("Confirm failed notifications"), "delete", target="main")
 
-        view_url = html.makeuri_contextless([("view_name", "failed_notifications")],
-                                            filename="view.py")
+        view_url = makeuri_contextless(
+            request,
+            [("view_name", "failed_notifications")],
+            filename="view.py",
+        )
 
         html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
         html.close_div()
@@ -412,34 +452,40 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         if not self.parameters().get("show_sites_not_connected"):
             return
 
-        sites_not_connected = [
-            site_id for site_id, site_status in sites.states().items()
-            if site_status["state"] != "online"
-        ]
-        if len(sites_not_connected) == 0:
-            return
+        site_states = sites.get_grouped_site_states()
 
+        disabled = site_states["disabled"]
+        if disabled.site_ids:
+            self._create_status_box(disabled.site_ids, "tacticalinfo", disabled.readable)
+
+        error = site_states["error"]
+        if error.site_ids:
+            self._create_status_box(error.site_ids, "tacticalalert", error.readable)
+
+    def _create_status_box(
+        self,
+        site_ids: List[str],
+        css_class: str,
+        site_status: str,
+    ):
         html.open_div(class_="spacertop")
-        html.open_div(class_="tacticalalert")
-
-        message_template = ungettext("%d site is not connected", "%d sites are not connected",
-                                     len(sites_not_connected))
+        html.open_div(class_=css_class)
+        message_template = ungettext("%d site is %s.", "%d sites are %s.", len(site_ids))
+        message = message_template % (len(site_ids), site_status)
         tooltip_template = ungettext(
             "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The disconnected site is %s.",
+            "in the Tactical Overview. The %s site is %s.",
             "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The disconnected sites are %s.", len(sites_not_connected))
-        message = message_template % len(sites_not_connected)
-        tooltip = tooltip_template % ', '.join(sites_not_connected)
+            "in the Tactical Overview. The %s sites are %s.", len(site_ids))
+        tooltip = tooltip_template % (site_status, ', '.join(site_ids))
 
         if config.user.may("wato.sites"):
-            url = html.makeuri_contextless([("mode", "sites")], filename="wato.py")
+            url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
             html.icon_button(url, tooltip, "sites", target="main")
             html.a(message, target="main", href=url)
         else:
-            html.icon(tooltip, "sites")
+            html.icon("sites", tooltip)
             html.write_text(message)
-
         html.close_div()
         html.close_div()
 

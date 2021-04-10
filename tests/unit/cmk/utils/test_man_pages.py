@@ -1,21 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-import pytest  # type: ignore[import]
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # noqa: F401 # pylint: disable=import-error,unused-import
-else:
-    from pathlib2 import Path  # noqa: F401 # pylint: disable=import-error,unused-import
+import pytest  # type: ignore[import]
 
 from testlib.utils import cmk_path
 
 import cmk.utils.debug
 import cmk.utils.man_pages as man_pages
+from cmk.utils.type_defs import CheckPluginName
+
+import cmk.base.api.agent_based.register as agent_based_register
 
 # TODO: Add tests for module internal functions
 
@@ -23,6 +22,16 @@ import cmk.utils.man_pages as man_pages
 @pytest.fixture(autouse=True)
 def patch_cmk_paths(monkeypatch, tmp_path):
     monkeypatch.setattr("cmk.utils.paths.local_check_manpages_dir", tmp_path)
+
+
+@pytest.fixture(scope="module", name="all_pages")
+def _get_all_pages():
+    return {name: man_pages.load_man_page(name) for name in man_pages.all_man_pages()}
+
+
+@pytest.fixture(scope="module", name="catalog")
+def _get_catalog():
+    return man_pages.load_man_page_catalog()
 
 
 def test_man_page_exists_only_shipped():
@@ -61,6 +70,13 @@ def test_man_page_path_both_dirs(tmp_path):
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
 
+def test_all_manpages_migrated(all_pages):
+    for name in all_pages:
+        if name in ("check-mk-inventory", "check-mk"):
+            continue
+        assert CheckPluginName(name)
+
+
 def test_all_man_pages(tmp_path):
     (tmp_path / ".asd").write_text(u"", encoding="utf-8")
     (tmp_path / "asd~").write_text(u"", encoding="utf-8")
@@ -76,9 +92,9 @@ def test_all_man_pages(tmp_path):
     assert pages["if64"] == "%s/checkman/if64" % cmk_path()
 
 
-def test_load_all_man_pages():
-    for name in man_pages.all_man_pages():
-        man_page = man_pages.load_man_page(name)
+def test_load_all_man_pages(all_pages):
+    for name, man_page in all_pages.items():
+        assert man_page is not None, name
         assert isinstance(man_page, dict)
         _check_man_page_structure(man_page)
 
@@ -126,50 +142,37 @@ def test_no_unsorted_man_pages():
     assert not unsorted_page_names, "Found unsorted man pages: %s" % ", ".join(unsorted_page_names)
 
 
-def test_manpage_catalog_headers():
-    for name, path in man_pages.all_man_pages().items():
-        try:
-            parsed = man_pages._parse_man_page_header(name, Path(path))
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            parsed = man_pages._create_fallback_man_page(name, Path(path), e)
-
-        assert parsed.get("catalog"), "Did not find \"catalog:\" header in man page \"%s\"" % name
+def test_manpage_files(all_pages):
+    assert len(all_pages) > 1000
 
 
-def test_manpage_files():
-    manuals = man_pages.all_man_pages()
-    assert len(manuals) > 1000
+def test_find_missing_manpages_passive(fix_register, all_pages):
+    for plugin_name in fix_register.check_plugins:
+        assert str(plugin_name) in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def _is_pure_section_declaration(check):
-    '''return true if and only if the check never generates a service'''
-    return check.get('inventory_function') is None and check.get('check_function') is None
+def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
+    for plugin_name in ("check_%s" % n for n in fix_plugin_legacy.active_check_info):
+        assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-@pytest.mark.skipif(sys.version_info[0] < 3, reason="cmk.base.check_api is Python-3-only")
-def test_find_missing_manpages():
-    all_check_manuals = man_pages.all_man_pages()
+def test_find_missing_manpages_cluster_section(fix_register, all_pages):
+    missing_cluster_description = set()
+    for plugin in fix_register.check_plugins.values():
+        if plugin.cluster_check_function.__name__ in (
+                "unfit_for_clustering",
+                "cluster_legacy_mode_from_hell",
+        ):
+            continue
+        man_page = all_pages[str(plugin.name)]
+        assert man_page
+        if "cluster" not in man_page["header"]:
+            missing_cluster_description.add(str(plugin.name))
 
-    import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    import cmk.base.check_api as check_api  # pylint: disable=bad-option-value,import-outside-toplevel
-    config.load_all_checks(check_api.get_check_api_context)
-    checks_sorted = sorted([(name, entry)
-                            for (name, entry) in config.check_info.items()
-                            if not _is_pure_section_declaration(entry)] +
-                           [("check_" + name, entry)
-                            for (name, entry) in config.active_check_info.items()])
-    assert len(checks_sorted) > 1000
-
-    for check_plugin_name, _check in checks_sorted:
-        if check_plugin_name in ["labels", "esx_systeminfo"]:
-            continue  # this check's discovery function can only create labels, never a service
-        assert check_plugin_name in all_check_manuals, "Manpage missing: %s" % check_plugin_name
+    assert not missing_cluster_description
 
 
-def test_no_subtree_and_entries_on_same_level():
-    catalog = man_pages.load_man_page_catalog()
+def test_no_subtree_and_entries_on_same_level(catalog):
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
@@ -202,8 +205,8 @@ def _check_man_page_structure(page):
     assert isinstance(page["header"]["agents"], list)
 
 
-def test_load_man_page_format():
-    page = man_pages.load_man_page("if64")
+def test_load_man_page_format(all_pages):
+    page = all_pages["if64"]
     assert isinstance(page, dict)
 
     _check_man_page_structure(page)
@@ -245,12 +248,11 @@ def test_print_man_page(capsys):
     assert "\n License: " in out
 
 
-def test_missing_catalog_entries_of_man_pages():
-    # type: () -> None
+def test_missing_catalog_entries_of_man_pages(all_pages) -> None:
     catalog_titles = set(man_pages.catalog_titles.keys())
     found_catalog_entries_from_man_pages = set()
     for name in man_pages.all_man_pages():
-        man_page = man_pages.load_man_page(name)
+        man_page = all_pages[name]
         assert man_page is not None
         found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles

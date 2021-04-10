@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -33,5 +33,5 @@ rulespec_registry.register(
         check_group_name="vms_procs",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vms_procs,
-        title=lambda: _("Number of processes on OpenVMS"),
+        title=lambda: _("OpenVMS processes"),
     ))

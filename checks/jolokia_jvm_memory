@@ -4,6 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.jolokia import *  # pylint: disable=wildcard-import,unused-wildcard-import
 factory_settings.update({
     'jolokia_jvm_memory': {
         'perc_heap': (80., 90.),
@@ -22,7 +27,7 @@ def parse_jolokia_jvm_memory(info):
     parsed = {}
     for instance, mbean, data in parse_jolokia_json_output(info):
 
-        type_ = _jolokia_mbean_attribute('type', mbean)
+        type_ = jolokia_mbean_attribute('type', mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)
 
@@ -100,7 +105,6 @@ check_info["jolokia_jvm_memory"] = {
     "has_perfdata": True,
     "default_levels_variable": "jolokia_jvm_memory",
     "group": "jvm_memory",
-    "includes": ["jolokia.include"],
 }
 
 #.
@@ -125,10 +129,8 @@ def discover_jolokia_jvm_memory_pools(parsed):
 def _get_jolokia_jvm_mempool_data(item, parsed):
     instance, pool_name = item.split(" Memory Pool ", 1)
     data = parsed.get(instance, {}).get("MemoryPool", {})
-    pool = [pool for pool in data.values() if pool.get("Name") == pool_name]
-    if not pool:
-        return {}
-    return pool[0]
+    pools = [pool for pool in data.values() if pool.get("Name") == pool_name]
+    return pools[0] if pools else {}
 
 
 def check_jolokia_jvm_memory_pools(item, params, parsed):

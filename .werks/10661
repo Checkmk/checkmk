@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The setting {{Maximum cache age from global settings}} in a dynamic
 configuration connection had no effect and the hardcoded fallback {{1 hour}}

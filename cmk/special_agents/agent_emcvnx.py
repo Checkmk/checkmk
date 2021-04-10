@@ -90,7 +90,7 @@ def main(sys_argv=None):
     mortypes = ['all']
     fetch_agent_info = False
 
-    naviseccli_options = {
+    naviseccli_options: Dict[str, Dict[str, Any]] = {
         "disks": {
             "cmd_options": [(None, "getall -disk")],
             "active": False,
@@ -133,7 +133,7 @@ def main(sys_argv=None):
             "active": False,
             "sep": 58
         },
-    }  # type: Dict[str, Dict[str, Any]]
+    }
 
     for o, a in opts:
         if o in ['--debug']:

@@ -1,12 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, List
 
 import cmk.utils.store as store
+from cmk.utils.type_defs import DiscoveryResult
 
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
@@ -17,10 +18,10 @@ from cmk.gui.valuespec import (
     Tuple,
     Integer,
 )
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.valuespec import ValueSpec
 
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.automations import execute_automation_discovery, AutomationDiscoveryResponse
 from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -37,15 +38,14 @@ DiscoveryTask = NamedTuple("DiscoveryTask", [
 ])
 
 
-def get_tasks(hosts_to_discover, bulk_size):
-    # type: (List[DiscoveryHost], int) -> List[DiscoveryTask]
+def get_tasks(hosts_to_discover: List[DiscoveryHost], bulk_size: int) -> List[DiscoveryTask]:
     """Create a list of tasks for the job
 
     Each task groups the hosts together that are in the same folder and site. This is
     mainly done to reduce the overhead of site communication and loading/saving of files
     """
     current_site_and_folder = None
-    tasks = []  # type: List[DiscoveryTask]
+    tasks: List[DiscoveryTask] = []
 
     for site_id, folder_path, host_name in sorted(hosts_to_discover):
         if not tasks or (site_id, folder_path) != current_site_and_folder or \
@@ -58,7 +58,7 @@ def get_tasks(hosts_to_discover, bulk_size):
 
 
 def vs_bulk_discovery(render_form=False, include_subfolders=True):
-    selection_elements = []  # type: List[ValueSpec]
+    selection_elements: List[ValueSpec] = []
 
     if include_subfolders:
         selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
@@ -84,14 +84,14 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
                      ("fixall",
                       _("Add unmonitored services and new host labels, remove vanished services")),
                      ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
+                     ("only-host-labels", _("Only discover new host labels")),
                  ],
              )),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
             ("performance",
              Tuple(title=_("Performance options"),
                    elements=[
-                       Checkbox(label=_("Use cached data if present"), default_value=True),
-                       Checkbox(label=_("Do full SNMP scan for SNMP devices"), default_value=True),
+                       Checkbox(label=_("Do a full service scan"), default_value=True),
                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
                    ])),
             ("error_handling",
@@ -125,12 +125,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(self, mode, use_cache, do_scan, error_handling, tasks, job_interface=None):
+    def do_execute(self, mode, do_scan, error_handling, tasks, job_interface=None):
         self._initialize_statistics()
         job_interface.send_progress_update(_("Bulk discovery started..."))
 
         for task in tasks:
-            self._bulk_discover_item(task, mode, use_cache, do_scan, error_handling, job_interface)
+            self._bulk_discover_item(task, mode, do_scan, error_handling, job_interface)
 
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
@@ -160,13 +160,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(self, task, mode, use_cache, do_scan, error_handling, job_interface):
+    def _bulk_discover_item(self, task, mode, do_scan, error_handling, job_interface):
         self._num_hosts_total += len(task.host_names)
 
         try:
-            counts, failed_hosts = self._execute_discovery(task, mode, use_cache, do_scan,
-                                                           error_handling)
-            self._process_discovery_results(task, job_interface, counts, failed_hosts)
+            response = self._execute_discovery(task, mode, do_scan, error_handling)
+            self._process_discovery_results(task, job_interface, response)
         except Exception:
             self._num_hosts_failed += len(task.host_names)
             if task.site_id:
@@ -176,11 +175,10 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
             self._logger.exception(msg)
 
-    def _execute_discovery(self, task, mode, use_cache, do_scan, error_handling):
+    def _execute_discovery(self, task, mode, do_scan,
+                           error_handling) -> AutomationDiscoveryResponse:
         arguments = [mode] + task.host_names
 
-        if use_cache:
-            arguments = ["@cache"] + arguments
         if do_scan:
             arguments = ["@scan"] + arguments
         if not error_handling:
@@ -188,54 +186,53 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         timeout = html.request.request_timeout - 2
 
-        counts, failed_hosts = check_mk_automation(task.site_id,
-                                                   "inventory",
-                                                   arguments,
-                                                   timeout=timeout,
-                                                   non_blocking_http=True)
+        return execute_automation_discovery(site_id=task.site_id,
+                                            args=arguments,
+                                            timeout=timeout,
+                                            non_blocking_http=True)
 
-        return counts, failed_hosts
-
-    def _process_discovery_results(self, task, job_interface, counts, failed_hosts):
+    def _process_discovery_results(self, task, job_interface,
+                                   response: AutomationDiscoveryResponse) -> None:
         # The following code updates the host config. The progress from loading the WATO folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration():
             Folder.invalidate_caches()
             folder = Folder.folder(task.folder_path)
             for hostname in task.host_names:
-                self._process_service_counts_for_host(counts[hostname])
+                self._process_service_counts_for_host(response.results[hostname])
                 msg = self._process_discovery_result_for_host(folder.host(hostname),
-                                                              failed_hosts.get(hostname, False),
-                                                              counts[hostname])
+                                                              response.results[hostname])
                 job_interface.send_progress_update("%s: %s" % (hostname, msg))
 
-    def _process_service_counts_for_host(self, host_counts):
-        self._num_services_added += host_counts[0]
-        self._num_services_removed += host_counts[1]
-        self._num_services_kept += host_counts[2]
-        self._num_services_total += host_counts[3]
-        if len(host_counts) > 5:  # Added in 1.6b
-            self._num_host_labels_added += host_counts[4]
-            self._num_host_labels_total += host_counts[5]
+    def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
+        self._num_services_added += result.self_new
+        self._num_services_removed += result.self_removed
+        self._num_services_kept += result.self_kept
+        self._num_services_total += result.self_total
+        self._num_host_labels_added += result.self_new_host_labels
+        self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(self, host, failed_reason, host_counts):
-        if failed_reason is None:
+    def _process_discovery_result_for_host(self, host, result: DiscoveryResult) -> str:
+        if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")
 
-        if failed_reason is not False:
+        if result.error_text is not None:
             self._num_hosts_failed += 1
             if not host.locked():
                 host.set_discovery_failed()
-            return _("discovery failed: %s") % failed_reason
+            return _("discovery failed: %s") % result.error_text
 
         self._num_hosts_succeeded += 1
 
         add_service_change(
-            host, "bulk-discovery",
+            host,
+            "bulk-discovery",
             _("Did service discovery on host %s: %d added, %d removed, %d kept, "
               "%d total services and %d host labels added, %d host labels total") %
-            tuple([host.name()] + host_counts))
+            (host.name(), result.self_new, result.self_removed, result.self_kept, result.self_total,
+             result.self_new_host_labels, result.self_total_host_labels),
+            diff_text=result.diff_text)
 
         if not host.locked():
             host.clear_discovery_failed()

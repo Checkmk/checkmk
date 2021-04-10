@@ -1,9 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
+
+from typing import Optional, Type
 
 import cmk.utils.paths
 
@@ -12,7 +14,6 @@ import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.wato.utils.context_buttons import home_button
 from cmk.gui.valuespec import Checkbox
 from cmk.gui.pages import page_registry, AjaxPage
 
@@ -48,7 +49,7 @@ class ModeBackup(backup.PageBackup, WatoMode):
         return SiteBackupKeypairStore()
 
     def home_button(self):
-        home_button()
+        pass
 
 
 @mode_registry.register
@@ -60,6 +61,10 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     def title(self):
         return _("Site backup targets")
@@ -86,6 +91,10 @@ class ModeEditBackupTarget(backup.PageEditBackupTarget, WatoMode):
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupTargets
+
     def targets(self):
         return SiteBackupTargets()
 
@@ -99,6 +108,10 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     def jobs(self):
         return SiteBackupJobs()
@@ -152,6 +165,10 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return "backup_job_state"
 
     @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
+
+    @classmethod
     def permissions(cls):
         return ["backups"]
 
@@ -164,12 +181,12 @@ class ModeAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self):
-        self.page()
+        self._handle_exc(self.page)
 
     def page(self):
         config.user.need_permission("wato.backups")
         if html.request.var("job") == "restore":
-            page = backup.PageBackupRestoreState()  # type: backup.PageAbstractBackupJobState
+            page: backup.PageAbstractBackupJobState = backup.PageBackupRestoreState()
         else:
             page = ModeBackupJobState()
         page.show_job_details()
@@ -191,6 +208,10 @@ class ModeBackupKeyManagement(SiteBackupKeypairStore, backup.PageBackupKeyManage
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
+
     def jobs(self):
         return SiteBackupJobs()
 
@@ -205,6 +226,10 @@ class ModeBackupEditKey(SiteBackupKeypairStore, backup.PageBackupEditKey, WatoMo
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
+
 
 @mode_registry.register
 class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, WatoMode):
@@ -216,8 +241,12 @@ class ModeBackupUploadKey(SiteBackupKeypairStore, backup.PageBackupUploadKey, Wa
     def permissions(cls):
         return ["backups"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
+
     def _upload_key(self, key_file, value):
-        watolib.log_audit(None, "upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
+        watolib.log_audit("upload-backup-key", _("Uploaded backup key '%s'") % value["alias"])
         super(ModeBackupUploadKey, self)._upload_key(key_file, value)
 
 
@@ -230,6 +259,10 @@ class ModeBackupDownloadKey(SiteBackupKeypairStore, backup.PageBackupDownloadKey
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackupKeyManagement
 
     def _file_name(self, key_id, key):
         return "Check_MK-%s-%s-backup_key-%s.pem" % (backup.hostname(), config.omd_site(), key_id)
@@ -244,6 +277,10 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
     @classmethod
     def permissions(cls):
         return ["backups"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeBackup
 
     def title(self):
         if not self._target:
@@ -262,13 +299,11 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
         except KeyError:
             return backup.SystemBackupTargetsReadOnly().get(target_ident)
 
-    def _show_target_list(self):
-        # type: () -> None
+    def _show_target_list(self) -> None:
         super(ModeBackupRestore, self)._show_target_list()
         backup.SystemBackupTargetsReadOnly().show_list(editable=False,
                                                        title=_("System global targets"))
 
-    def _show_backup_list(self):
-        # type: () -> None
+    def _show_backup_list(self) -> None:
         assert self._target is not None
         self._target.show_backup_list(only_type="Check_MK")

@@ -1,0 +1,12 @@
+Title: Windows agent firewall rule applies to all three Windows network profiles
+Class: security
+Compatible: compat
+Component: checks
+Date: 1607932977
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0i1
+
+With this realease Windows agent opens firewall for all three Windows network profile:
+Private, Domain and Public.

@@ -69,7 +69,7 @@ std::wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            XLOG::l("Failed to load dll '{}'", wtools::ConvertToUTF8(dllpath));
+            XLOG::l("Failed to load dll '{}'", wtools::ToUtf8(dllpath));
             return {};
         }
     } else {
@@ -202,7 +202,7 @@ EventLog::EventLog(const std::wstring &Name)
 
     if (handle_ == nullptr) {
         XLOG::l("failed to open eventlog: '{}' error = [{}]",
-                wtools::ConvertToUTF8(name_), GetLastError());
+                wtools::ToUtf8(name_), GetLastError());
     }
 
     buffer_.resize(INIT_BUFFER_SIZE);
@@ -328,8 +328,7 @@ bool EventLog::fillBuffer() {
         // otherwise treat this like any other error
     }
 
-    XLOG::l("Can't read eventlog '{}' error {}", wtools::ConvertToUTF8(name_),
-            error);
+    XLOG::l("Can't read eventlog '{}' error {}", wtools::ToUtf8(name_), error);
     return false;
 }
 }  // namespace cma::evl

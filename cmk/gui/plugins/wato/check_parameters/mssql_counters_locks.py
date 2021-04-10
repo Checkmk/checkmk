@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,6 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     Float,
-    TextAscii,
     Tuple,
 )
 
@@ -21,10 +20,12 @@ from cmk.gui.plugins.wato import (
     HostRulespec,
 )
 
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
+
 
 def _valuespec_inventory_mssql_counters_rules():
     return Dictionary(
-        title=_("Include MSSQL Counters services"),
+        title=_("MSSQL counter discovery"),
         elements=[
             ("add_zero_based_services", Checkbox(title=_("Include service with zero base."))),
         ],
@@ -101,7 +102,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_counters_locks",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_counters_locks,
         title=lambda: _("MSSQL Locks"),

@@ -1,0 +1,12 @@
+Title: cluster discovery: Fix moving services to unmonitored
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1612429435
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

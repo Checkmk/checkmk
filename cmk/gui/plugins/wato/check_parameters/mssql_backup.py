@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,7 +12,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     MonitoringState,
-    TextAscii,
     Transform,
     Tuple,
 )
@@ -25,10 +24,11 @@ from cmk.gui.plugins.wato import (
     HostRulespec,
 )
 
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
+
 
 def _vs_mssql_backup_age(title):
     return Alternative(title=_("%s" % title),
-                       style="dropdown",
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[
@@ -45,7 +45,7 @@ def _vs_mssql_backup_age(title):
 
 def _valuespec_discovery_mssql_backup():
     return Dictionary(
-        title=_("Discovery of MSSQL backup"),
+        title=_("MSSQL backup discovery"),
         elements=[
             ("mode",
              DropdownChoice(title=_("Backup modes"),
@@ -97,7 +97,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         parameter_valuespec=_parameter_valuespec_mssql_backup,
         title=lambda: _("MSSQL Backup summary"),
     ))

@@ -4,11 +4,15 @@
 // source code package.
 
 #include "TableEventConsoleEvents.h"
-#include <memory>
+
 #include "Column.h"
+#include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "Row.h"
+#include "StringColumn.h"
 #include "Table.h"
 #include "TableHosts.h"
+#include "TimeColumn.h"
 
 TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole(mc) {
@@ -17,68 +21,65 @@ TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
 
 // static
 void TableEventConsoleEvents::addColumns(Table *table) {
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_id", "The unique ID for this event", Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
+    ColumnOffsets offsets{};
+    table->addColumn(ECRow::makeIntColumn(
+        "event_id", "The unique ID for this event", offsets));
+    table->addColumn(ECRow::makeIntColumn(
         "event_count", "The number of occurrences of this event within period",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_text", "The textual description of the event",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<TimeEventConsoleColumn>(
+        offsets));
+    table->addColumn(ECRow::makeStringColumn(
+        "event_text", "The textual description of the event", offsets));
+    table->addColumn(ECRow::makeTimeColumn(
         "event_first",
-        "Time of the first occurrence of the event (Unix timestamp)",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<TimeEventConsoleColumn>(
+        "Time of the first occurrence of the event (Unix timestamp)", offsets));
+    table->addColumn(ECRow::makeTimeColumn(
         "event_last",
-        "Time of the last occurrence of this event (Unix timestamp)",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_comment", "Event comment", Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_sl", "The service level for this event", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_host", "Host name for this event", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_contact", "Contact information", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_application", "Syslog tag/application", Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_pid", "The process ID of the originating process",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_priority", "Syslog priority", Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_facility", "Syslog facility", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_rule_id", "The ID of the rule", Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
-        "event_state", "The state of the event (0/1/2/3)", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
+        "Time of the last occurrence of this event (Unix timestamp)", offsets));
+    table->addColumn(
+        ECRow::makeStringColumn("event_comment", "Event comment", offsets));
+    table->addColumn(ECRow::makeIntColumn(
+        "event_sl", "The service level for this event", offsets));
+    table->addColumn(ECRow::makeStringColumn(
+        "event_host", "Host name for this event", offsets));
+    table->addColumn(ECRow::makeStringColumn("event_contact",
+                                             "Contact information", offsets));
+    table->addColumn(ECRow::makeStringColumn(
+        "event_application", "Syslog tag/application", offsets));
+    table->addColumn(ECRow::makeIntColumn(
+        "event_pid", "The process ID of the originating process", offsets));
+    table->addColumn(
+        ECRow::makeIntColumn("event_priority", "Syslog priority", offsets));
+    table->addColumn(
+        ECRow::makeIntColumn("event_facility", "Syslog facility", offsets));
+    table->addColumn(ECRow::makeStringColumn("event_rule_id",
+                                             "The ID of the rule", offsets));
+    table->addColumn(ECRow::makeIntColumn(
+        "event_state", "The state of the event (0/1/2/3)", offsets));
+    table->addColumn(ECRow::makeStringColumn(
         "event_phase",
         "The phase the event is currently in (one of open/closed/delayed/counting/ack)",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
-        "event_owner", "The owner of the event", Column::Offsets{}));
-    table->addColumn(std::make_unique<ListEventConsoleColumn>(
+        offsets));
+    table->addColumn(ECRow::makeStringColumn(
+        "event_owner", "The owner of the event", offsets));
+    table->addColumn(ECRow::makeListColumn(
         "event_match_groups", "Text groups from regular expression match",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<ListEventConsoleColumn>(
-        "event_contact_groups", "Contact groups", Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
+        offsets));
+    table->addColumn(ECRow::makeListColumn("event_contact_groups",
+                                           "Contact groups", offsets));
+    table->addColumn(ECRow::makeStringColumn(
         "event_contact_groups_precedence",
-        "Whether or not the host- or rule groups have precedence",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<StringEventConsoleColumn>(
+        "Whether or not the host- or rule groups have precedence", offsets));
+    table->addColumn(ECRow::makeStringColumn(
         "event_ipaddress", "The IP address where the event originated",
-        Column::Offsets{}));
-    table->addColumn(std::make_unique<IntEventConsoleColumn>(
+        offsets));
+    table->addColumn(ECRow::makeIntColumn(
         "event_host_in_downtime",
         "Whether or not the host (if found in core) was in downtime during event creation (0/1)",
-        Column::Offsets{}));
+        offsets));
 
-    TableHosts::addColumns(table, "host_", DANGEROUS_OFFSETOF(ECRow, _host),
-                           -1);
+    TableHosts::addColumns(table, "host_", offsets.add([](Row r) {
+        return r.rawData<ECRow>()->host();
+    }));
 }
 
 std::string TableEventConsoleEvents::name() const {

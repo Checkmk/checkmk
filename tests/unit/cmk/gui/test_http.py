@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,6 @@ import io
 import time
 
 import pytest  # type: ignore[import]
-import six
 
 from werkzeug.test import create_environ
 
@@ -60,7 +59,7 @@ def test_get_str_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_non_ascii():
-    assert html.request.get_str_input("abc") == six.ensure_str("äbc")
+    assert html.request.get_str_input("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -77,7 +76,7 @@ def test_get_str_input_mandatory_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_non_ascii():
-    assert html.request.get_str_input_mandatory("abc") == six.ensure_str(u"äbc")
+    assert html.request.get_str_input_mandatory("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -167,7 +166,7 @@ def test_get_ascii_input_mandatory_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_type():
     assert html.request.get_unicode_input("xyz") == "x"
-    assert isinstance(html.request.get_unicode_input("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -184,7 +183,7 @@ def test_get_unicode_input_default():
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_input_type():
     assert html.request.get_unicode_input_mandatory("xyz") == u"x"
-    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), six.text_type)
+    assert isinstance(html.request.get_unicode_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -260,7 +259,6 @@ def test_get_integer_input_mandatory_not_a_number():
 
 def test_cookie_handling(register_builtin_html, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
-    assert html.request.get_cookie_names() == ["cookie1"]
     assert html.request.has_cookie("cookie1")
     assert not html.request.has_cookie("cookie2")
     #TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
@@ -283,14 +281,14 @@ def test_response_set_http_cookie(register_builtin_html):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg")
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/"
+        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_set_http_cookie_secure(register_builtin_html, monkeypatch):
     html.response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert html.response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/"
+            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
 
 
 def test_response_del_cookie(register_builtin_html, monkeypatch):
@@ -302,7 +300,7 @@ def test_response_del_cookie(register_builtin_html, monkeypatch):
             "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
 
 
-# User IDs in Check_MK may contain non ascii characters. When they need to be encoded,
+# User IDs in Checkmk may contain non ascii characters. When they need to be encoded,
 # they are encoded in UTF-8. Since this is possible the user names in the cookies directly
 # contain those UTF-8 encoded user names.
 # Until we decide that distributed setups between the current version and the previous

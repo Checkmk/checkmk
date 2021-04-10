@@ -83,15 +83,15 @@ def inventory_jenkins_nodes(parsed):
                 if label_data is None:
                     continue
 
-                service_labels = ServiceLabels()
+                service_labels = []
                 for label in label_data:
                     label_name = label.get("name")
                     if label_name is None:
                         continue
 
                     if label_name != item:
-                        service_labels.add_label(
-                            ServiceLabel(u'cmk/jenkins_node_label_%s' % label_name, u'yes'))
+                        service_labels.append(
+                            ServiceLabel('cmk/jenkins_node_label_%s' % label_name, 'yes'))
 
             yield Service(item=item, parameters={}, service_labels=service_labels)
 

@@ -154,8 +154,7 @@ def _handle_request(url, args):
     return response.json()
 
 
-def setup_logging(verbosity):
-    # type: (int) -> None
+def setup_logging(verbosity: int) -> None:
     if verbosity >= 3:
         lvl = logging.DEBUG
     elif verbosity == 2:

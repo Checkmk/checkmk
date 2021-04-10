@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -37,7 +37,6 @@ def _parameter_valuespec_oracle_sessions():
             ("sessions_abs",
              Alternative(
                  title=_("Absolute levels of active sessions"),
-                 style="dropdown",
                  help=_("This check monitors the current number of active sessions on Oracle"),
                  elements=[
                      FixedValue(None, title=_("Do not use absolute levels"), totext=""),

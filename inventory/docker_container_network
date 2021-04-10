@@ -3,14 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
-def parse_docker_container_network(info):
-    # pylint: disable=undefined-variable
-    version = docker_get_version(info)
-    index = 0 if version is None else 1
-    parsed = docker_json_get_obj(info[index]) or {}
-    return parsed
+import cmk.base.plugins.agent_based.utils.docker as docker
 
 
 def inv_docker_container_network_networks(parsed, inventory_tree):
@@ -51,12 +44,11 @@ def inv_docker_container_network_ports(parsed, inventory_tree):
 
 
 def inv_docker_container_network(info, inventory_tree):
-    parsed = parse_docker_container_network(info)
+    parsed = docker.parse(info).data
     inv_docker_container_network_networks(parsed, inventory_tree)
     inv_docker_container_network_ports(parsed, inventory_tree)
 
 
 inv_info["docker_container_network"] = {  # pylint: disable=undefined-variable
-    "includes": ['docker.include'],
     "inv_function": inv_docker_container_network,
 }

@@ -5,7 +5,7 @@
 
 # EXAMPLE
 
-# This script is called by the Check_MK ORACLE plugin in order to
+# This script is called by the Checkmk ORACLE plugin in order to
 # execute an SQL query.
 
 # It is your task to adapt this script so that the ORACLE environment

@@ -1,0 +1,24 @@
+Title: Inventory of Linux kernel configuration (sysctl)
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1592210050
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk adds the option to inventorize the kernel configuration parameters
+of Linux systems (output of <tt>sysctl -ae</tt>). To activate this option, two
+configuration steps are necessary.
+
+First, the user needs to deploy the corresponding agent plugin via the rule
+"Hardware/Software-Inventory (Linux, Windows, Solaris, AIX)". Then, the checkmk
+agents for Linux need to re-baked and re-installed to include the changes in the
+agent plugin collecting the inventory data.
+
+Secondly, the user needs to specify regex-patterns for including and excluding kernel
+configuration parameters in the inventory via the rule "Inventory of Linux kernel
+configuration (sysctl)". The reason for this second step is that some configuration
+parameters can change often, resulting in frequent changes in the HW/SW inventory,
+which can quickly fill up the temporary filesystem used by checkmk.

@@ -1,0 +1,37 @@
+Title: Fix crash in EC configuration (regression since 1.6.0p14)
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1598530834
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+When there were open events in the Event Console that were created by a rule
+that was removed from the Event Console, this resulted in an exception on the
+Event Console configuration page (IndexError (list index out of range)).
+
+However, this message was rather a consequence error. The original error
+message was found in var/log/mkeventd.log. There you could find messages of
+this kind: 
+
+C+:
+2020-08-27 14:19:42,913 [40] [cmk.mkeventd.StatusServer] Error handling client : 'my_rule'
+Traceback (most recent call last):
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 3031, in serve
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 3071, in handle_client
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 3092, in _answer_query
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 2753, in query
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 2871, in _enumerate
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 736, in get_status
+    row += self._add_event_limit_status()
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 766, in _add_event_limit_status
+    self.get_rules_with_active_event_limit(),
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 1784, in get_rules_with_active_event_limit
+    if num_events >= self._get_rule_event_limit(rule_id)[0]:
+  File "/omd/sites/stable/lib/python/cmk/ec/main.py", line 1885, in _get_rule_event_limit
+    rule = self._rule_by_id.get(rule_id)
+KeyError: 'my_rule'
+C-:

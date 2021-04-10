@@ -44,7 +44,7 @@ def inv_statgrab_net(info, params, inventory_tree):
         if entry.get("port_type") in usage_port_types:
             total_ethernet_ports += 1
 
-    node.extend(parsed.values())
+    node.extend(parsed.values())  # pylint: disable=dict-values-not-iterating
 
     node = inventory_tree.get_dict("networking.")
     node["total_ethernet_ports"] = total_ethernet_ports

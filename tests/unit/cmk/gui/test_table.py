@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,6 @@ import re
 
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
 import pytest  # type: ignore[import]
-import six
 
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
@@ -17,7 +16,7 @@ from tools import compare_html  # type: ignore[import]
 
 
 def read_out_simple_table(text):
-    assert isinstance(text, six.string_types)
+    assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
     for row in bs(text, 'lxml').findAll('tr'):
@@ -116,16 +115,16 @@ def test_nesting(register_builtin_html):
 
         written_text = "".join(html.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+        written_text, '''<h3 class="table">  TEST </h3>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <tr class="data even0">  <td>   1  </td>  <td>
+                                <h3 class="table"> TEST 2</h3>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text
@@ -149,16 +148,16 @@ def test_nesting_context(register_builtin_html):
 
         written_text = "".join(html.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+        written_text, '''<h3 class="table">  TEST </h3>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <tr class="data even0">  <td>   1  </td>  <td>
+                                <h3 class="table"> TEST 2</h3>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text

@@ -1,0 +1,11 @@
+Title: f5_bigip_fans: replaced deprecated OID
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1590412572
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The old OID has been deprecated. Replaced by sysCpuSensor table.

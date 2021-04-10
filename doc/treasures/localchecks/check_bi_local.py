@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -13,7 +13,6 @@
 #    user with read access to Multisite.
 # 4. Add password OR automation secret of this user
 
-from __future__ import print_function
 url_prefix = ""  # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
@@ -46,12 +45,13 @@ accept_any_certificate = False
 
 # Do not change anything below
 
-import os, sys
+import os
+import sys
 
 if protocol != "https":
     protocol = "http"
 
-if protocol == "https" and accept_any_certificate == True:
+if protocol == "https" and accept_any_certificate:
     cert_option = "--insecure"
 else:
     cert_option = ""
@@ -73,7 +73,7 @@ try:
                     (user, password, cert_option, url)
     output = os.popen(command).read()  # nosec
     data = eval(output)
-except:
+except Exception:
     sys.stderr.write("Invalid output from URL %s:\n" % url)
     sys.stderr.write(output)
     sys.stderr.write("Command was: %s\n" % command)

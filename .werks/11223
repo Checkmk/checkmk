@@ -1,0 +1,13 @@
+Title: aix_diskiod: Switch to new diskstat-ruleset
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1594905269
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The check <tt>aix_diskiod</tt> now uses the rules defined under the
+ruleset "Levels for disk IO" instead of "Levels on disk IO (old style
+checks)". User-defined rules have to be adjusted to account for this.

@@ -7,8 +7,8 @@ description:
  This check monitors the temperature of the
  modules of a Juniper Ethernet Switch Chassis.
 
- The upper default levels are set to (55%, 60%).
- The upper and lower levels are configurable.
+ The upper default levels are set to 55, 60 degrees
+ Celsius. The upper and lower levels are configurable.
 
 item:
  The name or description of the module.

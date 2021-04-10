@@ -1,16 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.metrics import (
-    perfometer_info,
-    MB,
     GB,
-    TB,
     MAX_NUMBER_HOPS,
+    MB,
+    perfometer_info,
     skype_mobile_devices,
+    TB,
 )
 
 #.
@@ -39,6 +39,13 @@ from cmk.gui.plugins.metrics import (
 # "sort_group" -> When sorting perfometer the first criteria used is either this optional performeter
 #                 group or the perfometer ID. The sort_group can be used to group different perfometers
 #                 which show equal data for sorting them together in a single sort domain.
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "active_connections",
+    "half_value": 50.0,
+    "exponent": 2,
+})
 
 perfometer_info.append({
     "type": "dual",
@@ -85,6 +92,19 @@ perfometer_info.append({
     "type": "linear",
     "segments": ["ap_devices_drifted", "ap_devices_not_responding"],
     "total": "ap_devices_total",
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["ap_devices_percent_unhealthy"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "wifi_connection_total",
+    "half_value": 5000,
+    "exponent": 2.0
 })
 
 perfometer_info.append({
@@ -349,13 +369,6 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "dedup_rate",
-    "half_value": 30.0,
-    "exponent": 1.2,
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
     "half_value": 1000.0,
     "exponent": 2.0
@@ -513,6 +526,13 @@ perfometer_info.append({
     ],
     "total": 100,
     "label": ("fs_used(%)", "%"),
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "dedup_rate",
+    "half_value": 30.0,
+    "exponent": 1.2,
 })
 
 perfometer_info.append({
@@ -1447,9 +1467,16 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type": "linear",
-    "segments": ["connections_perc_used"],
-    "total": 100,
+    "type": "stacked",
+    "perfometers": [{
+        "type": "linear",
+        "segments": ["connections_perc_used"],
+        "total": 100,
+    }, {
+        "type": "linear",
+        "segments": ["connections_perc_conn_threads"],
+        "total": 100,
+    }],
 })
 
 perfometer_info.append({
@@ -1575,5 +1602,11 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["log_file_utilization"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["disk_utilization"],
     "total": 100.0,
 })

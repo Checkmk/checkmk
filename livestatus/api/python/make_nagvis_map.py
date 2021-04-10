@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,7 +9,6 @@
 # system. Most things are hardcoded here but this might by
 # a useful example for coding your own stuff...
 
-from __future__ import print_function
 import livestatus
 
 g_y = 50
@@ -39,20 +38,20 @@ def render_hostgroup(name, alias):
     # Name des Serverraums
     make_label(alias, x_hostgroup, g_y, x_therm - x_hostgroup - 20)
 
-    def display_servicegroup(name, x):
-        if live.query_value("GET servicegroups\nStats: name = %s\n" % name) == 1:
+    def display_servicegroup(sg_name, x):
+        if live.query_value("GET servicegroups\nStats: name = %s\n" % sg_name) == 1:
             print("""
 define servicegroup {
             servicegroup_name = %s
             x=%d
             y=%d
-}""" % (name, x, g_y))
+}""" % (sg_name, x, g_y))
 
             # Einzelauflistung der Thermometer
             num = 0
             shift = 16
             for host, service in live.query(
-                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
+                    "GET services\nFilter: groups >= %s\nColumns: host_name description" % sg_name):
                 num += 1
                 print("""
 define service {
@@ -92,8 +91,8 @@ hostgroups = [
     ("ik026", "IK-026"),
     ("etage", "Etagenverteiler"),
 ]
-for name, alias in hostgroups:
-    render_hostgroup(name, alias)
+for hg_name, hg_alias in hostgroups:
+    render_hostgroup(hg_name, hg_alias)
 
 make_label("Temperaturen", x_therm, y_title, 250)
 make_label("USV-Status", x_usv, y_title, 160)

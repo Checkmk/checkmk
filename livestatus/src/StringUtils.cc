@@ -4,6 +4,7 @@
 // source code package.
 
 #include "StringUtils.h"
+
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -31,7 +32,13 @@ std::string unsafe_toupper(const std::string &str) {
 
 bool starts_with(const std::string &input, const std::string &test) {
     return input.size() >= test.size() &&
-           std::equal(test.begin(), test.end(), input.begin());
+           input.compare(0, test.size(), test) == 0;
+}
+
+bool ends_with(const std::string &input, const std::string &test) {
+    return input.size() >= test.size() &&
+           input.compare(input.size() - test.size(), std::string::npos, test) ==
+               0;
 }
 
 std::vector<std::string> split(const std::string &str, char delimiter) {
@@ -42,6 +49,25 @@ std::vector<std::string> split(const std::string &str, char delimiter) {
         result.push_back(field);
     }
     return result;
+}
+
+// Due to legacy reasons, we allow spaces as a separator between the parts of a
+// composite key. To be able to use spaces in the parts of the keys themselves,
+// we allow a semicolon, too, and look for that first.
+std::tuple<std::string, std::string> splitCompositeKey2(
+    const std::string &composite_key) {
+    auto semicolon = composite_key.find(';');
+    return semicolon == std::string::npos
+               ? mk::nextField(composite_key)
+               : make_tuple(mk::rstrip(composite_key.substr(0, semicolon)),
+                            mk::rstrip(composite_key.substr(semicolon + 1)));
+}
+
+std::tuple<std::string, std::string, std::string> splitCompositeKey3(
+    const std::string &composite_key) {
+    const auto &[part1, rest] = splitCompositeKey2(composite_key);
+    const auto &[part2, part3] = splitCompositeKey2(rest);
+    return {part1, part2, part3};
 }
 
 std::string join(const std::vector<std::string> &values,
@@ -103,7 +129,7 @@ std::string replace_all(const std::string &str, const std::string &from,
     result.reserve(str.size());
     size_t added_after_match = from.empty() ? 1 : 0;
     size_t pos = 0;
-    size_t match;
+    size_t match = 0;
     while ((match = str.find(from, pos)) != std::string::npos) {
         result.append(str, pos, match - pos)
             .append(to)

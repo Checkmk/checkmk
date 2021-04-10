@@ -35,20 +35,20 @@ fi
 
 ####################################################################################################
 # checkmk variables and constants
-MK_LIBDIR=${MK_LIBDIR:-/usr/lib/check_mk_agent}
-MK_CONFDIR=${MK_CONFDIR:-/etc/check_mk}
-MK_VARDIR=${MK_VARDIR:-/var/lib/check_mk_agent}
+MK_LIBDIR="${MK_LIBDIR:-/usr/lib/check_mk_agent}"
+MK_CONFDIR="${MK_CONFDIR:-/etc/check_mk}"
+MK_VARDIR="${MK_VARDIR:-/var/lib/check_mk_agent}"
 
 # All executables in MK_PLUGINSDIR will be executed and their ouput appended to the output of
 # the agent. Plugins define their own sections and must output headers with '<<<' and '>>>'
-MK_PLUGINSDIR="${MK_LIBDIR:?}"/plugins
+MK_PLUGINSDIR="${MK_LIBDIR:?}/plugins"
 
 # All executables in MK_LOCALDIR will be executed and their output inserted into the section 
 # <<<local>>>. Please refer to online documentation for details about local checks.
-MK_LOCALDIR="${MK_LIBDIR}"/local
+MK_LOCALDIR="${MK_LIBDIR}/local"
 
 # All files in MK_SPOOLDIR will be appended to the agent output if they are not outdated (see below)
-MK_SPOOLDIR="${MK_VARDIR:?}"/spool
+MK_SPOOLDIR="${MK_VARDIR:?}/spool"
 
 # Optionally set a tempdir for all subsequent calls
 #MK_TMPDIR=
@@ -66,7 +66,7 @@ MK_SPOOLDIR="${MK_VARDIR:?}"/spool
 }
 
 # Define the version of Check_MK
-MK_VERSION="${MK_VERSION:-1.7.0i1}"
+MK_VERSION="${MK_VERSION:-2.1.0i1}"
 
 # Protect our globals, making them constant...
 readonly MK_LIBDIR MK_CONFDIR MK_VARDIR MK_PLUGINSDIR MK_LOCALDIR MK_SPOOLDIR MK_VERSION
@@ -102,9 +102,9 @@ read_python_version() {
 
 PYTHON3=$(read_python_version python3 4)
 PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
-if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
+if [ -f "${MK_CONFDIR}/python_path.cfg" ]; then
     # shellcheck source=/dev/null
-    . "$MK_CONFDIR/python_path.cfg"
+    . "${MK_CONFDIR}/python_path.cfg"
 fi
 export PYTHON2 PYTHON3
 
@@ -1663,7 +1663,7 @@ var_is_unset "${MK_SKIP_ZPOOL}" && section_zpool
 var_is_unset "${MK_SKIP_VERITAS}" && section_veritas_cluster
 
 ## Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-var_is_unset "${MK_SKIP_FILEINFO}" ] && run_fileinfo
+var_is_unset "${MK_SKIP_FILEINFO}" && run_fileinfo
 
 # Get stats about OMD monitoring cores running on this machine.
 # Since cd is a shell builtin the check does not affect the performance

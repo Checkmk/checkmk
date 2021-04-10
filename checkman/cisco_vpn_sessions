@@ -1,0 +1,26 @@
+title: Cisco VPN sessions
+agents: snmp
+catalog: hw/network/cisco
+license: GPLv3
+distribution: check_mk
+description:
+ This check monitors the number of active VPN sessions for Cisco PIX, ASA and
+ Firepower appliances. Furthermore, it also reports peak and cumulative values
+ for the number of active sessions as well as the overall maximum allowed by
+ the system.
+
+ The number of active sessions is monitored for each type of VPN session
+ separately and, in addition, the check also monitors the overall number of active
+ sessions (summed over all session types).
+
+ There are no default levels on the number of active sessions. Upper levels can
+ be configured using the rule "Cisco VPN Sessions".
+
+item:
+ The type of VPN session, one of 'IPsec RA' (remote access), 'IPsec L2L' (LAN-to-LAN),
+ 'AnyConnect SVC' (SSL VPN Client), 'WebVPN' (clientless) or 'Summary' (summary of the
+ previous items).
+
+inventory:
+ One service is created for each type of VPN session. Additionally, one summary service
+ is created.

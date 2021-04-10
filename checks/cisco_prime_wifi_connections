@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+"""Cisco prime connection count check
+This check will compare the sum of all 'count' entries against lower levels and additionally
+output the sums of all individual connection types
+
+see: https://d1nmyq4gcgsfi5.cloudfront.net/media/pi_3_3_devnet/api/v2/data/ClientCounts@_docs.html
+"""
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cisco_prime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+
+def check_cisco_prime_wifi_connections(item, params, parsed):
+    """Sum up all individual counts for each connection type (as well as their sums
+    indicated by 'count')"""
+    keys = {
+        "": "Total connections",
+        "dot11a": "802.11a",
+        "dot11b": "802.11b",
+        "dot11g": "802.11g",
+        "dot11ac": "802.11ac",
+        "dot11n2_4": "802.11n24",
+        "dot11n5": "802.11n5",
+    }
+    try:
+        # Find the entry with all connection count values summed up ("key" = "All SSIDs")
+        # and return only the it's value (a dict) with keys lowered for comparison
+        sum_entry = next({ctype.lower(): cname
+                          for ctype, cname in v.items()}
+                         for k, v in parsed.items()
+                         if v.get("key") == "All SSIDs")
+    except StopIteration:
+        # Re-word the exception
+        raise RuntimeError("No item with key='All SSIDs' found")
+
+    for ctype, cname in keys.items():
+        full_type_name = ctype + "authcount"
+        count = sum_entry[full_type_name]
+        lower_levels = params.get("levels_lower")
+        if ctype == "":
+            yield check_levels(
+                count,
+                "wifi_connection_total",
+                (None, None) + (lower_levels or (None, None)),
+                human_readable_func=int,
+                infoname=cname,
+            )
+        else:
+            yield 0, "%s: %d" % (cname, count), [("wifi_connection_" + ctype, count)]
+
+
+check_info["cisco_prime_wifi_connections"] = {
+    "parse_function": lambda info: parse_cisco_prime("clientCountsDTO", info),
+    "inventory_function": discover_single,
+    "check_function": check_cisco_prime_wifi_connections,
+    "service_description": "Cisco Prime WiFi Connections",
+    "group": "cisco_prime_wifi_connections",
+    "has_perfdata": True,
+}

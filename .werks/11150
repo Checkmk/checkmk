@@ -1,0 +1,23 @@
+Title: Refactoring of the monitoring of Cisco VPN sessions
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1589874781
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk refactors the code for monitoring the number of Cisco
+VPN sessions. The three checks cisco_asa_ipsecsessions,
+cisco_asa_svcsessions and cisco_asa_webvpnsessions are replaced
+with one check with three items (cisco_vpn_sessions). The
+corresponding rule for defining upper levels on the number of active
+sessions is renamed from "Cisco SVC/WebVPN/IPsec Sessions" to "Cisco
+VPN Sessions"
+
+This change is incompatible. Users have to re-discover the services
+of affected hosts and re-create the rules for the upper levels on
+the number of active sessions. Furthermore, any previously created rules
+should be deleted, since they are deprecated as of this werk and have
+no more effect.

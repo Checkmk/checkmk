@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -34,16 +34,11 @@ import tarfile
 import threading
 import time
 import traceback
-from typing import NamedTuple, List  # pylint: disable=unused-import
+from typing import NamedTuple, List
+from pathlib import Path
 
 import requests
 import urllib3  # type: ignore[import]
-import six
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
 
 import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
@@ -62,7 +57,6 @@ import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.werks as werks
 import cmk.gui.log as log
 import cmk.gui.background_job as background_job
 import cmk.gui.weblib as weblib
@@ -150,10 +144,10 @@ from cmk.gui.watolib.sites import (
     LivestatusViaTCP,
 )
 from cmk.gui.watolib.changes import (
-    log_entry,
     log_audit,
     add_change,
     add_service_change,
+    make_diff_text,
 )
 from cmk.gui.watolib.activate_changes import (
     get_replication_paths,
@@ -164,6 +158,8 @@ from cmk.gui.watolib.activate_changes import (
     confirm_all_local_changes,
     get_pending_changes_info,
     get_number_of_pending_changes,
+    activate_changes_start,
+    activate_changes_wait,
 )
 from cmk.gui.watolib.groups import (
     edit_group,
@@ -178,7 +174,7 @@ from cmk.gui.watolib.rulespecs import (
     RulespecSubGroup,
     RulespecGroupRegistry,
     rulespec_group_registry,
-    RulespecGroupManualChecks,
+    RulespecGroupEnforcedServices,
     register_rulegroup,
     get_rulegroup,
     Rulespec,
@@ -191,7 +187,6 @@ from cmk.gui.watolib.rulesets import (
     FolderRulesets,
     FilteredRulesetCollection,
     StaticChecksRulesets,
-    NonStaticChecksRulesets,
     SearchedRulesets,
     Ruleset,
     Rule,
@@ -202,6 +197,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     CREHost,
     Host,
+    collect_all_hosts,
     validate_all_hosts,
     call_hook_hosts_changed,
     folder_preserving_link,
@@ -231,7 +227,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 from cmk.gui.watolib.snapshots import backup_domains
-from cmk.gui.watolib.automation_commands import (AutomationCommand, automation_command_registry)
+from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     save_site_global_settings,
@@ -252,7 +248,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     convert_cgroups_from_tuple,
     host_attribute_matches,
-    default_site,
     format_config_value,
     liveproxyd_config_dir,
     mk_repr,
@@ -368,6 +363,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
         ruleset_config = {
             # Make the tag 'offline' remove hosts from the monitoring
             'only_hosts': [{
+                'id': '10843c55-11ea-4eb2-bfbc-bce65cd2ae22',
                 'condition': {
                     'host_tags': {
                         'criticality': {
@@ -383,6 +379,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Rule for WAN hosts with adapted PING levels
             'ping_levels': [{
+                'id': '0365b634-30bf-40a3-8516-08e86051508e',
                 'condition': {
                     'host_tags': {
                         'networking': 'wan',
@@ -401,6 +398,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # All hosts should use SNMP v2c if not specially tagged
             'bulkwalk_hosts': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'condition': {
                     'host_tags': {
                         'snmp': 'snmp',
@@ -415,8 +413,19 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 },
             },],
 
+            # All SNMP managment boards should use SNMP v2c if not specially tagged
+            'management_bulkwalk_hosts': [{
+                'id': '59d84cde-ee3a-4f8d-8bec-fce35a2b0d15',
+                'condition': {},
+                'value': True,
+                'options': {
+                    'description': u'All management boards use SNMP v2 (incl. bulk walks) by default'
+                },
+            },],
+
             # Put all hosts and the contact group 'all'
             'host_contactgroups': [{
+                'id': 'efd67dab-68f8-4d3c-a417-9f7e29ab48d5',
                 'condition': {},
                 'value': 'all',
                 'options': {
@@ -426,6 +435,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Docker container specific host check commands
             'host_check_commands': [{
+                'id': '24da4ccd-0d1b-40e3-af87-0097df8668f2',
                 'condition': {
                     'host_labels': {
                         u'cmk/docker_object': u'container'
@@ -442,6 +452,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             'active_checks': {
                 'cmk_inv': [
                     {
+                        'id': '7ba2ac2a-5a49-47ce-bc3c-1630fb191c7f',
                         'condition': {
                             'host_labels': {
                                 u'cmk/docker_object': u'node',
@@ -452,6 +463,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                         },
                     },
                     {
+                        'id': 'b4b151f9-c7cc-4127-87a6-9539931fcd73',
                         'condition': {
                             'host_labels': {
                                 u'cmk/check_mk_server': u'yes',
@@ -467,6 +479,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             # Interval for HW/SW-Inventory check
             'extra_service_conf': {
                 'check_interval': [{
+                    'id': 'b3847203-84b3-4f5b-ac67-0f06d4403905',
                     'condition': {
                         'service_description': [{
                             '$regex': 'Check_MK HW/SW Inventory$'
@@ -482,6 +495,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             # Disable unreachable notifications by default
             'extra_host_conf': {
                 'notification_options': [{
+                    'id': '814bf932-6341-4f96-983d-283525b5416d',
                     'condition': {},
                     'value': 'd,r,f,s'
                 },],
@@ -489,12 +503,12 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Periodic service discovery
             'periodic_discovery': [{
+                'id': '95a56ffc-f17e-44e7-a162-be656f19bedf',
                 'condition': {},
                 'value': {
                     'severity_unmonitored': 1,
                     'severity_vanished': 0,
                     'check_interval': 120.0,
-                    'inventory_check_do_scan': True
                 },
                 'options': {
                     'description': u'Perform every two hours a service discovery'
@@ -503,6 +517,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
             # Include monitoring of checkmk's tmpfs
             'inventory_df_rules': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
                 'condition': {
                     'host_labels': {
                         u'cmk/check_mk_server': u'yes',
@@ -538,17 +553,17 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             "use_new_descriptions_for": [
                 "aix_memory",
                 "barracuda_mailqueues",
-                "brocade_sys.mem",
+                "brocade_sys_mem",
                 "casa_cpu_temp",
                 "cisco_mem",
                 "cisco_mem_asa",
                 "cisco_mem_asa64",
-                "cmciii.psm_current",
-                "cmciii.temp",
+                "cmciii_psm_current",
+                "cmciii_temp",
                 "cmciii_lcp_airin",
                 "cmciii_lcp_airout",
                 "cmciii_lcp_water",
-                "cmk-inventory",
+                "cmk_inventory",
                 "db2_mem",
                 "df",
                 "df_netapp",
@@ -556,12 +571,12 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "docker_container_mem",
                 "enterasys_temp",
                 "esx_vsphere_datastores",
-                "esx_vsphere_hostsystem.mem_usage",
-                "esx_vsphere_hostsystem.mem_usage_cluster",
-                "etherbox.temp",
+                "esx_vsphere_hostsystem_mem_usage",
+                "esx_vsphere_hostsystem_mem_usage_cluster",
+                "etherbox_temp",
                 "fortigate_memory",
                 "fortigate_memory_base",
-                "fortigate_node.memory",
+                "fortigate_node_memory",
                 "hr_fs",
                 "hr_mem",
                 "http",
@@ -569,10 +584,10 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "hyperv_vms",
                 "ibm_svc_mdiskgrp",
                 "ibm_svc_system",
-                "ibm_svc_systemstats.cache",
-                "ibm_svc_systemstats.disk_latency",
-                "ibm_svc_systemstats.diskio",
-                "ibm_svc_systemstats.iops",
+                "ibm_svc_systemstats_cache",
+                "ibm_svc_systemstats_disk_latency",
+                "ibm_svc_systemstats_diskio",
+                "ibm_svc_systemstats_iops",
                 "innovaphone_mem",
                 "innovaphone_temp",
                 "juniper_mem",
@@ -580,19 +595,20 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "juniper_trpz_mem",
                 "liebert_bat_temp",
                 "logwatch",
-                "logwatch.groups",
-                "mem.used",
-                "mem.win",
+                "logwatch_groups",
+                "mem_used",
+                "mem_win",
                 "mknotifyd",
-                "mknotifyd.connection",
+                "mknotifyd_connection",
                 "mssql_backup",
-                "mssql_counters.cache_hits",
-                "mssql_counters.file_sizes",
-                "mssql_counters.locks",
-                "mssql_counters.locks_per_batch",
-                "mssql_counters.pageactivity",
-                "mssql_counters.sqlstats",
-                "mssql_counters.transactions",
+                "mssql_blocked_sessions",
+                "mssql_counters_cache_hits",
+                "mssql_counters_file_sizes",
+                "mssql_counters_locks",
+                "mssql_counters_locks_per_batch",
+                "mssql_counters_pageactivity",
+                "mssql_counters_sqlstats",
+                "mssql_counters_transactions",
                 "mssql_databases",
                 "mssql_datafiles",
                 "mssql_tablespaces",
@@ -600,10 +616,9 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "mssql_versions",
                 "netscaler_mem",
                 "nullmailer_mailq",
-                "nvidia.temp",
+                "nvidia_temp",
                 "postfix_mailq",
                 "ps",
-                "ps.perf",
                 "qmail_stats",
                 "raritan_emx",
                 "raritan_pdu_inlet",
@@ -613,16 +628,16 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
                 "statgrab_mem",
                 "tplink_mem",
                 "ups_bat_temp",
-                "vms_diskstat.df",
+                "vms_diskstat_df",
                 "wmic_process",
                 "zfsget",
             ],
             "enable_rulebased_notifications": True,
-            "ui_theme": "facelift",
             "lock_on_logon_failures": 10,
         }
 
-        if cmk_version.is_demo():
+        if cmk_version.is_free_edition():
+            # CMC may not run here, we will base the decision on is_free_edition only
             settings["cmc_cmk_helpers"] = 3
 
         return settings
@@ -648,6 +663,8 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         return 40
 
     def generate(self):
+        # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
+        import cmk.gui.werks as werks
         werks.acknowledge_all_werks(check_permission=False)
 
 

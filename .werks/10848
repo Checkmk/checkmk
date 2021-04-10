@@ -1,0 +1,18 @@
+Title: mk_oracle: Support for configuration directory
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1590590550
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+An configuration directory for mk_oracle has been added.  mk_oracle
+usually reads mk_oracle.cfg. Now it also reads all files with *.cfg from
+$MK_CONFDIR/mk_oracle.d This feauture is needed for setups with bakery and
+local changes on the database server. It is possible to configure through
+the bakery and add custom SQLs in configuration directory.
+
+All variables in files from mk_oracle.d will oerwrite possible entries from
+mk_oracle.cfg.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -36,26 +36,19 @@ import re
 import shutil
 import sys
 import time
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-from typing import (  # pylint: disable=unused-import
-    Optional, IO, Union, Dict, List, Set, Text,
-)
+from pathlib import Path
+from typing import Optional, IO, Union, Dict, List, Set, Type
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
 import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
-import six
+from six import ensure_str
 
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.encoding import ensure_unicode
+from cmk.utils.macros import replace_macros_in_str
 
 import cmk.gui.hooks as hooks
 import cmk.gui.config as config
@@ -80,7 +73,7 @@ from cmk.gui.valuespec import (
     Password,
     rule_option_elements,
 )
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry  # pylint: disable=unused-import
+from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.plugins.userdb.utils import (
@@ -96,9 +89,11 @@ from cmk.gui.plugins.userdb.utils import (
     get_connection,
     cleanup_connection_id,
     release_users_lock,
+    CheckCredentialsResult,
+    add_internal_attributes,
 )
 
-from cmk.utils.type_defs import UserId  # pylint: disable=unused-import
+from cmk.utils.type_defs import UserId
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -150,8 +145,8 @@ class MKLDAPException(MKGeneralException):
     pass
 
 
-DistinguishedName = Text
-GroupMemberships = Dict[DistinguishedName, Dict[str, Union[Text, List[Text]]]]
+DistinguishedName = str
+GroupMemberships = Dict[DistinguishedName, Dict[str, Union[str, List[str]]]]
 
 #.
 #   .--UserConnector-------------------------------------------------------.
@@ -170,7 +165,7 @@ GroupMemberships = Dict[DistinguishedName, Dict[str, Union[Text, List[Text]]]]
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
-    connection_suffixes = {}  # type: Dict[str, str]
+    connection_suffixes: Dict[str, str] = {}
 
     @classmethod
     def transform_config(cls, cfg):
@@ -210,7 +205,7 @@ class LDAPUserConnector(UserConnector):
     def __init__(self, cfg):
         super(LDAPUserConnector, self).__init__(self.transform_config(cfg))
 
-        self._ldap_obj = None  # type: Optional[ldap.ldapobject.ReconnectLDAPObject]
+        self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
         self._ldap_obj_config = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
@@ -250,7 +245,7 @@ class LDAPUserConnector(UserConnector):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_level = 2
-                trace_file = sys.stderr  # type: Optional[IO[str]]
+                trace_file: Optional[IO[str]] = sys.stderr
             else:
                 trace_level = 0
                 trace_file = None
@@ -287,8 +282,8 @@ class LDAPUserConnector(UserConnector):
 
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError) as e:
             self.clear_nearest_dc_cache()
-            if isinstance(e[0], dict):
-                msg = e[0].get('info', e[0].get('desc', ''))
+            if hasattr(e, 'message') and 'desc' in e.message:
+                msg = e.message['desc']
             else:
                 msg = "%s" % e
 
@@ -358,20 +353,18 @@ class LDAPUserConnector(UserConnector):
             self.disconnect()
             raise
 
-    def disconnect(self):
-        # type: () -> None
+    def disconnect(self) -> None:
         self._ldap_obj = None
         self._ldap_obj_config = None
 
-    def _discover_nearest_dc(self, domain):
-        # type: (str) -> str
+    def _discover_nearest_dc(self, domain: str) -> str:
         cached_server = self._get_nearest_dc_from_cache()
         if cached_server:
             self._logger.info('Using cached DC %s' % cached_server)
             return cached_server
 
-        import ad  # type: ignore[import] # pylint: disable=import-error
-        locator = ad.Locator()
+        import activedirectory  # type: ignore[import] # pylint: disable=import-error
+        locator = activedirectory.Locator()
         locator.m_logger = self._logger
         try:
             server = locator.locate(domain)
@@ -384,21 +377,18 @@ class LDAPUserConnector(UserConnector):
             self._logger.info('  DISCOVERY: Try to use domain DNS name %r as server' % domain)
             return domain
 
-    def _get_nearest_dc_from_cache(self):
-        # type: () -> Optional[str]
+    def _get_nearest_dc_from_cache(self) -> Optional[str]:
         try:
-            return six.ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
+            return ensure_str(self._nearest_dc_cache_filepath().open(encoding="utf-8").read())
         except IOError:
             pass
         return None
 
-    def _cache_nearest_dc(self, server):
-        # type: (str) -> None
+    def _cache_nearest_dc(self, server: str) -> None:
         self._logger.debug('Caching nearest DC %s' % server)
         store.save_file(self._nearest_dc_cache_filepath(), server)
 
-    def clear_nearest_dc_cache(self):
-        # type: () -> None
+    def clear_nearest_dc_cache(self) -> None:
         if not self._uses_discover_nearest_server():
             return
 
@@ -407,23 +397,19 @@ class LDAPUserConnector(UserConnector):
         except OSError:
             pass
 
-    def _nearest_dc_cache_filepath(self):
-        # type: () -> Path
+    def _nearest_dc_cache_filepath(self) -> Path:
         return self._ldap_caches_filepath() / ("nearest_server.%s" % self.id())
 
     @classmethod
-    def _ldap_caches_filepath(cls):
-        # type: () -> Path
+    def _ldap_caches_filepath(cls) -> Path:
         return Path(cmk.utils.paths.tmp_dir) / "ldap_caches"
 
     @classmethod
-    def config_changed(cls):
-        # type: () -> None
+    def config_changed(cls) -> None:
         cls.clear_all_ldap_caches()
 
     @classmethod
-    def clear_all_ldap_caches(cls):
-        # type: () -> None
+    def clear_all_ldap_caches(cls) -> None:
         try:
             shutil.rmtree(str(cls._ldap_caches_filepath()))
         except OSError as e:
@@ -451,7 +437,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self._logger.info('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(six.ensure_str(user_dn), password)
+            conn.simple_bind_s(ensure_str(user_dn), password)
             self._logger.info('  SUCCESS')
         except ldap.LDAPError as e:
             self._logger.info('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -507,12 +493,10 @@ class LDAPUserConnector(UserConnector):
     def has_group_base_dn_configured(self):
         return self._config['group_dn'] != ''
 
-    def get_group_dn(self):
-        # type: () -> DistinguishedName
+    def get_group_dn(self) -> DistinguishedName:
         return self._replace_macros(self._config['group_dn'])
 
-    def _get_user_dn(self):
-        # type: () -> DistinguishedName
+    def _get_user_dn(self) -> DistinguishedName:
         return self._replace_macros(self._config['user_dn'])
 
     def _get_suffix(self):
@@ -534,28 +518,24 @@ class LDAPUserConnector(UserConnector):
                     (LDAPUserConnector.connection_suffixes[suffix], self.id(), suffix))
             LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
-    def needed_attributes(self):
-        # type: () -> List[Text]
+    def needed_attributes(self) -> List[str]:
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
-        attrs = set()  # type: Set[Text]
+        attrs: Set[str] = set()
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
 
-    def object_exists(self, dn):
-        # type: (DistinguishedName) -> bool
+    def object_exists(self, dn: DistinguishedName) -> bool:
         try:
             return bool(self._ldap_search(dn, columns=['dn'], scope='base'))
         except Exception:
             return False
 
-    def user_base_dn_exists(self):
-        # type: () -> bool
+    def user_base_dn_exists(self) -> bool:
         return self.object_exists(self._get_user_dn())
 
-    def group_base_dn_exists(self):
-        # type: () -> bool
+    def group_base_dn_exists(self) -> bool:
         return self.object_exists(self.get_group_dn())
 
     def _ldap_paged_async_search(self, base, scope, filt, columns):
@@ -564,8 +544,8 @@ class LDAPUserConnector(UserConnector):
 
         lc = SimplePagedResultsControl(size=page_size, cookie='')
 
-        base = six.ensure_str(base)
-        filt = six.ensure_str(filt)
+        base = ensure_str(base)
+        filt = ensure_str(filt)
 
         results = []
         while True:
@@ -625,8 +605,8 @@ class LDAPUserConnector(UserConnector):
                         new_obj = {}
                         for key, val in obj.items():
                             # Convert all keys to lower case!
-                            new_obj[ensure_unicode(key).lower()] = [ensure_unicode(i) for i in val]
-                        result.append((ensure_unicode(dn).lower(), new_obj))
+                            new_obj[ensure_str(key).lower()] = [ensure_str(i) for i in val]
+                        result.append((ensure_str(dn).lower(), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT as e:
                     raise MKLDAPException(
@@ -672,7 +652,7 @@ class LDAPUserConnector(UserConnector):
         return result
 
     def _ldap_get_scope(self, scope):
-        # Had "subtree" in Check_MK for several weeks. Better be compatible to both definitions.
+        # Had "subtree" in Checkmk for several weeks. Better be compatible to both definitions.
         if scope in ['sub', 'subtree']:
             return ldap.SCOPE_SUBTREE
         if scope == 'base':
@@ -699,15 +679,7 @@ class LDAPUserConnector(UserConnector):
 
     # Returns the given distinguished name template with replaced vars
     def _replace_macros(self, tmpl):
-        dn = tmpl
-
-        for key, val in [('$OMD_SITE$', config.omd_site())]:
-            if val:
-                dn = dn.replace(key, val)
-            else:
-                dn = dn.replace(key, '')
-
-        return dn
+        return replace_macros_in_str(tmpl, {'$OMD_SITE$': config.omd_site() or ''})
 
     def _sanitize_user_id(self, user_id):
         if self._config.get('lower_user_ids', False):
@@ -859,8 +831,10 @@ class LDAPUserConnector(UserConnector):
 
         return [m.lower() for m in list(group[0][1].values())[0]]
 
-    def get_group_memberships(self, filters, filt_attr='cn', nested=False):
-        # type: (List[Text], str, bool) -> GroupMemberships
+    def get_group_memberships(self,
+                              filters: List[str],
+                              filt_attr: str = 'cn',
+                              nested: bool = False) -> GroupMemberships:
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_search_cache:
             return self._group_search_cache[cache_key]
@@ -881,9 +855,8 @@ class LDAPUserConnector(UserConnector):
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
-    def _get_direct_group_memberships(self, filters, filt_attr):
-        # type: (List[Text], str) -> GroupMemberships
-        groups = {}  # type: GroupMemberships
+    def _get_direct_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
+        groups: GroupMemberships = {}
         filt = self.ldap_filter('groups')
         member_attr = self._member_attr().lower()
 
@@ -922,9 +895,8 @@ class LDAPUserConnector(UserConnector):
     # Nested querying is more complicated. We have no option to simply do a query for group objects
     # to make them resolve the memberships here. So we need to query all users with the nested
     # memberof filter to get all group memberships of that group. We need one query for each group.
-    def _get_nested_group_memberships(self, filters, filt_attr):
-        # type: (List[Text], str) -> GroupMemberships
-        groups = {}  # type: GroupMemberships
+    def _get_nested_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
+        groups: GroupMemberships = {}
 
         # Search group members in common ancestor of group and user base DN to be able to use a single
         # query instead of one for groups and one for users below when searching for the members.
@@ -1091,7 +1063,7 @@ class LDAPUserConnector(UserConnector):
         config.user_connections.append(connection)
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         self.connect()
 
         # Did the user provide an suffix with his user_id? This might enforce
@@ -1140,8 +1112,7 @@ class LDAPUserConnector(UserConnector):
         self._default_bind(self._ldap_obj)
         return result
 
-    def _connection_id_of_user(self, user_id):
-        # type: (UserId) -> Optional[str]
+    def _connection_id_of_user(self, user_id: UserId) -> Optional[str]:
         user = load_cached_profile(user_id)
         if user is None:
             return None
@@ -1204,7 +1175,7 @@ class LDAPUserConnector(UserConnector):
 
         # Remove users which are controlled by this connector but can not be found in
         # LDAP anymore
-        for user_id, user in users.items():
+        for user_id, user in list(users.items()):
             user_connection_id = cleanup_connection_id(user.get('connector'))
             if user_connection_id == connection_id and self._strip_suffix(
                     user_id) not in ldap_users:
@@ -1262,6 +1233,7 @@ class LDAPUserConnector(UserConnector):
 
             users[user_id] = user  # Update the user record
             if mode_create:
+                add_internal_attributes(users[user_id])
                 changes.append(_("LDAP [%s]: Created user %s") % (connection_id, user_id))
             else:
                 details = []
@@ -1313,6 +1285,9 @@ class LDAPUserConnector(UserConnector):
     def _find_changed_user_keys(self, keys, user, new_user):
         changed = {}
         for key in keys:
+            # Skip user notification rules, not relevant here
+            if key == "notification_rules":
+                continue
             value = user[key]
             new_value = new_user[key]
             if isinstance(value, list) and isinstance(new_value, list):
@@ -1334,25 +1309,21 @@ class LDAPUserConnector(UserConnector):
         self._group_cache.clear()
         self._group_search_cache.clear()
 
-    def _set_last_sync_time(self):
-        # type: () -> None
+    def _set_last_sync_time(self) -> None:
         with self._sync_time_file.open('w', encoding="utf-8") as f:
             f.write('%s\n' % time.time())
 
-    def is_enabled(self):
-        # type: () -> bool
+    def is_enabled(self) -> bool:
         sync_config = user_sync_config()
         if isinstance(sync_config, tuple) and self.id() not in sync_config[1]:
             #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False
         return True
 
-    def sync_is_needed(self):
-        # type: () -> bool
+    def sync_is_needed(self) -> bool:
         return self._get_last_sync_time() + self._get_cache_livetime() <= time.time()
 
-    def _get_last_sync_time(self):
-        # type: () -> float
+    def _get_last_sync_time(self) -> float:
         try:
             with self._sync_time_file.open(encoding="utf-8") as f:
                 return float(f.read().strip())
@@ -1364,8 +1335,7 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
-    def locked_attributes(self):
-        # type: () -> List[str]
+    def locked_attributes(self) -> List[str]:
         locked = {'password'}  # This attributes are locked in all cases!
         for key, params in self._config['active_plugins'].items():
             plugin = ldap_attribute_plugin_registry[key]()
@@ -1374,9 +1344,8 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes added in this connector which shal be written to
     # the multisites users.mk
-    def multisite_attributes(self):
-        # type: () -> List[str]
-        attrs = set()  # type: Set[str]
+    def multisite_attributes(self) -> List[str]:
+        attrs: Set[str] = set()
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.multisite_attributes)
@@ -1384,9 +1353,8 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
-    def non_contact_attributes(self):
-        # type: () -> List[str]
-        attrs = set()  # type: Set[str]
+    def non_contact_attributes(self) -> List[str]:
+        attrs: Set[str] = set()
         for key in self._config['active_plugins'].keys():
             plugin = ldap_attribute_plugin_registry[key]()
             attrs.update(plugin.non_contact_attributes)
@@ -1454,12 +1422,11 @@ class LDAPConnectionValuespec(Transform):
         super(LDAPConnectionValuespec, self).__init__(valuespec,
                                                       forth=LDAPUserConnector.transform_config)
 
-    def _general_elements(self):
-        # type: () -> List[DictionaryEntry]
-        general_elements = []  # type: List[DictionaryEntry]
+    def _general_elements(self) -> List[DictionaryEntry]:
+        general_elements: List[DictionaryEntry] = []
 
         if self._new:
-            id_element = (
+            id_element: DictionaryEntry = (
                 "id",
                 TextAscii(
                     title=_("ID"),
@@ -1469,7 +1436,7 @@ class LDAPConnectionValuespec(Transform):
                     allow_empty=False,
                     size=12,
                     validate=self._validate_ldap_connection_id,
-                ))  # type: DictionaryEntry
+                ))
         else:
             id_element = ("id", FixedValue(
                 self._connection_id,
@@ -1489,7 +1456,7 @@ class LDAPConnectionValuespec(Transform):
         connection_elements = [
             ("directory_type",
              CascadingDropdown(
-                 title=_("Directory Type"),
+                 title=_("Directory type"),
                  help=_("Select the software the LDAP directory is based on. Depending on "
                         "the selection e.g. the attribute names used in LDAP queries will "
                         "be altered."),
@@ -1502,7 +1469,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("bind",
              Tuple(
-                 title=_("Bind Credentials"),
+                 title=_("Bind credentials"),
                  help=_("Set the credentials to be used to connect to the LDAP server. The "
                         "used account must not be allowed to do any changes in the directory "
                         "the whole connection is read only. "
@@ -1520,7 +1487,7 @@ class LDAPConnectionValuespec(Transform):
                          size=63,
                      ),
                      Password(
-                         title=_("Bind Password"),
+                         title=_("Bind password"),
                          help=_("Specify the password to be used to bind to "
                                 "the LDAP directory."),
                      ),
@@ -1528,7 +1495,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("port",
              Integer(
-                 title=_("TCP Port"),
+                 title=_("TCP port"),
                  help=_("This variable allows to specify the TCP port to "
                         "be used to connect to the LDAP server. "),
                  minvalue=1,
@@ -1548,7 +1515,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("connect_timeout",
              Float(
-                 title=_("Connect Timeout"),
+                 title=_("Connect timeout"),
                  help=_("Timeout for the initial connection to the LDAP server in seconds."),
                  unit=_("Seconds"),
                  minvalue=1.0,
@@ -1556,7 +1523,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("version",
              DropdownChoice(
-                 title=_("LDAP Version"),
+                 title=_("LDAP version"),
                  help=_("Select the LDAP version the LDAP server is serving. Most modern "
                         "servers use LDAP version 3."),
                  choices=[(2, "2"), (3, "3")],
@@ -1564,7 +1531,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("page_size",
              Integer(
-                 title=_("Page Size"),
+                 title=_("Page size"),
                  help=_(
                      "LDAP searches can be performed in paginated mode, for example to improve "
                      "the performance. This enables pagination and configures the size of the pages."
@@ -1574,7 +1541,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("response_timeout",
              Integer(
-                 title=_("Response Timeout"),
+                 title=_("Response timeout"),
                  unit=_("Seconds"),
                  help=_("Timeout for LDAP query responses."),
                  minvalue=0,
@@ -1607,9 +1574,8 @@ class LDAPConnectionValuespec(Transform):
 
         return connection_elements
 
-    def _vs_directory_options(self, ty):
-        # type: (str) -> Dictionary
-        connect_to_choices = [
+    def _vs_directory_options(self, ty: str) -> Dictionary:
+        connect_to_choices: List[CascadingDropdownChoice] = [
             ("fixed_list", _("Manually specify list of LDAP servers"),
              Dictionary(
                  elements=[
@@ -1635,7 +1601,7 @@ class LDAPConnectionValuespec(Transform):
                  ],
                  optional_keys=["failover_servers"],
              )),
-        ]  # type: List[CascadingDropdownChoice]
+        ]
 
         if ty == "ad":
             connect_to_choices.append((
@@ -1669,7 +1635,7 @@ class LDAPConnectionValuespec(Transform):
         user_elements = [
             ("user_dn",
              LDAPDistinguishedName(
-                 title=_("User Base DN"),
+                 title=_("User base DN"),
                  help=_(
                      "Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
                      "All user accounts to synchronize must be located below this one."),
@@ -1677,7 +1643,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_scope",
              DropdownChoice(
-                 title=_("Search Scope"),
+                 title=_("Search scope"),
                  help=_(
                      "Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
                      "the base DN</i> is the best choice. "
@@ -1691,7 +1657,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_filter",
              TextUnicode(
-                 title=_("Search Filter"),
+                 title=_("Search filter"),
                  help=
                  _("Using this option you can define an optional LDAP filter which is used during "
                    "LDAP searches. It can be used to only handle a subset of the users below the given "
@@ -1710,7 +1676,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_filter_group",
              LDAPDistinguishedName(
-                 title=_("Filter Group (Only use in special situations)"),
+                 title=_("Filter group (see help)"),
                  help=
                  _("Using this option you can define the DN of a group object which is used to filter the users. "
                    "Only members of this group will then be synchronized. This is a filter which can be "
@@ -1728,7 +1694,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("user_id",
              TextAscii(
-                 title=_("User-ID Attribute"),
+                 title=_("User-ID attribute"),
                  help=_("The attribute used to identify the individual users. It must have "
                         "unique values to make an user identifyable by the value of this "
                         "attribute."),
@@ -1737,15 +1703,15 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("lower_user_ids",
              FixedValue(
-                 title=_("Lower Case User-IDs"),
+                 title=_("Lower case User-IDs"),
                  help=_("Convert imported User-IDs to lower case during synchronization."),
                  value=True,
                  totext=_("Enforce lower case User-IDs."),
              )),
             ("user_id_umlauts",
              Transform(DropdownChoice(
-                 title=_("Translate Umlauts in User-IDs (deprecated)"),
-                 help=_("Check_MK was not not supporting special characters (like Umlauts) in "
+                 title=_("Umlauts in User-IDs (deprecated)"),
+                 help=_("Checkmk was not not supporting special characters (like Umlauts) in "
                         "User-IDs. To deal with LDAP users having umlauts in their User-IDs "
                         "you had the choice to replace umlauts with other characters. This option "
                         "is still available for compatibility reasons, but you are adviced to use "
@@ -1772,7 +1738,7 @@ class LDAPConnectionValuespec(Transform):
         group_elements = [
             ("group_dn",
              LDAPDistinguishedName(
-                 title=_("Group Base DN"),
+                 title=_("Group base DN"),
                  help=_(
                      "Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
                      "All groups used must be located below this one."),
@@ -1780,7 +1746,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_scope",
              DropdownChoice(
-                 title=_("Search Scope"),
+                 title=_("Search scope"),
                  help=_("Scope to be used in group related LDAP searches. In most cases "
                         "<i>Search whole subtree below the base DN</i> "
                         "is the best choice. It searches for matching objects in the given base "
@@ -1794,7 +1760,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_filter",
              TextUnicode(
-                 title=_("Search Filter"),
+                 title=_("Search filter"),
                  help=_("Using this option you can define an optional LDAP filter which is used "
                         "during group related LDAP searches. It can be used to only handle a "
                         "subset of the groups below the given base DN.<br><br>"
@@ -1806,7 +1772,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("group_member",
              TextAscii(
-                 title=_("Member Attribute"),
+                 title=_("Member attribute"),
                  help=_("The attribute used to identify users group memberships."),
                  default_value=lambda: ldap_attr_of_connection(self._connection_id, 'member'),
                  attrencode=True,
@@ -1819,7 +1785,7 @@ class LDAPConnectionValuespec(Transform):
         other_elements = [
             ("active_plugins",
              Dictionary(
-                 title=_('Attribute Sync Plugins'),
+                 title=_('Attribute sync plugins'),
                  help=
                  _('It is possible to fetch several attributes of users, like Email or full names, '
                    'from the LDAP directory. This is done by plugins which can individually enabled '
@@ -1831,7 +1797,7 @@ class LDAPConnectionValuespec(Transform):
              )),
             ("cache_livetime",
              Age(
-                 title=_('Sync Interval'),
+                 title=_('Sync interval'),
                  help=
                  _('This option defines the interval of the LDAP synchronization. This setting is only '
                    'used by sites which have the '
@@ -1908,56 +1874,49 @@ class LDAPConnectionValuespec(Transform):
 #   +----------------------------------------------------------------------+
 #   | The LDAP User Connector provides some kind of plugin mechanism to    |
 #   | modulize which ldap attributes are synchronized and how they are     |
-#   | synchronized into Check_MK. The standard attribute plugins           |
+#   | synchronized into Checkmk. The standard attribute plugins           |
 #   | are defnied here.                                                    |
 #   '----------------------------------------------------------------------'
 
 
-class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
+class LDAPAttributePlugin(metaclass=abc.ABCMeta):
     """Base class for all LDAP attribute synchronization plugins"""
     @abc.abstractproperty
-    def ident(self):
-        # type: () -> str
+    def ident(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def title(self):
-        # type: () -> Text
+    def title(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def help(self):
-        # type: () -> Text
+    def help(self) -> str:
         raise NotImplementedError()
 
     @abc.abstractproperty
-    def is_builtin(self):
-        # type: () -> bool
+    def is_builtin(self) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def lock_attributes(self, params):
-        # type: (Dict) -> List[Text]
+    def lock_attributes(self, params: Dict) -> List[str]:
         """List of user attributes to lock
 
         Normally the attributes that are modified by the sync_func()"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def needed_attributes(self, connection, params):
-        # type: (LDAPUserConnector, Dict) -> List[Text]
+    def needed_attributes(self, connection: LDAPUserConnector, params: Dict) -> List[str]:
         """Gathers the LDAP user attributes that are needed by this plugin"""
         raise NotImplementedError()
 
     # TODO: plugin is not needed anymore?
     @abc.abstractmethod
-    def sync_func(self, connection, plugin, params, user_id, ldap_user, user):
-        # type: (LDAPUserConnector, dict, dict, Text, dict, dict) -> dict
+    def sync_func(self, connection: LDAPUserConnector, plugin: dict, params: dict, user_id: str,
+                  ldap_user: dict, user: dict) -> dict:
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
 
-    def parameters(self, connection):
-        # type: (LDAPUserConnector) -> Union[FixedValue, Dictionary]
+    def parameters(self, connection: LDAPUserConnector) -> Union[FixedValue, Dictionary]:
         return FixedValue(
             title=self.title,
             help=self.help,
@@ -1973,8 +1932,7 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
     #)))
 
     @property
-    def multisite_attributes(self):
-        # type: () -> List[str]
+    def multisite_attributes(self) -> List[str]:
         """When a plugin introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -1982,8 +1940,7 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
         return []
 
     @property
-    def non_contact_attributes(self):
-        # type: () -> List[str]
+    def non_contact_attributes(self) -> List[str]:
         """When a plugin introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -1991,12 +1948,9 @@ class LDAPAttributePlugin(six.with_metaclass(abc.ABCMeta, object)):
         return []
 
 
-class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.ClassRegistry):
-    def plugin_base_class(self):
-        return LDAPAttributePlugin
-
-    def plugin_name(self, plugin_class):
-        return plugin_class().ident
+class LDAPAttributePluginRegistry(cmk.utils.plugin_registry.Registry[Type[LDAPAttributePlugin]]):
+    def plugin_name(self, instance):
+        return instance().ident
 
 
 class LDAPBuiltinAttributePlugin(LDAPAttributePlugin):
@@ -2092,7 +2046,11 @@ def ldap_filter_of_connection(connection_id, *args, **kwargs):
 
 def ldap_sync_simple(user_id, ldap_user, user, user_attr, attr):
     if attr in ldap_user:
-        return {user_attr: ldap_user[attr][0]}
+        attr_value = ldap_user[attr][0]
+        # LDAP attribute in boolean format sends str "TRUE" or "FALSE"
+        if user_attr == 'disable_notifications':
+            return {user_attr: {'disable': attr_value == "TRUE"}}
+        return {user_attr: attr_value}
     return {}
 
 
@@ -2130,7 +2088,7 @@ def get_groups_of_user(connection, user_id, ldap_user, cg_names, nested, other_c
 
     # Load all LDAP groups which have a CN matching one contact
     # group which exists in WATO
-    ldap_groups = {}  # type: GroupMemberships
+    ldap_groups: GroupMemberships = {}
     for conn in connections:
         ldap_groups.update(conn.get_group_memberships(cg_names, nested=nested))
 
@@ -2181,7 +2139,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
 
     @property
     def help(self):
-        return _('Synchronizes the email of the LDAP user account into Check_MK.')
+        return _('Synchronizes the email of the LDAP user account into Checkmk.')
 
     def lock_attributes(self, params):
         return ['email']
@@ -2301,13 +2259,11 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         return ['locked']
 
     @property
-    def multisite_attributes(self):
-        # type: () -> List[str]
+    def multisite_attributes(self) -> List[str]:
         return ["ldap_pw_last_changed"]
 
     @property
-    def non_contact_attributes(self):
-        # type: () -> List[str]
+    def non_contact_attributes(self) -> List[str]:
         return ["ldap_pw_last_changed"]
 
     def needed_attributes(self, connection, params):
@@ -2645,7 +2601,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                 group_specs = [group_specs]  # be compatible to old single group configs
 
             for group_spec in group_specs:
-                if isinstance(group_spec, six.string_types):
+                if isinstance(group_spec, str):
                     dn = group_spec  # be compatible to old config without connection spec
                 elif not isinstance(group_spec, tuple):
                     continue  # skip non configured ones (old valuespecs allowed None)
@@ -2682,7 +2638,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return ldap_groups
 
     def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch = {}  # type: Dict[str, List[Text]]
+        groups_to_fetch: Dict[str, List[str]] = {}
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
@@ -2698,7 +2654,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                         groups_to_fetch.setdefault(this_conn_id, [])
                         groups_to_fetch[this_conn_id].append(group_spec.lower())
 
-            elif isinstance(group_specs, six.string_types):
+            elif isinstance(group_specs, str):
                 # Need to be compatible to old config formats
                 this_conn_id = connection.id()
                 groups_to_fetch.setdefault(this_conn_id, [])
@@ -2714,7 +2670,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         )
 
     def _list_roles_with_group_dn(self):
-        elements = []  # type: List[DictionaryEntry]
+        elements: List[DictionaryEntry] = []
         for role_id, role in load_roles().items():
             elements.append((
                 role_id,

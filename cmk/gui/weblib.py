@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,8 +16,7 @@ from cmk.gui.exceptions import MKUserError
 
 
 @cmk.gui.pages.register("tree_openclose")
-def ajax_tree_openclose():
-    # type: () -> None
+def ajax_tree_openclose() -> None:
     tree = html.request.get_str_input_mandatory("tree")
     name = html.request.get_unicode_input_mandatory("name")
 
@@ -38,15 +37,13 @@ def ajax_tree_openclose():
 #   +----------------------------------------------------------------------+
 
 
-def init_selection():
-    # type: () -> None
+def init_selection() -> None:
     """Generate the initial selection_id"""
     selection_id()
     config.user.cleanup_old_selections()
 
 
-def selection_id():
-    # type: () -> str
+def selection_id() -> str:
     """Generates a selection id or uses the given one"""
     if not html.request.has_var('selection'):
         sel_id = utils.gen_id()
@@ -64,8 +61,7 @@ def selection_id():
 
 
 @cmk.gui.pages.register("ajax_set_rowselection")
-def ajax_set_rowselection():
-    # type: () -> None
+def ajax_set_rowselection() -> None:
     ident = html.request.get_str_input_mandatory('id')
     action = html.request.get_str_input_mandatory('action', 'set')
     if action not in ['add', 'del', 'set', 'unset']:

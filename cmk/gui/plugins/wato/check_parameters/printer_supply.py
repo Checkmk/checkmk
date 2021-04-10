@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -25,8 +25,8 @@ from cmk.gui.plugins.wato import (
 def transform_printer_supply(params):
     if isinstance(params, tuple):
         if len(params) == 2:
-            return {"levels": params}
-        return {"levels": params[:2], "upturn_toner": params[2]}
+            return {"levels": params, "upturn_toner": False, "some_remaining": 1}
+        return {"levels": params[:2], "upturn_toner": params[2], "some_remaining": 1}
     return params
 
 

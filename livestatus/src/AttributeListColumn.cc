@@ -4,8 +4,7 @@
 // source code package.
 
 #include "AttributeListColumn.h"
-#include <memory>
-#include <vector>
+
 #include "Row.h"
 
 std::unique_ptr<Filter> AttributeListColumn::createFilter(

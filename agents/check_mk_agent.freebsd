@@ -7,7 +7,7 @@
 #         Florian Heigl <florian.heigl@gmail.com>
 #           (Added sections: df mount mem netctr ipmitool)
 
-# NOTE: This agent has beed adapted from the Check_MK linux agent.
+# NOTE: This agent has beed adapted from the Checkmk linux agent.
 #       The most sections are commented out at the moment because
 #       they have not been ported yet. We will try to adapt most
 #       sections to print out the same output as the linux agent so
@@ -50,7 +50,7 @@ else
 fi
 
 # Runs a command asynchronous by use of a cache file
-function run_cached() {
+run_cached() {
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
@@ -93,7 +93,7 @@ function run_cached() {
 }
 
 echo "<<<check_mk>>>"
-echo "Version: 1.7.0i1"
+echo "Version: 2.1.0i1"
 echo "AgentOS: freebsd"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

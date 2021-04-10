@@ -34,3 +34,7 @@ item:
 
 inventory:
  One service is created for each running database.
+
+cluster:
+ In case a cluster is configured, only the first backup matching the current item is evaluated.
+ However the minimum backupage of all matched backups is taken into consideration.

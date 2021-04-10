@@ -6,7 +6,7 @@ Date: 1575640041
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check monitors the count of messages for each source of a Graylog
 instance. It outputs the total number of messages and the average rate of

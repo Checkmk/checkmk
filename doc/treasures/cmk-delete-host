@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,8 +12,9 @@
 # 3) restarts omd site
 # 4) removes all data (including rrd files) from the given hosts
 
-from __future__ import print_function
-import os, sys, shutil, pprint
+import os
+import shutil
+import sys
 
 # Set automation user login credentials
 automation_user = "cmdb_automation"
@@ -47,8 +48,8 @@ def log(text):
     print("%s: %s" % (g_current_host, text))
 
 
-def get_wato_folder(hostname):
-    process = os.popen("cmk -D " + hostname, "r")  # nosec
+def get_wato_folder(host_name):
+    process = os.popen("cmk -D " + host_name, "r")  # nosec
     output = process.read().split("\n")
     for line in output:
         if line.startswith("Tags:"):

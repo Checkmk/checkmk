@@ -1,0 +1,12 @@
+Title: Fix deletion of failed notifications in distributed setups
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1612166658
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

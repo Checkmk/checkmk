@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,16 +6,17 @@
 
 # pylint: disable=redefined-outer-name
 
-from __future__ import print_function
+import contextlib
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
-import shutil
+
 import pytest  # type: ignore[import]
 
-from testlib import repo_path, is_enterprise_repo
 import testlib.pylint_cmk as pylint_cmk
-import cmk.utils.cmk_subprocess as subprocess
+from testlib import is_enterprise_repo, repo_path
 
 
 @pytest.fixture(scope="function")
@@ -41,33 +42,41 @@ def pylint_test_dir():
     shutil.rmtree(test_dir)
 
 
-def test_pylint(pylint_test_dir):
+def test_pylint(pylint_test_dir, capsys):
+    with capsys.disabled():
+        print("\n")
+        retcode = subprocess.call("python -m pylint --version".split(), shell=False)
+        print()
+        assert not retcode
+
     exit_code = pylint_cmk.run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
     assert exit_code == 0, "PyLint found an error"
 
 
 def _get_files_to_check(pylint_test_dir):
+    # Add the compiled files for things that are no modules yet
+    open(pylint_test_dir + "/__init__.py", "w")
+    _compile_check_and_inventory_plugins(pylint_test_dir)
+
+    # Not checking compiled check, inventory, bakery plugins with Python 3
+    files = [pylint_test_dir]
+
     p = subprocess.Popen(
-        ["%s/scripts/find-python-files" % repo_path(),
-         str(sys.version_info[0])],
+        ["%s/scripts/find-python-files" % repo_path()],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         shell=False,
         close_fds=True,
     )
-
     stdout = p.communicate()[0]
 
-    files = []
     for fname in stdout.splitlines():
         # Thin out these excludes some day...
         rel_path = fname[len(repo_path()) + 1:]
 
         # Can currently not be checked alone. Are compiled together below
         if rel_path.startswith("checks/") or \
-           rel_path.startswith("inventory/") or \
-           rel_path.startswith("agents/bakery/") or \
-           rel_path.startswith("enterprise/agents/bakery/"):
+           rel_path.startswith("inventory/"):
             continue
 
         # TODO: We should also test them...
@@ -87,28 +96,21 @@ def _get_files_to_check(pylint_test_dir):
 
         files.append(fname)
 
-    # Add the compiled files for things that are no modules yet
-    open(pylint_test_dir + "/__init__.py", "w")
-    _compile_check_and_inventory_plugins(pylint_test_dir)
-
-    if is_enterprise_repo():
-        _compile_bakery_plugins(pylint_test_dir)
-
-    # Not checking compiled check, inventory, bakery plugins with Python 3
-    if sys.version_info[0] == 3:
-        files += [
-            pylint_test_dir,
-        ]
-
     return files
 
 
-def _compile_check_and_inventory_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_checks.py", "w") as f:
+@contextlib.contextmanager
+def stand_alone_template(file_name):
+
+    with open(file_name, "w") as file_handle:
 
         # Fake data structures where checks register (See cmk/base/checks.py)
-        f.write("""
+        file_handle.write("""
 # -*- encoding: utf-8 -*-
+
+from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+
 check_info                         = {}
 check_includes                     = {}
 precompile_params                  = {}
@@ -134,33 +136,40 @@ def inv_tree(path, default_value=None):
     return node
 """)
 
-        # add the modules
+        disable_pylint = [
+            'chained-comparison',
+            'consider-iterating-dictionary',
+            'consider-using-dict-comprehension',
+            'consider-using-in',
+            'function-redefined',
+            'no-else-break',
+            'no-else-continue',
+            'no-else-return',
+            'pointless-string-statement',
+            'redefined-outer-name',
+            'reimported',
+            'simplifiable-if-expression',
+            'ungrouped-imports',
+            'unnecessary-comprehension',
+            'unused-variable',
+            'useless-object-inheritance',
+            'wrong-import-order',
+            'wrong-import-position',
+        ]
+
         # These pylint warnings are incompatible with our "concatenation technology".
-        f.write(
-            "# pylint: disable=reimported,ungrouped-imports,wrong-import-order,wrong-import-position,redefined-outer-name\n"
-        )
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/check_api.py")
-        pylint_cmk.add_file(f, repo_path() + "/cmk/base/inventory_plugins.py")
+        file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
 
-        # Now add the checks
-        for path in pylint_cmk.check_files(repo_path() + "/checks"):
-            pylint_cmk.add_file(f, path)
+        yield file_handle
 
-        # Now add the inventory plugins
+
+def _compile_check_and_inventory_plugins(pylint_test_dir):
+
+    for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
+        with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
+            pylint_cmk.add_file(file_handle, f_name)
+
+    with stand_alone_template(pylint_test_dir + "/cmk_checks.py") as file_handle:
+        pylint_cmk.add_file(file_handle, repo_path() + "/cmk/base/inventory_plugins.py")
         for path in pylint_cmk.check_files(repo_path() + "/inventory"):
-            pylint_cmk.add_file(f, path)
-
-
-def _compile_bakery_plugins(pylint_test_dir):
-    with open(pylint_test_dir + "/cmk_bakery_plugins.py", "w") as f:
-        # This pylint warning is incompatible with our "concatenation technology".
-        f.write("# pylint: disable=reimported,wrong-import-order,wrong-import-position\n")
-
-        pylint_cmk.add_file(
-            f,
-            os.path.realpath(
-                os.path.join(repo_path(), "enterprise/cmk/base/cee/agent_bakery_plugins.py")))
-
-        # Also add bakery plugins
-        for path in pylint_cmk.check_files(os.path.join(repo_path(), "enterprise/agents/bakery")):
-            pylint_cmk.add_file(f, path)
+            pylint_cmk.add_file(file_handle, path)

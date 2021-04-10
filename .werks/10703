@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Fixed several reflected XSS issues that were possible because some webservice
 responses that may contain user provided strings were not correctly encoded.

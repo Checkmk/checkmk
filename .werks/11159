@@ -1,0 +1,21 @@
+Title: Grouping of NetApp Volumes
+Class: feature
+Compatible: incompat
+Component: checks
+Date: 1591689562
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+NetApp volumes collected by the NetApp special agent, which are monitored
+by the check <tt>netapp_api_volumes</tt>, can now be grouped using the rule
+"Filesystem grouping patterns". This allows for combining multiple volumes into
+a single service. Services corresponding to grouped volumes deliver the same
+performance data as individual volumes and are also configurable via the rule
+"NetApp Volumes".
+
+This werk is incompatible in the sense that it can result in unwanted grouping
+of NetApp volumes. This will happen if user-defined rules for the grouping of
+filesystems match services monitoring NetApp volumes. In this case, users have
+to refine the corresponding rules.

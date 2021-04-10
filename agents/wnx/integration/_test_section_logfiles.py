@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -9,9 +9,8 @@ import os
 import platform
 import re
 import sys
-import six
 
-import pytest
+import pytest  # type: ignore
 from local import (actual_output, make_yaml_config, src_exec_dir, local_test, run_subprocess,
                    wait_agent, write_config)
 
@@ -188,7 +187,7 @@ def manage_logfiles(request):
     if platform.system() == 'Windows':
         for log in [Globals.testlog1, Globals.testlog2]:
             with io.open(log, 'w', encoding=request.param) as logfile:
-                for entry in [six.text_type(Globals.testentry1), six.text_type(Globals.testentry2)]:
+                for entry in [str(Globals.testentry1), str(Globals.testentry2)]:
                     logfile.write('%s\r\n' % entry)
     yield
     if platform.system() == 'Windows':

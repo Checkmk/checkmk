@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -28,32 +28,32 @@ def _parameter_valuespec_fileinfo():
          Tuple(
              title=_("Minimal age"),
              elements=[
-                 Age(title=_("Warning if younger than")),
-                 Age(title=_("Critical if younger than")),
+                 Age(title=_("Warning below")),
+                 Age(title=_("Critical below")),
              ],
          )),
         ("maxage",
          Tuple(
              title=_("Maximal age"),
              elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than")),
+                 Age(title=_("Warning at or above")),
+                 Age(title=_("Critical at or above")),
              ],
          )),
         ("minsize",
          Tuple(
              title=_("Minimal size"),
              elements=[
-                 Filesize(title=_("Warning if below")),
-                 Filesize(title=_("Critical if below")),
+                 Filesize(title=_("Warning below")),
+                 Filesize(title=_("Critical below")),
              ],
          )),
         ("maxsize",
          Tuple(
              title=_("Maximal size"),
              elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
+                 Filesize(title=_("Warning at or above")),
+                 Filesize(title=_("Critical at or above")),
              ],
          )),
         ("timeofday",

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -32,32 +32,32 @@ def _parameter_valuespec_filestats():
                    Tuple(
                        title=_("Minimal age of a file"),
                        elements=[
-                           Age(title=_("Warning if younger than")),
-                           Age(title=_("Critical if younger than")),
+                           Age(title=_("Warning below")),
+                           Age(title=_("Critical below")),
                        ],
                    )),
                   ("max_age",
                    Tuple(
                        title=_("Maximal age of a file"),
                        elements=[
-                           Age(title=_("Warning if older than")),
-                           Age(title=_("Critical if older than")),
+                           Age(title=_("Warning at or above")),
+                           Age(title=_("Critical at or above")),
                        ],
                    )),
                   ("min_size",
                    Tuple(
                        title=_("Minimal size of a file"),
                        elements=[
-                           Filesize(title=_("Warning if below")),
-                           Filesize(title=_("Critical if below")),
+                           Filesize(title=_("Warning below")),
+                           Filesize(title=_("Critical below")),
                        ],
                    )),
                   ("max_size",
                    Tuple(
                        title=_("Maximal size of a file"),
                        elements=[
-                           Filesize(title=_("Warning if above")),
-                           Filesize(title=_("Critical if above")),
+                           Filesize(title=_("Warning at or above")),
+                           Filesize(title=_("Critical at or above")),
                        ],
                    ))],
         help=_("Here you can impose various levels the results reported by the"

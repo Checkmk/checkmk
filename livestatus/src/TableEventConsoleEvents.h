@@ -7,7 +7,9 @@
 #define TableEventConsoleEvents_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
 #include "TableEventConsole.h"
 #include "nagios.h"
 class MonitoringCore;

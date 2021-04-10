@@ -6,13 +6,12 @@
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Dict, List  # pylint: disable=unused-import
+from typing import Any, Dict, List
 
 from cmk.utils.i18n import _
 
 
-def default_rule_pack(rules):
-    # type: (List[Dict[str, Any]]) -> Dict[str, Any]
+def default_rule_pack(rules: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Returns the default rule pack"""
     return {
         "id": "default",
@@ -22,8 +21,7 @@ def default_rule_pack(rules):
     }
 
 
-def default_config():
-    # type: () -> Dict[str, Any]
+def default_config() -> Dict[str, Any]:
     """Returns the default configuration"""
     v1_v2_credential = {
         "description": '"public" default for receiving SNMPv1/v2 traps',

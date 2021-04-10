@@ -17,3 +17,7 @@ item:
 
 inventory:
  One service is created for each line in agent output.
+
+cluster:
+  The outcome on a cluster can be configured to be either the worst, or the
+  best state encountered for every job.

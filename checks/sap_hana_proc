@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.sap_hana as sap_hana
+
 
 def parse_sap_hana_proc(info):
     parsed = {}
-    for sid_instance, lines in parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
         for line in lines:
             if len(line) < 2:
                 continue
@@ -55,5 +57,4 @@ check_info['sap_hana_proc'] = {
     'inventory_function': inventory_sap_hana_proc,
     'check_function': check_sap_hana_proc,
     'service_description': 'SAP HANA Process %s',
-    'includes': ['sap_hana.include'],
 }

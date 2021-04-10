@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -75,7 +75,7 @@ rulespec_registry.register(
 
 def _valuespec_inventory_sap_values():
     return Dictionary(
-        title=_('SAP R/3 Single Value Inventory'),
+        title=_('SAP R/3 single value discovery'),
         elements=[
             (
                 'match',
@@ -156,10 +156,10 @@ def _valuespec_sap_value_groups():
             ],
         ),
         add_label=_("Add pattern group"),
-        title=_('SAP Value Grouping Patterns'),
+        title=_('SAP value discovery'),
         help=_(
             'The check <tt>sap.value</tt> normally creates one service for each SAP value. '
-            'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
+            'By defining grouping patterns, you can switch to the check <tt>sap.value_groups</tt>. '
             'That check monitors a list of SAP values at once.'),
     )
 
@@ -175,7 +175,7 @@ rulespec_registry.register(
 
 def _valuespec_inventory_fujitsu_ca_ports():
     return Dictionary(
-        title=_("Discovery of Fujtsu storage CA ports"),
+        title=_("Fujtsu storage CA port discovery"),
         elements=[
             ("indices", ListOfStrings(title=_("CA port indices"))),
             ("modes",

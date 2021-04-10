@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,12 +6,12 @@
 
 import socket
 import time
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 
 from testlib.web_session import CMKWebSession
 
 
-class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsole:
     def __init__(self, site):
         super(CMKEventConsole, self).__init__()
         self.site = site
@@ -19,7 +19,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
         self.web_session = CMKWebSession(site)
 
     def _config(self):
-        cfg = {}  # type: Dict[str, Any]
+        cfg: Dict[str, Any] = {}
         content = self.site.read_file("etc/check_mk/mkeventd.d/wato/global.mk")
         exec(content, {}, cfg)
         return cfg
@@ -102,7 +102,7 @@ class CMKEventConsole(object):  # pylint: disable=useless-object-inheritance
         return event
 
 
-class CMKEventConsoleStatus(object):  # pylint: disable=useless-object-inheritance
+class CMKEventConsoleStatus:
     def __init__(self, address):
         self._address = address
 

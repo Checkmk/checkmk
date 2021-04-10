@@ -1,0 +1,22 @@
+Title: Drop classic theme
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1593677898
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+With this change we remove the Classic theme. Even though there are still many
+fans of this theme who like to use our Classic Theme, we can no longer support
+this theme in the future due to cost and effort.
+
+Users of the Classic Theme will automatically be switched to the current
+default theme.
+
+The main reason for this change is that we will make massive changes to the
+user interface of Checkmk with the upcoming version. We can easily implement
+these changes in the modern and dark theme together. In addition, we would have
+had to redesign and implement some of these in the Classic theme, which we
+cannot afford.

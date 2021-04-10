@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,38 +8,34 @@
 This library is currently handled as internal module of Check_MK and
 does not offer stable APIs. The code may change at any time."""
 
-__version__ = "1.7.0i1"
+__version__ = "2.1.0i1"
 
-import os
-import sys
 import errno
+import enum
+import os
+from pathlib import Path
+import subprocess
+import sys
 import time
-from typing import (  # pylint: disable=unused-import
-    Text, Dict, Any,
-)
-import six
+from typing import Any, Dict
+
+from six import ensure_str
 
 import cmk.utils.paths
-from cmk.utils.encoding import ensure_unicode
+import livestatus
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-import cmk.utils.cmk_subprocess as subprocess
-
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
+from functools import lru_cache
 
 
-def omd_version():
-    # type: () -> Text
+@lru_cache
+def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_unicode(version_link.resolve().name)
+    return ensure_str(version_link.resolve().name)
 
 
-def omd_site():
-    # type: () -> str
+@lru_cache
+def omd_site() -> str:
     try:
         return os.environ["OMD_SITE"]
     except KeyError:
@@ -48,35 +44,62 @@ def omd_site():
               "only execute this in an OMD site."))
 
 
-def edition_short():
-    # type: () -> Text
-    """Can currently either return \"cre\" or \"cee\"."""
-    parts = omd_version().split(".")
-    if parts[-1] == "demo":
-        return six.text_type(parts[-2])
-
-    return six.text_type(parts[-1])
+@lru_cache
+def edition_short() -> str:
+    return str(omd_version().split(".")[-1])
 
 
-def is_enterprise_edition():
-    # type: () -> bool
+def is_enterprise_edition() -> bool:
     return edition_short() == "cee"
 
 
-def is_raw_edition():
-    # type: () -> bool
+def is_raw_edition() -> bool:
     return edition_short() == "cre"
 
 
-def is_managed_edition():
-    # type: () -> bool
+def is_managed_edition() -> bool:
     return edition_short() == "cme"
 
 
-def is_demo():
-    # type: () -> bool
-    parts = omd_version().split(".")
-    return parts[-1] == "demo"
+def is_free_edition() -> bool:
+    return edition_short() == "cfe"
+
+
+def is_cma() -> bool:
+    return os.path.exists("/etc/cma/cma.conf")
+
+
+def edition_title():
+    if is_enterprise_edition():
+        return "CEE"
+    if is_managed_edition():
+        return "CME"
+    if is_free_edition():
+        return "CFE"
+    return "CRE"
+
+
+class TrialState(enum.Enum):
+    """All possible states of the free version"""
+    VALID = enum.auto()
+    EXPIRED = enum.auto()
+    NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
+
+
+def _get_expired_status() -> TrialState:
+    try:
+        query = "GET status\nColumns: is_trial_expired\n"
+        response = livestatus.LocalConnection().query(query)
+        return TrialState.EXPIRED if response[0][0] == 1 else TrialState.VALID
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        # NOTE: If livestatus is absent we assume that trial is expired.
+        # Livestatus may be absent only when the cmc missing and this case for free version means
+        # just expiration(impossibility to check)
+        return TrialState.NO_LIVESTATUS
+
+
+def is_expired_trial() -> bool:
+    return is_free_edition() and _get_expired_status() == TrialState.EXPIRED
 
 
 #   .--general infos-------------------------------------------------------.
@@ -92,8 +115,7 @@ def is_demo():
 # and diagnostics.
 
 
-def get_general_version_infos():
-    # type: () -> Dict[str, Any]
+def get_general_version_infos() -> Dict[str, Any]:
     return {
         "time": time.time(),
         "os": _get_os_info(),
@@ -105,13 +127,10 @@ def get_general_version_infos():
     }
 
 
-def _get_os_info():
-    # type: () -> Text
-    if "OMD_ROOT" in os.environ:
-        return open(os.environ["OMD_ROOT"] + "/share/omd/distro.info").readline().split(
-            "=", 1)[1].strip()
+def _get_os_info() -> str:
     if os.path.exists("/etc/redhat-release"):
         return open("/etc/redhat-release").readline().strip()
+
     if os.path.exists("/etc/SuSE-release"):
         return open("/etc/SuSE-release").readline().strip()
 
@@ -126,13 +145,19 @@ def _get_os_info():
 
     if "PRETTY_NAME" in info:
         return info["PRETTY_NAME"]
+
     if info:
         return "%s" % info
+
+    if os.environ.get("OMD_ROOT"):
+        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        if os.path.exists(disto_info):
+            return open(disto_info).readline().split("=", 1)[1].strip()
+
     return "UNKNOWN"
 
 
-def _current_monitoring_core():
-    # type: () -> Text
+def _current_monitoring_core() -> str:
     try:
         p = subprocess.Popen(
             ["omd", "config", "show", "CORE"],
@@ -142,7 +167,7 @@ def _current_monitoring_core():
             stderr=open(os.devnull, "w"),
             encoding="utf-8",
         )
-        return p.communicate()[0]
+        return p.communicate()[0].rstrip()
     except OSError as e:
         # Allow running unit tests on systems without omd installed (e.g. on travis)
         if e.errno != errno.ENOENT:

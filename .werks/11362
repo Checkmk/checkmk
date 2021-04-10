@@ -1,0 +1,23 @@
+Title: rmon_stats: new, separate discovery ruleset
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1597667064
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The discovery of the services provided by the check <tt>rmon_stats</tt>,
+which monitors RMON statistics, used to be configured via the ruleset
+"Network Interface and Switch Port Discovery". However, <tt>rmon_stats</tt>
+does not honor any of the other settings provided by this ruleset. Therefore,
+the service discovery for <tt>rmon_stats</tt> is now configured via the new,
+separate ruleset "Monitor RMON statistics".
+
+This werk is marked as incompatible because users who configured
+<tt>rmon_stats</tt> to be discovered have to adjust their rulesets
+accordingly. This is done by activating the discovery of <tt>rmon_stats</tt>
+for the corresponding hosts using the new ruleset "Monitor RMON statistics".
+Without this step, the corresponding services will continue to work but will
+disappear if a re-discovery is performed.

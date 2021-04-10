@@ -1,4 +1,5 @@
-﻿####
+$CMK_VERSION = "2.1.0i1"
+####
 ## Hyper-V VM state
 ####
 ## Script must executed with local administrator credentials!

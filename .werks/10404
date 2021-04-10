@@ -6,7 +6,7 @@ Date: 1572864818
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When the resolution of RRD files is increased it could lead to potential
 delays in rendering of the graphs. This werk separates the tasks of

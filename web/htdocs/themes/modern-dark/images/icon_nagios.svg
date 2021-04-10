@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 212 236" style="enable-background:new 0 0 212 236;" xml:space="preserve">
+<style type="text/css">
+	.st0{enable-background:new    ;}
+	.st1{fill:#FFFFFF;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-604.000000, -667.000000)">
+		<g id="nagios" transform="translate(578.000000, 461.000000)">
+			<g class="st0">
+				<path class="st1" d="M29.6,442V212.2h33.8c7.2,0,11.9,3.4,14.1,10.1l3.8,18.1c4.6-4.8,9.5-9.1,14.7-13
+					c5.2-3.9,10.6-7.2,16.4-10.1c5.7-2.8,11.9-5,18.5-6.5c6.6-1.5,13.7-2.2,21.5-2.2c12.5,0,23.7,2.1,33.4,6.4
+					c9.7,4.3,17.8,10.2,24.3,17.9c6.5,7.7,11.4,16.9,14.8,27.6c3.4,10.7,5,22.4,5,35.3V442h-55.3V295.7c0-14-3.2-24.9-9.7-32.6
+					c-6.5-7.7-16.2-11.5-29.2-11.5c-9.6,0-18.5,2.2-26.9,6.5c-8.4,4.3-16.3,10.2-23.7,17.7V442H29.6z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

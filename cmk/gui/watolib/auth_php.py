@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -36,14 +36,9 @@
 # Returns true/false whether or not the user is permitted
 
 import copy
-import sys
+from pathlib import Path
 
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
-import six
+from six import ensure_str
 
 import cmk.utils.store as store
 import cmk.utils.paths
@@ -72,8 +67,8 @@ def _format_php(data, lvl=1):
             s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
                                                                                  lvl + 1) + ',\n'
         s += '    ' * (lvl - 1) + ')'
-    elif isinstance(data, six.string_types):
-        s += '\'%s\'' % six.ensure_str(data).replace('\'', '\\\'')
+    elif isinstance(data, str):
+        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
     elif isinstance(data, bool):
         s += data and 'true' or 'false'
     elif data is None:
@@ -88,9 +83,9 @@ def _create_php_file(callee, users, role_permissions, groups):
     # Do not change WATO internal objects
     nagvis_users = copy.deepcopy(users)
 
-    # Set a language for all users
     for user in nagvis_users.values():
-        user.setdefault('language', config.default_language)
+        user.setdefault('language', config.default_language)  # Set a language for all users
+        user.pop('session_info', None)  # remove the SessionInfo object
 
     content = u'''<?php
 // Created by Multisite UserDB Hook (%s)

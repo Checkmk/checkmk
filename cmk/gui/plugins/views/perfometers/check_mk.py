@@ -1,10 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import division
 import cmk.utils.render
 import cmk.gui.utils as utils
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -18,7 +17,7 @@ from cmk.gui.plugins.views.perfometers import (
     perfometer_logarithmic_dual_independent,
 )
 
-# Perf-O-Meters for Check_MK's checks
+# Perf-O-Meters for Checkmk's checks
 #
 # They are called with:
 # 1. row -> a dictionary of the data row with at least the
@@ -44,49 +43,6 @@ def number_human_readable(n, precision=1, unit="B"):
     if abs(n) > base:
         return (f + "k%s") % (n / base, unit)  # fixed: true-division
     return (f + "%s") % (n, unit)
-
-
-def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
-    used_mb = perf_data[0][1]
-    maxx = perf_data[0][-1]
-    # perf data might be incomplete, if trending perfdata is off...
-    uncommitted_mb = 0
-    for entry in perf_data:
-        if entry[0] == "uncommitted":
-            uncommitted_mb = entry[1]
-            break
-
-    perc_used = 100 * (float(used_mb) / float(maxx))
-    perc_uncommitted = 100 * (float(uncommitted_mb) / float(maxx))
-    perc_totally_free = 100 - perc_used - perc_uncommitted
-
-    if perc_used + perc_uncommitted <= 100:
-        # Regular handling, no overcommitt
-        data = [
-            (perc_used, "#00ffc6"),
-            (perc_uncommitted, "#eeccff"),
-            (perc_totally_free, get_themed_perfometer_bg_color()),
-        ]
-    else:
-        # Visualize overcommitted space by scaling to total overcommittment value
-        # and drawing the capacity as red line in the perfometer
-        total = perc_used + perc_uncommitted
-        perc_used_bar = perc_used * 100.0 / total
-        perc_free = (100 - perc_used) * 100.0 / total
-        data = [
-            (perc_used_bar, "#00ffc6"),
-            (perc_free, "#eeccff"),
-            (1, "red"),  # This line visualizes the capacity
-            (perc_uncommitted - perc_free, "#eeccff"),
-        ]
-
-    legend = "%0.2f%%" % perc_used
-    if uncommitted_mb:
-        legend += " (+%0.2f%%)" % perc_uncommitted
-    return legend, render_perfometer(data)
-
-
-perfometers["check_mk-esx_vsphere_datastores"] = perfometer_esx_vsphere_datastores
 
 
 def perfometer_check_mk_mem_used(row, check_command, perf_data):
@@ -388,7 +344,6 @@ def perfometer_check_mk_if(row, check_command, perf_data):
 
 perfometers["check_mk-if"] = perfometer_check_mk_if
 perfometers["check_mk-if64"] = perfometer_check_mk_if
-perfometers["check_mk-if64adm"] = perfometer_check_mk_if
 perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
 perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
 perfometers["check_mk-vms_if"] = perfometer_check_mk_if
@@ -462,7 +417,7 @@ perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
     perfdata_found = False
-    perfdata1 = ''
+    perfdata1 = 0
 
     for data in perf_data:
         if data[0] == "apply_lag":
@@ -529,7 +484,7 @@ perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 
-def perfometer_ps_perf(row, check_command, perf_data):
+def perfometer_ps(row, check_command, perf_data):
     perf_dict = {p[0]: float(p[1]) for p in perf_data}
     try:
         perc = perf_dict["pcpu"]
@@ -538,8 +493,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
         return "", ""
 
 
-perfometers["check_mk-ps"] = perfometer_ps_perf
-perfometers["check_mk-ps.perf"] = perfometer_ps_perf
+perfometers["check_mk-ps"] = perfometer_ps
 
 
 def perfometer_hpux_snmp_cs_cpu(row, check_command, perf_data):
@@ -737,15 +691,23 @@ def perfometer_fileinfo(row, check_command, perf_data):
 
 
 def perfometer_fileinfo_groups(row, check_command, perf_data):
+    # No files found in file group yields metrics('count', 'size')
+    # Files found in file group yields metrics('count', 'size', 'size_largest', 'size_smallest',
+    #                                          'age_oldest', 'age_newest')
     h = '<div class="stacked">'
     texts = []
-    for i, color, base, scale, verbfunc in [
-        (2, "#aabb50", 10000, 10, lambda v: ("%d Tot") % v),  # count
-        (1, "#ccff50", 3600, 10, cmk.utils.render.approx_age)
-    ]:  # age_newest
-        val = float(perf_data[i][1])
-        h += perfometer_logarithmic(val, base, scale, color)
-        texts.append(verbfunc(val))
+    perfometer_values = {
+        'count': ("#aabb50", 10000, 10, lambda v: ("%d Tot") % v),
+        'age_newest': ("#ccff50", 3600, 10, cmk.utils.render.approx_age),
+    }
+    for name, value, _unit, _min, _max, _warn, _crit in perf_data:
+        try:
+            color, base, scale, verbfunc = perfometer_values[name]
+        except KeyError:
+            continue
+        value = float(value)
+        h += perfometer_logarithmic(value, base, scale, color)
+        texts.append(verbfunc(value))
     h += '</div>'
     return " / ".join(texts), h  # perfometer_logarithmic(100, 200, 2, "#883875")
 
@@ -890,7 +852,10 @@ perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 
 def perfometer_ups_capacity(row, command, perf):
-    return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')
+    value = [float(data[1]) for data in perf if data[0] == 'percent']
+    if len(value) == 1:
+        return "%0.2f%%" % value[0], perfometer_linear(value[0], '#B2FF7F')
+    return "", ""
 
 
 perfometers['check_mk-ups_capacity'] = perfometer_ups_capacity

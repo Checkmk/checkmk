@@ -5,8 +5,8 @@ diff -ur nagios-3.5.0.orig/base/config.c nagios-3.5.0/base/config.c
  			}
  		}
  
-+        if(total_objects > 10){ 
-+                logit(NSLOG_VERIFICATION_ERROR,TRUE,"Error: Sorry, in this demo version at most 10 hosts are allowed.");
++        if(total_objects > 25){ 
++                logit(NSLOG_VERIFICATION_ERROR,TRUE,"Error: Sorry, in this demo version at most 25 hosts are allowed.");
 +                errors++;
 +        }
 +

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -8,7 +8,6 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
-    TextAscii,
     Tuple,
 )
 
@@ -17,6 +16,8 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
 
 
 def _parameter_valuespec_mssql_page_activity():
@@ -55,7 +56,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_page_activity",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_page_activity,
         title=lambda: _("MSSQL Page Activity"),

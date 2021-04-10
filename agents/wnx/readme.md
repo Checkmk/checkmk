@@ -3,10 +3,12 @@
 ## Here we can place only:
 1. *.sln
 2. readme.txt
-3. build scripts
+3. build scripts and tools
 4. CMakeLists.txt 
 5. .gitignore
 6. Makefile
+7. rulesets for clang/tidy
+8. 
 
 ## Installation
 

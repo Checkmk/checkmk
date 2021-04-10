@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -39,6 +39,6 @@ __all__ = ["VERBOSE"]
 # looks wrong.
 
 # We need an additional log level between INFO and DEBUG to reflect the
-# verbose() and vverbose() mechanisms of Check_MK.
+# verbose() and vverbose() mechanisms of Checkmk.
 VERBOSE = 15
 logging.addLevelName(VERBOSE, "VERBOSE")

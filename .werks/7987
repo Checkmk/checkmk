@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1564040119
 
 When performing an omd cp or omd mv to copy or rename a site, this resulted

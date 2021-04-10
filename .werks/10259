@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When a large number of host attributes is configured in an environment, this
 could make the WATO host search fail with a HTTP error (white page with black

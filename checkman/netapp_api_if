@@ -6,62 +6,37 @@ distribution: check_mk
 description:
  This check monitors the operational status, link speed, traffic, packet
  counts, discards and errors of network interfaces of a NetApp Filer.
+ Currently, only the ethernet and virtual interfaces are checked. For virtual
+ interfaces, the check raises a WARN if the speed differs among the members of
+ the virtual interface.
 
- Right now only the ethernet and virtual interfaces are checked.
-
- For virtual interfaces the check raises a WARN if not all members of
- this virtual interface have the same speed set.
-
- Depending on the check parameters this check can go WARN or CRIT when the
+ Depending on the check parameters, this check can go WARN or CRIT when the
  port status changes (i.e. is down), when the link speed changes (e.g. a
- port expected to be set to 1GBit/s operates only at 100MBit/s), when the
+ port expected to be set to 1 GBit/s operates only at 100 MBit/s), when the
  absolute or procentual traffic of a port exceeds certain levels or if the
  rate of errors or discards exceeds configurable limits.
 
- This check supports averaging the in- and outgoing traffic over a
- configurable range of time by using an exponentially weighted moving average.
- The averaging can be configured on a per host and per port base. This is
- done by adding a key {"average"} to the parameter dictionary with the number
- of minutes that the average should cover as its key. Port with averaging
- turned on output two additional performance values: the averaged traffic
- in bytes. If you have configured traffic levels, then those levels are
- applied to the averaged values.
-
- It might be a good idea to use the option "Use description as service name
- for network interface checks", since there is no real interface index available
- and can change over time.
+ This check supports averaging the in- and outgoing traffic over a configurable
+ time range by using an exponentially weighted moving average - just as Linux
+ does for the CPU load averages. The averaging can be configured on a per-host
+ and per-interface base. Interfaces with averaging turned on yield two additional
+ performance values: the averaged in- and outgoing traffic in bytes. If you have
+ configured traffic levels, then those levels are applied to the averaged values.
 
 item:
- There are three allowed ways to specify a port: {1}: the index of the interface
- (depends on the order of the data reported by the agent), the {ifDescr} of
- the port or the {ifAlias} of the port. If you are using the alias, you have to
- make sure that it is unique by configuring useful aliases in the switch.
- Checkmk does not check for uniqueness.
+ There are three allowed ways to specify an interface: its index (depends on the order
+ of the data reported by the agent), which simply enumerates the interfaces starting
+ from 1, its description and its alias. Note that it might be a good idea to configure
+ checkmk to discover the interfaces using the description in the service name, since
+ the index can change over time (rule "Network interface and switch port discovery").
 
 inventory:
- One service is created for each port that fulfills configurable conditions.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type 6, 32,
+ 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 
- {Grouping:} In some situations you do not want to monitor a single
+ {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
- The {if} check supports such pools by defining groups.
- You can specifiy the members of a group by their port type and the item name(s) of
- the single interfaces. The data of all members is accumulated and put together
- in a single grouped interface service.
-
- You can specify the groups with the ruleset {if_groups}.
- Groups are defined as list of dictionaries.
-
- The keys are:
-
-  {"name"}:   String. Name of the group within the service description
-
-  {"iftype"}: Integer. Interface port type as integer
-
-  {"include_items"}: List of Strings. Interface item name. This name depends
-  on further settings like if_inventory_uses_alias or if_inventory_uses_description
-
-  {"single"}(optional): Bool. Interfaces in this group do not show up
-  as single service if "single" is set to True (Default: False)
-
-  For example: if_groups = ([{"name" : "Group vFiler0", "iftype" : 6, "single" : True}], ["lan"], ALL_HOSTS )
-
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.

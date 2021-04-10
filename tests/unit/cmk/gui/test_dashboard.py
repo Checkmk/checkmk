@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -38,7 +38,6 @@ def test_dashlet_registry_plugins():
         'hoststats',
         'notify_failed_notifications',
         'mk_logo',
-        'network_topology',
         'servicestats',
         'url',
         'overview',
@@ -47,13 +46,26 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'single_metric',
         'snapin',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_plugins += [
+            'alerts_bar_chart',
+            'alert_statistics',
+            'average_scatterplot',
+            'barplot',
+            'gauge',
+            'notifications_bar_chart',
+            'problem_graph',
+            'single_metric',
+            'site_overview',
             'custom_graph',
+            'combined_graph',
+            'ntop_alerts',
+            'ntop_flows',
+            'ntop_top_talkers',
+            'single_timeseries',
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -62,15 +74,14 @@ def test_dashlet_registry_plugins():
 
 def _expected_intervals():
     expected = [
-        ('hoststats', 60),
+        ('hoststats', False),
         ('mk_logo', False),
-        ('network_topology', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),
         ('overview', False),
         ('pnpgraph', 60),
-        ('servicestats', 60),
+        ('servicestats', False),
         ('snapin', 30),
         ('url', False),
         ('view', False),
@@ -96,6 +107,12 @@ def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_re
     }
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+    if type_name in ["pnpgraph", "custom_graph"]:
+        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
+        monkeypatch.setattr("cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
+                            lambda g, d: [{
+                                "title": '1'
+                            }])
 
     monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 
@@ -135,7 +152,7 @@ _attr_map = [
     ("resizable", "is_resizable", True),
     ("size", "initial_size", dashboard.Dashlet.minimum_size),
     ("parameters", "vs_parameters", None),
-    ("opt_params", "opt_parameters", None),
+    ("opt_params", "opt_parameters", False),
     ("validate_params", "validate_parameters_func", None),
     ("refresh", "initial_refresh_interval", False),
     ("allowed", "allowed_roles", config.builtin_role_ids),
@@ -247,7 +264,7 @@ def test_old_dashlet_position(mocker):
 
 def test_old_dashlet_size(mocker):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (10, 5)
+    assert dashlet_type.initial_size() == (12, 10)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)
@@ -283,7 +300,7 @@ def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.initial_position() == (1, 1)
     assert dashboard.Dashlet.initial_refresh_interval() is False
     assert dashboard.Dashlet.vs_parameters() is None
-    assert dashboard.Dashlet.opt_parameters() is None
+    assert dashboard.Dashlet.opt_parameters() is False
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None

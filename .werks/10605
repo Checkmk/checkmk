@@ -6,7 +6,7 @@ Date: 1586336061
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The subcheck f5_bigip_cluster_status.v11_2 has been deprecated since Version
 1.4.0p9, and is now finally removed.

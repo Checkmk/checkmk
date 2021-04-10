@@ -1,0 +1,13 @@
+Title: sap_hana_ess: Fixed permanent crit state of started threads
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1590769340
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The check was always in CRIT state because of the section 'Started threads".
+This has been fixed.

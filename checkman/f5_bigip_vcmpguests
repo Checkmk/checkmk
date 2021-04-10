@@ -11,3 +11,5 @@ description:
 inventory:
  One service is created.
 
+cluster:
+  On a cluster the service will assume the worst of the encountered states.

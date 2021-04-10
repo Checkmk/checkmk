@@ -4,12 +4,13 @@
 // source code package.
 
 #include "CrashReport.h"
-#include <iosfwd>
+
 #include <optional>
 #include <regex>
 #include <system_error>
 #include <utility>
-#include <vector>  // IWYU pragma: keep
+#include <vector>
+
 #include "Logger.h"
 
 CrashReport::CrashReport(std::string id, std::string component)
@@ -51,7 +52,7 @@ bool mk::crash_report::any(
 }
 
 bool mk::crash_report::delete_id(const std::filesystem::path &base_path,
-                                 const std::string &id, Logger *const logger) {
+                                 const std::string &id, Logger *logger) {
     std::optional<CrashReport> target;
     bool found =
         mk::crash_report::any(base_path, [&target, &id](const CrashReport &cr) {

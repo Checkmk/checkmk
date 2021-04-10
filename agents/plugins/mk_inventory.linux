@@ -3,6 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
 # Run and *send* only once every __ seconds
 . $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
 
@@ -75,5 +83,53 @@ then
         ip -6 r
     fi
 
+    # Kernel configuration
+    if type sysctl > /dev/null ; then
+        echo "<<<lnx_sysctl:persist($UNTIL)>>>"
+        sysctl -ae
+    fi
+
+    # Block devices
+    (
+        # use sep=0 rather than 124 in order to be more flexible in the parse function
+        echo "<<<lnx_block_devices:sep(0):persist($UNTIL)>>>"
+        DEVTYPE_CHECK="DEVTYPE=disk"
+        DATA_ITEMS=(
+            size                # must be multiplied with block size (512byte)
+            uuid                #
+            # dev                 #
+            # wwid                # world wide ID
+            # nguid
+            device/address      # can be bus address, e.g. 0000:21:00.0
+            device/firmware_rev #
+            device/model        # can be "SAMSUNG MZVLB512HAJQ-00000", "LOGICAL VOLUME"
+            device/serial       #
+            device/type         # can be "0", "MMC", "SD"
+            device/vendor       # can be "ATA  ", "HP  ", "QEMU "
+            # device/dev          # what is second `dev` for?
+            # device/name         # found at some mmc devices
+            # device/wwid         # world wide ID?
+        )
+        find "/sys/block/" -maxdepth 1 -type f -o -type l -print0 | while IFS= read -r -d '' DEVICE; do
+            UEVENT_FILE="$(realpath "${DEVICE}")/uevent"
+            DEVICE_DIR="$(dirname "${UEVENT_FILE}")"
+
+            # busybox compatible way to say
+            #   if DEVTYPE_CHECK not in <device>/uevent or "devices/virtual/" in DEVICE_DIR: continue`
+            case "$(cat "${UEVENT_FILE}")" in *"${DEVTYPE_CHECK}"*) ;; *) continue; esac
+            case "${UEVENT_FILE}" in *"devices/virtual/"*) continue;; esac
+
+            # use pipe as delimiter - also to mark begin of lines for consitency check
+            echo "|device|${DEVICE_DIR}|"
+
+            for item in "${DATA_ITEMS[@]}"; do
+                item_file="$DEVICE_DIR/${item}"
+                if [ ! -f "${item_file}" ]; then
+                    continue
+                fi
+                echo "|${item}|$(cat "${item_file}")|"
+            done
+        done 2>/dev/null
+    )
 fi
 

@@ -1,0 +1,19 @@
+Title: Agent bakery: Automatically build agents for created hosts
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1594107209
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+After creating a new host in the configuration, the agent baking process for
+the new host is triggered now. When multiple hosts are created at once, for
+example using the API or an import mechanism, one baking process is started for
+all of these hosts.
+
+The process is started as a background job, just like when a bake process is
+started manually. With the single difference that the process only cares about
+the newly added hosts. You can see the process or result message when accessing
+the Agent Bakery page in your Configuration.

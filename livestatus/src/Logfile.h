@@ -9,6 +9,7 @@
 // NOTE: We need the 2nd "keep" pragma for deleting Logfile. Is this an IWYU
 // bug?
 #include "config.h"  // IWYU pragma: keep
+
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
@@ -16,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <string>
+
 #include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
 class Logger;

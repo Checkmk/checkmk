@@ -6,7 +6,7 @@ Date: 1574425325
 Edition: cme
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Within the customer properties there is now the option to define individual
 replacement macros to use in reports. It is possible to set up an arbitrary

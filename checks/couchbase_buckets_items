@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 @get_parsed_item_data
 def check_couchbase_buckets_items(_item, params, data):
@@ -15,7 +21,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "items_count",
             params.get('curr_items_tot'),
             infoname="Total items in vBuckets",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     write_queue = data.get("disk_write_queue")
@@ -25,7 +31,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "disk_write_ql",
             params.get("disk_write_ql"),
             infoname="Items in disk write queue",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     fetched = data.get("ep_bg_fetched")
@@ -35,7 +41,7 @@ def check_couchbase_buckets_items(_item, params, data):
             "fetched_items",
             params.get("fetched_items"),
             infoname="Items fetched from disk",
-            human_readable_func=six.text_type,
+            human_readable_func=str,
         )
 
     queue_fill = data.get("ep_diskqueue_fill")
@@ -64,7 +70,6 @@ check_info['couchbase_buckets_items'] = {
     'inventory_function': discover(lambda _k, v: 'curr_items_tot' in v),
     'check_function': check_couchbase_buckets_items,
     'service_description': 'Couchbase Bucket %s Items',
-    'includes': ['couchbase.include'],
     'group': 'couchbase_items',
     'has_perfdata': True
 }

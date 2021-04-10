@@ -30,7 +30,7 @@ static std::filesystem::path CreateYamlnInTemp(const std::string& Name,
     std::ofstream ofs(path.u8string());
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
 
@@ -47,7 +47,7 @@ static std::filesystem::path CreateTestFile(const std::filesystem::path& Name,
     std::ofstream ofs(path.u8string(), std::ios::binary);
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
+        XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
     }
 
@@ -438,7 +438,7 @@ TEST(AgentConfig, Aggregate) {
             // prepare and check data
             auto core_yaml = YAML::LoadFile(cfgs[0].u8string());
             auto core_plugin = core_yaml[groups::kPlugins];
-            ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 3);
+            ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 4);
             ASSERT_EQ(core_plugin[vars::kPluginsFolders].size(), 2);
 
             auto bakery_yaml = YAML::LoadFile(cfgs[1].u8string());
@@ -454,7 +454,7 @@ TEST(AgentConfig, Aggregate) {
 
             // CHECK bakery
             ASSERT_EQ(bakery_plugin[vars::kPluginsFolders].size(), 3);
-            ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 4);
+            ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 5);
             ASSERT_EQ(bakery_yaml["bakery"]["status"].as<std::string>(),
                       "loaded");
         }
@@ -484,7 +484,7 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsFolders].size(), 3);
-    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 4);
+    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 5);
 
     CreateTestFile(cfgs[2], "user:\n  status: 'loaded'\nglobal:\n  port: 111");
 
@@ -498,7 +498,7 @@ TEST(AgentConfig, Aggregate) {
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
     EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsFolders].size(), 3);
-    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 4);
+    EXPECT_EQ(yaml[groups::kPlugins][vars::kPluginsExecution].size(), 5);
     EXPECT_TRUE(GetCfg().isBakeryLoaded());
     EXPECT_TRUE(GetCfg().isUserLoaded());
 }
@@ -576,17 +576,20 @@ TEST(AgentConfig, FoldersTest) {
 
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(fs::exists(folders.getData()));
-        EXPECT_TRUE(
-            folders.getData() ==
-            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
+                                             L"",
+                                             Folders::CreateMode::with_path,
+                                             Folders::Protection::no));
     }  // namespace fs=std::filesystem;
 
     {
         Folders folders;
         auto ret = folders.setRoot(L"WinDefend", L"");  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -595,7 +598,8 @@ TEST(AgentConfig, FoldersTest) {
     {
         Folders folders;
         auto ret = folders.setRoot(L"", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
@@ -605,13 +609,15 @@ TEST(AgentConfig, FoldersTest) {
         Folders folders;
         auto ret =
             folders.setRoot(L"WinDefend", value.wstring());  // good to test
-        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path);
+        folders.createDataFolderStructure(L"", Folders::CreateMode::with_path,
+                                          Folders::Protection::no);
         EXPECT_TRUE(ret);
         EXPECT_TRUE(fs::exists(folders.getData()));
         EXPECT_TRUE(fs::exists(folders.getRoot()));
-        EXPECT_TRUE(
-            folders.getData() ==
-            folders.makeDefaultDataFolder(L"", Folders::CreateMode::with_path));
+        EXPECT_TRUE(folders.getData() == folders.makeDefaultDataFolder(
+                                             L"",
+                                             Folders::CreateMode::with_path,
+                                             Folders::Protection::no));
     }
 }
 }  // namespace cma::cfg::details
@@ -626,7 +632,7 @@ TEST(AgentConfig, LogFile) {
 
 TEST(AgentConfig, YamlRead) {
     namespace fs = std::filesystem;
-    auto file = MakePathToConfigTestFiles(G_SolutionPath) /
+    auto file = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
                 cma::cfg::files::kDefaultDevMinimum;
     auto ret = fs::exists(file);
     ASSERT_TRUE(ret);
@@ -715,19 +721,15 @@ TEST(AgentConfig, InternalArray) {
 }
 
 TEST(AgentConfig, WorkConfig) {
-    using namespace std::filesystem;
+    namespace fs = std::filesystem;
     using namespace std;
     using namespace cma::cfg;
 
-    vector<wstring> cfg_files;
-    cfg_files.emplace_back(files::kDefaultMainConfig);
-
-    auto ret = cma::cfg::InitializeMainConfig(cfg_files, YamlCacheOp::nothing);
-    ASSERT_EQ(ret, true);
-    auto cfg = cma::cfg::GetLoadedConfig();
+    auto temp_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
+    const auto cfg = cma::cfg::GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 
-    cfg = cma::cfg::GetLoadedConfig();
     auto sz = cfg.size();
     EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
     using namespace cma::cfg;
@@ -849,24 +851,32 @@ TEST(AgentConfig, WorkConfig) {
 
     // modules
     {
-        auto modules_table = GetLoadedConfig()[groups::kModules];
+        auto modules_table = cfg[groups::kModules];
         SCOPED_TRACE("");
-        tst::CheckYaml(modules_table,
-                       {
-                           // name, type
-                           {vars::kEnabled, YAML::NodeType::Scalar},
-                           {vars::kModulesPython, YAML::NodeType::Scalar},
-                           {vars::kModulesTable, YAML::NodeType::Sequence}
-                           //
-                       });
+        tst::CheckYaml(
+            modules_table,
+            {
+                // name, type
+                {vars::kEnabled, YAML::NodeType::Scalar},
+                {vars::kModulesPython, YAML::NodeType::Scalar},
+                {vars::kModulesQuickReinstall, YAML::NodeType::Scalar},
+                {vars::kModulesTable, YAML::NodeType::Sequence}
+                //
+            });
     }
 
+    // modules values
+    {
+        EXPECT_TRUE(
+            cfg[groups::kModules][vars::kModulesQuickReinstall].as<bool>());
+    }
+
+    // modules table
     {
         auto table =
             GetArray<YAML::Node>(groups::kModules, vars::kModulesTable);
-        EXPECT_TRUE(table.size() == 1);
-        auto modules_table =
-            GetLoadedConfig()[groups::kModules][vars::kModulesTable];
+        EXPECT_EQ(table.size(), 1);
+        auto modules_table = cfg[groups::kModules][vars::kModulesTable];
         auto pos = 0;
         for (auto entry : modules_table) {
             EXPECT_EQ(entry[vars::kModulesName].as<std::string>(),
@@ -880,7 +890,7 @@ TEST(AgentConfig, WorkConfig) {
             pos++;
         }
 
-        EXPECT_TRUE(pos == 1) << "one entry allowed for the modules.table";
+        EXPECT_EQ(pos, 1) << "one entry allowed for the modules.table";
     }
 
     // system
@@ -894,6 +904,11 @@ TEST(AgentConfig, WorkConfig) {
         auto mode =
             GetVal(groups::kSystem, vars::kCleanupUninstall, std::string("xx"));
         EXPECT_TRUE(mode == values::kCleanupSmart);
+    }
+
+    {
+        auto mode = GetVal(groups::kSystem, vars::kWaitNetwork, 1);
+        EXPECT_TRUE(mode == defaults::kServiceWaitNetwork);
     }
 
     {
@@ -934,7 +949,7 @@ TEST(AgentConfig, UTF16LE) {
 
     details::KillDefaultConfig();
 
-    auto file_utf16 = MakePathToConfigTestFiles(G_SolutionPath) /
+    auto file_utf16 = tst::MakePathToConfigTestFiles(tst::G_SolutionPath) /
                       files::kDefaultDevConfigUTF16;
     bool success = loader(file_utf16.wstring());
     EXPECT_TRUE(success);
@@ -947,7 +962,7 @@ TEST(AgentConfig, UTF16LE) {
     EXPECT_TRUE(name_utf8 != "");
     auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
     EXPECT_TRUE(name_utf16 != L"");
-    auto utf8_from_utf16 = wtools::ConvertToUTF8(name_utf16);
+    auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
     EXPECT_TRUE(utf8_from_utf16 != "");
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
@@ -989,7 +1004,7 @@ TEST(AgentConfig, FailScenario_Long) {
         EXPECT_TRUE(port == -1);
     }
 
-    auto test_config_path = MakePathToConfigTestFiles(G_SolutionPath);
+    auto test_config_path = tst::MakePathToConfigTestFiles(tst::G_SolutionPath);
 
     auto file_1 = (test_config_path / files::kDefaultMainConfig).wstring();
     auto file_2 = (test_config_path / files::kDefaultDevMinimum).wstring();
@@ -1151,7 +1166,7 @@ TEST(AgentConfig, SectionLoader) {
     EXPECT_NO_THROW(tst::PrintNode(cfg["plugins"], "plugins"));
     EXPECT_TRUE(p.enabledInConfig());
     EXPECT_TRUE(p.existInConfig());
-    EXPECT_EQ(p.unitsCount(), 3);
+    EXPECT_EQ(p.unitsCount(), 4);
     EXPECT_EQ(p.foldersCount(), 2);
 
     Plugins p_local;

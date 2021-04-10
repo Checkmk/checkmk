@@ -1,0 +1,14 @@
+Title: cisco_vpn_sessions: rename item "SVC" --> "AnyConnect SVC"
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1590602607
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+As a follow-up of werk #11152, this werk renames the item "SVC" of the check
+cisco_vpn_sessions to "AnyConnect SVC" (for clarity). Users have to re-discover
+the services of affected hosts for this to come into effect and potentially
+adjust any corresponding rules.

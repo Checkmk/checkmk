@@ -5,32 +5,57 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a section plugin
 """
-from typing import (  # pylint: disable=unused-import
-    Any, Generator, List, Optional, Union)
 import functools
-import sys
 import inspect
 import itertools
-
-if sys.version_info[0] >= 3:
-    from inspect import signature  # pylint: disable=no-name-in-module,ungrouped-imports
-else:
-    from funcsigs import signature  # type: ignore[import] # pylint: disable=import-error
+from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-import cmk.base.snmp_utils as snmp_utils
-from cmk.base.discovered_labels import HostLabel  # pylint: disable=unused-import
-from cmk.base.api import PluginName
-from cmk.base.api.agent_based.section_types import (  # pylint: disable=unused-import
-    AgentParseFunction, AgentSectionPlugin, HostLabelFunction, SNMPDetectSpec, SNMPParseFunction,
-    SNMPSectionPlugin,
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
+
+from cmk.base.api.agent_based.register.utils import (
+    RuleSetType,
+    validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
 )
-from cmk.base.api.agent_based.section_types import SNMPTree
+from cmk.base.api.agent_based.section_classes import (
+    SNMPTree,)
+
+from cmk.base.api.agent_based.type_defs import (
+    AgentParseFunction,
+    AgentSectionPlugin,
+    HostLabel,
+    HostLabelFunction,
+    SimpleSNMPParseFunction,
+    SNMPParseFunction,
+    SNMPSectionPlugin,
+    StringByteTable,
+    StringTable,
+)
 
 
-def _validate_parse_function(parse_function):
-    # type: (Union[AgentParseFunction, SNMPParseFunction]) -> None
+def _create_parse_annotation(
+    *,
+    needs_bytes: bool = False,
+    is_list: bool = False,
+) -> Tuple[Type, str]:
+    # this is dumb, but other approaches are not understood by mypy
+    if is_list:
+        if needs_bytes:
+            return List[StringByteTable], "List[StringByteTable]"
+        return List[StringTable], "List[StringTable]"
+    if needs_bytes:
+        return StringByteTable, "StringByteTable"
+    return StringTable, "StringTable"
+
+
+def _validate_parse_function(
+    parse_function: Union[AgentParseFunction, SimpleSNMPParseFunction, SNMPParseFunction],
+    *,
+    expected_annotation: Tuple[Type, str],
+) -> None:
     """Validate the parse functions signature and type"""
 
     if not inspect.isfunction(parse_function):
@@ -39,32 +64,74 @@ def _validate_parse_function(parse_function):
     if inspect.isgeneratorfunction(parse_function):
         raise TypeError("parse function must not be a generator function: %r" % (parse_function,))
 
-    parameters = signature(parse_function).parameters
-    if list(parameters) != ['string_table']:
-        raise ValueError("parse function must accept exactly one argument 'string_table'")
+    parameters = inspect.signature(parse_function).parameters
+    parameter_names = list(parameters)
+    if parameter_names != ['string_table']:
+        raise ValueError("parse function must accept exactly one argument 'string_table' (got %r)" %
+                         parameter_names)
+
+    arg = parameters['string_table']
+    if arg.annotation is not arg.empty:  # why is inspect._empty trueish?!
+        if arg.annotation != expected_annotation[0]:
+            raise TypeError('expected parse function argument annotation %r, got %r' %
+                            (expected_annotation[1], arg.annotation))
 
 
-def _validate_host_label_function(host_label_function):
-    # type: (HostLabelFunction) -> None
-    """Validate the host label functions signature and type"""
+def _validate_host_label_kwargs(
+    *,
+    host_label_function: HostLabelFunction,
+    host_label_default_parameters: Optional[Dict[str, Any]],
+    host_label_ruleset_name: Optional[str],
+    host_label_ruleset_type: RuleSetType,
+) -> None:
+    validate_ruleset_type(host_label_ruleset_type)
+    validate_default_parameters(
+        "host_label",
+        host_label_ruleset_name,
+        host_label_default_parameters,
+    )
 
-    if not inspect.isgeneratorfunction(host_label_function):
-        raise TypeError("host label function must be a generator function: %r" %
-                        (host_label_function,))
+    validate_function_arguments(
+        type_label="host_label",
+        function=host_label_function,
+        has_item=False,
+        default_params=host_label_default_parameters,
+        sections=[ParsedSectionName("__always_just_one_section__")],
+    )
 
-    parameters = signature(host_label_function).parameters
-    if list(parameters) != ['section']:
-        raise ValueError("host label function must accept exactly one argument 'section'")
+
+def _create_agent_parse_function(
+    parse_function: Optional[AgentParseFunction],) -> AgentParseFunction:
+    if parse_function is None:
+        return lambda string_table: string_table
+
+    return parse_function
 
 
-def _validate_supersedings(supersedes):
-    # type: (List[PluginName]) -> None
-    if not len(supersedes) == len(set(supersedes)):
+def _create_snmp_parse_function(
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None],
+    needs_unpacking: bool,
+) -> SNMPParseFunction:
+    if parse_function is None:
+        if needs_unpacking:
+            return lambda string_table: string_table[0]
+        return lambda string_table: string_table
+
+    if needs_unpacking:
+        return lambda string_table: parse_function(string_table[0])
+    # _validate_parse_function should have ensured this is the correct type:
+    return parse_function  # type: ignore[return-value]
+
+
+def _validate_supersedings(own_name: SectionName, supersedes: List[SectionName]) -> None:
+    set_supersedes = set(supersedes)
+    if own_name in set_supersedes:
+        raise ValueError("cannot supersede myself: '%s'" % own_name)
+    if len(supersedes) != len(set_supersedes):
         raise ValueError("duplicate supersedes entry")
 
 
-def _validate_detect_spec(detect_spec):
-    # type: (SNMPDetectSpec) -> None
+def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
     if not (isinstance(detect_spec, list) and
             all(isinstance(element, list) for element in detect_spec)):
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
@@ -80,7 +147,7 @@ def _validate_detect_spec(detect_spec):
         if not str(oid_string).startswith('.'):
             raise ValueError("OID in value of 'detect' keyword must start with '.': %r" %
                              (oid_string,))
-        snmp_utils.OIDSpec.validate(oid_string.rstrip('.*'))
+        SNMPTree.validate_oid_string(oid_string.rstrip('.*'))
 
         if expression is not None:
             try:
@@ -93,37 +160,38 @@ def _validate_detect_spec(detect_spec):
                       (expected_match,))
 
 
-def _validate_snmp_trees(trees):
-    # type: (List[SNMPTree]) -> None
-    type_error = TypeError("value of 'trees' keyword must be a non-empty list of SNMPTrees")
-    if not isinstance(trees, list):
-        raise type_error
-    if not trees:
-        raise type_error
-    if any(not isinstance(element, SNMPTree) for element in trees):
-        raise type_error
+def _validate_type_list_snmp_trees(trees: List[SNMPTree]) -> None:
+    """Validate that we have a list of SNMPTree instances """
+    if isinstance(trees, list) and trees and all(isinstance(t, SNMPTree) for t in trees):
+        return
+    raise TypeError("value of 'fetch' keyword must be SNMPTree or non-empty list of SNMPTrees")
 
 
-def _noop_host_label_function(section):  # pylint: disable=unused-argument
-    # type: (Any) -> Generator[HostLabel, None, None]
-    return
-    yield  # pylint: disable=unreachable
+def _validate_fetch_spec(trees: List[SNMPTree]) -> None:
+    _validate_type_list_snmp_trees(trees)
+    for tree in trees:
+        tree.validate()
 
 
-def _create_host_label_function(host_label_function):
-    # type: (Optional[HostLabelFunction]) -> HostLabelFunction
+def _noop_host_label_function(section: Any) -> Generator[HostLabel, None, None]:
+    yield from ()
+
+
+def _create_host_label_function(
+    host_label_function: Optional[HostLabelFunction],) -> HostLabelFunction:
     if host_label_function is None:
         return _noop_host_label_function
 
-    _validate_host_label_function(host_label_function)
-
     @functools.wraps(host_label_function)
-    def filtered_generator(section):
+    def filtered_generator(*args, **kwargs):
         """Only let HostLabel through
 
         This allows for better typing in base code.
         """
-        for label in host_label_function(section):  # type: ignore[misc] # Bug: None not callable
+        for label in host_label_function(  # type: ignore[misc] # Bug: None not callable
+                *args,
+                **kwargs,
+        ):
             if not isinstance(label, HostLabel):
                 raise TypeError("unexpected type in host label function: %r" % type(label))
             yield label
@@ -131,93 +199,166 @@ def _create_host_label_function(host_label_function):
     return filtered_generator
 
 
-def _create_supersedes(supersedes):
-    # type: (Optional[List[str]]) -> List[PluginName]
+def _create_supersedes(
+    section_name: SectionName,
+    supersedes: Optional[List[str]],
+) -> Set[SectionName]:
     if supersedes is None:
-        return []
+        return set()
 
-    supersedes_plugins = [PluginName(n) for n in supersedes]
-    _validate_supersedings(supersedes_plugins)
+    superseded_plugins = [SectionName(n) for n in supersedes]
+    _validate_supersedings(section_name, superseded_plugins)
 
-    return sorted(supersedes_plugins)
+    return set(superseded_plugins)
 
 
 def create_agent_section_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[AgentParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
-):
-    # type: (...) -> AgentSectionPlugin
+    *,
+    name: str,
+    parsed_section_name: Optional[str] = None,
+    parse_function: Optional[AgentParseFunction] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+    supersedes: Optional[List[str]] = None,
+    module: Optional[str] = None,
+    validate_creation_kwargs: bool = True,
+) -> AgentSectionPlugin:
     """Return an AgentSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): unhack this CMK-3983
-    if (name is None or parse_function is None or forbidden_names is None):
-        raise TypeError()
-    # TODO (mo): Well, implement it, and remove pragma below!
-    if supersedes is not None:
-        raise NotImplementedError("supersedes is not yet available")
-    if parsed_section_name is not None:
-        raise NotImplementedError("parsed_section_name is not yet available")
+    section_name = SectionName(name)
 
-    plugin_name = PluginName(name, forbidden_names=forbidden_names)
+    if validate_creation_kwargs:
+        if parse_function is not None:
+            _validate_parse_function(
+                parse_function,
+                expected_annotation=_create_parse_annotation(),
+            )
 
-    _validate_parse_function(parse_function)
+        if host_label_function is not None:
+            _validate_host_label_kwargs(
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,
+                host_label_ruleset_name=host_label_ruleset_name,
+                host_label_ruleset_type=host_label_ruleset_type,
+            )
 
     return AgentSectionPlugin(
-        plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
-        parse_function,
-        _create_host_label_function(host_label_function),
-        _create_supersedes(supersedes),
+        name=section_name,
+        parsed_section_name=ParsedSectionName(
+            parsed_section_name if parsed_section_name else str(section_name)),
+        parse_function=_create_agent_parse_function(parse_function),
+        host_label_function=_create_host_label_function(host_label_function),
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=(None if host_label_ruleset_name is None else
+                                 RuleSetName(host_label_ruleset_name)),
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
+        supersedes=_create_supersedes(section_name, supersedes),
+        module=module,
     )
 
 
 def create_snmp_section_plugin(
-        #*,
-        name=None,  # type: Optional[str]
-        parsed_section_name=None,  # type: Optional[str]
-        parse_function=None,  # type: Optional[SNMPParseFunction]
-        host_label_function=None,  # type: Optional[HostLabelFunction]
-        supersedes=None,  # type:  Optional[List[str]]
-        detect_spec=None,  # type: Optional[SNMPDetectSpec]
-        trees=None,  # type: Optional[List[SNMPTree]]
-        forbidden_names=None,  # type: Optional[List[PluginName]]
-):
-    # type: (...) -> SNMPSectionPlugin
+    *,
+    name: str,
+    detect_spec: SNMPDetectBaseType,
+    fetch: Union[SNMPTree, List[SNMPTree]],
+    parsed_section_name: Optional[str] = None,
+    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
+    host_label_function: Optional[HostLabelFunction] = None,
+    host_label_default_parameters: Optional[Dict] = None,
+    host_label_ruleset_name: Optional[str] = None,
+    host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
+    supersedes: Optional[List[str]] = None,
+    module: Optional[str] = None,
+    validate_creation_kwargs: bool = True,
+) -> SNMPSectionPlugin:
     """Return an SNMPSectionPlugin object after validating and converting the arguments one by one
 
     For a detailed description of the parameters please refer to the exposed function in the
     'register' namespace of the API.
     """
-    # TODO (mo): unhack this CMK-3983
-    if (name is None or parse_function is None or detect_spec is None or trees is None or
-            forbidden_names is None):
-        raise TypeError()
-    # TODO (mo): Well, implement it, and remove pragma below!
-    if supersedes is not None:
-        raise NotImplementedError("supersedes is not yet available")
-    if parsed_section_name is not None:
-        raise NotImplementedError("parsed_section_name is not yet available")
+    section_name = SectionName(name)
 
-    plugin_name = PluginName(name, forbidden_names)
+    # normalize to List[SNMPTree]
+    tree_list = [fetch] if isinstance(fetch, SNMPTree) else fetch
 
-    _validate_parse_function(parse_function)
-    _validate_detect_spec(detect_spec)
-    _validate_snmp_trees(trees)
+    if validate_creation_kwargs:
+        _validate_detect_spec(detect_spec)
+        _validate_fetch_spec(tree_list)
+
+        if parse_function is not None:
+            needs_bytes = any(oid.encoding == "binary" for tree in tree_list for oid in tree.oids)
+            _validate_parse_function(
+                parse_function,
+                expected_annotation=_create_parse_annotation(
+                    needs_bytes=needs_bytes,
+                    is_list=isinstance(fetch, list),
+                ),
+            )
+
+        if host_label_function is not None:
+            _validate_host_label_kwargs(
+                host_label_function=host_label_function,
+                host_label_default_parameters=host_label_default_parameters,
+                host_label_ruleset_name=host_label_ruleset_name,
+                host_label_ruleset_type=host_label_ruleset_type,
+            )
 
     return SNMPSectionPlugin(
-        plugin_name,
-        PluginName(parsed_section_name) if parsed_section_name else plugin_name,  # type: ignore
-        parse_function,
-        _create_host_label_function(host_label_function),
-        _create_supersedes(supersedes),
-        detect_spec,
-        trees,
+        name=section_name,
+        parsed_section_name=ParsedSectionName(
+            parsed_section_name if parsed_section_name else str(section_name)),
+        parse_function=_create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
+        host_label_function=_create_host_label_function(host_label_function),
+        host_label_default_parameters=host_label_default_parameters,
+        host_label_ruleset_name=(None if host_label_ruleset_name is None else
+                                 RuleSetName(host_label_ruleset_name)),
+        host_label_ruleset_type=("merged"
+                                 if host_label_ruleset_type is RuleSetType.MERGED else "all"),
+        supersedes=_create_supersedes(section_name, supersedes),
+        detect_spec=detect_spec,
+        trees=tree_list,
+        module=module,
+    )
+
+
+def validate_section_supersedes(all_supersedes: Dict[SectionName, Set[SectionName]]) -> None:
+    """Make sure that no sections are superseded implicitly.
+
+    This validation makes a little extra work required for complex sepersedes,
+    however it makes resolving of supersedes way more straight forward (and more explicit).
+    """
+
+    for name, explicitly in all_supersedes.items():
+        transitivly = {
+            n for section_name in explicitly for n in all_supersedes.get(section_name, ())
+        }
+        implicitly = transitivly - explicitly
+        if name in implicitly:
+            raise ValueError("Section plugin '%s' implicitly supersedes section(s) %s. "
+                             "This leads to a cyclic superseding!" %
+                             (name, ', '.join("'%s'" % n for n in sorted(implicitly))))
+        if implicitly:
+            raise ValueError("Section plugin '%s' implicitly supersedes section(s) %s. "
+                             "You must add those to the supersedes keyword argument." %
+                             (name, ', '.join("'%s'" % n for n in sorted(implicitly))))
+
+
+def trivial_section_factory(section_name: SectionName) -> AgentSectionPlugin:
+    return AgentSectionPlugin(
+        name=section_name,
+        parsed_section_name=ParsedSectionName(str(section_name)),
+        parse_function=lambda string_table: string_table,
+        host_label_function=_noop_host_label_function,
+        host_label_default_parameters=None,
+        host_label_ruleset_name=None,
+        host_label_ruleset_type="merged",  # doesn't matter, use default.
+        supersedes=set(),
+        module=None,
     )

@@ -7,13 +7,14 @@
 #define Renderer_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <iosfwd>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
-#include "data_encoding.h"
+
+enum class Encoding;
 class CSVSeparators;
 class Logger;
 
@@ -184,7 +185,7 @@ public:
 
     void output(const RowFragment &value) {
         separate();
-        renderer().output(std::move(value));
+        renderer().output(value);
     }
 
     template <typename T>

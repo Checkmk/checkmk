@@ -1,0 +1,13 @@
+Title: mk_oracle.ps1: Fixed missing update of SQLs
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1595503616
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Some new SQLs or fixes have not been transferred between mk_oracle and
+amk_oracle.ps1. Now both plugins use the same SQLs in 1.6.

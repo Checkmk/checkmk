@@ -1,11 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import six
+
+from typing import Any, Mapping
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
@@ -20,6 +21,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     Age,
     TextUnicode,
+    TextAreaUnicode,
     DropdownChoice,
     RegExp,
     RegExpUnicode,
@@ -30,7 +32,6 @@ from cmk.gui.valuespec import (
     Password,
     Percentage,
     CascadingDropdown,
-    UploadOrPasteTextFile,
     Hostname,
     Optional,
 )
@@ -50,6 +51,22 @@ from cmk.gui.exceptions import MKUserError
 
 
 @rulespec_group_registry.register
+class RulespecGroupIntegrateOtherServices(RulespecGroup):
+    @property
+    def name(self):
+        return "custom_checks"
+
+    @property
+    def title(self):
+        return _("Other services")
+
+    @property
+    def help(self):
+        return _("This services are provided by so called active checks. "
+                 "You can also integrate custom nagios plugins.")
+
+
+@rulespec_group_registry.register
 class RulespecGroupActiveChecks(RulespecGroup):
     @property
     def name(self):
@@ -57,11 +74,13 @@ class RulespecGroupActiveChecks(RulespecGroup):
 
     @property
     def title(self):
-        return _("Active checks (HTTP, TCP, etc.)")
+        return _("HTTP, TCP, Email, ...")
 
     @property
     def help(self):
-        return _("Configure active networking checks like HTTP and TCP")
+        return _("Rules to add [cms_active_checks|network services] like HTTP and TCP to the "
+                 "monitoring. The services are provided by so called active checks that allow "
+                 "you to monitor network services directly from the outside.")
 
 
 # These elements are also used in check_parameters.py
@@ -232,7 +251,7 @@ def _valuespec_active_checks_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:ssh",
         valuespec=_valuespec_active_checks_ssh,
@@ -454,6 +473,27 @@ rulespec_registry.register(
     ))
 
 
+def _transform_check_dns_settings(params: Mapping[str, Any]) -> Mapping[str, Any]:
+    """
+        >>> _transform_check_dns_settings({'expected_address': '1.2.3.4,C0FE::FE11'})
+        {'expect_all_addresses': True, 'expected_addresses_list': ['1.2.3.4', 'C0FE::FE11']}
+        >>> _transform_check_dns_settings({'expected_address': ['A,B', 'C']})
+        {'expect_all_addresses': True, 'expected_addresses_list': ['A', 'B', 'C']}
+
+    """
+    legacy_addresses = params.get("expected_address")
+    if legacy_addresses is None:
+        return params
+
+    return {
+        "expect_all_addresses": True,
+        "expected_addresses_list":
+            (legacy_addresses.split(',') if isinstance(legacy_addresses, str) else sum(
+                (entry.split(',') for entry in legacy_addresses), [])),
+        **{k: v for k, v in params.items() if k != "expected_address"},
+    }
+
+
 def _valuespec_active_checks_dns():
     return Tuple(
         title=_("Check DNS service"),
@@ -463,7 +503,7 @@ def _valuespec_active_checks_dns():
             TextAscii(title=_("Queried Hostname or IP address"),
                       allow_empty=False,
                       help=_('The name or IPv4 address you want to query')),
-            Dictionary(
+            Transform(Dictionary(
                 title=_("Optional parameters"),
                 elements=[
                     ("name",
@@ -485,19 +525,21 @@ def _valuespec_active_checks_dns():
                                  allow_empty=False,
                                  help=_("Optional DNS server you want to use for the lookup")),
                          ])),
-                    (
-                        "expected_address",
-                        Transform(
-                            ListOfStrings(
-                                title=_("Expected DNS answers"),
-                                help=_("List all allowed expected answers here. If query for an "
-                                       "IP address then the answer will be host names, that end "
-                                       "with a dot. Multiple IP addresses within one answer must "
-                                       "be separated by comma."),
-                            ),
-                            forth=lambda old: isinstance(old, six.string_types) and [old] or old,
-                        ),
-                    ),
+                    ("expect_all_addresses",
+                     DropdownChoice(
+                         title=_("Address matching"),
+                         choices=[
+                             (True, _("Expect all of the addresses")),
+                             (False, _("Expect at least one of the addresses")),
+                         ],
+                     )),
+                    ("expected_addresses_list",
+                     ListOfStrings(
+                         title=_("Expected DNS answers"),
+                         help=_("List all allowed expected answers here. If query for an "
+                                "IP address then the answer will be host names, that end "
+                                "with a dot."),
+                     )),
                     ("expected_authority",
                      FixedValue(
                          value=True,
@@ -517,6 +559,7 @@ def _valuespec_active_checks_dns():
                          default_value=10,
                      )),
                 ]),
+                      forth=_transform_check_dns_settings),
         ])
 
 
@@ -583,29 +626,31 @@ def _valuespec_active_checks_sql():
                  help=_('The password used to connect to the database'),
                  allow_empty=False,
              )),
-            ("sql",
-             Alternative(
-                 title=_("Query or SQL statement"),
-                 elements=[
-                     TextAscii(
-                         title=_("SQL statement or procedure name"),
-                         help=
-                         _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
-                           'a result table with one row and at least two columns. The first column must be '
-                           'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
-                           'Alternatively the first column can be interpreted as number value and you can '
-                           'define levels for this number. The '
-                           'second column is used as check output. The third column is optional and can '
-                           'contain performance data.'),
-                         allow_empty=False,
-                     ),
-                     UploadOrPasteTextFile(
-                         title=_("Import Query"),
-                         file_title=_("File including Query"),
-                         default_mode="upload",
-                     ),
-                 ],
-             )),
+            (
+                "sql",
+                Transform(
+                    TextAreaUnicode(
+                        title=_("Query or SQL statement"),
+                        help=
+                        _('The SQL-statement or procedure name which is executed on the DBMS. It must return '
+                          'a result table with one row and at least two columns. The first column must be '
+                          'an integer and is interpreted as the state (0 is OK, 1 is WARN, 2 is CRIT). '
+                          'Alternatively the first column can be interpreted as number value and you can '
+                          'define levels for this number. The '
+                          'second column is used as check output. The third column is optional and can '
+                          'contain performance data.'),
+                        allow_empty=False,
+                        monospaced=True,
+                    ),
+                    # Former Alternative(Text, Alternative(FileUpload, Text)) based implementation
+                    # would save a string or a tuple with a string or a binary array as third element
+                    # which would then be turned into a string.
+                    # Just make all this a string
+                    forth=lambda old_val: [
+                        elem.decode() if isinstance(elem, bytes) else str(elem)
+                        for elem in ((old_val[-1] if isinstance(old_val, tuple) else old_val),)
+                    ][0],
+                )),
             (
                 "procedure",
                 Dictionary(
@@ -665,7 +710,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_tcp():
     return Tuple(
-        title=_("Check connecting to a TCP port"),
+        title=_("Check TCP port connection"),
         help=_("This check tests the connection to a TCP port. It uses "
                "<tt>check_tcp</tt> from the standard Nagios plugins."),
         elements=[
@@ -836,7 +881,7 @@ def _valuespec_active_checks_uniserv():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         name="active_checks:uniserv",
         valuespec=_valuespec_active_checks_uniserv,
     ))
@@ -845,14 +890,19 @@ rulespec_registry.register(
 def _ip_address_family_element():
     return (
         "address_family",
-        DropdownChoice(title=_("IP Address Family"),
+        DropdownChoice(title=_("IP address family"),
                        choices=[
-                           (None, _("Primary Address Family")),
+                           (None, _("Primary address family")),
                            ('ipv4', _("Enforce IPv4")),
                            ('ipv6', _("Enforce IPv6")),
                        ],
                        default_value=None),
     )
+
+
+def _transform_add_address_family(v):
+    v.setdefault("address_family", None)
+    return v
 
 
 def _active_checks_http_proxyspec():
@@ -873,7 +923,7 @@ def _active_checks_http_proxyspec():
 def _active_checks_http_hostspec():
     return Dictionary(
         title=_("Host settings"),
-        help=_("Usually Check_MK will nail this check to the primary IP address of the host"
+        help=_("Usually Checkmk will nail this check to the primary IP address of the host"
                " it is attached to. It will use the corresponding IP version (IPv4/IPv6) and"
                " default port (80/443). With this option you can override either of these"
                " parameters. By default no virtual host is set and HTTP/1.0 will be used."
@@ -1231,7 +1281,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_ldap():
     return Tuple(
-        title=_("Check access to LDAP service"),
+        title=_("Check LDAP service access"),
         help=_("This check uses <tt>check_ldap</tt> from the standard "
                "Nagios plugins in order to try the response of an LDAP "
                "server."),
@@ -1348,7 +1398,7 @@ def _active_checks_smtp_transform_smtp_address_family(val):
 
 def _valuespec_active_checks_smtp():
     return Tuple(
-        title=_("Check access to SMTP services"),
+        title=_("Check SMTP service access"),
         help=_("This check uses <tt>check_smtp</tt> from the standard "
                "Nagios plugins in order to try the response of an SMTP "
                "server."),
@@ -1490,7 +1540,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_disk_smb():
     return Dictionary(
-        title=_("Check access to SMB share"),
+        title=_("Check SMB share access"),
         help=_("This ruleset helps you to configure the classical Nagios "
                "plugin <tt>check_disk_smb</tt> that checks the access to "
                "filesystem shares that are exported via SMB/CIFS."),
@@ -1555,7 +1605,7 @@ rulespec_registry.register(
 
 def _valuespec_custom_checks():
     return Dictionary(
-        title=_("Classical active and passive Monitoring checks"),
+        title=_("Integrate Nagios plugins"),
         help=_("With this ruleset you can configure \"classical Monitoring checks\" "
                "to be executed directly on your monitoring server. These checks "
                "will not use Check_MK. It is also possible to configure passive "
@@ -1613,6 +1663,7 @@ def _valuespec_custom_checks():
                       DropdownChoice(
                           title=_("State in case of absent updates"),
                           choices=[
+                              (0, _("OK")),
                               (1, _("WARN")),
                               (2, _("CRIT")),
                               (3, _("UNKNOWN")),
@@ -1633,7 +1684,7 @@ def _valuespec_custom_checks():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="custom_checks",
         valuespec=_valuespec_custom_checks,
@@ -1754,7 +1805,7 @@ def _valuespec_active_checks_bi_aggr():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:bi_aggr",
         valuespec=_valuespec_active_checks_bi_aggr,
@@ -1861,7 +1912,7 @@ rulespec_registry.register(
 
 def _valuespec_active_checks_notify_count():
     return Tuple(
-        title=_("Check Number of Notifications per Contact"),
+        title=_("Check notification number per contact"),
         help=
         _("Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
           "provided with Check_MK. This plugin counts the total number of notifications sent by the local "
@@ -1894,7 +1945,7 @@ def _valuespec_active_checks_notify_count():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:notify_count",
         valuespec=_valuespec_active_checks_notify_count,
@@ -1902,50 +1953,54 @@ rulespec_registry.register(
 
 
 def _valuespec_active_checks_traceroute():
-    return Dictionary(
-        title=_("Check current routing (uses <tt>traceroute</tt>)"),
-        help=_("This active check uses <tt>traceroute</tt> in order to determine the current "
-               "routing from the monitoring host to the target host. You can specify any number "
-               "of missing or expected routes in that way detect e.g. an (unintended) failover "
-               "to a secondary route."),
-        elements=[
-            ("dns",
-             Checkbox(
-                 title=_("Name resolution"),
-                 label=_("Use DNS to convert IP addresses into hostnames"),
-                 help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
-                        "called with the option <tt>-n</tt>. That means that all IP addresses "
-                        "are tried to be converted into names. This usually adds additional "
-                        "execution time. Also DNS resolution might fail for some addresses."),
-             )),
-            _ip_address_family_element(),
-            ("routers",
-             ListOf(
-                 Tuple(elements=[
-                     TextAscii(
-                         title=_("Router (FQDN, IP-Address)"),
-                         allow_empty=False,
-                     ),
-                     DropdownChoice(title=_("How"),
-                                    choices=[
-                                        ('W', _("WARN - if this router is not being used")),
-                                        ('C', _("CRIT - if this router is not being used")),
-                                        ('w', _("WARN - if this router is being used")),
-                                        ('c', _("CRIT - if this router is being used")),
-                                    ]),
-                 ]),
-                 title=_("Router that must or must not be used"),
-                 add_label=_("Add Condition"),
-             )),
-            ("method",
-             DropdownChoice(title=_("Method of probing"),
-                            choices=[
-                                (None, _("UDP (default behaviour of tcpdump)")),
-                                ("icmp", _("ICMP Echo Request")),
-                                ("tcp", _("TCP SYN")),
-                            ])),
-        ],
-        optional_keys=False,
+    return Transform(
+        Dictionary(
+            title=_("Check current routing"),
+            help=_(
+                "This active check uses <tt>traceroute</tt> in order to determine the current "
+                "routing from the monitoring host to the target host. You can specify any number "
+                "of missing or expected routes in order to detect e.g. an (unintended) failover "
+                "to a secondary route."),
+            elements=[
+                ("dns",
+                 Checkbox(
+                     title=_("Name resolution"),
+                     label=_("Use DNS to convert IP addresses into hostnames"),
+                     help=_("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
+                            "called with the option <tt>-n</tt>. That means that all IP addresses "
+                            "are tried to be converted into names. This usually adds additional "
+                            "execution time. Also DNS resolution might fail for some addresses."),
+                 )),
+                _ip_address_family_element(),
+                ("routers",
+                 ListOf(
+                     Tuple(elements=[
+                         TextAscii(
+                             title=_("Router (FQDN, IP-Address)"),
+                             allow_empty=False,
+                         ),
+                         DropdownChoice(title=_("How"),
+                                        choices=[
+                                            ('W', _("WARN - if this router is not being used")),
+                                            ('C', _("CRIT - if this router is not being used")),
+                                            ('w', _("WARN - if this router is being used")),
+                                            ('c', _("CRIT - if this router is being used")),
+                                        ]),
+                     ]),
+                     title=_("Router that must or must not be used"),
+                     add_label=_("Add Condition"),
+                 )),
+                ("method",
+                 DropdownChoice(title=_("Method of probing"),
+                                choices=[
+                                    (None, _("UDP (default behaviour of traceroute)")),
+                                    ("icmp", _("ICMP Echo Request")),
+                                    ("tcp", _("TCP SYN")),
+                                ])),
+            ],
+            optional_keys=False,
+        ),
+        forth=_transform_add_address_family,
     )
 
 
@@ -2340,7 +2395,7 @@ def _valuespec_active_checks_by_ssh():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:by_ssh",
         valuespec=_valuespec_active_checks_by_ssh,
@@ -2456,7 +2511,7 @@ def _valuespec_active_checks_elasticsearch_query():
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupActiveChecks,
+        group=RulespecGroupIntegrateOtherServices,
         match_type="all",
         name="active_checks:elasticsearch_query",
         valuespec=_valuespec_active_checks_elasticsearch_query,

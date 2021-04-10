@@ -1,0 +1,12 @@
+Title: Agent bakery generator for sap.cfg
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1589803376
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The Agent bakery now correctly joins CCMS paths to be monitored when
+generating the sap.cfg file for the SAP R/3 Monitoring pluging.

@@ -1,0 +1,14 @@
+Title: suseconnect: replace error message with no services discovered when licensing information is not found
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1594986046
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The SUSEconnect plugin previously showed a 'Licencing Information Not Found'
+message when it was unable to find relevant licencing information on a specific
+host. We amended this plugin so that no services are shown in the discovery
+instead.

@@ -7,7 +7,10 @@
 #define TableEventConsoleStatus_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
+#include "Row.h"
 #include "TableEventConsole.h"
 class MonitoringCore;
 
@@ -16,6 +19,7 @@ public:
     explicit TableEventConsoleStatus(MonitoringCore *mc);
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
+    [[nodiscard]] Row getDefault() const override;
 };
 
 #endif  // TableEventConsoleStatus_h

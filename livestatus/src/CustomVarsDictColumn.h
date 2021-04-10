@@ -7,10 +7,12 @@
 #define CustomVarsDictColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "Column.h"
 #include "Filter.h"
 #include "MonitoringCore.h"
@@ -30,8 +32,8 @@ class RowRenderer;
 class CustomVarsDictColumn : public Column {
 public:
     CustomVarsDictColumn(std::string name, std::string description,
-                         const Column::Offsets &offsets,
-                         const MonitoringCore *mc, AttributeKind kind)
+                         const ColumnOffsets &offsets, const MonitoringCore *mc,
+                         AttributeKind kind)
         : Column(std::move(name), std::move(description), offsets)
         , _mc(mc)
         , _kind(kind) {}

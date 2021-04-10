@@ -22,7 +22,7 @@ def parse_fortigate_signatures(info):
         if match is None:
             return None, None
         # what timezone is this in?
-        t = time.strptime(match.group(2), "%Y-%m-%d %H:%S")
+        t = time.strptime(match.group(2), "%Y-%m-%d %H:%M")
         ts = time.mktime(t)
         return match.group(1), time.time() - ts
 

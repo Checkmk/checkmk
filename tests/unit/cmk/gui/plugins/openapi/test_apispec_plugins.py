@@ -3,17 +3,16 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# pylint: disable=redefined-outer-name
 
 import pytest  # type: ignore[import]
 
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load  # type: ignore[import]
+from marshmallow import Schema, fields, post_load
 
 from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
 
 
-class Movie(object):  # pylint: disable=useless-object-inheritance
+class Movie:
     def __init__(self, **kw):
         for key, value in kw.items():
             setattr(self, key, value)
@@ -63,8 +62,8 @@ class MoviesSchema(ValueTypedDictSchema):
     value_type = MovieSchema
 
 
-@pytest.fixture()
-def spec():
+@pytest.fixture(name="spec")
+def spec_fixture():
     return APISpec(title='Sensationalist Witty Title',
                    version='1.0.0',
                    openapi_version='3.0.0',
@@ -92,10 +91,10 @@ def test_apispec_plugin_value_typed_dict(spec):
 
 
 def test_apispec_load():
-    result = MoviesSchema().load(MOVIES).data
+    result = MoviesSchema().load(MOVIES)
     assert sorted(result) == sorted(EXPECTED_MOVIES)
 
 
 def test_apispec_dump():
-    result = MoviesSchema().dump(EXPECTED_MOVIES).data
+    result = MoviesSchema().dump(EXPECTED_MOVIES)
     assert result == MOVIES

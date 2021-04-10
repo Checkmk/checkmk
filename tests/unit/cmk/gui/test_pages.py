@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -15,6 +15,9 @@ import cmk.gui.pages
 def test_registered_pages():
     expected_pages = [
         'add_bookmark',
+        'ajax_figure_dashlet_data',
+        'ajax_bi_rule_preview',
+        'ajax_bi_aggregation_preview',
         'ajax_cascading_render_painer_parameters',
         'ajax_activation_state',
         'ajax_add_visual',
@@ -31,18 +34,25 @@ def test_registered_pages():
         'ajax_popup_move_to_folder',
         'ajax_reschedule',
         'ajax_search',
+        'ajax_search_monitoring',
+        'ajax_search_setup',
         'ajax_service_discovery',
+        'ajax_set_dashboard_start_url',
         'ajax_set_foldertree',
         'ajax_set_rowselection',
-        'ajax_set_viewoption',
+        'ajax_sidebar_position',
+        'ajax_sidebar_get_unack_incomp_werks',
         'ajax_start_activation',
         'ajax_switch_help',
+        'ajax_ui_theme',
         'ajax_userdb_sync',
         'ajax_visual_filter_list_get_choice',
         'ajax_vs_autocomplete',
+        'ajax_vs_unit_resolver',
         'ajax_fetch_aggregation_data',
         'ajax_save_bi_template_layout',
         'ajax_save_bi_aggregation_layout',
+        'ajax_sidebar_get_messages',
         'ajax_load_bi_template_layout',
         'ajax_load_bi_aggregation_layout',
         'ajax_delete_bi_template_layout',
@@ -50,15 +60,12 @@ def test_registered_pages():
         'ajax_fetch_topology',
         'ajax_get_all_bi_template_layouts',
         'automation_login',
-        'bi',
         'bi_map',
-        'bi_debug',
         'bi_render_tree',
         'bi_save_treestate',
         'bi_set_assumption',
         'bookmark_lists',
         'clear_failed_notifications',
-        'count_context_button',
         'create_dashboard',
         'create_view',
         'create_view_dashlet',
@@ -66,6 +73,9 @@ def test_registered_pages():
         'create_link_view_dashlet',
         'create_view_infos',
         'custom_snapins',
+        'edit_custom_snapin',
+        'pagetype_topics',
+        'edit_pagetype_topic',
         'dashboard',
         'dashboard_dashlet',
         'delete_dashlet',
@@ -73,7 +83,6 @@ def test_registered_pages():
         'download_crash_report',
         'download_diagnostics_dump',
         'edit_bookmark_list',
-        'edit_custom_snapin',
         'edit_dashboard',
         'edit_dashboards',
         'edit_dashlet',
@@ -106,7 +115,6 @@ def test_registered_pages():
         'sidebar_ajax_tag_tree',
         'sidebar_ajax_tag_tree_enter',
         'sidebar_fold',
-        'sidebar_get_messages',
         'sidebar_message_read',
         'sidebar_move_snapin',
         'sidebar_openclose',
@@ -115,7 +123,9 @@ def test_registered_pages():
         'switch_site',
         'tree_openclose',
         'user_change_pw',
+        'user_notify',
         'user_profile',
+        'user_profile_replicate',
         'version',
         'view',
         'wato',
@@ -128,10 +138,15 @@ def test_registered_pages():
         'ajax_graph',
         'ajax_graph_hover',
         'ajax_render_graph_content',
+        'ajax_initial_dashboard_filters',
+        'ajax_initial_view_filters',
+        'ajax_initial_topology_filters',
+        'noauth:ajax_graph_images',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_pages += [
+            "ajax_host_overview_tooltip",
             'ajax_metric_choice',
             'ajax_pagetype_add_element',
             'ajax_popup_add_metric_to_graph',
@@ -162,7 +177,6 @@ def test_registered_pages():
             'graph_export',
             'graph_image',
             'graph_tunings',
-            'noauth:ajax_graph_images',
             'noauth:deploy_agent',
             'register_agent',
             'report',
@@ -176,14 +190,41 @@ def test_registered_pages():
             'report_thumbnail',
             'sla_configurations',
             'sla_details',
+            'ntop_host_details',
+            'ajax_ntop_top_talkers',
+            'ajax_ntop_interface_quickstats',
+            'ajax_ntop_host_details',
+            'ajax_ntop_host_stats',
+            'ajax_ntop_host_traffic',
+            'ajax_ntop_host_ports',
+            'ajax_ntop_host_ports_painter',
+            'ajax_ntop_host_protocol_breakdown',
+            'ajax_ntop_host_top_peers_protocols',
+            'ajax_ntop_host_top_peers_protocols_painter',
+            'ajax_ntop_host_top_peers_protocols_bar',
+            'ajax_ntop_host_top_peers_protocols_pie',
+            'ajax_ntop_host_packets',
+            'ajax_ntop_host_applications',
+            'ajax_ntop_flows',
+            'ajax_ntop_engaged_alerts',
+            'ajax_ntop_past_alerts',
+            'ajax_ntop_flow_alerts',
+            'license_usage_download',
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we
     # see this page or we don't...
-    actual = sorted(p  #
-                    for p in cmk.gui.pages.page_registry.keys()
-                    if p != "switch_customer")
-    assert actual == sorted(expected_pages)
+    actual_set = set(p  #
+                     for p in cmk.gui.pages.page_registry.keys()
+                     if p != "switch_customer")
+
+    expected_set = set(expected_pages)
+    differences = actual_set.symmetric_difference(expected_set)
+    if differences:
+        sys.stdout.write("Registered pages differ\n")
+        sys.stdout.write("Expected but missing: %s\n" % ", ".join(expected_set - actual_set))
+        sys.stdout.write("Unknown new pages: %s\n" % ", ".join(actual_set - expected_set))
+    assert len(differences) == 0
 
 
 def test_pages_register(monkeypatch, capsys):
@@ -203,7 +244,7 @@ def test_pages_register(monkeypatch, capsys):
 def test_pages_register_handler(monkeypatch, capsys):
     monkeypatch.setattr(cmk.gui.pages, "page_registry", cmk.gui.pages.PageRegistry())
 
-    class PageClass(object):  # pylint: disable=bad-option-value,useless-object-inheritance
+    class PageClass:
         def handle_page(self):
             sys.stdout.write("234")
 

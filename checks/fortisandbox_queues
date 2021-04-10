@@ -25,8 +25,8 @@ def parse_fortisandbox_queues(info):
         'Executable', 'PDF', 'Office', 'Flash', 'Web', 'Android', 'MAC', 'URL job', 'User defined',
         'Non Sandboxing', 'Job Queue Assignment'
     ]
-    parsed = dict(zip(queues, map(int, info[0])))
-    return parsed
+
+    return {k: int(v) for k, v in zip(queues, info[0])}
 
 
 def inventory_fortisandbox_queues(parsed):

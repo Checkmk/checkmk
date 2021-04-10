@@ -1,0 +1,14 @@
+Title: f5_bigip_vserver: Fixed scaling of connections duration min/max/mean
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1592208987
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The values connections duration min/max/mean are measured in milli seconds
+thus we have to multiple them by the factor 0.001 in order to get canonical
+values for our metric system.

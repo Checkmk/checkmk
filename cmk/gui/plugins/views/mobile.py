@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -31,13 +31,13 @@ def mobile_view(d):
     x = {
         'mobile': True,
         'browser_reload': 0,
-        'column_headers': 'perpage',
+        'column_headers': 'pergroup',
         'description': 'This view is used by the mobile GUI',
         'hidden': False,
         'hidebutton': False,
         'icon': None,
         'public': True,
-        'topic': _('Mobile'),
+        'topic': 'overview',
         'user_sortable': False,
         'play_sounds': False,
         'show_checkboxes': False,
@@ -110,7 +110,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('Search'),
-        'topic': _('Services')
+        'topic': 'overview',
     }),
 
     # View of all current service problems
@@ -154,7 +154,7 @@ multisite_builtin_views.update({
             ('svcdescr', False),
         ],
         'title': _('Problems (all)'),
-        'topic': _('Services'),
+        'topic': 'problems',
     }),
 
     # View of unhandled service problems
@@ -203,9 +203,8 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'linktitle': _('Problems (unhandled)'),
         'title': _('Problems (unhandled)'),
-        'topic': _('Services'),
+        'topic': 'problems',
     }),
 
     # Service details
@@ -216,7 +215,6 @@ multisite_builtin_views.update({
         'hard_filtervars': [],
         'hide_filters': ['site', 'service', 'host'],
         'layout': 'mobiledataset',
-        'linktitle': 'Details',
         'name': 'mobile_service',
         'num_columns': 1,
         'hidden': True,
@@ -277,7 +275,6 @@ multisite_builtin_views.update({
         ],
         'show_filters': ['svcstate', 'serviceregex'],
         'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
-        'linktitle': _('Services of this host'),
         'title': _('Services of host'),
     }),
 
@@ -345,7 +342,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Host search',
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
@@ -360,7 +356,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Search'),
-        'topic': _('Hosts'),
+        'topic': 'overview',
     }),
 
     #List all host problems
@@ -399,7 +395,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Problems (all)'),
-        'topic': _('Hosts')
+        'topic': 'problems'
     }),
 
     #List unhandled host problems
@@ -437,7 +433,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [],
         'title': _('Problems (unhandled)'),
-        'topic': _('Hosts')
+        'topic': 'problems'
     }),
 
     # All Nagios Events at all
@@ -451,7 +447,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Events',
         'mustsearch': False,
         'name': 'mobile_events',
         'num_columns': 1,
@@ -466,7 +461,7 @@ multisite_builtin_views.update({
         'show_filters': [],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': 'Events',
-        'topic': _('Events')
+        'topic': 'history'
     }),
 
     # All Notifications at all
@@ -489,9 +484,8 @@ multisite_builtin_views.update({
             ('logtime_from', '24'),
         ],
         'hide_filters': [],
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'mobile_notifications',
         'num_columns': 2,
@@ -500,7 +494,7 @@ multisite_builtin_views.update({
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('log_plugin_output', None, ''),
         ],
@@ -513,7 +507,7 @@ multisite_builtin_views.update({
         ],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications'),
-        'topic': _('Events')
+        'topic': 'history'
     }),
 
     # All events of a Host
@@ -530,7 +524,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc history'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -561,7 +554,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host', 'service'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('History'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -598,9 +590,8 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['log_contact_name'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Contact notification'),
         'name': 'mobile_contactnotifications',
         'num_columns': 2,
         'painters': [
@@ -615,7 +606,7 @@ multisite_builtin_views.update({
         'show_filters': ['host', 'serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of contact'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of Host
@@ -639,14 +630,13 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['site', 'host'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc notifications'),
         'name': 'hostsvcnotifications',
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
@@ -656,7 +646,7 @@ multisite_builtin_views.update({
         'show_filters': ['serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of host & services'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of a service
@@ -679,14 +669,13 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['site', 'service', 'host'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'name': 'mobile_svcnotifications',
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('host', None, ''),
             ('log_state', None, ''),
             ('log_plugin_output', None, ''),
@@ -696,7 +685,7 @@ multisite_builtin_views.update({
         'show_filters': ['log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Service Notifications'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 })
 
@@ -766,10 +755,6 @@ class LayoutMobileTable(Layout):
     def can_display_checkboxes(self):
         return False
 
-    @property
-    def is_hidden(self):
-        return False
-
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         # TODO: Move to class
         render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes)
@@ -831,10 +816,6 @@ class LayoutMobileList(Layout):
     def can_display_checkboxes(self):
         return False
 
-    @property
-    def is_hidden(self):
-        return False
-
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         # TODO: Move to class
         render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes)
@@ -883,10 +864,6 @@ class LayoutMobileDataset(Layout):
 
     @property
     def can_display_checkboxes(self):
-        return False
-
-    @property
-    def is_hidden(self):
         return False
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):

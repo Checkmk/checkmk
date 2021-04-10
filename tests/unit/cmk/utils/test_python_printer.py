@@ -1,17 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import List  # pylint: disable=unused-import
+from typing import List
 import pytest  # type: ignore[import]
 from cmk.utils.python_printer import pformat
 
 
 def test_same_as_repr():
-    objs = [
+    objs: List[object] = [
         None,
         True,
         False,
@@ -32,7 +32,7 @@ def test_same_as_repr():
         {
             (11,): (33, 44, 22),
         },
-    ]  # type: List[object]
+    ]
     for obj in objs:
         assert pformat(obj) == repr(obj)
 

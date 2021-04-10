@@ -17,7 +17,7 @@ description:
  since meaningful values depend on the type of interface.
 
  The service goes {WARN} if no laser power information can be found.
- The service goes {WARN}/{CRIT} of the value is within the limits.
+ The service goes {CRIT} if the value is outside the user-defined limits.
 
  Service interfaces (item name beginning with "S") do not have laser power
  information, so that non-existent laser power information is ignored for these
@@ -27,15 +27,10 @@ description:
  The check uses the FspR7-MIB for laser parameters
  ({currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}).
 
-
 item:
- There are three allowed ways to specify an interface: {1}: the last component
- of the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias}
- of the port. If you are using the alias, you have to make sure that it is
- unique by configuring useful aliases in the switch. Checkmk does not check
- for uniqueness.
- The default is to use the {ifDescr}.
+ Either the interface description {ifDescr} if it is non-empty or otherwise
+ the interface index {ifIndex}.
 
 inventory:
- One service is created for each interface that fulfills configurable conditions (porttype and portstate).
-
+ One service is created for each interface whose administrative state is "up"
+ and whose type is 1, 6 or 56.

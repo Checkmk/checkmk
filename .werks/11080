@@ -1,0 +1,37 @@
+Title: Port Checkmk to Python 3
+Class: feature
+Compatible: incomp
+Component: core
+Date: 1590489182
+Edition: cre
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+Most of Checkmk is written in Python. We have been developing on Python 2 for
+over 10 years now and are now taking the big step of porting Checkmk to Python
+3 with Checkmk 1.7.
+
+This is a very big change in the software which has cost us a lot of time. But
+this step is necessary to continue to develop Checkmk efficiently and safely.
+
+In the past, Python 2.7 with all necessary 3rd party modules have been shipped
+in Checkmk for a long time. This Python 2.7 will no longer be shipped with
+Checkmk 1.7. Instead we now ship Python 3.8 with all necessary 3rd party
+modules.
+
+This is especially important if you use your own plugins or scripts. You have
+to consider the following things.
+
+If you have a script that is called directly from a cronjob or the core, e.g. a
+notification script, you have often used the shebang "#!/usr/bin/env python" in
+the past. By doing so, you have used the Python 2.7 that we shipped. Since this
+no longer exists, "python" of the operating system is used without further
+adaptation. This can be a Python 2.7, it depends on your system.
+
+We recommend changing the shebang to "#!/usr/bin/env python3". This will allow
+you to use the Python that comes with Checkmk again.
+
+After you have done this, you may need to adjust some things in your scripts to
+change your code from Python 2 to 3. We will publish more information about the
+conversion of plugins and scripts soon.

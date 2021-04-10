@@ -1,0 +1,26 @@
+title: AVM Fritz!Box: WAN Network Interface
+agents: fritzbox
+catalog: hw/network/avm
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the operational status, link speed and traffic of a
+ Fritz!Box WAN interface. The check is fully compatible with {if64}, please see
+ the corresponding manpage for details.
+
+ The check uses data provided by the fritzbox special agent. You need to
+ configure this agent to be used for the Fritz!Box you would like to monitor.
+ The special agent uses uPnP to get the needed information from the device.
+
+item:
+ There are three allowed ways to specify an interface: its index, its description and
+ its alias. For this check, the index is always 0 and the description and the alias
+ are always 'WAN'.
+
+inventory:
+ In general, the discovery of network interfaces can be configured using the rule
+ "Network interface and switch port discovery". By default, only interfaces which are
+ currently found {up} and are of type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205
+ or 229 are discovered. The single WAN interface discovered by this check is always of
+ type 6. However, by default, if the WAN interface is currently down or if its status
+ is not known, it will not be discovered.

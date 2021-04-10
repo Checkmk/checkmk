@@ -1,0 +1,21 @@
+Title: Fixed hostgroup columns related to hard states of services.
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1594637362
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Various columns of the "hostgroups" table always returned zero:
+
+<ul>
+<li>num_services_hard_ok</li>
+<li>num_services_hard_warn</li>
+<li>num_services_hard_crit</li>
+<li>num_services_hard_unknown</li>
+<li>worst_service_hard_state</li>
+</ul>
+
+This has been fixed, they return the expected values now.

@@ -6,7 +6,7 @@ Date: 1579077833
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The output of these check plugins is now formatted in a clearer way, in line with other memory checks.
 For instance: Output previously formatted as

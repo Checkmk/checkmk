@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import operator
-from cmk.base.plugins.agent_based.agent_based_api.v0 import register, SNMPTree
-from cmk.base.plugins.agent_based.utils import ucd_hr_detection
+
+from .agent_based_api.v1 import register, SNMPTree
+from .utils import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
 # .1.3.6.1.4.1.2021.4.3.0 8388604   --> UCD-SNMP-MIB::MemTotalSwap.0
@@ -78,7 +79,7 @@ def parse_ucd_mem(string_table):
 register.snmp_section(
     name="ucd_mem",
     parse_function=parse_ucd_mem,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2021.4",
             oids=[

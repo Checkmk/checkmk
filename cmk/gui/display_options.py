@@ -1,10 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-from cmk.gui.globals import html
 
 #.
 #   .--Display Opts.-------------------------------------------------------.
@@ -22,7 +20,7 @@ from cmk.gui.globals import html
 #   '----------------------------------------------------------------------'
 
 
-class DisplayOptions(object):
+class DisplayOptions:
     H = "H"  # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
     T = "T"  # The title line showing the header and the logged in user
     B = "B"  # The blue context buttons that link to other views
@@ -61,12 +59,12 @@ class DisplayOptions(object):
         self.options = self.all_off()
         self.title_options = None
 
-    def load_from_html(self):
+    def load_from_html(self, html):
         # Parse display options and
         if html.output_format == "html":
             options = html.request.var("display_options", "")
         else:
-            options = display_options.all_off()
+            options = self.all_off()
 
         # Remember the display options in the object for later linking etc.
         self.options = self._merge_with_defaults(options)
@@ -80,11 +78,10 @@ class DisplayOptions(object):
         if html.request.has_var('_display_options'):
             self.options = self._merge_with_defaults(html.request.var("_display_options", ""))
 
-        # But there is one special case: The sorter links! These links need to know
-        # about the provided display_option parameter. The links could use
-        # "display_options.options" but this contains the implicit options which should
-        # not be added to the URLs. So the real parameters need to be preserved for
-        # this case.
+        # But there is one special case: Links to other views (sorter header links, painter column
+        # links). These links need to know about the provided display_option parameter. The links
+        # could use "display_options.options" but this contains the implicit options which should
+        # not be added to the URLs. So the real parameters need to be preserved for this case.
         self.title_options = html.request.var("display_options")
 
         # If display option 'M' is set, then all links are targetet to the 'main'
@@ -109,6 +106,3 @@ class DisplayOptions(object):
 
     def disabled(self, opt):
         return opt not in self.options
-
-
-display_options = DisplayOptions()

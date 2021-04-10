@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any  # pylint: disable=unused-import
+from typing import Dict, Any
 
 import cmk.utils.render
 from cmk.gui.i18n import _
@@ -282,6 +282,18 @@ metric_info["connections"] = {
     "color": "#a080b0",
 }
 
+metric_info["idle_connections"] = {
+    "title": _("Idle connections"),
+    "unit": "count",
+    "color": "#a080f0",
+}
+
+metric_info["active_connections"] = {
+    "title": _("Active connections"),
+    "unit": "count",
+    "color": "#a020c0",
+}
+
 metric_info["connections_ssl"] = {
     "title": _("SSL connections"),
     "unit": "count",
@@ -331,7 +343,7 @@ metric_info["connections_duration_max"] = {
 }
 
 metric_info["connections_duration_mean"] = {
-    "title": _("Connections duration max"),
+    "title": _("Connections duration mean"),
     "unit": "s",
     "color": "25/a"
 }
@@ -406,6 +418,12 @@ metric_info["active_sessions"] = {
     "title": _("Active sessions"),
     "unit": "count",
     "color": "11/a",
+}
+
+metric_info["active_sessions_peak"] = {
+    "title": _("Peak value of active sessions"),
+    "unit": "count",
+    "color": "#000000",
 }
 
 metric_info["inactive_sessions"] = {
@@ -793,6 +811,43 @@ metric_info["ap_devices_not_responding"] = {
     "title": _("Not responding devices"),
     "unit": "count",
     "color": "14/a"
+}
+
+for ctype, ccolor in (
+    ("critical", "14/a"),
+    ("minor", "23/b"),
+    ("cleared", "32/b"),
+):
+    metric_info["ap_devices_" + ctype] = {
+        "title": ctype.title(),
+        "unit": "count",
+        "color": ccolor,
+    }
+
+for ctype, ccolor in (
+    ("dot11a", "21/a"),
+    ("dot11b", "21/b"),
+    ("dot11g", "33/a"),
+    ("dot11ac", "34/b"),
+    ("dot11n2_4", "45/a"),
+    ("dot11n5", "46/b"),
+):
+    metric_info["wifi_connection_" + ctype] = {
+        "title": "802." + ctype,
+        "unit": "count",
+        "color": ccolor,
+    }
+
+metric_info["wifi_connection_total"] = {
+    "title": "Total connections",
+    "unit": "count",
+    "color": "35/a",
+}
+
+metric_info["ap_devices_percent_unhealthy"] = {
+    "title": "Percentage of unhealthy access points",
+    "unit": "%",
+    "color": "33/a"
 }
 
 metric_info["request_rate"] = {
@@ -1304,10 +1359,22 @@ metric_info["connections_max"] = {
     "color": "51/b",
 }
 
+metric_info["connections_conn_threads"] = {
+    "title": _("Currently open connections"),
+    "unit": "count",
+    "color": "31/c",
+}
+
+metric_info["connections_perc_conn_threads"] = {
+    "title": _("Open connections load"),
+    "unit": "%",
+    "color": "31/c",
+}
+
 metric_info["connections_perc_used"] = {
     "title": _("Parallel connections load"),
     "unit": "%",
-    "color": "21/a",
+    "color": "42/a",
 }
 
 metric_info['op_s'] = {
@@ -1390,47 +1457,23 @@ metric_info['write_avg_exe_ms'] = {
     'color': '#90ee90',
 }
 
-metric_info['get_requests'] = {
-    'title': _('GET Requests'),
-    'unit': '1/s',
-    'color': '11/a',
-}
 
-metric_info['put_requests'] = {
-    'title': _('PUT Requests'),
-    'unit': '1/s',
-    'color': '13/a',
-}
+def register_requests_metrics():
+    for request, color in zip(['get', 'put', 'delete', 'head', 'post', 'select', 'list'],
+                              ['11/a', '13/a', '15/a', '21/a', '23/a', '25/a', '31/a']):
+        metric_info['%s_requests' % request] = {
+            'title': _('%s Requests' % request.upper()),
+            'unit': '1/s',
+            'color': color,
+        }
+        metric_info['%s_requests_perc' % request] = {
+            'title': _('Percentage %s Requests' % request.upper()),
+            'unit': '%',
+            'color': color,
+        }
 
-metric_info['delete_requests'] = {
-    'title': _('DELETE Requests'),
-    'unit': '1/s',
-    'color': '15/a',
-}
 
-metric_info['head_requests'] = {
-    'title': _('HEAD Requests'),
-    'unit': '1/s',
-    'color': '21/a',
-}
-
-metric_info['post_requests'] = {
-    'title': _('POST Requests'),
-    'unit': '1/s',
-    'color': '23/a',
-}
-
-metric_info['select_requests'] = {
-    'title': _('SELECT Requests'),
-    'unit': '1/s',
-    'color': '25/a',
-}
-
-metric_info['list_requests'] = {
-    'title': _('LIST Requests'),
-    'unit': '1/s',
-    'color': '31/a',
-}
+register_requests_metrics()
 
 metric_info['channels'] = {
     "title": _("Channels"),
@@ -1476,6 +1519,24 @@ metric_info['packets_dropped'] = {
 
 metric_info['packets_rejected'] = {
     "title": _("Packets rejected"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["fortiauthenticator_fails_5min"] = {
+    "title": _("Authentication failures (last 5 minutes)"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["fortigate_detection_rate"] = {
+    "title": _("Detection rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["fortigate_blocking_rate"] = {
+    "title": _("Blocking rate"),
     "unit": "1/s",
     "color": "42/a",
 }
@@ -1526,6 +1587,36 @@ graph_info["bandwidth"] = {
         ("if_in_bps:crit", _("Critical (In)")),
         ("if_out_bps:warn,-1,*", _("Warning (Out)")),
         ("if_out_bps:crit,-1,*", _("Critical (Out)")),
+    ],
+}
+
+graph_info["if_errors"] = {
+    "title": _("Errors"),
+    "metrics": [
+        ("if_in_errors", "area"),
+        ("if_in_discards", "stack"),
+        ("if_out_errors", "-area"),
+        ("if_out_discards", "-stack"),
+    ],
+}
+
+graph_info["bm_packets"] = {
+    "title": _("Broad-/Multicast"),
+    "metrics": [
+        ("if_in_mcast", "line"),
+        ("if_in_bcast", "line"),
+        ("if_out_mcast", "-line"),
+        ("if_out_bcast", "-line"),
+    ],
+}
+
+graph_info["packets_1"] = {
+    "title": _("Packets"),
+    "metrics": [
+        ("if_in_unicast", "line"),
+        ("if_in_non_unicast", "line"),
+        ("if_out_unicast", "-line"),
+        ("if_out_non_unicast", "-line"),
     ],
 }
 
@@ -1667,6 +1758,15 @@ graph_info["tcp_connection_states"] = {
     "optional_metrics": ["tcp_bound", "tcp_idle"]
 }
 
+graph_info["db_connections"] = {
+    "title": _("DB Connections"),
+    "metrics": [("active_connections", "area"), ("idle_connections", "area")],
+    "scalars": [
+        ("active_connections:warn", _('Warning (active connections)')),
+        ("active_connections:crit", _('Critical (active connections)')),
+    ],
+}
+
 graph_info["cluster_hosts"] = {
     "title": _("Hosts"),
     "metrics": [
@@ -1703,6 +1803,17 @@ graph_info["access_point_statistics"] = {
         ("ap_devices_drifted", "area"),
         ("ap_devices_not_responding", "stack"),
     ]
+}
+
+graph_info["access_point_statistics2"] = {
+    "title": _("Access point statistics"),
+    "metrics": [("ap_devices_" + ctype, "stack") for ctype in ("cleared", "minor", "critical")]
+}
+
+graph_info["wifi_connections"] = {
+    "title": _("WiFi connection types"),
+    "metrics": [("wifi_connection_dot%s" % ctype, "stack")
+                for ctype in ("11a", "11b", "11g", "11ac", "11n2_4", "11n5")]
 }
 
 graph_info["round_trip_average"] = {
@@ -1749,11 +1860,11 @@ register_hop_graphs()
 
 
 def register_hop_response_graph():
-    new_graph = {
+    new_graph: Dict[str, Any] = {
         "title": _("Hop response times"),
         "metrics": [],
         "optional_metrics": [],
-    }  # type: Dict[str, Any]
+    }
     for idx in range(1, MAX_NUMBER_HOPS):
         color = indexed_color(idx, MAX_NUMBER_HOPS)
         new_graph["metrics"].append(
@@ -1883,6 +1994,7 @@ graph_info['DB_connections'] = {
     'title': _('Parallel connections'),
     'metrics': [
         ('connections_max_used', 'area'),
+        ('connections_conn_threads', 'area'),
         ('connections_max', 'line'),
     ],
 }
@@ -1914,6 +2026,7 @@ graph_info["nodes_by_type"] = {
     ],
 }
 graph_info["channel_utilization_24ghz"] = {
+    "title": _("Channel utilization for 2,4GHz Band"),
     "metrics": [("channel_utilization_24ghz", "area"),],
     "scalars": [
         "channel_utilization_24ghz:warn",
@@ -1923,10 +2036,24 @@ graph_info["channel_utilization_24ghz"] = {
 }
 
 graph_info["channel_utilization_5ghz"] = {
+    "title": _("Channel utilization for 5GHz Band"),
     "metrics": [("channel_utilization_5ghz", "area"),],
     "scalars": [
         "channel_utilization_5ghz:warn",
         "channel_utilization_5ghz:crit",
     ],
     "range": (0, 100),
+}
+
+graph_info["active_sessions_with_peak_value"] = {
+    "title": _("Active sessions"),
+    "metrics": [
+        ("active_sessions", "area"),
+        ("active_sessions_peak", "line"),
+    ],
+    "range": (0, "active_sessions_peak:max"),
+    "scalars": [
+        "active_sessions:warn",
+        "active_sessions:crit",
+    ],
 }

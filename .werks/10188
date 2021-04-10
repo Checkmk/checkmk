@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously Windows Agent used only the file timestamp to determine whether 
 the file have to be reinstalled. 

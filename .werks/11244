@@ -1,0 +1,26 @@
+Title: Check_MK Discovery service: Contact SNMP devices for real if 'Perform a full SNMP scan' is enabled
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1598098991
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+There are two options {{Perform a full SNMP scan always, detect new check types}}
+and {{Just rely on existing check files, detect new items only}} especially for
+SNMP devices in the ruleset {{Periodic service discovery}}. The idea behind the
+first option is contacting SNMP devices for real and possibly find new check
+types. This option had no effect since Checkmk version 1.5.0 and cached data
+was always used. The result was that the {{Check_MK Discovery}} service might
+not have found new check typs on SNMP devices.
+
+Now if this option is set Checkmk really contacts SNMP devices and may find new
+check types and services.
+
+Please note: The execution time of the {{Check_MK Discovery}} service may take
+more time as before on hosts with SNMP data sources. In this case you can
+increase the regular and retry check interval of this service using the ruleset
+{{Normal check interval for service checks}} and {{Retry check interval for service checks}}
+in order to prevent timeouts.

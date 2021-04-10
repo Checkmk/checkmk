@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,13 +6,34 @@
 
 import operator
 import functools
+from typing import List, Literal, Optional
+from itertools import chain
 
-import cmk.utils.version as cmk_version
 from cmk.utils.prediction import TimeSeries
+import cmk.utils.version as cmk_version
 import cmk.gui.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import stats
+from cmk.gui.plugins.metrics.utils import (
+    fade_color,
+    parse_color,
+    render_color,
+)
+
+if cmk_version.is_raw_edition():
+
+    def evaluate_timeseries_transformation(transform, conf, operands_evaluated):
+        raise MKGeneralException(
+            _("Metric transformations and combinations like Forecasts calculations, "
+              "aggregations and filtering are only available with the "
+              "Checkmk Enterprise Editions"))
+
+    def resolve_combined_single_metric_spec(expression):
+        return evaluate_timeseries_transformation(None, None, None)
+else:
+    # Suppression is needed to silence pylint in CRE environment
+    from cmk.gui.cee.plugins.metrics.timeseries import evaluate_timeseries_transformation  # type: ignore[no-redef] # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # type: ignore[no-redef] # pylint: disable=no-name-in-module
 
 #.
 #   .--Curves--------------------------------------------------------------.
@@ -31,78 +52,98 @@ def compute_graph_curves(metrics, rrd_data):
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
-        if expression[0] == "transformation" and expression[1][0] == "forecast":
-            curves.extend(multiline_curves(metric_definition, rrd_data))
-        else:
+        time_series = evaluate_time_series_expression(expression, rrd_data)
+        if not time_series:
+            continue
+
+        multi = len(time_series) > 1
+        mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
+        for i, ts in enumerate(time_series):
+            title = metric_definition["title"]
+            if ts.metadata.get('title') and multi:
+                title += " - " + ts.metadata['title']
+
+            color = metric_definition.get("color", ts.metadata.get('color', "#000000"))
+            if i % 2 == 1 and not (expression[0] == "transformation" and
+                                   expression[1][0] == "forecast"):
+                color = render_color(fade_color(parse_color(color), 0.3))
 
             curves.append({
-                "line_type": metric_definition["line_type"],
-                "color": metric_definition["color"],
-                "title": metric_definition["title"],
-                "rrddata": evaluate_time_series_expression(expression, rrd_data),
+                "line_type": mirror_prefix + ts.metadata.get('line_type', "")
+                             if multi else metric_definition["line_type"],
+                "color": color,
+                'title': title,
+                'rrddata': ts
             })
+
     return curves
 
 
-def multiline_curves(metric_definition, rrd_data):
-    "For the moment only works on forecast"
-    time_series = evaluate_time_series_expression(metric_definition["expression"], rrd_data)
-    for line, color, title, ts in time_series:
-        yield {
-            "line_type": line,
-            'color': color,
-            'title': "%s - %s" % (metric_definition["title"], title),
-            'rrddata': ts
-        }
-
-
-def evaluate_time_series_expression(expression, rrd_data):
+def evaluate_time_series_expression(expression, rrd_data) -> List[TimeSeries]:
     if rrd_data:
-        num_points = len(list(rrd_data.values())[0])
+        sample_data = next(iter(rrd_data.values()))
+        num_points = len(sample_data)
+        twindow = sample_data.twindow
     else:
+        # no data, default clean graph, use for pure scalars on custom graphs
         num_points = 1
+        twindow = (0, 60, 60)
 
     if expression[0] == "operator":
         operator_id, operands = expression[1:]
-        operands_evaluated = [evaluate_time_series_expression(a, rrd_data) for a in operands]
-        return time_series_math(operator_id, operands_evaluated)
+        operands_evaluated = list(
+            chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands))
+        if result := time_series_math(operator_id, operands_evaluated):
+            return [result]
+        return []
 
     if expression[0] == "transformation":
         (transform, conf), operands = expression[1:]
         operands_evaluated = evaluate_time_series_expression(operands[0], rrd_data)
-        if transform == 'percentile':
-            return time_series_operator_perc(operands_evaluated, conf)
-        if transform == 'forecast':
-            if cmk_version.is_raw_edition():
-                raise MKGeneralException(
-                    _("Forecast calculations are only available with the "
-                      "Checkmk Enterprise Editions"))
-            # Suppression is needed to silence pylint in CRE environment
-            from cmk.gui.cee.plugins.metrics.forecasts import time_series_transform_forecast  # pylint: disable=no-name-in-module
-            return time_series_transform_forecast(
-                TimeSeries(operands_evaluated, rrd_data['__range']), conf)
+        return evaluate_timeseries_transformation(transform, conf, operands_evaluated)
 
     if expression[0] == "rrd":
         key = tuple(expression[1:])
         if key in rrd_data:
-            return rrd_data[key]
-        return [None] * num_points
+            return [rrd_data[key]]
+        return [TimeSeries([None] * num_points, twindow)]
 
     if expression[0] == "constant":
-        return [expression[1]] * num_points
+        return [TimeSeries([expression[1]] * num_points, twindow)]
+
+    if expression[0] == "combined":
+        metrics = resolve_combined_single_metric_spec(expression[1])
+        curves = []
+        for m in metrics:
+            for curve in evaluate_time_series_expression(m['expression'], rrd_data):
+                curve.metadata = {k: m[k] for k in m if k in ['line_type', 'title']}
+                curves.append(curve)
+
+        return curves
 
     raise NotImplementedError()
 
 
-def time_series_math(operator_id, operands_evaluated):
+def time_series_math(operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
+                     operands_evaluated: List[TimeSeries]) -> Optional[TimeSeries]:
     operators = time_series_operators()
     if operator_id not in operators:
         raise MKGeneralException(
             _("Undefined operator '%s' in graph expression") %
             escaping.escape_attribute(operator_id))
-    _op_title, op_func = operators[operator_id]
+    # Test for correct arity on FOUND[evaluated] data
+    if any((
+            operator_id in ["-", "/"] and len(operands_evaluated) != 2,
+            len(operands_evaluated) < 1,
+    )):
+        #raise MKGeneralException(_("Incorrect amount of data to correctly evaluate expression"))
+        # Silently return so to get an empty graph slot
+        return None
 
-    return [op_func_wrapper(op_func, tsp) for tsp in zip(*operands_evaluated)]
+    _op_title, op_func = operators[operator_id]
+    twindow = operands_evaluated[0].twindow
+
+    return TimeSeries([op_func_wrapper(op_func, tsp) for tsp in zip(*operands_evaluated)], twindow)
 
 
 def op_func_wrapper(op_func, tsp):
@@ -136,7 +177,7 @@ def time_series_operator_difference(tsp):
 
 
 def time_series_operator_fraction(tsp):
-    if None in tsp:
+    if None in tsp or tsp[1] == 0:
         return None
     return tsp[0] / tsp[1]
 
@@ -152,13 +193,6 @@ def time_series_operator_minimum(tsp):
 def time_series_operator_average(tsp):
     tsp = clean_time_series_point(tsp)
     return sum(tsp) / len(tsp)
-
-
-def time_series_operator_perc(tsp, percentile):
-    points = len(tsp)
-    tsp = clean_time_series_point(tsp)
-    perc = stats.percentile(tsp, percentile) if tsp else None
-    return [perc] * points
 
 
 def time_series_operators():

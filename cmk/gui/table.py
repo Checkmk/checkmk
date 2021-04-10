@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,28 +7,47 @@
 from contextlib import contextmanager
 import re
 import json
-from typing import NamedTuple, Union, cast, Dict, Tuple, List, Optional, Text, Any, Iterator  # pylint: disable=unused-import
-import six
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Tuple,
+    Union,
+    TYPE_CHECKING,
+    cast,
+)
 
+from six import ensure_str
+
+from cmk.gui.utils.html import HTML
 import cmk.gui.utils as utils
 import cmk.gui.config as config
 import cmk.gui.escaping as escaping
+import cmk.gui.weblib as weblib
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import CSSSpec, HTML, HTMLContent, HTMLTagAttributes  # pylint: disable=unused-import
+from cmk.gui.globals import html, request
+from cmk.gui.utils.urls import makeuri
+
+if TYPE_CHECKING:
+    from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
+    from cmk.gui.type_defs import CSSSpec
 
 TableHeader = NamedTuple(
     "TableHeader",
     [
-        ("title", Union[int, HTML, str, Text]),  # basically HTMLContent without None
-        ("css", CSSSpec),
-        ("help_txt", Optional[Text]),
+        ("title", Union[int, HTML, str]),  # basically HTMLContent without None
+        ("css", 'CSSSpec'),
+        ("help_txt", Optional[str]),
         ("sortable", bool),
     ])
 
 CellSpec = NamedTuple("CellSpec", [
-    ("content", Text),
-    ("css", CSSSpec),
+    ("content", str),
+    ("css", 'CSSSpec'),
     ("colspan", Optional[int]),
 ])
 
@@ -37,13 +56,13 @@ TableRow = NamedTuple("TableRow", [
     ("css", Optional[str]),
     ("state", int),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 GroupHeader = NamedTuple("GroupHeader", [
-    ("title", Text),
+    ("title", str),
     ("fixed", bool),
-    ("row_attributes", HTMLTagAttributes),
+    ("row_attributes", 'HTMLTagAttributes'),
 ])
 
 TableRows = List[Union[TableRow, GroupHeader]]
@@ -51,21 +70,21 @@ TableRows = List[Union[TableRow, GroupHeader]]
 
 @contextmanager
 def table_element(
-        table_id=None,  # type: Optional[str]
-        title=None,  # type: HTMLContent
-        searchable=True,  # type: bool
-        sortable=True,  # type: bool
-        foldable=False,  # type: bool
-        limit=None,  # type: Optional[int]
-        output_format="html",  # type: str
-        omit_if_empty=False,  # type: bool
-        omit_empty_columns=False,  # type: bool
-        omit_headers=False,  # type: bool
-        empty_text=None,  # type: Optional[Text]
-        help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
-        css=None,  # type: Optional[str]
-):
-    # type: (...) -> Iterator[Table]
+    table_id: Optional[str] = None,
+    title: 'HTMLContent' = None,
+    searchable: bool = True,
+    sortable: bool = True,
+    foldable: bool = False,
+    limit: Union[None, int, Literal[False]] = None,
+    output_format: str = "html",
+    omit_if_empty: bool = False,
+    omit_empty_columns: bool = False,
+    omit_headers: bool = False,
+    omit_update_header: bool = False,
+    empty_text: Optional[str] = None,
+    help: Optional[str] = None,  # pylint: disable=redefined-builtin
+    css: Optional[str] = None,
+) -> Iterator['Table']:
     with html.plugged():
         table = Table(table_id=table_id,
                       title=title,
@@ -77,6 +96,7 @@ def table_element(
                       omit_if_empty=omit_if_empty,
                       omit_empty_columns=omit_empty_columns,
                       omit_headers=omit_headers,
+                      omit_update_header=omit_update_header,
                       empty_text=empty_text,
                       help=help,
                       css=css)
@@ -106,26 +126,27 @@ def table_element(
 #   '----------------------------------------------------------------------'
 
 
-class Table(object):
+class Table:
     def __init__(
-            self,
-            table_id=None,  # type: Optional[str]
-            title=None,  # type: HTMLContent
-            searchable=True,  # type: bool
-            sortable=True,  # type: bool
-            foldable=False,  # type: bool
-            limit=None,  # type: Optional[int]
-            output_format="html",  # type: str
-            omit_if_empty=False,  # type: bool
-            omit_empty_columns=False,  # type: bool
-            omit_headers=False,  # type: bool
-            empty_text=None,  # type: Optional[Text]
-            help=None,  # type: Optional[Text] # pylint: disable=redefined-builtin
-            css=None,  # type: Optional[str]
+        self,
+        table_id: Optional[str] = None,
+        title: 'HTMLContent' = None,
+        searchable: bool = True,
+        sortable: bool = True,
+        foldable: bool = False,
+        limit: Union[None, int, Literal[False]] = None,
+        output_format: str = "html",
+        omit_if_empty: bool = False,
+        omit_empty_columns: bool = False,
+        omit_headers: bool = False,
+        omit_update_header: bool = False,
+        empty_text: Optional[str] = None,
+        help: Optional[str] = None,  # pylint: disable=redefined-builtin
+        css: Optional[str] = None,
     ):
         super(Table, self).__init__()
         self.next_func = lambda: None
-        self.next_header = None  # type: Optional[Text]
+        self.next_header: Optional[str] = None
 
         # Use our pagename as table id if none is specified
         table_id = table_id if table_id is not None else html.myfile
@@ -139,14 +160,17 @@ class Table(object):
 
         self.id = table_id
         self.title = title
-        self.rows = []  # type: TableRows
+        self.rows: TableRows = []
         self.limit = limit
-        self.headers = []  # type: List[TableHeader]
+        self.limit_reached = False
+        self.limit_hint: Optional[int] = None
+        self.headers: List[TableHeader] = []
         self.options = {
             "collect_headers": False,  # also: True, "finished"
             "omit_if_empty": omit_if_empty,
             "omit_empty_columns": omit_empty_columns,
             "omit_headers": omit_headers,
+            "omit_update_header": omit_update_header,
             "searchable": searchable,
             "sortable": sortable,
             "foldable": foldable,
@@ -163,13 +187,13 @@ class Table(object):
         self.next_func = lambda: self._add_row(*posargs, **kwargs)
 
     def text_cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
+        self,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
+        help_txt: Optional[str] = None,
+        colspan: Optional[int] = None,
+        sortable: bool = True,
     ):
         self.cell(title=title,
                   text=text,
@@ -179,14 +203,14 @@ class Table(object):
                   escape_text=True)
 
     def cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
-            escape_text=False,  # type: bool
+        self,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
+        help_txt: Optional[str] = None,
+        colspan: Optional[int] = None,
+        sortable: bool = True,
+        escape_text: bool = False,
     ):
         self._finish_previous()
         self.next_func = lambda: self._add_cell(title=title,
@@ -197,13 +221,16 @@ class Table(object):
                                                 sortable=sortable,
                                                 escape_text=escape_text)
 
-    def _finish_previous(self):
-        # type: () -> None
+    def _finish_previous(self) -> None:
         self.next_func()
         self.next_func = lambda: None
 
-    def _add_row(self, css=None, state=0, collect_headers=True, fixed=False, **attrs):
-        # type: (Optional[str], int, bool, bool, **Any) -> None
+    def _add_row(self,
+                 css: Optional[str] = None,
+                 state: int = 0,
+                 collect_headers: bool = True,
+                 fixed: bool = False,
+                 **attrs: Any) -> None:
         if self.next_header:
             self.rows.append(GroupHeader(title=self.next_header, fixed=True, row_attributes=attrs))
             self.next_header = None
@@ -216,27 +243,29 @@ class Table(object):
         elif not collect_headers and self.options["collect_headers"] is True:
             self.options["collect_headers"] = False
 
+        self.limit_reached = False if self.limit is None else len(self.rows) > self.limit
+
     def _add_cell(
-            self,
-            title="",  # type: HTMLContent
-            text="",  # type: HTMLContent
-            css=None,  # type: CSSSpec
-            help_txt=None,  # type: Optional[Text]
-            colspan=None,  # type: Optional[int]
-            sortable=True,  # type: bool
-            escape_text=False,  # type: bool
+        self,
+        title: 'HTMLContent' = "",
+        text: 'HTMLContent' = "",
+        css: 'CSSSpec' = None,
+        help_txt: Optional[str] = None,
+        colspan: Optional[int] = None,
+        sortable: bool = True,
+        escape_text: bool = False,
     ):
         if escape_text:
             cell_text = escaping.escape_text(text)
         else:
             if isinstance(text, HTML):
                 cell_text = "%s" % text
-            elif not isinstance(text, six.text_type):
+            elif not isinstance(text, str):
                 cell_text = str(text)
             else:
                 cell_text = text
 
-        htmlcode = cell_text + html.drain()  # type: Text
+        htmlcode: str = cell_text + html.drain()
 
         if title is None:
             title = ""
@@ -253,15 +282,13 @@ class Table(object):
         assert isinstance(current_row, TableRow)
         current_row.cells.append(CellSpec(htmlcode, css, colspan))
 
-    def groupheader(self, title):
-        # type: (Text) -> None
+    def groupheader(self, title: str) -> None:
         """Intermediate title, shown as soon as there is a following row.
         We store the group headers in the list of rows, with css None and state set to "header"
         """
         self.next_header = title
 
-    def _end(self):
-        # type: () -> None
+    def _end(self) -> None:
         if not self.rows and self.options["omit_if_empty"]:
             return
 
@@ -272,6 +299,7 @@ class Table(object):
 
         if self.title:
             if self.options["foldable"]:
+                html.open_div(class_="foldable_wrapper")
                 html.begin_foldable_container(treename="table",
                                               id_=self.id,
                                               isopen=True,
@@ -279,7 +307,7 @@ class Table(object):
                                               title=html.render_h3(self.title,
                                                                    class_=["treeangle", "title"]))
             else:
-                html.open_h3()
+                html.open_h3(class_="table")
                 html.write(self.title)
                 html.close_h3()
 
@@ -296,7 +324,7 @@ class Table(object):
         # Apply limit after search / sorting etc.
         num_rows_unlimited = len(rows)
         limit = self.limit
-        if limit is not None:
+        if limit:
             # only use rows up to the limit plus the fixed rows
             limited_rows = []
             for index in range(num_rows_unlimited):
@@ -309,33 +337,34 @@ class Table(object):
             rows = limited_rows
 
         # Render header
-        self._write_table(rows, self._show_action_row(), actions_visible, search_term)
+        if self.limit_hint is not None:
+            num_rows_unlimited = self.limit_hint
 
-        if self.title and self.options["foldable"]:
-            html.end_foldable_container()
+        if limit and num_rows_unlimited > limit:
 
-        if limit is not None and num_rows_unlimited > limit:
             html.show_message(
                 _('This table is limited to show only %d of %d rows. '
                   'Click <a href="%s">here</a> to disable the limitation.') %
-                (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+                (limit, num_rows_unlimited, makeuri(request, [('limit', 'none')])))
+
+        self._write_table(rows, num_rows_unlimited, self._show_action_row(), actions_visible,
+                          search_term)
+
+        if self.title and self.options["foldable"]:
+            html.end_foldable_container()
+            html.close_div()
 
         return
 
-    def _show_action_row(self):
-        # type: () -> bool
-        if self.options["searchable"]:
-            return True
-
+    def _show_action_row(self) -> bool:
         if self.options["sortable"] and self._get_sort_column(config.user.tableoptions[self.id]):
             return True
 
         return False
 
-    def _evaluate_user_opts(self):
-        # type: () -> Tuple[TableRows, bool, Optional[Text]]
+    def _evaluate_user_opts(self) -> Tuple[TableRows, bool, Optional[str]]:
         assert self.id is not None
-        table_id = six.ensure_str(self.id)
+        table_id = ensure_str(self.id)
         rows = self.rows
 
         search_term = None
@@ -352,19 +381,12 @@ class Table(object):
             actions_visible = html.request.get_ascii_input('_%s_actions' % table_id) == '1'
             table_opts['actions_visible'] = actions_visible
 
-        if html.request.get_ascii_input('_%s_reset' % table_id):
-            html.request.del_var('_%s_search' % table_id)
-            if 'search' in table_opts:
-                del table_opts['search']  # persist
-
         if self.options["searchable"]:
+            search_term = html.request.get_unicode_input_mandatory('search', '')
             # Search is always lower case -> case insensitive
-            search_term = html.request.get_unicode_input_mandatory('_%s_search' % table_id,
-                                                                   table_opts.get('search', ''))
             search_term = search_term.lower()
             if search_term:
-                html.request.set_var('_%s_search' % table_id, search_term)
-                table_opts['search'] = search_term  # persist
+                html.request.set_var('search', search_term)
                 rows = _filter_rows(rows, search_term)
 
         if html.request.get_ascii_input('_%s_reset_sorting' % table_id):
@@ -386,14 +408,14 @@ class Table(object):
 
         return rows, actions_visible, search_term
 
-    def _get_sort_column(self, table_opts):
-        # type: (Dict[str, Any]) -> Optional[str]
+    def _get_sort_column(self, table_opts: Dict[str, Any]) -> Optional[str]:
         return html.request.get_ascii_input('_%s_sort' % self.id, table_opts.get('sort'))
 
-    def _write_table(self, rows, actions_enabled, actions_visible, search_term):
-        # type: (TableRows, bool, bool, Optional[Text]) -> None
-        headinfo = _("1 row") if len(rows) == 1 else _("%d rows") % len(rows)
-        html.javascript("cmk.utils.update_header_info(%s);" % json.dumps(headinfo))
+    def _write_table(self, rows: TableRows, num_rows_unlimited: int, actions_enabled: bool,
+                     actions_visible: bool, search_term: Optional[str]) -> None:
+        if not self.options["omit_update_header"]:
+            row_info = _("1 row") if len(rows) == 1 else _("%d rows") % num_rows_unlimited
+            html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
 
         table_id = self.id
 
@@ -418,14 +440,6 @@ class Table(object):
             html.open_td(colspan=num_cols)
             if not html.in_form():
                 html.begin_form("%s_actions" % table_id)
-
-            if self.options["searchable"]:
-                html.open_div(class_="search")
-                html.text_input("_%s_search" % table_id)
-                html.button("_%s_submit" % table_id, _("Search"))
-                html.button("_%s_reset" % table_id, _("Reset search"))
-                html.set_focus("_%s_search" % table_id)
-                html.close_div()
 
             if html.request.has_var('_%s_sort' % table_id):
                 html.open_div(class_=["sort"])
@@ -455,14 +469,14 @@ class Table(object):
                     self._render_headers(actions_enabled, actions_visible, empty_columns)
                 continue
 
-            oddeven_name = "even" if (nr - 1) % 2 == 0 else "odd"
+            oddeven_name = "even" if nr % 2 == 0 else "odd"
             class_ = ["data", "%s%d" % (oddeven_name, row.state)]
             if row.css:
                 class_.append(row.css)
             else:
                 for k in ["class_", "class"]:
                     if k in row.row_attributes:
-                        cls_spec = cast(CSSSpec, row.row_attributes.pop(k))
+                        cls_spec = cast('CSSSpec', row.row_attributes.pop(k))
                         if isinstance(cls_spec, list):
                             class_.extend([c for c in cls_spec if c is not None])
                         elif cls_spec is not None:
@@ -485,16 +499,14 @@ class Table(object):
 
         html.close_table()
 
-    def _get_num_cols(self, rows):
-        # type: (TableRows) -> int
+    def _get_num_cols(self, rows: TableRows) -> int:
         if self.headers:
             return len(self.headers)
         if self.rows:
             return len(self.rows[0])
         return 0
 
-    def _get_empty_columns(self, rows, num_cols):
-        # type: (TableRows, int) -> List[bool]
+    def _get_empty_columns(self, rows: TableRows, num_cols: int) -> List[bool]:
         if not num_cols:
             return []
 
@@ -507,8 +519,7 @@ class Table(object):
                 empty_columns[col_index] &= not cell.content
         return empty_columns
 
-    def _write_csv(self, csv_separator):
-        # type: (str) -> None
+    def _write_csv(self, csv_separator: str) -> None:
         rows = self.rows
         limit = self.limit
         omit_headers = self.options["omit_headers"]
@@ -531,8 +542,8 @@ class Table(object):
                                           ]))
             html.write("\n")
 
-    def _render_headers(self, actions_enabled, actions_visible, empty_columns):
-        # type: (bool, bool, List[bool]) -> None
+    def _render_headers(self, actions_enabled: bool, actions_visible: bool,
+                        empty_columns: List[bool]) -> None:
         if self.options["omit_headers"]:
             return
 
@@ -545,13 +556,13 @@ class Table(object):
                 continue
 
             if header.help_txt:
-                header_title = html.render_span(
-                    header.title, title=header.help_txt)  # type: Union[int, HTML, Text]
+                header_title: Union[int, HTML, str] = html.render_span(header.title,
+                                                                       title=header.help_txt)
             else:
                 header_title = header.title
 
             if not isinstance(header.css, list):
-                css_class = [header.css]  # type: CSSSpec
+                css_class: 'CSSSpec' = [header.css]
             else:
                 css_class = header.css
 
@@ -591,7 +602,7 @@ class Table(object):
                         img = 'table_actions_off'
 
                     html.open_div(class_=["toggle_actions"])
-                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                    html.icon_button(makeuri(request, [('_%s_actions' % table_id, state)]),
                                      help_txt,
                                      img,
                                      cssclass='toggle_actions')
@@ -608,9 +619,8 @@ class Table(object):
         html.close_tr()
 
 
-def _filter_rows(rows, search_term):
-    # type: (TableRows, Text) -> TableRows
-    filtered_rows = []  # type: TableRows
+def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
+    filtered_rows: TableRows = []
     match_regex = re.compile(search_term, re.IGNORECASE)
 
     for row in rows:
@@ -619,14 +629,16 @@ def _filter_rows(rows, search_term):
             continue  # skip filtering of headers or fixed rows
 
         for cell in row.cells:
+            # Filter out buttons
+            if cell.css is not None and "buttons" in cell.css:
+                continue
             if match_regex.search(cell.content):
                 filtered_rows.append(row)
                 break  # skip other cells when matched
     return filtered_rows
 
 
-def _sort_rows(rows, sort_col, sort_reverse):
-    # type: (TableRows, int, int) -> TableRows
+def _sort_rows(rows: TableRows, sort_col: int, sort_reverse: int) -> TableRows:
     # remove and remind fixed rows, add to separate list
     fixed_rows = []
     for index, row in enumerate(rows[:]):
@@ -652,3 +664,13 @@ def _sort_rows(rows, sort_col, sort_reverse):
             rows.insert(index, cells)
 
     return rows
+
+
+def init_rowselect(selection_key: str) -> None:
+    selected = config.user.get_rowselection(weblib.selection_id(), selection_key)
+    selection_properties = {
+        "page_id": selection_key,
+        "selection_id": weblib.selection_id(),
+        "selected_rows": selected,
+    }
+    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))

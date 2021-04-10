@@ -4,9 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+from cmk.base.plugins.agent_based.utils.aws import (
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
+
 
 def parse_aws_elbv2_application(info):
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         'ConsumedLCUs',
         'ActiveConnectionCount',
         'NewConnectionCount',
@@ -62,7 +73,6 @@ check_info['aws_elbv2_application'] = {
     'inventory_function': lambda p: inventory_aws_generic_single(p, ['ConsumedLCUs']),
     'check_function': check_aws_elbv2_application_lcu,
     'service_description': 'AWS/ApplicationELB LCUs',
-    'includes': ['aws.include'],
     'group': 'aws_elbv2_lcu',
     'has_perfdata': True,
 }
@@ -107,7 +117,7 @@ def check_aws_elbv2_application_connections(item, params, parsed):
             'human_readable_func': aws_get_counts_rate_human_readable
         })
 
-    return check_aws_elb_metrics(metric_infos)
+    return check_aws_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.connections'] = {
@@ -116,7 +126,6 @@ check_info['aws_elbv2_application.connections'] = {
         p, _aws_elbv2_application_connection_types, requirement=any),
     'check_function': check_aws_elbv2_application_connections,
     'service_description': 'AWS/ApplicationELB Connections',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -132,16 +141,15 @@ check_info['aws_elbv2_application.connections'] = {
 
 
 def check_aws_elbv2_application_http_elb(item, params, parsed):
-    return check_aws_http_elb(params.get("levels_load_balancers", params), parsed,
-                              ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
-                              'HTTPCode_ELB_%s_Count')
+    return check_aws_http_errors(params.get("levels_load_balancers", params), parsed,
+                                 ['3xx', '4xx', '5xx', '500', '502', '503', '504'],
+                                 'HTTPCode_ELB_%s_Count')
 
 
 check_info['aws_elbv2_application.http_elb'] = {
     'inventory_function': lambda p: inventory_aws_generic_single(p, ['RequestCount']),
     'check_function': check_aws_elbv2_application_http_elb,
     'service_description': 'AWS/ApplicationELB HTTP ELB',
-    'includes': ['aws.include'],
     'group': 'aws_elb_http',
     'has_perfdata': True,
 }
@@ -164,7 +172,7 @@ _aws_elbv2_application_http_redirects_metrics = [
 
 
 def check_aws_elbv2_application_http_redirects(item, params, parsed):
-    return check_aws_elb_metrics([{
+    return check_aws_metrics([{
         'metric_val': parsed.get(cw_metric_name),
         'metric_name': 'aws_%s' % key,
         'info_name': info_name,
@@ -180,7 +188,6 @@ check_info['aws_elbv2_application.http_redirects'] = {
         p, _aws_elbv2_application_http_redirects_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_http_redirects,
     'service_description': 'AWS/ApplicationELB HTTP Redirects',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }
 
@@ -225,7 +232,7 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
             'human_readable_func': human_readable_func
         })
 
-    return check_aws_elb_metrics(metric_infos)
+    return check_aws_metrics(metric_infos)
 
 
 check_info['aws_elbv2_application.statistics'] = {
@@ -233,6 +240,5 @@ check_info['aws_elbv2_application.statistics'] = {
         p, _aws_elbv2_application_statistics_metrics, requirement=any),
     'check_function': check_aws_elbv2_application_statistics,
     'service_description': 'AWS/ApplicationELB Statistics',
-    'includes': ['aws.include'],
     'has_perfdata': True,
 }

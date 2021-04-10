@@ -1,13 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from typing import Any as _Any, Dict as _Dict  # pylint: disable=unused-import
-
-import six
+from typing import Any as _Any, Dict as _Dict
 
 import cmk.utils.regex
 
@@ -34,7 +32,7 @@ from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
 
 # Use this structure for new icons
 # TODO: Move this to cmk.gui.views once this is only used by legacy view/icon plugins
-multisite_icons_and_actions = {}  # type: _Dict[str, _Dict[str, _Any]]
+multisite_icons_and_actions: _Dict[str, _Dict[str, _Any]] = {}
 
 
 def get_multisite_icons():
@@ -116,7 +114,7 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
         return
 
     title, url = None, None
-    if isinstance(result, six.string_types + (HTML,)):
+    if isinstance(result, (str, HTML)):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.
         # LM: There are icons that still use this API
@@ -135,7 +133,7 @@ def _process_icon(what, row, tags, custom_vars, icon_id, icon):
                         n = n[5:]
                     if n.endswith(".png"):
                         n = n[:-4]
-                    yield icon.sort_index(), n.encode('utf-8'), None, None
+                    yield icon.sort_index(), n, None, None
             return
 
         icon_name = result

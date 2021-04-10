@@ -1,31 +1,48 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple
 
 
-def _parameter_valuespec_checkpoint_connections():
-    return Tuple(
-        help=_("This rule sets limits to the current number of connections through "
-               "a Checkpoint firewall."),
-        title=_("Maximum number of firewall connections"),
-        elements=[
-            Integer(title=_("Warning at"), default_value=40000),
-            Integer(title=_("Critical at"), default_value=50000),
-        ],
+def _parameter_valuespec_checkpoint_connections() -> Transform:
+    return Transform(
+        Dictionary(
+            [
+                (
+                    "levels",
+                    Tuple(
+                        help=_("This rule sets limits to the current number of connections through "
+                               "a Checkpoint firewall."),
+                        title=_("Maximum number of firewall connections"),
+                        elements=[
+                            Integer(
+                                title=_("Warning at"),
+                                minvalue=0,
+                                default_value=40000,
+                                unit=_("connections"),
+                            ),
+                            Integer(
+                                title=_("Critical at"),
+                                minvalue=0,
+                                default_value=50000,
+                                unit=_("connections"),
+                            ),
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        ),
+        forth=lambda x: x if isinstance(x, dict) else {"levels": x},
     )
 
 

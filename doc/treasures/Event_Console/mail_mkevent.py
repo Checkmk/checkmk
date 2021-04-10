@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -25,8 +25,9 @@ for i in range(numMessages):
     host = "not_found"
     msg = ""
     found_host = False
-    for line in M.retr(i + 1)[1]:
-        if found_host == False and line.split()[0] == "From:":
+    for line_ in M.retr(i + 1)[1]:
+        line = line_.decode("utf-8")
+        if not found_host and line.split()[0] == "From:":
             host = line.split()[1].split('@')[1]
             host = host.replace('>', '')
             found_host = True

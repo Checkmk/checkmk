@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -41,7 +41,7 @@ def _parameter_valuespec_netapp_volumes():
              default_value=(80.0, 90.0),
              match=match_dual_level_type,
              elements=[
-                 get_free_used_dynamic_valuespec("used", "volume"),
+                 get_free_used_dynamic_valuespec("used", "volume", maxvalue=None),
                  Transform(
                      get_free_used_dynamic_valuespec("free", "volume", default_value=(20.0, 10.0)),
                      forth=transform_filesystem_free,

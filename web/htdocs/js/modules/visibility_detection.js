@@ -17,8 +17,7 @@ import * as utils from "utils";
 
 var g_visibility_detection_enabled = true;
 
-export function initialize()
-{
+export function initialize() {
     var hidden_attr_name = "hidden";
 
     // Standards:
@@ -52,13 +51,18 @@ export function initialize()
     }
 
     function on_visibility_change(evt) {
-        var v = "visible", h = "hidden",
+        var v = "visible",
+            h = "hidden",
             evtMap = {
-                focus:v, focusin:v, pageshow:v, blur:h, focusout:h, pagehide:h
+                focus: v,
+                focusin: v,
+                pageshow: v,
+                blur: h,
+                focusout: h,
+                pagehide: h,
             };
 
-        if (!g_visibility_detection_enabled)
-            return;
+        if (!g_visibility_detection_enabled) return;
 
         utils.remove_class(document.body, "visible");
         utils.remove_class(document.body, "hidden");

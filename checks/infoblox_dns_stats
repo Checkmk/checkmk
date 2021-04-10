@@ -4,16 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.infoblox import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def check_infoblox_dns_stats(_no_item, _no_params, info):
-    successes, referrals, nxrrset, nxdomain, \
-        _recursion, failures = map(int, info[0])
+    successes, referrals, nxrrset, nxdomain, recursion, failures = map(int, info[0])
 
     return check_infoblox_statistics(
         "dns",
         [("successes", successes, "Since DNS process started", "successful responses"),
          ("referrals", referrals, "Since DNS process started", "referrals"),
-         ("recursion", successes, "Since DNS process started", "queries received using recursion"),
+         ("recursion", recursion, "Since DNS process started", "queries received using recursion"),
          ("failures", failures, "Since DNS process started", "queries failed"),
          ("nxrrset", nxrrset, "Queries", "for non-existent records"),
          ("nxdomain", nxdomain, "Queries", "for non-existent domain")])
@@ -35,5 +40,4 @@ check_info['infoblox_dns_stats'] = {
         ]),
     'snmp_scan_function': scan_infoblox,
     'has_perfdata': True,
-    'includes': ["infoblox.include"],
 }

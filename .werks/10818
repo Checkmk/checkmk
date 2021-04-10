@@ -6,7 +6,7 @@ Date: 1582285046
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 We have seen discovered GPU sensors with strange values, even if those
 components are not installed. Such sensors will be not discovered any more. If

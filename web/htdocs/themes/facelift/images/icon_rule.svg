@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 275 363" style="enable-background:new 0 0 275 363;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#B894EE;}
+	.st1{fill:#5A24AB;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-353.000000, -468.000000)">
+		<g id="views" transform="translate(353.000000, 468.000000)">
+			<g id="Group">
+				<polygon id="Path" class="st0" points="275,363 0,363 0,0 187,0 275,88 				"/>
+				<polygon id="Path_1_" class="st1" points="258.5,99 176,99 176,16.5 				"/>
+				<path id="Shape" class="st1" d="M55,154h165v22H55V154z M55,198h121v22H55V198z M55,242h165v22H55V242z M55,286h121v22H55V286z"
+					/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

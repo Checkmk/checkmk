@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -41,5 +41,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_cluster_v11,
-        title=lambda: _("Configuration Sync Status for F5 BigIP devices"),
+        title=lambda: _("F5 BigIP configuration sync status"),
     ))

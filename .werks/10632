@@ -6,7 +6,7 @@ Date: 1578469962
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The livestatus check crashed when there was no value for the expiration date of a certificate.
 If the expiration date can not be acquired the information of 'Site certificate validity' will not be shown in the status details.

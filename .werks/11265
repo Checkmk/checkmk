@@ -1,0 +1,19 @@
+Title: Discovery Page: Do not show last job failures if they are fixed
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1598592987
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+Previously failures of last discovery jobs were displayed in a red message box again.
+
+This happened in the following situation: If a hostname was not resolveable the
+discovery page displayed {{Failed to lookup IP address of HOST via DNS}}. After
+an IP address was configured this message was shown again on the discovery page
+but also a discovered services table. This behaviour is misleading.
+
+Now the last error message is put in the current job details but will not be
+displayed as a critical message again.

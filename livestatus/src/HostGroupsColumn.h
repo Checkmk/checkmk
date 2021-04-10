@@ -7,20 +7,22 @@
 #define HostGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <string>
 #include <vector>
-#include "Column.h"
+
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
-class HostGroupsColumn : public ListColumn {
+class HostGroupsColumn : public deprecated::ListColumn {
 public:
     HostGroupsColumn(const std::string &name, const std::string &description,
-                     const Column::Offsets &offsets, MonitoringCore *mc)
-        : ListColumn(name, description, offsets), _mc(mc) {}
+                     const ColumnOffsets &offsets, MonitoringCore *mc)
+        : deprecated::ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,16 +6,18 @@
 
 import datetime as dt
 
-from marshmallow import Schema, fields  # type: ignore[import]
+from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui.plugins.openapi import plugins
+from cmk.utils.defines import weekday_ids
+from cmk.gui.plugins.openapi import fields, plugins
+from cmk.gui.plugins.openapi.utils import BaseSchema
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
 
 
-class ApiError(Schema):
+class ApiError(BaseSchema):
     code = fields.Integer(
         description="The HTTP status code.",
         required=True,
@@ -31,26 +33,29 @@ class ApiError(Schema):
         required=True,
         example="Not found",
     )
-    errors = fields.List(
-        fields.String(),
-        allow_none=True,
-        description="Optionally a list of errors used for debugging.",
-        example=None,
+    _fields = fields.Dict(
+        data_key='fields',  # mypy
+        keys=fields.String(description="The field name"),
+        values=fields.List(fields.String(description="The error messages")),
+        description="Detailed error messages on all fields failing validation.",
+        required=False,
     )
 
 
-class UserSchema(Schema):
+class UserSchema(BaseSchema):
     id = fields.Int(dump_only=True)
     name = fields.Str(description="The user's name")
     created = fields.DateTime(dump_only=True,
+                              format="iso8601",
                               default=dt.datetime.utcnow,
                               doc_default="The current datetime")
 
 
-class Link(Schema):
+class LinkSchema(BaseSchema):
     """A Link representation according to A-24 (2.7)
 
     """
+    domainType = fields.Constant("link", required=True)
     rel = fields.String(
         description=("Indicates the nature of the relationship of the related resource to the "
                      "resource that generated this representation"),
@@ -66,8 +71,8 @@ class Link(Schema):
     method = fields.String(
         description="The HTTP method to use to traverse the link (get, post, put or delete)",
         required=True,
-        pattern="get|put|post|delete",
-        example="get",
+        pattern="GET|PUT|POST|DELETE",
+        example="GET",
     )
     type = fields.String(
         description="The media type that the linked resource will return",
@@ -87,9 +92,9 @@ class Link(Schema):
     )
 
 
-class Linkable(Schema):
+class Linkable(BaseSchema):
     links = fields.List(
-        fields.Nested(Link),
+        fields.Nested(LinkSchema),
         required=True,
         description="list of links to other resources.",
     )
@@ -167,15 +172,26 @@ class ObjectMemberBase(Linkable):
 
 class ObjectCollectionMember(ObjectMemberBase):
     memberType = fields.Constant('collection')
-    value = fields.List(fields.Nested(Link()))
+    value = fields.List(fields.Nested(LinkSchema()))
+    name = fields.String(example="important_values")
+
+
+class ObjectProperty(Linkable):
+    id = fields.String()
+    # FIXME: This is the only use-case right now. Needs to be expanded when this is used more.
+    value = fields.List(fields.String())
+    extensions = fields.Dict()
 
 
 class ObjectPropertyMember(ObjectMemberBase):
     memberType = fields.Constant('property')
+    name = fields.String(example="important_value")
 
 
 class ObjectActionMember(ObjectMemberBase):
     memberType = fields.Constant('action')
+    parameters = fields.Dict()
+    name = fields.String(example="frobnicate_foo")
 
 
 class ObjectMember(OneOfSchema):
@@ -192,30 +208,51 @@ class ObjectMemberDict(plugins.ValueTypedDictSchema):
 
 
 class ActionResultBase(Linkable):
-    resultType = fields.String(required=True, example='object')
-    result = fields.Dict()
+    resultType: fields.Field = fields.String()
+    extensions = fields.Dict(example={'some': 'values'})
 
 
 class ActionResultObject(ActionResultBase):
     resultType = fields.Constant('object')
-    value = fields.Dict(required=True,
-                        allow_none=True,
-                        example={'foo': 'bar'},
-                        description="The return value of this action.")
+    result = fields.Nested(
+        Schema.from_dict(
+            {
+                'links': fields.List(
+                    fields.Nested(LinkSchema),
+                    required=True,
+                ),
+                'value': fields.Dict(
+                    required=True,
+                    example={'duration': '5 seconds.'},
+                )
+            },
+            name='ActionResultObjectValue',
+        ))
 
 
 class ActionResultScalar(ActionResultBase):
     resultType = fields.Constant('scalar')
-    value = fields.String(required=True,
-                          allow_none=True,
-                          example="Done.",
-                          description="The return value of this action.")
+    result = fields.Nested(
+        Schema.from_dict(
+            {
+                'links': fields.List(
+                    fields.Nested(LinkSchema),
+                    required=True,
+                ),
+                'value': fields.String(
+                    required=True,
+                    example="Done.",
+                )
+            },
+            name='ActionResultScalarValue',
+        ))
 
 
 class ActionResult(OneOfSchema):
     type_field = 'resultType'
     type_schemas = {
         'object': ActionResultObject,
+        'scalar': ActionResultScalar,
     }
 
 
@@ -224,15 +261,17 @@ class AttributeDict(plugins.ValueTypedDictSchema):
 
 
 class DomainObject(Linkable):
-    domainType = fields.String(required=True)
+    domainType: fields.Field = fields.String(required=True)
+    # Generic things to ease development. Should be changed for more concrete schemas.
     id = fields.String()
     title = fields.String()
     members = fields.Nested(ObjectMemberDict())
+    extensions = fields.Dict()
 
 
-class FolderMembers(Schema):
+class FolderMembers(BaseSchema):
     hosts = fields.Nested(
-        ObjectPropertyMember(),
+        ObjectCollectionMember(),
         description="A list of links pointing to the actual host-resources.",
     )
     move = fields.Nested(
@@ -241,17 +280,24 @@ class FolderMembers(Schema):
     )
 
 
-class Folder(Linkable):
-    domainType = fields.Constant(
-        "folder",
-        required=True,
-    )
+class FolderSchema(Linkable):
+    domainType = fields.Constant("folder_config")
     id = fields.String()
     title = fields.String()
-    members = fields.Nested(FolderMembers(),)
+    members = fields.Nested(FolderMembers())
+    extensions = fields.Dict()
 
 
-class MoveFolder(Schema):
+class ConcreteFolder(OneOfSchema):
+    type_schemas = {
+        'folder_config': FolderSchema,
+        'link': LinkSchema,
+    }
+    type_field_remove = False
+    type_field = 'domainType'
+
+
+class MoveFolder(BaseSchema):
     destination = fields.String(
         description=("The folder-id of the folder to which this folder shall be moved to. May "
                      "be 'root' for the root-folder."),
@@ -282,19 +328,29 @@ class ContactGroup(DomainObject):
     )
 
 
-class HostMembers(Schema):
-    folder = fields.Nested(
-        ObjectPropertyMember(),
+class Configuration(DomainObject):
+    domainType = fields.Constant("config", required=True)
+
+
+class SiteStateMembers(BaseSchema):
+    sites = fields.Dict()
+
+
+class SiteState(Linkable):
+    domainType = fields.Constant("site-state", required=True)
+    members = fields.Nested(SiteStateMembers, description="All the members of the host object.")
+
+
+class HostMembers(BaseSchema):
+    folder_config = fields.Nested(
+        ConcreteFolder,
         description="The folder in which this host resides. It is represented by a hexadecimal "
         "identifier which is it's 'primary key'. The folder can be accessed via the "
         "`self`-link provided in the links array.")
 
 
-class Host(Linkable):
-    domainType = fields.Constant(
-        "host",
-        required=True,
-    )
+class HostConfigSchema(Linkable):
+    domainType = fields.Constant("host_config", required=True)
     id = fields.String()
     title = fields.String()
     members = fields.Nested(HostMembers, description="All the members of the host object.")
@@ -304,8 +360,38 @@ class ObjectAction(Linkable):
     parameters = fields.Nested(Parameter)
 
 
+class TypeSchemas(dict):
+    """This automatically creates entries with the default value."""
+    def get(self, key, default=None):
+        return self[key]
+
+    def __missing__(self, key):
+        return DomainObject
+
+
+class CollectionItem(OneOfSchema):
+    type_schemas = TypeSchemas({'link': LinkSchema})
+    type_field = 'domainType'
+    type_field_remove = False
+
+
+class ConcreteHostTagGroup(DomainObject):
+    domainType = fields.Constant(
+        "host_tag_group",
+        required=True,
+    )
+
+
 class DomainObjectCollection(Linkable):
-    value = fields.List(fields.Nested(Link))
+    id = fields.String()
+    domainType: fields.Field = fields.String()
+    value: fields.Field = fields.Nested(CollectionItem, many=True)
+    extensions = fields.Dict()
+
+
+class FolderCollection(DomainObjectCollection):
+    domainType = fields.Constant("folder_config")
+    value = fields.List(fields.Nested(ConcreteFolder))
 
 
 class User(Linkable):
@@ -321,17 +407,117 @@ class User(Linkable):
     )
 
 
-class InstalledVersions(Schema):
+TIME_FIELD = fields.Time(
+    example="14:00",
+    description="The hour of the time period.",
+)
+
+
+class ConcreteTimeRange(BaseSchema):
+    start = TIME_FIELD
+    end = TIME_FIELD
+
+
+class ConcreteTimeRangeActive(BaseSchema):
+    day = fields.String(description="The day for which the time ranges are specified",
+                        pattern=f"{'|'.join(weekday_ids())}")
+    time_ranges = fields.List(fields.Nested(ConcreteTimeRange))
+
+
+class ConcreteTimePeriodException(BaseSchema):
+    date = fields.Date(
+        example="2020-01-01",
+        description="The date of the time period exception."
+        "8601 profile",
+    )
+    time_ranges = fields.List(
+        fields.Nested(ConcreteTimeRange),
+        example="[{'start': '14:00', 'end': '18:00'}]",
+    )
+
+
+class ConcreteTimePeriod(BaseSchema):
+    alias = fields.String(description="The alias of the time period", example="alias")
+    active_time_ranges = fields.List(
+        fields.Nested(ConcreteTimeRangeActive),
+        description="The days for which time ranges were specified",
+        example={
+            'day': 'all',
+            'time_ranges': [{
+                'start': '12:00',
+                'end': '14:00'
+            }]
+        },
+    )
+    exceptions = fields.List(
+        fields.Nested(ConcreteTimePeriodException),
+        description="Specific day exclusions with their list of time ranges",
+        example=[{
+            'date': '2020-01-01',
+            'time_ranges': [{
+                'start': '14:00',
+                'end': '18:00'
+            }]
+        }],
+    )
+    exclude = fields.List(  # type: ignore[assignment]
+        fields.String(description="Name of excluding time period", example="holidays"),
+        description="The collection of time period aliases whose periods are excluded",
+    )
+
+
+class ConcretePassword(BaseSchema):
+    ident = fields.String(
+        example="pass",
+        description="The unique identifier for the password",
+    )
+    title = fields.String(
+        example="Kubernetes login",
+        description="The title for the password",
+    )
+    comment = fields.String(
+        example="Kommentar",
+        description="A comment for the password",
+    )
+
+    documentation_url = fields.String(
+        example="localhost",
+        description="The URL pointing to documentation or any other page.",
+    )
+
+    password = fields.String(
+        required=True,
+        example="password",
+        description="The password string",
+    )
+
+    owner = fields.String(
+        example="admin",
+        description=
+        "The owner of the password who is able to edit, delete and use existing passwords.")
+
+    shared = fields.List(
+        fields.String(
+            example="all",
+            description="The member the password is shared with",
+        ),
+        example=["all"],
+        description="The list of members the password is shared with",
+    )
+
+
+class InstalledVersions(BaseSchema):
     site = fields.String(description="The site where this API call was made on.",
                          example="production")
     group = fields.String(description="The Apache WSGI application group this call was made on.",
                           example="de")
+    rest_api = fields.Dict(description="The REST-API version", example={'revision': '1.0.0'})
     versions = fields.Dict(description="Some version numbers", example={"checkmk": "1.8.0p1"})
     edition = fields.String(description="The Checkmk edition.", example="raw")
     demo = fields.Bool(description="Whether this is a demo version or not.", example=False)
 
 
-class VersionCapabilities(Schema):
+class VersionCapabilities(BaseSchema):
     blobsClobs = fields.Bool(
         required=False,
         description="attachment support",
@@ -353,7 +539,7 @@ class VersionCapabilities(Schema):
     )
 
 
-class Version(Link):
+class Version(LinkSchema):
     specVersion = fields.Str(
         description=('The "major.minor" parts of the version of the spec supported by this '
                      'implementation, e.g. "1.0"'),

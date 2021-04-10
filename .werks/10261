@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The web API call "edit_users" that can be used to edit the attributes of a user
 could previously not be used for users that were created using the LDAP synchronization.

@@ -9,6 +9,7 @@
 // NOTE: We need the 2nd "keep" pragma for deleting Query. Is this
 // an IWYU bug?
 #include "config.h"  // IWYU pragma: keep
+
 #include <bitset>
 #include <chrono>
 #include <cstdint>
@@ -21,6 +22,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+
 #include "Aggregator.h"  // IWYU pragma: keep
 #include "Filter.h"
 #include "Renderer.h"
@@ -29,7 +31,6 @@
 #include "StatsColumn.h"
 #include "Triggers.h"
 #include "contact_fwd.h"
-#include "data_encoding.h"
 class Column;
 class Logger;
 class OutputBuffer;
@@ -49,13 +50,13 @@ public:
 
     bool timelimitReached() const;
     void invalidRequest(const std::string &message) const;
+    void badGateway(const std::string &message) const;
 
     const contact *authUser() const { return _auth_user; }
     std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
 
-    std::unique_ptr<Filter> partialFilter(
-        const std::string &message,
-        std::function<bool(const Column &)> predicate) const;
+    std::unique_ptr<Filter> partialFilter(const std::string &message,
+                                          columnNamePredicate predicate) const;
     std::optional<std::string> stringValueRestrictionFor(
         const std::string &column_name) const;
     std::optional<int32_t> greatestLowerBoundFor(

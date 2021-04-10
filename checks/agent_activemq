@@ -20,6 +20,7 @@ def agent_activemq_arguments(params, hostname, ipaddress):
     args = ["--servername", params["servername"]]
 
     args += ["--port", "%s" % params["port"]]
+    args += ["--protocol", "%s" % params['protocol']]
     if params.get("use_piggyback"):
         args += ["--piggyback"]
 

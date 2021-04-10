@@ -1,0 +1,14 @@
+Title: Add missing links to views hidden from menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616141887
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The "Customize > Views" list shows a list of customized views. The titles of
+the views normally link to the target view which is now also done for views
+that have the option "Hide this view in the monitor menu" set.

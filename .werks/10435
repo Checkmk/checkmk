@@ -6,7 +6,7 @@ Date: 1583160206
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When calling the agent bakery for the purpose of agent deployment
 (normally done automatically via agent updater), occuring errors will be logged

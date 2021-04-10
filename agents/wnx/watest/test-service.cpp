@@ -122,26 +122,8 @@ TEST(ServiceControllerTest, StartStop) {
 
 }  // namespace wtools
 
-TEST(Misc, All) {
-    {
-        std::string a = "a";
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-    }
-    {
-        std::string b = "b\\";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b\\");
-        b = "b/";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b/");
-    }
-}
-
 namespace cma::srv {
-extern bool global_stop_signaled;
+extern bool g_global_stop_signaled;
 TEST(SelfConfigure, Checker) {
     auto handle = SelfOpen();
     if (handle == nullptr) {
@@ -162,7 +144,7 @@ TEST(CmaSrv, GlobalApi) {
     ServiceProcessor sp;
     sp.stopService();
     EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
-    global_stop_signaled = false;
+    g_global_stop_signaled = false;
 }
 
 static void SetStartMode(std::string_view mode) {
@@ -224,10 +206,13 @@ TEST(CmaSrv, ServiceConfig) {
     EXPECT_EQ(defaults::kRestartOnCrash, true);
     EXPECT_EQ(std::string(defaults::kStartMode), values::kStartModeAuto);
 
-    // remove all from the Firewall
+    //
     {
+        // first mode, second config text
         std::pair<WinService::StartMode, std::string_view> pairs[] = {
             {WinService::StartMode::started, values::kStartModeAuto},
+            {WinService::StartMode::started, "invalid"},  // check bad value
+            {WinService::StartMode::delayed, values::kStartModeDelayed},
             {WinService::StartMode::stopped, values::kStartModeDemand},
             {WinService::StartMode::disabled, values::kStartModeDisabled}};
 

@@ -4,62 +4,34 @@ catalog: hw/storagehw/mcdata
 license: GPL
 distribution: check_mk
 description:
- This check monitors the operational status, link speed, traffic, frame
- counts, C3 discards and CRC errors of FibreChannel port of McData FC switches.
-
- This check uses the internal logic of the {if}/{if64} check, so at some places
- the naming conventions are a bit unusual (instead of frames, the check speaks
- of packages, for example). The advantage of this approach is, on the other
- hand, that this check makes use of all interesting features if {if}, such
- as averaging, nice PNP templates, Perf-O-Meters and other stuff.
-
- Depending on the check parameters this check can go WARN or CRIT when the
- port status changes (i.e. is down), when the link speed changes (e.g. a
- port expected to be set to 2GBit/s operates only at 1GBit/s), when the
- absolute or procentual traffic of a port exceeds certain levels or if the
- rate of errors or discards exceeds configurable limits.
-
- This check supports averaging the in- and outgoing traffic over a configurable
- range of time by using an exponentially weighted moving average - just as
- Linux does for the CPU load averages.  The averaging can be configured on
- a per host and per port base. This is done by adding a key {"average"}
- to the parameter dictionary with the number of minutes that the average
- should cover as its key. Port with averaging turned on output two additional
- performance values: the averaged traffic in bytes. If you have configured
- traffic levels, then those levels are applied to the averaged values.
+ This check monitors the operational status, link speed, traffic, frame counts,
+ C3 discards and CRC errors of the FibreChannel ports of McData FC switches. The
+ check uses the same functionality as {if64}. Please refer to the {if64} manpage
+ for further documentation.
 
 item:
- The port index as two digit string, for example {"03"} or {"24"}. The first
- port has the number {"01"}.
+ There are three allowed ways to specify an interface: its index, its description
+ and its alias. For this check, these three are the same, namely a two-digit string
+ starting from "01".
 
 inventory:
- One service is created for each port that fulfills configurable conditions.
- Per default these are ports which are currently found {up} and are of types {6} (ethernetCsmacd),
- {32} (frameRelay) or {117} (gigabitEthernet). This check announces the port
- type of {6} for the FC ports. This is not exactly correct but makes the inventory
- find the FC ports without further configuration.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {up} and are of type
+ 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229. Note that all interfaces
+ discovered by this check are of type 6.
 
- {Grouping:} In some situations you do not want to monitor a single
+ {Grouping:} In some situations, you do not want to monitor a single
  interface but a group of interfaces that together form a pool.
- The {if} check supports such pools by defining groups.
- You can specifiy the members of a group by their port type and the item name(s) of
- the single interfaces. The data of all members is accumulated and put together
- in a single grouped interface service.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
 
- You can specify the groups with the ruleset {if_groups}.
- Groups are defined as list of dictionaries.
-
- The keys are:
-
-  {"name"}:   String. Name of the group within the service description
-
-  {"iftype"}: Integer. Interface port type as integer
-
-  {"include_items"}: List of Strings. Interface item name. This name depends
-  on further settings like if_inventory_uses_alias or if_inventory_uses_description
-
-  {"single"}(optional): Bool. Interfaces in this group do not show up
-  as single service if "single" is set to True (Default: False)
-
-  For example: if_groups = ([{"name" : "Group WLAN", "iftype" : 6, "single" : True}], ["lan"], ALL_HOSTS )
-
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

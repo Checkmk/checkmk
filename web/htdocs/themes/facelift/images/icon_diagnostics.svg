@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 366 326" style="enable-background:new 0 0 366 326;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#FAD90C;}
+	.st1{fill:#ED664C;}
+	.st2{fill:#DEA808;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-522.000000, -566.000000)">
+		<g id="support" transform="translate(522.000000, 565.000000)">
+			<path id="Path" class="st0" d="M365.1,92.3v67.1c0,7.9-6.4,14.4-14.4,14.4h-132h-2.4v-30.4h-67.1v30.4h-1.6H14.8
+				c-7.9,0-14.4-6.4-14.4-14.4V92.3c0-7.9,6.4-14.4,14.4-14.4h67.1h28.8h139.1h28.8h72C358.7,77.9,365.1,84.3,365.1,92.3z"/>
+			<g id="Group" transform="translate(13.972350, 0.910046)">
+				<path id="Path_1_" class="st1" d="M264.7,29v48h-28.8V33.8c0-2.6-2.1-4.8-4.8-4.8H101.6c-2.6,0-4.8,2.1-4.8,4.8v43.2H67.9v-48
+					C67.9,13,80.9,0.1,96.8,0.1h139.1C251.8,0.2,264.7,13.1,264.7,29z"/>
+				<path id="Path_2_" class="st0" d="M204.7,181.5h132v4.8v139.1H0.8V186.2v-4.8h132.8h1.6v8c0,18.5,15,33.6,33.6,33.6
+					s33.6-15,33.6-33.6v-8L204.7,181.5L204.7,181.5z"/>
+				<path id="Path_3_" class="st2" d="M202.3,192.1c0,21.4-15,32-33.6,32s-33.6-10.6-33.6-32V176v-35.1h67.1V176V192.1z"/>
+			</g>
+		</g>
+	</g>
+</g>
+</svg>

@@ -1,0 +1,12 @@
+Title: GUI livestatus connection: Fixed race condition which caused needless reconnection to liveproxyd
+Class: fix
+Compatible: compat
+Component: liveproxy
+Date: 1602231512
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The livestatus connection from the GUI resend its request several times if the liveproxyd has closed the socket connection (even if it had a good reason).

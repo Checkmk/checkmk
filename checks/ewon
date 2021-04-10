@@ -194,7 +194,7 @@ def _inventory_oxyreduct_names(parsed):
 
 def _check_oxyreduct(params, data):
     def to_binary(number):
-        return ''.join(str(1 & int(number) >> i) for i in range(16)[::-1])
+        return ''.join(str(1 & int(number) >> i) for i in reversed(range(16)))
 
     for tagid, value in data.items():
         ref_tagid = tagid

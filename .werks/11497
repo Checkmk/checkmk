@@ -1,0 +1,18 @@
+Title: Notification spooler: Fix potential cluster issues when trying to stop mknotifyd
+Class: fix
+Compatible: compat
+Component: core
+Date: 1601533669
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+When running a failover cluster (like on the Checkmk appliance) it is important
+to stop all services in a reliable way before the cluster data volume can be
+unmounted and moved over to the other nodes.
+
+Previously the mknotifyd init script (which is used by omd stop) was not
+waiting for the mknotifyd to terminate after signaling a stop to the process.
+In rare cases this could lead to failover failures, when the mknotifyd takes
+too long to stop.

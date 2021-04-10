@@ -1,0 +1,19 @@
+Title: Fix host "Save & Test" action showing "API error" for all tests
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1598277435
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The host diagnostic page was initially showing the message "API Error: The text
+None is not a valid integer number." after adding or editing a host and
+confirming the dialog with the "Save & Test" button.
+
+This regression was introduced by werk #11254 in version 1.6.0p15.
+
+You could workaround this issue by clicking the "Test" button on the page
+showing that error. It will start the tests in the correct way.

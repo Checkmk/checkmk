@@ -7,33 +7,38 @@ set -e -o pipefail
 
 HOOKROOT=/docker-entrypoint.d
 
-function exec_hook() {
+exec_hook() {
     HOOKDIR="$HOOKROOT/$1"
     if [ -d "$HOOKDIR" ]; then
         pushd "$HOOKDIR" >/dev/null
         for hook in *; do
             if [ ! -d "$hook" ] && [ -x "$hook" ]; then
                 echo "### Running $HOOKDIR/$hook"
-                ./"$hook" || true
+                ./"$hook"
             fi
         done
         popd >/dev/null
     fi
 }
 
-function create_system_apache_config() {
+create_system_apache_config() {
     # We have the special situation that the site apache is directly accessed from
     # external without a system apache reverse proxy. We need to disable the canonical
     # name redirect here to make redirects work as expected.
     #
     # In a reverse proxy setup the proxy would rewrite the host to the host requested by the user.
     # See omd/packages/apache-omd/skel/etc/apache/apache.conf for further information.
+    #
+    # The ServerName also needs to be in a special way. See
+    # (https://forum.checkmk.com/t/check-mk-running-behind-lb-on-port-80-redirects-to-url-including-port-5000/16545)
     APACHE_DOCKER_CFG="/omd/sites/$CMK_SITE_ID/etc/apache/conf.d/cmk_docker.conf"
-    echo -e "# Created for Checkmk docker container\\n\\nUseCanonicalName Off\\n" >"$APACHE_DOCKER_CFG"
+    echo -e "# Created for Checkmk docker container\\n\\nUseCanonicalName Off\\nServerName 127.0.0.1\\n" >"$APACHE_DOCKER_CFG"
     chown "$CMK_SITE_ID:$CMK_SITE_ID" "$APACHE_DOCKER_CFG"
     # Redirect top level requests to the sites base url
     echo -e "# Redirect top level requests to the sites base url\\nRedirectMatch 302 ^/$ /$CMK_SITE_ID/\\n" >>"$APACHE_DOCKER_CFG"
 }
+
+exec_hook pre-entrypoint
 
 if [ -z "$CMK_SITE_ID" ]; then
     echo "ERROR: No site ID given"
@@ -44,7 +49,7 @@ trap 'omd stop '"$CMK_SITE_ID"'; exit 0' SIGTERM SIGHUP SIGINT
 
 # Prepare local MTA for sending to smart host
 # TODO: Syslog is only added to support postfix. Can we please find a better solution?
-if [ ! -z "$MAIL_RELAY_HOST" ]; then
+if [ -n "$MAIL_RELAY_HOST" ]; then
     echo "### PREPARE POSTFIX (Hostname: $HOSTNAME, Relay host: $MAIL_RELAY_HOST)"
     echo "$HOSTNAME" >/etc/mailname
     postconf -e myorigin="$HOSTNAME"
@@ -97,7 +102,7 @@ if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
 fi
 
 # In case the version symlink is dangling we are in an update situation: The
-# volume was previously attached to a container with another Check_MK version.
+# volume was previously attached to a container with another Checkmk version.
 # We now have to perform the "omd update" to be able to bring the site back
 # to life.
 if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then

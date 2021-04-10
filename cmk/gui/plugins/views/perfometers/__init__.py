@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -12,7 +12,7 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Dict as _Dict  # pylint: disable=unused-import
+from typing import Dict as _Dict
 
 import cmk.gui.utils as utils
 import cmk.gui.metrics as metrics
@@ -35,7 +35,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   '----------------------------------------------------------------------'
 
 # TODO: Is this unused?
-perfometers = {}  # type: _Dict
+perfometers: _Dict = {}
 
 #   .--Old Style-----------------------------------------------------------.
 #   |                ___  _     _   ____  _         _                      |
@@ -148,9 +148,6 @@ def render_metricometer(stack):
         h = html.render_div(h, class_="stacked")
     return h
 
-
-# Load the legacy plugins
-utils.load_web_plugins("perfometer", globals())
 
 #.
 #   .--Plugins-------------------------------------------------------------.

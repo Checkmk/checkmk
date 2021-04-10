@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -14,37 +14,45 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import (  # pylint: disable=unused-import
-    Optional, List, Type, Union, Text, Tuple, Dict,
-)
-import six
+from typing import Optional, List, Type
 
-from cmk.gui.table import table_element, Table  # pylint: disable=unused-import
+from cmk.gui.table import table_element, Table
 import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.context_buttons import global_buttons
-from cmk.gui.plugins.wato.utils.html_elements import wato_confirm
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile  # pylint: disable=unused-import
+from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.valuespec import (
-    ID,
-    FixedValue,
-    SiteChoice,
-    Dictionary,
-    TextUnicode,
     Checkbox,
+    Dictionary,
     DocumentationURL,
+    FixedValue,
+    ID,
     RuleComment,
+    SetupSiteChoice,
+    TextUnicode,
 )
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import SiteId
+from cmk.gui.page_menu import (
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+    PageMenuSearch,
+    make_simple_link,
+    make_simple_form_page_menu,
+)
+from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.utils.flashed_messages import flash
 
 
-class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
+class SimpleModeType(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def type_name(self):
-        # type: () -> str
+    def type_name(self) -> str:
         """A GUI globally unique identifier (in singular form) for the managed type of object"""
         raise NotImplementedError()
 
@@ -54,20 +62,17 @@ class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def is_site_specific(self):
-        # type: () -> bool
+    def is_site_specific(self) -> bool:
         """Whether or not an object of this type is site specific
         It has a mandatory "site" attribute in case it is.
         """
         raise NotImplementedError()
 
-    def site_valuespec(self):
-        # type: () -> SiteChoice
-        return SiteChoice()
+    def site_valuespec(self) -> SetupSiteChoice:
+        return SetupSiteChoice()
 
     @abc.abstractmethod
-    def can_be_disabled(self):
-        # type: () -> bool
+    def can_be_disabled(self) -> bool:
         """Whether or not an object of this type can be disabled
 
         If True the user can set an attribute named "disabled" for each object.
@@ -75,28 +80,23 @@ class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def affected_config_domains(self):
-        # type: () -> List[Type[watolib.ABCConfigDomain]]
+    def affected_config_domains(self) -> List[Type[watolib.ABCConfigDomain]]:
         """List of config domains that are affected by changes to objects of this type"""
         raise NotImplementedError()
 
-    def mode_ident(self):
-        # type: () -> str
+    def mode_ident(self) -> str:
         """A GUI wide unique identifier which is used to create the WATO mode identifiers"""
         return self.type_name()
 
-    def list_mode_name(self):
-        # type: () -> str
+    def list_mode_name(self) -> str:
         """The mode name of the WATO list mode of this object type"""
         return "%ss" % self.mode_ident()
 
-    def edit_mode_name(self):
-        # type: () -> str
+    def edit_mode_name(self) -> str:
         """The mode name of the WATO edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
-    def affected_sites(self, entry):
-        # type: (dict) -> Optional[List[str]]
+    def affected_sites(self, entry: dict) -> Optional[List[str]]:
         """Sites that are affected by changes to objects of this type
 
         Returns either a list of sites affected by a change or None.
@@ -109,14 +109,13 @@ class SimpleModeType(six.with_metaclass(abc.ABCMeta, object)):
         return None
 
 
-class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
+class _SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
     """Base for specific WATO modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
     """
-    def __init__(self, mode_type, store):
-        # type: (SimpleModeType, WatoSimpleConfigFile) -> None
+    def __init__(self, mode_type: SimpleModeType, store: WatoSimpleConfigFile) -> None:
         self._mode_type = mode_type
         self._store = store
 
@@ -124,33 +123,37 @@ class SimpleWatoModeBase(six.with_metaclass(abc.ABCMeta, WatoMode)):
         # to be set before it is executed. Therefore we execute the super constructor
         # here.
         # TODO: Make the _from_vars() mechanism more explicit
-        super(SimpleWatoModeBase, self).__init__()
+        super(_SimpleWatoModeBase, self).__init__()
 
-    def _add_change(self, action, entry, text):
-        # type: (str, Dict, Text) -> None
+    def _add_change(
+        self,
+        *,
+        action: str,
+        text: str,
+        affected_sites: Optional[List[SiteId]],
+    ) -> None:
         """Add a WATO change entry for this object type modifications"""
-        watolib.add_change("%s-%s" % (action, self._mode_type.type_name()),
-                           text,
-                           domains=self._mode_type.affected_config_domains(),
-                           sites=self._mode_type.affected_sites(entry))
+        watolib.add_change(
+            "%s-%s" % (action, self._mode_type.type_name()),
+            text,
+            domains=self._mode_type.affected_config_domains(),
+            sites=affected_sites,
+        )
 
 
-class SimpleListMode(SimpleWatoModeBase):
+class SimpleListMode(_SimpleWatoModeBase):
     """Base class for list modes"""
     @abc.abstractmethod
-    def _table_title(self):
-        # type: () -> str
+    def _table_title(self) -> str:
         """The user visible title shown on top of the list table"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _show_entry_cells(self, table, ident, entry):
-        # type: (Table, str, dict) -> None
+    def _show_entry_cells(self, table: Table, ident: str, entry: dict) -> None:
         """Shows the HTML code for the cells of an object row"""
         raise NotImplementedError()
 
-    def _handle_custom_action(self, action):
-        # type: (str) -> Union[None, bool, Tuple[Optional[str], Text]]
+    def _handle_custom_action(self, action: str) -> ActionResult:
         """Gives the mode the option to implement custom actions
 
         This function is called when the action phase is triggered. The action name is given
@@ -162,33 +165,52 @@ class SimpleListMode(SimpleWatoModeBase):
         """
         raise MKUserError("_action", _("The action '%s' is not implemented") % action)
 
-    def _new_context_button_label(self):
-        # type: () -> Text
-        return _("New %s") % self._mode_type.name_singular()
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return PageMenu(
+            dropdowns=[
+                PageMenuDropdown(
+                    name=self._mode_type.type_name(),
+                    title=self._mode_type.name_singular().title(),
+                    topics=[
+                        PageMenuTopic(
+                            title=self._mode_type.name_singular().title(),
+                            entries=[
+                                PageMenuEntry(
+                                    title=self._new_button_label(),
+                                    icon_name="new",
+                                    item=make_simple_link(
+                                        makeuri_contextless(
+                                            request,
+                                            [("mode", self._mode_type.edit_mode_name())],
+                                        )),
+                                    is_shortcut=True,
+                                    is_suggested=True,
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ],
+            breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
+        )
 
-    def buttons(self):
-        global_buttons()
-        html.context_button(self._new_context_button_label(),
-                            html.makeuri_contextless([("mode", self._mode_type.edit_mode_name())]),
-                            "new")
+    def _new_button_label(self) -> str:
+        return _("Add %s") % self._mode_type.name_singular()
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return
+            return None
 
         action_var = html.request.get_str_input("_action")
         if action_var is None:
-            return
+            return None
 
         if action_var != "delete":
             return self._handle_custom_action(action_var)
 
-        confirm = wato_confirm(_("Confirm deletion"), self._delete_confirm_message())
-        if confirm is False:
-            return False
-        if not confirm:
-            return
-        html.check_transaction()  # invalidate transid
+        if not html.check_transaction():
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         entries = self._store.load_for_modification()
 
@@ -205,11 +227,15 @@ class SimpleListMode(SimpleWatoModeBase):
         self._validate_deletion(ident, entries[ident])
 
         entry = entries.pop(ident)
-        self._add_change("delete", entry,
-                         _("Removed the %s '%s'") % (self._mode_type.name_singular(), ident))
+        self._add_change(
+            action="delete",
+            text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
+            affected_sites=self._mode_type.affected_sites(entry),
+        )
         self._store.save(entries)
 
-        return None, _("The %s has been deleted.") % self._mode_type.name_singular()
+        flash(_("The %s has been deleted.") % self._mode_type.name_singular())
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _validate_deletion(self, ident, entry):
         """Override this to implement custom validations"""
@@ -233,28 +259,37 @@ class SimpleListMode(SimpleWatoModeBase):
     def _show_action_cell(self, table, ident):
         table.cell(_("Actions"), css="buttons")
 
-        edit_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("ident", ident),
-        ])
+        edit_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("ident", ident),
+            ],
+        )
         html.icon_button(edit_url, _("Edit this %s") % self._mode_type.name_singular(), "edit")
 
-        clone_url = html.makeuri_contextless([
-            ("mode", self._mode_type.edit_mode_name()),
-            ("clone", ident),
-        ])
+        clone_url = makeuri_contextless(
+            request,
+            [
+                ("mode", self._mode_type.edit_mode_name()),
+                ("clone", ident),
+            ],
+        )
         html.icon_button(clone_url, _("Clone this %s") % self._mode_type.name_singular(), "clone")
 
-        delete_url = watolib.make_action_link([
-            ("mode", self._mode_type.list_mode_name()),
-            ("_action", "delete"),
-            ("_delete", ident),
-        ])
+        delete_url = make_confirm_link(
+            url=watolib.make_action_link([
+                ("mode", self._mode_type.list_mode_name()),
+                ("_action", "delete"),
+                ("_delete", ident),
+            ]),
+            message=self._delete_confirm_message(),
+        )
         html.icon_button(delete_url,
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
 
-class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
+class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
     """Base class for edit modes"""
     @abc.abstractmethod
     def _vs_individual_elements(self):
@@ -271,7 +306,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                                   _("This %s does not exist.") % self._mode_type.name_singular())
 
             self._new = False
-            self._ident = ident  # type: Optional[str]
+            self._ident: Optional[str] = ident
             self._entry = entry
             return
 
@@ -297,10 +332,11 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             return _("New %s") % self._mode_type.name_singular()
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
-    def buttons(self):
-        html.context_button(_("Back"),
-                            html.makeuri_contextless([("mode", self._mode_type.list_mode_name())]),
-                            "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(_("Actions"),
+                                          breadcrumb,
+                                          form_name="edit",
+                                          button_name="save")
 
     def valuespec(self):
         general_elements = self._vs_mandatory_elements()
@@ -313,6 +349,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
             title=self._mode_type.name_singular().title(),
             elements=general_elements + individual_elements,
             optional_keys=self._vs_optional_keys(),
+            show_more_keys=["docu_url"],
             headers=[
                 (_("General Properties"), general_keys),
                 (_("%s Properties") % self._mode_type.name_singular().title(), individual_keys),
@@ -321,6 +358,7 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
         )
 
     def _vs_mandatory_elements(self):
+        ident_attr: List = []
         if self._new:
             ident_attr = [
                 ("ident",
@@ -328,8 +366,9 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                      title=_("Unique ID"),
                      help=_("The ID must be a unique text. It will be used as an internal key "
                             "when objects refer to this object."),
+                     default_value=self._default_id,
                      allow_empty=False,
-                     size=12,
+                     size=80,
                  )),
             ]
         else:
@@ -375,12 +414,18 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
 
         return elements
 
+    def _default_id(self) -> str:
+        return unique_default_name_suggestion(
+            self._mode_type.name_singular(),
+            self._store.load_for_reading().keys(),
+        )
+
     def _vs_optional_keys(self):
         return []
 
-    def action(self):
+    def action(self) -> ActionResult:
         if not html.transaction_valid():
-            return self._mode_type.list_mode_name()
+            return redirect(mode_url(self._mode_type.list_mode_name()))
 
         vs = self.valuespec()
 
@@ -401,20 +446,31 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
                 "ident",
                 _("You are not allowed to edit this %s.") % self._mode_type.name_singular())
 
-        entries[self._ident] = self._entry
-
         if self._new:
+            entries[self._ident] = self._entry
             self._add_change(
-                "add", self._entry,
-                _("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident))
+                action="add",
+                text=_("Added the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                affected_sites=self._mode_type.affected_sites(self._entry),
+            )
         else:
+            current_sites = self._mode_type.affected_sites(self._entry)
+            previous_sites = self._mode_type.affected_sites(entries[self._ident])
+
+            affected_sites = (None if current_sites is None or previous_sites is None else sorted(
+                {*previous_sites, *current_sites}))
+
+            entries[self._ident] = self._entry
+
             self._add_change(
-                "edit", self._entry,
-                _("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident))
+                action="edit",
+                text=_("Edited the %s '%s'") % (self._mode_type.name_singular(), self._ident),
+                affected_sites=affected_sites,
+            )
 
         self._save(entries)
 
-        return self._mode_type.list_mode_name()
+        return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries):
         self._store.save(entries)
@@ -429,6 +485,5 @@ class SimpleEditMode(six.with_metaclass(abc.ABCMeta, SimpleWatoModeBase)):
         vs.set_focus("_edit")
         forms.end()
 
-        html.button("save", _("Save"))
         html.hidden_fields()
         html.end_form()

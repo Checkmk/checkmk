@@ -7,9 +7,13 @@
 #define TableStatus_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <string>
+
+#include "Row.h"
 #include "Table.h"
 #include "global_counters.h"
+class ColumnOffsets;
 #ifdef CMC
 class Core;
 #endif
@@ -27,10 +31,12 @@ public:
     [[nodiscard]] std::string name() const override;
     [[nodiscard]] std::string namePrefix() const override;
     void answerQuery(Query *query) override;
+    [[nodiscard]] Row getDefault() const override;
 
 private:
     void addCounterColumns(const std::string &name,
-                           const std::string &description, Counter which);
+                           const std::string &description,
+                           const ColumnOffsets &offsets, Counter which);
 };
 
 #endif  // TableStatus_h

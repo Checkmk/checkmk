@@ -8,15 +8,11 @@ import getopt
 import json
 import socket
 import sys
-from typing import Any, Dict  # pylint: disable=unused-import
+from typing import Any, Dict
 from base64 import b64encode
+from http.client import HTTPConnection
 
-if sys.version_info[0] >= 3:
-    from http.client import HTTPConnection
-else:
-    from httplib import HTTPConnection  # pylint: disable=import-error
-
-import six
+from six import ensure_binary, ensure_str
 
 
 def usage():
@@ -125,8 +121,8 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 sys.stdout.write('Connecting to %s:%s...\n' % (arg_host, opt_port))
             connection.connect()
 
-            auth = b64encode(six.ensure_binary('%s:%s' % (opt_username, opt_password)))
-            headers = {'Authorization': 'Basic ' + six.ensure_str(auth)}
+            auth = b64encode(ensure_binary('%s:%s' % (opt_username, opt_password)))
+            headers = {'Authorization': 'Basic ' + ensure_str(auth)}
             for obj in ['Agent', '*|*']:
                 connection.request('GET',
                                    url % {
@@ -149,7 +145,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 raise
             return 1
 
-    grouped_data = {}  # type: Dict[str, Dict[str, Dict[str, Any]]]
+    grouped_data: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for metric in data:
         path_parts = metric['metricPath'].split('|')
         if len(path_parts) == 7:  # Unit missing
@@ -178,10 +174,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 if typename in ['app', 'memory', 'sessions', 'web_container_runtime']:
                     sys.stdout.write('<<<appdynamics_%s:sep(124)>>>\n' %
                                      (typename.replace("_runtime", "")))
-                    for item, values in items.iteritems():
+                    for item, values in items.items():
                         if values:
                             output_items = [application, item]
-                            for name, value in values.iteritems():
+                            for name, value in values.items():
                                 if not name:
                                     output_items.append('%s' % value)
                                 else:

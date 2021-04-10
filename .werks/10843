@@ -6,7 +6,7 @@ Date: 1580973599
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check plugin can be used for Prometheus retrieved metrics
 concerning network interface information from the cAdvisor. The

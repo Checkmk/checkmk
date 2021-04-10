@@ -1,0 +1,21 @@
+Title: Averaging of single-core CPU utilization
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1591261890
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This werk extends the following checks by an option to compute averaged
+single-core CPU utilizations (previously, this was only possible for the total
+CPU utilization): hr_cpu, huawei_switch_cpu, kernel.util, tplink_cpu,
+winperf_processor.util. In particular, this option is now available for Linux/UNIX
+(kernel.util) and Windows systems (winperf_processor.util).
+
+To activate the averaging, use the option "Averaging for single cores" of the rules
+"CPU utilization on Linux/UNIX" or "CPU utilization for simple devices" (depending on
+the check). Note that, as described in the documentations of these rules, this option
+only has an effect when used together with the sub-options "Apply single-core levels"
+or "Graphs for averaged single-core utilizations".

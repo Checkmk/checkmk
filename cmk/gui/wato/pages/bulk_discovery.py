@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,9 +7,7 @@
 this mode is used."""
 
 import copy
-from typing import (  # pylint: disable=unused-import
-    List, Tuple, cast,
-)
+from typing import List, Tuple, cast, Type, Optional
 
 import cmk.gui.config as config
 import cmk.gui.sites as sites
@@ -18,6 +16,9 @@ from cmk.gui.log import logger
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
@@ -28,6 +29,7 @@ from cmk.gui.watolib.bulk_discovery import (
 
 from cmk.gui.plugins.wato import (
     WatoMode,
+    ActionResult,
     mode_registry,
     get_hostnames_from_checkboxes,
 )
@@ -42,6 +44,10 @@ class ModeBulkDiscovery(WatoMode):
     @classmethod
     def permissions(cls):
         return ["hosts", "services"]
+
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModeFolder
 
     def _from_vars(self):
         self._start = bool(html.request.var("_start"))
@@ -64,27 +70,43 @@ class ModeBulkDiscovery(WatoMode):
          self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
                                      self._bulk_discovery_params["selection"])
 
-        # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._use_cache, self._do_scan,
-         self._bulk_size) = cast(Tuple[bool, bool, int], self._bulk_discovery_params["performance"])
-
+        self._do_scan, self._bulk_size = self._get_performance_params()
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
+
+    def _get_performance_params(self) -> Tuple[bool, int]:
+        performance_params = self._bulk_discovery_params["performance"]
+        assert isinstance(performance_params, tuple)
+
+        if len(performance_params) == 3:
+            # In previous Checkmk versions (< 2.0) there was a third performance parameter:
+            # 'use_cache' in the first place.
+            do_scan, bulk_size = performance_params[1:]
+        else:
+            do_scan, bulk_size = performance_params
+
+        assert isinstance(do_scan, bool)
+        assert isinstance(bulk_size, int)
+        return do_scan, bulk_size
 
     def title(self):
         return _("Bulk discovery")
 
-    def buttons(self):
-        html.context_button(_("Folder"), Folder.current().url(), "back")
+    def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        return make_simple_form_page_menu(_("Discovery"),
+                                          breadcrumb,
+                                          form_name="bulkinventory",
+                                          button_name="_start",
+                                          save_title=_("Start"))
 
-    def action(self):
+    def action(self) -> ActionResult:
         config.user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
             html.check_transaction()
-            self._job.set_function(self._job.do_execute, self._mode, self._use_cache, self._do_scan,
+            self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()
         except Exception as e:
@@ -138,12 +160,10 @@ class ModeBulkDiscovery(WatoMode):
         vs.render_input("bulkinventory", self._bulk_discovery_params)
         forms.end()
 
-        html.button("_start", _("Start"))
         html.hidden_fields()
         html.end_form()
 
-    def _get_hosts_to_discover(self):
-        # type: () -> List[DiscoveryHost]
+    def _get_hosts_to_discover(self) -> List[DiscoveryHost]:
         if self._only_failed_invcheck:
             restrict_to_hosts = self._find_hosts_with_failed_discovery_check()
         else:

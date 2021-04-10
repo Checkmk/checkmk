@@ -4,6 +4,7 @@
 // source code package.
 
 #include "CountAggregator.h"
+
 #include "Filter.h"
 #include "Renderer.h"
 #include "Row.h"

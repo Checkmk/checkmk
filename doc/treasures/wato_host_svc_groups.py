@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,12 +16,11 @@
 #}
 # Means alias has to follow the name
 
-from __future__ import print_function
 import sys
 path = sys.argv[1]
 
 alias = False
-next_ = False
+next_ = ""
 
 servicegroups = {}
 hostgroups = {}
@@ -39,14 +38,14 @@ for line in open(path).readlines():
                 next_ = "servicegroup"
                 name = value
 
-            if alias == True:
+            if alias:
                 if next_ == "hostgroup":
                     hostgroups[name] = value
                 elif next_ == "servicegroup":
                     servicegroups[name] = value
                 alias = False
             alias = True
-        except:
+        except Exception:
             pass
 
 print("Hostgroups:")

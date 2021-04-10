@@ -7,9 +7,11 @@
 #define TableLog_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <ctime>
 #include <memory>
 #include <string>
+
 #include "Logfile.h"
 #include "Table.h"
 #include "contact_fwd.h"

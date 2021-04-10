@@ -1,28 +1,29 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Union, Callable, Text, Dict, Optional, Tuple, List, Any, TYPE_CHECKING  # pylint: disable=unused-import
-import six
+from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
+from six import ensure_binary, ensure_str
 
 import cmk.gui.escaping as escaping
-from cmk.gui.htmllib import HTML
+from cmk.gui.utils.html import HTML
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
+import cmk.gui.config as config
 
 if TYPE_CHECKING:
-    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform  # pylint: disable=unused-import
+    from typing import Sequence
+    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform
 
 g_header_open = False
 g_section_open = False
 
 
-def get_input(valuespec, varprefix):
-    # type: (ValueSpec, str) -> Any
+def get_input(valuespec: 'ValueSpec', varprefix: str) -> Any:
     value = valuespec.from_html_vars(varprefix)
     valuespec.validate_value(value, varprefix)
     return value
@@ -36,28 +37,24 @@ def get_input(valuespec, varprefix):
 # several dictionaries at once.
 # TODO: Remove all call sites and clean this up! The mechanic of this
 # is very uncommon compared to the other usages of valuespecs.
-def edit_dictionaries(
-        dictionaries,  # type: List[Tuple[str, Union[Transform, Dictionary]]]
-        value,  # type: Dict[str, Any]
-        focus=None,  # type: Optional[str]
-        hover_help=True,  # type: bool
-        validate=None,  # type: Optional[Callable[[Any], None]]
-        buttontext=None,  # type: Optional[Text]
-        title=None,  # type: Optional[Text]
-        buttons=None,  # type: List[Tuple[str, Text, str]]
-        method="GET",  # type: str
-        preview=False,  # type: bool
-        varprefix="",  # type: str
-        formname="form",  # type: str
-        consume_transid=True  # type: bool
-):
+def edit_dictionaries(dictionaries: 'Sequence[Tuple[str, Union[Transform, Dictionary]]]',
+                      value: Dict[str, Any],
+                      focus: Optional[str] = None,
+                      hover_help: bool = True,
+                      validate: Optional[Callable[[Any], None]] = None,
+                      title: Optional[str] = None,
+                      method: str = "GET",
+                      preview: bool = False,
+                      varprefix: str = "",
+                      formname: str = "form",
+                      consume_transid: bool = True):
 
     if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
-        messages = []  # type: List[Text]
-        new_value = {}  # type: Dict[str, Dict[str, Any]]
+        messages: List[str] = []
+        new_value: Dict[str, Dict[str, Any]] = {}
         for keyname, vs_dict in dictionaries:
             dict_varprefix = varprefix + keyname
             new_value[keyname] = {}
@@ -95,127 +92,118 @@ def edit_dictionaries(
         vs_dict.render_input_as_form(dict_varprefix, subvalue)
 
     end()
-    if buttons:
-        for name, button_title, _icon in buttons:
-            html.button(name, button_title)
-    else:
-        if buttontext is None:
-            buttontext = _("Save")
-        html.button("save", buttontext)
     # Should be ignored be hidden_fields, but I do not dare to change it there
     html.request.del_var("filled_in")
     html.hidden_fields()
     html.end_form()
-
-
-# Similar but for editing an arbitrary valuespec
-def edit_valuespec(
-        vs,  # type: Dictionary
-        value,  # type: Dict[str, Any]
-        buttontext=None,  # type: Optional[Text]
-        method="GET",  # type: str
-        varprefix="",  # type: str
-        validate=None,  # type: Optional[Callable[[Dict[str, Any]], None]]
-        formname="form",  # type: str
-        consume_transid=True,  # type: bool
-        focus=None  # type: Optional[str]
-):
-    # type: (...) -> Optional[Dict[str, Any]]
-
-    if html.request.get_ascii_input("filled_in") == formname and html.transaction_valid():
-        if consume_transid:
-            html.check_transaction()
-
-        messages = []
-        try:
-            new_value = vs.from_html_vars(varprefix)
-            vs.validate_value(new_value, varprefix)
-
-        except MKUserError as e:
-            messages.append("%s: %s" % (vs.title(), e.message))
-            html.add_user_error(e.varname, e.message)
-
-        if validate and not html.has_user_errors():
-            try:
-                validate(new_value)
-            except MKUserError as e:
-                messages.append(e.message)
-                html.add_user_error(e.varname, e.message)
-
-        if messages:
-            html.show_error("".join(["%s<br>\n" % m for m in messages]))
-        else:
-            return new_value
-
-    html.begin_form(formname, method=method)
-    html.help(vs.help())
-    vs.render_input(varprefix, value)
-    if buttontext is None:
-        buttontext = _("Save")
-    html.button("save", buttontext)
-    # Should be ignored be hidden_fields, but I do not dare to change it there
-    html.request.del_var("filled_in")
-    html.hidden_fields()
-    if focus:
-        html.set_focus(focus)
-    else:
-        vs.set_focus(varprefix)
-    html.end_form()
-    return None
 
 
 # New functions for painting forms
 
 
-def header(title, isopen=True, table_id="", narrow=False, css=None):
-    # type: (Text, bool, str, bool, Optional[str]) -> None
+def header(
+    title: str,
+    isopen: bool = True,
+    table_id: str = "",
+    narrow: bool = False,
+    css: Optional[str] = None,
+    show_table_head: bool = True,
+    show_more_toggle: bool = False,
+    show_more_mode: bool = False,
+    help_text: Union[str, HTML, None] = None,
+) -> None:
     global g_header_open, g_section_open
     if g_header_open:
         end()
 
-    html.open_table(id_=table_id if table_id else None,
-                    class_=["nform", "narrow" if narrow else None, css if css else None])
+    id_ = ensure_str(base64.b64encode(ensure_binary(title)))
+    treename = html.form_name or "nform"
+    isopen = config.user.get_tree_state(treename, id_, isopen)
+    container_id = html.foldable_container_id(treename, id_)
 
-    html.begin_foldable_container(treename=html.form_name if html.form_name else "nform",
-                                  id_=six.ensure_str(base64.b64encode(six.ensure_binary(title))),
-                                  isopen=isopen,
-                                  title=title,
-                                  indent="nform")
+    html.open_table(id_=table_id if table_id else None,
+                    class_=[
+                        "nform",
+                        "narrow" if narrow else None,
+                        css if css else None,
+                        "open" if isopen else "closed",
+                        "more" if config.user.get_show_more_setting("foldable_%s" % id_) or
+                        show_more_mode else None,
+                    ])
+
+    if show_table_head:
+        _table_head(
+            treename=treename,
+            id_=id_,
+            isopen=isopen,
+            title=title,
+            show_more_toggle=show_more_toggle,
+            help_text=help_text,
+        )
+
+    html.open_tbody(id_=container_id, class_=["open" if isopen else "closed"])
     html.tr(html.render_td('', colspan=2))
     g_header_open = True
     g_section_open = False
 
 
+def _table_head(
+    treename: str,
+    id_: str,
+    isopen: bool,
+    title: str,
+    show_more_toggle: bool,
+    help_text: Union[str, HTML, None] = None,
+) -> None:
+    onclick = html.foldable_container_onclick(treename, id_, fetch_url=None)
+    img_id = html.foldable_container_img_id(treename, id_)
+
+    html.open_thead()
+    html.open_tr(class_="heading")
+    html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
+    html.img(id_=img_id,
+             class_=["treeangle", "nform", "open" if isopen else "closed"],
+             src="themes/%s/images/tree_closed.svg" % (html.get_theme()),
+             align="absbottom")
+    html.write_text(title)
+    html.help(help_text)
+    if show_more_toggle:
+        html.more_button("foldable_" + id_, dom_levels_up=4, with_text=True)
+    html.close_td()
+    html.close_tr()
+    html.close_thead()
+
+
 # container without legend and content
-def container():
-    # type: () -> None
+def container() -> None:
     global g_section_open
-    if g_section_open:
-        html.close_td()
-        html.close_tr()
+    section_close()
     html.open_tr()
     html.open_td(colspan=2)
     g_section_open = True
 
 
-def space():
-    # type: () -> None
+def space() -> None:
     html.tr(html.render_td('', colspan=2, style="height:15px;"))
 
 
-def section(title=None,
-            checkbox=None,
-            section_id=None,
-            simple=False,
-            hide=False,
-            legend=True,
-            css=None):
-    # type: (Union[None, HTML, Text], Union[None, HTML, str, Text, Tuple[str, bool, str]], Optional[str], bool, bool, bool, Optional[str]) -> None
+def section(title: Union[None, HTML, str] = None,
+            checkbox: Union[None, HTML, str, Tuple[str, bool, str]] = None,
+            section_id: Optional[str] = None,
+            simple: bool = False,
+            hide: bool = False,
+            legend: bool = True,
+            css: Optional[str] = None,
+            is_show_more: bool = False,
+            is_changed: bool = False,
+            is_required: bool = False) -> None:
     global g_section_open
-    if g_section_open:
-        html.close_td()
-        html.close_tr()
-    html.open_tr(id_=section_id, class_=[css], style="display:none;" if hide else None)
+    section_close()
+    html.open_tr(
+        id_=section_id,
+        class_=[css, "show_more_mode" if is_show_more and not is_changed else "basic"],
+        style="display:none;" if hide else None,
+    )
 
     if legend:
         html.open_td(class_=["legend", "simple" if simple else None])
@@ -223,11 +211,11 @@ def section(title=None,
             html.open_div(class_=["title", "withcheckbox" if checkbox else None],
                           title=escaping.strip_tags(title))
             html.write(escaping.escape_text(title))
-            html.span('.' * 200, class_="dots")
+            html.span('.' * 200, class_=["dots", "required" if is_required else None])
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
-            if isinstance(checkbox, six.string_types + (HTML,)):
+            if isinstance(checkbox, (str, HTML)):
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox
@@ -240,14 +228,16 @@ def section(title=None,
     g_section_open = True
 
 
-def end():
-    # type: () -> None
-    global g_header_open
-    g_header_open = False
+def section_close() -> None:
     if g_section_open:
         html.close_td()
         html.close_tr()
-    html.end_foldable_container()
+
+
+def end() -> None:
+    global g_header_open
+    g_header_open = False
+    section_close()
     html.tr(html.render_td('', colspan=2), class_=["bottom"])
     html.close_tbody()
     html.close_table()

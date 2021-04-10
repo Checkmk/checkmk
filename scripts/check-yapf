@@ -20,14 +20,8 @@ else
 fi
 
 printf -v files " %s" "$@"
-PYTHON2_FILES=$(python_files 2 "$files")
 PYTHON3_FILES=$(python_files 3 "$files")
 
 if [ ! -z "$PYTHON3_FILES" ]; then
-    $PIPENV 3 run yapf --parallel --style $REPO_PATH/.style.yapf --verbose -i $ARGS $PYTHON3_FILES
-fi
-
-
-if [ ! -z "$PYTHON2_FILES" ]; then
-    $PIPENV 2 run yapf --parallel --style $REPO_PATH/.style.yapf --verbose -i $ARGS $PYTHON2_FILES
+    $PIPENV run yapf --parallel --style $REPO_PATH/.style.yapf --verbose -i $ARGS $PYTHON3_FILES
 fi

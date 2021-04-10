@@ -7,6 +7,7 @@
 #define opids_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <iosfwd>
 #include <memory>
 #include <string>

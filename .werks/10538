@@ -1,0 +1,19 @@
+Title: Improved livestatus query performance on some gui pages/features
+Class: fix
+Compatible: compat
+Component: core
+Date: 1591172505
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+The following performance improvements are only noticable on systems with 10k+ hosts.
+
+<ul>
+<li>The Agent Bakery "Automatic updates" overview page is now renderered faster</li>
+<li>The hostname autocompletion feature now udpates faster</li>
+<li>Using Host- and Servicecheck command filters now costs less CPU time</li>
+</ul>
+

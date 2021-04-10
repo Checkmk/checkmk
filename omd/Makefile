@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include Makefile.omd
+include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
@@ -20,30 +20,26 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     openssl \
+    redis \
     libgsf \
     postgresql \
     perl-modules \
-    Python \
     Python3 \
     freetds \
     re2 \
-    python-modules \
     python3-modules \
     rrdtool \
-    python2-rrdtool \
     msitools \
     net-snmp \
-    python2-net-snmp \
     apache-omd \
+    lasso \
+    mod_auth_mellon \
     mod_fcgid \
-    mod_wsgi \
     python3-mod_wsgi \
     check_mk \
-    check_multi \
     check_mysql_health \
     check_oracle_health \
     Webinject \
-    dokuwiki \
     jmx4perl \
     mk-livestatus \
     stunnel \
@@ -63,6 +59,9 @@ PACKAGES := \
     heirloom-pkgtools
 
 ifeq ($(EDITION),enterprise)
+PACKAGES += enterprise
+endif
+ifeq ($(EDITION),free)
 PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
@@ -88,7 +87,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
@@ -279,10 +278,11 @@ deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \
-	    TARGET="--no-sign -- clean binary-arch" ; \
+	    TARGET="--no-sign -- clean build-arch binary-arch" ; \
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \

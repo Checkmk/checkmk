@@ -44,13 +44,16 @@ description:
  filesystem but a group of filesystems forming a pool.
  Only the total usage of the pool is of interest. The {df} check supports pools
  by defining groups. For each group you specify a name and a list
- of globbing patterns (path patterns containing {*} and {?}). The name
+ of globbing patterns (path patterns containing {*}, {?} and {[...]}). The name
  is being used as the check item. All filesystems that match one of
- the patterns are part of the pool.
+ the patterns are part of the pool. You can specify both patterns for including
+ and excluding filesystems from a group.
 
  When using inventory you specify the groups with the ruleset
  {filesystem_groups}. When configuring manual checks, you specify
- the list of patterns in the check parameter {"patterns"}.
+ the list of patterns in the check parameters {"patterns_include"} (for including
+ filesystems in the group) and {"patterns_exclude"} (for excluding filesystems
+ from the group).
 
 item:
  The mount point of the filesystem (UNIX) or the drive

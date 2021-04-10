@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -7,7 +7,7 @@
 # This hook scans the whole WATO configuration for duplicate hosts having
 # duplicate names or IP addresses and warns the admin about this fact.
 
-# Put this script into local/share/check_mk/web/plugins/wato on a Check_MK site
+# Put this script into local/share/check_mk/web/plugins/wato on a Checkmk site
 # and run "omd reload apache" as site user to ensure the plugin is loaded.
 from cmk.gui.log import logger
 

@@ -1,57 +1,65 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""User-defined exceptions."""
 
-import sys
-import six
+import traceback
+from types import TracebackType
+from typing import Tuple, Type
+
+__all__ = [
+    "MKAgentError",
+    "MKBailOut",
+    "MKIPAddressLookupError",
+    "MKEmptyAgentData",
+    "MKException",
+    "MKFetcherError",
+    "MKGeneralException",
+    "MKParseFunctionError",
+    "MKSkipCheck",
+    "MKSNMPError",
+    "MKTerminate",
+    "MKTimeout",
+]
 
 
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
 class MKException(Exception):
-    # TODO: Remove this method after Python 3 migration.
-    # NOTE: In Python 2 the return type is WRONG, we should return str.
-    def __str__(self):
-        # not-yet-a-type: () -> six.text_type
-        """
-        Python 3:
-        - No args:
-          >>> str(Exception())
-          ''
+    pass
 
-        - Bytes input:
-          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f"))
-          "b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f'"
 
-        - Unicode input:
-          >>> str(Exception("hé ßß"))
-          'hé ßß'
+class MKFetcherError(MKException):
+    """An exception common to the fetchers."""
 
-        - Multiple args:
-          >>> str(Exception(b"h\xc3\xa9 \xc3\x9f\xc3\x9f", 123, "hé ßß"))
-          "(b'h\\xc3\\xa9 \\xc3\\x9f\\xc3\\x9f', 123, 'hé ßß')"
-        """
 
-        if sys.version_info[0] >= 3:
-            return super(MKException, self).__str__()
+class MKAgentError(MKFetcherError):
+    pass
 
-        if not self.args:
-            return six.text_type("")
 
-        if len(self.args) == 1:
-            arg = self.args[0]
-            if isinstance(arg, six.binary_type):
-                # Python 3 immediately returns repr of bytestr but we try to decode first.
-                # We always return a unicode str.
-                try:
-                    return arg.decode("utf-8")
-                except UnicodeDecodeError:
-                    return u"b%s" % repr(arg)
-            return six.text_type(arg)
+class MKEmptyAgentData(MKAgentError):
+    pass
 
-        return six.text_type(self.args)
+
+class MKParseFunctionError(MKException):
+    def __init__(self, exception_type: Type[Exception], exception: Exception,
+                 backtrace: TracebackType) -> None:
+        self.exception_type = exception_type
+        self.exception = exception
+        self.backtrace = backtrace
+        super(MKParseFunctionError, self).__init__(self, exception_type, exception, backtrace)
+
+    def exc_info(self) -> Tuple[Type[Exception], Exception, TracebackType]:
+        return self.exception_type, self.exception, self.backtrace
+
+    def __str__(self) -> str:
+        return "%r\n%s" % (self.exception, "".join(traceback.format_tb(self.backtrace)))
+
+
+class MKSkipCheck(MKException):
+    pass
 
 
 class MKGeneralException(MKException):
@@ -84,4 +92,8 @@ class MKTimeout(MKException):
 
 
 class MKSNMPError(MKException):
+    pass
+
+
+class MKIPAddressLookupError(MKGeneralException):
     pass

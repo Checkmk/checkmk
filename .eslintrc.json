@@ -3,12 +3,12 @@
         "browser": true,
         "commonjs": true
     },
-    "extends": ["eslint:recommended", "plugin:compat/recommended"],
+    "extends": ["eslint:recommended", "plugin:compat/recommended", "prettier"],
     "parserOptions": {
         "ecmaVersion": 6,
         "sourceType": "module"
     },
-    "plugins": ["compat"],
+    "plugins": ["compat", "prettier"],
     "rules": {
         "strict": 1,
         "indent": [
@@ -27,6 +27,7 @@
         "semi": [
             "error",
             "always"
-        ]
+        ],
+        "prettier/prettier": 2
     }
 }

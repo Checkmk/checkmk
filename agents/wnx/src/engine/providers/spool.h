@@ -1,8 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
-
-// provides basic api to start and stop service
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #pragma once
 #ifndef spool_h__
@@ -18,31 +17,25 @@
 
 namespace cma::provider {
 
-// mrpe:
 class SpoolProvider : public Asynchronous {
 public:
     SpoolProvider() : Asynchronous(cma::section::kSpool) {}
 
-    SpoolProvider(const std::string_view& Name, char Separator)
-        : Asynchronous(Name, Separator) {}
+    SpoolProvider(const std::string_view& name, char separator)
+        : Asynchronous(name, separator) {}
 
-    virtual void loadConfig();
+    void loadConfig() override;
 
-    virtual void updateSectionStatus();
+    void updateSectionStatus() override;
 
     // empty header
-    virtual std::string makeHeader(const std::string_view) const { return {}; }
+    std::string makeHeader(const std::string_view) const override { return {}; }
 
 protected:
     std::string makeBody() override;
-
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class MrpeTest;
-    FRIEND_TEST(MrpeTest, Base);
-#endif
 };
-bool IsSpoolFileValid(const std::filesystem::path& Path);
-bool IsDirectoryValid(const std::filesystem::path& Dir);
+bool IsSpoolFileValid(const std::filesystem::path& path);
+bool IsDirectoryValid(const std::filesystem::path& dir);
 }  // namespace cma::provider
 
 #endif  // spool_h__

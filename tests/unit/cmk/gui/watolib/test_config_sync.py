@@ -1,23 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import time
 import tarfile
 import shutil
 from io import IOBase
-from typing import Dict, List  # pylint: disable=unused-import
-import six
+from typing import Dict, List
+from pathlib import Path
 
-# Explicitly check for Python 3 (which is understood by mypy)
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=import-error
-else:
-    from pathlib2 import Path  # pylint: disable=import-error
-
+from six import ensure_str
 import pytest  # type: ignore[import]
 import responses  # type: ignore[import]
 
@@ -26,6 +20,7 @@ import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
 import cmk.gui.wato.mkeventd
+import cmk.gui.watolib.utils as utils
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
 
@@ -189,12 +184,12 @@ def _get_expected_paths(user_id, is_pre_17_site):
         "etc/htpasswd",
         "etc/auth.serials",
         "etc/check_mk/multisite.d/wato/users.mk",
-        six.ensure_str('var/check_mk/web/%s' % user_id),
-        six.ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
-        six.ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
+        ensure_str('var/check_mk/web/%s' % user_id),
+        ensure_str('var/check_mk/web/%s/cached_profile.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/enforce_pw_change.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/last_pw_change.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/num_failed_logins.mk' % user_id),
+        ensure_str('var/check_mk/web/%s/serial.mk' % user_id),
     ]
 
     # The new sync directories create all needed files on the central site now
@@ -278,7 +273,7 @@ def test_generate_snapshot(edition_short, monkeypatch, tmp_path, with_user_login
     activation_manager = _get_activation_manager(monkeypatch)
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
 
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: False)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
 
     snapshot_settings = _create_sync_snapshot(activation_manager,
                                               snapshot_data_collector_class,
@@ -300,7 +295,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager, snapshot_data_collector_class,
@@ -348,7 +343,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
 
     assert sorted(f.name for f in unpack_dir.iterdir()) == sorted(expected_subtars)
 
-    expected_files = {
+    expected_files: Dict[str, List[str]] = {
         'mkeventd_mkp.tar': [],
         'multisite.tar': ["global.mk", "users.mk"],
         'usersettings.tar': [with_user_login],
@@ -362,7 +357,7 @@ def test_generate_pre_17_site_snapshot(edition_short, monkeypatch, tmp_path, wit
         'auth.serials.tar': ["auth.serials"],
         'mknotify.tar': [],
         'diskspace.tar': [],
-    }  # type: Dict[str, List[str]]
+    }
 
     if cmk_version.is_managed_edition():
         expected_files.update({
@@ -409,7 +404,7 @@ def test_apply_pre_17_sync_snapshot(edition_short, monkeypatch, tmp_path, with_u
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,
@@ -564,7 +559,7 @@ def test_synchronize_site(mocked_responses, monkeypatch, edition_short, tmp_path
 
     is_pre_17_site = False
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,
@@ -594,7 +589,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
 
     is_pre_17_site = True
     monkeypatch.setattr(cmk_version, "edition_short", lambda: edition_short)
-    monkeypatch.setattr(activate_changes, "_is_pre_17_remote_site", lambda s: is_pre_17_site)
+    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     snapshot_settings = _create_sync_snapshot(activation_manager,
@@ -623,10 +618,7 @@ def test_synchronize_pre_17_site(monkeypatch, edition_short, tmp_path, mocker):
     assert list(kwargs.keys()) == ["files"]
     assert list(kwargs["files"].keys()) == ["snapshot"]
     # TODO: Add correct type once we are on Python 3 only
-    if sys.version_info[0] >= 3:
-        assert isinstance(kwargs["files"]["snapshot"], IOBase)
-    else:
-        assert isinstance(kwargs["files"]["snapshot"], file)  # pylint: disable=undefined-variable
+    assert isinstance(kwargs["files"]["snapshot"], IOBase)
 
     file_name = kwargs["files"]["snapshot"].name  # type: ignore[attr-defined]
     assert file_name == snapshot_settings.snapshot_path

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -59,7 +59,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_databases",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database identifier"),),
+        item_spec=lambda: TextAscii(title=_("Database identifier"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_databases,
         title=lambda: _("MSSQL Databases properties"),

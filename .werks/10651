@@ -6,7 +6,7 @@ Date: 1576052474
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  This commit adds the functionality of the Prometheus custom check
  plugin to Checkmk. It allows the user to define PromQL queries and

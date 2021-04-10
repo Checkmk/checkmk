@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -6,7 +6,7 @@
 
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, NamedTuple, Union  # pylint: disable=unused-import
+from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 import cmk.gui.config as config
 import cmk.gui.i18n
@@ -18,15 +18,14 @@ Hook = NamedTuple("Hook", [
     ("is_builtin", bool),
 ])
 
-hooks = {}  # type: Dict[str, List[Hook]]
+hooks: Dict[str, List[Hook]] = {}
 
 # Datastructures and functions needed before plugins can be loaded
-loaded_with_language = False  # type: Union[bool, None, str]
+loaded_with_language: Union[bool, None, str] = False
 
 
 # Load all login plugins
-def load_plugins(force):
-    # type: (bool) -> None
+def load_plugins(force: bool) -> None:
     global loaded_with_language
     if loaded_with_language == cmk.gui.i18n.get_current_language() and not force:
         return
@@ -41,8 +40,7 @@ def load_plugins(force):
     loaded_with_language = cmk.gui.i18n.get_current_language()
 
 
-def unregister_plugin_hooks():
-    # type: () -> None
+def unregister_plugin_hooks() -> None:
     old_hooks = hooks.copy()
     for name, registered_hooks in old_hooks.items():
         hooks_left = [h for h in registered_hooks if h.is_builtin]
@@ -52,35 +50,29 @@ def unregister_plugin_hooks():
             del hooks[name]
 
 
-def register_builtin(name, func):
-    # type: (str, Callable) -> None
+def register_builtin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=True)
 
 
-def register_from_plugin(name, func):
-    # type: (str, Callable) -> None
+def register_from_plugin(name: str, func: Callable) -> None:
     register(name, func, is_builtin=False)
 
 
 # Kept public for compatibility with pre 1.6 plugins (is_builtin needs to be optional for pre 1.6)
-def register(name, func, is_builtin=False):
-    # type: (str, Callable, bool) -> None
+def register(name: str, func: Callable, is_builtin: bool = False) -> None:
     hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
 
 
-def get(name):
-    # type: (str) -> List[Hook]
+def get(name: str) -> List[Hook]:
     return hooks.get(name, [])
 
 
-def registered(name):
-    # type: (str) -> bool
+def registered(name: str) -> bool:
     """ Returns True if at least one function is registered for the given hook """
     return hooks.get(name, []) != []
 
 
-def call(name, *args):
-    # type: (str, *Any) -> None
+def call(name: str, *args: Any) -> None:
     n = 0
     for hook in hooks.get(name, []):
         n += 1

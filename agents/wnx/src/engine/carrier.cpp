@@ -95,7 +95,6 @@ bool CoreCarrier::sendData(const std::string& PeerName, uint64_t Marker,
 }
 
 // BASE API
-// gtest [+]
 bool CoreCarrier::sendLog(const std::string& PeerName, const void* Data,
                           size_t Length) {
     std::lock_guard lk(lock_);
@@ -150,7 +149,11 @@ bool CoreCarrier::mailSlotSend(DataType Type, const std::string& PeerName,
         return false;
     }
 
-    return postman.ExecPost(cdh.get(), cdh->fullLength());
+    auto ret = postman.ExecPost(cdh.get(), cdh->fullLength());
+    if (!ret) {
+        XLOG::l("Failed to send data to mail slot");
+    }
+    return ret;
 }
 
 bool CoreCarrier::dumpSlotSend(DataType type, const std::string& peer_name,

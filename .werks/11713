@@ -1,0 +1,22 @@
+Title: PySNMP: Opaque Handling
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1607341317
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+If your SNMP device used the type "Opaque" to send
+floats the values were not formatted properly which
+caused some crashes later.
+
+The error occured if Checks tried to use these corrupted
+values. Error patterns looked like this:
+
+ValueError: could not convert string to float: '\x9fx\x04?B\x8f\\'
+
+Now the Opaque value is formatted.
+

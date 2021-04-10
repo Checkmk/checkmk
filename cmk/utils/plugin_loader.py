@@ -1,34 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Tuple, Optional, List, Generator  # pylint: disable=unused-import
 
 import importlib
 import pkgutil
 import sys
-
-if sys.version_info[0] >= 3:
-    from pathlib import Path  # pylint: disable=unused-import
-else:
-    # pylint3 tells us that pathlib2 isn't there even if the branch isn't chosen.
-    from pathlib2 import Path  # pylint: disable=unused-import,import-error
+from typing import Tuple, Optional, List, Generator
 
 
-def load_plugins_with_exceptions(package_name, *init_file_paths):
-    # type: (str, *Path) -> Generator[Tuple[str, Exception], None, None]
+def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exception], None, None]:
     """Load all specified packages
 
-    This function accepts two parameters, a package name in Python's dotted syntax (e.g.
-    requests.exceptions) and optionally multiple filesystem paths.
+    This function accepts a package name in Python's dotted syntax (e.g.
+    requests.exceptions).
 
     Args:
         package_name:
             A valid module path in Python's dotted syntax.
-
-        *init_file_paths:
-            Zero or more `Path` instances of packages.
 
     Returns:
         A generator of 2-tuples of plugin-name and exception, when a plugin failed to
@@ -36,27 +26,26 @@ def load_plugins_with_exceptions(package_name, *init_file_paths):
 
     Raises:
         Nothing explicit. Possibly ImportErrors.
+
+    Example:
+        >>> for mod_name, exc in load_plugins_with_exceptions("urllib"):
+        ...     print("Importing %s failed: %s" % (mod_name, exc))
+
     """
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path = getattr(package, '__path__')  # type: Optional[List[str]]
-    if module_path:
-        for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
-            try:
-                importlib.import_module("%s.%s" % (package_name, plugin_name))
-            except Exception as exc:
-                yield plugin_name, exc
-
-    for file_path in init_file_paths:
-        for _loader, plugin_name, _is_pkg in pkgutil.walk_packages([str(file_path)]):
-            try:
-                importlib.import_module("%s.%s" % (package_name, plugin_name))
-            except Exception as exc:
-                yield plugin_name, exc
+    module_path: List[str] = getattr(package, '__path__', [])
+    for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
+        try:
+            importlib.import_module("%s.%s" % (package_name, plugin_name))
+        except Exception as exc:
+            yield plugin_name, exc
 
 
-def load_plugins(init_file_path, package_name):
-    # type: (str, str) -> None
+def load_plugins(
+    init_file_path: str,
+    package_name: str,
+) -> None:
     """Import all submodules of a module, recursively
 
     This works reliably even with relative imports happening along the chain.
@@ -74,7 +63,7 @@ def load_plugins(init_file_path, package_name):
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path = getattr(package, '__path__')  # type: Optional[List[str]]
+    module_path: Optional[List[str]] = getattr(package, '__path__')
     if module_path:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             importlib.import_module("%s.%s" % (package_name, plugin_name))

@@ -4,6 +4,7 @@
 // source code package.
 
 #include <string>
+
 #include "RegExp.h"
 #include "gtest/gtest.h"
 

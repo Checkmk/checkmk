@@ -1,0 +1,13 @@
+Title: fortigate_sslvpn: Fix crash if old-style parameters
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1592387456
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+If old-style parameters (None) are discovered then the service raises an AttributeError:
+'NoneType' object has no attribute 'get'.

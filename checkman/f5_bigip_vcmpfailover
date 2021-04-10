@@ -12,3 +12,5 @@ description:
 inventory:
  One service is created.
 
+cluster:
+  This check plugin is expected to be run on a cluster. See description above.

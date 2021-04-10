@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -46,7 +46,6 @@ def _parameter_valuespec_postgres_maintenance():
             ("never_analyze_vacuum",
              Alternative(
                  title=_("Never analyzed/vacuumed tables"),
-                 style="dropdown",
                  elements=[
                      Tuple(
                          title=_("Age of never analyzed/vacuumed tables"),

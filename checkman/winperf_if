@@ -8,32 +8,52 @@ description:
  counts, discards and errors of network interfaces of a Windows host using
  data sent by the Checkmk agent.
 
- In order to get information about the link status and MAC address you
- need to deploy the agent plugin {wmic_if.bat} into the {plugins} directory
- of your Checkmk agent for Windows. On servers with just one network
- interface you probably won't need the information about the link status,
- since the agent will be unreachable anyway if the status is not {up}.
- We propose to not installing the plugin in that case and save a few
- CPU resources.
+ To get information about the link status and the MAC address, you need to
+ deploy the agent plugin {wmic_if.bat} into the {plugins} directory of your
+ Checkmk agent for Windows. On servers with just one network interface, you
+ probably won't need the information about the link status, since the agent
+ will be unreachable anyway if the interface is not up. We propose to not
+ install the plugin in that case and save a few CPU resources.
 
- The plugin "mk_dhcp_enabled.bat" can be used to get a WARN if the ip
- address of the interface was assigned by dhcp.
+ The plugin {mk_dhcp_enabled.bat} can be used to get a WARN if the ip
+ address of the interface was assigned by dhcp. To check the current state of
+ Windows bonding interfaces, you need to install the agent plugin {windows_if.ps1}
+ on the target host.
 
- The interface index (in SNMP known as {ifIndex}) is simulated by
- creating an artificial running index after sorting the names of
- the interfaces alphabetically.
+ Depending on the check parameters, this check can go WARN or CRIT when the
+ port status changes (i.e. is down), when the link speed changes (e.g. a
+ port expected to be set to 1 GBit/s operates only at 100 MBit/s), when the
+ absolute or procentual traffic of a port exceeds certain levels or if the
+ rate of errors or discards exceeds configurable limits.
 
- All other aspects of this check are completely compatible of {if}.
- Please refer to that man page for further information.
-
- To check the current state of Windows bonding interfaces you need to
- install the agent plugin windows_if.ps1 on the target host.
+ This check supports averaging the in- and outgoing traffic over a configurable
+ time range by using an exponentially weighted moving average - just as Linux
+ does for the CPU load averages. The averaging can be configured on a per-host
+ and per-interface base. Interfaces with averaging turned on yield two additional
+ performance values: the averaged in- and outgoing traffic in bytes. If you have
+ configured traffic levels, then those levels are applied to the averaged values.
 
 item:
- See man page of {if} for details
+ There are three allowed ways to specify an interface: its index, which simply
+ enumerates the interfaces, its description and its alias.
 
 inventory:
- One service is created for each port that fulfills configurable conditions.
+ One service is created for each interface that fulfills configurable conditions
+ (rule "Network interface and switch port discovery").
+ By default, these are interfaces which are currently found {Connected} and are of
+ type 6, 32, 62, 117, 127, 128, 129, 180, 181, 182, 205 or 229.
 
- See man page of {if} for details
+ {Grouping:} In some situations, you do not want to monitor a single
+ interface but a group of interfaces that together form a pool.
+ This check supports such pools by defining groups. The data of all members is
+ accumulated and put together in a single grouped interface service.
 
+cluster:
+ In the case where single (ungrouped) interfaces are clustered, the corresponding
+ services report only the results from the node with the highest outgoing traffic,
+ since this node is likely the active node.
+ In the case where interface groups are clustered, the grouping is applied across
+ all nodes, potentially combining interfaces from different nodes. Note that the
+ rules defining the interface groups must be configured to apply to the nodes, not
+ to the cluster host (the latter has no effect). In case the grouping configurations
+ vary across the nodes, the last node wins.

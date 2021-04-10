@@ -6,6 +6,6 @@ Date: 1571902607
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When creating a new site with --no-tmpfs option set, the tmp directory is missing mandatory directory structure. This fixed with this werk.

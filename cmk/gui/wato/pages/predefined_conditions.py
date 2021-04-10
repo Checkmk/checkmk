@@ -1,18 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Predefine conditions that can be used in the WATO rule editor"""
 
-from typing import List  # pylint: disable=unused-import
+from typing import List, Optional, Type
 
 import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec  # pylint: disable=unused-import
+from cmk.gui.globals import html, request
+from cmk.gui.valuespec import ValueSpec
 from cmk.gui.valuespec import (
     FixedValue,
     Alternative,
@@ -21,7 +21,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
 from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
 from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -29,19 +29,21 @@ from cmk.gui.watolib.rulespecs import ServiceRulespec
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.plugins.wato import (
-    ConfigDomainGUI,
+    WatoMode,
+    ConfigDomainCore,
     SimpleModeType,
     SimpleListMode,
     SimpleEditMode,
     mode_registry,
 )
 
+from cmk.gui.utils.urls import makeuri_contextless
 
-def dummy_rulespec():
-    # type: () -> ServiceRulespec
+
+def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfiguration,
         valuespec=lambda: FixedValue(None),
     )
 
@@ -68,7 +70,7 @@ class PredefinedConditionModeType(SimpleModeType):
         return False
 
     def affected_config_domains(self):
-        return [ConfigDomainGUI]
+        return [ConfigDomainCore]
 
 
 @mode_registry.register
@@ -122,10 +124,12 @@ class ModePredefinedConditions(SimpleListMode):
                          _("Show rules using this %s") % self._mode_type.name_singular(), "search")
 
     def _search_url(self, ident):
-        return html.makeuri_contextless([("mode", "rulesets"),
-                                         ("search_p_rule_predefined_condition",
-                                          DropdownChoice.option_id(ident)),
-                                         ("search_p_rule_predefined_condition_USE", "on")])
+        return makeuri_contextless(
+            request,
+            [("mode", "rule_search"), ("filled_in", "rule_search"),
+             ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
+             ("search_p_rule_predefined_condition_USE", "on")],
+        )
 
     def _show_entry_cells(self, table, ident, entry):
         table.cell(_("Title"), html.render_text(entry["title"]))
@@ -167,6 +171,10 @@ class ModeEditPredefinedCondition(SimpleEditMode):
     def permissions(cls):
         return ["rulesets"]
 
+    @classmethod
+    def parent_mode(cls) -> Optional[Type[WatoMode]]:
+        return ModePredefinedConditions
+
     def __init__(self):
         super(ModeEditPredefinedCondition, self).__init__(
             mode_type=PredefinedConditionModeType(),
@@ -175,14 +183,14 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
     def _vs_individual_elements(self):
         if config.user.may("wato.edit_all_predefined_conditions"):
-            admin_element = [
+            admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
                     title=_("Administrators"),
                     totext=_("Administrators (having the permission "
                              "\"Write access to all predefined conditions\")"),
                 )
-            ]  # type: List[ValueSpec]
+            ]
         else:
             admin_element = []
 
@@ -194,7 +202,6 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                  help=_(
                      "Each predefined condition is owned by a group of users which are able to edit, "
                      "delete and use existing predefined conditions."),
-                 style="dropdown",
                  elements=admin_element + [
                      DropdownChoice(
                          title=_("Members of the contact group:"),
@@ -261,8 +268,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         new_rulesets.save()
         old_rulesets.save()
 
-    def _rewrite_rules_for(self, conditions):
-        # type: (RuleConditions) -> None
+    def _rewrite_rules_for(self, conditions: RuleConditions) -> None:
         """Apply changed predefined condition to rules
 
         After updating a predefined condition it is necessary to rewrite the

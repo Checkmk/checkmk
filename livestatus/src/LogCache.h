@@ -7,6 +7,7 @@
 #define LogCache_h
 
 #include "config.h"  // IWYU pragma: keep
+
 #include <chrono>
 #include <ctime>
 #include <map>
@@ -34,6 +35,7 @@ public:
 
     [[nodiscard]] size_t numCachedLogMessages() const;
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
+    [[nodiscard]] bool empty() const { return _logfiles.empty(); }
     auto begin() { return _logfiles.begin(); }
     auto end() { return _logfiles.end(); }
 

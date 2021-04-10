@@ -1,0 +1,15 @@
+Title: Exclusion patterns for grouping of filesystems
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1591706369
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The rule "Filesystem grouping patterns" allows for arranging filesystems
+discovered for example by the check <tt>df</tt> into groups. Up to now, the
+rule only allowed for specifying patterns for including a filesystem in a
+group. With this werk, the user can also specify exclusion patterns wich
+prevent filesystems from becoming a member of a group.

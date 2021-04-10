@@ -1,209 +1,321 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
-from typing import Tuple, List  # pylint: disable=unused-import
-import six
+from typing import List, NamedTuple, Tuple
+from dataclasses import asdict, dataclass
 
 from livestatus import MKLivestatusNotFoundError
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+from cmk.gui.globals import request
 
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
+from cmk.gui.plugins.dashboard import (ABCFigureDashlet, dashlet_registry)
+from cmk.gui.utils.urls import makeuri_contextless
 
 
-class DashletStats(six.with_metaclass(abc.ABCMeta, Dashlet)):
+class HostStats(NamedTuple):
+    up: int
+    downtime: int
+    unreachable: int
+    down: int
+
+
+class ServiceStats(NamedTuple):
+    ok: int
+    downtime: int
+    host_down: int
+    warning: int
+    unknown: int
+    critical: int
+
+
+@dataclass
+class StatsPart:
+    title: str
+    css_class: str
+    count: int
+    url: str
+
+
+@dataclass
+class StatsElement:
+    total: StatsPart
+    parts: List[StatsPart]
+
+    def serialize(self):
+        serialized = asdict(self)
+        serialized["total"] = asdict(self.total)
+        serialized["parts"] = [asdict(p) for p in self.parts]
+        return serialized
+
+
+class StatsDashletDataGenerator:
     @classmethod
-    def is_resizable(cls):
-        return False
+    def generate_response_data(cls, properties, context, settings):
+        return {
+            "title": settings.get("title", cls._title()),
+            "title_url": settings.get("title_url"),
+            "data": cls._collect_data(context, settings["single_infos"]).serialize(),
+        }
 
     @classmethod
-    def initial_size(cls):
-        return (30, 18)
-
-    @classmethod
-    def initial_refresh_interval(cls):
-        return 60
-
-    @classmethod
-    def has_context(cls):
-        return True
-
-    @abc.abstractmethod
-    def _livestatus_table(self):
+    def _title(cls):
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _table(self):
+    @classmethod
+    def _livestatus_table(cls):
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _filter(self):
+    @classmethod
+    def _view_name(cls):
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def _view_name(self):
+    @classmethod
+    def _named_stats(cls, stats):
         raise NotImplementedError()
 
-    # TODO: Refactor this method
-    def show(self):
-        pie_id = "dashlet_%d" % self._dashlet_id
-        pie_diameter = 130
-        pie_left_aspect = 0.5
-        pie_right_aspect = 0.8
-        table = self._table()
+    @classmethod
+    def _collect_data(cls, context, single_infos) -> StatsElement:
+        stats = cls._get_stats(context)
 
-        filter_headers, only_sites = visuals.get_filter_headers(table=self._livestatus_table(),
-                                                                infos=self.infos(),
-                                                                context=self.context)
+        general_url_vars = [
+            ("view_name", cls._view_name()),
+            ("filled_in", "filter"),
+            ("search", "1"),
+        ]
+        general_url_vars.extend(visuals.get_context_uri_vars(context, single_infos))
 
-        query = "GET %s\n" % self._livestatus_table()
-        for entry in table:
-            query += entry[3]
-        query += self._filter() + filter_headers
+        parts, total = cls._get_parts_and_total_count(stats, general_url_vars)
+        total_part = StatsPart(
+            title=_("Total"),
+            css_class="",
+            count=total,
+            url=(makeuri_contextless(request, general_url_vars, filename="view.py")),
+        )
 
-        if only_sites:
-            try:
-                sites.live().set_only_sites(only_sites)
-                result = sites.live().query_row(query)  # type: List[int]
-            finally:
-                sites.live().set_only_sites()
-        else:
-            try:
+        return StatsElement(
+            parts=parts,
+            total=total_part,
+        )
+
+    @classmethod
+    def _get_stats(cls, context):
+        filter_headers, only_sites = visuals.get_filter_headers(table=cls._livestatus_table(),
+                                                                infos=HostStatsDashlet.infos(),
+                                                                context=context)
+        query = cls._stats_query() + "\n" + filter_headers
+        try:
+            if only_sites:
+                with sites.only_sites(only_sites):
+                    result: List[int] = sites.live().query_row(query)
+            else:
                 result = sites.live().query_summed_stats(query)
-            except MKLivestatusNotFoundError:
-                result = []
+        except MKLivestatusNotFoundError:
+            result = []
 
-        pies = list(zip(table, result))
-        total = sum([x[1] for x in pies])
+        return cls._named_stats(result)
 
-        html.open_div(class_="stats")
-        html.canvas('',
-                    class_="pie",
-                    id_="%s_stats" % pie_id,
-                    width="%d" % pie_diameter,
-                    height="%d" % pie_diameter,
-                    style="float: left")
-        html.img(html.theme_url("images/globe.png"), class_="globe")
+    @classmethod
+    def _get_parts_and_total_count(cls, stats, general_url_vars) -> Tuple[List[StatsPart], int]:
+        raise NotImplementedError()
 
-        html.open_table(class_=["hoststats"] + (["narrow"] if len(pies) > 0 else []),
-                        style="float:left")
-
-        table_entries = []  # type: List[Tuple]
-        table_entries += pies
-        while len(table_entries) < 6:
-            table_entries = table_entries + [(("", None, [], ""), HTML("&nbsp;"))]
-        table_entries.append(((_("Total"), "", [], ""), total))
-
-        for (name, color, table_url_vars, query), count in table_entries:
-            url_vars = [
-                ("view_name", self._view_name()),
-                ("filled_in", "filter"),
-                ("search", "1"),
-            ] + table_url_vars + self._dashlet_context_vars()
-            url = html.makeuri_contextless(url_vars, filename="view.py")
-
-            html.open_tr()
-            html.th(html.render_a(name, href=url))
-            html.td('', class_="color", style="background-color: %s" % color if color else '')
-            html.td(html.render_a(count, href=url))
-            html.close_tr()
-
-        html.close_table()
-
-        pie_parts = []
-        if total > 0:
-            # Count number of non-empty classes
-            num_nonzero = 0
-            for _info, value in pies:
-                if value > 0:
-                    num_nonzero += 1
-
-            # Each non-zero class gets at least a view pixels of visible thickness.
-            # We reserve that space right now. All computations are done in percent
-            # of the radius.
-            separator = 0.02  # 3% of radius
-            remaining_separatorspace = num_nonzero * separator  # space for separators
-            remaining_radius = 1 - remaining_separatorspace  # remaining space
-            remaining_part = 1.0  # keep track of remaining part, 1.0 = 100%
-
-            # Loop over classes, begin with most outer sphere. Inner spheres show
-            # worse states and appear larger to the user (which is the reason we
-            # are doing all this stuff in the first place)
-            for (name, color, _unused, _q), value in pies[::1]:
-                if value > 0 and remaining_part > 0:  # skip empty classes
-
-                    # compute radius of this sphere *including all inner spheres!* The first
-                    # sphere always gets a radius of 1.0, of course.
-                    radius = remaining_separatorspace + remaining_radius * (remaining_part**
-                                                                            (1 / 3.0))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, true);' %
-                                     (pie_id, pie_right_aspect, radius, color))
-                    pie_parts.append('chart_pie("%s", %f, %f, %r, false);' %
-                                     (pie_id, pie_left_aspect, radius, color))
-
-                    # compute relative part of this class
-                    part = float(value) / total  # ranges from 0 to 1
-                    remaining_part -= part
-                    remaining_separatorspace -= separator
-
-        html.close_div()
-
-        html.javascript(
-            """
-function chart_pie(pie_id, x_scale, radius, color, right_side) {
-    var context = document.getElementById(pie_id + "_stats").getContext('2d');
-    if (!context)
-        return;
-    var pie_x = %(x)f;
-    var pie_y = %(y)f;
-    var pie_d = %(d)f;
-    context.fillStyle = color;
-    context.save();
-    context.translate(pie_x, pie_y);
-    context.scale(x_scale, 1);
-    context.beginPath();
-    if(right_side)
-        context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
-    else
-        context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
-    context.closePath();
-    context.fill();
-    context.restore();
-    context = null;
-}
+    @classmethod
+    def _stats_query(cls) -> str:
+        raise NotImplementedError()
 
 
-if (cmk.dashboard.has_canvas_support()) {
-    %(p)s
-}
-""" % {
-                "x": int(pie_diameter / 2.0),
-                "y": int(pie_diameter / 2.0),
-                "d": pie_diameter,
-                'p': '\n'.join(pie_parts)
-            })
+class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
+    @classmethod
+    def _title(cls):
+        return HostStatsDashlet.title()
+
+    @classmethod
+    def _livestatus_table(cls):
+        return "hosts"
+
+    @classmethod
+    def _url_add_vars(cls):
+        return {
+            "up": [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")],
+            "downtime": [("searchhost&search", "1"), ("is_host_scheduled_downtime_depth", "1")],
+            "unreachable": [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")],
+            "down": [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")],
+        }
+
+    @classmethod
+    def _view_name(cls):
+        return "searchhost"
+
+    @classmethod
+    def _named_stats(cls, stats: List[int]) -> HostStats:
+        if not stats:
+            stats = [0, 0, 0, 0]
+        return HostStats(*stats)
+
+    @classmethod
+    def _get_parts_and_total_count(cls, stats, general_url_vars) -> Tuple[List[StatsPart], int]:
+        parts = []
+        total = 0
+        url_add_vars = cls._url_add_vars()
+        for title, css_class, count, url_vars in [
+            (_("Up"), "ok", stats.up, url_add_vars["up"]),
+            (_("In downtime"), "downtime", stats.downtime, url_add_vars["downtime"]),
+            (_("Unreachable"), "unknown", stats.unreachable, url_add_vars["unreachable"]),
+            (_("Down"), "critical", stats.down, url_add_vars["down"]),
+        ]:
+            url_vars.extend(general_url_vars)
+            url = makeuri_contextless(request, url_vars, filename="view.py")
+            parts.append(StatsPart(title=title, css_class=css_class, count=count, url=url))
+            total += count
+        return parts, total
+
+    @classmethod
+    def _stats_query(cls) -> str:
+        return "\n".join([
+            "GET hosts",
+
+            # Up
+            "Stats: state = 0",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # Downtime
+            "Stats: scheduled_downtime_depth > 0",
+
+            # Unreachable
+            "Stats: state = 2",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # Down
+            "Stats: state = 1",
+            "Stats: scheduled_downtime_depth = 0",
+            "StatsAnd: 2",
+
+            # Filter
+            "Filter: custom_variable_names < _REALNAME",
+        ])
+
+
+class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
+    @classmethod
+    def _title(cls):
+        return ServiceStatsDashlet.title()
+
+    @classmethod
+    def _livestatus_table(cls):
+        return "services"
+
+    @classmethod
+    def _url_add_vars(cls):
+        return {
+            "ok": [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")],
+            "downtime": [("is_in_downtime", "1")],
+            "host_down": [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")],
+            "warning": [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")],
+            "unknown": [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")],
+            "critical": [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")],
+        }
+
+    @classmethod
+    def _view_name(cls):
+        return "searchsvc"
+
+    @classmethod
+    def _named_stats(cls, stats: List[int]) -> ServiceStats:
+        if not stats:
+            stats = [0, 0, 0, 0, 0, 0]
+        return ServiceStats(*stats)
+
+    @classmethod
+    def _get_parts_and_total_count(cls, stats, general_url_vars) -> Tuple[List[StatsPart], int]:
+        parts = []
+        total = 0
+        url_add_vars = cls._url_add_vars()
+        for title, css_class, count, url_vars in [
+            (_("OK"), "ok", stats.ok, url_add_vars["ok"]),
+            (_("In downtime"), "downtime", stats.downtime, url_add_vars["downtime"]),
+            (_("On down host"), "host_down", stats.host_down, url_add_vars["host_down"]),
+            (_("Warning"), "warning", stats.warning, url_add_vars["warning"]),
+            (_("Unknown"), "unknown", stats.unknown, url_add_vars["unknown"]),
+            (_("Critical"), "critical", stats.critical, url_add_vars["critical"]),
+        ]:
+            url_vars.extend(general_url_vars)
+            url = makeuri_contextless(request, url_vars, filename="view.py")
+            parts.append(StatsPart(title=title, css_class=css_class, count=count, url=url))
+            total += count
+        return parts, total
+
+    @classmethod
+    def _stats_query(cls) -> str:
+        return "\n".join([
+            "GET services",
+
+            # OK
+            "Stats: state = 0",
+            "Stats: scheduled_downtime_depth = 0",
+            "Stats: host_scheduled_downtime_depth = 0",
+            "Stats: host_state = 0",
+            "Stats: host_has_been_checked = 1",
+            "StatsAnd: 5",
+
+            # Downtime
+            "Stats: scheduled_downtime_depth > 0",
+            "Stats: host_scheduled_downtime_depth > 0",
+            "StatsOr: 2",
+
+            # Down host
+            "Stats: scheduled_downtime_depth = 0",
+            "Stats: host_scheduled_downtime_depth = 0",
+            "Stats: host_state != 0",
+            "StatsAnd: 3",
+
+            # Warning
+            "Stats: state = 1",
+            "Stats: scheduled_downtime_depth = 0",
+            "Stats: host_scheduled_downtime_depth = 0",
+            "Stats: host_state = 0",
+            "Stats: host_has_been_checked = 1",
+            "StatsAnd: 5",
+
+            # Unknown
+            "Stats: state = 3",
+            "Stats: scheduled_downtime_depth = 0",
+            "Stats: host_scheduled_downtime_depth = 0",
+            "Stats: host_state = 0",
+            "Stats: host_has_been_checked = 1",
+            "StatsAnd: 5",
+
+            # Critical
+            "Stats: state = 2",
+            "Stats: scheduled_downtime_depth = 0",
+            "Stats: host_scheduled_downtime_depth = 0",
+            "Stats: host_state = 0",
+            "Stats: host_has_been_checked = 1",
+            "StatsAnd: 5",
+
+            # Filter
+            "Filter: host_custom_variable_names < _REALNAME",
+        ])
 
 
 @dashlet_registry.register
-class HostStatsDashlet(DashletStats):
-    """Dashlet that displays statistics about host states as globe and a table"""
+class HostStatsDashlet(ABCFigureDashlet):
+    @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        return HostStatsDashletDataGenerator.generate_response_data(properties, context, settings)
+
     @classmethod
     def type_name(cls):
         return "hoststats"
 
     @classmethod
     def title(cls):
-        return _("Host Statistics")
+        return _("Host statistics")
 
     @classmethod
     def description(cls):
@@ -214,60 +326,36 @@ class HostStatsDashlet(DashletStats):
         return 45
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
+    def is_resizable(cls):
+        return False
+
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+    @classmethod
+    def infos(cls) -> List[str]:
         return ["host"]
 
-    def _livestatus_table(self):
-        return "hosts"
-
-    def _view_name(self):
-        return "searchhost"
-
-    # TODO: Refactor this data structure
-    def _table(self):
-        return [
-            (
-                _("Up"),
-                "#0b3",
-                [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")],
-                "Stats: state = 0\n"  #
-                "Stats: scheduled_downtime_depth = 0\n"  #
-                "StatsAnd: 2\n"),
-            (
-                _("Down"),
-                "#f00",
-                [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")],
-                "Stats: state = 1\n"  #
-                "Stats: scheduled_downtime_depth = 0\n"  #
-                "StatsAnd: 2\n"),
-            (
-                _("Unreachable"),
-                "#f80",
-                [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")],
-                "Stats: state = 2\n"  #
-                "Stats: scheduled_downtime_depth = 0\n"  #
-                "StatsAnd: 2\n"),
-            (_("In Downtime"), "#0af", [
-                ("searchhost&search", "1"),
-                ("is_host_scheduled_downtime_depth", "1"),
-            ], "Stats: scheduled_downtime_depth > 0\n")
-        ]
-
-    def _filter(self):
-        return "Filter: custom_variable_names < _REALNAME\n"
+    @classmethod
+    def data_generator(cls):
+        return HostStatsDashletDataGenerator
 
 
 @dashlet_registry.register
-class ServiceStatsDashlet(DashletStats):
-    """Dashlet that displays statistics about service states as globe and a table"""
+class ServiceStatsDashlet(ABCFigureDashlet):
+    @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        return ServiceStatsDashletDataGenerator.generate_response_data(
+            properties, context, settings)
+
     @classmethod
     def type_name(cls):
         return "servicestats"
 
     @classmethod
     def title(cls):
-        return _("Service Statistics")
+        return _("Service statistics")
 
     @classmethod
     def description(cls):
@@ -278,57 +366,13 @@ class ServiceStatsDashlet(DashletStats):
         return 50
 
     @classmethod
-    def infos(cls):
-        # type: () -> List[str]
-        return ['host', 'service']
+    def is_resizable(cls):
+        return False
 
-    def _livestatus_table(self):
-        return "services"
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
 
-    def _view_name(self):
-        return "searchsvc"
-
-    def _table(self):
-        return [
-            (_("OK"), "#0b3", [("hst0", "on"), ("st0", "on"),
-                               ("is_in_downtime", "0")], "Stats: state = 0\n"
-             "Stats: scheduled_downtime_depth = 0\n"
-             "Stats: host_scheduled_downtime_depth = 0\n"
-             "Stats: host_state = 0\n"
-             "Stats: host_has_been_checked = 1\n"
-             "StatsAnd: 5\n"),
-            (_("In Downtime"), "#0af", [("is_in_downtime", "1")],
-             "Stats: scheduled_downtime_depth > 0\n"
-             "Stats: host_scheduled_downtime_depth > 0\n"
-             "StatsOr: 2\n"),
-            (_("On Down host"), "#048", [("hst1", "on"), ("hst2", "on"), ("hstp", "on"),
-                                         ("is_in_downtime", "0")],
-             "Stats: scheduled_downtime_depth = 0\n"
-             "Stats: host_scheduled_downtime_depth = 0\n"
-             "Stats: host_state != 0\n"
-             "StatsAnd: 3\n"),
-            (_("Warning"), "#ff0", [("hst0", "on"), ("st1", "on"),
-                                    ("is_in_downtime", "0")], "Stats: state = 1\n"
-             "Stats: scheduled_downtime_depth = 0\n"
-             "Stats: host_scheduled_downtime_depth = 0\n"
-             "Stats: host_state = 0\n"
-             "Stats: host_has_been_checked = 1\n"
-             "StatsAnd: 5\n"),
-            (_("Unknown"), "#f80", [("hst0", "on"), ("st3", "on"),
-                                    ("is_in_downtime", "0")], "Stats: state = 3\n"
-             "Stats: scheduled_downtime_depth = 0\n"
-             "Stats: host_scheduled_downtime_depth = 0\n"
-             "Stats: host_state = 0\n"
-             "Stats: host_has_been_checked = 1\n"
-             "StatsAnd: 5\n"),
-            (_("Critical"), "#f00", [("hst0", "on"), ("st2", "on"),
-                                     ("is_in_downtime", "0")], "Stats: state = 2\n"
-             "Stats: scheduled_downtime_depth = 0\n"
-             "Stats: host_scheduled_downtime_depth = 0\n"
-             "Stats: host_state = 0\n"
-             "Stats: host_has_been_checked = 1\n"
-             "StatsAnd: 5\n"),
-        ]
-
-    def _filter(self):
-        return "Filter: host_custom_variable_names < _REALNAME\n"
+    @classmethod
+    def data_generator(cls):
+        return ServiceStatsDashletDataGenerator

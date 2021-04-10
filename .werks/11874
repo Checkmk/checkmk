@@ -1,0 +1,25 @@
+Title: Linux agent: Fix execution of cached plugins (2.0.0b4 regression)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610737256
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0i1
+
+The 2.0.0b4 release introduced a regression in the Linux agent which broke the
+execution of cached agent plugins (which also includes the agent updater for
+example). The plugins that are placed below
+<tt>/usr/lib/check_mk_agent/plugins/[seconds]</tt> were not executed at all in
+2.0.0b4.
+
+Possible workarounds:
+
+<ul>
+<li>Move the plugin to the <tt>/usr/lib/check_mk_agent/plugins</tt> directory
+    to execute it every check cycle</li>
+<li>Use an agent of previous 2.0.0 releases</li>
+<li>Use the agent from a daily build 2021-01-16 or newer</li>
+</ul>

@@ -6,7 +6,7 @@ Date: 1581937892
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously, some plugins and configuration example used a description, some used the filename.
 This has been unified. Plugins and configuration examples now use the filename.
